@@ -142,7 +142,7 @@ function HelpMenu() {
 	const { versionName, versionBuild, os, browser } = useCompanionVersion()
 	const sysinfo = useMemo(() => {
 		let version = versionName || 'version unknown'
-		let versionPlus = version
+		let versionPlus = 'Companion: ' + version
 		if (versionBuild) {
 			version += '\n' + versionBuild
 			versionPlus += ' ' + versionBuild
@@ -217,6 +217,7 @@ function HelpMenu() {
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
+			MenuSeparator,
 			{
 				id: 'version',
 				label: sysinfo.version,

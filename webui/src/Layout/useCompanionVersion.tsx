@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC'
-import { UAParser } from 'ua-parser-js'
+import Bowser from 'bowser'
 import { useEffect, useState } from 'react'
 
 export interface CompanionVersion {
@@ -10,11 +10,61 @@ export interface CompanionVersion {
 	browser: string
 }
 
-function formatBrowserString(parser: UAParser.IResult): string {
-	const browserName = parser.browser.name || 'Unknown Browser'
-	const browserVersion = parser.browser.version || 'Unknown Version'
-	const browserOS = `${parser.os.name} ${parser.os.version ?? ''}`
-	return `${browserName} v${browserVersion} running on: ${browserOS}`
+// Define advanced types. Alt: install 'user-agent-data-types' for official definitions
+interface NavigatorUAData {
+	readonly brands: Array<{ brand: string; version: string }>
+	readonly mobile: boolean
+	readonly platform: string
+	getHighEntropyValues(hints: string[]): Promise<{
+		architecture?: string
+		model?: string
+		platformVersion?: string
+		fullVersionList?: Array<{ brand: string; version: string }>
+	}>
+}
+
+// Extend the global Navigator interface
+interface CustomNavigator extends Navigator {
+	userAgentData?: NavigatorUAData
+}
+
+function browserOS(parser: Bowser.Parser.Parser, hints?: any) {
+	const os = parser.getOS()
+
+	let osName = os.name || 'Unknown OS'
+
+	// Handle Windows 11 Detection
+	if (osName === 'Windows' && hints?.platformVersion) {
+		const majorVersion = parseInt(hints.platformVersion.split('.')[0])
+		if (majorVersion >= 13) {
+			// Optionally map platformVersion to a friendly build (e.g., 22H2)
+			osName = `Windows 11 (Build ${hints.platformVersion})`
+		} else {
+			osName = 'Windows 10'
+		}
+	}
+
+	return osName
+}
+
+function formatBrowserString(parser: Bowser.Parser.Parser, hints?: any): string {
+	const browserName = parser.getBrowser().name || 'Unknown Browser'
+	let browserVersion = parser.getBrowser().version || 'Unknown Version'
+	if (hints?.fullVersionList) {
+		// Look for the specific brand that matches what Bowser identified
+		const match = hints.fullVersionList.find(
+			(item: any) => item.brand.includes(browserName) || browserName.includes(item.brand)
+		)
+		if (match) {
+			browserVersion = match.version
+		}
+	}
+	const browserOsString = browserOS(parser, hints)
+	// note: hints.model may equal ''
+	const browserPlatform =
+		hints?.model || parser.getPlatform().model || parser.getPlatform().type || 'unknown platform (desktop?)'
+	// could add hints.architecture
+	return `${browserName} v${browserVersion} running OS: ${browserOsString} on: ${browserPlatform}${hints ? '' : ' (not precise)'}`
 }
 
 /*
@@ -42,20 +92,49 @@ export function useCompanionVersion(): CompanionVersion {
 	}
 
 	// 2. Browser Info
-	const [browserString, setBrowserString] = useState(formatBrowserString(new UAParser().getResult()))
+	// For more accurate data use userAgentData, we can either add the types globally or just do this:
+	// userAgentData is sometimes called "Client Hints"
+	const uaData1 = (navigator as any).userAgentData
+	const parser1 = Bowser.getParser(window.navigator.userAgent, uaData1)
+	const [browserString, setBrowserString] = useState(formatBrowserString(parser1))
 
+	// now try getting "high-entropy" version info
 	useEffect(() => {
-		const parser = new UAParser()
-		// Asynchronous call to get accurate version via Client Hints
-		const fetchFullSpecs = async () => {
-			// withClientHints() returns a Promise with more accurate data that
-			// usually distinguishes Windows 11 from 10 (doesn't seem to work with Firefox)
-			const result = await parser.getResult().withClientHints()
-			setBrowserString(formatBrowserString(result))
+		let isMounted = true // prevent running if component is unmounted
+
+		async function fetchDetailedInfo() {
+			const ua = window.navigator.userAgent
+			const nav = navigator as CustomNavigator
+			let hints = null
+
+			// 1. Fetch High Entropy Values if supported (Chromium)
+			if (nav.userAgentData?.getHighEntropyValues) {
+				try {
+					// probably could skip 'architecture' for now...
+					hints = await nav.userAgentData.getHighEntropyValues([
+						'architecture',
+						'model',
+						'platformVersion',
+						'fullVersionList',
+					])
+				} catch (e) {
+					console.warn('Hints rejected, falling back to basic UA', e)
+				}
+			}
+
+			// 2. Initialize Bowser with the best available data
+			if (hints && isMounted) {
+				const parser = Bowser.getParser(ua, hints)
+				setBrowserString(formatBrowserString(parser, hints))
+			}
 		}
 
-		fetchFullSpecs().catch(console.error)
-	}, []) // Run once on mount
+		void fetchDetailedInfo()
+
+		return () => {
+			isMounted = false
+		}
+	}, []) // run once on mount
 
 	// 3. Server OS info:
 	const osString = versionInfo.data?.os ?? 'unknown'
