@@ -11,11 +11,11 @@ export interface ValidateInputValueOptions {
 }
 
 /**
- *
- * @param definition
- * @param value
- * @param options
- * @returns
+ * Check if a value is valid for a given input field definition, returning true/false
+ * @param definition The input field definition
+ * @param value The value to validate
+ * @param options Optional validation options
+ * @returns True if the value is valid for the given input field definition, false otherwise
  */
 export function checkInputValueIsGood(
 	definition: SomeCompanionInputField,
