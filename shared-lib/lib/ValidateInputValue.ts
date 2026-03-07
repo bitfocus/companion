@@ -5,20 +5,38 @@ import { assertNever } from './Util.js'
 import { stringifyVariableValue } from './Model/Variables.js'
 import isEqual from 'fast-deep-equal'
 
+export interface ValidateInputValueOptions {
+	/** If true, skip validating expression fields */
+	skipValidateExpression?: boolean
+}
+
+/**
+ *
+ * @param definition
+ * @param value
+ * @param options
+ * @returns
+ */
+export function checkInputValueIsGood(
+	definition: SomeCompanionInputField,
+	value: JsonValue | undefined,
+	options?: ValidateInputValueOptions
+): boolean {
+	const result = validateInputValue(definition, value, options)
+	return result.validationError === undefined && result.validationWarnings.length === 0
+}
+
 /**
  * Check if a value is valid for a given input field definition
  * @param definition The input field definition
  * @param value The value to validate
  * @param options Optional validation options
- * @param options.skipValidateExpression If true, skip validating expression fields
  * @returns An object with the sanitised value, an optional error message, and an array of warnings
  */
 export function validateInputValue(
 	definition: SomeCompanionInputField,
 	value: JsonValue | undefined,
-	options?: {
-		skipValidateExpression?: boolean
-	}
+	options?: ValidateInputValueOptions
 ): {
 	sanitisedValue: JsonValue | undefined
 	validationError: string | undefined

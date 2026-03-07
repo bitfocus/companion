@@ -21,7 +21,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
@@ -66,10 +66,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	localVariablesStore,
 	fieldSupportsExpression,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
-	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(option, value).validationError === undefined,
-		[option]
-	)
+	const checkValid = useCallback((value: JsonValue | undefined) => checkInputValueIsGood(option, value), [option])
 	const setExpressionValue = useCallback(
 		(val: string) =>
 			setValue(option.id, {
