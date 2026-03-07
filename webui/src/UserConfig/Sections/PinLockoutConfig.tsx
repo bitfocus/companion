@@ -9,7 +9,10 @@ import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow
 export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow label="PIN Lockout" />
+			<UserConfigHeadingRow
+				label="PIN Lockout"
+				tooltip="Enable this feature to lock input surfaces when idle for a specified time."
+			/>
 
 			<UserConfigSwitchRow userConfig={props} label="Enable Pin Codes" field="pin_enable" />
 

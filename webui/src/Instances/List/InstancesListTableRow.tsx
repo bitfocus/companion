@@ -85,12 +85,13 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			: `Enable ${labelStr}`
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
+		<div
+			className="flex flex-row align-items-center gap-2 hand"
+			title={moduleDisplayName + '. Click on the row to configure.'}
+		>
 			<div onClick={doEdit} className="flex flex-column grow" style={{ minWidth: 0 }}>
 				<b>{instance.label}</b>
-				<span className="auto-ellipsis" title={moduleDisplayName}>
-					{moduleDisplayName}
-				</span>
+				<span className="auto-ellipsis">{moduleDisplayName}</span>
 			</div>
 
 			<div onClick={doEdit} className="no-break">
@@ -187,7 +188,12 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						</>
 					}
 				>
-					<CButton color="secondary" style={{ padding: '3px 8px' }} onClick={(e) => e.currentTarget.focus()}>
+					<CButton
+						color="secondary"
+						style={{ padding: '3px 8px' }}
+						onClick={(e) => e.currentTarget.focus()}
+						title="Click for additional options."
+					>
 						<FontAwesomeIcon icon={faEllipsisV} />
 					</CButton>
 				</CPopover>

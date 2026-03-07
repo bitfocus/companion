@@ -27,8 +27,8 @@ export const SurfacesConfig = observer(function SurfacesConfig(props: UserConfig
 			<tr>
 				<td colSpan={3}>
 					<CAlert color="info" className="mt-3">
-						You can configure support for different types of surfaces in the{' '}
-						<Link to="/surfaces/integrations">Surface Integrations</Link> page.
+						You can configure support for different types of surfaces in the Surface Integrations Table on the{' '}
+						<Link to="/surfaces/configured">Configured Surfaces</Link> page.
 					</CAlert>
 				</td>
 			</tr>
