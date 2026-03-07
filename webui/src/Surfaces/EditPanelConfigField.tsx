@@ -9,7 +9,7 @@ import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -42,7 +42,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
+		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
 		[definition]
 	)
 	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])
