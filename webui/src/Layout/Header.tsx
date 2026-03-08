@@ -136,7 +136,7 @@ function HelpMenu() {
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
-	// add a toast notification when copied to clipboard. (Should this be done with Notifications.tsx? I couldn't figure it out.)
+	// get notifier for adding a toast notification when copied to clipboard.
 	const { notifier } = useContext(RootAppStoreContext)
 
 	const { versionName, versionBuild, os, browser } = useCompanionVersion()
