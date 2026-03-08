@@ -151,6 +151,11 @@ export class ConnectionEntityManager {
 						if (entity.upgradeIndex === undefined || entity.upgradeIndex === this.#currentUpgradeIndex) {
 							wrapper.state = EntityState.READY
 
+							if (entity.disabled) {
+								// Disabled entities should not be subscribed to the module
+								continue
+							}
+
 							const entityDefinition = entity.getEntityDefinition()
 							if (!entityDefinition || !entityDefinition.hasLifecycleFunctions) {
 								// The entity does not have lifecycle functions, so we can skip informing the module about it

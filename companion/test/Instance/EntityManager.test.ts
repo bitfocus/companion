@@ -524,7 +524,7 @@ describe('InstanceEntityManager', () => {
 			mockIpcWrapper.sendWithCb.mockClear()
 
 			// Simulate variables changing
-			entityManager.onVariablesChanged(new Set(['var1']))
+			entityManager.onVariablesChanged(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Verify it triggered a re-process
@@ -578,7 +578,7 @@ describe('InstanceEntityManager', () => {
 			mockIpcWrapper.sendWithCb.mockClear()
 
 			// Simulate unrelated variables changing
-			entityManager.onVariablesChanged(new Set(['unrelated-var']))
+			entityManager.onVariablesChanged(new Set(['unrelated-var']), null)
 			vi.runAllTimers()
 
 			// Should not have triggered a re-process
@@ -1139,6 +1139,85 @@ describe('InstanceEntityManager', () => {
 			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledTimes(1)
 		})
 
+		it('should not subscribe a disabled entity to the module', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: true,
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 5,
+					disabled: true,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+
+			vi.runAllTimers()
+
+			expect(mockIpcWrapper.sendWithCb).not.toHaveBeenCalled()
+		})
+
+		it('should run upgrade scripts for a disabled entity that is out of date', async () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: true,
+				upgradeIndex: 3, // Lower than the current index (5)
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 3,
+					disabled: true,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+
+			vi.runAllTimers()
+
+			// Upgrade should be sent
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith(
+				'upgradeActionsAndFeedbacks',
+				expect.objectContaining({
+					actions: expect.arrayContaining([
+						expect.objectContaining({
+							id: 'entity-1',
+							upgradeIndex: 3,
+							disabled: true,
+							controlId: 'control-1',
+						}),
+					]),
+					feedbacks: [],
+				})
+			)
+
+			// But no subscribe should follow
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledTimes(1)
+		})
+
 		it('should skip upgrading entities without lifecycle functions even with old upgradeIndex', async () => {
 			const mockEntityWithoutLifecycle = {
 				id: 'entity-without-lifecycle',
@@ -1218,17 +1297,8 @@ describe('InstanceEntityManager', () => {
 
 			vi.runAllTimers()
 
-			// Should send disabled: true to the module
-			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith(
-				'updateActions',
-				expect.objectContaining({
-					actions: expect.objectContaining({
-						'entity-1': expect.objectContaining({
-							disabled: true,
-						}),
-					}),
-				})
-			)
+			// Disabled entities should not be sent to the module
+			expect(mockIpcWrapper.sendWithCb).not.toHaveBeenCalled()
 		})
 
 		it('should handle entity with invalid option types', () => {
@@ -1305,6 +1375,117 @@ describe('InstanceEntityManager', () => {
 			for (let i = 0; i < 5; i++) {
 				expect(payload[`action-${i}`]).toBeDefined()
 			}
+		})
+
+		it('should send null to module when entity transitions from enabled to disabled', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: false,
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 5,
+					disabled: false,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Entity is subscribed
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith(
+				'updateActions',
+				expect.objectContaining({
+					actions: expect.objectContaining({
+						'entity-1': expect.objectContaining({ controlId: 'control-1' }),
+					}),
+				})
+			)
+
+			mockIpcWrapper.sendWithCb.mockClear()
+
+			// Entity becomes disabled — forgetEntity is called
+			entityManager.forgetEntity('entity-1')
+			vi.runAllTimers()
+
+			// Module should be told to unsubscribe (null)
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith('updateActions', {
+				actions: {
+					'entity-1': null,
+				},
+			})
+		})
+
+		it('should subscribe to module when entity transitions from disabled to enabled', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: true,
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 5,
+					disabled: true,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Nothing sent while disabled
+			expect(mockIpcWrapper.sendWithCb).not.toHaveBeenCalled()
+
+			// Entity becomes enabled — trackEntity is called with disabled: false
+			mockEntity.disabled = false
+			mockEntity.asEntityModel.mockReturnValue({
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				connectionId: 'connection-1',
+				options: {},
+				upgradeIndex: 5,
+				disabled: false,
+			})
+
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Module should now receive the subscription
+			expect(mockIpcWrapper.sendWithCb).toHaveBeenCalledWith('updateActions', {
+				actions: {
+					'entity-1': {
+						id: 'entity-1',
+						actionId: 'action-1',
+						options: {},
+						upgradeIndex: 5,
+						disabled: false,
+						controlId: 'control-1',
+					},
+				},
+			})
 		})
 	})
 
