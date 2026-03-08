@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 export interface CompanionVersion {
 	versionName: string
 	versionBuild: string
-	os: string
+	os?: string
 	browser: string
 }
 
@@ -70,9 +70,9 @@ function formatBrowserString(parser: Bowser.Parser.Parser, hints?: any): string 
 /*
  *  Get Companion Version info
  */
-export function useCompanionVersion(): CompanionVersion {
+export function useCompanionVersion(extra = false): CompanionVersion {
 	// 1. Companion Version info
-	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
+	const versionInfo = useQuery(trpc.appInfo.version.queryOptions({ all: extra }))
 	let versionName = ''
 	let versionBuild = ''
 
@@ -137,7 +137,7 @@ export function useCompanionVersion(): CompanionVersion {
 	}, []) // run once on mount
 
 	// 3. Server OS info:
-	const osString = versionInfo.data?.os ?? 'unknown'
+	const osString = extra ? (versionInfo.data?.os ?? 'unknown') : undefined
 
 	return { versionName, versionBuild, browser: browserString, os: osString }
 }

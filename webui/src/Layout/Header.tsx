@@ -139,7 +139,7 @@ function HelpMenu() {
 	// get notifier for adding a toast notification when copied to clipboard.
 	const { notifier } = useContext(RootAppStoreContext)
 
-	const { versionName, versionBuild, os, browser } = useCompanionVersion()
+	const { versionName, versionBuild, os, browser } = useCompanionVersion(true)
 	const sysinfo = useMemo(() => {
 		let version = versionName || 'version unknown'
 		let versionPlus = 'Companion: ' + version
