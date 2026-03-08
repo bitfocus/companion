@@ -1028,21 +1028,50 @@ describe('validateInputValue', () => {
 			})
 		})
 
-		it('should return error when value is not an array', () => {
-			expect(validateInputValue(definition, 'option1')).toEqual({
-				sanitisedValue: 'option1',
-				validationError: 'Value must be an array',
-				validationWarnings: [],
-			})
-			expect(validateInputValue(definition, 123)).toEqual({
-				sanitisedValue: 123,
-				validationError: 'Value must be an array',
-				validationWarnings: [],
-			})
+		it('should return error when value is not an array and cannot be coerced', () => {
 			expect(validateInputValue(definition, { option1: true })).toEqual({
 				sanitisedValue: { option1: true },
 				validationError: 'Value must be an array',
 				validationWarnings: [],
+			})
+			expect(validateInputValue(definition, '')).toEqual({
+				sanitisedValue: '',
+				validationError: 'Value must be an array',
+				validationWarnings: [],
+			})
+		})
+
+		describe('non-array coercion', () => {
+			it('should coerce a non-empty string into an array with a warning', () => {
+				expect(validateInputValue(definition, 'option1')).toEqual({
+					sanitisedValue: ['option1'],
+					validationError: undefined,
+					validationWarnings: ['Value was coerced into an array'],
+				})
+			})
+
+			it('should coerce a number into an array with a warning', () => {
+				expect(validateInputValue(definition, 123)).toEqual({
+					sanitisedValue: [123],
+					validationError: undefined,
+					validationWarnings: ['Value was coerced into an array'],
+				})
+			})
+
+			it('should coerce a boolean into an array with a warning and then validate the value', () => {
+				expect(validateInputValue(definition, true)).toEqual({
+					sanitisedValue: [true],
+					validationError: 'The following selected values are not valid: true',
+					validationWarnings: ['Value was coerced into an array'],
+				})
+			})
+
+			it('should coerce a string not in choices into an error with a warning', () => {
+				expect(validateInputValue(definition, 'invalid')).toEqual({
+					sanitisedValue: ['invalid'],
+					validationError: 'The following selected values are not valid: invalid',
+					validationWarnings: ['Value was coerced into an array'],
+				})
 			})
 		})
 

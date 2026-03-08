@@ -232,7 +232,17 @@ export function validateInputValue(
 			if (value === undefined) return { sanitisedValue: [], validationError: undefined, validationWarnings }
 
 			if (!Array.isArray(value)) {
-				return { sanitisedValue: value, validationError: 'Value must be an array', validationWarnings }
+				// Try to help modules which relied on old behaviour where non-array values were coerced into an array, by coercing strings/numbers/booleans into an array with a warning
+				if (
+					(typeof value === 'string' && value.trim() !== '') ||
+					typeof value === 'number' ||
+					typeof value === 'boolean'
+				) {
+					validationWarnings.push('Value was coerced into an array')
+					value = [value]
+				} else {
+					return { sanitisedValue: value, validationError: 'Value must be an array', validationWarnings }
+				}
 			}
 
 			const sanitisedValue: JsonValue[] = []
