@@ -7,7 +7,7 @@ export interface CompanionVersion {
 	versionName: string
 	versionBuild: string
 	os?: string
-	browser: string
+	browser?: string
 }
 
 // Define advanced types. Alt: install 'user-agent-data-types' for official definitions
@@ -95,16 +95,14 @@ export function useCompanionVersion(extra = false): CompanionVersion {
 	}
 
 	// 2. Browser Info
-	// For more accurate data use userAgentData, we can either add the types globally or just do this:
-	// userAgentData is sometimes called "Client Hints"
-	const uaData1 = (navigator as any).userAgentData
-	const parser1 = Bowser.getParser(window.navigator.userAgent, uaData1)
-	const [browserString, setBrowserString] = useState(formatBrowserString(parser1))
+	const [browserString, setBrowserString] = useState('')
 
-	// now try getting "high-entropy" version info
+	// now determine browserString if requested and try getting "high-entropy" version info
 	useEffect(() => {
 		let isMounted = true // prevent running if component is unmounted
 
+		// For more accurate data use userAgentData, with an async call.
+		// userAgentData is sometimes called "Client Hints"
 		async function fetchDetailedInfo() {
 			const ua = window.navigator.userAgent
 			const nav = navigator as CustomNavigator
@@ -132,15 +130,27 @@ export function useCompanionVersion(extra = false): CompanionVersion {
 			}
 		}
 
-		void fetchDetailedInfo()
+		if (extra) {
+			// set the default parser string first, just in case
+			const uaData1 = (navigator as CustomNavigator).userAgentData
+			const parser1 = Bowser.getParser(window.navigator.userAgent, uaData1)
+			setBrowserString(formatBrowserString(parser1))
+
+			// now try getting "high-entropy" data
+			void fetchDetailedInfo()
+		}
 
 		return () => {
 			isMounted = false
 		}
-	}, []) // run once on mount
+	}, [extra])
 
-	// 3. Server OS info:
-	const osString = extra ? (versionInfo.data?.os ?? 'unknown') : undefined
-
-	return { versionName, versionBuild, browser: browserString, os: osString }
+	const result: CompanionVersion = { versionName, versionBuild }
+	if (extra) {
+		// 3. Server OS info:
+		const osString = versionInfo.data?.os ?? 'unknown'
+		result.os = osString
+		result.browser = browserString
+	}
+	return result
 }
