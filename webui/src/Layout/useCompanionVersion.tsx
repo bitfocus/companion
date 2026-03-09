@@ -47,10 +47,11 @@ function browserOS(parser: Bowser.Parser.Parser, hints?: any) {
 	return osName
 }
 
-let preciseVersion = false
 function formatBrowserString(parser: Bowser.Parser.Parser, hints?: any): string {
 	const browserName = parser.getBrowser().name || 'Unknown Browser'
 	let browserVersion = parser.getBrowser().version || 'Unknown Version'
+
+	let preciseVersion = false
 	if (hints?.fullVersionList) {
 		// Look for the specific brand that matches what Bowser identified
 		const match = hints.fullVersionList.find(
