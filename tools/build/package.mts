@@ -242,6 +242,10 @@ if (process.env.ELECTRON !== '0') {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)
 	}
+
+	// Ensure the node_modules was included, as that requies our patch to app-builder-lib to be applied
+	const nodeModulesDirs = await glob('electron-output/*/resources/node_modules', { onlyDirectories: true })
+	if (nodeModulesDirs.length === 0) throw new Error('node_modules was not included in the electron build!')
 } else {
 	// TODO - populate dist with the rest of the bits
 }
