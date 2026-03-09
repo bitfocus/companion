@@ -243,7 +243,7 @@ if (process.env.ELECTRON !== '0') {
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)
 	}
 
-	// Ensure the node_modules was included, as that requies our patch to app-builder-lib to be applied
+	// Ensure the node_modules was included, as that requires our patch to app-builder-lib to be applied
 	const expectedPathGlob =
 		platformInfo.runtimePlatform === 'darwin'
 			? 'electron-output/*/Companion.app/Contents/Resources/node_modules'
