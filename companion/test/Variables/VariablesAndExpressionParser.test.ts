@@ -306,6 +306,137 @@ describe('VariablesAndExpressionParser', () => {
 			}
 			expect(result.referencedVariableIds.size).toBe(0)
 		})
+
+		it('should return ok: true when a number field value is clamped to min', () => {
+			const parser = createParser()
+			const entityDefinition: ClientEntityDefinition = {
+				entityType: EntityModelType.Action,
+				label: 'Test',
+				sortKey: null,
+				description: undefined,
+				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
+				optionsToMonitorForInvalidations: null,
+				feedbackType: null,
+				feedbackStyle: undefined,
+				hasLifecycleFunctions: true,
+				hasLearn: false,
+				learnTimeout: undefined,
+				showInvert: false,
+				optionsSupportExpressions: true, // required so number fields go through validateInputValue
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			}
+			const options: ExpressionableOptionsObject = {
+				field1: { isExpression: false, value: -10 }, // below min, should be clamped to 0
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(0)
+			}
+		})
+
+		it('should return ok: true when a number field value is clamped to max', () => {
+			const parser = createParser()
+			const entityDefinition: ClientEntityDefinition = {
+				entityType: EntityModelType.Action,
+				label: 'Test',
+				sortKey: null,
+				description: undefined,
+				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
+				optionsToMonitorForInvalidations: null,
+				feedbackType: null,
+				feedbackStyle: undefined,
+				hasLifecycleFunctions: true,
+				hasLearn: false,
+				learnTimeout: undefined,
+				showInvert: false,
+				optionsSupportExpressions: true, // required so number fields go through validateInputValue
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			}
+			const options: ExpressionableOptionsObject = {
+				field1: { isExpression: false, value: 200 }, // above max, should be clamped to 100
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.field1).toBe(100)
+			}
+		})
+
+		it('should return ok: true when one of multiple fields has a clamped number', () => {
+			const parser = createParser()
+			const entityDefinition: ClientEntityDefinition = {
+				entityType: EntityModelType.Action,
+				label: 'Test',
+				sortKey: null,
+				description: undefined,
+				options: [
+					{ id: 'text1', type: 'textinput', label: 'Text', useVariables: useVariablesMinimal },
+					{ id: 'num1', type: 'number', label: 'Number', min: 10, max: 50, default: 10, clampValues: true },
+				],
+				optionsToMonitorForInvalidations: null,
+				feedbackType: null,
+				feedbackStyle: undefined,
+				hasLifecycleFunctions: true,
+				hasLearn: false,
+				learnTimeout: undefined,
+				showInvert: false,
+				optionsSupportExpressions: true, // required so number fields go through validateInputValue
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			}
+			const options: ExpressionableOptionsObject = {
+				text1: { isExpression: false, value: '$(test:var1)' },
+				num1: { isExpression: false, value: 999 }, // above max, should be clamped to 50
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.text1).toBe('value1')
+				expect(result.parsedOptions.num1).toBe(50)
+			}
+		})
+
+		it('should not clamp number field when optionsSupportExpressions is false (passthrough path)', () => {
+			const parser = createParser()
+			const entityDefinition: ClientEntityDefinition = {
+				entityType: EntityModelType.Action,
+				label: 'Test',
+				sortKey: null,
+				description: undefined,
+				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
+				optionsToMonitorForInvalidations: null,
+				feedbackType: null,
+				feedbackStyle: undefined,
+				hasLifecycleFunctions: true,
+				hasLearn: false,
+				learnTimeout: undefined,
+				showInvert: false,
+				optionsSupportExpressions: false, // legacy path: number fields are passed through without validation
+				showButtonPreview: false,
+				supportsChildGroups: [],
+			}
+			const options: ExpressionableOptionsObject = {
+				field1: { isExpression: false, value: 200 }, // above max, but clamping is intentionally skipped
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// In the legacy (optionsSupportExpressions: false) path, number fields are treated as
+				// passthrough — validateInputValue is never called, so clampValues has no effect.
+				expect(result.parsedOptions.field1).toBe(200)
+			}
+		})
 	})
 
 	describe('parseEntityOptions with expressions', () => {

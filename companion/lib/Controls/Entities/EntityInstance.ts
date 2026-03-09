@@ -280,18 +280,21 @@ export class ControlEntityInstance {
 	 */
 	subscribe(recursive: boolean, onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		if (
-			!this.#data.disabled &&
 			(!onlyConnectionId || this.#data.connectionId === onlyConnectionId) &&
 			(!onlyType || this.#data.type === onlyType)
 		) {
 			if (this.#data.connectionId === 'internal') {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
+				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
+				// The EntityManager will not subscribe disabled entities to the module.
 				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 				})
 			}
-			this.#isInvertedManager.trackEntity(this)
+			if (!this.#data.disabled) {
+				this.#isInvertedManager.trackEntity(this)
+			}
 		}
 
 		if (recursive) {
