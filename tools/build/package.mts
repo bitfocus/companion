@@ -244,7 +244,11 @@ if (process.env.ELECTRON !== '0') {
 	}
 
 	// Ensure the node_modules was included, as that requies our patch to app-builder-lib to be applied
-	const nodeModulesDirs = await glob('electron-output/*/resources/node_modules', { onlyDirectories: true })
+	const expectedPathGlob =
+		platformInfo.runtimePlatform === 'darwin'
+			? 'electron-output/*/Companion.app/Contents/Resources/node_modules'
+			: 'electron-output/*/resources/node_modules'
+	const nodeModulesDirs = await glob(expectedPathGlob, { onlyDirectories: true })
 	if (nodeModulesDirs.length === 0) throw new Error('node_modules was not included in the electron build!')
 } else {
 	// TODO - populate dist with the rest of the bits
