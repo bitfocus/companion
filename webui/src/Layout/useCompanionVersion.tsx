@@ -47,6 +47,7 @@ function browserOS(parser: Bowser.Parser.Parser, hints?: any) {
 	return osName
 }
 
+let preciseVersion = false
 function formatBrowserString(parser: Bowser.Parser.Parser, hints?: any): string {
 	const browserName = parser.getBrowser().name || 'Unknown Browser'
 	let browserVersion = parser.getBrowser().version || 'Unknown Version'
@@ -57,6 +58,7 @@ function formatBrowserString(parser: Bowser.Parser.Parser, hints?: any): string 
 		)
 		if (match) {
 			browserVersion = match.version
+			preciseVersion = true
 		}
 	}
 	const browserOsString = browserOS(parser, hints)
@@ -64,7 +66,7 @@ function formatBrowserString(parser: Bowser.Parser.Parser, hints?: any): string 
 	const browserPlatform =
 		hints?.model || parser.getPlatform().model || parser.getPlatform().type || 'unknown platform (desktop?)'
 	// could add hints.architecture
-	return `${browserName} v${browserVersion} running OS: ${browserOsString} on: ${browserPlatform}${hints ? '' : ' (not precise)'}`
+	return `${browserName} v${browserVersion} running OS: ${browserOsString} on: ${browserPlatform}${preciseVersion ? '' : ' (browser version may not be precise)'}`
 }
 
 /*
