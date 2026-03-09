@@ -150,7 +150,9 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 	}, [connections, includeAll, filterActionsRecorder])
 
 	if (multiple) {
-		return <MultiDropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+		return (
+			<MultiDropdownInputField disabled={disabled} value={value} choices={choices} sortSelection setValue={setValue} />
+		)
 	} else {
 		return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
 	}

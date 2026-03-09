@@ -7,6 +7,7 @@ import { WindowedMenuList } from 'react-windowed-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { useComputed } from '~/Resources/util.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -16,6 +17,7 @@ interface MultiDropdownInputFieldProps {
 	minSelection?: number
 	minChoicesForSearch?: number
 	maxSelection?: number
+	sortSelection?: boolean
 	tooltip?: string
 	regex?: string
 	value: DropdownChoiceId[]
@@ -33,6 +35,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	minSelection,
 	minChoicesForSearch,
 	maxSelection,
+	sortSelection,
 	tooltip,
 	regex,
 	value,
@@ -47,7 +50,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 
 	if (value === undefined) value = [] as any
 
-	const currentValue = useMemo(() => {
+	const currentValue = useComputed(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
 		const res: DropdownChoiceInt[] = []
 		for (const val of selectedValue) {
@@ -60,8 +63,18 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 				res.push({ value: val, label: allowCustom ? String(val) : `?? (${val})` })
 			}
 		}
+		if (sortSelection) {
+			res.sort((a, b) => {
+				const aIndex = flatOptions.findIndex((o) => o.value == a.value)
+				const bIndex = flatOptions.findIndex((o) => o.value == b.value)
+				if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
+				if (aIndex !== -1) return -1
+				if (bIndex !== -1) return 1
+				return String(a.label).localeCompare(String(b.label))
+			})
+		}
 		return res
-	}, [value, flatOptions, allowCustom])
+	}, [value, flatOptions, allowCustom, sortSelection])
 
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {
