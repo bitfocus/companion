@@ -482,7 +482,7 @@ jobs:
       - name: Docker meta
         if: ${{ needs.linux-x64.outputs.do-docker }}
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ghcr.io/${{ github.repository }}/${{ env.IMAGE_NAME }}
