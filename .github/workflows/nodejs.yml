@@ -521,7 +521,7 @@ jobs:
           nslookup s4.bitfocus.io
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         if: ${{ steps.meta.outputs.tags }}
         env:
           DOCKER_BUILD_SUMMARY: false
