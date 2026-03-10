@@ -1504,6 +1504,92 @@ describe('InstanceEntityManager', () => {
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(0)
 		})
 
+		it('should not subscribe a disabled entity to the module', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: true,
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 5,
+					disabled: true,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+			expect(mockAdapter.upgradeActions).not.toHaveBeenCalled()
+			expect(mockAdapter.upgradeFeedbacks).not.toHaveBeenCalled()
+		})
+
+		it('should run upgrade scripts for a disabled entity that is out of date', async () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: true,
+				upgradeIndex: 3, // Lower than the current index (5)
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 3,
+					disabled: true,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+
+			vi.runAllTimers()
+
+			// Upgrade should be sent
+			expect(mockAdapter.upgradeActions).toHaveBeenCalledWith(
+				[
+					{
+						controlId: 'control-1',
+						entity: {
+							id: 'entity-1',
+							type: EntityModelType.Action,
+							definitionId: 'action-1',
+							connectionId: 'connection-1',
+							options: {},
+							upgradeIndex: 3,
+							disabled: true,
+						},
+					} satisfies Omit<EntityManagerActionEntity, 'parsedOptions'>,
+				],
+				5
+			)
+
+			// But no subscribe should follow
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+		})
+
 		it('should skip upgrading entities without lifecycle functions even with old upgradeIndex', async () => {
 			const mockEntityWithoutLifecycle = {
 				id: 'entity-without-lifecycle',
@@ -1552,6 +1638,120 @@ describe('InstanceEntityManager', () => {
 			// Should only be called once (for upgrade), not for regular processing
 			expect(mockAdapter.upgradeActions).toHaveBeenCalledTimes(1)
 			expect(mockAdapter.upgradeFeedbacks).toHaveBeenCalledTimes(0)
+		})
+
+		it('should send null to module when entity transitions from enabled to disabled', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: false,
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 5,
+					disabled: false,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Entity is subscribed
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map<string, EntityManagerActionEntity | null>([
+					['entity-1', expect.objectContaining({ controlId: 'control-1' })],
+				])
+			)
+
+			mockAdapter.updateActions.mockClear()
+
+			// Entity becomes disabled — forgetEntity is called
+			entityManager.forgetEntity('entity-1')
+			vi.runAllTimers()
+
+			// Module should be told to unsubscribe (null)
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map<string, EntityManagerActionEntity | null>([['entity-1', null]])
+			)
+		})
+
+		it('should subscribe to module when entity transitions from disabled to enabled', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				disabled: true,
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 5,
+					disabled: true,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Nothing sent while disabled
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
+
+			// Entity becomes enabled — trackEntity is called with disabled: false
+			mockEntity.disabled = false
+			mockEntity.asEntityModel.mockReturnValue({
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				connectionId: 'connection-1',
+				options: {},
+				upgradeIndex: 5,
+				disabled: false,
+			})
+
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// Module should now receive the subscription
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map<string, EntityManagerActionEntity | null>([
+					[
+						'entity-1',
+						{
+							controlId: 'control-1',
+							entity: {
+								id: 'entity-1',
+								type: EntityModelType.Action,
+								definitionId: 'action-1',
+								connectionId: 'connection-1',
+								options: {},
+								upgradeIndex: 5,
+								disabled: false,
+							} as any,
+							parsedOptions: {},
+						} satisfies EntityManagerActionEntity,
+					],
+				])
+			)
 		})
 	})
 
