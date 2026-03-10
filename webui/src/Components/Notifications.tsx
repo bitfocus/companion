@@ -81,7 +81,7 @@ export const NotificationsManager = forwardRef<NotificationsManagerRef>(function
 				return (
 					<React.Fragment key={toast.id}>
 						<CToast visible={toast.show} autohide={autohide} delay={toast.autohide} className="w-auto">
-							{(toast.title || !toast.autohide) && (
+							{(toast.title || toast.closeButton) && (
 								<CToastHeader closeButton={toast.closeButton}>{toast.title}</CToastHeader>
 							)}
 							<CToastBody>{toast.message}</CToastBody>
