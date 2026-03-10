@@ -77,8 +77,10 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 					<h4>Configured Surfaces</h4>
 
 					<p style={{ marginBottom: '0.5rem' }}>
-						Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the
-						Elgato Streamdeck application and click the Rescan button below.
+						Click on any item to edit the configuration of a currently-known surface or group.
+						<br />
+						If your streamdeck is missing from this list, you might need to close the Elgato Streamdeck application and
+						click the Rescan button below.
 					</p>
 
 					<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>

@@ -18,7 +18,10 @@ export function UserConfigHeadingRow({ label, tooltip }: UserConfigHeadingRowPro
 						{tooltip && (
 							<span className="ms-auto px-2">
 								<InlineHelp help={tooltip}>
-									<FontAwesomeIcon icon={faQuestionCircle} />
+									{/* button is just to enable focus for keyboard navigation */}
+									<button className="subhead-help-button" type="button" aria-label="context help">
+										<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
+									</button>
 								</InlineHelp>
 							</span>
 						)}

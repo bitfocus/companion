@@ -594,6 +594,13 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +30%);
 	}
 }
 
+.subhead-help-button {
+	border: 0;
+	background: 'none';
+	padding: 0;
+	cursor: 'pointer';
+}
+
 .secondary-panel {
 	padding-left: 15px;
 	padding-right: 5px;

@@ -22,8 +22,11 @@ function SurfaceSettingsPanel() {
 		<>
 			<SettingsPanelTitleBar />
 			<p style={{ marginBottom: '0em', fontStyle: 'italic', padding: '0.5em 2em' }}>
-				To configure a surface integration, select an item from the table below. For a specific surface, select it in
-				the Configured Surfaces table to the left.
+				To configure a surface integration, select an item from the table below.
+				<br />
+				For a specific surface, <span className="d-inline d-xl-none"> click the X button, above and </span>select it in
+				the Configured Surfaces table
+				<span className="d-none d-xl-inline"> to the left </span>.
 			</p>
 			<div className="secondary-panel-simple-body" style={{ paddingTop: 0, paddingRight: '1.25em' }}>
 				<table

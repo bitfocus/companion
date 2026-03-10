@@ -27,6 +27,7 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 			className={`float_right${visibilityClass ? ' ' + visibilityClass : ''} p-1 ms-2 panel-close-button`}
 			onClick={closeFn}
 			title="Close"
+			aria-label="Close"
 		>
 			{/* The inline styling here is to make the icon square */}
 			<FontAwesomeIcon icon={faTimes} size="lg" style={{ marginRight: '1px' }} />
@@ -63,7 +64,7 @@ export function ContextHelpButton({ hoverText, userGuide, size = '2xl' }: Contex
 	return (
 		<InlineHelp help={hoverText}>
 			<CButton variant="ghost" className={`context-help-button-${size} p-0`} {...userGuideProps}>
-				<FontAwesomeIcon icon={faQuestionCircle} size={size} />
+				<FontAwesomeIcon icon={faQuestionCircle} size={size} aria-label="context help" />
 			</CButton>
 		</InlineHelp>
 	)

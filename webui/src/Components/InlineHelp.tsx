@@ -12,7 +12,7 @@ export const InlineHelp = ({
 		<>
 			<CPopover
 				content={<div className="inline-help">{help}</div>}
-				trigger="hover"
+				trigger={['hover', 'focus', 'click']} // better for screen readers?
 				delay={{ show: 300, hide: 100 }}
 				animation={false}
 				placement="bottom"
