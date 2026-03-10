@@ -501,7 +501,7 @@ jobs:
 
       - name: Login to registry
         if: ${{ steps.meta.outputs.tags }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
