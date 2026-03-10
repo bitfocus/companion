@@ -596,9 +596,9 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +30%);
 
 .subhead-help-button {
 	border: 0;
-	background: 'none';
+	background: none;
 	padding: 0;
-	cursor: 'pointer';
+	cursor: pointer;
 }
 
 .secondary-panel {
