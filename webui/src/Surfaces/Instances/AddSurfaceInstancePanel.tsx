@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { observer } from 'mobx-react-lite'
-import { useNavigate, useLocation } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
 import type { AddInstanceService } from '~/Instances/AddInstanceService'
@@ -58,28 +58,16 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 function useAddSurfaceInstanceService(): AddInstanceService {
 	const addMutation = useMutationExt(trpc.instances.surfaces.add.mutationOptions())
 	const navigate = useNavigate() // from: is only needed to resolve relative paths, so not needed here...
-	const { pathname } = useLocation()
-
-	const homepage = pathname.split('/', 3).join('/') // first two elements of the path ex: /surfaces/configured
-	// this is not pretty but should do for the moment
-	let instancePage: string
-	if (pathname.endsWith('add')) {
-		// /surfaces/configured/integrations/add
-		instancePage = pathname.replace('add', '$instanceId') // replace the filename part of the path
-	} else {
-		// /surfaces/configured/integrations
-		instancePage = homepage + '/integrations/$instanceId' // add to the path
-	}
 
 	return useMemo(
 		() => ({
 			moduleType: ModuleInstanceType.Surface,
 
 			closeAddInstance: () => {
-				void navigate({ to: homepage })
+				void navigate({ to: '/surfaces/configured' })
 			},
 			openConfigureInstance: (instanceId) => {
-				void navigate({ to: instancePage, params: { instanceId } })
+				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
 			},
 
 			performAddInstance: async (moduleInfo, label, versionId) => {
@@ -95,6 +83,6 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 				return moduleInfo.shortname
 			},
 		}),
-		[navigate, addMutation, homepage, instancePage]
+		[navigate, addMutation]
 	)
 }

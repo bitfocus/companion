@@ -16,7 +16,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { SurfaceInstancesListContextProvider, useSurfaceInstancesListContext } from './SurfaceInstancesListContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { SurfaceInstanceTableRow } from './SurfaceInstanceTableRow.js'
-import { useLocation, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type {
@@ -35,29 +35,24 @@ export interface VisibleSurfaceInstancesState {
 
 interface SurfaceInstancesListProps {
 	selectedInstanceId: string | null
-	toDir?: string
 }
 
 export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	selectedInstanceId,
-	toDir,
 }: SurfaceInstancesListProps) {
 	const { surfaceInstances, instanceStatuses } = useContext(RootAppStoreContext)
-
-	const { pathname } = useLocation()
-	const homepage = pathname.split('/', 3).join('/') // first two elements of the path ex: /surfaces/configured
 
 	const navigate = useNavigate()
 
 	const doConfigureInstance = useCallback(
 		(instanceId: string | null) => {
 			if (!instanceId) {
-				void navigate({ to: homepage })
+				void navigate({ to: '/surfaces/configured' })
 			} else {
-				void navigate({ to: `/surfaces/${toDir ?? 'configured/integrations'}/$instanceId`, params: { instanceId } })
+				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
 			}
 		},
-		[navigate, toDir, homepage]
+		[navigate]
 	)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -99,7 +94,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 					<CButton
 						color="primary"
 						size="sm"
-						onClick={() => void navigate({ to: `/surfaces/${toDir ?? 'configured/integrations'}/add` })}
+						onClick={() => void navigate({ to: '/surfaces/configured/integrations/add' })}
 					>
 						<FontAwesomeIcon icon={faPlug} className="me-1" />
 						Add Surface Integration

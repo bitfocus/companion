@@ -50,7 +50,7 @@ function SurfaceSettingsPanel() {
 				</table>
 				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
 				<div style={{ border: '1px solid var(--cui-border-color)', borderTop: 0, paddingTop: '0.5em' }}>
-					<SurfaceInstancesList selectedInstanceId={null} toDir="configured/integrations" />
+					<SurfaceInstancesList selectedInstanceId={null} />
 					{userConfigProps && (
 						<>
 							<table>
