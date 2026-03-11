@@ -1,11 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useCallback } from 'react'
 import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
 //import { SurfacesConfig } from '~/UserConfig/Sections/SurfacesConfig'
 import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 import { useUserConfigProps } from '~/UserConfig/Context'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
-import { useConfiguredSurfaceContext } from '~/Surfaces/ConfiguredSurfacesContext'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelHeaderIcons'
 
@@ -102,11 +101,11 @@ function SurfaceSettingsPanel() {
 }
 
 function SettingsPanelTitleBar() {
-	const setPanelVisibility = useConfiguredSurfaceContext()
+	const navigate = useNavigate({ from: '/surfaces/configured' })
 	// note that the close button is hidden when the window is wide enough.
 	const doClose = useCallback(() => {
-		setPanelVisibility(false)
-	}, [setPanelVisibility])
+		void navigate({ to: '.', search: { showSettings: undefined } })
+	}, [navigate])
 
 	return (
 		<div className="secondary-panel-simple-header">

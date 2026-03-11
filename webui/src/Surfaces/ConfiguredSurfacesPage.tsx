@@ -6,15 +6,15 @@ import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
 import { MyErrorBoundary } from '~/Resources/Error'
-import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
+import { Outlet, useMatchRoute, useNavigate, useSearch, useRouterState } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
-import { ConfiguredSurfaceContext } from './ConfiguredSurfacesContext'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
+	const pathname = useRouterState({ select: (s) => s.location.pathname })
 
 	const routeMatch = matchRoute({ to: '/surfaces/configured/$itemId' })
 	const selectedItemId = routeMatch ? routeMatch.itemId : null
@@ -46,10 +46,17 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		addGroupModalRef.current?.show()
 	}, [])
 
-	const [showSettings, setShowSettings] = useState(false)
-	const settingsVisibility = useCallback(() => {
-		setShowSettings((val) => !val)
-	}, [])
+	// Handle the various cases in which we want to show the settings panel (when window is narrow)
+	// 1. if one of the integration subpanels are currently visible
+	const showingIntegrations = pathname.startsWith('/surfaces/configured/integrations')
+	// 2. if the user clicked the "Show Settings" button
+	const { showSettings: showSettingsParam } = useSearch({ from: '/_app/surfaces/configured' })
+	const handleShowSettings = useCallback(() => {
+		// note: the search term will propagate to the other sub-windows, so when the window is narrow,
+		// subwindows will return to the settings panel (since the user must have gotten to the sub-panel from there).
+		void navigate({ to: '.', search: { showSettings: true } })
+	}, [navigate])
+	const showSettings = showSettingsParam || showingIntegrations
 
 	const selectItem = useCallback(
 		(itemId: string | null) => {
@@ -103,7 +110,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 
-					<CButton color="info" className="d-xl-none float-end" size="sm" onClick={settingsVisibility}>
+					<CButton color="info" className="d-xl-none float-end" size="sm" onClick={handleShowSettings}>
 						<FontAwesomeIcon icon={faCog} /> Show Settings
 					</CButton>
 				</div>
@@ -124,9 +131,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
-						<ConfiguredSurfaceContext.Provider value={{ setShowSettings }}>
-							<Outlet />
-						</ConfiguredSurfaceContext.Provider>
+						<Outlet />
 					</MyErrorBoundary>
 				</div>
 			</CCol>
