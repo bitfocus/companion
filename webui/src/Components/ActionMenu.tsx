@@ -5,15 +5,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import { type IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Link } from '@tanstack/react-router'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 // provide a declarative menu specification:
-interface MenuActiveData {
+export interface MenuActiveData {
 	readonly label: string
 	readonly to: string | (() => void) // URL string or action callback
 	readonly id?: string // used for key and to allow individually styled items, see code
 	readonly icon?: IconDefinition | (() => ReactElement) | 'none'
+	readonly fullWidth?: boolean
 	readonly tooltip?: string
 	readonly inNewTab?: boolean
+	readonly copyToClipboard?: Omit<CopyToClipboard.Props, 'children'> // if you want something copied to the clipboard on click
 }
 
 interface MenuSeparatorData {
@@ -62,7 +65,7 @@ export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
 			: { as: 'button' as ElementType, onClick: data.to }
 
 		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
-		return (
+		const menuItem = (
 			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
 			<CDropdownItem
 				type={isUrl ? undefined : 'button'}
@@ -70,7 +73,7 @@ export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
 				title={data.tooltip}
 				{...navProps}
 			>
-				{data.icon !== 'none' && (
+				{!data.fullWidth && data.icon !== 'none' && (
 					<span className="dropdown-item-icon">
 						{typeof data.icon === 'function' ? (
 							data.icon()
@@ -84,8 +87,11 @@ export function MenuItem({ data }: { data: MenuItemData }): React.JSX.Element {
 				)}
 				<span className="dropdown-item-label">{data.label}</span>
 
-				{data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
+				{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
 			</CDropdownItem>
 		)
+
+		const clip = data.copyToClipboard
+		return clip ? <CopyToClipboard {...clip}>{menuItem}</CopyToClipboard> : menuItem
 	}
 }

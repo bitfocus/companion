@@ -18,6 +18,8 @@ import { EventEmitter } from 'events'
 import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
 import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
+import os from 'os'
+import z from 'zod'
 
 type UpdateEvents = {
 	info: [info: AppUpdateInfo]
@@ -116,12 +118,25 @@ export class UIUpdate {
 	createTrpcRouter() {
 		const self = this
 		return router({
-			version: publicProcedure.query(() => {
-				return {
-					appVersion: this.#appInfo.appVersion,
-					appBuild: this.#appInfo.appBuild,
-				}
-			}),
+			version: publicProcedure
+				.input(
+					z
+						.object({
+							all: z.boolean(),
+						})
+						.optional()
+				)
+				.query(({ input }) => {
+					let osName = os.type()
+					if (/windows/i.test(osName)) {
+						osName = os.version()
+					}
+					return {
+						appVersion: this.#appInfo.appVersion,
+						appBuild: this.#appInfo.appBuild,
+						os: input?.all ? `${osName} (v${os.release()}; ${os.arch()})` : undefined,
+					}
+				}),
 
 			updateInfo: publicProcedure.subscription(async function* (opts) {
 				const changes = toIterable(self.#updateEvents, 'info', opts.signal)
