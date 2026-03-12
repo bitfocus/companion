@@ -61,8 +61,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const tileInnerSize = 72 * (drawScale ?? 1)
 		const tilePadding = Math.min(6, tileInnerSize * 0.05)
 		const tileSize = tileInnerSize + tilePadding * 2
-		const growWidth = doGrow ? 90 : 0
-		const growHeight = doGrow ? 60 : 0
+		const growWidth = doGrow ? 90 : 5 // need at least 5 to eliminate the vertical scroll bar. Why?
+		const growHeight = doGrow ? 60 : 5
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
 		const { scrollX: scrollXRaw, scrollY: scrollYRaw, setRef: setScrollRef } = useScrollPosition<HTMLDivElement>()
@@ -230,8 +230,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			doGrow('bottom', amount)
 		}, [doGrow])
 
-		const canvasWidth = Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2
-		const canvasHeight = Math.max(countRows * tileSize, windowSize.height) + growHeight * 2
+		const canvasWidth = countColumns * tileSize + growWidth * 2
+		const canvasHeight = countRows * tileSize + growHeight * 2
 
 		const gridCanvasStyle = useMemo(
 			() => ({

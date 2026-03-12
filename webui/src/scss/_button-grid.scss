@@ -83,8 +83,8 @@
 }
 
 .button-grid-panel {
-	display: grid;
-	grid-template-rows: auto 1fr auto;
+	display: flex;
+	flex-direction: column;
 	height: 100%;
 }
 
@@ -103,12 +103,11 @@
 }
 
 .button-infinite-grid {
-	height: 100%;
-	max-height: 65vh;
+	height: 100%; // needed to get the scrollbar.
 
 	background-color: #222;
 	// border-radius: 5px; // A radius here breaks safari, causing the div to draw over the scrollbars
-	overflow: scroll;
+	overflow: auto;
 
 	&.button-armed {
 		background-color: #7f1111;
@@ -116,8 +115,6 @@
 
 	.button-grid-canvas {
 		position: relative;
-		width: 1000px;
-		height: 1000px;
 
 		// default grid scale, used for button text
 		--grid-scale: 1;
