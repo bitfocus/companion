@@ -76,6 +76,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 			{ wait: 1000 } // give the user a chance to make it narrow again if they overshot.
 		)
 
+		handler() // run once on mount or changed dependency.
 		window.addEventListener('resize', handler)
 		return () => {
 			handler.cancel()
