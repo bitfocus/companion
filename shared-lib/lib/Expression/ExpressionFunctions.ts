@@ -7,6 +7,63 @@ function toString(v: any): string {
 	return v + ''
 }
 
+function toDate(v: any): Date | null {
+	if (v instanceof Date) return v
+	if (typeof v === 'number') return new Date(v)
+	if (typeof v === 'string') {
+		const num = Number(v)
+		if (!isNaN(num) && v.trim().length > 0) return new Date(num)
+		const d = new Date(v)
+		if (!isNaN(d.getTime())) return d
+	}
+	return null
+}
+
+const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+
+function getDateParts(
+	d: Date,
+	tz?: string
+): { year: number; month: number; day: number; hour: number; minute: number; second: number; weekday: number } | null {
+	if (!tz) {
+		return {
+			year: d.getFullYear(),
+			month: d.getMonth() + 1,
+			day: d.getDate(),
+			hour: d.getHours(),
+			minute: d.getMinutes(),
+			second: d.getSeconds(),
+			weekday: d.getDay(),
+		}
+	}
+	try {
+		const parts = new Intl.DateTimeFormat('en-US', {
+			timeZone: tz,
+			year: 'numeric',
+			month: 'numeric',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: 'numeric',
+			second: 'numeric',
+			weekday: 'short',
+			hourCycle: 'h23',
+		}).formatToParts(d)
+		const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? NaN)
+		const wd = parts.find((p) => p.type === 'weekday')?.value
+		return {
+			year: get('year'),
+			month: get('month'),
+			day: get('day'),
+			hour: get('hour'),
+			minute: get('minute'),
+			second: get('second'),
+			weekday: wd ? (weekdayMap[wd] ?? NaN) : NaN,
+		}
+	} catch {
+		return null
+	}
+}
+
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// General operations
@@ -268,5 +325,53 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		if (isNaN(diff)) return 'ERR'
 
 		return Math.round(diff / 1000)
+	},
+
+	// Date operations
+	parseDate: (v) => {
+		const d = toDate(v ?? Date.now())
+		return d ? d.getTime() : NaN
+	},
+	dateYear: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.year : NaN
+	},
+	dateMonth: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.month : NaN
+	},
+	dateDay: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.day : NaN
+	},
+	dateHour: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.hour : NaN
+	},
+	dateMinute: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.minute : NaN
+	},
+	dateSecond: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.second : NaN
+	},
+	dateWeekday: (v, tz) => {
+		const d = toDate(v ?? Date.now())
+		if (!d) return NaN
+		const parts = getDateParts(d, tz)
+		return parts ? parts.weekday : NaN
 	},
 }
