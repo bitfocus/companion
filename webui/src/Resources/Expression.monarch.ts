@@ -228,6 +228,51 @@ export const builtinFunctionCompletions: Array<{
 		detail: 'timeDiff(from, to)',
 		documentation: 'Calculates the difference between two times in seconds',
 	},
+
+	// Date operations
+	{
+		name: 'parseDate',
+		detail: 'parseDate(value?)',
+		documentation:
+			'Parses a date value and returns Unix timestamp in milliseconds. Accepts numbers (Unix ms), ISO 8601 strings, or other parseable date strings. Defaults to current time if no value is provided.',
+	},
+	{
+		name: 'dateYear',
+		detail: 'dateYear(value?, timezone?)',
+		documentation:
+			'Returns the year (e.g. 2024) from a date value. Optional IANA timezone (e.g. "UTC", "America/New_York").',
+	},
+	{
+		name: 'dateMonth',
+		detail: 'dateMonth(value?, timezone?)',
+		documentation: 'Returns the month (1-12) from a date value. 1 = January, 12 = December. Optional IANA timezone.',
+	},
+	{
+		name: 'dateDay',
+		detail: 'dateDay(value?, timezone?)',
+		documentation: 'Returns the day of the month (1-31) from a date value. Optional IANA timezone.',
+	},
+	{
+		name: 'dateHour',
+		detail: 'dateHour(value?, timezone?)',
+		documentation: 'Returns the hour (0-23) from a date value. Optional IANA timezone.',
+	},
+	{
+		name: 'dateMinute',
+		detail: 'dateMinute(value?, timezone?)',
+		documentation: 'Returns the minute (0-59) from a date value. Optional IANA timezone.',
+	},
+	{
+		name: 'dateSecond',
+		detail: 'dateSecond(value?, timezone?)',
+		documentation: 'Returns the second (0-59) from a date value. Optional IANA timezone.',
+	},
+	{
+		name: 'dateWeekday',
+		detail: 'dateWeekday(value?, timezone?)',
+		documentation:
+			'Returns the day of the week (0-6) from a date value. 0 = Sunday, 6 = Saturday. Optional IANA timezone.',
+	},
 ]
 
 const keywords = ['return', 'undefined']
