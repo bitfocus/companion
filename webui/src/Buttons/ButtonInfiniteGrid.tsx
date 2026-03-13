@@ -37,6 +37,7 @@ interface ButtonInfiniteGridProps {
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
+	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
@@ -51,6 +52,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			buttonIconFactory,
 			drawScale,
 			maxHeightToMatchCanvas,
+			setViewportMinHeight,
 		},
 		ref
 	) {
@@ -71,6 +73,12 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		// This prevents visible buttons from being unmounted when the grid is hidden (e.g., tab switch)
 		const lastValidWindowSize = useRef<{ width: number; height: number } | null>(null)
 		const lastValidScroll = useRef<{ x: number; y: number } | null>(null)
+
+		useEffect(() => {
+			if (setViewportMinHeight) {
+				setViewportMinHeight(2 * tileSize + growHeight + 15) // 15 if for the horizontal scrollbar.
+			}
+		}, [growHeight, setViewportMinHeight, tileSize])
 
 		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
 		useEffect(() => {
@@ -230,8 +238,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			doGrow('bottom', amount)
 		}, [doGrow])
 
-		const canvasWidth = Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2
-		const canvasHeight = Math.max(countRows * tileSize, windowSize.height) + growHeight * 2
+		const canvasWidth = countColumns * tileSize + growWidth * 2
+		const canvasHeight = countRows * tileSize + growHeight * 2
 
 		const gridCanvasStyle = useMemo(
 			() => ({
