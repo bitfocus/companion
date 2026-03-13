@@ -37,6 +37,7 @@ interface ButtonInfiniteGridProps {
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
+	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
@@ -51,6 +52,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			buttonIconFactory,
 			drawScale,
 			maxHeightToMatchCanvas,
+			setViewportMinHeight,
 		},
 		ref
 	) {
@@ -61,8 +63,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const tileInnerSize = 72 * (drawScale ?? 1)
 		const tilePadding = Math.min(6, tileInnerSize * 0.05)
 		const tileSize = tileInnerSize + tilePadding * 2
-		const growWidth = doGrow ? 90 : 5 // need at least 5 to eliminate the vertical scroll bar. Why?
-		const growHeight = doGrow ? 60 : 5
+		const growWidth = doGrow ? 90 : 0
+		const growHeight = doGrow ? 60 : 0
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
 		const { scrollX: scrollXRaw, scrollY: scrollYRaw, setRef: setScrollRef } = useScrollPosition<HTMLDivElement>()
@@ -71,6 +73,12 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		// This prevents visible buttons from being unmounted when the grid is hidden (e.g., tab switch)
 		const lastValidWindowSize = useRef<{ width: number; height: number } | null>(null)
 		const lastValidScroll = useRef<{ x: number; y: number } | null>(null)
+
+		useEffect(() => {
+			if (setViewportMinHeight) {
+				setViewportMinHeight(2 * tileSize + growHeight + 15) // 15 if for the horizontal scrollbar.
+			}
+		}, [growHeight, setViewportMinHeight, tileSize])
 
 		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
 		useEffect(() => {

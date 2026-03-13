@@ -1,5 +1,5 @@
 import { CAlert, CButton, CCol, CRow } from '@coreui/react'
-import React, { useCallback, useContext, useRef } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
@@ -146,6 +146,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	)
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+	const [viewportMinHeight, setViewportMinHeight] = useState(300)
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
@@ -182,7 +183,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 					</CCol>
 				</CRow>
 			</div>
-			<div className="button-grid-panel-content">
+			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }}>
 				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
 						ref={gridRef}
@@ -194,6 +195,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
 						buttonIconFactory={PrimaryButtonGridIcon}
 						drawScale={gridZoomValue / 100}
+						setViewportMinHeight={setViewportMinHeight}
 					/>
 				)}
 			</div>
