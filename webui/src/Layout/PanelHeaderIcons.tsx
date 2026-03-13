@@ -5,6 +5,7 @@ import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link } from '@tanstack/react-router'
 import { InlineHelp } from '~/Components/InlineHelp'
+import { makeAbsolutePath } from '~/Resources/util'
 
 interface CloseButtonProps {
 	closeFn: () => void
@@ -46,7 +47,7 @@ export function ContextHelpButton({ hoverText, userGuide, size = '2xl' }: Contex
 	const userGuideProps =
 		typeof userGuide === 'string'
 			? {
-					to: userGuide,
+					href: makeAbsolutePath(userGuide),
 					target: '_blank',
 					rel: 'noopener noreferrer',
 					as: Link,
