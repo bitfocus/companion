@@ -47,7 +47,6 @@ import { Route as AppSurfacesOutboundRouteImport } from './routes/_app/surfaces/
 import { Route as AppSurfacesDiscoverRouteImport } from './routes/_app/surfaces/discover.tsx'
 import { Route as AppSurfacesConfiguredRouteImport } from './routes/_app/surfaces/configured.tsx'
 import { Route as AppSurfacesSplatRouteImport } from './routes/_app/surfaces/$.tsx'
-import { Route as AppSettingsSurfacesRouteImport } from './routes/_app/settings/surfaces.tsx'
 import { Route as AppSettingsProtocolsRouteImport } from './routes/_app/settings/protocols.tsx'
 import { Route as AppSettingsGeneralRouteImport } from './routes/_app/settings/general.tsx'
 import { Route as AppSettingsButtonsRouteImport } from './routes/_app/settings/buttons.tsx'
@@ -276,11 +275,6 @@ const AppSurfacesSplatRoute = AppSurfacesSplatRouteImport.update({
   path: '/surfaces/$',
   getParentRoute: () => AppRoute,
 } as any)
-const AppSettingsSurfacesRoute = AppSettingsSurfacesRouteImport.update({
-  id: '/settings/surfaces',
-  path: '/settings/surfaces',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppSettingsProtocolsRoute = AppSettingsProtocolsRouteImport.update({
   id: '/settings/protocols',
   path: '/settings/protocols',
@@ -440,7 +434,6 @@ export interface FileRoutesByFullPath {
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
   '/settings/protocols': typeof AppSettingsProtocolsRoute
-  '/settings/surfaces': typeof AppSettingsSurfacesRoute
   '/surfaces/$': typeof AppSurfacesSplatRoute
   '/surfaces/configured': typeof AppSurfacesConfiguredRouteWithChildren
   '/surfaces/discover': typeof AppSurfacesDiscoverRoute
@@ -498,7 +491,6 @@ export interface FileRoutesByTo {
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
   '/settings/protocols': typeof AppSettingsProtocolsRoute
-  '/settings/surfaces': typeof AppSettingsSurfacesRoute
   '/surfaces/$': typeof AppSurfacesSplatRoute
   '/surfaces/discover': typeof AppSurfacesDiscoverRoute
   '/surfaces/outbound': typeof AppSurfacesOutboundRoute
@@ -560,7 +552,6 @@ export interface FileRoutesById {
   '/_app/settings/buttons': typeof AppSettingsButtonsRoute
   '/_app/settings/general': typeof AppSettingsGeneralRoute
   '/_app/settings/protocols': typeof AppSettingsProtocolsRoute
-  '/_app/settings/surfaces': typeof AppSettingsSurfacesRoute
   '/_app/surfaces/$': typeof AppSurfacesSplatRoute
   '/_app/surfaces/configured': typeof AppSurfacesConfiguredRouteWithChildren
   '/_app/surfaces/discover': typeof AppSurfacesDiscoverRoute
@@ -625,7 +616,6 @@ export interface FileRouteTypes {
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/protocols'
-    | '/settings/surfaces'
     | '/surfaces/$'
     | '/surfaces/configured'
     | '/surfaces/discover'
@@ -683,7 +673,6 @@ export interface FileRouteTypes {
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/protocols'
-    | '/settings/surfaces'
     | '/surfaces/$'
     | '/surfaces/discover'
     | '/surfaces/outbound'
@@ -744,7 +733,6 @@ export interface FileRouteTypes {
     | '/_app/settings/buttons'
     | '/_app/settings/general'
     | '/_app/settings/protocols'
-    | '/_app/settings/surfaces'
     | '/_app/surfaces/$'
     | '/_app/surfaces/configured'
     | '/_app/surfaces/discover'
@@ -1064,13 +1052,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSurfacesSplatRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/settings/surfaces': {
-      id: '/_app/settings/surfaces'
-      path: '/settings/surfaces'
-      fullPath: '/settings/surfaces'
-      preLoaderRoute: typeof AppSettingsSurfacesRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/settings/protocols': {
       id: '/_app/settings/protocols'
       path: '/settings/protocols'
@@ -1374,7 +1355,6 @@ interface AppRouteChildren {
   AppSettingsButtonsRoute: typeof AppSettingsButtonsRoute
   AppSettingsGeneralRoute: typeof AppSettingsGeneralRoute
   AppSettingsProtocolsRoute: typeof AppSettingsProtocolsRoute
-  AppSettingsSurfacesRoute: typeof AppSettingsSurfacesRoute
   AppSurfacesSplatRoute: typeof AppSurfacesSplatRoute
   AppSurfacesConfiguredRoute: typeof AppSurfacesConfiguredRouteWithChildren
   AppSurfacesDiscoverRoute: typeof AppSurfacesDiscoverRoute
@@ -1403,7 +1383,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsButtonsRoute: AppSettingsButtonsRoute,
   AppSettingsGeneralRoute: AppSettingsGeneralRoute,
   AppSettingsProtocolsRoute: AppSettingsProtocolsRoute,
-  AppSettingsSurfacesRoute: AppSettingsSurfacesRoute,
   AppSurfacesSplatRoute: AppSurfacesSplatRoute,
   AppSurfacesConfiguredRoute: AppSurfacesConfiguredRouteWithChildren,
   AppSurfacesDiscoverRoute: AppSurfacesDiscoverRoute,

@@ -331,7 +331,12 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
 					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
 					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
-					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
+					<SidebarMenuItem
+						name="Surfaces"
+						icon={null}
+						path="/surfaces/configured"
+						title="Surface settings have moved to the main Surfaces Page."
+					/>
 					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
 					<SidebarMenuItem name="Backups" icon={null} path="/settings/backups" />
 					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
