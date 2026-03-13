@@ -104,7 +104,7 @@
 
 .button-infinite-grid {
 	height: 100%; // needed to get the scrollbar.
-	margin-bottom: 6px; // without this the vertical scrollbar won't go away 6px for 8 rows; 5px for fewer rows
+	margin-bottom: 6px; // without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows
 	// (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive)
 
 	scrollbar-color: #666 #222; // match the scrollbar bg to the background-color so corner-rounding is apparent even with scrollbars present
