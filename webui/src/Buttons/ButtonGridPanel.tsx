@@ -146,7 +146,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	)
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
-	const [viewportMinHeight, setViewportMinHeight] = useState(300)
+	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">

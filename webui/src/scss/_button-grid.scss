@@ -91,7 +91,7 @@
 .button-grid-panel-content {
 	overflow: hidden;
 	border-radius: 8px;
-	// min-height: 250px;  set min-height in tsx
+	// min-height: 250px;  instead, set min-height in tsx to match button-sizes.
 }
 
 .button-grid-header {
@@ -104,7 +104,9 @@
 
 .button-infinite-grid {
 	height: 100%; // needed to get the scrollbar.
-	margin-bottom: 0.5em; // without this (or adding 5-6px to the button-grid-canvas height in tsx) the vertical scrollbar won't go away
+	margin-bottom: 6px; // without this the vertical scrollbar won't go away 6px for 8 rows; 5px for fewer rows
+	// (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive)
+
 	scrollbar-color: #666 #222; // match the scrollbar bg to the background-color so corner-rounding is apparent even with scrollbars present
 	background-color: #222;
 	// border-radius: 5px; // A radius here breaks safari, causing the div to draw over the scrollbars
