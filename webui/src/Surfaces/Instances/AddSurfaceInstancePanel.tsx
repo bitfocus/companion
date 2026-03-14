@@ -33,7 +33,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 								Can't find your surface?{' '}
 								<a
 									target="_blank"
-									href={makeAbsolutePath('/getting-started#6_modules.md')}
+									href={makeAbsolutePath('/user-guide/config/modules')}
 									className="text-decoration-none"
 								>
 									Check our guidance for getting device support
