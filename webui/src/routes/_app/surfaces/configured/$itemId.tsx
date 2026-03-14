@@ -1,16 +1,16 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import React, { useContext } from 'react'
 import { SurfaceEditPanel } from '~/Surfaces/EditPanel.js'
 import { useComputed } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useSurfacesSubscription } from '~/Hooks/useSurfacesSubscription'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { surfaces } = useContext(RootAppStoreContext)
 	const { itemId } = Route.useParams()
-
-	const navigate = Route.useNavigate()
+	const dataReady = useSurfacesSubscription(surfaces)
 
 	// Determine if this is a surface or group and validate
 	const itemInfo = useComputed(() => {
@@ -36,22 +36,19 @@ const RouteComponent = observer(function RouteComponent() {
 		return null
 	}, [itemId, surfaces])
 
-	// Redirect if item not found
-	useComputed(() => {
-		if (itemId && !itemInfo) {
-			void navigate({ to: `/surfaces/configured` })
-		}
-	}, [navigate, itemId, itemInfo])
-
-	if (!itemInfo) {
-		return null
+	if (dataReady && !itemInfo) {
+		// Redirect if itemId is not valid
+		// condition was: itemId && !itemInfo but if itemId is missing, we wouldn't reach this route: it would go to index.tsx
+		return <Navigate to="/surfaces/configured" replace />
+	} else {
+		// note: !dataReady is handled in SurfaceEditPanel...
+		// but in truth we'd never get here when !dataReady because Companion displays a "loading" bar until dataReady is true
+		return (
+			<MyErrorBoundary>
+				<SurfaceEditPanel key={itemId} surfaceId={itemInfo?.surfaceId ?? null} groupId={itemInfo?.groupId ?? null} />
+			</MyErrorBoundary>
+		)
 	}
-
-	return (
-		<MyErrorBoundary>
-			<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId} groupId={itemInfo.groupId} />
-		</MyErrorBoundary>
-	)
 })
 
 export const Route = createFileRoute('/_app/surfaces/configured/$itemId')({

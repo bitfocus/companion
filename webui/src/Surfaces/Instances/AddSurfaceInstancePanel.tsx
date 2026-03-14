@@ -7,12 +7,18 @@ import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
-export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel() {
+interface AddSurfaceInstancePanelProps {
+	isSubpanel?: boolean
+}
+export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel({
+	isSubpanel,
+}: AddSurfaceInstancePanelProps) {
 	const service = useAddSurfaceInstanceService()
 
 	return (
 		<AddInstancePanel
 			service={service}
+			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
 			description={(storeCount) =>
 				storeCount > 0 ? (
@@ -27,7 +33,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 								Can't find your surface?{' '}
 								<a
 									target="_blank"
-									href={makeAbsolutePath('/getting-started#6_modules.md')}
+									href={makeAbsolutePath('/user-guide/config/modules')}
 									className="text-decoration-none"
 								>
 									Check our guidance for getting device support
@@ -50,18 +56,18 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 })
 
 function useAddSurfaceInstanceService(): AddInstanceService {
-	const navigate = useNavigate({ from: '/surfaces/integrations' })
 	const addMutation = useMutationExt(trpc.instances.surfaces.add.mutationOptions())
+	const navigate = useNavigate() // from: is only needed to resolve relative paths, so not needed here...
 
 	return useMemo(
 		() => ({
 			moduleType: ModuleInstanceType.Surface,
 
 			closeAddInstance: () => {
-				void navigate({ to: '/surfaces/integrations' })
+				void navigate({ to: '/surfaces/configured' })
 			},
 			openConfigureInstance: (instanceId) => {
-				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
+				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
 			},
 
 			performAddInstance: async (moduleInfo, label, versionId) => {

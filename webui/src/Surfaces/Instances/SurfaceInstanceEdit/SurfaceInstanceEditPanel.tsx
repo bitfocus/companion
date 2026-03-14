@@ -67,9 +67,10 @@ function useInstanceEditPanelService(
 ): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/surfaces/integrations/$instanceId` })
+	const navigate = useNavigate()
+
 	const closePanel = useCallback(() => {
-		void navigate({ to: `/surfaces/integrations` })
+		void navigate({ to: '/surfaces/configured' })
 	}, [navigate])
 
 	const setConfigMutation = useMutationExt(trpc.instances.surfaces.setConfig.mutationOptions())

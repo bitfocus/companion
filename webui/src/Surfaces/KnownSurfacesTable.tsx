@@ -171,12 +171,13 @@ const ManualGroupRow = observer(function ManualGroupRow({
 		[selectItem, group.id]
 	)
 
+	const groupName = group.displayName || 'Surface Group'
 	return (
 		<>
 			<div className={classNames('grid-row', { 'grid-row-selected': isGroupSelected })} onClick={handleGroupClick}>
 				<div className="grid-cell">#{group.index}</div>
-				<div className="grid-cell">
-					<b>{group.displayName || 'Surface Group'}</b>
+				<div className="grid-cell" title={`Click to edit ${groupName} group settings.`}>
+					<b>{groupName}</b>
 					<div className="surface-id-row">
 						<span className="surface-id" title={group.id}>
 							{group.id}
@@ -269,9 +270,16 @@ const SurfaceRow = observer(function SurfaceRow({
 			<div className="grid-cell">
 				{index !== null ? `#${index}` : ''}
 				{/* Show disabled icon for surfaces that respect the enabled setting and are disabled */}
-				{surfaceDisabled && <FontAwesomeIcon icon={faPowerOff} color="gray" title="Disabled" />}
+				{surfaceDisabled && (
+					<span title="Disabled">
+						<FontAwesomeIcon icon={faPowerOff} color="gray" aria-label="Disabled" />
+					</span>
+				)}
 			</div>
-			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
+			<div
+				className={classNames('grid-cell', { 'ps-4': isInGroup })}
+				title={`Click to edit ${surface.id} surface settings.`}
+			>
 				<div>
 					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 					{!!surface.hasFirmwareUpdates && (
@@ -284,9 +292,7 @@ const SurfaceRow = observer(function SurfaceRow({
 					)}
 				</div>
 				<div className="surface-id-row">
-					<span className="surface-id" title={surface.id}>
-						{surface.id}
-					</span>
+					<span className="surface-id">{surface.id}</span>
 					<CopyToClipboard text={surface.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
 						<CButton size="sm" title="Copy surface id" className="p-0 px-1">
 							<FontAwesomeIcon icon={faCopy} color="#000" />
