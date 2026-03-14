@@ -67,8 +67,7 @@ function useInstanceEditPanelService(
 ): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	// from: is only needed to resolve relative paths (and using string var caused problems)...
-	const navigate = useNavigate() //{ from: `/surfaces/configured/integrations/$instanceId` }
+	const navigate = useNavigate()
 
 	const closePanel = useCallback(() => {
 		void navigate({ to: '/surfaces/configured' })

@@ -1,20 +1,16 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import React, { useCallback } from 'react'
 import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
-//import { SurfacesConfig } from '~/UserConfig/Sections/SurfacesConfig'
 import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 import { useUserConfigProps } from '~/UserConfig/Context'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelHeaderIcons'
-
-export const Route = createFileRoute('/_app/surfaces/configured/')({
-	component: SurfaceSettingsPanel,
-})
+import { observer } from 'mobx-react-lite'
 
 // settings panel (shown when no configured surface is selected)
 //  Shows surface user-settings and the integrations table (SurfaceInstancesList)
-function SurfaceSettingsPanel() {
+const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 	const userConfigProps = useUserConfigProps()
 
 	return (
@@ -98,7 +94,7 @@ function SurfaceSettingsPanel() {
 			</div>
 		</>
 	)
-}
+})
 
 function SettingsPanelTitleBar() {
 	const navigate = useNavigate({ from: '/surfaces/configured' })
@@ -121,3 +117,7 @@ function SettingsPanelTitleBar() {
 		</div>
 	)
 }
+
+export const Route = createFileRoute('/_app/surfaces/configured/')({
+	component: SurfaceSettingsPanel,
+})

@@ -47,7 +47,7 @@ export function ContextHelpButton({ hoverText, userGuide, size = '2xl' }: Contex
 	const userGuideProps =
 		typeof userGuide === 'string'
 			? {
-					href: makeAbsolutePath(userGuide),
+					href: makeAbsolutePath(userGuide), // or "to:"" w/o makeAbsolutePath... (but currently Tanstack isn't serving the user-guide)
 					target: '_blank',
 					rel: 'noopener noreferrer',
 					as: Link,
