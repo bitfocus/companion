@@ -94,18 +94,14 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			<div onClick={doEdit} className="no-break">
 				<MyErrorBoundary>
 					{moduleVersion?.isLegacy && (
-						<>
-							<FontAwesomeIcon
-								icon={faExclamationTriangle}
-								color="#f80"
-								title="This module has not been updated for Companion 3.0, and may not work fully"
-							/>{' '}
-						</>
+						<span title="This module has not been updated for Companion 3.0, and may not work fully">
+							<FontAwesomeIcon icon={faExclamationTriangle} color="#f80" />{' '}
+						</span>
 					)}
 					{moduleVersion?.isBeta && (
-						<>
-							<FontAwesomeIcon icon={faFlask} title="Beta" />{' '}
-						</>
+						<span title="Beta">
+							<FontAwesomeIcon icon={faFlask} />{' '}
+						</span>
 					)}
 					{moduleVersion?.displayName ?? instance.moduleVersionId}
 
