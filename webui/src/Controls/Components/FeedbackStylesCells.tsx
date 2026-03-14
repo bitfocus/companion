@@ -37,6 +37,7 @@ export function FeedbackManageStyles({
 							choices={ButtonStyleProperties}
 							setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}
 							value={currentValue}
+							sortSelection
 						/>
 					</MyErrorBoundary>
 				</CCol>

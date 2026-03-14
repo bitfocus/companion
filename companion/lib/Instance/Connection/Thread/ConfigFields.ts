@@ -228,6 +228,7 @@ function translateMultiDropdownField(
 		minChoicesForSearch: field.minChoicesForSearch,
 		minSelection: field.minSelection,
 		maxSelection: field.maxSelection,
+		sortSelection: field.sortSelection,
 	}
 }
 function translateCustomVariableField(

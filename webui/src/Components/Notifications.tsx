@@ -14,7 +14,7 @@ interface CurrentToast {
 	show: boolean
 	autohide: number | undefined
 
-	closeButton?: never
+	closeButton?: boolean
 }
 
 export const NotificationsManager = forwardRef<NotificationsManagerRef>(function NotificationsManager(_props, ref) {
@@ -75,12 +75,14 @@ export const NotificationsManager = forwardRef<NotificationsManagerRef>(function
 	)
 
 	return (
-		<CToaster placement={'top-right'}>
+		<CToaster placement={'top-end'}>
 			{toasts.map((toast) => {
+				const autohide = (toast.autohide ?? 0) > 0
+				const closeButton = !autohide || toast.closeButton
 				return (
 					<React.Fragment key={toast.id}>
-						<CToast visible={toast.show} autohide={(toast.autohide ?? 0) > 0} delay={toast.autohide}>
-							<CToastHeader closeButton={toast.closeButton}>{toast.title}</CToastHeader>
+						<CToast visible={toast.show} autohide={autohide} delay={toast.autohide} className="w-auto">
+							{(toast.title || closeButton) && <CToastHeader closeButton={closeButton}>{toast.title}</CToastHeader>}
 							<CToastBody>{toast.message}</CToastBody>
 						</CToast>
 					</React.Fragment>

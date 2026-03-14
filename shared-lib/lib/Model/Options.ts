@@ -217,6 +217,11 @@ export interface CompanionInputFieldMultiDropdownExtended extends CompanionInput
 	minSelection?: number
 	/** The maximum number of selected values */
 	maxSelection?: number
+	/**
+	 * If true, the ui should sort the selected values by the order they appear in the choices array
+	 * Any custom values will be sorted alphabetically at the end of the list
+	 */
+	sortSelection?: boolean
 
 	allowCustom?: boolean
 	regex?: string

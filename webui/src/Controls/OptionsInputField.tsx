@@ -167,6 +167,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 					minSelection={option.minSelection}
 					minChoicesForSearch={option.minChoicesForSearch}
 					maxSelection={option.maxSelection}
+					sortSelection={option.sortSelection}
 					regex={option.regex}
 					disabled={readonly}
 					setValue={setBasicValue}

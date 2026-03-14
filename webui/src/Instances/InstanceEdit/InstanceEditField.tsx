@@ -94,6 +94,7 @@ export function InstanceEditField({
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
+					sortSelection={definition.sortSelection}
 					regex={definition.regex}
 					value={value as any}
 					setValue={setValue}

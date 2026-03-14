@@ -36,6 +36,7 @@
     "@types/sanitize-html": "^2.16.0",
     "@vitejs/plugin-legacy": "^7.2.1",
     "@vitejs/plugin-react": "^5.1.4",
+    "bowser": "^2.14.1",
     "buffer": "^6.0.3",
     "classnames": "^2.5.1",
     "crypto-js": "^4.2.0",

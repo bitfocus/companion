@@ -1826,6 +1826,7 @@ __metadata:
     "@types/sanitize-html": "npm:^2.16.0"
     "@vitejs/plugin-legacy": "npm:^7.2.1"
     "@vitejs/plugin-react": "npm:^5.1.4"
+    bowser: "npm:^2.14.1"
     buffer: "npm:^6.0.3"
     classnames: "npm:^2.5.1"
     crypto-js: "npm:^4.2.0"
@@ -1944,12 +1945,12 @@ __metadata:
   linkType: hard
 
 "@companion-module/base@npm:~2.0.0":
-  version: 2.0.1
-  resolution: "@companion-module/base@npm:2.0.1"
+  version: 2.0.2
+  resolution: "@companion-module/base@npm:2.0.2"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/2d30bc57daa34cbb91f1f42e6ab5f4edbd92543d4af7590ecd0e57d3b4625597b79060ea2d580a02f7d1efc7598105b8056383f80f69b29b758c44d0ff8fa7da
+  checksum: 10c0/2224ec9015e8c61d105509a9ff3e2fe0751dd0f69a72dd40be521a95007ea13b7cc465eeca293240061123668b398f8f26aa63bdd010fb9b4ef5ce2070391347
   languageName: node
   linkType: hard
 
@@ -9591,6 +9592,13 @@ __metadata:
   version: 3.2.0
   resolution: "boolean@npm:3.2.0"
   checksum: 10c0/6a0dc9668f6f3dda42a53c181fcbdad223169c8d87b6c4011b87a8b14a21770efb2934a778f063d7ece17280f8c06d313c87f7b834bb1dd526a867ffcd00febf
+  languageName: node
+  linkType: hard
+
+"bowser@npm:^2.14.1":
+  version: 2.14.1
+  resolution: "bowser@npm:2.14.1"
+  checksum: 10c0/bb69b55ba7f0456e3dc07d0cfd9467f985581f640ba8fd426b08754a6737ee0d6cf3b50607941e5255f04c83075b952ece0599f978dd4d20f1e95461104c5ffd
   languageName: node
   linkType: hard
 

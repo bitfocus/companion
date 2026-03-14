@@ -243,6 +243,7 @@ function translateMultiDropdownField(
 		minChoicesForSearch: field.minChoicesForSearch,
 		minSelection: field.minSelection,
 		maxSelection: field.maxSelection,
+		sortSelection: undefined, // Not supported from old modules
 	}
 }
 function translateCustomVariableField(
