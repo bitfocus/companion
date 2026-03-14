@@ -186,6 +186,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						style={{ padding: '3px 8px' }}
 						onClick={(e) => e.currentTarget.focus()}
 						title="Click for additional options."
+						aria-label="Click for additional options."
 					>
 						<FontAwesomeIcon icon={faEllipsisV} />
 					</CButton>

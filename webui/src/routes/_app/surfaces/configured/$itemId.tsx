@@ -6,7 +6,6 @@ import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSurfacesSubscription } from '~/Hooks/useSurfacesSubscription'
-import { CSpinner } from '@coreui/react'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { surfaces } = useContext(RootAppStoreContext)
@@ -37,22 +36,16 @@ const RouteComponent = observer(function RouteComponent() {
 		return null
 	}, [itemId, surfaces])
 
-	if (!dataReady) {
-		// presumably the component will rerender when status changes.
-		return (
-			<div className="d-flex-col text-center m-5">
-				<h1 role="status">Loading...</h1>
-				<CSpinner className="ms-auto" />
-			</div>
-		)
-	} else if (!itemInfo) {
-		// Redirect if item not found
+	if (dataReady && !itemInfo) {
+		// Redirect if itemId is not valid
 		// condition was: itemId && !itemInfo but if itemId is missing, we wouldn't reach this route: it would go to index.tsx
 		return <Navigate to="/surfaces/configured" replace />
 	} else {
+		// note: !dataReady is handled in SurfaceEditPanel...
+		// but in truth we'd never get here when !dataReady because Companion displays a "loading" bar until dataReady is true
 		return (
 			<MyErrorBoundary>
-				<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId} groupId={itemInfo.groupId} />
+				<SurfaceEditPanel key={itemId} surfaceId={itemInfo?.surfaceId ?? null} groupId={itemInfo?.groupId ?? null} />
 			</MyErrorBoundary>
 		)
 	}
