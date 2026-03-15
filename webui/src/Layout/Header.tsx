@@ -180,7 +180,7 @@ function HelpMenu() {
 				id: 'whats-new',
 				label: "What's New",
 				icon: faStar,
-				to: whatsNewOpen,
+				do: whatsNewOpen,
 				tooltip: 'Show the current release notes.',
 				inNewTab: false,
 			},
@@ -223,7 +223,7 @@ function HelpMenu() {
 				id: 'version',
 				label: sysinfo.version,
 				fullWidth: true,
-				to: () => {}, // no additional action needed
+				do: () => {}, // no additional action needed
 				tooltip: 'Click to copy version info including OS and browser to the clipboard.',
 				copyToClipboard: copyVersionToClipboard,
 			},

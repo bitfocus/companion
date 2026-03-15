@@ -224,14 +224,14 @@ export const MySidebar = memo(function MySidebar() {
 			{
 				id: 'collapse-all',
 				label: 'Collapse All Groups',
-				to: () => expandAllGroups(false),
+				do: () => expandAllGroups(false),
 				tooltip: 'Collapse all top-level groups in the sidebar.',
 			},
 			{
 				// not sure this is useful
 				id: 'expand-all',
 				label: 'Expand All Groups',
-				to: () => {
+				do: () => {
 					expandAllGroups(true)
 					setAccordionMode(false)
 				},
@@ -241,7 +241,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'accordion-mode',
 				label: 'Auto-Collapse Groups',
 				icon: accordionMode ? faCheck : undefined,
-				to: () => setAccordionMode(!accordionMode),
+				do: () => setAccordionMode(!accordionMode),
 				tooltip:
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
@@ -253,7 +253,7 @@ export const MySidebar = memo(function MySidebar() {
 							id: 'hide-sidebar',
 							label: unfoldable ? 'Fixed-width Sidebar' : 'Folding Sidebar',
 							icon: () => foldableIcon(unfoldable),
-							to: doToggle,
+							do: doToggle,
 							tooltip:
 								'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
 						},
@@ -262,7 +262,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
 				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
-				to: () => setHideHelp(!hideHelp),
+				do: () => setHideHelp(!hideHelp),
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],

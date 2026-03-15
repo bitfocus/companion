@@ -19,7 +19,7 @@ interface MenuItemBaseProps {
 }
 
 interface MenuFnItemProps extends MenuItemBaseProps {
-	readonly to: () => void
+	readonly do: () => void
 	// note: MenuItemFn can set inNewTab to show the "external link" icon but needs to manage opening the window on its own.
 }
 
@@ -67,12 +67,12 @@ export function MenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
 			</div>
 		)
 	} else {
-		//const isRoute = 'to' in data && typeof data.to !== 'function'
-		const isCallback = 'to' in data && typeof data.to === 'function'
+		//const isRoute = 'to' in data // && typeof data.to !== 'function'
+		const isCallback = 'do' in data // && typeof data.to === 'function'
 		const isExternalLink = 'href' in data //isRoute && /^https?:\/\//i.test(data.to) // "http://" or "https://"
 
 		const navProps = isCallback
-			? { as: 'button' as ElementType, onClick: data.to }
+			? { as: 'button' as ElementType, onClick: data.do }
 			: {
 					// note: using Link for href items causes CDropDownItem to mark them as active, so just use 'a'
 					...(isExternalLink
