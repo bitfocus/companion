@@ -57,7 +57,7 @@ import { useCompanionVersion } from './useCompanionVersion'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
-import { type MenuItemData } from '~/Components/ActionMenu'
+import { type MenuItemProps } from '~/Components/ActionMenu'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -219,7 +219,7 @@ export const MySidebar = memo(function MySidebar() {
 	)
 
 	// note: the context menu has to be defined inside the component to use the internal states as well as `whatsNewOpen` which is a useCallback
-	const contextMenuItems: MenuItemData[] = useMemo(
+	const contextMenuItems: MenuItemProps[] = useMemo(
 		() => [
 			{
 				id: 'collapse-all',

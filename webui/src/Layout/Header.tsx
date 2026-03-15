@@ -28,8 +28,9 @@ import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCompanionVersion } from './useCompanionVersion.js'
-import { ActionMenu, type MenuActiveData, type MenuItemData } from '~/Components/ActionMenu.js'
+import { ActionMenu, type MenuItemProps, type MenuActionItemProps } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface MyHeaderProps {
 	canLock: boolean
@@ -153,7 +154,7 @@ function HelpMenu() {
 
 	const copyVersionToClipboard = useMemo(
 		// return a props object to be passed to <CopyToClipboard>
-		(): MenuActiveData['copyToClipboard'] => ({
+		(): MenuActionItemProps['copyToClipboard'] => ({
 			text: sysinfo.versionPlus,
 			onCopy: (_text, result) => {
 				const success = 'Version info copied!'
@@ -165,13 +166,13 @@ function HelpMenu() {
 	)
 
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
-	const helpMenuItems: MenuItemData[] = useMemo(
+	const helpMenuItems: MenuItemProps[] = useMemo(
 		() => [
 			{
 				id: 'user-guide',
 				label: 'User Guide / Help',
 				icon: circleInfo, // this is a function call, unlike the rest.
-				to: '/user-guide/',
+				href: makeAbsolutePath('/user-guide/'),
 				tooltip: 'Open the User Guide in a new tab.',
 				inNewTab: true,
 			},
@@ -188,7 +189,7 @@ function HelpMenu() {
 				id: 'fb',
 				label: 'Community Support',
 				icon: faFacebook,
-				to: 'https://l.companion.free/q/6pc9ciJR5',
+				href: 'https://l.companion.free/q/6pc9ciJR5',
 				tooltip: 'Share your experience or ask questions to your Companions.',
 				inNewTab: true,
 			},
@@ -196,7 +197,7 @@ function HelpMenu() {
 				id: 'slack',
 				label: 'Slack Workspace',
 				icon: faSlack,
-				to: 'https://l.companion.free/q/OWxbBnDKG',
+				href: 'https://l.companion.free/q/OWxbBnDKG',
 				tooltip: 'Discuss technical issues on Slack.',
 				inNewTab: true,
 			},
@@ -204,7 +205,7 @@ function HelpMenu() {
 				id: 'github',
 				label: 'Report an Issue',
 				icon: faGithub,
-				to: 'https://l.companion.free/q/QZbI6mdNd',
+				href: 'https://l.companion.free/q/QZbI6mdNd',
 				tooltip: 'Report bugs or request features on GitHub.',
 				inNewTab: true,
 			},
@@ -213,7 +214,7 @@ function HelpMenu() {
 				id: 'sponsor',
 				label: 'Sponsor Companion',
 				icon: faDollarSign,
-				to: 'https://l.companion.free/q/6PtdAvZab',
+				href: 'https://l.companion.free/q/6PtdAvZab',
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
