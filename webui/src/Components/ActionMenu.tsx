@@ -21,14 +21,20 @@ interface MenuItemBaseProps {
 interface MenuFnItemProps extends MenuItemBaseProps {
 	readonly do: () => void
 	// note: MenuItemFn can set inNewTab to show the "external link" icon but needs to manage opening the window on its own.
+	readonly to?: never
+	readonly href?: never
 }
 
 interface MenuRouteItemProps extends MenuItemBaseProps {
 	readonly to: LinkOptions['to']
+	readonly do?: never
+	readonly href?: never
 }
 
 interface MenuHttpItemProps extends MenuItemBaseProps {
 	readonly href: string
+	readonly do?: never
+	readonly to?: never
 }
 
 export type MenuActionItemProps = MenuRouteItemProps | MenuHttpItemProps | MenuFnItemProps
@@ -67,9 +73,9 @@ export function MenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
 			</div>
 		)
 	} else {
-		//const isRoute = 'to' in data // && typeof data.to !== 'function'
-		const isCallback = 'do' in data // && typeof data.to === 'function'
-		const isExternalLink = 'href' in data //isRoute && /^https?:\/\//i.test(data.to) // "http://" or "https://"
+		//Note 'to' expects a Tanstack route; 'href' expect an "external" link, i.e. one not served by Tanstack
+		const isCallback = data.do !== undefined
+		const isExternalLink = data.href !== undefined // currently, this includes /user-guide links (and /int, /img, ...)
 
 		const navProps = isCallback
 			? { as: 'button' as ElementType, onClick: data.do }

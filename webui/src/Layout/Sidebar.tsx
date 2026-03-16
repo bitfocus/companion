@@ -241,7 +241,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'accordion-mode',
 				label: 'Auto-Collapse Groups',
 				icon: accordionMode ? faCheck : undefined,
-				do: () => setAccordionMode(!accordionMode),
+				do: () => setAccordionMode((value) => !value),
 				tooltip:
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
@@ -262,7 +262,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
 				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
-				do: () => setHideHelp(!hideHelp),
+				do: () => setHideHelp((value) => !value),
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
