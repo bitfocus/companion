@@ -90,6 +90,8 @@
     "postinstall": "run -T tsx post-install.ts",
     "start": "vite",
     "dev": "run start",
+    "dev:docs": "WEBUI_DOCS=1 run dev",
+    "dev:nodocs": "WEBUI_NO_DOCS=1 run dev",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },

@@ -1,13 +1,17 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import { spawn, spawnSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
+// note: in order to correctly work with Docusaurus we need to use localhost rather than 127.0.0.1
+//  presumably to avoid IPv4/IPv6 mismatches.
+const upstreamUrl = process.env.UPSTREAM_URL || 'localhost:8000'
+const upstreamHost = upstreamUrl.split(':')[0]
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
@@ -40,6 +44,50 @@ let normalizedBase = basePath
 if (!normalizedBase.startsWith('/')) normalizedBase = `/${normalizedBase}`
 normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : normalizedBase
 
+// plugin to start docusaurus server: default expecting the server started independently
+// noDocs=1 was the previous behavior
+const noDocServer = !!process.env.WEBUI_NO_DOCS // if set we don't proxy docusaurus
+const withDocs = !!process.env.WEBUI_DOCS && !noDocServer // if set, we start docusaurus here
+function docusaurusPlugin(): Plugin {
+	let proc: ReturnType<typeof spawn> | null = null
+
+	return {
+		name: 'docusaurus',
+		configureServer(server) {
+			const env = { ...process.env, BASE_URL: normalizedBase }
+			proc = spawn('yarn', ['start', '--no-open'], {
+				cwd: path.join(import.meta.dirname, '../docs'),
+				env,
+				stdio: ['pipe', 'inherit', 'inherit'], // stdin  piped (to answer prompts), stdout+stderr visible,
+				shell: true,
+				detached: process.platform !== 'win32', // needed for process.kill(-pid) on Unix
+			})
+			// answer "n" to any port-in-use prompt so it exits cleanly, just to be safe (the particular underlying problem appears to have been solved for now)
+			proc.stdin?.write('n\n')
+			proc.stdin?.end()
+			proc.on('error', (err) => console.error('Failed to start Docusaurus:', err))
+
+			// kill when Vite shuts down
+			const cleanup = () => {
+				if (proc?.pid) {
+					console.log('Shutting down Docusaurus, pid:', proc.pid)
+					// note: we could replace this with tree-kill (package) but then it needs an "Atomics.wait" hack to make sure it completes before Vite exits
+					// (otherwise stopping Vite with 'q' won't stop Docusaurus).
+					if (process.platform === 'win32') {
+						spawnSync('taskkill', ['/pid', String(proc.pid), '/f', '/t'], { shell: true })
+					} else {
+						process.kill(-proc.pid)
+					}
+					proc = null
+				}
+			}
+			server.httpServer?.on('close', cleanup)
+			process.on('beforeExit', cleanup) // catches ending Vite by typing "q"
+			process.on('exit', cleanup) // final safety net
+		},
+	}
+}
+
 export default defineConfig({
 	publicDir: 'public',
 	// This changes the out put dir from dist to build
@@ -64,10 +112,18 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			[`${normalizedBase}/user-guide`]: {
-				target: `http://${upstreamUrl}`,
-				rewrite: (path) => path.slice(normalizedBase.length),
-			},
+			[`${normalizedBase}/user-guide`]: noDocServer
+				? {
+						// forward to Express, which may show an error screen
+						target: `http://${upstreamUrl}`,
+						rewrite: (path) => path.slice(normalizedBase.length),
+					}
+				: {
+						// forward to Docusaurus
+						target: `http://${upstreamHost}:4000`,
+						changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
+						// don't rewrite for docusaurus if starting it here (BASE_URL is passed to docusaurus)
+					},
 			[`${normalizedBase}/trpc`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
@@ -82,6 +138,7 @@ export default defineConfig({
 	},
 	plugins: [
 		tsconfigPaths(),
+		withDocs ? docusaurusPlugin() : undefined,
 		tanstackRouter({
 			virtualRouteConfig: './src/routes/-routes.ts',
 			addExtensions: true,
