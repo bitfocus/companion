@@ -48,15 +48,22 @@ normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : no
 // noDocs=1 was the previous behavior
 const noDocServer = !!process.env.WEBUI_NO_DOCS // if set we don't proxy docusaurus
 const withDocs = !!process.env.WEBUI_DOCS && !noDocServer // if set, we start docusaurus here
-function docusaurusPlugin(): Plugin {
-	let docuProc: ReturnType<typeof spawn> | null = null
-	const tsMs = () =>
-		new Date().toLocaleTimeString('en-US', {
+function tsMs () {
+	// timestamp with milliseconds
+	const ts = new Date().toLocaleTimeString('en-US', {
 			hour: '2-digit',
 			minute: '2-digit',
 			second: '2-digit',
 			fractionalSecondDigits: 3,
 		})
+	const dim = `\x1b[2m`
+	const reset = `\x1b[0m`
+	return `${dim}${ts}${reset}`
+}
+
+function docusaurusPlugin(): Plugin {
+	let docuProc: ReturnType<typeof spawn> | null = null
+
 	return {
 		name: 'docusaurus',
 		configureServer(server) {
@@ -64,10 +71,10 @@ function docusaurusPlugin(): Plugin {
 			// This works in practice because Docusaurus takes several seconds to start,
 			// so port 4000 is always free by the time the new instance is ready.
 			const env = { ...process.env, BASE_URL: normalizedBase }
-			docuProc = spawn('yarn', ['start', '--no-open', `--host ${upstreamHost}`], {
+			docuProc = spawn('yarn', ['start', '--no-open', '--host', upstreamHost], {
 				cwd: path.join(import.meta.dirname, '../docs'),
 				env,
-				stdio: ['ignore', 'pipe', 'pipe'], // stdin  piped (to answer prompts), stdout+stderr piped to add a prefix,
+				stdio: ['pipe', 'pipe', 'pipe'], // stdin  piped as a precaution against interactive prompts (e.g. port-in-use), stdout+stderr piped to add a prefix,
 				shell: true,
 				detached: process.platform !== 'win32', // needed for process.kill(-pid) on Unix
 			})
