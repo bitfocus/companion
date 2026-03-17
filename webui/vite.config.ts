@@ -163,6 +163,17 @@ export default defineConfig({
 						target: `http://${upstreamHost}:4000`,
 						changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
 						// don't rewrite for docusaurus if starting it here (BASE_URL is passed to docusaurus)
+						configure: (proxy) => {
+							// Handle ECONNREFUSED errors, by showing the placeholder page (instead of a generic error page)
+							const placeholderHtml = fs.readFileSync(path.join(import.meta.dirname, '../docs/placeholder/index.html'))
+							proxy.on('error', (err, _req, res) => {
+								if ((err as NodeJS.ErrnoException).code !== 'ECONNREFUSED') return
+								if ('writeHead' in res) {
+									res.writeHead(502, { 'Content-Type': 'text/html' })
+									res.end(placeholderHtml)
+								}
+							})
+						},
 					},
 			[`${normalizedBase}/trpc`]: {
 				target: `ws://${upstreamUrl}`,
