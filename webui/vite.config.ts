@@ -48,14 +48,14 @@ normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : no
 // noDocs=1 was the previous behavior
 const noDocServer = !!process.env.WEBUI_NO_DOCS // if set we don't proxy docusaurus
 const withDocs = !!process.env.WEBUI_DOCS && !noDocServer // if set, we start docusaurus here
-function tsMs () {
+function tsMs() {
 	// timestamp with milliseconds
 	const ts = new Date().toLocaleTimeString('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-			fractionalSecondDigits: 3,
-		})
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+		fractionalSecondDigits: 3,
+	})
 	const dim = `\x1b[2m`
 	const reset = `\x1b[0m`
 	return `${dim}${ts}${reset}`
