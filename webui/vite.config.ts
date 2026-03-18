@@ -1,17 +1,14 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig } from 'vite'
 import reactPlugin from '@vitejs/plugin-react'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import { spawn, spawnSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { normalizeBasePath, upstreamUrlHost } from '../tools/webui-dev-utils'
 
-// note: in order to correctly work with Docusaurus we need to use localhost rather than 127.0.0.1
-//  presumably to avoid IPv4/IPv6 mismatches.
-const upstreamUrl = process.env.UPSTREAM_URL || 'localhost:8000'
-const upstreamHost = upstreamUrl.split(':')[0]
+const { upstreamUrl, upstreamHost } = upstreamUrlHost()
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
@@ -38,95 +35,7 @@ function getBaseFromArgs(): string {
 	return '/'
 }
 
-// Get the base path from Vite's --base argument
-const basePath = getBaseFromArgs()
-let normalizedBase = basePath
-if (!normalizedBase.startsWith('/')) normalizedBase = `/${normalizedBase}`
-normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : normalizedBase
-
-// plugin to start docusaurus server: default expecting the server started independently
-// noDocs=1 was the previous behavior
-const noDocServer = !!process.env.WEBUI_NO_DOCS // if set we don't proxy docusaurus
-const withDocs = !!process.env.WEBUI_DOCS && !noDocServer // if set, we start docusaurus here
-function tsMs() {
-	// timestamp with milliseconds
-	const ts = new Date().toLocaleTimeString('en-US', {
-		hour: '2-digit',
-		minute: '2-digit',
-		second: '2-digit',
-		fractionalSecondDigits: 3,
-	})
-	const dim = `\x1b[2m`
-	const reset = `\x1b[0m`
-	return `${dim}${ts}${reset}`
-}
-
-function docusaurusPlugin(): Plugin {
-	let docuProc: ReturnType<typeof spawn> | null = null
-
-	return {
-		name: 'docusaurus',
-		configureServer(server) {
-			// Note: new Docusaurus process is spawned before the old one is killed (~20ms later via httpServer close).
-			// This works in practice because Docusaurus takes several seconds to start,
-			// so port 4000 is always free by the time the new instance is ready.
-			const env = { ...process.env, BASE_URL: normalizedBase }
-			docuProc = spawn('yarn', ['start', '--no-open', '--host', upstreamHost], {
-				cwd: path.join(import.meta.dirname, '../docs'),
-				env,
-				stdio: ['pipe', 'pipe', 'pipe'], // stdin  piped as a precaution against interactive prompts (e.g. port-in-use), stdout+stderr piped to add a prefix,
-				shell: true,
-				detached: process.platform !== 'win32', // needed for process.kill(-pid) on Unix
-			})
-			// answer "n" to any port-in-use prompt so it exits cleanly, just to be safe (the particular underlying problem appears to have been solved for now)
-			docuProc.stdin?.write('n\n')
-			docuProc.stdin?.end()
-			docuProc.on('error', (err) => console.error('Failed to start Docusaurus:', err))
-			docuProc.on('exit', () => {
-				docuProc = null
-			})
-			const prefix = `\x1b[36m[docusaurus]\x1b[0m ` // cyan to match Vite's style
-			const prefixErr = `\x1b[31m[docusaurus] ` // whole line will be red
-
-			docuProc.stdout?.on('data', (data) => {
-				data
-					.toString()
-					.split('\n')
-					.forEach((line: string) => {
-						if (line.trim()) console.log(`${tsMs()} ${prefix}${line}`)
-					})
-			})
-			docuProc.stderr?.on('data', (data) => {
-				data
-					.toString()
-					.split('\n')
-					.forEach((line: string) => {
-						if (line.trim()) console.error(`${tsMs()} ${prefixErr}${line}\x1b[0m`)
-					})
-			})
-
-			// kill Docusaurus when Vite shuts down
-			const cleanup = () => {
-				process.off('beforeExit', cleanup) // catches ending Vite by typing "q"
-				process.off('exit', cleanup) // final safety net
-				if (docuProc?.pid && docuProc.exitCode === null && docuProc.signalCode === null) {
-					console.log(`${tsMs()} Shutting down Docusaurus, pid: ${docuProc.pid}`)
-					// note: we could replace this with tree-kill (package) but then it needs an "Atomics.wait" hack to make sure it completes before Vite exits
-					// (otherwise stopping Vite with 'q' won't stop Docusaurus).
-					if (process.platform === 'win32') {
-						spawnSync('taskkill', ['/pid', String(docuProc.pid), '/f', '/t'], { shell: true })
-					} else {
-						process.kill(-docuProc.pid)
-					}
-				}
-				docuProc = null
-			}
-			server.httpServer?.on('close', cleanup) // needed for auto-restarts
-			process.on('beforeExit', cleanup) // catches when user ends Vite by typing "q" in the terminal
-			process.on('exit', cleanup) // final safety net
-		},
-	}
-}
+const normalizedBase = normalizeBasePath(getBaseFromArgs())
 
 export default defineConfig({
 	publicDir: 'public',
@@ -152,29 +61,23 @@ export default defineConfig({
 				target: `http://${upstreamUrl}`,
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
-			[`${normalizedBase}/user-guide`]: noDocServer
-				? {
-						// forward to Express, which may show an error screen
-						target: `http://${upstreamUrl}`,
-						rewrite: (path) => path.slice(normalizedBase.length),
-					}
-				: {
-						// forward to Docusaurus
-						target: `http://${upstreamHost}:4000`,
-						changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
-						// don't rewrite for docusaurus if starting it here (BASE_URL is passed to docusaurus)
-						configure: (proxy) => {
-							// Handle ECONNREFUSED errors, by showing the placeholder page (instead of a generic error page)
-							const placeholderHtml = fs.readFileSync(path.join(import.meta.dirname, '../docs/placeholder/index.html'))
-							proxy.on('error', (err, _req, res) => {
-								if ((err as NodeJS.ErrnoException).code !== 'ECONNREFUSED') return
-								if ('writeHead' in res) {
-									res.writeHead(502, { 'Content-Type': 'text/html' })
-									res.end(placeholderHtml)
-								}
-							})
-						},
-					},
+			[`${normalizedBase}/user-guide`]: {
+				// forward to Docusaurus
+				target: `http://${upstreamHost}:4000`,
+				changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
+				// rewrite: don't rewrite for docusaurus - it testing a base_url use 'yarn dev:docs --base' or manually set env BASE_URL for docusaurus to use
+				configure: (proxy) => {
+					// Handle ECONNREFUSED errors, by showing the placeholder page (instead of a generic error page)
+					const placeholderHtml = fs.readFileSync(path.join(import.meta.dirname, '../docs/placeholder/index.html'))
+					proxy.on('error', (err, _req, res) => {
+						if ((err as NodeJS.ErrnoException).code !== 'ECONNREFUSED') return
+						if ('writeHead' in res) {
+							res.writeHead(502, { 'Content-Type': 'text/html' })
+							res.end(placeholderHtml)
+						}
+					})
+				},
+			},
 			[`${normalizedBase}/trpc`]: {
 				target: `ws://${upstreamUrl}`,
 				ws: true,
@@ -189,7 +92,6 @@ export default defineConfig({
 	},
 	plugins: [
 		tsconfigPaths(),
-		withDocs ? docusaurusPlugin() : undefined,
 		tanstackRouter({
 			virtualRouteConfig: './src/routes/-routes.ts',
 			addExtensions: true,
