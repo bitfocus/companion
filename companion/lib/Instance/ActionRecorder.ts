@@ -18,6 +18,7 @@ import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import { ExpressionOrJsonValueSchema, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]
@@ -236,7 +237,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 								const action = this.#currentSession.actions[index]
 
 								if (!action.options) action.options = {}
-								action.options[input.key] = input.value
+								if (BANNED_PROPS.has(input.key)) throw new Error(`Setting option "${input.key}" is not allowed`)
 
 								this.commitChanges([input.sessionId])
 							}

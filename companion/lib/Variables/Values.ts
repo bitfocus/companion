@@ -25,6 +25,7 @@ import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
@@ -35,7 +36,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
 
 	readonly #blinker: VariablesBlinker
-	#variableValues: VariableValueData = {}
+	#variableValues: VariableValueData = Object.create(null)
 
 	constructor() {
 		super()
@@ -94,7 +95,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	connectionLabelRename(labelFrom: string, labelTo: string): void {
-		const valuesTo = this.#variableValues[labelTo] || {}
+		const valuesTo = this.#variableValues[labelTo] || Object.create(null)
 		this.#variableValues[labelTo] = valuesTo
 
 		// Move variable values, and track the 'diff'
@@ -132,12 +133,13 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	setVariableValues(label: string, variables: VariableValueEntry[]): void {
-		const moduleValues = this.#variableValues[label] ?? {}
+		const moduleValues = this.#variableValues[label] ?? Object.create(null)
 		this.#variableValues[label] = moduleValues
 
 		const all_changed_variables_set = new Set<string>()
 		const connection_labels = new Set<string>()
 		for (const variable of variables) {
+			if (BANNED_PROPS.has(variable.id)) continue
 			if (moduleValues[variable.id] !== variable.value) {
 				moduleValues[variable.id] = variable.value
 
