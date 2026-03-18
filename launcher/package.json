@@ -18,7 +18,7 @@
 		"electron-store": "^11.0.2",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.3.4",
-		"nanoid": "^5.1.6",
+		"nanoid": "^5.1.7",
 		"plist": "^3.1.0",
 		"semver": "^7.7.4",
 		"strip-ansi": "^7.2.0",
