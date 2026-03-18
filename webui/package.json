@@ -90,6 +90,7 @@
     "postinstall": "run -T tsx post-install.ts",
     "start": "vite",
     "dev": "run start",
+    "dev:docs": "yarn workspace @companion-app/workspace dev:webui:docs",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },
