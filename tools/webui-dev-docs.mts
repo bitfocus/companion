@@ -17,7 +17,9 @@ import { resolve } from 'path'
 import { $, argv, question, usePowerShell } from 'zx'
 import { normalizeBasePath } from './webui-dev-utils.ts'
 
-usePowerShell()
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
 
 // Parse --base arg and normalize
 const normalizedBase = normalizeBasePath(argv.base ?? '')
@@ -75,7 +77,7 @@ if (await isPortInUse(4000, docusaurusHost)) {
 				process.exit(1)
 			}
 		} else {
-			await $`lsof -ti:4000 | xargs kill -9`.quiet().nothrow()
+			await $`lsof -ti TCP:4000 -sTCP:LISTEN | xargs kill -9`.quiet().nothrow()
 			console.log('Killed process on port 4000')
 		}
 	} else {
