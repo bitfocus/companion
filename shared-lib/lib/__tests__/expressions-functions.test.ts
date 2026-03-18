@@ -504,10 +504,8 @@ describe('functions', () => {
 			// String number input
 			expect(ExpressionFunctions.parseDate('1700000000000')).toBe(1700000000000)
 
-			// ISO string input
-			expect(ExpressionFunctions.parseDate('2024-01-15T12:00:00.000Z')).toBe(
-				new Date('2024-01-15T12:00:00.000Z').getTime()
-			)
+			// ISO string input with distinct component values
+			expect(ExpressionFunctions.parseDate('2024-01-15T12:13:14.321Z')).toBe(1705320794321)
 
 			// No argument defaults to current time
 			const before = Date.now()
@@ -515,6 +513,21 @@ describe('functions', () => {
 			const after = Date.now()
 			expect(result).toBeGreaterThanOrEqual(before)
 			expect(result).toBeLessThanOrEqual(after)
+
+			// Null defaults to current time
+			const before2 = Date.now()
+			const result2 = ExpressionFunctions.parseDate(null)
+			const after2 = Date.now()
+			expect(result2).toBeGreaterThanOrEqual(before2)
+			expect(result2).toBeLessThanOrEqual(after2)
+
+			// ISO date without time
+			expect(ExpressionFunctions.parseDate('2024-06-15')).toBe(1718409600000)
+
+			// US format (MM/DD/YYYY) parses in V8
+			expect(ExpressionFunctions.parseDate('01/15/2024')).toBe(new Date(2024, 0, 15).getTime())
+			// European format (DD/MM/YYYY) does not
+			expect(ExpressionFunctions.parseDate('15/01/2024')).toBe(NaN)
 
 			// Invalid input
 			expect(ExpressionFunctions.parseDate('not a date')).toBe(NaN)
@@ -529,6 +542,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.dateYear('2024-06-15T12:00:00Z', 'UTC')).toBe(2024)
 			// No argument defaults to current time
 			expect(ExpressionFunctions.dateYear()).toBe(new Date().getFullYear())
+			// Null defaults to current time
+			expect(ExpressionFunctions.dateYear(null)).toBe(new Date().getFullYear())
 			// Invalid
 			expect(ExpressionFunctions.dateYear('invalid')).toBe(NaN)
 			// Invalid timezone

@@ -341,7 +341,7 @@ The returned seconds can also be used within `secondsToTimestamp` to format the 
 Parse a date value and return the Unix timestamp in milliseconds. Accepts:
 
 - Numbers: treated as Unix milliseconds
-- Strings: ISO 8601 format (e.g. `"2024-06-15T14:30:00Z"`) or other parseable date formats
+- Strings: parsed using JavaScript's [`Date()` constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date). ISO 8601 format (e.g. `"2024-06-15T14:30:00Z"`) is recommended for reliable results. Ambiguous formats like `MM/DD/YYYY` are not reliably supported.
 - No argument: returns current time (same as `unixNow()`)
 
 Returns `NaN` if the value cannot be parsed.
