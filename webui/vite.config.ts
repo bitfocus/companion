@@ -6,14 +6,14 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import fs from 'fs'
 import path from 'path'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import { normalizeBasePath, upstreamUrlHost } from '../tools/webui-dev-utils'
-
-const { upstreamUrl, upstreamHost } = upstreamUrlHost()
+import { normalizeBasePath } from '../tools/webui-dev-utils'
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
 	.toString()
 	.trim()
+
+const upstreamUrl = process.env.UPSTREAM_URL || 'localhost:8000'
 
 /**
  * Parse --base argument from command line
@@ -62,8 +62,8 @@ export default defineConfig({
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 			[`${normalizedBase}/user-guide`]: {
-				// forward to Docusaurus
-				target: `http://${upstreamHost}:4000`,
+				// forward to Docusaurus (note: if changing hostname, change it in tools/webui-dev-docs.mts too)
+				target: `http://localhost:4000`,
 				changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
 				// rewrite: don't rewrite for docusaurus - it testing a base_url use 'yarn dev:docs --base' or manually set env BASE_URL for docusaurus to use
 				configure: (proxy) => {

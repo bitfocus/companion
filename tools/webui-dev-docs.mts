@@ -8,20 +8,23 @@
  *
  * Passes any extra args (e.g. --base) through to Vite.
  * Uses concurrently with --kill-others so both processes stop together (Ctrl-C or Vite's "q").
- * Use Ctrl-C to stop both processes (Vite's "q" is not available when running under concurrently).
+ * If Vite's "q" is not working, use Ctrl-C to stop both processes.
  */
 
 import concurrently, { type ConcurrentlyCommandInput } from 'concurrently'
 import { createConnection } from 'net'
 import { resolve } from 'path'
 import { $, argv, question, usePowerShell } from 'zx'
-import { normalizeBasePath, upstreamUrlHost } from './webui-dev-utils.ts'
+import { normalizeBasePath } from './webui-dev-utils.ts'
 
 usePowerShell()
 
 // Parse --base arg and normalize
 const normalizedBase = normalizeBasePath(argv.base ?? '')
-const { upstreamHost } = upstreamUrlHost()
+//docusaurusHost notes:
+// (1) dev docusaurus will always be served on the local dev computer
+// (2) localhost is hardcoded here and in vite.config.ts, but since it's unlikely to change, should be fine
+const docusaurusHost = 'localhost'
 
 // Forward all args after the script name to Vite unaltered (safe regardless of how zx is invoked)
 const scriptIndex = process.argv.findIndex((arg) => resolve(arg) === import.meta.filename)
@@ -41,11 +44,11 @@ function isPortInUse(port: number, host: string): Promise<boolean> {
 
 // If port 4000 is in use, ask user what to do
 let skipDocusaurus = false
-if (await isPortInUse(4000, upstreamHost)) {
+if (await isPortInUse(4000, docusaurusHost)) {
 	let answer = ''
 	while (!/^(y|s)$/i.test(answer)) {
 		answer = await question(
-			`Port 4000 (used for Docusaurus) is already in use on ${upstreamHost}. Do you want to replace it?\n` +
+			`Port 4000 (used for Docusaurus) is already in use on ${docusaurusHost}. Do you want to replace it?\n` +
 				`  [y] kill existing and start fresh\n` +
 				`  [s] skip starting Docusaurus (use the existing instance)\n` +
 				`  [N] abort\n` +
@@ -85,10 +88,8 @@ console.log(`Starting Vite and Docusaurus...`)
 if (normalizedBase) console.log(`Base path: ${normalizedBase}`)
 console.log(`yarn workspace @companion-app/webui dev ${viteArgs} --clearScreen false`)
 if (!skipDocusaurus) {
-	console.log(`yarn workspace @companion-app/docs start --no-open --host ${upstreamHost}`)
-	console.log(
-		`\x1b[1;36m* Type Ctrl-C to stop both processes (Vite's "q" is not available when running under concurrently).\x1b[0m`
-	)
+	console.log(`yarn workspace @companion-app/docs start --no-open --host ${docusaurusHost}`)
+	console.log(`\x1b[1;36m* If Vite's "q" is not working, use Ctrl-C. Either one will stop both processes.\x1b[0m`)
 }
 
 const commands: ConcurrentlyCommandInput[] = [
@@ -100,7 +101,7 @@ const commands: ConcurrentlyCommandInput[] = [
 	...(!skipDocusaurus
 		? [
 				{
-					command: `yarn workspace @companion-app/docs start --no-open --host ${upstreamHost}`,
+					command: `yarn workspace @companion-app/docs start --no-open --host ${docusaurusHost}`,
 					name: 'docusaurus',
 					prefixColor: 'cyan',
 					env: {

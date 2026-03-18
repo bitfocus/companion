@@ -44,7 +44,8 @@
 				color: #c0c0c0;
 			}
 
-			.code {
+			.code,
+			code {
 				background: #1a1a1a;
 				border: 1px solid #3a3a3a;
 				border-radius: 6px;
@@ -54,6 +55,11 @@
 				font-size: 0.9rem;
 				color: #4ec9b0;
 				overflow-x: auto;
+			}
+
+			code {
+				padding: 0.5em;
+				margin: 0;
 			}
 
 			.note {
@@ -82,7 +88,10 @@
 			<div class="code">yarn dev:webui:docs</div>
 			<div class="code">yarn dev:webui:docs --base=/myurlbase</div>
 
-			<p>to start the Docusaurus server together with Vite and ensure they use the same BASE_URL.</p>
+			<p>
+				to start the Docusaurus server together with Vite and ensure they use the same BASE_URL. <br />Note: if starting
+				from the webui folder, use <code>yarn dev:docs</code> instead.
+			</p>
 		</div>
 	</body>
 </html>
