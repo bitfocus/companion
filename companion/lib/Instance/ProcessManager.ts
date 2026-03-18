@@ -420,6 +420,7 @@ export class InstanceProcessManager {
 					moduleInfo.basePath,
 					enableInspect
 				),
+				...runtimeInfo.arguments,
 				enableInspect ? `--inspect=${inspectPort}` : undefined,
 				runtimeInfo.entrypoint,
 			].filter((v): v is string => !!v)
@@ -686,6 +687,7 @@ export class InstanceProcessManager {
 		lastLabel: string
 	): Promise<{
 		entrypoint: string
+		arguments: string[]
 		moduleEntrypoint: string
 		apiVersion: string
 		env: Record<string, string>
@@ -735,6 +737,7 @@ export class InstanceProcessManager {
 							import.meta.dirname,
 							isPackaged() ? './ConnectionThread.js' : './Connection/Thread/Entrypoint.js'
 						),
+						arguments: ['--enable-source-maps'],
 						moduleEntrypoint: jsFullPath,
 						env: {
 							MODULE_ENTRYPOINT: jsFullPath,
@@ -744,6 +747,7 @@ export class InstanceProcessManager {
 					return {
 						apiVersion: moduleApiVersion,
 						entrypoint: jsFullPath,
+						arguments: [],
 						moduleEntrypoint: jsFullPath,
 						env: {
 							CONNECTION_ID: instanceId,
@@ -781,6 +785,7 @@ export class InstanceProcessManager {
 						import.meta.dirname,
 						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
 					),
+					arguments: ['--enable-source-maps'],
 					moduleEntrypoint: jsFullPath,
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
