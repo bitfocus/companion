@@ -26,6 +26,7 @@ import type {
 	ProcessManagerForEntity,
 } from './Types.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { JsonValue } from 'type-fest'
@@ -435,6 +436,7 @@ export class ControlEntityInstance {
 	 * Set an option for this entity
 	 */
 	setOption(key: string, value: ExpressionOrValue<JsonValue | undefined>): void {
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values

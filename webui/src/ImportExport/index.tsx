@@ -11,6 +11,7 @@ import { observer } from 'mobx-react-lite'
 import CryptoJS from 'crypto-js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_config_file'
 
@@ -115,6 +116,7 @@ export const ImportExportPage = observer(function ImportExport() {
 													}
 												}
 
+												if (BANNED_PROPS.has(id)) continue
 												if (matchingLabelId) {
 													initialRemap[id] = matchingLabelId
 												} else {

@@ -52,7 +52,7 @@ import { useCompanionVersion } from './useCompanionVersion'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
-import { type MenuItemData } from '~/Components/ActionMenu'
+import { type MenuItemProps } from '~/Components/ActionMenu'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -214,19 +214,19 @@ export const MySidebar = memo(function MySidebar() {
 	)
 
 	// note: the context menu has to be defined inside the component to use the internal states as well as `whatsNewOpen` which is a useCallback
-	const contextMenuItems: MenuItemData[] = useMemo(
+	const contextMenuItems: MenuItemProps[] = useMemo(
 		() => [
 			{
 				id: 'collapse-all',
 				label: 'Collapse All Groups',
-				to: () => expandAllGroups(false),
+				do: () => expandAllGroups(false),
 				tooltip: 'Collapse all top-level groups in the sidebar.',
 			},
 			{
 				// not sure this is useful
 				id: 'expand-all',
 				label: 'Expand All Groups',
-				to: () => {
+				do: () => {
 					expandAllGroups(true)
 					setAccordionMode(false)
 				},
@@ -236,7 +236,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'accordion-mode',
 				label: 'Auto-Collapse Groups',
 				icon: accordionMode ? faCheck : undefined,
-				to: () => setAccordionMode(!accordionMode),
+				do: () => setAccordionMode((value) => !value),
 				tooltip:
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
@@ -248,7 +248,7 @@ export const MySidebar = memo(function MySidebar() {
 							id: 'hide-sidebar',
 							label: unfoldable ? 'Fixed-width Sidebar' : 'Folding Sidebar',
 							icon: () => foldableIcon(unfoldable),
-							to: doToggle,
+							do: doToggle,
 							tooltip:
 								'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
 						},
@@ -257,7 +257,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
 				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
-				to: () => setHideHelp(!hideHelp),
+				do: () => setHideHelp((value) => !value),
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
