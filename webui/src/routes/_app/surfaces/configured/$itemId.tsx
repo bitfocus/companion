@@ -5,12 +5,10 @@ import { useComputed } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useSurfacesSubscription } from '~/Hooks/useSurfacesSubscription'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { surfaces } = useContext(RootAppStoreContext)
 	const { itemId } = Route.useParams()
-	const dataReady = useSurfacesSubscription(surfaces)
 
 	// Determine if this is a surface or group and validate
 	const itemInfo = useComputed(() => {
@@ -36,13 +34,13 @@ const RouteComponent = observer(function RouteComponent() {
 		return null
 	}, [itemId, surfaces])
 
-	if (dataReady && !itemInfo) {
+	if (!itemInfo) {
 		// Redirect if itemId is not valid
 		// condition was: itemId && !itemInfo but if itemId is missing, we wouldn't reach this route: it would go to index.tsx
 		return <Navigate to="/surfaces/configured" replace />
 	} else {
-		// note: !dataReady is handled in SurfaceEditPanel...
-		// but in truth we'd never get here when !dataReady because Companion displays a "loading" bar until dataReady is true
+		// note: data isn't ready SurfaceEditPanel will indicate it...
+		// but in truth we'd never get here in that cse because Companion displays a "loading" bar until data is ready.
 		return (
 			<MyErrorBoundary>
 				<SurfaceEditPanel key={itemId} surfaceId={itemInfo?.surfaceId ?? null} groupId={itemInfo?.groupId ?? null} />
