@@ -109,7 +109,7 @@ function SettingsPanelTitleBar() {
 			<div className="header-buttons">
 				<ContextHelpButton
 					hoverText="Manage global surface settings and surface integrations here."
-					userGuide="/user-guide/config/settings#surfaces"
+					help="/user-guide/config/settings#surfaces"
 				/>
 
 				<CloseButton closeFn={doClose} visibilityClass="d-xl-none" />

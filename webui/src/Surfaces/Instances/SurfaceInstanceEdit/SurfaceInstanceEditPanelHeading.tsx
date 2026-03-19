@@ -38,7 +38,7 @@ export const SurfaceInstanceEditPanelHeading = observer(function SurfaceInstance
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
 					<ContextHelpButton
-						userGuide={doShowHelp}
+						help={doShowHelp}
 						hoverText="Change properties of the surface integration here. Click the icon to show instructions for this module."
 					/>
 				)}

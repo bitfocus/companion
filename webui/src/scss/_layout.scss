@@ -592,7 +592,7 @@ form.row > * {
 $panel-header-bg: #dee2e5; // Darker gray background
 $panel-header-border-color: #dee2e6; // Subtle border
 $panel-header-color: #343a40; // title text -  Darker (?) text for better contrast
-$panel-header-button-color: color.adjust($panel-header-color, $lightness: +30%);
+$panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 .panel-close-button {
 	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
 	border: none;

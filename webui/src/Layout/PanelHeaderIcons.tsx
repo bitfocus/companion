@@ -1,9 +1,8 @@
-import React from 'react'
+import React, { useCallback, useRef, type ElementType } from 'react'
 import { CButton } from '@coreui/react'
 import type { SizeProp } from '@fortawesome/fontawesome-svg-core'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link } from '@tanstack/react-router'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
@@ -14,7 +13,7 @@ interface CloseButtonProps {
 
 interface ContextHelpButtonProps {
 	hoverText: string
-	userGuide: `/user-guide/${string}` | (() => void) // could string be made more specific with a TanStack type?
+	help: `/user-guide/${string}` | (() => void)
 	size?: SizeProp
 }
 
@@ -41,20 +40,38 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
  Caller can supply a link to the user guide or a custom function.
  The default size is intended for panel headers.
 */
-export function ContextHelpButton({ hoverText, userGuide, size = '2xl' }: ContextHelpButtonProps): React.JSX.Element {
-	// note: an alternative way to do the following would be a default function using
-	//  router.buildLocation() and window.open() to navigate to the link in a new window...
-	const userGuideProps =
-		typeof userGuide === 'string'
+export function ContextHelpButton({ hoverText, help, size = '2xl' }: ContextHelpButtonProps): React.JSX.Element {
+	// First, a little trick to handle both keyboard navigation, in which the "hover help" should show up on focus,
+	// and "click" (including "enter"), which will open a new tab and should close the hover-help.
+	// Without removeFocus() the help icon will retain focus, and hover-help will still show when the user returns to this tab.
+	// afterElementRef is a little trick to preserve tab focus order, so the next tab will go to the element after this one in the tab-order.
+	const afterElementRef = useRef<HTMLDivElement>(null)
+	const removeFocus = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+		event.currentTarget.blur()
+		afterElementRef.current?.focus({ preventScroll: true })
+	}, [])
+
+	const onClick2 = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement>, helpFn: () => void) => {
+			helpFn()
+			removeFocus(event)
+		},
+		[removeFocus]
+	)
+
+	const helpButtonProps =
+		typeof help === 'string'
 			? {
-					href: makeAbsolutePath(userGuide), // or "to:"" w/o makeAbsolutePath... (but currently Tanstack isn't serving the user-guide)
+					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
+					href: makeAbsolutePath(help),
 					target: '_blank',
 					rel: 'noopener noreferrer',
-					as: Link,
+					as: 'a' as ElementType,
+					onClick: removeFocus,
 				}
-			: { onClick: userGuide }
+			: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, help) }
 
-	if (userGuide && !/click/i.test(hoverText)) {
+	if (help && !/click/i.test(hoverText)) {
 		hoverText += ' Click the icon for more details.'
 	}
 
@@ -63,10 +80,13 @@ export function ContextHelpButton({ hoverText, userGuide, size = '2xl' }: Contex
 	//  See _layout.scss for the context-help-button-2xl example (FontAwesomeIcons get class 'fa-<size>')
 	// NOTE: removed the float_right class here -- we end up fighting against its margin and it doesn't seem to do much else...
 	return (
-		<InlineHelp help={hoverText}>
-			<CButton variant="ghost" className={`context-help-button-${size} p-0`} {...userGuideProps}>
-				<FontAwesomeIcon icon={faQuestionCircle} size={size} aria-label="context help" />
-			</CButton>
-		</InlineHelp>
+		<>
+			<InlineHelp help={hoverText}>
+				<CButton variant="ghost" className={`context-help-button-${size} p-0`} {...helpButtonProps}>
+					<FontAwesomeIcon icon={faQuestionCircle} size={size} aria-label="context help" />
+				</CButton>
+			</InlineHelp>
+			<div ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />
+		</>
 	)
 }
