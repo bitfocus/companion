@@ -174,9 +174,13 @@ const ManualGroupRow = observer(function ManualGroupRow({
 	const groupName = group.displayName || 'Surface Group'
 	return (
 		<>
-			<div className={classNames('grid-row', { 'grid-row-selected': isGroupSelected })} onClick={handleGroupClick}>
+			<div
+				className={classNames('grid-row', { 'grid-row-selected': isGroupSelected })}
+				onClick={handleGroupClick}
+				title={`${groupName}${/group/i.test(groupName) ? '' : ' group'}: click to edit settings.`}
+			>
 				<div className="grid-cell">#{group.index}</div>
-				<div className="grid-cell" title={`Click to edit ${groupName} group settings.`}>
+				<div className="grid-cell">
 					<b>{groupName}</b>
 					<div className="surface-id-row">
 						<span className="surface-id" title={group.id}>
@@ -266,6 +270,7 @@ const SurfaceRow = observer(function SurfaceRow({
 				'surface-disabled': surfaceDisabled,
 			})}
 			onClick={handleSurfaceClick}
+			title={`${surface.id}: click to edit surface settings.`}
 		>
 			<div className="grid-cell">
 				{index !== null ? `#${index}` : ''}
@@ -276,10 +281,7 @@ const SurfaceRow = observer(function SurfaceRow({
 					</span>
 				)}
 			</div>
-			<div
-				className={classNames('grid-cell', { 'ps-4': isInGroup })}
-				title={`Click to edit ${surface.id} surface settings.`}
-			>
+			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
 				<div>
 					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 					{!!surface.hasFirmwareUpdates && (
