@@ -329,49 +329,49 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 
 	// Date operations
 	parseDate: (v) => {
-		const d = toDate(v ?? Date.now())
-		return d ? d.getTime() : NaN
+		const d = toDate(v)
+		return d ? d.getTime() : null
 	},
 	dateYear: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.year : NaN
+		return parts ? parts.year : null
 	},
 	dateMonth: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.month : NaN
+		return parts ? parts.month : null
 	},
 	dateDay: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.day : NaN
+		return parts ? parts.day : null
 	},
 	dateHour: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.hour : NaN
+		return parts ? parts.hour : null
 	},
 	dateMinute: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.minute : NaN
+		return parts ? parts.minute : null
 	},
 	dateSecond: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.second : NaN
+		return parts ? parts.second : null
 	},
 	dateWeekday: (v, tz) => {
-		const d = toDate(v ?? Date.now())
-		if (!d) return NaN
+		const d = toDate(v)
+		if (!d) return null
 		const parts = getDateParts(d, tz)
-		return parts ? parts.weekday : NaN
+		return parts ? parts.weekday : null
 	},
 }

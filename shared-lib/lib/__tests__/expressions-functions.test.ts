@@ -507,31 +507,19 @@ describe('functions', () => {
 			// ISO string input with distinct component values
 			expect(ExpressionFunctions.parseDate('2024-01-15T12:13:14.321Z')).toBe(1705320794321)
 
-			// No argument defaults to current time
-			const before = Date.now()
-			const result = ExpressionFunctions.parseDate()
-			const after = Date.now()
-			expect(result).toBeGreaterThanOrEqual(before)
-			expect(result).toBeLessThanOrEqual(after)
-
-			// Null defaults to current time
-			const before2 = Date.now()
-			const result2 = ExpressionFunctions.parseDate(null)
-			const after2 = Date.now()
-			expect(result2).toBeGreaterThanOrEqual(before2)
-			expect(result2).toBeLessThanOrEqual(after2)
-
 			// ISO date without time
 			expect(ExpressionFunctions.parseDate('2024-06-15')).toBe(1718409600000)
 
 			// US format (MM/DD/YYYY) parses in V8
 			expect(ExpressionFunctions.parseDate('01/15/2024')).toBe(new Date(2024, 0, 15).getTime())
 			// European format (DD/MM/YYYY) does not
-			expect(ExpressionFunctions.parseDate('15/01/2024')).toBe(NaN)
+			expect(ExpressionFunctions.parseDate('15/01/2024')).toBe(null)
 
 			// Invalid input
-			expect(ExpressionFunctions.parseDate('not a date')).toBe(NaN)
-			expect(ExpressionFunctions.parseDate('')).toBe(NaN)
+			expect(ExpressionFunctions.parseDate('not a date')).toBe(null)
+			expect(ExpressionFunctions.parseDate('')).toBe(null)
+			expect(ExpressionFunctions.parseDate(undefined)).toBe(null)
+			expect(ExpressionFunctions.parseDate(null)).toBe(null)
 		})
 
 		it('dateYear', () => {
@@ -540,14 +528,12 @@ describe('functions', () => {
 			expect(ExpressionFunctions.dateYear(new Date('1999-12-31T23:00:00Z').getTime(), 'UTC')).toBe(1999)
 			// ISO string input
 			expect(ExpressionFunctions.dateYear('2024-06-15T12:00:00Z', 'UTC')).toBe(2024)
-			// No argument defaults to current time
-			expect(ExpressionFunctions.dateYear()).toBe(new Date().getFullYear())
-			// Null defaults to current time
-			expect(ExpressionFunctions.dateYear(null)).toBe(new Date().getFullYear())
 			// Invalid
-			expect(ExpressionFunctions.dateYear('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateYear('invalid')).toBe(null)
+			expect(ExpressionFunctions.dateYear(undefined)).toBe(null)
+			expect(ExpressionFunctions.dateYear(null)).toBe(null)
 			// Invalid timezone
-			expect(ExpressionFunctions.dateYear(0, 'Invalid/Zone')).toBe(NaN)
+			expect(ExpressionFunctions.dateYear(0, 'Invalid/Zone')).toBe(null)
 		})
 
 		it('dateMonth', () => {
@@ -556,7 +542,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.dateMonth(new Date('2024-12-25T12:00:00Z').getTime(), 'UTC')).toBe(12)
 			expect(ExpressionFunctions.dateMonth(new Date('2024-06-01T12:00:00Z').getTime(), 'UTC')).toBe(6)
 			// Invalid
-			expect(ExpressionFunctions.dateMonth('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateMonth('invalid')).toBe(null)
 		})
 
 		it('dateDay', () => {
@@ -564,7 +550,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.dateDay(new Date('2024-01-01T12:00:00Z').getTime(), 'UTC')).toBe(1)
 			expect(ExpressionFunctions.dateDay(new Date('2024-01-31T12:00:00Z').getTime(), 'UTC')).toBe(31)
 			// Invalid
-			expect(ExpressionFunctions.dateDay('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateDay('invalid')).toBe(null)
 		})
 
 		it('dateHour', () => {
@@ -574,7 +560,7 @@ describe('functions', () => {
 			// Timezone support
 			expect(ExpressionFunctions.dateHour(new Date('2024-06-15T12:00:00Z').getTime(), 'America/New_York')).toBe(8)
 			// Invalid
-			expect(ExpressionFunctions.dateHour('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateHour('invalid')).toBe(null)
 		})
 
 		it('dateMinute', () => {
@@ -582,7 +568,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.dateMinute(new Date('2024-06-15T14:00:00Z').getTime(), 'UTC')).toBe(0)
 			expect(ExpressionFunctions.dateMinute(new Date('2024-06-15T14:59:00Z').getTime(), 'UTC')).toBe(59)
 			// Invalid
-			expect(ExpressionFunctions.dateMinute('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateMinute('invalid')).toBe(null)
 		})
 
 		it('dateSecond', () => {
@@ -590,7 +576,7 @@ describe('functions', () => {
 			expect(ExpressionFunctions.dateSecond(new Date('2024-06-15T14:30:00Z').getTime(), 'UTC')).toBe(0)
 			expect(ExpressionFunctions.dateSecond(new Date('2024-06-15T14:30:59Z').getTime(), 'UTC')).toBe(59)
 			// Invalid
-			expect(ExpressionFunctions.dateSecond('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateSecond('invalid')).toBe(null)
 		})
 
 		it('dateWeekday', () => {
@@ -601,7 +587,7 @@ describe('functions', () => {
 			// ISO string input
 			expect(ExpressionFunctions.dateWeekday('2024-06-15T12:00:00Z', 'UTC')).toBe(6)
 			// Invalid
-			expect(ExpressionFunctions.dateWeekday('invalid')).toBe(NaN)
+			expect(ExpressionFunctions.dateWeekday('invalid')).toBe(null)
 		})
 	})
 
