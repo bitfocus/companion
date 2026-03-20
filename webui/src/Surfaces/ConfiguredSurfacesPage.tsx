@@ -6,7 +6,7 @@ import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
 import { MyErrorBoundary } from '~/Resources/Error'
-import { Outlet, useMatchRoute, useNavigate, useSearch } from '@tanstack/react-router'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
@@ -47,42 +47,42 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 	}, [])
 
 	// Handle the various cases in which we want to show the settings panel (when window is narrow)
-	// 1. if one of the integration subpanels are currently visible
-	const showingSubpanel = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: true })
-	// 2. if the user clicked the "Show Settings" button
-	const { showSettings: showSettingsParam } = useSearch({ from: '/_app/surfaces/configured' })
+	// 1. if one of the integration subpanels are currently visible or user clicked Show Settings
+	const showSettings = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: true })
+	// 2. specific action when the user clicks the "Show Settings" button
 	const handleShowSettings = useCallback(() => {
-		// note: the search term will propagate to the other sub-windows, so when the window is narrow,
-		// subwindows will return to the settings panel (since the user must have gotten to the sub-panel from there).
-		void navigate({ to: '.', search: { showSettings: true } })
+		void navigate({ to: '/surfaces/configured/integrations' })
 	}, [navigate])
-	const showSettings = showSettingsParam || showingSubpanel
 
 	// 3. Handle changes in panel visibility
 	const primaryPanelRef = useRef<React.ElementRef<typeof CCol>>(null)
 	useEffect(() => {
-		const handler = debounceFn(
-			() => {
-				const pRef = primaryPanelRef.current
-				if (showSettingsParam && pRef && getComputedStyle(pRef).display !== 'none') {
+		// if left-panel is visible and we're at the top-level, remove the "integrations" route-placeholder
+		const checkVisibility = () => {
+			const pRef = primaryPanelRef.current
+			const showingOverview = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: false })
+			if (showSettings && pRef) {
+				if (showingOverview && getComputedStyle(pRef).display !== 'none') {
 					// Turn off showSettings if the user widens the window enough to expose the left panel.
-					// this prevents retaining showSettings=true indefinitely, with possibly confusing results if the window narrows again.
-					void navigate({ to: '.', search: { showSettings: undefined } })
-				} else if (showingSubpanel && pRef && getComputedStyle(pRef).display === 'none') {
-					// keep the return-to-settings behavior consistent when closing a subpanel. This feature is not strictly necessary.
-					void navigate({ to: '.', search: { showSettings: true } })
+					// this prevents a possibly confusing results of the setting showing up "spontaneously" if the window narrows again.
+					void navigate({ to: '/surfaces/configured' })
 				}
-			},
+			}
+		}
+
+		checkVisibility() // run once, immediately on mount or changed dependency.
+		// handle window-size change. Use debounce so it only fires once at the end of resizing.
+		const handler = debounceFn(
+			checkVisibility,
 			{ wait: 1000 } // give the user a chance to make it narrow again if they overshot.
 		)
 
-		handler() // run once on mount or changed dependency.
 		window.addEventListener('resize', handler)
 		return () => {
 			handler.cancel()
 			window.removeEventListener('resize', handler)
 		}
-	}, [navigate, showSettingsParam, showingSubpanel])
+	}, [matchRoute, navigate, showSettings])
 
 	// Handle editing known-surfaces (aka configured surfaces)
 	const selectKnownSurface = useCallback(
@@ -160,7 +160,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				</div>
 			</CCol>
 
-			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />

@@ -333,7 +333,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem
 						name="Surfaces"
 						icon={null}
-						path="/surfaces/configured"
+						path="/surfaces/configured/integrations"
 						title="Surface settings have moved to the main Surfaces Page."
 					/>
 					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />

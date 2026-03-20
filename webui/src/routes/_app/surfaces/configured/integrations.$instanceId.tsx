@@ -11,7 +11,7 @@ const ModuleConfigComponent = observer(function ModuleConfigComponent() {
 	// Ensure the selected instance is valid
 	// note: Currently Companion displays a "loading" bar until surfaceInstances have been loaded, so we don't test for "data is ready"
 	if (!surfaceInstances.instances.has(instanceId)) {
-		return <Navigate to="/surfaces/configured" replace />
+		return <Navigate to="/surfaces/configured/integrations" replace />
 	} else {
 		return <SurfaceInstanceEditPanel key={instanceId} instanceId={instanceId} />
 	}

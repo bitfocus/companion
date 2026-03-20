@@ -47,7 +47,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	const doConfigureInstance = useCallback(
 		(instanceId: string | null) => {
 			if (!instanceId) {
-				void navigate({ to: '/surfaces/configured' })
+				void navigate({ to: '/surfaces/configured/integrations' })
 			} else {
 				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
 			}

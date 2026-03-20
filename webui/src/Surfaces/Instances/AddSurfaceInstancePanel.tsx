@@ -64,7 +64,9 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 			moduleType: ModuleInstanceType.Surface,
 
 			closeAddInstance: () => {
-				void navigate({ to: '/surfaces/configured' })
+				// it's always safe to return to /surfaces/configured/integrations (i.e. it will always display correctly)
+				// if the window is wide-enough, ConfigureSurfacesPage will remove the last part of the path.
+				void navigate({ to: '/surfaces/configured/integrations' })
 			},
 			openConfigureInstance: (instanceId) => {
 				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
