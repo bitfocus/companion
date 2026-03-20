@@ -12,21 +12,21 @@
 	},
 	"dependencies": {
 		"@companion-app/shared": "*",
-		"@sentry/electron": "^7.9.0",
+		"@sentry/electron": "^7.10.0",
 		"chokidar": "^5.0.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^11.0.2",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.3.4",
-		"nanoid": "^5.1.6",
+		"nanoid": "^5.1.7",
 		"plist": "^3.1.0",
 		"semver": "^7.7.4",
 		"strip-ansi": "^7.2.0",
-		"systeminformation": "^5.31.3"
+		"systeminformation": "^5.31.4"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "40.7.0",
+		"electron": "41.0.2",
 		"electron-builder": "26.8.2",
 		"electron-reloader": "^1.2.3"
 	}

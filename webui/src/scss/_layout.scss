@@ -155,7 +155,8 @@ form.row > * {
 		--cui-dropdown-link-color: var(--menu-color);
 		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
 		--cui-dropdown-link-hover-color: var(--menu-hover-color); // only works if .dropdown-item doesn't define color:
-		--cui-dropdown-link-active-bg: var(--menu-hover-bg); // don't change during click
+		// next two: don't change during click (but note that item is also "active" when its route is the current one...)
+		--cui-dropdown-link-active-bg: var(--menu-hover-bg);
 		--cui-dropdown-link-active-color: var(--menu-hover-color);
 
 		padding: 0.5em 0;
@@ -168,6 +169,11 @@ form.row > * {
 			font-size: 0.95rem; // Slightly smaller, more refined
 			padding: 0.4em 0.75em; // More vertical padding, balanced horizontal
 			transition: background-color 0.15s ease-in-out; // Smooth hover transition
+
+			&:focus-visible {
+				// override button focus behavior (when "to" is a function), so it highlights the same way as the other items
+				outline: none;
+			}
 
 			.dropdown-item-icon {
 				// let the rules above and below control its padding

@@ -13,10 +13,10 @@ import { Image, type TextLayoutCache } from './Image.js'
 import { ParseAlignment, parseColor } from '../Resources/Util.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult } from './ImageResult.js'
-import type { GraphicsOptions } from './Controller.js'
 import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import QuickLRU from 'quick-lru'
+import type { RendererButtonStyle, RendererDrawStyle } from './Types.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -77,7 +77,7 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(options: GraphicsOptions, location: ControlLocation | null): ImageResult {
+	static drawBlank(showTopbar: boolean, location: ControlLocation | null): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
@@ -86,7 +86,7 @@ export class GraphicsRenderer {
 
 		img.fillColor('black')
 
-		if (!options.remove_topbar) {
+		if (showTopbar) {
 			img.drawTextLine(2, 3, location ? formatLocation(location) : 'x/x', 'rgb(50, 50, 50)', 8)
 			img.horizontalLine(13.5, 'rgb(30, 30, 30)')
 		}
@@ -110,12 +110,7 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for a btuton
 	 */
-	static async drawButtonImageUnwrapped(
-		options: GraphicsOptions,
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined
-	): Promise<{
+	static async drawButtonImageUnwrapped(drawStyle: RendererDrawStyle): Promise<{
 		buffer: Buffer
 		width: number
 		height: number
@@ -134,8 +129,8 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (options.page_plusminus) {
-				img.drawTextLine(31, 20, options.page_direction_flipped ? '–' : '+', colorWhite, 18)
+			if (drawStyle.plusminus) {
+				img.drawTextLine(31, 20, drawStyle.direction_flipped ? '–' : '+', colorWhite, 18)
 			} else {
 				img.drawPath(
 					[
@@ -154,8 +149,8 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (options.page_plusminus) {
-				img.drawTextLine(31, 36, options.page_direction_flipped ? '+' : '–', colorWhite, 18)
+			if (drawStyle.plusminus) {
+				img.drawTextLine(31, 36, drawStyle.direction_flipped ? '+' : '–', colorWhite, 18)
 			} else {
 				img.drawPath(
 					[
@@ -174,20 +169,20 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (location === undefined) {
+			if (drawStyle.pageNumber <= 0) {
 				// Preview (no location)
 				img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
 				img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
-			} else if (!pagename || pagename.toLowerCase() == 'page') {
+			} else if (!drawStyle.pageName || drawStyle.pageName.toLowerCase() == 'page') {
 				img.drawTextLine(23, 18, 'PAGE', colorButtonYellow, 10)
-				img.drawTextLineAligned(36, 32, '' + location.pageNumber, colorWhite, 18, 'center', 'top')
+				img.drawTextLineAligned(36, 32, '' + drawStyle.pageNumber, colorWhite, 18, 'center', 'top')
 			} else {
-				img.drawAlignedText(0, 0, 72, 72, pagename, colorWhite, 18, 'center', 'center')
+				img.drawAlignedText(0, 0, 72, 72, drawStyle.pageName, colorWhite, 18, 'center', 'center')
 			}
 		} else if (drawStyle.style === 'button') {
 			draw_style = 'button'
 
-			await GraphicsRenderer.#drawButtonMain(img, options, drawStyle, location)
+			await GraphicsRenderer.#drawButtonMain(img, drawStyle)
 		}
 
 		// console.timeEnd('drawButtonImage')
@@ -203,17 +198,7 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the main button
 	 */
-	static async #drawButtonMain(
-		img: Image,
-		options: GraphicsOptions,
-		drawStyle: DrawStyleButtonModel,
-		location: ControlLocation | undefined
-	): Promise<void> {
-		let showTopbar = !!drawStyle.show_topbar
-		if (drawStyle.show_topbar === 'default' || drawStyle.show_topbar === undefined) {
-			showTopbar = !options.remove_topbar
-		}
-
+	static async #drawButtonMain(img: Image, drawStyle: RendererButtonStyle): Promise<void> {
 		// handle upgrade from pre alignment-support configuration
 		if (drawStyle.alignment === undefined) {
 			drawStyle.alignment = 'center:center'
@@ -223,7 +208,7 @@ export class GraphicsRenderer {
 		}
 
 		// Draw background color first
-		if (!showTopbar) {
+		if (!drawStyle.show_topbar) {
 			img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
 		} else {
 			img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
@@ -236,7 +221,7 @@ export class GraphicsRenderer {
 				const data = Buffer.from(png64, 'base64')
 				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
 
-				if (!showTopbar) {
+				if (!drawStyle.show_topbar) {
 					await img.drawFromPngData(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
 				} else {
 					await img.drawFromPngData(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
@@ -244,13 +229,13 @@ export class GraphicsRenderer {
 			} catch (e) {
 				console.error('error drawing image:', e)
 				img.box(0, 14, 71, 57, 'black')
-				if (!showTopbar) {
+				if (!drawStyle.show_topbar) {
 					img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
 				} else {
 					img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
 				}
 
-				GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+				GraphicsRenderer.#drawTopbar(img, drawStyle)
 				return
 			}
 		}
@@ -259,7 +244,7 @@ export class GraphicsRenderer {
 		try {
 			for (const image of drawStyle.imageBuffers || []) {
 				if (image.buffer) {
-					const yOffset = showTopbar ? 14 : 0
+					const yOffset = drawStyle.show_topbar ? 14 : 0
 
 					const x = image.x ?? 0
 					const y = yOffset + (image.y ?? 0)
@@ -271,13 +256,13 @@ export class GraphicsRenderer {
 			}
 		} catch (_e) {
 			img.fillColor('black')
-			if (!showTopbar) {
+			if (!drawStyle.show_topbar) {
 				img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 			} else {
 				img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
 			}
 
-			GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+			GraphicsRenderer.#drawTopbar(img, drawStyle)
 			return
 		}
 
@@ -293,26 +278,21 @@ export class GraphicsRenderer {
 			fontSize = Number(drawStyle.size) || 'auto'
 		}
 
-		if (!showTopbar) {
+		if (!drawStyle.show_topbar) {
 			img.drawAlignedText(2, 1, 68, 70, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
 		} else {
 			img.drawAlignedText(2, 15, 68, 57, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
 		}
 
 		// At last draw Topbar on top
-		GraphicsRenderer.#drawTopbar(img, showTopbar, drawStyle, location)
+		GraphicsRenderer.#drawTopbar(img, drawStyle)
 	}
 
 	/**
 	 * Draw the topbar onto an image for a button
 	 */
-	static #drawTopbar(
-		img: Image,
-		showTopbar: boolean,
-		drawStyle: DrawStyleButtonModel,
-		location: ControlLocation | undefined
-	) {
-		if (!showTopbar) {
+	static #drawTopbar(img: Image, drawStyle: RendererButtonStyle) {
+		if (!drawStyle.show_topbar) {
 			if (drawStyle.pushed) {
 				img.drawBorder(3, colorButtonYellow)
 			}
@@ -321,18 +301,18 @@ export class GraphicsRenderer {
 			img.box(0, 0, 72, 13.5, colorBlack)
 			img.horizontalLine(13.5, colorButtonYellow)
 
-			if (drawStyle.stepCount > 1 && location) {
+			if (drawStyle.stepCount > 1 && drawStyle.location) {
 				step = `.${drawStyle.stepCurrent}`
 			}
 
-			if (location === undefined) {
+			if (drawStyle.location === undefined) {
 				// Preview (no location)
 				img.drawTextLine(4, 2, `x.x${step}`, colorButtonYellow, 9)
 			} else if (drawStyle.pushed) {
 				img.box(0, 0, 72, 14, colorButtonYellow)
-				img.drawTextLine(4, 2, `${formatLocation(location)}${step}`, colorBlack, 9)
+				img.drawTextLine(4, 2, `${formatLocation(drawStyle.location)}${step}`, colorBlack, 9)
 			} else {
-				img.drawTextLine(4, 2, `${formatLocation(location)}${step}`, colorButtonYellow, 9)
+				img.drawTextLine(4, 2, `${formatLocation(drawStyle.location)}${step}`, colorButtonYellow, 9)
 			}
 		}
 
@@ -340,16 +320,16 @@ export class GraphicsRenderer {
 		let rightMax = 72
 
 		// first the cloud icon if present
-		if (drawStyle.cloud_error && showTopbar) {
+		if (drawStyle.cloud_error && drawStyle.show_topbar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
 			rightMax -= 17
-		} else if (drawStyle.cloud && showTopbar) {
+		} else if (drawStyle.cloud && drawStyle.show_topbar) {
 			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloud)
 			rightMax -= 17
 		}
 
 		// next error or warning icon
-		if (location) {
+		if (drawStyle.location) {
 			let statusColor: string | undefined
 			switch (drawStyle.button_status) {
 				case 'error':

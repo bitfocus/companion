@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type RefObject, type MouseEventHandler } from 'react'
-import { type MenuItemData } from './ActionMenu'
+import { type MenuItemProps } from './ActionMenu'
 
 // convenience object
-export const MenuSeparator: MenuItemData = {
+export const MenuSeparator: MenuItemProps = {
 	isSeparator: true,
 }
 
@@ -12,7 +12,7 @@ export interface ContextMenuProps {
 	visible: boolean
 	position: { x: number; y: number }
 	onContextMenu: MouseEventHandler<HTMLDivElement>
-	menuItems: MenuItemData[]
+	menuItems: MenuItemProps[]
 	menuRef: RefObject<HTMLDivElement>
 }
 
@@ -29,7 +29,7 @@ export interface ContextMenuProps {
 		<ContextMenu { ...contextMenuProps}/>
 	</div>
 */
-export function useContextMenuState(menuItems: MenuItemData[]): ContextMenuProps {
+export function useContextMenuState(menuItems: MenuItemProps[]): ContextMenuProps {
 	const [visible, setVisible] = useState(false)
 	const [position, setPosition] = useState({ x: 200, y: 200 })
 	const menuRef = useRef<HTMLDivElement>(null) // to get the ContextMenu's ref for event handling here

@@ -9,6 +9,7 @@
  * this program.
  */
 import LogController from '../../Log/Controller.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
@@ -83,6 +84,7 @@ function generateConfigFields(
 	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
 
 	for (const variable of deviceInfo.transferVariables) {
+		if (BANNED_PROPS.has(variable.id)) continue
 		if (variable.type === 'input') {
 			const id = `satellite_input_${variable.id}`
 			fields.push({

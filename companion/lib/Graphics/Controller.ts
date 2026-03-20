@@ -20,9 +20,9 @@ import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import os from 'os'
 import debounceFn from 'debounce-fn'
-import type { CompanionButtonStyleProps } from '@companion-module/base'
+import { assertNever, type CompanionButtonStyleProps } from '@companion-module/base'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
@@ -31,6 +31,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
+import type { RendererButtonStyle, RendererDrawStyle } from './Types.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
@@ -239,16 +240,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 							if (!render) {
 								const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
-									buttonStyle,
-									undefined,
-									undefined,
+									{
+										...(buttonStyle as DrawStyleButtonModel),
+										show_topbar: this.#resolveShowTopBar((buttonStyle as DrawStyleButtonModel).show_topbar),
+										location: undefined, // Presets don't have a location, and it isn't needed for rendering
+									},
 									CRASHED_WORKER_RETRY_COUNT
 								)
 								render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
 								this.#renderLRUCache.set(key, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank(this.#drawOptions, null)
+							render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, null)
 						}
 
 						this.emit('presetDrawn', args.controlId, render)
@@ -303,27 +306,59 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const pagename = this.#pageStore.getPageName(location.pageNumber)
 
-						// Check if the image is already present in the render cache and if so, return it
-						let keyLocation: ControlLocation | undefined
-						if (buttonStyle.style === 'button') {
-							const globalShowTopBar = !this.#drawOptions.remove_topbar && buttonStyle.show_topbar === 'default'
-							keyLocation = globalShowTopBar || buttonStyle.show_topbar === true ? location : undefined
-						}
-						const key = JSON.stringify({ options: this.#drawOptions, buttonStyle, keyLocation, pagename })
-						render = this.#renderLRUCache.get(key)
+						let renderStyle: RendererDrawStyle | undefined
+						switch (buttonStyle.style) {
+							case 'button': {
+								const showTopBar = this.#resolveShowTopBar(buttonStyle.show_topbar)
 
-						if (!render) {
-							const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
-								buttonStyle,
-								location,
-								pagename,
-								CRASHED_WORKER_RETRY_COUNT
-							)
-							render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
-							this.#renderLRUCache.set(key, render)
+								renderStyle = {
+									...buttonStyle,
+
+									show_topbar: showTopBar,
+									location: showTopBar ? location : undefined, // Only needed if the topbar is shown
+								}
+								break
+							}
+							case 'pageup':
+							case 'pagedown': {
+								renderStyle = {
+									style: buttonStyle.style,
+									plusminus: this.#drawOptions.page_plusminus,
+									direction_flipped: this.#drawOptions.page_direction_flipped,
+								}
+								break
+							}
+							case 'pagenum': {
+								renderStyle = {
+									style: 'pagenum',
+									pageNumber: location.pageNumber,
+									pageName: pagename,
+								}
+								break
+							}
+							default:
+								assertNever(buttonStyle)
+								break
+						}
+
+						if (renderStyle) {
+							// Check if the image is already present in the render cache and if so, return it
+							const cacheKey = JSON.stringify(renderStyle)
+							render = this.#renderLRUCache.get(cacheKey)
+
+							if (!render) {
+								const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
+									renderStyle,
+									CRASHED_WORKER_RETRY_COUNT
+								)
+								render = GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, buttonStyle)
+								this.#renderLRUCache.set(cacheKey, render)
+							}
+						} else {
+							render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(this.#drawOptions, location)
+						render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 					}
 
 					// Only cache the render, if it is within the valid bounds
@@ -376,12 +411,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(this.#drawOptions, location)
+				const blankRender = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 
 				this.#updateCacheWithRender(location, blankRender)
 				this.emit('button_drawn', location, blankRender)
 			}
 		}
+	}
+
+	#resolveShowTopBar(show_topbar: DrawStyleButtonModel['show_topbar']): boolean {
+		const globalShowTopBar = !this.#drawOptions.remove_topbar && show_topbar === 'default'
+		return globalShowTopBar || show_topbar === true
 	}
 
 	/**
@@ -419,7 +459,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Draw a preview of a button
 	 */
 	async drawPreview(buttonStyle: CompanionButtonStyleProps & { style: 'button' }): Promise<ImageResult> {
-		const drawStyle: DrawStyleModel = {
+		const drawStyle: RendererButtonStyle = {
 			...buttonStyle,
 
 			textExpression: false,
@@ -434,17 +474,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			stepCurrent: 1,
 			stepCount: 1,
 
-			show_topbar: buttonStyle.show_topbar,
+			show_topbar: this.#resolveShowTopBar(buttonStyle.show_topbar),
 			alignment: buttonStyle.alignment ?? 'center:center',
 			pngalignment: buttonStyle.pngalignment ?? 'center:center',
 			png64: buttonStyle.png64 ?? null,
 			size: buttonStyle.size === 'auto' ? 'auto' : Number(buttonStyle.size),
+
+			location: undefined,
 		}
 
 		const { buffer, width, height, dataUrl, draw_style } = await this.#executePoolDrawButtonImage(
 			drawStyle,
-			undefined,
-			undefined,
 			CRASHED_WORKER_RETRY_COUNT
 		)
 		return GraphicsRenderer.wrapDrawButtonImage(buffer, width, height, dataUrl, draw_style, drawStyle)
@@ -566,7 +606,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(this.#drawOptions, location)
+		return GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 	}
 
 	/**
@@ -591,9 +631,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @returns Image render object
 	 */
 	async #executePoolDrawButtonImage(
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined,
+		drawStyle: RendererDrawStyle,
 		remainingAttempts: number
 	): Promise<{
 		buffer: Buffer
@@ -602,6 +640,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		dataUrl: string
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
-		return this.#poolExec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename], remainingAttempts)
+		return this.#poolExec('drawButtonImage', [drawStyle], remainingAttempts)
 	}
 }

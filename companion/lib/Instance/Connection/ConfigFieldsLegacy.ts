@@ -1,4 +1,5 @@
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import {
 	CompanionFieldVariablesSupport,
 	type CompanionInputFieldBaseExtended,
@@ -35,46 +36,48 @@ import type { EncodeIsVisible, SomeEncodedCompanionConfigField } from '@companio
 import type { Complete } from '@companion-module/host'
 
 export function translateConnectionConfigFields(fields: SomeEncodedCompanionConfigField[]): SomeCompanionInputField[] {
-	return fields.map((raw) => {
-		// Cast to remove the EncodeIsVisible mangling
-		const o = raw as SomeCompanionConfigField
-		switch (o.type) {
-			case 'bonjour-device':
-				return {
-					...translateCommonFields(o),
-					type: 'bonjour-device',
-					width: o.width,
-				} satisfies Complete<CompanionInputFieldBonjourDeviceExtended>
-			case 'secret-text':
-				return {
-					...translateCommonFields(o),
-					type: 'secret-text',
-					width: o.width,
-					default: o.default,
-					minLength: o.required ? 1 : undefined,
-					regex: o.regex,
-				} satisfies Complete<CompanionInputFieldSecretExtended>
+	return fields
+		.filter((raw) => !BANNED_PROPS.has(raw.id))
+		.map((raw) => {
+			// Cast to remove the EncodeIsVisible mangling
+			const o = raw as SomeCompanionConfigField
+			switch (o.type) {
+				case 'bonjour-device':
+					return {
+						...translateCommonFields(o),
+						type: 'bonjour-device',
+						width: o.width,
+					} satisfies Complete<CompanionInputFieldBonjourDeviceExtended>
+				case 'secret-text':
+					return {
+						...translateCommonFields(o),
+						type: 'secret-text',
+						width: o.width,
+						default: o.default,
+						minLength: o.required ? 1 : undefined,
+						regex: o.regex,
+					} satisfies Complete<CompanionInputFieldSecretExtended>
 
-			case 'static-text':
-				return translateStaticTextField(o, o.width)
-			case 'textinput':
-				return translateTextInputField(o, o.width, false)
-			case 'checkbox':
-				return translateCheckboxField(o, o.width)
-			case 'colorpicker':
-				return translateColorPickerField(o, o.width)
-			case 'number':
-				return translateNumberField(o, o.width)
-			case 'dropdown':
-				return translateDropdownField(o, o.width)
-			case 'multidropdown':
-				return translateMultiDropdownField(o, o.width)
+				case 'static-text':
+					return translateStaticTextField(o, o.width)
+				case 'textinput':
+					return translateTextInputField(o, o.width, false)
+				case 'checkbox':
+					return translateCheckboxField(o, o.width)
+				case 'colorpicker':
+					return translateColorPickerField(o, o.width)
+				case 'number':
+					return translateNumberField(o, o.width)
+				case 'dropdown':
+					return translateDropdownField(o, o.width)
+				case 'multidropdown':
+					return translateMultiDropdownField(o, o.width)
 
-			default:
-				assertNever(o)
-				return generateUnsupportedField(raw, raw.width)
-		}
-	})
+				default:
+					assertNever(o)
+					return generateUnsupportedField(raw, raw.width)
+			}
+		})
 }
 
 export function translateEntityInputFields(
@@ -82,36 +85,38 @@ export function translateEntityInputFields(
 	entityType: EntityModelType,
 	usesInternalVariableParsing: boolean
 ): SomeCompanionInputField[] {
-	return fields.map((raw) => {
-		// Cast to remove the EncodeIsVisible mangling
-		const o = raw as SomeCompanionActionInputField | SomeCompanionFeedbackInputField
-		switch (o.type) {
-			case 'static-text':
-				return translateStaticTextField(o, 0)
-			case 'textinput':
-				return translateTextInputField(o, 0, usesInternalVariableParsing)
-			case 'checkbox':
-				return translateCheckboxField(o, 0)
-			case 'colorpicker':
-				return translateColorPickerField(o, 0)
-			case 'number':
-				return translateNumberField(o, 0)
-			case 'dropdown':
-				return translateDropdownField(o, 0)
-			case 'multidropdown':
-				return translateMultiDropdownField(o, 0)
-			case 'custom-variable':
-				if (entityType === EntityModelType.Action) {
-					return translateCustomVariableField(o, 0)
-				} else {
-					return generateUnsupportedField(raw, 0)
-				}
+	return fields
+		.filter((f) => !BANNED_PROPS.has(f.id))
+		.map((raw) => {
+			// Cast to remove the EncodeIsVisible mangling
+			const o = raw as SomeCompanionActionInputField | SomeCompanionFeedbackInputField
+			switch (o.type) {
+				case 'static-text':
+					return translateStaticTextField(o, 0)
+				case 'textinput':
+					return translateTextInputField(o, 0, usesInternalVariableParsing)
+				case 'checkbox':
+					return translateCheckboxField(o, 0)
+				case 'colorpicker':
+					return translateColorPickerField(o, 0)
+				case 'number':
+					return translateNumberField(o, 0)
+				case 'dropdown':
+					return translateDropdownField(o, 0)
+				case 'multidropdown':
+					return translateMultiDropdownField(o, 0)
+				case 'custom-variable':
+					if (entityType === EntityModelType.Action) {
+						return translateCustomVariableField(o, 0)
+					} else {
+						return generateUnsupportedField(raw, 0)
+					}
 
-			default:
-				assertNever(o)
-				return generateUnsupportedField(o, 0)
-		}
-	})
+				default:
+					assertNever(o)
+					return generateUnsupportedField(o, 0)
+			}
+		})
 }
 
 function generateUnsupportedField<T extends EncodeIsVisible<CompanionInputFieldBase>>(

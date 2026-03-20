@@ -3,6 +3,17 @@ import type { SomeExpressionNode } from './ExpressionParse.js'
 import type jsep from 'jsep'
 import { VARIABLE_UNKNOWN_VALUE, SplitVariableId } from '../Variables.js'
 
+/** Properties that must never be accessed or written via MemberExpression to prevent prototype pollution */
+export const BANNED_PROPS = new Set([
+	'__proto__',
+	'constructor',
+	'prototype',
+	'__defineGetter__',
+	'__defineSetter__',
+	'__lookupGetter__',
+	'__lookupSetter__',
+])
+
 interface ResolverState {
 	values: Record<string, any>
 	isComplete: boolean
@@ -41,7 +52,7 @@ export function ResolveExpression(
 	}
 
 	const resolverState: ResolverState = {
-		values: {},
+		values: Object.create(null),
 		isComplete: false,
 	}
 
@@ -184,6 +195,7 @@ export function ResolveExpression(
 
 						// propagate null
 						if (object == null) return object
+						if (BANNED_PROPS.has(String(property))) throw new Error(`Access to property "${property}" is not allowed`)
 
 						return object?.[property]
 					}
@@ -218,6 +230,8 @@ export function ResolveExpression(
 						} else if (left.type === 'MemberExpression') {
 							const object = resolve(left.object)
 							const property = resolve(left.property)
+							if (BANNED_PROPS.has(String(property)))
+								throw new Error(`Assignment to property "${property}" is not allowed`)
 
 							const newValue = mutateValueForAssignment(node.operator, object[property], rightValue)
 
@@ -250,6 +264,7 @@ export function ResolveExpression(
 						} else if (arg.type === 'MemberExpression') {
 							const object = resolve(arg.object)
 							const property = resolve(arg.property)
+							if (BANNED_PROPS.has(String(property))) throw new Error(`Update of property "${property}" is not allowed`)
 
 							const operator = node.operator
 							switch (node.operator) {

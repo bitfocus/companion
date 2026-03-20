@@ -26,6 +26,7 @@ import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigg
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { JsonValue } from 'type-fest'
 
 /**
@@ -503,6 +504,7 @@ export class ControlTrigger
 	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
 		// @ts-expect-error mismatch in types
 		this.options[key] = value
@@ -756,6 +758,7 @@ export class ControlTrigger
 		for (const event of this.events) {
 			if (event && event.id === id) {
 				if (!event.options) event.options = {}
+				if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
 				event.options[key] = value
 
