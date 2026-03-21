@@ -333,3 +333,48 @@ eg `timeDiff($(internal:time_hms), "18:00:00")` will return the seconds until `1
 An example using a Date Time String could be `timeDiff($(internal:time_hms), "2024-07-04T20:00-04:00")` which would return the number of seconds from the current Companion time until 4th July 2024, 8pm, in the UTC-4 Timezone.
 
 The returned seconds can also be used within `secondsToTimestamp` to format the result as needed.
+
+### Date operations
+
+**parseDate(value)**
+
+Parse a date value and return the Unix timestamp in milliseconds. Accepts:
+
+- Numbers: treated as Unix milliseconds
+- Strings: parsed using JavaScript's [`Date()` constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date). ISO 8601 format (e.g. `"2024-06-15T14:30:00Z"`) is recommended for reliable results. Ambiguous formats like `MM/DD/YYYY` are not reliably supported.
+
+Returns `null` if the value cannot be parsed.
+
+eg `parseDate("2024-06-15T12:00:00Z")` returns the Unix ms for that date.
+
+The returned value is Unix ms, the same format as `unixNow()`, so it can be used with all other date functions.
+
+**dateYear(value, timezone?)**, **dateMonth(value, timezone?)**, **dateDay(value, timezone?)**
+
+Extract date components from a date value (Unix ms or date string).
+
+- `dateYear` returns the full year (e.g. 2024)
+- `dateMonth` returns the month from 1 (January) to 12 (December)
+- `dateDay` returns the day of the month from 1 to 31
+
+eg `dateYear(unixNow())` returns the current year, `dateMonth(unixNow(), 'UTC')` returns the current month in UTC.
+
+**dateHour(value, timezone?)**, **dateMinute(value, timezone?)**, **dateSecond(value, timezone?)**
+
+Extract time components from a date value.
+
+- `dateHour` returns 0–23
+- `dateMinute` returns 0–59
+- `dateSecond` returns 0–59
+
+eg `dateHour(unixNow())` returns the current hour in local time, `dateHour(unixNow(), 'America/New_York')` returns the current hour in New York.
+
+**dateWeekday(value, timezone?)**
+
+Returns the day of the week as a number: 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
+
+eg `dateWeekday(unixNow())` returns today's weekday number.
+
+:::tip
+All date component functions accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, local time is used. All functions return `null` for invalid input.
+:::
