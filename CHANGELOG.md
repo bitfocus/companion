@@ -1,5 +1,12 @@
 # Bitfocus Companion
 
+## Companion v4.2.6 - Release Notes
+
+- stream deck + xl not working on windows
+- unable to export some pages
+- run upgrade scripts for disabled actions/feedbacks
+- prevent prototype pollution in expressions
+
 ## Companion v4.2.5 - Release Notes
 
 - support stream deck + xl
