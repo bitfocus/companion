@@ -66,7 +66,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 			}
 		}
 
-		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label }))
+		return options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: String(choice.label) }))
 	}, [choices])
 
 	const currentValue = useMemo(() => {
