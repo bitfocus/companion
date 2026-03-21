@@ -47,17 +47,20 @@ function getDateParts(
 			weekday: 'short',
 			hourCycle: 'h23',
 		}).formatToParts(d)
-		const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? NaN)
+		const get = (type: string) => Number(parts.find((p) => p.type === type)?.value)
 		const wd = parts.find((p) => p.type === 'weekday')?.value
-		return {
+		const weekday = wd !== undefined ? weekdayMap[wd] : undefined
+		if (weekday === undefined) return null
+		const out = {
 			year: get('year'),
 			month: get('month'),
 			day: get('day'),
 			hour: get('hour'),
 			minute: get('minute'),
 			second: get('second'),
-			weekday: wd ? (weekdayMap[wd] ?? NaN) : NaN,
+			weekday,
 		}
+		return Object.values(out).some((v) => isNaN(v)) ? null : out
 	} catch {
 		return null
 	}
