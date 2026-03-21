@@ -65,7 +65,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				if (showingOverview && getComputedStyle(pRef).display !== 'none') {
 					// Turn off showSettings if the user widens the window enough to expose the left panel.
 					// this prevents a possibly confusing results of the setting showing up "spontaneously" if the window narrows again.
-					void navigate({ to: '/surfaces/configured' })
+					void navigate({ to: '/surfaces/configured', replace: true })
 				}
 			}
 		}
