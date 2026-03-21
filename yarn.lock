@@ -3312,6 +3312,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@elgato-stream-deck/core@patch:@elgato-stream-deck/core@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-core-npm-7.6.0-72203b1af6.patch":
+  version: 7.6.0
+  resolution: "@elgato-stream-deck/core@patch:@elgato-stream-deck/core@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-core-npm-7.6.0-72203b1af6.patch::version=7.6.0&hash=566d56"
+  dependencies:
+    eventemitter3: "npm:^5.0.4"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/363db9bd48239df93493ee8ab2b323d698c95b7176d7973d428b79fea64df23b0f0187077b55332bf9e79cf6ff441cfd8228a07c391eb6b69568351f5b9554ff
+  languageName: node
+  linkType: hard
+
 "@elgato-stream-deck/node-lib@npm:7.6.0":
   version: 7.6.0
   resolution: "@elgato-stream-deck/node-lib@npm:7.6.0"

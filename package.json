@@ -91,7 +91,8 @@
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
-    "@types/express-serve-static-core": "^5.1.0"
+    "@types/express-serve-static-core": "^5.1.0",
+    "@elgato-stream-deck/core@npm:7.6.0": "patch:@elgato-stream-deck/core@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-core-npm-7.6.0-72203b1af6.patch"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

@@ -1,0 +1,13 @@
+diff --git a/dist/models/plus-xl.js b/dist/models/plus-xl.js
+index ffe5bcd05afc4c6f29e1d24ef2f4c8f53268ecfd..e1ebcf4a26878c651c97d3b493f1942c016e0c61 100644
+--- a/dist/models/plus-xl.js
++++ b/dist/models/plus-xl.js
+@@ -75,7 +75,7 @@ const plusXlProperties = {
+     CONTROLS: (0, controlsGenerator_js_1.freezeDefinitions)(plusXlControls),
+     KEY_SPACING_HORIZONTAL: 99,
+     KEY_SPACING_VERTICAL: 40,
+-    FULLSCREEN_PANELS: 0,
++    FULLSCREEN_PANELS: 1,
+     HAS_NFC_READER: false,
+     SUPPORTS_CHILD_DEVICES: false,
+ };
