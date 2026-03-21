@@ -91,7 +91,7 @@ jobs:
 
           upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
 
-          api-version: ${{ github.ref_name }}
+          api-version: ${{ steps.filenames.outputs.longversion }}
           api-branch: "experimental"
           api-product: ${{ env.API_PRODUCT }}
           api-target: "generic"
