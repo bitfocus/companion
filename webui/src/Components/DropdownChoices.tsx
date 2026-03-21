@@ -33,15 +33,17 @@ export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 				if ('options' in item) {
 					// Grouped choices
 					const group: GroupBase<DropdownChoiceInt> = {
-						label: item.label,
-						options: item.options.map((choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label })),
+						label: String(item.label),
+						options: item.options.map(
+							(choice): DropdownChoiceInt => ({ value: choice.id, label: String(choice.label) })
+						),
 					}
 					options.push(group)
 					flatOptions.push(...group.options)
 				} else {
 					// Flat choice
-					options.push({ value: item.id, label: item.label })
-					flatOptions.push({ value: item.id, label: item.label })
+					options.push({ value: item.id, label: String(item.label) })
+					flatOptions.push({ value: item.id, label: String(item.label) })
 				}
 			}
 
@@ -51,7 +53,7 @@ export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 			}
 		} else if (typeof choices === 'object') {
 			const options = Object.values(choices).map(
-				(choice): DropdownChoiceInt => ({ value: choice.id, label: choice.label })
+				(choice): DropdownChoiceInt => ({ value: choice.id, label: String(choice.label) })
 			)
 			return {
 				options,
