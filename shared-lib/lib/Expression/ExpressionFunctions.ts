@@ -20,6 +20,15 @@ function toDate(v: any): Date | null {
 
 const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
 
+type DateParts = NonNullable<ReturnType<typeof getDateParts>>
+
+function getDatePart(v: any, tz: any, key: keyof DateParts): number | null {
+	const d = toDate(v)
+	if (!d) return null
+	const parts = getDateParts(d, tz)
+	return parts ? parts[key] : null
+}
+
 function getDateParts(
 	d: Date,
 	tz?: string
@@ -334,46 +343,11 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		const d = toDate(v)
 		return d ? d.getTime() : null
 	},
-	dateYear: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.year : null
-	},
-	dateMonth: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.month : null
-	},
-	dateDay: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.day : null
-	},
-	dateHour: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.hour : null
-	},
-	dateMinute: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.minute : null
-	},
-	dateSecond: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.second : null
-	},
-	dateWeekday: (v, tz) => {
-		const d = toDate(v)
-		if (!d) return null
-		const parts = getDateParts(d, tz)
-		return parts ? parts.weekday : null
-	},
+	dateYear: (v, tz) => getDatePart(v, tz, 'year'),
+	dateMonth: (v, tz) => getDatePart(v, tz, 'month'),
+	dateDay: (v, tz) => getDatePart(v, tz, 'day'),
+	dateHour: (v, tz) => getDatePart(v, tz, 'hour'),
+	dateMinute: (v, tz) => getDatePart(v, tz, 'minute'),
+	dateSecond: (v, tz) => getDatePart(v, tz, 'second'),
+	dateWeekday: (v, tz) => getDatePart(v, tz, 'weekday'),
 }
