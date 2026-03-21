@@ -12,8 +12,8 @@ interface CloseButtonProps {
 }
 
 interface ContextHelpButtonProps {
-	hoverText: string
-	help: `/user-guide/${string}` | (() => void)
+	hoverText: string | React.ReactNode
+	help?: `/user-guide/${string}` | (() => void)
 	size?: SizeProp
 }
 
@@ -36,9 +36,12 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 }
 
 /*
- ContextHelpButton - meant for panels and other headers such as in Connections and Surfaces
- Caller can supply a link to the user guide or a custom function.
- The default size is intended for panel headers.
+ ContextHelpButton - a generic inline-help icon, 
+ particularly handy for panels and other headers such as in Connections and Surfaces.
+ - hoverText: what to show on hover or focus. Can be plain-text or a React fragment.
+ - help: Caller can supply a link to the user guide or a custom function (or leave it out).
+ - size: a FontAwesome size class such as lg or 2xl. The default size is intended for panel headers.
+ The button is given a class with the size appended, such as context-help-button-2xl
 */
 export function ContextHelpButton({ hoverText, help, size = '2xl' }: ContextHelpButtonProps): React.JSX.Element {
 	// First, a little trick to handle both keyboard navigation, in which the "hover help" should show up on focus,
@@ -69,9 +72,11 @@ export function ContextHelpButton({ hoverText, help, size = '2xl' }: ContextHelp
 					as: 'a' as ElementType,
 					onClick: removeFocus,
 				}
-			: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, help) }
+			: help !== undefined
+				? { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, help) }
+				: {}
 
-	if (help && !/click/i.test(hoverText)) {
+	if (typeof hoverText === 'string' && help && !/click/i.test(hoverText)) {
 		hoverText += ' Click the icon for more details.'
 	}
 

@@ -25,6 +25,7 @@ import type {
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { ContextHelpButton } from '~/Layout/PanelHeaderIcons.js'
 
 export interface VisibleSurfaceInstancesState {
 	disabled: boolean
@@ -85,12 +86,12 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="connections-list-header fixed-header">
+			<div className="connections-list-header fixed-header d-flex justify-content-end align-items-center">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<CButtonGroup className="connection-group-actions mb-2 mx-1">
+				<CButtonGroup className="connection-group-actions m-1 me-auto align-items-center">
 					<CButton
 						color="primary"
 						size="sm"
@@ -101,9 +102,21 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 					</CButton>
 					<CreateCollectionButton />
 				</CButtonGroup>
+				<ContextHelpButton
+					size="xl"
+					hoverText={
+						<>
+							<p>
+								Surface integrations are like connections but for input surfaces: they provide the ability to use
+								different hardware or virtual surfaces to trigger buttons in Companion.
+							</p>
+							<p>Click on any row to configure the integration.</p>
+						</>
+					}
+				/>
 			</div>
 
-			<div className="connections-list-table-container scrollable-content">
+			<div className="connections-list-table-container scrollable-content mt-2">
 				<PanelCollapseHelperProvider
 					storageId="connection-collections"
 					knownPanelIds={surfaceInstances.allCollectionIds}
@@ -143,7 +156,7 @@ function SurfaceInstancesListTableHeading() {
 
 	return (
 		<div className="flex flex-row">
-			<div className="grow">Instance</div>
+			<div className="grow">Surface Integrations </div>
 			<div className="no-break">
 				<CButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />

@@ -16,7 +16,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 	return (
 		<>
 			<SettingsPanelTitleBar />
-			<p style={{ marginBottom: '0em', fontStyle: 'italic', padding: '0.5em 2em' }}>
+			<p style={{ marginBottom: '0em', padding: '0.5em 2em' }}>
 				To configure a surface integration, select an item from the table below.
 				<br />
 				For a specific surface, <span className="d-inline d-xl-none"> click the X button, above and </span>select it in
@@ -24,63 +24,46 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 				<span className="d-none d-xl-inline"> to the left </span>.
 			</p>
 			<div className="secondary-panel-simple-body" style={{ paddingTop: 0, paddingRight: '1.25em' }}>
-				<table
-					className="table table-responsive-sm table-settings mb-0"
-					style={{ border: '1px solid var(--cui-border-color)', borderBottom: 0 }}
-				>
-					<thead>
-						<UserConfigHeadingRow
-							label="Surface Integrations (Plugins)"
-							tooltip={
-								<>
-									<p>
-										Surface integrations are like connections: they provide the ability to use different hardware or
-										virtual surfaces to trigger buttons in Companion.
-									</p>
-									<p>Click on any row to configure the integration.</p>
-								</>
-							}
-						/>
-					</thead>
-					<tbody></tbody>
-				</table>
 				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
-				<div style={{ border: '1px solid var(--cui-border-color)', borderTop: 0, paddingTop: '0.5em' }}>
+				<div>
 					<SurfaceInstancesList selectedInstanceId={null} />
 					{userConfigProps && (
 						<>
-							<table>
-								<tbody>
-									<tr>
-										<td>
-											<div style={{ minWidth: '2em' }}></div>
-										</td>
-										<td style={{ width: '100%' }}>
-											<table className="table table-responsive-sm table-settings elgato-plugin">
-												<tbody>
-													<UserConfigSwitchRow
-														userConfig={userConfigProps}
-														label={<strong>Enable Elgato software Plugin support</strong>}
-														field="elgato_plugin_enable"
-													/>
-												</tbody>
-											</table>
-										</td>
-									</tr>
-								</tbody>
-							</table>
+							<div className="d-flex" style={{ border: '1px solid var(--cui-border-color)', borderTop: 0 }}>
+								<span style={{ paddingRight: 'calc(1.5em + 10px)' }}> </span>
+								<span className="d-inline" style={{ width: '100%' }}>
+									<table className="table table-responsive-sm table-settings elgato-plugin">
+										<tbody>
+											<UserConfigSwitchRow
+												userConfig={userConfigProps}
+												label={<strong>Enable Elgato software Plugin support</strong>}
+												field="elgato_plugin_enable"
+											/>
+										</tbody>
+									</table>
+								</span>
+							</div>
 						</>
 					)}
 				</div>
 
 				<br />
 
-				<p style={{ marginBottom: '0em', fontStyle: 'italic' }}>The following settings affect all surfaces.</p>
-				<hr style={{ marginTop: '0.5em', marginBottom: 0 }} />
 				{userConfigProps && (
 					<table className="table table-responsive-sm table-settings">
+						<thead>
+							<UserConfigHeadingRow
+								label="General Surface Settings"
+								tooltip="The following settings affect all surfaces."
+							/>
+						</thead>
 						<tbody>
-							<UserConfigSwitchRow userConfig={userConfigProps} label="Watch for new USB Devices" field="usb_hotplug" />
+							<UserConfigSwitchRow
+								userConfig={userConfigProps}
+								label="Watch for new USB Devices"
+								field="usb_hotplug"
+								title="Automatically scan for new devices when they are plugged in."
+							/>
 
 							<UserConfigSwitchRow
 								userConfig={userConfigProps}
@@ -105,10 +88,10 @@ function SettingsPanelTitleBar() {
 
 	return (
 		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Surface/Integrations Settings</h4>
+			<h4 className="panel-title">Surface Integrations and General Settings</h4>
 			<div className="header-buttons">
 				<ContextHelpButton
-					hoverText="Manage global surface settings and surface integrations here."
+					hoverText="Manage surface integrations and global surface settings here."
 					help="/user-guide/config/settings#surfaces"
 				/>
 
