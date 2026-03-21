@@ -69,11 +69,9 @@ export class DiscoveredSurfaceRegistry {
 	/**
 	 * Return a cached identifier or assign the next available one.
 	 *
-	 * @param uniquenessKey - Device-type key (e.g. "vendor:product").
-	 * @param alwaysAddSuffix - Force numeric suffix on the first id when true.
+	 * @param surface - The discovered surface info.
 	 * @param prefixedDevicePath - Path used for caching, prefixed with instanceId (e.g. "instance123:/dev/hidraw0").
-	 * @param opener - Optional handler that can open this surface (for HID-scanned surfaces).
-	 * @param surface - Optional discovered surface info (for HID-scanned surfaces).
+	 * @param opener - Handler that can open this surface.
 	 * @returns The collision-resolved surface ID.
 	 */
 	trackSurface(
@@ -144,19 +142,6 @@ export class DiscoveredSurfaceRegistry {
 	}
 
 	/**
-	 * Forget a specific device by its resolved surface ID.
-	 * This should be called when a discovered surface is no longer available.
-	 * @param resolvedSurfaceId - The resolved surface ID to forget
-	 */
-	forgetSurfaceById(resolvedSurfaceId: string): void {
-		const key = this.#surfaceIdToKey.get(resolvedSurfaceId)
-		if (!key) return
-
-		this.#deviceCache.delete(key)
-		this.#surfaceIdToKey.delete(resolvedSurfaceId)
-	}
-
-	/**
 	 * Forget all devices belonging to a specific instance.
 	 * @param instanceId - The instance ID prefix to match
 	 */
@@ -168,6 +153,16 @@ export class DiscoveredSurfaceRegistry {
 				this.#surfaceIdToKey.delete(entry.resolvedSurfaceId)
 			}
 		}
+	}
+
+	/**
+	 * Get the prefixed device path for a surface by its resolved ID.
+	 * Returns undefined if the surface is not in the registry.
+	 */
+	getSurfacePath(resolvedSurfaceId: string): `${string}:${string}` | undefined {
+		const key = this.#surfaceIdToKey.get(resolvedSurfaceId)
+		if (!key) return undefined
+		return this.#deviceCache.get(key)?.prefixedDevicePath
 	}
 
 	/**
