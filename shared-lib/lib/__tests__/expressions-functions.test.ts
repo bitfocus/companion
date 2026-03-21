@@ -520,6 +520,8 @@ describe('functions', () => {
 			expect(ExpressionFunctions.parseDate('')).toBe(null)
 			expect(ExpressionFunctions.parseDate(undefined)).toBe(null)
 			expect(ExpressionFunctions.parseDate(null)).toBe(null)
+			expect(ExpressionFunctions.parseDate(NaN)).toBe(null)
+			expect(ExpressionFunctions.parseDate(Infinity)).toBe(null)
 		})
 
 		it('dateYear', () => {

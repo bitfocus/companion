@@ -8,15 +8,14 @@ function toString(v: any): string {
 }
 
 function toDate(v: any): Date | null {
-	if (v instanceof Date) return v
-	if (typeof v === 'number') return new Date(v)
-	if (typeof v === 'string') {
+	let d: Date | undefined
+	if (v instanceof Date) d = v
+	else if (typeof v === 'number') d = new Date(v)
+	else if (typeof v === 'string' && v.trim().length > 0) {
 		const num = Number(v)
-		if (!isNaN(num) && v.trim().length > 0) return new Date(num)
-		const d = new Date(v)
-		if (!isNaN(d.getTime())) return d
+		d = new Date(isNaN(num) ? v : num)
 	}
-	return null
+	return d && !isNaN(d.getTime()) ? d : null
 }
 
 const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
