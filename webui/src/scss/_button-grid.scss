@@ -83,15 +83,15 @@
 }
 
 .button-grid-panel {
-	display: grid;
-	grid-template-rows: auto 1fr auto;
+	display: flex;
+	flex-direction: column;
 	height: 100%;
 }
 
 .button-grid-panel-content {
 	overflow: hidden;
 	border-radius: 8px;
-	min-height: 300px;
+	// min-height: 250px;  instead, set min-height in tsx to match button-sizes.
 }
 
 .button-grid-header {
@@ -103,12 +103,22 @@
 }
 
 .button-infinite-grid {
-	height: 100%;
-	max-height: 65vh;
+	height: 100%; // needed to get the scrollbar.
+	margin-bottom: 6px; // without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows
+	// (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive)
 
 	background-color: #222;
 	// border-radius: 5px; // A radius here breaks safari, causing the div to draw over the scrollbars
-	overflow: scroll;
+	overflow: auto;
+
+	scrollbar-color: #666 #222; // match the scrollbar bg to the background-color so corner-rounding is apparent even with scrollbars present
+	&::-webkit-scrollbar-track {
+		background-color: #222; /* Webkit background color for compatibility */
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: #666; /* Webkit thumb color for compatibility */
+	}
 
 	&.button-armed {
 		background-color: #7f1111;
@@ -116,8 +126,6 @@
 
 	.button-grid-canvas {
 		position: relative;
-		width: 1000px;
-		height: 1000px;
 
 		// default grid scale, used for button text
 		--grid-scale: 1;
