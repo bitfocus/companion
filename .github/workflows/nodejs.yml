@@ -104,7 +104,6 @@ jobs:
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
           beta-branch: main
-          dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
@@ -183,7 +182,6 @@ jobs:
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
           beta-branch: main
-          dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
@@ -273,7 +271,6 @@ jobs:
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
           beta-branch: main
-          dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
@@ -356,7 +353,6 @@ jobs:
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
           beta-branch: main
-          dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
@@ -450,7 +446,6 @@ jobs:
         with:
           long-version: ${{ steps.filenames.outputs.longversion }}
           beta-branch: main
-          dev-branch: develop
 
           source-filename: ${{ steps.filenames.outputs.sourcename }}
           destination-filename: ${{ steps.filenames.outputs.targetname }}
