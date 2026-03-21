@@ -151,3 +151,20 @@
 		}
 	}
 }
+
+.elgato-plugin {
+	td {
+		border-bottom: none;
+	}
+	td:last-of-type {
+		// override default padding so it better aligns with the integrations table
+		padding-left: 0 !important;
+		padding-right: 0.2rem !important;
+	}
+}
+
+.connections-list-header {
+	.inline-help-outer {
+		padding-right: 0.5em;
+	}
+}

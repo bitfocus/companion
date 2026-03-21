@@ -32,11 +32,17 @@ const UserConfigTable = observer(function UserConfigTable() {
 	if (!userConfigProps) return null
 
 	return (
-		<table className="table table-responsive-sm table-settings">
-			<tbody>
-				<CompanionConfig {...userConfigProps} />
-				<DataCollectionConfig {...userConfigProps} />
-			</tbody>
-		</table>
+		<>
+			<table className="table table-responsive-sm table-settings">
+				<tbody>
+					<CompanionConfig {...userConfigProps} />
+				</tbody>
+			</table>
+			<table className="table table-responsive-sm table-settings">
+				<tbody>
+					<DataCollectionConfig {...userConfigProps} />
+				</tbody>
+			</table>
+		</>
 	)
 })

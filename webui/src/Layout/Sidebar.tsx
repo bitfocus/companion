@@ -38,12 +38,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faFacebook, faSlack } from '@fortawesome/free-brands-svg-icons'
-import {
-	SurfacesConfiguredTabNotifyIcon,
-	ConnectionsTabNotifyIcon,
-	SurfacesTabNotifyIcon,
-	SurfacesInstancesTabNotifyIcon,
-} from '~/Surfaces/TabNotifyIcon.js'
+import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
@@ -306,14 +301,8 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem
 						name="Configured"
 						icon={null}
-						notifications={SurfacesConfiguredTabNotifyIcon}
+						notifications={SurfacesTabNotifyIcon}
 						path="/surfaces/configured"
-					/>
-					<SidebarMenuItem
-						name="Integrations"
-						notifications={SurfacesInstancesTabNotifyIcon}
-						icon={null}
-						path="/surfaces/integrations"
 					/>
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
@@ -341,7 +330,12 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
 					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
 					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
-					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
+					<SidebarMenuItem
+						name="Surfaces"
+						icon={null}
+						path="/surfaces/configured/integrations"
+						title="Surface settings have moved to the main Surfaces Page."
+					/>
 					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
 					<SidebarMenuItem name="Backups" icon={null} path="/settings/backups" />
 					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
