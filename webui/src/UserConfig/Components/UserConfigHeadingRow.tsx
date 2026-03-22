@@ -1,13 +1,15 @@
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons'
 
-interface UserConfigHeadingRowProps {
+interface UserConfigHeadingRowProps extends ContextHelpButtonProps {
 	label: string
-	tooltip?: string | React.ReactNode
 }
-export function UserConfigHeadingRow({ label, tooltip }: UserConfigHeadingRowProps): React.JSX.Element {
+export function UserConfigHeadingRow({
+	label,
+	tooltip,
+	action,
+	size = 'xl',
+}: UserConfigHeadingRowProps): React.JSX.Element {
 	return (
 		<>
 			<tr className="settings-category-spacer"></tr>
@@ -17,12 +19,7 @@ export function UserConfigHeadingRow({ label, tooltip }: UserConfigHeadingRowPro
 						{label}
 						{tooltip && (
 							<span className="ms-auto px-2">
-								<InlineHelp help={tooltip}>
-									{/* button is just to enable focus for keyboard navigation */}
-									<button className="subhead-help-button" type="button" aria-label="context help">
-										<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
-									</button>
-								</InlineHelp>
+								<ContextHelpButton tooltip={tooltip} action={action} size={size} />
 							</span>
 						)}
 					</span>

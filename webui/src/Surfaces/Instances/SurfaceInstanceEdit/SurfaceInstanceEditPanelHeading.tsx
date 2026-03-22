@@ -4,7 +4,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelHeaderIcons.js'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 interface SurfaceInstanceEditPanelHeadingProps {
 	instanceInfo: ClientSurfaceInstanceConfig
@@ -38,8 +38,8 @@ export const SurfaceInstanceEditPanelHeading = observer(function SurfaceInstance
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
 					<ContextHelpButton
-						help={doShowHelp}
-						hoverText="Change properties of the surface integration here. Click the icon to show instructions for this module."
+						action={doShowHelp}
+						tooltip="Change properties of the surface integration here. Click the icon to show instructions for this module."
 					/>
 				)}
 				<CloseButton closeFn={closeConfigurePanel} />

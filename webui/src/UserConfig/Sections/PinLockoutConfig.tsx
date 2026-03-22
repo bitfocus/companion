@@ -4,6 +4,7 @@ import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserConfigProps) {
 	const indentLabel = (label: string) => {
@@ -19,14 +20,27 @@ export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserCo
  */}
 			<UserConfigSwitchRow
 				userConfig={props}
-				label="Enable PIN Lockout"
+				label={
+					<>
+						<span>Enable PIN Lockout </span>
+						<ContextHelpButton
+							tooltip="Enable this feature to lock input surfaces when idle for a specified time."
+							action="/user-guide/config/settings#pin-lockout"
+							size="1x"
+						/>
+					</>
+				}
 				field="pin_enable"
-				title="Enable this feature to lock input surfaces when idle for a specified time."
 			/>
 
 			{props.config.pin_enable && (
 				<>
-					<UserConfigSwitchRow userConfig={props} label={indentLabel('Link Lockouts')} field="link_lockouts" />
+					<UserConfigSwitchRow
+						userConfig={props}
+						label={indentLabel('Link Lockouts')}
+						field="link_lockouts"
+						title="Lock out all surfaces when one is locked out."
+					/>
 
 					<UserConfigTextInputRow userConfig={props} label={indentLabel('PIN Unlock Code')} field="pin" />
 

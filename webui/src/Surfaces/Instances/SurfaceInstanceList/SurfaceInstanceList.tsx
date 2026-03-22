@@ -25,7 +25,7 @@ import type {
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { ContextHelpButton } from '~/Layout/PanelHeaderIcons.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 export interface VisibleSurfaceInstancesState {
 	disabled: boolean
@@ -86,12 +86,12 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="connections-list-header fixed-header d-flex justify-content-end align-items-center">
+			<div className="connections-list-header fixed-header d-flex align-items-center">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<CButtonGroup className="connection-group-actions m-1 me-auto align-items-center">
+				<CButtonGroup className="connection-group-actions m-1 me-auto">
 					<CButton
 						color="primary"
 						size="sm"
@@ -104,7 +104,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				</CButtonGroup>
 				<ContextHelpButton
 					size="xl"
-					hoverText={
+					tooltip={
 						<>
 							<p>
 								Surface integrations are like connections but for input surfaces: they provide the ability to use

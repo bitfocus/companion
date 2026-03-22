@@ -5,7 +5,7 @@ import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 import { useUserConfigProps } from '~/UserConfig/Context'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelHeaderIcons'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { observer } from 'mobx-react-lite'
 
 // settings panel (shown when no configured surface is selected)
@@ -55,6 +55,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 							<UserConfigHeadingRow
 								label="General Surface Settings"
 								tooltip="The following settings affect all surfaces."
+								action="/user-guide/config/settings#surfaces"
 							/>
 						</thead>
 						<tbody>
@@ -91,8 +92,8 @@ function SettingsPanelTitleBar() {
 			<h4 className="panel-title">Surface Integrations and General Settings</h4>
 			<div className="header-buttons">
 				<ContextHelpButton
-					hoverText="Manage surface integrations and global surface settings here."
-					help="/user-guide/config/settings#surfaces"
+					tooltip="Manage surface integrations and global surface settings here."
+					action="/user-guide/config/settings#surfaces"
 				/>
 
 				<CloseButton closeFn={doClose} visibilityClass="d-xl-none" />

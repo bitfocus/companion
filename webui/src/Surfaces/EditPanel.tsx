@@ -21,7 +21,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { InlineHelp } from '~/Components/InlineHelp'
 import type { JsonValue } from 'type-fest'
-import { CloseButton } from '~/Layout/PanelHeaderIcons.js'
+import { CloseButton } from '~/Layout/PanelIcons.js'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 

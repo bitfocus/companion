@@ -11,9 +11,9 @@ interface CloseButtonProps {
 	visibilityClass?: string
 }
 
-interface ContextHelpButtonProps {
-	hoverText: string | React.ReactNode
-	help?: `/user-guide/${string}` | (() => void)
+export interface ContextHelpButtonProps {
+	tooltip: string | React.ReactNode
+	action?: `/user-guide/${string}` | (() => void)
 	size?: SizeProp
 }
 
@@ -38,12 +38,12 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 /*
  ContextHelpButton - a generic inline-help icon, 
  particularly handy for panels and other headers such as in Connections and Surfaces.
- - hoverText: what to show on hover or focus. Can be plain-text or a React fragment.
- - help: Caller can supply a link to the user guide or a custom function (or leave it out).
+ - tooltip: what to show on hover or focus. Can be plain-text or a React fragment.
+ - action: Caller can supply a link to the user guide or a custom function (or leave it out).
  - size: a FontAwesome size class such as lg or 2xl. The default size is intended for panel headers.
  The button is given a class with the size appended, such as context-help-button-2xl
 */
-export function ContextHelpButton({ hoverText, help, size = '2xl' }: ContextHelpButtonProps): React.JSX.Element {
+export function ContextHelpButton({ tooltip, action, size = '2xl' }: ContextHelpButtonProps): React.JSX.Element {
 	// First, a little trick to handle both keyboard navigation, in which the "hover help" should show up on focus,
 	// and "click" (including "enter"), which will open a new tab and should close the hover-help.
 	// Without removeFocus() the help icon will retain focus, and hover-help will still show when the user returns to this tab.
@@ -63,21 +63,21 @@ export function ContextHelpButton({ hoverText, help, size = '2xl' }: ContextHelp
 	)
 
 	const helpButtonProps =
-		typeof help === 'string'
+		typeof action === 'string'
 			? {
 					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
-					href: makeAbsolutePath(help),
+					href: makeAbsolutePath(action),
 					target: '_blank',
 					rel: 'noopener noreferrer',
 					as: 'a' as ElementType,
 					onClick: removeFocus,
 				}
-			: help !== undefined
-				? { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, help) }
+			: action !== undefined
+				? { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, action) }
 				: {}
 
-	if (typeof hoverText === 'string' && help && !/click/i.test(hoverText)) {
-		hoverText += ' Click the icon for more details.'
+	if (typeof tooltip === 'string' && action && !/click/i.test(tooltip)) {
+		tooltip += ' Click the icon for more details.'
 	}
 
 	// note some styling here needs to be on the FontAwesomeIcon, not .context-help-button or the CButton,
@@ -86,7 +86,7 @@ export function ContextHelpButton({ hoverText, help, size = '2xl' }: ContextHelp
 	// NOTE: removed the float_right class here -- we end up fighting against its margin and it doesn't seem to do much else...
 	return (
 		<>
-			<InlineHelp help={hoverText}>
+			<InlineHelp help={tooltip}>
 				<CButton variant="ghost" className={`context-help-button-${size} p-0`} {...helpButtonProps}>
 					<FontAwesomeIcon icon={faQuestionCircle} size={size} aria-label="context help" />
 				</CButton>
