@@ -1,9 +1,10 @@
 import React from 'react'
 import { ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons'
 
-interface UserConfigHeadingRowProps extends ContextHelpButtonProps {
+interface UserConfigHeadingRowProps extends Partial<ContextHelpButtonProps> {
 	label: string
 }
+
 export function UserConfigHeadingRow({
 	label,
 	tooltip,
