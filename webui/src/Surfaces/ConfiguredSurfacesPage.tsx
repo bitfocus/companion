@@ -10,9 +10,11 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
-import debounceFn from 'debounce-fn'
+import { useLayoutMode } from '~/Hooks/useLayoutMode'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
+	const { twoPanelMode } = useLayoutMode()
+
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
 
@@ -55,14 +57,12 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 	}, [navigate])
 
 	// 3. Handle changes in panel visibility
-	const primaryPanelRef = useRef<React.ElementRef<typeof CCol>>(null)
 	useEffect(() => {
 		// if left-panel is visible and we're at the top-level, remove the "integrations" route-placeholder
 		const checkVisibility = () => {
-			const pRef = primaryPanelRef.current
-			const showingOverview = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: false })
-			if (showSettings && pRef) {
-				if (showingOverview && getComputedStyle(pRef).display !== 'none') {
+			if (showSettings && twoPanelMode) {
+				const showingOverview = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: false })
+				if (showingOverview) {
 					// Turn off showSettings if the user widens the window enough to expose the left panel.
 					// this prevents a possibly confusing results of the setting showing up "spontaneously" if the window narrows again.
 					void navigate({ to: '/surfaces/configured', replace: true })
@@ -70,19 +70,14 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 			}
 		}
 
-		checkVisibility() // run once, immediately on mount or changed dependency.
-		// handle window-size change. Use debounce so it only fires once at the end of resizing.
-		const handler = debounceFn(
-			checkVisibility,
-			{ wait: 1000 } // give the user a chance to make it narrow again if they overshot.
-		)
-
-		window.addEventListener('resize', handler)
+		// Handle window-size change (and also on mount)
+		// When resizing, the delay gives the user a chance to make it narrow again if they overshot.
+		// On mount, the delay is not ideal, but since there's no visible change to the panel it doesn't hurt.
+		const handler = setTimeout(checkVisibility, 1000)
 		return () => {
-			handler.cancel()
-			window.removeEventListener('resize', handler)
+			clearTimeout(handler)
 		}
-	}, [matchRoute, navigate, showSettings])
+	}, [twoPanelMode, matchRoute, navigate, showSettings])
 
 	// Handle editing known-surfaces (aka configured surfaces)
 	const selectKnownSurface = useCallback(
@@ -101,16 +96,15 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		[navigate, selectedItemId]
 	)
 
-	const showPrimaryPanel = !selectedItemId && !showSettings
-	const showSecondaryPanel = !!selectedItemId || showSettings
+	// the following constants determine if the panel will actually be shown (previously these only established if it was "allowed" to be shown)
+	const showPrimaryPanel = twoPanelMode || (!selectedItemId && !showSettings)
+	const showSecondaryPanel = twoPanelMode || !!selectedItemId || showSettings
 
 	return (
 		<CRow className="surfaces-page split-panels">
 			<CCol
-				xs={12}
-				xl={6}
-				className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-flex d-none'} flex-column-layout`}
-				ref={primaryPanelRef}
+				xs={twoPanelMode ? 6 : 12}
+				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
 			>
 				<div className="fixed-header">
 					<h4>Configured Surfaces</h4>
@@ -142,9 +136,11 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 
-					<CButton color="info" className="d-xl-none float-end" size="sm" onClick={handleShowSettings}>
-						<FontAwesomeIcon icon={faCog} /> Show Settings
-					</CButton>
+					{!twoPanelMode && (
+						<CButton color="info" className="float-end" size="sm" onClick={handleShowSettings}>
+							<FontAwesomeIcon icon={faCog} /> Show Settings
+						</CButton>
+					)}
 				</div>
 
 				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectKnownSurface} />
@@ -160,7 +156,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				</div>
 			</CCol>
 
-			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-xl-block d-none'}`}>
+			<CCol xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />

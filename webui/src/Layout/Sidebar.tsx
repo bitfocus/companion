@@ -41,7 +41,7 @@ import { faGithub, faFacebook, faSlack } from '@fortawesome/free-brands-svg-icon
 import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
-import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
+import { useLocalStorage } from 'usehooks-ts'
 import { Link } from '@tanstack/react-router'
 import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
@@ -53,6 +53,7 @@ import type { ConnectionCollection } from '@companion-app/shared/Model/Connectio
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
 import { type MenuItemProps } from '~/Components/ActionMenu'
+import { useLayoutMode } from '~/Hooks/useLayoutMode'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -72,7 +73,7 @@ export function useSidebarState(): SidebarStateProps {
 }
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
-	const isOnMobile = useMediaQuery('(max-width: 991.98px)')
+	const { mobileMode: isOnMobile } = useLayoutMode()
 
 	const event = useMemo(() => new EventTarget(), [])
 
