@@ -53,7 +53,7 @@ import type { ConnectionCollection } from '@companion-app/shared/Model/Connectio
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
 import { type MenuItemProps } from '~/Components/ActionMenu'
-import { useLayoutMode } from '~/Hooks/useLayoutMode'
+import { useMobileMode } from '~/Hooks/useLayoutMode'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -73,7 +73,7 @@ export function useSidebarState(): SidebarStateProps {
 }
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
-	const { mobileMode: isOnMobile } = useLayoutMode()
+	const isOnMobile = useMobileMode()
 
 	const event = useMemo(() => new EventTarget(), [])
 

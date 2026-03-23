@@ -1,7 +1,7 @@
 import { CCol, CRow, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
 import { faSync, faAdd, faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useRef, useState, useCallback, useEffect } from 'react'
+import React, { useRef, useState, useCallback } from 'react'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
@@ -10,16 +10,17 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
-import { useLayoutMode } from '~/Hooks/useLayoutMode'
+import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
-	const { twoPanelMode } = useLayoutMode()
+	const twoPanelMode = useTwoPanelMode()
 
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
 
 	const routeMatch = matchRoute({ to: '/surfaces/configured/$itemId' })
-	const selectedItemId = routeMatch ? routeMatch.itemId : null
+	const selectedSurfaceId = routeMatch ? routeMatch.itemId : null
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
 	const addEmulatorModalRef = useRef<AddEmulatorModalRef>(null)
@@ -48,41 +49,22 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		addGroupModalRef.current?.show()
 	}, [])
 
-	// Handle the various cases in which we want to show the settings panel (when window is narrow)
-	// 1. if one of the integration subpanels are currently visible or user clicked Show Settings
-	const showSettings = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: true })
-	// 2. specific action when the user clicks the "Show Settings" button
+	// Handle action when the user clicks the "Show Settings" button
 	const handleShowSettings = useCallback(() => {
 		void navigate({ to: '/surfaces/configured/integrations' })
 	}, [navigate])
 
-	// 3. Handle changes in panel visibility
-	useEffect(() => {
-		// if left-panel is visible and we're at the top-level, remove the "integrations" route-placeholder
-		const checkVisibility = () => {
-			if (showSettings && twoPanelMode) {
-				const showingOverview = matchRoute({ to: '/surfaces/configured/integrations', fuzzy: false })
-				if (showingOverview) {
-					// Turn off showSettings if the user widens the window enough to expose the left panel.
-					// this prevents a possibly confusing results of the setting showing up "spontaneously" if the window narrows again.
-					void navigate({ to: '/surfaces/configured', replace: true })
-				}
-			}
-		}
+	// Handle the various cases in which we want to show the secondary panel in one-panel mode
+	// 1. if one of the integration subpanels are currently visible or user clicked "Show Settings"
+	const showSettings = useShowSecondaryPanel({
+		baseRoute: '/surfaces/configured',
+		secondaryRoute: '/surfaces/configured/integrations',
+	})
 
-		// Handle window-size change (and also on mount)
-		// When resizing, the delay gives the user a chance to make it narrow again if they overshot.
-		// On mount, the delay is not ideal, but since there's no visible change to the panel it doesn't hurt.
-		const handler = setTimeout(checkVisibility, 1000)
-		return () => {
-			clearTimeout(handler)
-		}
-	}, [twoPanelMode, matchRoute, navigate, showSettings])
-
-	// Handle editing known-surfaces (aka configured surfaces)
+	// 2. if editing known-surfaces (aka configured surfaces)
 	const selectKnownSurface = useCallback(
 		(itemId: string | null) => {
-			if (itemId === null || selectedItemId === itemId) {
+			if (itemId === null || selectedSurfaceId === itemId) {
 				void navigate({ to: '/surfaces/configured' })
 			} else {
 				void navigate({
@@ -93,12 +75,12 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				})
 			}
 		},
-		[navigate, selectedItemId]
+		[navigate, selectedSurfaceId]
 	)
 
 	// the following constants determine if the panel will actually be shown (previously these only established if it was "allowed" to be shown)
-	const showPrimaryPanel = twoPanelMode || (!selectedItemId && !showSettings)
-	const showSecondaryPanel = twoPanelMode || !!selectedItemId || showSettings
+	const showPrimaryPanel = twoPanelMode || (!selectedSurfaceId && !showSettings)
+	const showSecondaryPanel = twoPanelMode || !!selectedSurfaceId || showSettings
 
 	return (
 		<CRow className="surfaces-page split-panels">
@@ -143,7 +125,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 					)}
 				</div>
 
-				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectKnownSurface} />
+				<KnownSurfacesTable selectedItemId={selectedSurfaceId} selectItem={selectKnownSurface} />
 
 				<div className="fixed-header">
 					<CCallout color="info">
