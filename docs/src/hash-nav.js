@@ -21,13 +21,13 @@ export function onRouteDidUpdate({ location }) {
 		const tryScroll = () => {
 			const el = document.getElementById(id)
 			if (el) {
-				el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+				const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+				el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
 				return true
 			}
 			return false
 		}
 
-		if (!tryScroll()) {
 		if (!tryScroll()) {
 			let timeoutId = null
 			const intervalId = setInterval(() => {
@@ -40,7 +40,6 @@ export function onRouteDidUpdate({ location }) {
 
 			scrollInterval = intervalId
 			scrollTimeout = timeoutId
-		}
 		}
 	}
 }
