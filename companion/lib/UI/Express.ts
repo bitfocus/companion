@@ -36,6 +36,7 @@ function createServeStatic(
 			extensions: ['html', 'md', 'json'],
 			maxAge: maxAge,
 			redirect: redirectToSlashes ?? false,
+			prefix: (req: Express.Request) => getCustomPrefixHeader(req),
 		})
 	} else {
 		for (const folder of folderPaths) {
