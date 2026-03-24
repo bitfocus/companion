@@ -22,7 +22,11 @@ import { createRewriteMiddleware, getCustomPrefixHeader } from './middleware/rew
 /**
  * Create a zip serve app
  */
-function createServeStatic(zipPath: fs.PathLike, folderPaths: string[]): Express.RequestHandler {
+function createServeStatic(
+	zipPath: fs.PathLike,
+	folderPaths: string[],
+	redirectToSlashes?: boolean
+): Express.RequestHandler {
 	const maxAge = process.env.PRODUCTION ? 3600000 : 0
 
 	if (fs.existsSync(zipPath)) {
@@ -31,7 +35,7 @@ function createServeStatic(zipPath: fs.PathLike, folderPaths: string[]): Express
 			etag: true,
 			extensions: ['html', 'md', 'json'],
 			maxAge: maxAge,
-			redirect: false,
+			redirect: redirectToSlashes ?? false,
 		})
 	} else {
 		for (const folder of folderPaths) {
@@ -110,7 +114,7 @@ export class UIExpress {
 			getResourcePath('static'),
 			getResourcePath('webui/build'),
 		])
-		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs/placeholder')])
+		const docsServer = createServeStatic(getResourcePath('docs.zip'), [getResourcePath('docs/placeholder')], true)
 
 		// Create rewrite middleware to replace ROOT_URL_HERE in HTML/CSS/JS files
 		const rewriteMiddleware = createRewriteMiddleware()
