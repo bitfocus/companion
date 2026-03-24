@@ -28,13 +28,19 @@ export function onRouteDidUpdate({ location }) {
 		}
 
 		if (!tryScroll()) {
-			scrollInterval = setInterval(() => {
+		if (!tryScroll()) {
+			let timeoutId = null
+			const intervalId = setInterval(() => {
 				if (tryScroll()) {
-					clearInterval(scrollInterval)
-					clearTimeout(scrollTimeout)
+					clearInterval(intervalId)
+					if (timeoutId) clearTimeout(timeoutId)
 				}
 			}, 50)
-			scrollTimeout = setTimeout(() => clearInterval(scrollInterval), 2000)
+			timeoutId = setTimeout(() => clearInterval(intervalId), 2000)
+
+			scrollInterval = intervalId
+			scrollTimeout = timeoutId
+		}
 		}
 	}
 }
