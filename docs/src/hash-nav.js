@@ -1,6 +1,6 @@
-// fix processing of hashess in url
+// fix processing of hashes in url
 // without this being installed in the docusaurus config, clicking on a button to /user-guide/config/settings#surfaces,
-// for example, will open the page but not scroll to #surfaces, apparently because the page hasn't hydrated in time to
+// for example, will open the page but not scroll to `#surfaces`, apparently because the page hasn't hydrated in time to
 // find the hash tag. This little function waits for rendering to complete and then tries again.
 export function onRouteDidUpdate({ location }) {
 	if (location.hash) {
