@@ -194,6 +194,7 @@ const config: Config = {
 	} satisfies Preset.ThemeConfig,
 
 	plugins: [lunrPlugin],
+	clientModules: [require.resolve('./src/hash-nav.js')],
 }
 
 export default config

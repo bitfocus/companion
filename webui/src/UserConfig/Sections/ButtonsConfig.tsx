@@ -7,6 +7,16 @@ import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigProps) {
 	return (
 		<>
+			<div>
+				<a
+					href="/user-guide/config/settings#buttons"
+					target="_blank"
+					rel="noopener noreferrer"
+					style={{ background: 'transparent' }}
+				>
+					Visit the user-guide for button-settings help.
+				</a>
+			</div>
 			<UserConfigHeadingRow label="Buttons" />
 
 			<UserConfigSwitchRow
