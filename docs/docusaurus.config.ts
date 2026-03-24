@@ -24,7 +24,7 @@ const config: Config = {
 	organizationName: 'bitfocus', // Usually your GitHub org/user name.
 	projectName: 'companion', // Usually your repo name.
 
-	trailingSlash: true,
+	// trailingSlash: true,
 
 	onBrokenLinks: 'throw',
 	onBrokenAnchors: 'throw',
