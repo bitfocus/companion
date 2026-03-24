@@ -91,11 +91,13 @@
     "start": "vite",
     "dev": "run start",
     "dev:docs": "yarn workspace @companion-app/workspace dev:webui:docs",
+    "test": "vitest",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },
   "devDependencies": {
     "jsdom": "^29.0.0",
-    "monaco-editor": "^0.55.1"
+    "monaco-editor": "^0.55.1",
+    "vitest": "^4.1.0"
   }
 }
