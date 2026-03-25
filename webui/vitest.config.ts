@@ -5,5 +5,6 @@ export default defineConfig({
 		name: 'webui',
 		exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
 		environment: 'jsdom',
+		css: true,
 	},
 })

@@ -589,6 +589,35 @@ form.row > * {
 	}
 }
 
+$panel-header-bg: #dee2e5; // Darker gray background
+$panel-header-border-color: #dee2e6; // Subtle border
+$panel-header-color: #343a40; // title text -  Darker (?) text for better contrast
+$panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
+.panel-close-button {
+	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
+	border: none;
+	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
+}
+
+.context-help-button-2xl {
+	border: 0;
+	border-radius: 100%;
+	box-shadow: 2px 3px 4px 1px rgb(0 0 0 / 25%);
+	color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
+	background-color: white;
+
+	.fa-2xl {
+		margin: 0px -4px -2px -4px;
+	}
+}
+
+.subhead-help-button {
+	border: 0;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+}
+
 .secondary-panel {
 	padding-left: 15px;
 	padding-right: 5px;
@@ -636,8 +665,8 @@ form.row > * {
 	margin-right: 12px;
 
 	.secondary-panel-simple-header {
-		background: #dee2e5; /* Darker gray background */
-		border-bottom: 1px solid #dee2e6; /* Subtle border */
+		background: #{$panel-header-bg};
+		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
 		padding: 1.25rem 1.5rem;
 		display: flex;
 		align-items: center;
@@ -648,7 +677,7 @@ form.row > * {
 			margin: 0;
 			font-size: 1.25rem;
 			font-weight: 600;
-			color: #343a40; /* Darker text for better contrast */
+			color: #{$panel-header-color};
 		}
 
 		.header-buttons {

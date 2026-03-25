@@ -67,9 +67,12 @@ function useInstanceEditPanelService(
 ): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: `/surfaces/integrations/$instanceId` })
+	const navigate = useNavigate()
+
 	const closePanel = useCallback(() => {
-		void navigate({ to: `/surfaces/integrations` })
+		// it's always safe to return to /surfaces/configured/integrations (i.e. it will always display correctly)
+		// if the window is wide-enough, ConfigureSurfacesPage will remove the last part of the path.
+		void navigate({ to: '/surfaces/configured/integrations' })
 	}, [navigate])
 
 	const setConfigMutation = useMutationExt(trpc.instances.surfaces.setConfig.mutationOptions())
