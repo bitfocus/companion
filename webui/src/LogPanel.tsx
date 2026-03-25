@@ -6,10 +6,10 @@ import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { List, useDynamicRowHeight, useListRef, type RowComponentProps } from 'react-window-new'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 import { trpc, useMutationExt } from './Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useVirtualizer } from '@tanstack/react-virtual'
 
 interface LogConfig {
 	debug: boolean | undefined
@@ -186,7 +186,7 @@ interface LogPanelContentsProps {
 function LogPanelContents({ config }: LogPanelContentsProps) {
 	const { history } = useLogHistory()
 
-	const listRef = useListRef(null)
+	const parentRef = React.useRef<HTMLDivElement>(null)
 
 	const state = useRef<ScrollerState>({
 		follow: true,
@@ -200,18 +200,17 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 	}, [history, config])
 
 	state.current.rowCount = messages.length
-	console.log('follow count', messages.length)
 
-	useEffect(() => {
-		console.log('follow to', messages.length - 1)
-		if (!listRef.current || messages.length === 0) return
-		state.current.isProgrammaticScroll = true
-		listRef.current.scrollToRow({
-			index: messages.length - 1,
-			behavior: 'instant',
-			align: 'end',
-		})
-	}, [listRef, messages.length])
+	const count = messages.length + 1
+
+	// eslint-disable-next-line react-hooks/incompatible-library
+	const virtualizer = useVirtualizer({
+		count: count,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 18,
+
+		overscan: 5,
+	})
 
 	const userScroll = useCallback(() => {
 		if (state.current.isProgrammaticScroll) {
@@ -224,55 +223,64 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 			state.current.hasMounted = true
 
 			setTimeout(() => {
-				if (listRef.current && state.current.rowCount > 0) {
+				if (parentRef.current && state.current.rowCount > 0) {
 					// scroll to bottom
 					state.current.isProgrammaticScroll = true
-					listRef.current.scrollToRow({
-						index: state.current.rowCount - 1,
-						behavior: 'instant',
-						align: 'end',
-					})
+					virtualizer.scrollToIndex(state.current.rowCount - 1, { align: 'end' })
 				}
 			}, 100)
 			return
 		}
 
-		const el = listRef.current?.element
+		const el = parentRef.current
 		if (!el) return
 
 		// if scrolling is at the bottom, reenable following
 		const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 10
 		state.current.follow = atBottom
-	}, [listRef])
+	}, [virtualizer])
 
-	const rowHeight = useDynamicRowHeight({
-		defaultRowHeight: 18,
-	})
+	// Scroll to bottom on count change
+	React.useEffect(() => {
+		if (state.current.follow) {
+			virtualizer.scrollToIndex(count - 1, { align: 'end' })
+		}
+	}, [count, virtualizer])
+
+	const items = virtualizer.getVirtualItems()
 
 	return (
-		<div style={{ width: '100%', height: '100%' }}>
-			<List
-				listRef={listRef}
-				rowComponent={LogLineRow}
-				rowCount={messages.length + 1}
-				rowHeight={rowHeight}
-				rowProps={{ messages }}
-				onScroll={userScroll}
-			/>
-		</div>
-	)
-}
-
-function LogLineRow({
-	style,
-	index,
-	messages,
-}: RowComponentProps<{
-	messages: ClientLogLineExt[]
-}>) {
-	return (
-		<div style={style}>
-			<LogLineInner line={index === 0 ? LogsOnDiskInfoLine : messages[index - 1]} />
+		<div ref={parentRef} style={{ width: '100%', height: '100%', overflow: 'auto' }} onScroll={userScroll}>
+			<div
+				style={{
+					height: virtualizer.getTotalSize(),
+					width: '100%',
+					position: 'relative',
+				}}
+			>
+				<div
+					style={{
+						position: 'absolute',
+						top: 0,
+						left: 0,
+						width: '100%',
+						transform: `translateY(${items[0]?.start ?? 0}px)`,
+					}}
+				>
+					{items.map((virtualRow) => (
+						<div
+							key={virtualRow.key}
+							data-index={virtualRow.index}
+							ref={virtualizer.measureElement}
+							className={virtualRow.index % 2 ? 'ListItemOdd' : 'ListItemEven'}
+						>
+							<div>
+								<LogLineInner line={virtualRow.index === 0 ? LogsOnDiskInfoLine : messages[virtualRow.index - 1]} />
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
 		</div>
 	)
 }

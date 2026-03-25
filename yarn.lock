@@ -1764,6 +1764,7 @@ __metadata:
     "@tanstack/react-query-devtools": "npm:^5.95.0"
     "@tanstack/react-router": "npm:^1.168.2"
     "@tanstack/react-router-devtools": "npm:^1.166.11"
+    "@tanstack/react-virtual": "npm:^3.13.23"
     "@tanstack/router-plugin": "npm:^1.167.3"
     "@tanstack/virtual-file-routes": "npm:^1.161.7"
     "@trpc/client": "npm:^11.14.1"
@@ -1816,7 +1817,6 @@ __metadata:
     react-use: "npm:^17.6.0"
     react-virtualized-auto-sizer: "npm:^1.0.26"
     react-window: "npm:^1.8.11"
-    react-window-new: "npm:react-window@^2.2.1"
     remark-gfm: "npm:^4.0.1"
     sanitize-html: "npm:^2.17.2"
     sass-embedded: "npm:^1.98.0"
@@ -7196,6 +7196,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/react-virtual@npm:^3.13.23":
+  version: 3.13.23
+  resolution: "@tanstack/react-virtual@npm:3.13.23"
+  dependencies:
+    "@tanstack/virtual-core": "npm:3.13.23"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/a3e33463eb471067f9539858655bbefb99778f930156165afb0218fe5ffa181bc2e3dacfe3b6f655f1716d9994064f58ef009370975f801b4c83826aa33a5791
+  languageName: node
+  linkType: hard
+
 "@tanstack/router-core@npm:1.168.2":
   version: 1.168.2
   resolution: "@tanstack/router-core@npm:1.168.2"
@@ -7303,6 +7315,13 @@ __metadata:
   version: 0.9.2
   resolution: "@tanstack/store@npm:0.9.2"
   checksum: 10c0/62e0c6ed2d437d7e2f54a2c9793c7f0c469779d48bc1e502af3e6151c30fdfdc1ec222ed2c42472edce56cfab5ee99db496ced59ba1ec760b814375a1db0a60f
+  languageName: node
+  linkType: hard
+
+"@tanstack/virtual-core@npm:3.13.23":
+  version: 3.13.23
+  resolution: "@tanstack/virtual-core@npm:3.13.23"
+  checksum: 10c0/3487089ea4e1dcbb01836f51a1b35b709f9ba03312fe600ddb97c893c16be213e1690af735717b1d6b2e22dfec691c338bc96b5965228c195840249699d5273a
   languageName: node
   linkType: hard
 
@@ -21304,16 +21323,6 @@ __metadata:
     react: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0 || ^19.0.0
   checksum: 10c0/788b438c9cb55f94a0561ef07e6bb6e5051ad3d5ececd9b2131014324ffe773b507ac7060f965e44c84bd8d6aa85c686754ac944384878c97f7304c0473a7754
-  languageName: node
-  linkType: hard
-
-"react-window-new@npm:react-window@^2.2.1":
-  version: 2.2.7
-  resolution: "react-window@npm:2.2.7"
-  peerDependencies:
-    react: ^18.0.0 || ^19.0.0
-    react-dom: ^18.0.0 || ^19.0.0
-  checksum: 10c0/4eba3bce2083fa53ac674513078fb23d4dc3ad7dfd12ea5733863b583ea1472294df791947a2b58f27bab45138cedf7a63fdc19b0420823bf19749aa10455b81
   languageName: node
   linkType: hard
 
