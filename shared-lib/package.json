@@ -24,7 +24,7 @@
     "jsonpath-plus": "^10.4.0",
     "ps-tree": "^1.2.0",
     "semver": "^7.7.4",
-    "type-fest": "^5.4.4",
+    "type-fest": "^5.5.0",
     "unicode-segmenter": "^0.15.0",
     "zod": "^4.3.6"
   },
