@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useState, memo, useRef, useMemo } from 'react'
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
-import { nanoid } from 'nanoid'
-import { VariableSizeList as List, type ListOnScrollProps } from 'react-window'
-import AutoSizer from 'react-virtualized-auto-sizer'
-import { useResizeObserver } from 'usehooks-ts'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import { trpc } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -30,6 +27,13 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 	source: 'System',
 	level: 'system',
 	message: 'Starting log. Only lines generated since opening the page are shown here',
+}
+
+interface ScrollerState {
+	follow: boolean
+	rowCount: number
+	isProgrammaticScroll: boolean
+	hasMounted: boolean
 }
 
 export interface InstanceDebugLogProps {
@@ -83,11 +87,8 @@ export function InstanceDebugLog({
 		)
 	)
 
-	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
-
 	const doClearLog = useCallback(() => {
 		setLinesBuffer([{ time: null, source: 'System', level: 'system', message: '** Log cleared **' }])
-		setListChunkClearedToken(nanoid())
 	}, [])
 
 	const doExportLog = useCallback(() => {
@@ -127,9 +128,6 @@ export function InstanceDebugLog({
 	const doToggleInfo = useCallback(() => doToggleConfig('info'), [doToggleConfig])
 	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
 	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
-
-	const contentRef = useRef(null)
-	const { width: contentWidth } = useResizeObserver({ ref: contentRef })
 
 	return (
 		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
@@ -191,14 +189,9 @@ export function InstanceDebugLog({
 						</div>
 					</CCol>
 				</CRow>
-				<CRow ref={contentRef} className="log-panel">
+				<CRow className="log-panel">
 					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
-						<LogPanelContents
-							linesBuffer={linesBuffer}
-							listChunkClearedToken={listChunkClearedToken}
-							config={config}
-							contentWidth={contentWidth ?? 0}
-						/>
+						<LogPanelContents linesBuffer={linesBuffer} config={config} />
 					</CCol>
 				</CRow>
 			</div>
@@ -208,132 +201,115 @@ export function InstanceDebugLog({
 
 interface LogPanelContentsProps {
 	linesBuffer: DebugLogLine[]
-	listChunkClearedToken: string
 	config: DebugConfig
-	contentWidth: number
 }
 
-function LogPanelContents({ linesBuffer, listChunkClearedToken, config, contentWidth }: LogPanelContentsProps) {
-	const listRef = useRef<List>(null)
-	const rowHeights = useRef<Record<string, number | undefined>>({})
+function LogPanelContents({ linesBuffer, config }: LogPanelContentsProps) {
+	const parentRef = React.useRef<HTMLDivElement>(null)
 
-	const [follow, setFollow] = useState(true)
-
-	useEffect(() => {
-		// Invalidate everything when the visibility selection changes, or the parent forces a reset
-		if (listRef.current) {
-			listRef.current.resetAfterIndex(0)
-		}
-	}, [listRef, listChunkClearedToken, contentWidth])
+	const state = useRef<ScrollerState>({
+		follow: true,
+		rowCount: linesBuffer.length,
+		isProgrammaticScroll: false,
+		hasMounted: false,
+	})
 
 	const messages = useMemo(() => {
 		return linesBuffer.filter((msg) => msg.level === 'system' || !!config[msg.level as keyof DebugConfig])
 	}, [linesBuffer, config])
 
-	useEffect(() => {
-		if (follow && listRef.current && messages.length > 0) {
-			// scroll to bottom
-			listRef.current.scrollToItem(messages.length - 1, 'end')
+	state.current.rowCount = messages.length
+
+	const count = messages.length + 1
+
+	// eslint-disable-next-line react-hooks/incompatible-library
+	const virtualizer = useVirtualizer({
+		count: count,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 18,
+		overscan: 5,
+	})
+
+	const userScroll = useCallback(() => {
+		if (state.current.isProgrammaticScroll) {
+			state.current.isProgrammaticScroll = false
+			return
 		}
-	}, [messages, follow])
 
-	const hasMountedRef = useRef(false)
-	const userScroll = useCallback(
-		(event: ListOnScrollProps) => {
-			// Ignore scroll event on mount
-			if (!hasMountedRef.current) {
-				hasMountedRef.current = true
+		// Ignore scroll event on mount
+		if (!state.current.hasMounted) {
+			state.current.hasMounted = true
 
-				setTimeout(() => {
-					if (listRef.current && messages.length > 0) {
-						// scroll to bottom
-						listRef.current.scrollToItem(messages.length - 1, 'end')
-					}
-				}, 100)
-				return
-			}
-
-			// if it was the user, then disable following
-			if (event.scrollUpdateWasRequested === false) {
-				setFollow(false)
-			}
-
-			if (!outerRef.current) {
-				return
-			}
-
-			// if scrolling is at the bottom, reenable following
-			if (event.scrollOffset + outerRef.current.offsetHeight === outerRef.current.scrollHeight) {
-				setFollow(true)
-			}
-		},
-		[messages.length]
-	)
-
-	const getRowHeight = useCallback(
-		(index: number) => {
-			return rowHeights.current[index] || 18
-		},
-		[rowHeights]
-	)
-
-	function setRowHeight(index: number, size: number) {
-		if (listRef.current) {
-			listRef.current.resetAfterIndex(0)
+			setTimeout(() => {
+				if (parentRef.current && state.current.rowCount > 0) {
+					// scroll to bottom
+					state.current.isProgrammaticScroll = true
+					virtualizer.scrollToIndex(state.current.rowCount, { align: 'end' })
+				}
+			}, 100)
+			return
 		}
-		rowHeights.current = { ...rowHeights.current, [index]: size }
-	}
 
-	function Row({ style, index }: { style: React.CSSProperties; index: number }) {
-		const rowRef = useRef<HTMLDivElement>(null)
+		const el = parentRef.current
+		if (!el) return
 
-		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
+		// if scrolling is at the bottom, reenable following
+		const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 10
+		state.current.follow = atBottom
+	}, [virtualizer])
 
-		useEffect(() => {
-			if (rowRef.current) {
-				setRowHeight(index, rowRef.current.clientHeight)
-			}
-			// eslint-disable-next-line
-		}, [rowRef])
+	// Scroll to bottom on count change
+	React.useEffect(() => {
+		if (state.current.follow) {
+			virtualizer.scrollToIndex(count - 1, { align: 'end' })
+		}
+	}, [count, virtualizer])
 
-		return (
-			<div style={style}>
-				<LogLineInner h={h} innerRef={rowRef} />
-			</div>
-		)
-	}
-
-	const outerRef = useRef<HTMLElement>(null)
+	const items = virtualizer.getVirtualItems()
 
 	return (
-		<AutoSizer style={{ width: '100%', height: '100%' }}>
-			{({ height, width }) => (
-				<List
-					height={height}
-					itemCount={messages.length + 1}
-					onScroll={userScroll}
-					itemSize={getRowHeight}
-					ref={listRef}
-					outerRef={outerRef}
-					width={width}
+		<div ref={parentRef} style={{ width: '100%', height: '100%', overflow: 'auto' }} onScroll={userScroll}>
+			<div
+				style={{
+					height: virtualizer.getTotalSize(),
+					width: '100%',
+					position: 'relative',
+				}}
+			>
+				<div
+					style={{
+						position: 'absolute',
+						top: 0,
+						left: 0,
+						width: '100%',
+						transform: `translateY(${items[0]?.start ?? 0}px)`,
+					}}
 				>
-					{Row}
-				</List>
-			)}
-		</AutoSizer>
+					{items.map((virtualRow) => (
+						<div
+							key={virtualRow.key}
+							data-index={virtualRow.index}
+							ref={virtualizer.measureElement}
+							className={virtualRow.index % 2 ? 'ListItemOdd' : 'ListItemEven'}
+						>
+							<LogLineInner line={virtualRow.index === 0 ? LogsOnDiskInfoLine : messages[virtualRow.index - 1]} />
+						</div>
+					))}
+				</div>
+			</div>
+		</div>
 	)
 }
 
 interface LogLineInnerProps {
-	h: DebugLogLine
-	innerRef: React.RefObject<HTMLDivElement>
+	line: DebugLogLine
 }
-const LogLineInner = memo(({ h, innerRef }: LogLineInnerProps) => {
-	const time_format = !h.time ? '                 ' : dayjs(h.time).format('YY.MM.DD HH:mm:ss')
+const LogLineInner = memo(({ line }: LogLineInnerProps) => {
+	const time_format = !line.time ? '                 ' : dayjs(line.time).format('YY.MM.DD HH:mm:ss')
 
 	return (
-		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
-			{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
+		<div className={`log-line log-type-${line.level}`}>
+			{time_format} <strong>{line.source}</strong>: <span className="log-message">{line.message}</span>
 		</div>
 	)
 })

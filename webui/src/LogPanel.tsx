@@ -226,7 +226,7 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 				if (parentRef.current && state.current.rowCount > 0) {
 					// scroll to bottom
 					state.current.isProgrammaticScroll = true
-					virtualizer.scrollToIndex(state.current.rowCount - 1, { align: 'end' })
+					virtualizer.scrollToIndex(state.current.rowCount, { align: 'end' })
 				}
 			}, 100)
 			return
@@ -274,9 +274,7 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 							ref={virtualizer.measureElement}
 							className={virtualRow.index % 2 ? 'ListItemOdd' : 'ListItemEven'}
 						>
-							<div>
-								<LogLineInner line={virtualRow.index === 0 ? LogsOnDiskInfoLine : messages[virtualRow.index - 1]} />
-							</div>
+							<LogLineInner line={virtualRow.index === 0 ? LogsOnDiskInfoLine : messages[virtualRow.index - 1]} />
 						</div>
 					))}
 				</div>
