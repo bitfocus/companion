@@ -252,7 +252,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
-		if (entity.disabled) return
 
 		this.#entityManager.trackEntity(entity, controlId)
 	}

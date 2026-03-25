@@ -155,7 +155,8 @@ form.row > * {
 		--cui-dropdown-link-color: var(--menu-color);
 		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
 		--cui-dropdown-link-hover-color: var(--menu-hover-color); // only works if .dropdown-item doesn't define color:
-		--cui-dropdown-link-active-bg: var(--menu-hover-bg); // don't change during click
+		// next two: don't change during click (but note that item is also "active" when its route is the current one...)
+		--cui-dropdown-link-active-bg: var(--menu-hover-bg);
 		--cui-dropdown-link-active-color: var(--menu-hover-color);
 
 		padding: 0.5em 0;
@@ -168,6 +169,11 @@ form.row > * {
 			font-size: 0.95rem; // Slightly smaller, more refined
 			padding: 0.4em 0.75em; // More vertical padding, balanced horizontal
 			transition: background-color 0.15s ease-in-out; // Smooth hover transition
+
+			&:focus-visible {
+				// override button focus behavior (when "to" is a function), so it highlights the same way as the other items
+				outline: none;
+			}
 
 			.dropdown-item-icon {
 				// let the rules above and below control its padding
@@ -190,6 +196,19 @@ form.row > * {
 			cursor: default;
 			padding-left: 0.75em;
 			color: rgba(0, 0, 0, 0.5);
+		}
+
+		.dropdown-item-version {
+			white-space: pre; // or pre-wrap to keep narrow but show all?
+
+			.dropdown-item-label {
+				display: block;
+				font-size: 0.85em;
+				min-width: 0;
+				max-width: 20em; // 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line?
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
 		}
 	}
 }
@@ -224,7 +243,8 @@ form.row > * {
 
 	max-width: 1900px;
 	min-height: 300px;
-	max-height: 100%;
+	//max-height: 100%;
+	height: 100%;
 
 	&.no-height-limit {
 		max-height: unset;
@@ -239,6 +259,7 @@ form.row > * {
 	// }
 
 	.tab-pane {
+		height: 100%;
 		padding: 1rem 1rem 1rem 1rem;
 
 		// Make absolute positioned child components be relative to this
@@ -570,6 +591,35 @@ form.row > * {
 	}
 }
 
+$panel-header-bg: #dee2e5; // Darker gray background
+$panel-header-border-color: #dee2e6; // Subtle border
+$panel-header-color: #343a40; // title text -  Darker (?) text for better contrast
+$panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
+.panel-close-button {
+	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
+	border: none;
+	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
+}
+
+.context-help-button-2xl {
+	border: 0;
+	border-radius: 100%;
+	box-shadow: 2px 3px 4px 1px rgb(0 0 0 / 25%);
+	color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
+	background-color: white;
+
+	.fa-2xl {
+		margin: 0px -4px -2px -4px;
+	}
+}
+
+.subhead-help-button {
+	border: 0;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+}
+
 .secondary-panel {
 	padding-left: 15px;
 	padding-right: 5px;
@@ -617,8 +667,8 @@ form.row > * {
 	margin-right: 12px;
 
 	.secondary-panel-simple-header {
-		background: #dee2e5; /* Darker gray background */
-		border-bottom: 1px solid #dee2e6; /* Subtle border */
+		background: #{$panel-header-bg};
+		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
 		padding: 1.25rem 1.5rem;
 		display: flex;
 		align-items: center;
@@ -629,7 +679,7 @@ form.row > * {
 			margin: 0;
 			font-size: 1.25rem;
 			font-weight: 600;
-			color: #343a40; /* Darker text for better contrast */
+			color: #{$panel-header-color};
 		}
 
 		.header-buttons {
@@ -663,47 +713,48 @@ form.row > * {
 	}
 }
 
-// scroll if side-by-side
-@include coreui.media-breakpoint-up('xl') {
-	.split-panels {
+// scroll tabs panel (note the split-panels class exists regardless on panel mode, so
+// the breakpoint restriction doesn't seem warranted (it actually "broke" single-panel mode scrolling for buttons page).
+//@include coreui.media-breakpoint-up('xl') {
+.split-panels {
+	height: 100%;
+
+	> .primary-panel {
+		height: 100%;
+		overflow-y: auto;
+	}
+
+	> .secondary-panel {
 		height: 100%;
 
-		> .primary-panel {
+		.secondary-panel-inner {
 			height: 100%;
-			overflow-y: auto;
-		}
+			display: grid;
+			grid-template-rows: auto 1fr;
 
-		> .secondary-panel {
-			height: 100%;
-
-			.secondary-panel-inner {
-				height: 100%;
-				display: grid;
-				grid-template-rows: auto 1fr;
-
-				.tab-content {
-					overflow-y: scroll;
-
-					&.default-scroll {
-						overflow: inherit;
-					}
-				}
-			}
-
-			.secondary-panel-simple {
-				margin-right: 0px;
-			}
-
-			.secondary-panel-simple-body {
+			.tab-content {
 				overflow-y: scroll;
 
-				&.no-scroll {
-					overflow-y: auto;
+				&.default-scroll {
+					overflow: inherit;
 				}
+			}
+		}
+
+		.secondary-panel-simple {
+			margin-right: 0px;
+		}
+
+		.secondary-panel-simple-body {
+			overflow-y: scroll;
+
+			&.no-scroll {
+				overflow-y: auto;
 			}
 		}
 	}
 }
+//}
 
 // For bigger screens, like 1440p and 4K, allow scaling
 @media only screen and (min-width: 2000px) {

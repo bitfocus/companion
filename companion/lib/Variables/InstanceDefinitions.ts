@@ -10,6 +10,7 @@
  */
 
 import LogController from '../Log/Controller.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type {
 	AllVariableDefinitions,
 	ModuleVariableDefinitions,
@@ -82,6 +83,7 @@ export class VariablesInstanceDefinitions {
 
 		const variablesObj: ModuleVariableDefinitions = {}
 		for (const variable of variables || []) {
+			if (BANNED_PROPS.has(variable.name)) continue
 			// Prune out the name
 			const newVarObj: Complete<VariableDefinition> = {
 				name: variable.name,

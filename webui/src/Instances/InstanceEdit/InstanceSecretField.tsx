@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
@@ -13,7 +13,7 @@ interface InstanceSecretFieldProps {
 
 export function InstanceSecretField({ setValue, definition, value }: InstanceSecretFieldProps): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
+		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
 		[definition]
 	)
 

@@ -6,13 +6,14 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import fs from 'fs'
 import path from 'path'
 import tsconfigPaths from 'vite-tsconfig-paths'
-
-const upstreamUrl = process.env.UPSTREAM_URL || '127.0.0.1:8000'
+import { normalizeBasePath } from '../tools/webui-dev-utils'
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
 	.toString()
 	.trim()
+
+const upstreamUrl = process.env.UPSTREAM_URL || 'localhost:8000'
 
 /**
  * Parse --base argument from command line
@@ -34,11 +35,7 @@ function getBaseFromArgs(): string {
 	return '/'
 }
 
-// Get the base path from Vite's --base argument
-const basePath = getBaseFromArgs()
-let normalizedBase = basePath
-if (!normalizedBase.startsWith('/')) normalizedBase = `/${normalizedBase}`
-normalizedBase = normalizedBase.endsWith('/') ? normalizedBase.slice(0, -1) : normalizedBase
+const normalizedBase = normalizeBasePath(getBaseFromArgs())
 
 export default defineConfig({
 	publicDir: 'public',
@@ -65,8 +62,21 @@ export default defineConfig({
 				rewrite: (path) => path.slice(normalizedBase.length),
 			},
 			[`${normalizedBase}/user-guide`]: {
-				target: `http://${upstreamUrl}`,
-				rewrite: (path) => path.slice(normalizedBase.length),
+				// forward to Docusaurus (note: if changing hostname, change it in tools/webui-dev-docs.mts too)
+				target: `http://localhost:4000`,
+				changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
+				// rewrite: don't rewrite for docusaurus - it testing a base_url use 'yarn dev:docs --base' or manually set env BASE_URL for docusaurus to use
+				configure: (proxy) => {
+					// Handle ECONNREFUSED errors, by showing the placeholder page (instead of a generic error page)
+					const placeholderHtml = fs.readFileSync(path.join(import.meta.dirname, '../docs/placeholder/index.html'))
+					proxy.on('error', (err, _req, res) => {
+						if ((err as NodeJS.ErrnoException).code !== 'ECONNREFUSED') return
+						if ('writeHead' in res) {
+							res.writeHead(502, { 'Content-Type': 'text/html' })
+							res.end(placeholderHtml)
+						}
+					})
+				},
 			},
 			[`${normalizedBase}/trpc`]: {
 				target: `ws://${upstreamUrl}`,

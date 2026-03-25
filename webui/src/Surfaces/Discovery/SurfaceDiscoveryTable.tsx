@@ -158,7 +158,6 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 	const { surfaceInstances, surfaces } = useContext(RootAppStoreContext)
 
 	const instanceInfo = surfaceInstances.instances.get(surfaceInfo.instanceId)
-	const surfaceInstanceDisplayName = instanceInfo?.label ?? 'Unknown Surface Integration'
 
 	const isAlreadyAdded = useComputed(() => {
 		// If no expression, can't match
@@ -213,7 +212,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 				</div>
 			</td>
 			<td>
-				<p className="p-no-margin">{surfaceInstanceDisplayName}</p>
+				<p className="p-no-margin">{surfaceInfo.address ?? '-'}</p>
 			</td>
 			<td>
 				<CButtonGroup>

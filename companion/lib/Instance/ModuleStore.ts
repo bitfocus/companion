@@ -463,7 +463,7 @@ function transformApiModuleToCache(
 
 		storeUrl: data.storeUrl,
 		githubUrl: data.githubUrl ?? null,
-		helpUrl: data.latestHelpUrl ?? null,
+		helpUrl: data.latestHelpUrl ?? data.prereleaseHelpUrl ?? null,
 
 		legacyIds: data.legacyIds ?? [],
 		deprecationReason: data.deprecationReason ?? null,

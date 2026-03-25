@@ -27,8 +27,11 @@ import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { ActionMenu, type MenuItemData } from '~/Components/ActionMenu.js'
+import { useCompanionVersion } from './useCompanionVersion.js'
+import { ActionMenu, type MenuItemProps, type MenuActionItemProps } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+
 interface MyHeaderProps {
 	canLock: boolean
 	setLocked: (locked: boolean) => void
@@ -134,14 +137,42 @@ function HelpMenu() {
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
+	// get notifier for adding a toast notification when copied to clipboard.
+	const { notifier } = useContext(RootAppStoreContext)
+
+	const { versionName, versionBuild, os, browser } = useCompanionVersion(true)
+	const sysinfo = useMemo(() => {
+		let version = versionName || 'version unknown'
+		let versionPlus = 'Companion: ' + version
+		if (versionBuild) {
+			version += '\n' + versionBuild
+			versionPlus += ' ' + versionBuild
+		}
+		versionPlus += `\nOS: ${os}\nBrowser: ${browser}\n`
+		return { version, versionPlus }
+	}, [versionName, versionBuild, os, browser])
+
+	const copyVersionToClipboard = useMemo(
+		// return a props object to be passed to <CopyToClipboard>
+		(): MenuActionItemProps['copyToClipboard'] => ({
+			text: sysinfo.versionPlus,
+			onCopy: (_text, result) => {
+				const success = 'Version info copied!'
+				const failure = 'Failed to copy version-string to the clipboard'
+				notifier.show('', result ? success : failure, 1000)
+			},
+		}),
+		[sysinfo, notifier]
+	)
+
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
-	const helpMenuItems: MenuItemData[] = useMemo(
+	const helpMenuItems: MenuItemProps[] = useMemo(
 		() => [
 			{
 				id: 'user-guide',
 				label: 'User Guide / Help',
 				icon: circleInfo, // this is a function call, unlike the rest.
-				to: '/user-guide/',
+				href: makeAbsolutePath('/user-guide/'),
 				tooltip: 'Open the User Guide in a new tab.',
 				inNewTab: true,
 			},
@@ -149,7 +180,7 @@ function HelpMenu() {
 				id: 'whats-new',
 				label: "What's New",
 				icon: faStar,
-				to: whatsNewOpen,
+				do: whatsNewOpen,
 				tooltip: 'Show the current release notes.',
 				inNewTab: false,
 			},
@@ -158,7 +189,7 @@ function HelpMenu() {
 				id: 'fb',
 				label: 'Community Support',
 				icon: faFacebook,
-				to: 'https://l.companion.free/q/6pc9ciJR5',
+				href: 'https://l.companion.free/q/6pc9ciJR5',
 				tooltip: 'Share your experience or ask questions to your Companions.',
 				inNewTab: true,
 			},
@@ -166,7 +197,7 @@ function HelpMenu() {
 				id: 'slack',
 				label: 'Slack Workspace',
 				icon: faSlack,
-				to: 'https://l.companion.free/q/OWxbBnDKG',
+				href: 'https://l.companion.free/q/OWxbBnDKG',
 				tooltip: 'Discuss technical issues on Slack.',
 				inNewTab: true,
 			},
@@ -174,7 +205,7 @@ function HelpMenu() {
 				id: 'github',
 				label: 'Report an Issue',
 				icon: faGithub,
-				to: 'https://l.companion.free/q/QZbI6mdNd',
+				href: 'https://l.companion.free/q/QZbI6mdNd',
 				tooltip: 'Report bugs or request features on GitHub.',
 				inNewTab: true,
 			},
@@ -183,12 +214,21 @@ function HelpMenu() {
 				id: 'sponsor',
 				label: 'Sponsor Companion',
 				icon: faDollarSign,
-				to: 'https://l.companion.free/q/6PtdAvZab',
+				href: 'https://l.companion.free/q/6PtdAvZab',
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
+			MenuSeparator,
+			{
+				id: 'version',
+				label: sysinfo.version,
+				fullWidth: true,
+				do: () => {}, // no additional action needed
+				tooltip: 'Click to copy version info including OS and browser to the clipboard.',
+				copyToClipboard: copyVersionToClipboard,
+			},
 		],
-		[whatsNewOpen]
+		[copyVersionToClipboard, sysinfo, whatsNewOpen]
 	)
 
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,

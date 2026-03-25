@@ -1,4 +1,5 @@
 import type { Logger } from '../../Log/Controller.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -57,6 +58,7 @@ export function ConvertPresetDefinitions(
 
 	const sortedCategories = new Set<string>(rawPresets.map((p) => p.category)).values().toArray().sort()
 	sortedCategories.forEach((category, i) => {
+		if (BANNED_PROPS.has(category)) return
 		// This is not very efficient, but probably good enough?
 		const presetsInCategory = rawPresets.filter((p) => p.category === category)
 
@@ -100,6 +102,7 @@ function splitPresetsIntoGroups(presets: (CompanionPresetDefinition & { id: stri
 			currentIndex = 0
 			groups.push(currentGroup)
 		} else if (preset.type === 'button') {
+			if (BANNED_PROPS.has(preset.id)) continue
 			// Add to current group, or create a new group without heading if needed
 			if (!currentGroup) {
 				currentGroup = {

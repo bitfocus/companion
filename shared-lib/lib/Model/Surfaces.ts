@@ -202,6 +202,7 @@ export interface ClientDiscoveredSurfaceInfoPlugin {
 
 	name: string
 	description: string
+	address: string | null
 
 	config: Record<string, any>
 }

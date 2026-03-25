@@ -11,6 +11,7 @@
 
 import LogController from '../Log/Controller.js'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
 	CustomVariableCollection,
@@ -206,6 +207,10 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	createVariable(name: string, defaultVal: VariableValue | undefined): string | null {
 		if (this.#custom_variables[name]) {
 			return `Variable "${name}" already exists`
+		}
+
+		if (BANNED_PROPS.has(name)) {
+			return `Variable name "${name}" is reserved`
 		}
 
 		if (!isCustomVariableValid(name)) {

@@ -315,6 +315,7 @@ function convertPluginConnectionToUi(
 		instanceId: instanceId,
 		name: info.displayName,
 		description: info.description,
+		address: info.addresses,
 		config: info.config,
 	}
 }

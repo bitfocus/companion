@@ -2,6 +2,7 @@ import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { CompanionAlignment } from '@companion-module/base'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -223,10 +224,11 @@ export function parseLineParameters(line: string): ParsedParams {
 		}
 	}
 
-	const res: ParsedParams = {}
+	const res: ParsedParams = Object.create(null)
 
 	for (const fragment of fragments) {
 		const [key, value] = fragment.split('=', 2)
+		if (BANNED_PROPS.has(key)) continue
 		res[key] = value === undefined ? true : value
 	}
 

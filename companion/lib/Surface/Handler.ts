@@ -390,7 +390,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!this.panel) return
 
 		try {
-			this.#surfaces.removeDevice(this.panel.info.surfaceId)
+			this.#surfaces.removeDevice(this.panel.info.surfaceId, { physicallyGone: true })
 		} catch (e) {
 			this.#logger.error(`Remove failed: ${e}`)
 		}

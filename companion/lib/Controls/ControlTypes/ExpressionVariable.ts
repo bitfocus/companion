@@ -23,6 +23,7 @@ import type {
 import jsonPatch from 'fast-json-patch'
 import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { JsonValue } from 'type-fest'
 
 /**
@@ -219,6 +220,7 @@ export class ControlExpressionVariable
 	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
 		// Handle expression variable name changes
 		if (key === 'variableName') {

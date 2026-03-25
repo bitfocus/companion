@@ -7,6 +7,7 @@ import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { JsonValue } from 'type-fest'
 
 /**
@@ -209,6 +210,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	 * Update an option field of this control
 	 */
 	optionsSetField(key: string, value: JsonValue): boolean {
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
+
 		// Check if rotary_actions should be added/remove
 		if (key === 'rotaryActions') {
 			this.entities.setupRotaryActionSets(!!value, true)

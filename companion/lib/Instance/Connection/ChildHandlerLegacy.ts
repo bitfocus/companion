@@ -88,6 +88,7 @@ import type {
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
@@ -391,7 +392,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
 		if (this.#entityManager) {
 			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
-			if (entity.disabled) return
 
 			this.#entityManager.trackEntity(entity, controlId)
 			return
@@ -752,6 +752,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
 
 		for (const rawAction of msg.actions || []) {
+			if (BANNED_PROPS.has(rawAction.id)) continue
 			const optionsToIgnoreForSubscribeSet = new Set<string>(rawAction.optionsToIgnoreForSubscribe || [])
 			const options = translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager)
 
@@ -794,6 +795,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
 		for (const rawFeedback of msg.feedbacks || []) {
+			if (BANNED_PROPS.has(rawFeedback.id)) continue
 			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
 
 			feedbacks[rawFeedback.id] = {
@@ -860,7 +862,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			// Ensure it is correctly formed
 			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
 				// Ensure the ids are valid
-				if (variable.id.match(idCheckRegex)) {
+				if (!BANNED_PROPS.has(variable.id) && variable.id.match(idCheckRegex)) {
 					newVariables.push({
 						description: variable.name,
 						name: variable.id,

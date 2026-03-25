@@ -16,6 +16,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 export const TabletView = observer(function TabletView() {
 	const navigate = useNavigate({ from: '/tablet' })
@@ -40,6 +41,7 @@ export const TabletView = observer(function TabletView() {
 
 		const parsedQuery: Record<string, string> = {}
 		for (const [key, value] of Object.entries(rawParsedQuery)) {
+			if (BANNED_PROPS.has(key)) continue
 			if (Array.isArray(value)) {
 				if (value[0]) {
 					parsedQuery[key] = value[0]

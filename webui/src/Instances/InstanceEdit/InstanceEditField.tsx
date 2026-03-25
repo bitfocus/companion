@@ -10,7 +10,7 @@ import {
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { JsonValue } from 'type-fest'
 
@@ -30,7 +30,7 @@ export function InstanceEditField({
 	instanceId,
 }: InstanceEditFieldProps): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value).validationError === undefined,
+		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
 		[definition]
 	)
 
@@ -94,6 +94,7 @@ export function InstanceEditField({
 					minSelection={definition.minSelection}
 					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
+					sortSelection={definition.sortSelection}
 					regex={definition.regex}
 					value={value as any}
 					setValue={setValue}

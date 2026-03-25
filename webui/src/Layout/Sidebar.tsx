@@ -38,27 +38,22 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faFacebook, faSlack } from '@fortawesome/free-brands-svg-icons'
-import {
-	SurfacesConfiguredTabNotifyIcon,
-	ConnectionsTabNotifyIcon,
-	SurfacesTabNotifyIcon,
-	SurfacesInstancesTabNotifyIcon,
-} from '~/Surfaces/TabNotifyIcon.js'
+import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
-import { useLocalStorage, useMediaQuery } from 'usehooks-ts'
+import { useLocalStorage } from 'usehooks-ts'
 import { Link } from '@tanstack/react-router'
 import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables, type ClientConnectionConfigWithId } from '~/Stores/Util.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
-import { trpc } from '~/Resources/TRPC'
-import { useQuery } from '@tanstack/react-query'
+import { useCompanionVersion } from './useCompanionVersion'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
-import { type MenuItemData } from '~/Components/ActionMenu'
+import { type MenuItemProps } from '~/Components/ActionMenu'
+import { useMobileMode } from '~/Hooks/useLayoutMode'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -78,7 +73,7 @@ export function useSidebarState(): SidebarStateProps {
 }
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
-	const isOnMobile = useMediaQuery('(max-width: 991.98px)')
+	const isOnMobile = useMobileMode()
 
 	const event = useMemo(() => new EventTarget(), [])
 
@@ -220,19 +215,19 @@ export const MySidebar = memo(function MySidebar() {
 	)
 
 	// note: the context menu has to be defined inside the component to use the internal states as well as `whatsNewOpen` which is a useCallback
-	const contextMenuItems: MenuItemData[] = useMemo(
+	const contextMenuItems: MenuItemProps[] = useMemo(
 		() => [
 			{
 				id: 'collapse-all',
 				label: 'Collapse All Groups',
-				to: () => expandAllGroups(false),
+				do: () => expandAllGroups(false),
 				tooltip: 'Collapse all top-level groups in the sidebar.',
 			},
 			{
 				// not sure this is useful
 				id: 'expand-all',
 				label: 'Expand All Groups',
-				to: () => {
+				do: () => {
 					expandAllGroups(true)
 					setAccordionMode(false)
 				},
@@ -242,7 +237,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'accordion-mode',
 				label: 'Auto-Collapse Groups',
 				icon: accordionMode ? faCheck : undefined,
-				to: () => setAccordionMode(!accordionMode),
+				do: () => setAccordionMode((value) => !value),
 				tooltip:
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
@@ -254,7 +249,7 @@ export const MySidebar = memo(function MySidebar() {
 							id: 'hide-sidebar',
 							label: unfoldable ? 'Fixed-width Sidebar' : 'Folding Sidebar',
 							icon: () => foldableIcon(unfoldable),
-							to: doToggle,
+							do: doToggle,
 							tooltip:
 								'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
 						},
@@ -263,7 +258,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
 				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
-				to: () => setHideHelp(!hideHelp),
+				do: () => setHideHelp((value) => !value),
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
@@ -307,14 +302,8 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem
 						name="Configured"
 						icon={null}
-						notifications={SurfacesConfiguredTabNotifyIcon}
+						notifications={SurfacesTabNotifyIcon}
 						path="/surfaces/configured"
-					/>
-					<SidebarMenuItem
-						name="Integrations"
-						notifications={SurfacesInstancesTabNotifyIcon}
-						icon={null}
-						path="/surfaces/integrations"
 					/>
 					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
@@ -342,7 +331,12 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
 					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
 					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
-					<SidebarMenuItem name="Surfaces" icon={null} path="/settings/surfaces" />
+					<SidebarMenuItem
+						name="Surfaces"
+						icon={null}
+						path="/surfaces/configured/integrations"
+						title="Surface settings have moved to the main Surfaces Page."
+					/>
 					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
 					<SidebarMenuItem name="Backups" icon={null} path="/settings/backups" />
 					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
@@ -499,25 +493,7 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 })
 
 const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
-	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
-
-	let versionString = ''
-	let versionSubheading = ''
-
-	if (versionInfo.data) {
-		if (versionInfo.data.appBuild.includes('-stable-')) {
-			versionString = `v${versionInfo.data.appVersion}`
-		} else {
-			// split appBuild into parts.
-			const splitPoint = versionInfo.data.appBuild.indexOf('-')
-			if (splitPoint === -1) {
-				versionString = `v${versionInfo.data.appBuild}`
-			} else {
-				versionString = `v${versionInfo.data.appBuild.substring(0, splitPoint)}`
-				versionSubheading = versionInfo.data.appBuild.substring(splitPoint + 1)
-			}
-		}
-	}
+	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
@@ -526,7 +502,7 @@ const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ do
 			</span>
 
 			<span className="flex-fill text-truncate">
-				<span className="version">{versionString || 'Unknown'}</span>
+				<span className="version">{versionName || 'Unknown'}</span>
 				{/* <br /> */}
 				<span className="version-sub">{versionSubheading}</span>
 			</span>
