@@ -6,8 +6,10 @@
 
 /* Adjust anchor-linking (in-page links) behavior: animate scrolling down to them
     and if the screen is tall enough, show a bit above the link for context. */
-html {
-	scroll-behavior: smooth;
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
 }
 
 @media (min-height: 600px) {
