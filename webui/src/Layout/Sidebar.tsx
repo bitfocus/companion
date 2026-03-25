@@ -59,7 +59,7 @@ function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
 }
 export interface SidebarStateProps {
-	showToggle: boolean
+	mobileMode: boolean
 	clickToggle: () => void
 	toggleEvent: EventTarget
 }
@@ -73,19 +73,19 @@ export function useSidebarState(): SidebarStateProps {
 }
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
-	const isOnMobile = useMobileMode()
+	const mobileMode = useMobileMode()
 
 	const event = useMemo(() => new EventTarget(), [])
 
 	const value = useMemo(() => {
 		return {
-			showToggle: isOnMobile,
+			mobileMode: mobileMode,
 			clickToggle: () => {
 				event.dispatchEvent(new Event('show'))
 			},
 			toggleEvent: event,
 		} satisfies SidebarStateProps
-	}, [isOnMobile, event])
+	}, [mobileMode, event])
 
 	return <SidebarStateContext.Provider value={value}>{children}</SidebarStateContext.Provider>
 }
@@ -242,7 +242,7 @@ export const MySidebar = memo(function MySidebar() {
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
-			...(sidebarState.showToggle
+			...(sidebarState.mobileMode
 				? []
 				: [
 						{
@@ -401,7 +401,7 @@ export const MySidebar = memo(function MySidebar() {
 				</CSidebarNav>
 			)}
 			<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
-				<SidebarTogglerAndVersion doToggle={doToggle} />
+				<UnfoldTogglerAndVersion doToggle={doToggle} />
 			</CSidebarHeader>
 		</CSidebar>
 	)
@@ -492,7 +492,7 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 	)
 })
 
-const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
+const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
 	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
 
 	return (
@@ -544,8 +544,8 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	}, [sidebarState.toggleEvent, setVisibleMobile])
 
 	useEffect(() => {
-		if (sidebarState.showToggle) setVisibleMobile(false)
-	}, [sidebarState.showToggle])
+		if (sidebarState.mobileMode) setVisibleMobile(false)
+	}, [sidebarState.mobileMode])
 
 	const handleOnClick = useCallback(
 		(event: MouseEvent) => {
@@ -560,20 +560,21 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
 			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu)
 
-			const toggler = target.closest('.sidebar-header-toggler') // the latter isn't strictly necessary, but makes the intent clear
-			if (toggler && !target.closest(' .nav-icon-wrapper')) return // ignore clicks on version text, etc.
+			// unfoldToggler: true if clicked in the "toggleFoldandVersion" area
+			const unfoldToggler = target.closest('.sidebar-header-toggler') // the latter isn't strictly necessary, but makes the intent clear
+			if (unfoldToggler && !target.closest(' .nav-icon-wrapper')) return // ignore clicks on version text, etc.
 
 			// if we got here the user clicked on a nav-link, not a non-active area, group-toggle or context-menu item
-			if (sidebarState.showToggle) {
+			if (sidebarState.mobileMode) {
 				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
-			} else if ((unfoldable && !toggler) || (!unfoldable && toggler)) {
+			} else if ((unfoldable && !unfoldToggler) || (!unfoldable && unfoldToggler)) {
 				// Folding mode: make the sidebar narrow momentarily (see handleTransitionEnd) so it can collapse
 				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs
 				setNarrow(true)
 			}
 		},
-		[sidebarState.showToggle, unfoldable]
+		[sidebarState.mobileMode, unfoldable]
 	)
 
 	const handleTransitionEnd = useCallback(
@@ -602,19 +603,19 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 
 	const handleKeyup = useCallback(
 		(event: Event) => {
-			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			if (sidebarState.mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
 				setVisibleMobile(false)
 			}
 		},
-		[sidebarState.showToggle, sidebarRef]
+		[sidebarState.mobileMode, sidebarRef]
 	)
 	const handleClickOutside = useCallback(
 		(event: Event) => {
-			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			if (sidebarState.mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
 				setVisibleMobile(false)
 			}
 		},
-		[sidebarState.showToggle, sidebarRef]
+		[sidebarState.mobileMode, sidebarRef]
 	)
 
 	useEffect(() => {
@@ -645,7 +646,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
 					'sidebar-narrow-unfoldable': unfoldable && !narrow, // // unfold-able. This is a CoreUI class so can't be renamed.
-					show: sidebarState.showToggle && visibleMobile,
+					show: sidebarState.mobileMode && visibleMobile,
 					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
@@ -655,9 +656,9 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 				{children}
 			</div>
 			{typeof window !== 'undefined' &&
-				sidebarState.showToggle &&
+				sidebarState.mobileMode &&
 				createPortal(
-					<CBackdrop className="sidebar-backdrop" visible={sidebarState.showToggle && visibleMobile} />,
+					<CBackdrop className="sidebar-backdrop" visible={sidebarState.mobileMode && visibleMobile} />,
 					document.body
 				)}
 		</>
