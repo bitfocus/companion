@@ -110,6 +110,7 @@
 	height: 100%; // needed to get the scrollbar.
 	padding-bottom: 6px; // without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows
 	// (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive)
+	padding-right: 6px;
 
 	background-color: #222;
 	// border-radius: 5px; // A radius here breaks safari, causing the div to draw over the scrollbars
