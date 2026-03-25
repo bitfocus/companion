@@ -2,6 +2,7 @@
 	display: grid;
 	grid-template-rows: auto 1fr;
 	height: 100%;
+	overflow: hidden;
 
 	.log-debug-buttons {
 		padding: 0 20px;
@@ -14,10 +15,8 @@
 	.log-panel {
 		margin-top: 10px;
 		font-size: 0.85em;
-		// overflow-y: scroll;
+		overflow: hidden;
 		line-height: 1.25em;
-
-		max-width: 100%;
 
 		.log-line {
 			margin-top: 0px;
@@ -29,6 +28,7 @@
 			border-radius: 4px;
 			font-family: 'Fira Code', monospace;
 			white-space: pre-wrap;
+			overflow-wrap: break-word;
 
 			&.log-type-fatal {
 				background-color: black;

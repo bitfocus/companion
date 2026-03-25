@@ -6,8 +6,7 @@ import dayjs from 'dayjs'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { VariableSizeList as List, type ListOnScrollProps } from 'react-window'
-import AutoSizer from 'react-virtualized-auto-sizer'
+import { List, useDynamicRowHeight, useListRef, type RowComponentProps } from 'react-window-new'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 import { trpc, useMutationExt } from './Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -174,131 +173,118 @@ function useLogHistory() {
 	return { history, listChunkClearedToken }
 }
 
+interface ScrollerState {
+	follow: boolean
+	rowCount: number
+	isProgrammaticScroll: boolean
+	hasMounted: boolean
+}
+
 interface LogPanelContentsProps {
 	config: LogConfig
 }
 function LogPanelContents({ config }: LogPanelContentsProps) {
-	const { history, listChunkClearedToken } = useLogHistory()
+	const { history } = useLogHistory()
 
-	const listRef = useRef<List>(null)
-	const rowHeights = useRef<Record<string, number | undefined>>({})
+	const listRef = useListRef(null)
 
-	const [follow, setFollow] = useState(true)
-
-	useEffect(() => {
-		// Invalidate everything when the visibility selection changes, or the parent forces a reset
-		if (listRef.current) {
-			listRef.current.resetAfterIndex(0)
-		}
-	}, [config, listRef, listChunkClearedToken])
+	const state = useRef<ScrollerState>({
+		follow: true,
+		rowCount: history.length,
+		isProgrammaticScroll: false,
+		hasMounted: false,
+	})
 
 	const messages = useMemo(() => {
 		return history.filter((msg) => msg.level === 'error' || !!config[msg.level as keyof LogConfig])
 	}, [history, config])
 
+	state.current.rowCount = messages.length
+	console.log('follow count', messages.length)
+
 	useEffect(() => {
-		if (follow && listRef.current && messages.length > 0) {
-			// scroll to bottom
-			listRef.current.scrollToItem(messages.length - 1, 'end')
+		console.log('follow to', messages.length - 1)
+		if (!listRef.current || messages.length === 0) return
+		state.current.isProgrammaticScroll = true
+		listRef.current.scrollToRow({
+			index: messages.length - 1,
+			behavior: 'instant',
+			align: 'end',
+		})
+	}, [listRef, messages.length])
+
+	const userScroll = useCallback(() => {
+		if (state.current.isProgrammaticScroll) {
+			state.current.isProgrammaticScroll = false
+			return
 		}
-	}, [messages, follow])
 
-	const hasMountedRef = useRef(false)
-	const userScroll = useCallback(
-		(event: ListOnScrollProps) => {
-			// Ignore scroll event on mount
-			if (!hasMountedRef.current) {
-				hasMountedRef.current = true
+		// Ignore scroll event on mount
+		if (!state.current.hasMounted) {
+			state.current.hasMounted = true
 
-				setTimeout(() => {
-					if (listRef.current && messages.length > 0) {
-						// scroll to bottom
-						listRef.current.scrollToItem(messages.length - 1, 'end')
-					}
-				}, 100)
-				return
-			}
-
-			// if it was the user, then disable following
-			if (event.scrollUpdateWasRequested === false) {
-				setFollow(false)
-			}
-
-			if (!outerRef.current) {
-				return
-			}
-
-			// if scrolling is at the bottom, reenable following
-			if (event.scrollOffset + outerRef.current.offsetHeight === outerRef.current.scrollHeight) {
-				setFollow(true)
-			}
-		},
-		[messages.length]
-	)
-
-	const getRowHeight = useCallback(
-		(index: number) => {
-			return rowHeights.current[index] || 18
-		},
-		[rowHeights]
-	)
-
-	function setRowHeight(index: number, size: number) {
-		if (listRef.current) {
-			listRef.current.resetAfterIndex(0)
+			setTimeout(() => {
+				if (listRef.current && state.current.rowCount > 0) {
+					// scroll to bottom
+					state.current.isProgrammaticScroll = true
+					listRef.current.scrollToRow({
+						index: state.current.rowCount - 1,
+						behavior: 'instant',
+						align: 'end',
+					})
+				}
+			}, 100)
+			return
 		}
-		rowHeights.current = { ...rowHeights.current, [index]: size }
-	}
 
-	function Row({ style, index }: { style: React.CSSProperties; index: number }) {
-		const rowRef = useRef<HTMLDivElement>(null)
+		const el = listRef.current?.element
+		if (!el) return
 
-		const h = index === 0 ? LogsOnDiskInfoLine : messages[index - 1]
+		// if scrolling is at the bottom, reenable following
+		const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 10
+		state.current.follow = atBottom
+	}, [listRef])
 
-		useEffect(() => {
-			if (rowRef.current) {
-				setRowHeight(index, rowRef.current.clientHeight)
-			}
-			// eslint-disable-next-line
-		}, [rowRef])
-
-		return (
-			<div style={style}>
-				<LogLineInner h={h} innerRef={rowRef} />
-			</div>
-		)
-	}
-
-	const outerRef = useRef<HTMLElement>(null)
+	const rowHeight = useDynamicRowHeight({
+		defaultRowHeight: 18,
+	})
 
 	return (
-		<AutoSizer style={{ width: '100%', height: '100%' }}>
-			{({ height, width }) => (
-				<List
-					height={height}
-					itemCount={messages.length + 1}
-					onScroll={userScroll}
-					itemSize={getRowHeight}
-					ref={listRef}
-					outerRef={outerRef}
-					width={width}
-				>
-					{Row}
-				</List>
-			)}
-		</AutoSizer>
+		<div style={{ width: '100%', height: '100%' }}>
+			<List
+				listRef={listRef}
+				rowComponent={LogLineRow}
+				rowCount={messages.length + 1}
+				rowHeight={rowHeight}
+				rowProps={{ messages }}
+				onScroll={userScroll}
+			/>
+		</div>
+	)
+}
+
+function LogLineRow({
+	style,
+	index,
+	messages,
+}: RowComponentProps<{
+	messages: ClientLogLineExt[]
+}>) {
+	return (
+		<div style={style}>
+			<LogLineInner line={index === 0 ? LogsOnDiskInfoLine : messages[index - 1]} />
+		</div>
 	)
 }
 
 interface LogLineInnerProps {
-	h: ClientLogLineExt
-	innerRef: React.RefObject<HTMLDivElement>
+	line: ClientLogLineExt
 }
-const LogLineInner = memo(({ h, innerRef }: LogLineInnerProps) => {
-	const time_format = h.time === null ? '                 ' : dayjs(h.time).format('YY.MM.DD HH:mm:ss')
+const LogLineInner = memo(({ line }: LogLineInnerProps) => {
+	const time_format = line.time === null ? '                 ' : dayjs(line.time).format('YY.MM.DD HH:mm:ss')
 	return (
-		<div ref={innerRef} className={`log-line log-type-${h.level}`}>
-			{time_format} <strong>{h.source}</strong>: <span className="log-message">{h.message}</span>
+		<div className={`log-line log-type-${line.level}`}>
+			{time_format} <strong>{line.source}</strong>: <span className="log-message">{line.message}</span>
 		</div>
 	)
 })
