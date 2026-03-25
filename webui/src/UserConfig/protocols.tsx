@@ -108,7 +108,7 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 					</CNavLink>
 				</CNavItem>
 			</CNav>
-			<CTabContent>
+			<CTabContent className="default-scroll">
 				<CTabPane role="tabpanel" aria-labelledby="tcp-udp-tab" visible={activeTab === 'tcp-udp'}>
 					<MyErrorBoundary>
 						<TcpUdpProtocol />

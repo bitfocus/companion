@@ -237,7 +237,8 @@ form.row > * {
 
 	max-width: 1900px;
 	min-height: 300px;
-	max-height: 100%;
+	//max-height: 100%;
+	height: 100%;
 
 	&.no-height-limit {
 		max-height: unset;
@@ -252,6 +253,7 @@ form.row > * {
 	// }
 
 	.tab-pane {
+		height: 100%;
 		padding: 1rem 1rem 1rem 1rem;
 
 		// Make absolute positioned child components be relative to this
@@ -676,47 +678,48 @@ form.row > * {
 	}
 }
 
-// scroll if side-by-side
-@include coreui.media-breakpoint-up('xl') {
-	.split-panels {
+// scroll tabs panel (note the split-panels class exists regardless on panel mode, so
+// the breakpoint restriction doesn't seem warranted (it actually "broke" single-panel mode scrolling for buttons page).
+//@include coreui.media-breakpoint-up('xl') {
+.split-panels {
+	height: 100%;
+
+	> .primary-panel {
+		height: 100%;
+		overflow-y: auto;
+	}
+
+	> .secondary-panel {
 		height: 100%;
 
-		> .primary-panel {
+		.secondary-panel-inner {
 			height: 100%;
-			overflow-y: auto;
-		}
+			display: grid;
+			grid-template-rows: auto 1fr;
 
-		> .secondary-panel {
-			height: 100%;
-
-			.secondary-panel-inner {
-				height: 100%;
-				display: grid;
-				grid-template-rows: auto 1fr;
-
-				.tab-content {
-					overflow-y: scroll;
-
-					&.default-scroll {
-						overflow: inherit;
-					}
-				}
-			}
-
-			.secondary-panel-simple {
-				margin-right: 0px;
-			}
-
-			.secondary-panel-simple-body {
+			.tab-content {
 				overflow-y: scroll;
 
-				&.no-scroll {
-					overflow-y: auto;
+				&.default-scroll {
+					overflow: inherit;
 				}
+			}
+		}
+
+		.secondary-panel-simple {
+			margin-right: 0px;
+		}
+
+		.secondary-panel-simple-body {
+			overflow-y: scroll;
+
+			&.no-scroll {
+				overflow-y: auto;
 			}
 		}
 	}
 }
+//}
 
 // For bigger screens, like 1440p and 4K, allow scaling
 @media only screen and (min-width: 2000px) {

@@ -90,10 +90,14 @@
 
 .button-grid-panel-content {
 	overflow: hidden;
+	align-self: center;
+	width: fit-content; // ← sizes to child naturally
+	max-width: 100%; // ← but shrinks when container is smaller
+	flex-shrink: 1;
+	min-width: 0;
 	border-radius: 8px;
 	// min-height: 250px;  instead, set min-height in tsx to match button-sizes.
 }
-
 .button-grid-header {
 	.btn-right {
 		float: right;
@@ -104,7 +108,7 @@
 
 .button-infinite-grid {
 	height: 100%; // needed to get the scrollbar.
-	margin-bottom: 6px; // without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows
+	padding-bottom: 6px; // without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows
 	// (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive)
 
 	background-color: #222;
@@ -112,6 +116,12 @@
 	overflow: auto;
 
 	scrollbar-color: #666 #222; // match the scrollbar bg to the background-color so corner-rounding is apparent even with scrollbars present
+
+	&::-webkit-scrollbar {
+		width: 12px;
+		height: 12px;
+	}
+
 	&::-webkit-scrollbar-track {
 		background-color: #222; /* Webkit background color for compatibility */
 	}

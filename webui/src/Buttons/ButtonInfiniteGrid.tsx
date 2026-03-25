@@ -65,6 +65,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const tileSize = tileInnerSize + tilePadding * 2
 		const growWidth = doGrow ? 90 : 0
 		const growHeight = doGrow ? 60 : 0
+		const SCROLLBAR_PADDING = 15
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
 		const { scrollX: scrollXRaw, scrollY: scrollYRaw, setRef: setScrollRef } = useScrollPosition<HTMLDivElement>()
@@ -76,7 +77,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 
 		useEffect(() => {
 			if (setViewportMinHeight) {
-				setViewportMinHeight(2 * tileSize + growHeight + 15) // 15 if for the horizontal scrollbar.
+				setViewportMinHeight(2 * tileSize + growHeight + SCROLLBAR_PADDING)
 			}
 		}, [growHeight, setViewportMinHeight, tileSize])
 
@@ -252,9 +253,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		)
 		const gridWrapperStyle = useMemo(
 			() => ({
-				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 30 : 'none', // Pad for possible scrollbar
+				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 2 * SCROLLBAR_PADDING : 'none', // Pad for possible scrollbar
+				maxWidth: canvasWidth + SCROLLBAR_PADDING,
 			}),
-			[maxHeightToMatchCanvas, countRows, tileSize]
+			[maxHeightToMatchCanvas, countRows, tileSize, canvasWidth]
 		)
 
 		return (
