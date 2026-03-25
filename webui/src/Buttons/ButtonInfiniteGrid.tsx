@@ -37,6 +37,7 @@ interface ButtonInfiniteGridProps {
 	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
+	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
@@ -51,6 +52,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			buttonIconFactory,
 			drawScale,
 			maxHeightToMatchCanvas,
+			setViewportMinHeight,
 		},
 		ref
 	) {
@@ -63,6 +65,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const tileSize = tileInnerSize + tilePadding * 2
 		const growWidth = doGrow ? 90 : 0
 		const growHeight = doGrow ? 60 : 0
+		const SCROLLBAR_PADDING = 15
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
 		const { scrollX: scrollXRaw, scrollY: scrollYRaw, setRef: setScrollRef } = useScrollPosition<HTMLDivElement>()
@@ -71,6 +74,12 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		// This prevents visible buttons from being unmounted when the grid is hidden (e.g., tab switch)
 		const lastValidWindowSize = useRef<{ width: number; height: number } | null>(null)
 		const lastValidScroll = useRef<{ x: number; y: number } | null>(null)
+
+		useEffect(() => {
+			if (setViewportMinHeight) {
+				setViewportMinHeight(2 * tileSize + growHeight + SCROLLBAR_PADDING)
+			}
+		}, [growHeight, setViewportMinHeight, tileSize])
 
 		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
 		useEffect(() => {
@@ -230,8 +239,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			doGrow('bottom', amount)
 		}, [doGrow])
 
-		const canvasWidth = Math.max(countColumns * tileSize, windowSize.width) + growWidth * 2
-		const canvasHeight = Math.max(countRows * tileSize, windowSize.height) + growHeight * 2
+		const canvasWidth = countColumns * tileSize + growWidth * 2
+		const canvasHeight = countRows * tileSize + growHeight * 2
 
 		const gridCanvasStyle = useMemo(
 			() => ({
@@ -244,9 +253,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		)
 		const gridWrapperStyle = useMemo(
 			() => ({
-				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 30 : 'none', // Pad for possible scrollbar
+				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 2 * SCROLLBAR_PADDING : 'none', // Pad for possible scrollbar
+				maxWidth: canvasWidth + SCROLLBAR_PADDING,
 			}),
-			[maxHeightToMatchCanvas, countRows, tileSize]
+			[maxHeightToMatchCanvas, countRows, tileSize, canvasWidth]
 		)
 
 		return (
