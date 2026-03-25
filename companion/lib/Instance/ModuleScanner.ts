@@ -71,7 +71,6 @@ export class InstanceModuleScanner {
 			if (manifestJson.type === undefined) {
 				return await this.#parseConnectionManifest(manifestJson, fullpath, isPackaged)
 			} else if (manifestJson.type === 'connection') {
-				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				return await this.#parseConnectionV2Manifest(manifestJson as ModuleManifest, fullpath, isPackaged)
 			} else if (manifestJson.type === 'surface') {
 				return await this.#parseSurfaceManifest(manifestJson, fullpath, isPackaged)
