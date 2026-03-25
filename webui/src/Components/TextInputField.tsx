@@ -8,7 +8,7 @@ import Select, {
 } from 'react-select'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
-import { WindowedMenuList } from 'react-windowed-select'
+import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CustomOption } from './DropDownInputFancy.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
