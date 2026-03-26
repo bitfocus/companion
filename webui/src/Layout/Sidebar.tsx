@@ -62,6 +62,8 @@ export interface SidebarStateProps {
 	mobileMode: boolean
 	clickToggle: () => void
 	toggleEvent: EventTarget
+	narrow: boolean
+	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
 }
 const SidebarStateContext = createContext<SidebarStateProps | null>(null)
 
@@ -74,6 +76,7 @@ export function useSidebarState(): SidebarStateProps {
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
 	const mobileMode = useMobileMode()
+	const [narrow, setNarrow] = useState(false)
 
 	const event = useMemo(() => new EventTarget(), [])
 
@@ -84,8 +87,10 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 				event.dispatchEvent(new Event('show'))
 			},
 			toggleEvent: event,
+			narrow,
+			setNarrow,
 		} satisfies SidebarStateProps
-	}, [mobileMode, event])
+	}, [mobileMode, event, narrow])
 
 	return <SidebarStateContext.Provider value={value}>{children}</SidebarStateContext.Provider>
 }
@@ -176,7 +181,7 @@ export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
-	const sidebarState = useSidebarState()
+	const { mobileMode, setNarrow } = useSidebarState()
 
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
@@ -188,7 +193,12 @@ export const MySidebar = memo(function MySidebar() {
 	const [ibuttonsGroupVis, setIbuttonsGroupVis] = useState(false)
 	const [supportGroupVis, setSupportGroupVis] = useState(false)
 
-	const doToggle = useCallback(() => setUnfoldable((val) => !val), [setUnfoldable])
+	const doToggle = useCallback(() => {
+		setUnfoldable((val) => {
+			if (!val) setNarrow(true) // if new value is true, make sidebar narrow so it folds now
+			return !val
+		})
+	}, [setUnfoldable, setNarrow])
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
@@ -242,7 +252,7 @@ export const MySidebar = memo(function MySidebar() {
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
-			...(sidebarState.mobileMode
+			...(mobileMode
 				? []
 				: [
 						{
@@ -262,7 +272,7 @@ export const MySidebar = memo(function MySidebar() {
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
-		[unfoldable, doToggle, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode, sidebarState]
+		[unfoldable, doToggle, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode, mobileMode]
 	)
 
 	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
@@ -494,10 +504,11 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 
 const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
 	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
+	const { mobileMode } = useSidebarState()
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span className="nav-icon-wrapper d-none d-lg-flex" onClick={doToggle}>
+			<span className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')} onClick={doToggle}>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
 
@@ -527,12 +538,11 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
-	const [narrow, setNarrow] = useState(false)
 
-	const sidebarState = useSidebarState()
+	const { toggleEvent, mobileMode, narrow, setNarrow } = useSidebarState()
 
 	useEffect(() => {
-		const event = sidebarState.toggleEvent
+		const event = toggleEvent
 		const handler = () => {
 			setVisibleMobile(true)
 		}
@@ -541,11 +551,11 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 		return () => {
 			event.removeEventListener('show', handler)
 		}
-	}, [sidebarState.toggleEvent, setVisibleMobile])
+	}, [toggleEvent, setVisibleMobile])
 
 	useEffect(() => {
-		if (sidebarState.mobileMode) setVisibleMobile(false)
-	}, [sidebarState.mobileMode])
+		if (mobileMode) setVisibleMobile(false)
+	}, [mobileMode])
 
 	const handleOnClick = useCallback(
 		(event: MouseEvent) => {
@@ -562,19 +572,21 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 
 			// unfoldToggler: true if clicked in the "toggleFoldandVersion" area
 			const unfoldToggler = target.closest('.sidebar-header-toggler') // the latter isn't strictly necessary, but makes the intent clear
-			if (unfoldToggler && !target.closest(' .nav-icon-wrapper')) return // ignore clicks on version text, etc.
+			if (unfoldToggler && !target.closest('.nav-icon-wrapper')) return // ignore clicks on version text, etc.
 
 			// if we got here the user clicked on a nav-link, not a non-active area, group-toggle or context-menu item
-			if (sidebarState.mobileMode) {
+			if (mobileMode) {
 				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
 			} else if ((unfoldable && !unfoldToggler) || (!unfoldable && unfoldToggler)) {
 				// Folding mode: make the sidebar narrow momentarily (see handleTransitionEnd) so it can collapse
-				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs
+				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs so:
+				// unfoldable && !unfoldToggler: User clicked a _nav-link_ while in folding mode → collapse
+				// !unfoldable && unfoldToggler: User clicked the _toggler_ to enable folding → collapse now
 				setNarrow(true)
 			}
 		},
-		[sidebarState.mobileMode, unfoldable]
+		[setNarrow, mobileMode, unfoldable]
 	)
 
 	const handleTransitionEnd = useCallback(
@@ -590,7 +602,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 				setNarrow(false)
 			}
 		},
-		[narrow]
+		[narrow, setNarrow]
 	)
 
 	// Fallback for reduced motion or if transition doesn't fire (both very rare cases)
@@ -599,23 +611,23 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 		if (!narrow) return
 		const timeout = setTimeout(() => setNarrow(false), 1000) // some transitions can be delayed, and there's no harm in waiting a bit longer here since we're in unfoldable mode.
 		return () => clearTimeout(timeout)
-	}, [narrow])
+	}, [narrow, setNarrow])
 
 	const handleKeyup = useCallback(
 		(event: Event) => {
-			if (sidebarState.mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			if (mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
 				setVisibleMobile(false)
 			}
 		},
-		[sidebarState.mobileMode, sidebarRef]
+		[mobileMode, sidebarRef]
 	)
 	const handleClickOutside = useCallback(
 		(event: Event) => {
-			if (sidebarState.mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			if (mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
 				setVisibleMobile(false)
 			}
 		},
-		[sidebarState.mobileMode, sidebarRef]
+		[mobileMode, sidebarRef]
 	)
 
 	useEffect(() => {
@@ -646,8 +658,8 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
 					'sidebar-narrow-unfoldable': unfoldable && !narrow, // // unfold-able. This is a CoreUI class so can't be renamed.
-					show: sidebarState.mobileMode && visibleMobile,
-					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
+					show: mobileMode && visibleMobile,
+					// hide: visibleDesktop === false && !showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
 				onContextMenu={onContextMenu}
@@ -656,11 +668,8 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 				{children}
 			</div>
 			{typeof window !== 'undefined' &&
-				sidebarState.mobileMode &&
-				createPortal(
-					<CBackdrop className="sidebar-backdrop" visible={sidebarState.mobileMode && visibleMobile} />,
-					document.body
-				)}
+				mobileMode &&
+				createPortal(<CBackdrop className="sidebar-backdrop" visible={mobileMode && visibleMobile} />, document.body)}
 		</>
 	)
 }
