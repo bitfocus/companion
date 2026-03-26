@@ -26,4 +26,4 @@ fi
 
 cd /app
 # Bind to everything, as access should be scoped down by how the port is exposed from docker
-exec ./node-runtimes/main/bin/node ./main.js --admin-address :: --admin-port 8000 --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev $@
+exec ./node-runtimes/main/bin/node ./main.js --admin-address :: --admin-port $COMPANION_ADMIN_PORT --config-dir $COMPANION_CONFIG_BASEDIR --extra-module-path /app/module-local-dev $@
