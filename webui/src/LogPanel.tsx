@@ -128,7 +128,6 @@ export const LogPanel = memo(function LogPanel() {
 })
 
 function useLogHistory() {
-	const [listChunkClearedToken, setListChunkClearedToken] = useState(nanoid())
 	const [history, setHistory] = useState<ClientLogLineExt[]>([])
 
 	useSubscription(
@@ -151,7 +150,6 @@ function useLogHistory() {
 							const newArray = [...history, ...newItems]
 
 							if (newArray.length > 5000) {
-								setListChunkClearedToken(nanoid())
 								return newArray.slice(-4500)
 							} else {
 								return newArray
@@ -171,7 +169,7 @@ function useLogHistory() {
 		})
 	)
 
-	return { history, listChunkClearedToken }
+	return { history }
 }
 
 interface LogPanelContentsProps {
