@@ -49,8 +49,8 @@
     "*.{json,css,scss,md,yaml,yml}": "prettier --check"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@tanstack/eslint-plugin-query": "^5.91.4",
+    "@eslint/js": "^10.0.1",
+    "@tanstack/eslint-plugin-query": "^5.95.0",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/node": "^22.19.15",
     "@types/ps-tree": "^1.1.6",
@@ -59,7 +59,7 @@
     "ajv": "^8.18.0",
     "chokidar": "^5.0.0",
     "concurrently": "^9.2.1",
-    "eslint": "^9.39.4",
+    "eslint": "^10.1.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^17.24.0",
     "eslint-plugin-prettier": "^5.5.5",
@@ -72,13 +72,13 @@
     "openapi-typescript": "^7.13.0",
     "p-retry": "^7.1.1",
     "prettier": "^3.8.1",
-    "socket": "^1.1.73",
+    "socket": "^1.1.75",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "typescript-eslint": "^8.57.0",
+    "typescript-eslint": "^8.57.1",
     "vitest": "^4.1.0",
     "vitest-mock-extended": "^3.1.0",
-    "yaml": "^2.8.2",
+    "yaml": "^2.8.3",
     "zx": "^8.8.5"
   },
   "resolutions": {
