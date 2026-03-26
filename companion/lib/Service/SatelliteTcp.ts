@@ -1,10 +1,8 @@
 import { ServiceBase } from './Base.js'
 import net, { type Socket } from 'net'
 import LogController from '../Log/Controller.js'
-import type { AppInfo } from '../Registry.js'
-import { SatelliteSocketWrapper, ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
+import { SatelliteSocketWrapper, type ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { SurfaceController } from '../Surface/Controller.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 
 /**
@@ -33,10 +31,10 @@ export class ServiceSatelliteTcp extends ServiceBase {
 		return this.#clients.size
 	}
 
-	constructor(appInfo: AppInfo, surfaceController: SurfaceController, userconfig: DataUserConfig) {
+	constructor(api: ServiceSatelliteApi, userconfig: DataUserConfig) {
 		super(userconfig, 'Service/SatelliteTcp', null, null)
 
-		this.#api = new ServiceSatelliteApi(appInfo, surfaceController)
+		this.#api = api
 
 		this.port = 16622
 

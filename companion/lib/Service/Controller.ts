@@ -12,6 +12,7 @@ import { ServiceTcp } from './Tcp.js'
 import { ServiceUdp } from './Udp.js'
 import type { UIHandler } from '../UI/Handler.js'
 import { ServiceSatelliteWebsocket } from './SatelliteWebsocket.js'
+import { ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -46,6 +47,7 @@ export class ServiceController {
 	readonly emberplus: ServiceEmberPlus
 	readonly artnet: ServiceArtnet
 	readonly rosstalk: ServiceRosstalk
+	readonly satelliteApi: ServiceSatelliteApi
 	readonly satelliteTcp: ServiceSatelliteTcp
 	readonly satelliteWebsocket: ServiceSatelliteWebsocket
 	readonly elgatoPlugin: ServiceElgatoPlugin
@@ -70,8 +72,9 @@ export class ServiceController {
 		this.emberplus = new ServiceEmberPlus(serviceApi, userconfig, pageStore)
 		this.artnet = new ServiceArtnet(serviceApi, userconfig)
 		this.rosstalk = new ServiceRosstalk(serviceApi, userconfig)
-		this.satelliteTcp = new ServiceSatelliteTcp(serviceApi.appInfo, surfaceController, userconfig)
-		this.satelliteWebsocket = new ServiceSatelliteWebsocket(serviceApi.appInfo, surfaceController, userconfig)
+		this.satelliteApi = new ServiceSatelliteApi(serviceApi, surfaceController)
+		this.satelliteTcp = new ServiceSatelliteTcp(this.satelliteApi, userconfig)
+		this.satelliteWebsocket = new ServiceSatelliteWebsocket(this.satelliteApi, userconfig)
 		this.elgatoPlugin = new ServiceElgatoPlugin(serviceApi, surfaceController, userconfig)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
 	}
@@ -80,6 +83,7 @@ export class ServiceController {
 		this.tcp.onButtonDrawn(location, render)
 		this.emberplus.onButtonDrawn(location, render)
 		this.elgatoPlugin.onButtonDrawn(location, render)
+		this.satelliteApi.onButtonDrawn(location, render)
 	}
 
 	/**
