@@ -107,9 +107,6 @@ export default defineConfig({
 				})
 			: undefined,
 	],
-	resolve: {
-		tsconfigPaths: true,
-	},
 	css: {
 		preprocessorOptions: {
 			scss: {
@@ -119,6 +116,7 @@ export default defineConfig({
 	},
 
 	resolve: {
+		tsconfigPaths: true,
 		alias: {
 			'react-windowed-select': 'react-windowed-select/dist/main.js',
 		},
