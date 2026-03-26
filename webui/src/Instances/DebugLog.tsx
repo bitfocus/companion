@@ -5,6 +5,7 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import { trpc } from '~/Resources/TRPC'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
+import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import dayjs from 'dayjs'
 
 interface DebugLogLine {
@@ -27,13 +28,6 @@ const LogsOnDiskInfoLine: DebugLogLine = {
 	source: 'System',
 	level: 'system',
 	message: 'Starting log. Only lines generated since opening the page are shown here',
-}
-
-interface ScrollerState {
-	follow: boolean
-	rowCount: number
-	isProgrammaticScroll: boolean
-	hasMounted: boolean
 }
 
 export interface InstanceDebugLogProps {
@@ -205,20 +199,11 @@ interface LogPanelContentsProps {
 }
 
 function LogPanelContents({ linesBuffer, config }: LogPanelContentsProps) {
-	const parentRef = React.useRef<HTMLDivElement>(null)
-
-	const state = useRef<ScrollerState>({
-		follow: true,
-		rowCount: linesBuffer.length,
-		isProgrammaticScroll: false,
-		hasMounted: false,
-	})
+	const parentRef = useRef<HTMLDivElement>(null)
 
 	const messages = useMemo(() => {
 		return linesBuffer.filter((msg) => msg.level === 'system' || !!config[msg.level as keyof DebugConfig])
 	}, [linesBuffer, config])
-
-	state.current.rowCount = messages.length
 
 	const count = messages.length + 1
 
@@ -230,45 +215,12 @@ function LogPanelContents({ linesBuffer, config }: LogPanelContentsProps) {
 		overscan: 5,
 	})
 
-	const userScroll = useCallback(() => {
-		if (state.current.isProgrammaticScroll) {
-			state.current.isProgrammaticScroll = false
-			return
-		}
-
-		// Ignore scroll event on mount
-		if (!state.current.hasMounted) {
-			state.current.hasMounted = true
-
-			setTimeout(() => {
-				if (parentRef.current && state.current.rowCount > 0) {
-					// scroll to bottom
-					state.current.isProgrammaticScroll = true
-					virtualizer.scrollToIndex(state.current.rowCount, { align: 'end' })
-				}
-			}, 100)
-			return
-		}
-
-		const el = parentRef.current
-		if (!el) return
-
-		// if scrolling is at the bottom, reenable following
-		const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 10
-		state.current.follow = atBottom
-	}, [virtualizer])
-
-	// Scroll to bottom on count change
-	React.useEffect(() => {
-		if (state.current.follow) {
-			virtualizer.scrollToIndex(count - 1, { align: 'end' })
-		}
-	}, [count, virtualizer])
+	const onScroll = useStickyScroll(parentRef, virtualizer, count)
 
 	const items = virtualizer.getVirtualItems()
 
 	return (
-		<div ref={parentRef} style={{ width: '100%', height: '100%', overflow: 'auto' }} onScroll={userScroll}>
+		<div ref={parentRef} style={{ width: '100%', height: '100%', overflow: 'auto' }} onScroll={onScroll}>
 			<div
 				style={{
 					height: virtualizer.getTotalSize(),
