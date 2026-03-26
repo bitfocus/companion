@@ -37,6 +37,10 @@ label.disabled {
 	}
 }
 
+.variable-dropdown-option {
+	overflow-wrap: break-word;
+}
+
 /* Style for variable-name autocomplete in text inputs as well as options in regular dropdowns */
 .variable-dropdown-option span {
 	display: block;
