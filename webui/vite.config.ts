@@ -5,6 +5,7 @@ import legacyPlugin from '@vitejs/plugin-legacy'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import fs from 'fs'
 import path from 'path'
+import tsconfigPaths from 'vite-tsconfig-paths'
 import { normalizeBasePath } from '../tools/webui-dev-utils'
 
 const buildFile = fs
@@ -90,6 +91,7 @@ export default defineConfig({
 		},
 	},
 	plugins: [
+		tsconfigPaths(),
 		tanstackRouter({
 			virtualRouteConfig: './src/routes/-routes.ts',
 			addExtensions: true,
@@ -112,13 +114,6 @@ export default defineConfig({
 			scss: {
 				quietDeps: true,
 			},
-		},
-	},
-
-	resolve: {
-		tsconfigPaths: true,
-		alias: {
-			'react-windowed-select': 'react-windowed-select/dist/main.js',
 		},
 	},
 })
