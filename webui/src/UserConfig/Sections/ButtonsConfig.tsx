@@ -9,8 +9,8 @@ export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigPr
 		<>
 			<UserConfigHeadingRow
 				label="Buttons"
-				tooltip="Setup button appearances."
-				action="/user-guide/config/settings#buttons"
+				children="Setup button appearances."
+				helpAction="/user-guide/config/settings#buttons"
 			/>
 
 			<UserConfigSwitchRow

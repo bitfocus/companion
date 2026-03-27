@@ -1,11 +1,10 @@
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfo } from '../../Instances/Util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 interface ConnectionEditPanelHeadingProps {
 	connectionInfo: ClientConnectionConfig
@@ -38,13 +37,11 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.moduleId}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
-					<div className="float_right" onClick={doShowHelp} title="Show help for this connection">
-						<FontAwesomeIcon icon={faQuestionCircle} size="lg" />
-					</div>
+					<ContextHelpButton action={doShowHelp}>
+						Change properties of the connection here. Click the icon to show instructions for this module.
+					</ContextHelpButton>
 				)}
-				<div className="float_right ms-1" onClick={closeConfigurePanel} title="Close">
-					<FontAwesomeIcon icon={faTimes} size="lg" />
-				</div>
+				<CloseButton closeFn={closeConfigurePanel} />
 			</div>
 		</div>
 	)

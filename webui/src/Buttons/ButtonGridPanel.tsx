@@ -16,6 +16,7 @@ import type { GridZoomController } from './GridZoom.js'
 import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -154,7 +155,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
 				<EditPagePropertiesModal ref={editRef} includeName />
 
-				<h4>Buttons</h4>
+				<h4 className="btn-inline">
+					Buttons<ContextHelpButton action="/user-guide/config/buttons/"></ContextHelpButton>
+				</h4>
 				<p style={{ marginBottom: '0.5rem' }}>
 					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
 					and what they should do when you press or click on them.

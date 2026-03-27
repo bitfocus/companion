@@ -15,7 +15,7 @@ export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserCo
 		<>
 			{/* <UserConfigHeadingRow
 				label="PIN Lockout"
-				tooltip="Enable this feature to lock input surfaces when idle for a specified time."
+				help="Enable this feature to lock input surfaces when idle for a specified time."
 			/>
  */}
 			<UserConfigSwitchRow
@@ -23,11 +23,9 @@ export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserCo
 				label={
 					<>
 						<span>Enable PIN Lockout </span>
-						<ContextHelpButton
-							tooltip="Enable this feature to lock input surfaces when idle for a specified time."
-							action="/user-guide/config/settings#pin-lockout"
-							size="1x"
-						/>
+						<ContextHelpButton action="/user-guide/config/settings#pin-lockout">
+							Enable this feature to lock input surfaces when idle for a specified time.
+						</ContextHelpButton>
 					</>
 				}
 				field="pin_enable"

@@ -39,7 +39,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 
 	return (
 		<>
-			<UserConfigHeadingRow label="HTTPS Web Server" />
+			<UserConfigHeadingRow label="HTTPS Web Server" helpAction="/user-guide/config/settings#https-web-server" />
 
 			<tr>
 				<td colSpan={3}>

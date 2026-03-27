@@ -37,10 +37,9 @@ export const SurfaceInstanceEditPanelHeading = observer(function SurfaceInstance
 			<h4 className="panel-title">Edit Surface Integration: {moduleInfo?.display?.name ?? instanceInfo.moduleId}</h4>
 			<div className="header-buttons">
 				{moduleVersion?.helpPath && (
-					<ContextHelpButton
-						action={doShowHelp}
-						tooltip="Change properties of the surface integration here. Click the icon to show instructions for this module."
-					/>
+					<ContextHelpButton action={doShowHelp}>
+						Change properties of the surface integration here. Click the icon to show instructions for this module.
+					</ContextHelpButton>
 				)}
 				<CloseButton closeFn={closeConfigurePanel} />
 			</div>

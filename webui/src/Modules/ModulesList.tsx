@@ -21,6 +21,7 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -132,7 +133,10 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	return (
 		<div className="flex-column-layout">
 			<div className="fixed-header">
-				<h4>Manage Modules</h4>
+				<h4 className="btn-inline">
+					Manage Modules
+					<ContextHelpButton action="/user-guide/config/modules"></ContextHelpButton>
+				</h4>
 
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your

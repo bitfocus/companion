@@ -31,6 +31,7 @@ import {
 import { useExpressionVariablesCollectionsApi } from './ExpressionVariablesCollectionsApi'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 
 export const ExpressionVariablesPage = observer(function ExpressionVariablesPage() {
 	const { expressionVariablesList } = useContext(RootAppStoreContext)
@@ -129,7 +130,10 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<h4>Expression Variables</h4>
+				<h4 className="btn-inline">
+					Expression Variables
+					<ContextHelpButton action="/user-guide/config/variables#expression-variables"></ContextHelpButton>
+				</h4>
 				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
 				<div className="mb-2">
@@ -307,9 +311,8 @@ function ExpressionVariableEditPanelHeading({ doCloseVariable }: ExpressionVaria
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Edit Expression variable</h4>
 			<div className="header-buttons">
-				<div className="float_right ms-1" onClick={doCloseVariable} title="Close">
-					<FontAwesomeIcon icon={faTimes} size="lg" />
-				</div>
+				<ContextHelpButton action="/user-guide/config/variables#expression-variables"></ContextHelpButton>
+				<CloseButton closeFn={doCloseVariable} />
 			</div>
 		</div>
 	)

@@ -17,6 +17,7 @@ import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
 import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
 import { TcpUdpProtocol } from './Sections/TcpUdpProtocol.js'
 import { useUserConfigProps } from './Context.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
@@ -26,7 +27,10 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4>Settings - Protocols</h4>
+								<h4 className="btn-inline">
+									Settings - Protocols
+									<ContextHelpButton action="/user-guide/config/settings#protocols"></ContextHelpButton>
+								</h4>
 								<p>Settings apply instantaneously, don't worry about it!</p>
 							</div>
 						</div>

@@ -649,17 +649,34 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
 	border: none;
 	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
+	display: flex;
+	align-items: center; // center the "X" in the button's background
+
+	.svg-inline--fa {
+		height: 1.25em;
+		width: 1.25em;
+		margin: 2px;
+	}
 }
 
-.context-help-button-2xl {
+// everything but size can be globally applied
+.context-help-button-btn {
 	border: 0;
 	border-radius: 100%;
-	box-shadow: 2px 3px 4px 1px rgb(0 0 0 / 25%);
-	color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
+	--cui-btn-color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
 	background-color: white;
+}
 
-	.fa-2xl {
-		margin: 0px -4px -2px -4px;
+// panel headers.  (For h4, h5 headings see _common.scss)
+.header-buttons .context-help-button-btn {
+	box-shadow: 1px 1px 4px 1px rgb(0 0 0 / 25%);
+	margin-top: 1px; // centers it a bit better
+	width: 2em;
+	height: 2em;
+
+	.svg-inline--fa {
+		width: 2em;
+		height: 2em;
 	}
 }
 

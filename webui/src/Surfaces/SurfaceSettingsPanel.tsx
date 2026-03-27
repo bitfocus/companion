@@ -54,8 +54,8 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 						<thead>
 							<UserConfigHeadingRow
 								label="General Surface Settings"
-								tooltip="The following settings affect all surfaces."
-								action="/user-guide/config/settings#surfaces"
+								helpMessage="The following settings affect all surfaces."
+								helpAction="/user-guide/config/settings#surfaces"
 							/>
 						</thead>
 						<tbody>
@@ -91,10 +91,9 @@ function SettingsPanelTitleBar() {
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Surface Integrations and General Settings</h4>
 			<div className="header-buttons">
-				<ContextHelpButton
-					tooltip="Manage surface integrations and global surface settings here."
-					action="/user-guide/config/settings#surfaces"
-				/>
+				<ContextHelpButton action="/user-guide/config/settings#surfaces">
+					Manage surface integrations and global surface settings here.
+				</ContextHelpButton>
 
 				<CloseButton closeFn={doClose} visibilityClass="d-xl-none" />
 			</div>
