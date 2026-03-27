@@ -41,6 +41,7 @@ import { nanoid } from 'nanoid'
  * 1.8.0 - Add support for remote surface to handle display of locked state
  * 1.9.0 - Add support for complex surface schemas
  * 1.10.0 - Add button subscription API (ADD-SUB, REMOVE-SUB, SUB-PRESS, SUB-ROTATE, SUB-STATE)
+ *        - KEY-STATE now includes LOCATION=page/row/column for all button types when location is known
  */
 const API_VERSION = '1.10.0'
 

@@ -262,6 +262,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 						x: definition.column,
 						y: definition.row,
 						image: this.#getLockImage(definition.style),
+						location: null,
 					})
 				}
 			}
@@ -311,6 +312,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		const styleArgs = await buildSatelliteStyleArgs(drawItem.image, controlDefinition.style, this.#config.rotation)
 		Object.assign(params, styleArgs)
+
+		if (drawItem.location) {
+			params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
+		}
 
 		if (!this.socket) return
 

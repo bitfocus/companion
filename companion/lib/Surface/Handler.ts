@@ -242,13 +242,14 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 				for (let y = 0; y < gridSize.rows; y++) {
 					for (let x = 0; x < gridSize.columns; x++) {
-						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder({
+						const location: ControlLocation = {
 							pageNumber: pageNumber ?? 0,
 							column: x + xOffset,
 							row: y + yOffset,
-						})
+						}
+						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder(location)
 
-						rawEntries.push({ x, y, image })
+						rawEntries.push({ x, y, image, location })
 					}
 				}
 
@@ -274,6 +275,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				x: transformedX,
 				y: transformedY,
 				image: entry.image,
+				location: entry.location,
 			}
 		})
 	}
@@ -334,6 +336,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					x: location.column - xOffset,
 					y: location.row - yOffset,
 					image: render,
+					location,
 				},
 			]
 			const transformedEntries = this.#transformButtonRenders(rawEntries)

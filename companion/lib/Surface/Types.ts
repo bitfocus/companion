@@ -8,6 +8,7 @@ import type {
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -55,6 +56,8 @@ export interface DrawButtonItem {
 	x: number
 	y: number
 	image: ImageResult
+	/** The absolute page/row/column location of the button being drawn, if known */
+	location: ControlLocation | null
 }
 
 export interface SurfacePanelEvents {
