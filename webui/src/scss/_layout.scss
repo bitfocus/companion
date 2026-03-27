@@ -457,32 +457,33 @@ form.row > * {
 		}
 	}
 
-	.nav-group-toggle-link {
-		padding: 0;
-
-		.nav-link {
-			margin-bottom: 0;
-		}
-	}
-
-	$group-background-color: #2a2a2a;
+	&.sidebar-narrow:hover .nav-group-items, // override CUI so nav-group-items show when in temporary narrow mode
+	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show if we ever implement narrow mode
+	&.sidebar-narrow-unfoldable:not(:hover) .nav-group-items, // override CUI so nav-group-items show
 	.nav-group-toggle-basic::after,
 	.nav-group-items {
-		// the box underneath the expanded group
-		padding-left: 0.5em !important;
+		// the box underneath and containing the expanded group
 		padding-right: 0.1em !important;
 		padding-top: 0px !important;
+		padding-left: 0px !important;
+		margin-left: 2px !important;
+		border-left: 3px solid var(--cui-sidebar-nav-link-icon-color);
+		//border-radius: var(--cui-sidebar-nav-link-border-radius); //optional
+	}
+
+	&.sidebar-narrow:hover .nav-group-items, // override CUI so nav-group-items show when in temporary narrow mode
+	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show if we ever implement narrow mode
+	&.sidebar-narrow-unfoldable:not(:hover) .nav-group-items {
+		// override CUI so nav-group-items show
+		height: auto !important;
+		visibility: visible !important; // !important is not currently necessary on this, but CUI could change it
+		opacity: 1 !important; // !important is not currently necessary on this, but CUI could change it
 	}
 
 	.sidebar-nav .nav-group-items .nav-link {
 		// the individual buttons in a group
-		padding-left: var(--cui-sidebar-nav-link-padding-x);
-		box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.2);
-		--cui-sidebar-nav-link-bg: #{$group-background-color};
-
-		&:hover {
-			background-color: color.adjust($group-background-color, $lightness: 5%) !important;
-		}
+		// subtract out 1-2 less than the nav-group-items spacing: (padding-left + margin-left + border-left)
+		padding-left: calc(var(--cui-sidebar-nav-link-padding-x) - 3px) !important;
 	}
 
 	.sidebar-header.sidebar-header-toggler {
