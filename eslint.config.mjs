@@ -42,6 +42,8 @@ export default [
 				{ argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_', varsIgnorePattern: '^_(.+)' },
 			],
 			'no-extra-semi': 'off',
+			'no-useless-assignment': 'off',
+			'preserve-caught-error': 'off', // Future: Maybe this should be enabled?
 			// 'n/no-unsupported-features/es-syntax': ['error', { ignores: ['modules'] }],
 			'no-use-before-define': 'off',
 			'no-warning-comments': ['error', { terms: ['nocommit', '@nocommit', '@no-commit'] }],
@@ -147,6 +149,7 @@ export default [
 			'webui/post-install.ts',
 			'.yarnrc.yml',
 			'companion/generated/**/*',
+			'companion/lib/Service/Satellite/SatelliteSurfaceManifestSchema.ts',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',

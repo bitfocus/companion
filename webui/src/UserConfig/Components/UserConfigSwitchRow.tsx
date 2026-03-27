@@ -10,6 +10,7 @@ interface UserConfigSwitchRowProps {
 	field: keyof UserConfigModel
 	requiresRestart?: boolean
 	inverted?: boolean
+	title?: string
 }
 export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	userConfig,
@@ -17,11 +18,12 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	field,
 	requiresRestart,
 	inverted,
+	title,
 }: UserConfigSwitchRowProps) {
 	const invertIfNeeded = (value: boolean) => (inverted ? !value : value)
 	return (
-		<tr>
-			<td>
+		<tr title={title}>
+			<td style={{ width: '100%' }}>
 				{label}
 				{requiresRestart && (
 					<>
@@ -39,7 +41,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 					onChange={(e) => userConfig.setValue(field, invertIfNeeded(e.currentTarget.checked))}
 				/>
 			</td>
-			<td>
+			<td className="pe-3">
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

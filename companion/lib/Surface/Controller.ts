@@ -548,8 +548,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				)
 				.mutation(async ({ input }) => {
 					if (input.id.startsWith('emulator:') && this.#surfaceHandlers.has(input.id)) {
-						this.removeDevice(input.id, true)
-
+						this.removeDevice(input.id, { purge: true })
 						// Emit an update to the config
 						this.#updateEvents.emit('emulatorConfig', input.id.slice('emulator:'.length), null)
 
@@ -1696,16 +1695,18 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		}
 	}
 
-	/**
-	 * Remove a surface
-	 */
-	removeDevice(surfaceId: string, purge = false): void {
+	removeDevice(surfaceId: string, { purge, physicallyGone }: { purge?: boolean; physicallyGone?: boolean } = {}): void {
 		const surfaceHandler = this.#surfaceHandlers.get(surfaceId)
 		if (surfaceHandler) {
-			this.#logger.silly('remove device ' + surfaceId)
+			this.#logger.debug('remove device ' + surfaceId)
 
-			// Release the id from the discovered registry, so that it can be reattached
-			this.#discoveredSurfaceRegistry.forgetSurfaceById(surfaceId)
+			const surfacePath = this.#discoveredSurfaceRegistry.getSurfacePath(surfaceId)
+			if (surfacePath !== undefined) {
+				const isModuleDetected = this.#discoveredSurfaces.has(surfacePath)
+				if (isModuleDetected || physicallyGone) {
+					this.#discoveredSurfaceRegistry.forgetSurface(surfacePath)
+				}
+			}
 
 			// Detach surface from any group
 			this.#detachSurfaceFromGroup(surfaceHandler)
@@ -1834,7 +1835,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			try {
 				if (id.startsWith('emulator:')) {
-					this.removeDevice(id, true)
+					this.removeDevice(id, { purge: true })
 				} else {
 					surface.resetConfig()
 
