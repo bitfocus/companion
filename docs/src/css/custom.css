@@ -4,6 +4,20 @@
  * work well for content-centric websites.
  */
 
+/* Adjust anchor-linking (in-page links) behavior: animate scrolling down to them
+    and if the screen is tall enough, show a bit above the link for context. */
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
+@media (min-height: 600px) {
+	html {
+		scroll-padding-top: 2rem;
+	}
+}
+
 /* You can override the default Infima variables here. */
 :root {
 	--ifm-color-primary: #d50215;
