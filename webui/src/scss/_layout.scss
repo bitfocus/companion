@@ -544,6 +544,15 @@ form.row > * {
 	.nav-main-scroller {
 		padding-bottom: 20px;
 	}
+	&.sidebar-narrow-unfoldable:not(:hover) .nav-main-scroller {
+		//overflow-y: hidden; // disable scrollbar when it's narrow
+		scrollbar-width: thin;
+	}
+
+	&.sidebar-narrow:hover .nav-main-scroller {
+		scrollbar-width: thin;
+	}
+
 	.sidebar-bottom-shadow-container {
 		position: relative;
 
