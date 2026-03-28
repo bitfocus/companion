@@ -116,10 +116,4 @@ export default defineConfig({
 			},
 		},
 	},
-
-	resolve: {
-		alias: {
-			'react-windowed-select': 'react-windowed-select/dist/main.js',
-		},
-	},
 })

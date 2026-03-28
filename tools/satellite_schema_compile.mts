@@ -21,7 +21,7 @@ let moduleCode = standaloneCode(ajv, validate)
 
 // Now you can write the module code to file
 const validatorPath = path.join(import.meta.dirname, '../companion/generated/SatelliteSurfaceSchemaValidator.js')
-fs.writeFileSync(validatorPath, '/* eslint-disable */\n' + moduleCode)
+fs.writeFileSync(validatorPath, moduleCode)
 
 // Format with prettier so that it doesnt bloat git
 $`prettier -w ${validatorPath}`

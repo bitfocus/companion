@@ -86,7 +86,7 @@ if (await isPortInUse(4000, docusaurusHost)) {
 	}
 }
 
-console.log(`Starting Vite and Docusaurus...`)
+console.log(`Starting Vite${skipDocusaurus ? '' : ' and Docusaurus'}...`)
 if (normalizedBase) console.log(`Base path: ${normalizedBase}`)
 console.log(`yarn workspace @companion-app/webui dev ${viteArgs} --clearScreen false`)
 if (!skipDocusaurus) {
