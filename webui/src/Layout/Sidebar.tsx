@@ -68,10 +68,8 @@ function foldableIcon(foldable: boolean): ReactElement {
 }
 export interface SidebarStateProps {
 	mobileMode: boolean
-	clickToggle: () => void
-	toggleEvent: EventTarget
-	narrow: boolean
-	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
+	handleShowSidebar: () => void
+	showSidebarEvent: EventTarget
 }
 const SidebarStateContext = createContext<SidebarStateProps | null>(null)
 
@@ -84,7 +82,6 @@ export function useSidebarState(): SidebarStateProps {
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
 	const mobileMode = useMobileMode()
-	const [narrow, setNarrow] = useState(false)
 
 	const event = useMemo(() => new EventTarget(), [])
 
@@ -92,14 +89,12 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 		return {
 			mobileMode: mobileMode,
 			// the next two are for the hamburger toggle
-			clickToggle: () => {
+			handleShowSidebar: () => {
 				event.dispatchEvent(new Event('show'))
 			},
-			toggleEvent: event,
-			narrow,
-			setNarrow,
+			showSidebarEvent: event,
 		} satisfies SidebarStateProps
-	}, [mobileMode, event, narrow])
+	}, [mobileMode, event])
 
 	return <SidebarStateContext.Provider value={value}>{children}</SidebarStateContext.Provider>
 }
@@ -191,11 +186,12 @@ export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
-	const { mobileMode, setNarrow } = useSidebarState()
+	const { mobileMode } = useSidebarState()
 
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
 	const [accordionMode, setAccordionMode] = useLocalStorage('sidebar_auto_collapse', false)
+	const [narrow, setNarrow] = useState(false)
 
 	const [surfacesGroupVis, setSurfacesGroupVis] = useState(false)
 	const [variablesGroupVis, setVariablesGroupVis] = useState(false)
@@ -289,7 +285,7 @@ export const MySidebar = memo(function MySidebar() {
 	const contextState = useContextMenuState(contextMenuItems)
 
 	return (
-		<CSidebar unfoldable={unfoldable} onContextMenu={contextState.onContextMenu}>
+		<CSidebar unfoldable={unfoldable} narrow={narrow} setNarrow={setNarrow} onContextMenu={contextState.onContextMenu}>
 			<ContextMenu {...contextState} />
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>
@@ -546,14 +542,16 @@ interface CSidebarProps {
 	 * Expand narrowed sidebar on hover.
 	 */
 	unfoldable?: boolean
+	narrow: boolean
+	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
 	onContextMenu?: MouseEventHandler<HTMLDivElement>
 }
-function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
+function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
 
-	const { toggleEvent, mobileMode, narrow, setNarrow } = useSidebarState()
+	const { showSidebarEvent: toggleEvent, mobileMode } = useSidebarState()
 
 	// handle the "hamburger" to show the sidebar in mobile mode
 	useEffect(() => {
@@ -611,15 +609,7 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 		if (narrow) setNarrow(false)
 	}, [narrow, setNarrow])
 
-	const handleKeyup = useCallback(
-		(event: Event) => {
-			if (mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-				setVisibleMobile(false)
-			}
-		},
-		[mobileMode, sidebarRef]
-	)
-	const handleClickOutside = useCallback(
+	const handleKeyOrClickOutside = useCallback(
 		(event: Event) => {
 			if (mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
 				setVisibleMobile(false)
@@ -629,20 +619,20 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 	)
 
 	useEffect(() => {
-		window.addEventListener('mouseup', handleClickOutside)
-		window.addEventListener('keyup', handleKeyup)
+		window.addEventListener('mouseup', handleKeyOrClickOutside)
+		window.addEventListener('keyup', handleKeyOrClickOutside)
 
 		const sideBarElement = sidebarRef.current
 
 		sideBarElement?.addEventListener('mouseup', handleOnClick)
 
 		return () => {
-			window.removeEventListener('mouseup', handleClickOutside)
-			window.removeEventListener('keyup', handleKeyup)
+			window.removeEventListener('mouseup', handleKeyOrClickOutside)
+			window.removeEventListener('keyup', handleKeyOrClickOutside)
 
 			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
-	}, [sidebarRef, handleOnClick, handleKeyup, handleClickOutside])
+	}, [sidebarRef, handleOnClick, handleKeyOrClickOutside])
 
 	return (
 		<>
@@ -661,7 +651,6 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 				})}
 				ref={sidebarRef}
 				onContextMenu={onContextMenu}
-				onTransitionEnd={/*handleTransitionEnd*/ () => {}}
 				onMouseLeave={handleMouseLeave}
 			>
 				{children}
@@ -713,7 +702,7 @@ function CNavGroup({
 
 	//const [_visible, setVisible] = useState(Boolean(visible))
 
-	const handleTogglerOnCLick = (_event: React.MouseEvent<HTMLElement>) => {
+	const handleTogglerOnClick = (_event: React.MouseEvent<HTMLElement>) => {
 		//event.preventDefault() // don't do this now that the action is taking place on Link
 		// but don't stop propagation, or it will prevent context-menus
 		setVisible(!visible)
@@ -757,18 +746,11 @@ function CNavGroup({
 	return (
 		<li className={classNames('nav-group', { show: visible }, className)} {...rest}>
 			{to ? (
-				<Link
-					to={to}
-					className="nav-link nav-group-toggle nav-group-toggle-link"
-					onClick={(event) => handleTogglerOnCLick(event)}
-				>
+				<Link to={to} className="nav-link nav-group-toggle nav-group-toggle-link" onClick={handleTogglerOnClick}>
 					{toggler}
 				</Link>
 			) : (
-				<a
-					className="nav-link nav-group-toggle nav-group-toggle-basic"
-					onClick={(event) => handleTogglerOnCLick(event)}
-				>
+				<a className="nav-link nav-group-toggle nav-group-toggle-basic" onClick={handleTogglerOnClick}>
 					{toggler}
 				</a>
 			)}

@@ -66,7 +66,7 @@ function circleInfo(stacked = false): ReactElement {
 export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHeaderProps) {
 	const { userConfig } = useContext(RootAppStoreContext)
 
-	const { mobileMode, clickToggle } = useSidebarState()
+	const { mobileMode, handleShowSidebar } = useSidebarState()
 
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
@@ -77,7 +77,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		<CHeader className="p-0">
 			<CContainer fluid>
 				{mobileMode && (
-					<CHeaderToggler className="ps-1" onClick={clickToggle}>
+					<CHeaderToggler className="ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
 					</CHeaderToggler>
 				)}
