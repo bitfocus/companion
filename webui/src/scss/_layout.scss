@@ -468,7 +468,8 @@ form.row > * {
 		padding-left: 0 !important;
 		margin-left: 2px !important;
 		border-left: 3px solid var(--cui-sidebar-nav-link-icon-color);
-		//border-radius: var(--cui-sidebar-nav-link-border-radius); //optional
+		//border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); //optional bottom edge
+		border-bottom-left-radius: var(--cui-sidebar-nav-link-border-radius);
 	}
 
 	&.sidebar-narrow:hover .nav-group-items, // override CUI so nav-group-items show when in temporary narrow mode
