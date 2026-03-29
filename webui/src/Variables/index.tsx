@@ -4,7 +4,7 @@ import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
@@ -93,10 +93,15 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				<div className="scrollable-content">
 					<div className="variables-category-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
 						<CButton color="info" as={Link} to="/variables/custom" className="mb-3">
-							<h6 className="mb-0 py-1">Custom Variables</h6>
+							<h6 className="mb-0 py-1">
+								<FontAwesomeIcon icon={faDollarSign} className="me-1" />
+								Custom Variables
+							</h6>
 						</CButton>
 						<CButton color="info" as={Link} to="/variables/expression" className="mb-3">
-							<h6 className="mb-0 py-1">Expression Variables</h6>
+							<h6 className="mb-0 py-1">
+								<FontAwesomeIcon icon={faSquareRootVariable} className="me-1" /> Expression Variables
+							</h6>
 						</CButton>
 					</div>
 

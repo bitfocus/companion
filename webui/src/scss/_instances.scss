@@ -155,7 +155,14 @@
 }
 
 .variables-table-filter {
-	margin: 0 0 1rem 0;
+	margin: 0 0 0.4rem 0;
+}
+
+.variables-table-count {
+	font-size: 0.85em;
+	opacity: 0.75;
+	margin: 0 0 0.6rem 0;
+	text-align: right;
 }
 
 .import-module {
