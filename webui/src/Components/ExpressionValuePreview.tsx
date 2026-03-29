@@ -47,8 +47,12 @@ export function ExpressionValuePreview({
 
 	if (!isParseable) {
 		return (
-			<CAlert color="warning" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
-				Invalid expression syntax
+			<CAlert
+				color="warning"
+				className="mt-1 mb-0"
+				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
+			>
+				Invalid expression
 			</CAlert>
 		)
 	}
