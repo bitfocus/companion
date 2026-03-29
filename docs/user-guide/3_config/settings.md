@@ -36,7 +36,7 @@ More details on supported surfaces are available in the chapter on [Surfaces](..
 - **Watch for Discoverable Remote Surfaces**
   Companion can scan the network for network-connected Stream Decks and Companion Satellite installations.
 
-- **Enable Elgato software Plugin support**
+- **Enable Elgato software Plugin API**
   Whether to enable support for connecting to Stream Deck devices using the Elgato software.
 
 ### PIN lockout

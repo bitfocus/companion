@@ -12,6 +12,16 @@ If any of your Stream Decks are not showing up, press the **Rescan USB** button.
 
 Here you can see all your current surfaces, both local and connected over Satellite, as well as any available emulators.
 
+## Enabling and Disabling Surfaces
+
+Each surface has an enable/disable toggle in the surface settings. Disabling a surface stops Companion from using it, but keeps its configuration intact. This is useful when running Companion alongside other software (such as the Elgato Stream Deck app) — you can reserve specific devices for Companion and leave others to be managed by the other application.
+
+:::tip
+
+This toggle doesn't apply to surfaces connected over Satellite
+
+:::
+
 ## Surface Settings
 
 Click on any Surface in the table to open the settings for that surface.

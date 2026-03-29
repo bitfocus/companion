@@ -36,7 +36,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 										<tbody>
 											<UserConfigSwitchRow
 												userConfig={userConfigProps}
-												label={<strong>Enable Elgato software Plugin support</strong>}
+												label={<strong>Enable Elgato software Plugin API</strong>}
 												field="elgato_plugin_enable"
 											/>
 										</tbody>

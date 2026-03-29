@@ -26,7 +26,7 @@ Triggers have 3 sections to configure
 
 This defines when the trigger will be executed.  
  The trigger will be executed when any of these events occur.  
- Common events are **Time interval** and **On variable change**
+ Common events are **Time interval**, **At random time interval**, and **On variable change**
 
 ![Events](images/triggers/events.png?raw=true 'Events')
 

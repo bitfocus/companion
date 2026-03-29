@@ -4,7 +4,7 @@ sidebar_position: 6
 description: Modules work as plugins to control external devices.
 ---
 
-All the connections in Companion are modules, and a connection is what's used to control an external device or piece of software. Modules used to be built-in to Companion, but starting with 4.0 they are downloadable plugins.
+Both connections and surfaces in Companion are powered by modules. A connection module controls an external device or piece of software; a surface module provides support for a physical or virtual input device. Modules used to be built-in to Companion, but starting with 4.0 (connections) and 4.3 (surfaces) they are downloadable plugins that can be updated independently of Companion itself.
 
 Modules are being added and updated all the time. A complete list of supported devices/modules can be found on the [Support List](https://l.companion.free/q/5LT04sXCC) page.
 
