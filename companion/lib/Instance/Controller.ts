@@ -567,6 +567,24 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 	}
 
+	/**
+	 * Force a reconnect of a running connection by restarting its process
+	 * @returns true if the connection was found and reconnect was triggered
+	 */
+	reconnectConnection(id: string): boolean {
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
+		if (!connectionConfig) return false
+
+		if (!connectionConfig.enabled) {
+			this.#logger.warn(`Cannot reconnect disabled connection "${connectionConfig.label}"`)
+			return false
+		}
+
+		this.#logger.info(`Reconnecting connection "${connectionConfig.label}"`)
+		this.#queueUpdateInstanceState(id, false, true)
+		return true
+	}
+
 	async removeConnection(connectionId: string): Promise<void> {
 		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!config) {

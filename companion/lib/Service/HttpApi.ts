@@ -7,6 +7,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
+import type { InstanceController } from '../Instance/Controller.js'
 
 const HTTP_API_SURFACE_ID = 'http'
 
@@ -33,6 +34,8 @@ export class ServiceHttpApi {
 
 	readonly #userconfigController: DataUserConfig
 
+	readonly #instanceController: InstanceController | null
+
 	/**
 	 * new Api express router
 	 */
@@ -48,10 +51,16 @@ export class ServiceHttpApi {
 	 */
 	readonly #express: UIExpress
 
-	constructor(serviceApi: ServiceApi, userconfigController: DataUserConfig, express: UIExpress) {
+	constructor(
+		serviceApi: ServiceApi,
+		userconfigController: DataUserConfig,
+		express: UIExpress,
+		instanceController?: InstanceController
+	) {
 		this.#serviceApi = serviceApi
 
 		this.#userconfigController = userconfigController
+		this.#instanceController = instanceController ?? null
 
 		this.#express = express
 		this.#apiRouter = Express.Router()
@@ -319,6 +328,13 @@ export class ServiceHttpApi {
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
+
+		// connections
+		this.#apiRouter.get('/connections', this.#connectionsList)
+		this.#apiRouter.get('/connections/:id/status', this.#connectionGetStatus)
+		this.#apiRouter.post('/connections/:id/reconnect', this.#connectionReconnect)
+		this.#apiRouter.post('/connections/:id/enable', this.#connectionEnable)
+		this.#apiRouter.post('/connections/:id/disable', this.#connectionDisable)
 
 		// Finally, default all unhandled to 404
 		this.#apiRouter.use((_req, res) => {
@@ -640,5 +656,131 @@ export class ServiceHttpApi {
 				res.send(result)
 			}
 		}
+	}
+
+	/**
+	 * List all connections with their current status
+	 */
+	#connectionsList = (_req: Express.Request, res: Express.Response): void => {
+		if (!this.#instanceController) {
+			res.status(500).json({ status: 500, message: 'Connection management not available' })
+			return
+		}
+
+		this.logger.debug('Got HTTP GET /api/connections')
+
+		const clientConnections = this.#instanceController.getConnectionClientJson(true)
+		const connections = Object.entries(clientConnections).map(([id, config]) => {
+			const status = this.#instanceController!.status.getInstanceStatus(id)
+			return {
+				id,
+				label: config.label,
+				moduleId: config.moduleId,
+				enabled: config.enabled,
+				sortOrder: config.sortOrder,
+				status: status ?? null,
+			}
+		})
+
+		res.json(connections)
+	}
+
+	/**
+	 * Get the status of a specific connection
+	 */
+	#connectionGetStatus = (req: Express.Request, res: Express.Response): void => {
+		if (!this.#instanceController) {
+			res.status(500).json({ status: 500, message: 'Connection management not available' })
+			return
+		}
+
+		const connectionId = req.params.id
+		this.logger.debug(`Got HTTP GET /api/connections/${connectionId}/status`)
+
+		const clientConnections = this.#instanceController.getConnectionClientJson(true)
+		const connectionConfig = clientConnections[connectionId]
+		if (!connectionConfig) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		const status = this.#instanceController.status.getInstanceStatus(connectionId)
+		res.json({
+			id: connectionId,
+			label: connectionConfig.label,
+			enabled: connectionConfig.enabled,
+			status: status ?? null,
+		})
+	}
+
+	/**
+	 * Trigger a reconnect for a specific connection
+	 */
+	#connectionReconnect = (req: Express.Request, res: Express.Response): void => {
+		if (!this.#instanceController) {
+			res.status(500).json({ status: 500, message: 'Connection management not available' })
+			return
+		}
+
+		const connectionId = req.params.id
+		this.logger.info(`Got HTTP POST /api/connections/${connectionId}/reconnect`)
+
+		const clientConnections = this.#instanceController.getConnectionClientJson(true)
+		if (!clientConnections[connectionId]) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		const result = this.#instanceController.reconnectConnection(connectionId)
+		if (!result) {
+			res.status(409).json({ status: 409, message: 'Connection is disabled and cannot be reconnected' })
+			return
+		}
+
+		res.json({ id: connectionId, message: 'Reconnect triggered' })
+	}
+
+	/**
+	 * Enable a connection
+	 */
+	#connectionEnable = (req: Express.Request, res: Express.Response): void => {
+		if (!this.#instanceController) {
+			res.status(500).json({ status: 500, message: 'Connection management not available' })
+			return
+		}
+
+		const connectionId = req.params.id
+		this.logger.info(`Got HTTP POST /api/connections/${connectionId}/enable`)
+
+		const clientConnections = this.#instanceController.getConnectionClientJson(true)
+		if (!clientConnections[connectionId]) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		this.#instanceController.enableDisableConnection(connectionId, true)
+		res.json({ id: connectionId, enabled: true })
+	}
+
+	/**
+	 * Disable a connection
+	 */
+	#connectionDisable = (req: Express.Request, res: Express.Response): void => {
+		if (!this.#instanceController) {
+			res.status(500).json({ status: 500, message: 'Connection management not available' })
+			return
+		}
+
+		const connectionId = req.params.id
+		this.logger.info(`Got HTTP POST /api/connections/${connectionId}/disable`)
+
+		const clientConnections = this.#instanceController.getConnectionClientJson(true)
+		if (!clientConnections[connectionId]) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		this.#instanceController.enableDisableConnection(connectionId, false)
+		res.json({ id: connectionId, enabled: false })
 	}
 }
