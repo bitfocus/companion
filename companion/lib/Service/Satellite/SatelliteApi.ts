@@ -330,7 +330,7 @@ export class ServiceSatelliteApi {
 				break
 			default:
 				socket.sendMessage('ERROR', null, null, {
-					MESSAGE: 'Unknown command: ${cmd.toUpperCase()}',
+					MESSAGE: `Unknown command: ${cmd.toUpperCase()}`,
 				})
 		}
 	}

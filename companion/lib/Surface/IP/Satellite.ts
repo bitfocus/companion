@@ -217,6 +217,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
+		this.#logger.debug(`Device info: ${JSON.stringify(deviceInfo)}`)
 
 		this.#config = {
 			rotation: 0,
