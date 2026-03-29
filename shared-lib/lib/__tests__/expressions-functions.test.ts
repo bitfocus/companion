@@ -495,6 +495,104 @@ describe('functions', () => {
 		})
 	})
 
+	describe('date', () => {
+		it('parseDate', () => {
+			// Number input (Unix ms)
+			expect(ExpressionFunctions.parseDate(0)).toBe(0)
+			expect(ExpressionFunctions.parseDate(1700000000000)).toBe(1700000000000)
+
+			// String number input
+			expect(ExpressionFunctions.parseDate('1700000000000')).toBe(1700000000000)
+
+			// ISO string input with distinct component values
+			expect(ExpressionFunctions.parseDate('2024-01-15T12:13:14.321Z')).toBe(1705320794321)
+
+			// ISO date without time
+			expect(ExpressionFunctions.parseDate('2024-06-15')).toBe(1718409600000)
+
+			// US format (MM/DD/YYYY) parses in V8
+			expect(ExpressionFunctions.parseDate('01/15/2024')).toBe(new Date(2024, 0, 15).getTime())
+			// European format (DD/MM/YYYY) does not
+			expect(ExpressionFunctions.parseDate('15/01/2024')).toBe(null)
+
+			// Invalid input
+			expect(ExpressionFunctions.parseDate('not a date')).toBe(null)
+			expect(ExpressionFunctions.parseDate('')).toBe(null)
+			expect(ExpressionFunctions.parseDate(undefined)).toBe(null)
+			expect(ExpressionFunctions.parseDate(null)).toBe(null)
+			expect(ExpressionFunctions.parseDate(NaN)).toBe(null)
+			expect(ExpressionFunctions.parseDate(Infinity)).toBe(null)
+		})
+
+		it('dateYear', () => {
+			// UTC to avoid local timezone issues in tests
+			expect(ExpressionFunctions.dateYear(new Date('2024-06-15T12:00:00Z').getTime(), 'UTC')).toBe(2024)
+			expect(ExpressionFunctions.dateYear(new Date('1999-12-31T23:00:00Z').getTime(), 'UTC')).toBe(1999)
+			// ISO string input
+			expect(ExpressionFunctions.dateYear('2024-06-15T12:00:00Z', 'UTC')).toBe(2024)
+			// Invalid
+			expect(ExpressionFunctions.dateYear('invalid')).toBe(null)
+			expect(ExpressionFunctions.dateYear(undefined)).toBe(null)
+			expect(ExpressionFunctions.dateYear(null)).toBe(null)
+			// Invalid timezone
+			expect(ExpressionFunctions.dateYear(0, 'Invalid/Zone')).toBe(null)
+		})
+
+		it('dateMonth', () => {
+			// 1-indexed: January = 1, December = 12
+			expect(ExpressionFunctions.dateMonth(new Date('2024-01-15T12:00:00Z').getTime(), 'UTC')).toBe(1)
+			expect(ExpressionFunctions.dateMonth(new Date('2024-12-25T12:00:00Z').getTime(), 'UTC')).toBe(12)
+			expect(ExpressionFunctions.dateMonth(new Date('2024-06-01T12:00:00Z').getTime(), 'UTC')).toBe(6)
+			// Invalid
+			expect(ExpressionFunctions.dateMonth('invalid')).toBe(null)
+		})
+
+		it('dateDay', () => {
+			expect(ExpressionFunctions.dateDay(new Date('2024-06-15T12:00:00Z').getTime(), 'UTC')).toBe(15)
+			expect(ExpressionFunctions.dateDay(new Date('2024-01-01T12:00:00Z').getTime(), 'UTC')).toBe(1)
+			expect(ExpressionFunctions.dateDay(new Date('2024-01-31T12:00:00Z').getTime(), 'UTC')).toBe(31)
+			// Invalid
+			expect(ExpressionFunctions.dateDay('invalid')).toBe(null)
+		})
+
+		it('dateHour', () => {
+			expect(ExpressionFunctions.dateHour(new Date('2024-06-15T14:30:45Z').getTime(), 'UTC')).toBe(14)
+			expect(ExpressionFunctions.dateHour(new Date('2024-06-15T00:00:00Z').getTime(), 'UTC')).toBe(0)
+			expect(ExpressionFunctions.dateHour(new Date('2024-06-15T23:59:59Z').getTime(), 'UTC')).toBe(23)
+			// Timezone support
+			expect(ExpressionFunctions.dateHour(new Date('2024-06-15T12:00:00Z').getTime(), 'America/New_York')).toBe(8)
+			// Invalid
+			expect(ExpressionFunctions.dateHour('invalid')).toBe(null)
+		})
+
+		it('dateMinute', () => {
+			expect(ExpressionFunctions.dateMinute(new Date('2024-06-15T14:30:45Z').getTime(), 'UTC')).toBe(30)
+			expect(ExpressionFunctions.dateMinute(new Date('2024-06-15T14:00:00Z').getTime(), 'UTC')).toBe(0)
+			expect(ExpressionFunctions.dateMinute(new Date('2024-06-15T14:59:00Z').getTime(), 'UTC')).toBe(59)
+			// Invalid
+			expect(ExpressionFunctions.dateMinute('invalid')).toBe(null)
+		})
+
+		it('dateSecond', () => {
+			expect(ExpressionFunctions.dateSecond(new Date('2024-06-15T14:30:45Z').getTime(), 'UTC')).toBe(45)
+			expect(ExpressionFunctions.dateSecond(new Date('2024-06-15T14:30:00Z').getTime(), 'UTC')).toBe(0)
+			expect(ExpressionFunctions.dateSecond(new Date('2024-06-15T14:30:59Z').getTime(), 'UTC')).toBe(59)
+			// Invalid
+			expect(ExpressionFunctions.dateSecond('invalid')).toBe(null)
+		})
+
+		it('dateWeekday', () => {
+			// 2024-06-15 is a Saturday (6), 2024-06-16 is Sunday (0), 2024-06-17 is Monday (1)
+			expect(ExpressionFunctions.dateWeekday(new Date('2024-06-15T12:00:00Z').getTime(), 'UTC')).toBe(6)
+			expect(ExpressionFunctions.dateWeekday(new Date('2024-06-16T12:00:00Z').getTime(), 'UTC')).toBe(0)
+			expect(ExpressionFunctions.dateWeekday(new Date('2024-06-17T12:00:00Z').getTime(), 'UTC')).toBe(1)
+			// ISO string input
+			expect(ExpressionFunctions.dateWeekday('2024-06-15T12:00:00Z', 'UTC')).toBe(6)
+			// Invalid
+			expect(ExpressionFunctions.dateWeekday('invalid')).toBe(null)
+		})
+	})
+
 	describe('time', () => {
 		it('unixNow', () => {
 			const value = ExpressionFunctions.unixNow()

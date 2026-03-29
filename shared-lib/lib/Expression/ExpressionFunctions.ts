@@ -7,6 +7,74 @@ function toString(v: any): string {
 	return v + ''
 }
 
+function toDate(v: any): Date | null {
+	let d: Date | undefined
+	if (v instanceof Date) d = v
+	else if (typeof v === 'number') d = new Date(v)
+	else if (typeof v === 'string' && v.trim().length > 0) {
+		const num = Number(v)
+		d = new Date(isNaN(num) ? v : num)
+	}
+	return d && !isNaN(d.getTime()) ? d : null
+}
+
+const weekdayMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+
+type DateParts = NonNullable<ReturnType<typeof getDateParts>>
+
+function getDatePart(v: any, tz: any, key: keyof DateParts): number | null {
+	const d = toDate(v)
+	if (!d) return null
+	const parts = getDateParts(d, tz)
+	return parts ? parts[key] : null
+}
+
+function getDateParts(
+	d: Date,
+	tz?: string
+): { year: number; month: number; day: number; hour: number; minute: number; second: number; weekday: number } | null {
+	if (!tz) {
+		return {
+			year: d.getFullYear(),
+			month: d.getMonth() + 1,
+			day: d.getDate(),
+			hour: d.getHours(),
+			minute: d.getMinutes(),
+			second: d.getSeconds(),
+			weekday: d.getDay(),
+		}
+	}
+	try {
+		const parts = new Intl.DateTimeFormat('en-US', {
+			timeZone: tz,
+			year: 'numeric',
+			month: 'numeric',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: 'numeric',
+			second: 'numeric',
+			weekday: 'short',
+			hourCycle: 'h23',
+		}).formatToParts(d)
+		const get = (type: string) => Number(parts.find((p) => p.type === type)?.value)
+		const wd = parts.find((p) => p.type === 'weekday')?.value
+		const weekday = wd !== undefined ? weekdayMap[wd] : undefined
+		if (weekday === undefined) return null
+		const out = {
+			year: get('year'),
+			month: get('month'),
+			day: get('day'),
+			hour: get('hour'),
+			minute: get('minute'),
+			second: get('second'),
+			weekday,
+		}
+		return Object.values(out).some((v) => isNaN(v)) ? null : out
+	} catch {
+		return null
+	}
+}
+
 // Note: when adding new functions, make sure to update the docs!
 export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	// General operations
@@ -269,4 +337,17 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 
 		return Math.round(diff / 1000)
 	},
+
+	// Date operations
+	parseDate: (v) => {
+		const d = toDate(v)
+		return d ? d.getTime() : null
+	},
+	dateYear: (v, tz) => getDatePart(v, tz, 'year'),
+	dateMonth: (v, tz) => getDatePart(v, tz, 'month'),
+	dateDay: (v, tz) => getDatePart(v, tz, 'day'),
+	dateHour: (v, tz) => getDatePart(v, tz, 'hour'),
+	dateMinute: (v, tz) => getDatePart(v, tz, 'minute'),
+	dateSecond: (v, tz) => getDatePart(v, tz, 'second'),
+	dateWeekday: (v, tz) => getDatePart(v, tz, 'weekday'),
 }
