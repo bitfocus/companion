@@ -43,7 +43,7 @@
 - certain triggers not being disabled with the collection (#3981)
 - respect multiline for connection config fields #3986
 - connection collections being lost during full import
-- udp service not istening when ipv6 enabled
+- udp service not listening when ipv6 enabled
 - preserve type of expressions when writing to custom/local variables #3954
 - child entities not being upgraded #3924
 - improve confusing trigger terminology "depress" (#3922)
