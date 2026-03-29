@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
@@ -37,6 +37,12 @@ interface VariableValueDisplay {
 
 	/** Limit the number of visible lines. Content beyond this is hidden with ellipsis. Ignored when compact is true. */
 	maxLines?: number
+
+	/** If true, forces the value to always be shown in full (not collapsed). Useful when rendering inside a popover. */
+	forceExpanded?: boolean
+
+	/** If false, suppresses the native title tooltip on the compact code element. Defaults to true. Pass false when a popover already provides the expanded view. */
+	showHoverTitle?: boolean
 }
 
 const TRUNCATE_LENGTH = 100
@@ -52,11 +58,13 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	invalidReason,
 	compact = false,
 	maxLines,
+	forceExpanded = false,
+	showHoverTitle = true,
 	...props
 }) => {
 	// Use the collapseHelper if we have all necessary information, otherwise use loal state
 	let collapser: { isPanelCollapsed: () => boolean; setPanelCollapsed: (b: boolean) => void }
-	const [collapsed, setCollapsed] = useState(true)
+	const [collapsed, setCollapsed] = useState(!forceExpanded)
 	let useCollapseHelper: boolean
 	if (panelCollapseHelper && collapsePanelId) {
 		collapser = {
@@ -86,8 +94,11 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 	const compactValue = valueStr.length > TRUNCATE_LENGTH ? `${valueStr.substring(0, TRUNCATE_LENGTH)}...` : valueStr
 
-	const displayValue =
-		(useCollapseHelper && collapser.isPanelCollapsed()) || (!useCollapseHelper && collapsed) ? compactValue : valueStr
+	const displayValue = forceExpanded
+		? valueStr
+		: (useCollapseHelper && collapser.isPanelCollapsed()) || (!useCollapseHelper && collapsed)
+			? compactValue
+			: valueStr
 
 	const elms: Array<string | JSX.Element> = []
 	const lines = displayValue.split('\\n')
@@ -128,20 +139,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 	const btnstyle = { marginLeft: '4px', borderRadius: '4px' }
 
-	const [expanded, setExpanded] = useState(false)
-	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-	const cancelClose = () => {
-		if (closeTimerRef.current !== null) {
-			clearTimeout(closeTimerRef.current)
-			closeTimerRef.current = null
-		}
-	}
-	const scheduleClose = () => {
-		cancelClose()
-		closeTimerRef.current = setTimeout(() => setExpanded(false), 150)
-	}
-
 	const valuePill = (
 		<div
 			style={{
@@ -149,7 +146,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 				color,
 				borderRadius: '6px',
 				padding: '4px 6px',
-				display: compact ? 'flex' : 'inline-table',
+				display: compact || forceExpanded ? 'flex' : 'inline-table',
 				lineHeight: '14px',
 				...(compact
 					? {
@@ -157,26 +154,23 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 							maxWidth: '300px',
 							alignItems: 'center',
 						}
-					: {
-							maxWidth: '100%',
-						}),
+					: forceExpanded
+						? {
+								flex: 1,
+								minWidth: 0,
+								alignItems: 'flex-start',
+							}
+						: {
+								maxWidth: '100%',
+							}),
 			}}
-			onMouseEnter={
-				compact
-					? () => {
-							cancelClose()
-							setExpanded(true)
-						}
-					: undefined
-			}
-			onMouseLeave={compact ? scheduleClose : undefined}
 		>
 			{showIcon && (
 				<span
 					style={{
 						padding: '4px',
 						paddingLeft: '6px',
-						display: compact ? 'flex' : 'table-cell',
+						display: compact || forceExpanded ? 'flex' : 'table-cell',
 						verticalAlign: 'top',
 						flexShrink: 0,
 					}}
@@ -187,7 +181,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			)}
 			<code
 				style={{
-					display: compact ? 'block' : 'table-cell',
+					display: compact || forceExpanded ? 'block' : 'table-cell',
 					verticalAlign: 'top',
 					color,
 					padding: '5.5px 6px 5.5px 4px',
@@ -198,23 +192,30 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 								textOverflow: 'ellipsis',
 								minWidth: 0,
 							}
-						: maxLines
+						: forceExpanded
 							? {
 									whiteSpace: 'pre-wrap',
-									overflow: 'hidden',
-									display: '-webkit-box',
-									WebkitLineClamp: maxLines,
-									WebkitBoxOrient: 'vertical',
-									textOverflow: 'ellipsis',
+									flex: 1,
+									minWidth: 0,
 								}
-							: {
-									whiteSpace: 'pre-wrap',
-								}),
+							: maxLines
+								? {
+										whiteSpace: 'pre-wrap',
+										overflow: 'hidden',
+										display: '-webkit-box',
+										WebkitLineClamp: maxLines,
+										WebkitBoxOrient: 'vertical',
+										textOverflow: 'ellipsis',
+									}
+								: {
+										whiteSpace: 'pre-wrap',
+									}),
 				}}
-				title={compactValue}
+				title={compact && showHoverTitle ? compactValue : undefined}
 			>
 				{elms /*displayValue */}
 				{!compact &&
+					!forceExpanded &&
 					(valueStr.length <= TRUNCATE_LENGTH ? (
 						''
 					) : collapser.isPanelCollapsed() ? (
@@ -233,49 +234,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	return (
 		<div className="variable-value-display" {...props}>
 			<div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
-				{compact ? (
-					<CPopover
-						visible={expanded}
-						onHide={() => setExpanded(false)}
-						placement="bottom"
-						fallbackPlacements={['top', 'bottom', 'right', 'left']}
-						className="variable-value-expanded"
-						content={
-							<div
-								onMouseEnter={cancelClose}
-								onMouseLeave={scheduleClose}
-								style={{
-									maxWidth: '500px',
-									maxHeight: '300px',
-									overflowY: 'auto',
-								}}
-							>
-								{invalidReason && (
-									<CAlert color="danger">
-										<FontAwesomeIcon icon={faTriangleExclamation} /> {invalidReason}
-									</CAlert>
-								)}
-								<code
-									style={{
-										whiteSpace: 'pre-wrap',
-										wordBreak: 'break-all',
-										padding: '0.5rem',
-										color: '#212529',
-										backgroundColor: '#f8f9fa',
-										borderRadius: '0.25rem',
-										display: 'block',
-									}}
-								>
-									{valueStr}
-								</code>
-							</div>
-						}
-					>
-						{valuePill}
-					</CPopover>
-				) : (
-					valuePill
-				)}
+				{valuePill}
 				{showCopy && (
 					<CopyToClipboard text={valueStr} onCopy={onCopied}>
 						<CButton size="sm" title="Copy variable value">
@@ -285,5 +244,120 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 				)}
 			</div>
 		</div>
+	)
+}
+
+interface VariableValueDisplayPopoverProps {
+	/** Value to show */
+	value: any
+
+	/** An optional collapse helper for collapsing all items in the list, falls back to local state if omitted */
+	panelCollapseHelper?: PanelCollapseHelperLite
+
+	/** Needed for the collapse helper, ID of this panel */
+	collapsePanelId?: string
+
+	/** Show a type annotation icon, optional, defaults to true */
+	showIcon?: boolean
+
+	/** Show the copy to clipboard button, optional, defaults to true */
+	showCopy?: boolean
+
+	/** Use a specific icon for type annotation, optional, by default the icon is derived from the value type */
+	icon?: string
+
+	/** Will be called when copy is clicked, optional */
+	onCopied: () => void
+
+	/** If set, displays the value in an invalid/error style and shows the reason as a tooltip */
+	invalidReason?: string
+}
+
+export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverProps> = ({
+	value,
+	panelCollapseHelper,
+	collapsePanelId,
+	showIcon = true,
+	showCopy = true,
+	icon,
+	onCopied = () => {},
+	invalidReason,
+}) => {
+	const [expanded, setExpanded] = useState(false)
+	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+	const cancelClose = useCallback(() => {
+		if (closeTimerRef.current !== null) {
+			clearTimeout(closeTimerRef.current)
+			closeTimerRef.current = null
+		}
+	}, [])
+
+	const scheduleClose = useCallback(() => {
+		cancelClose()
+		closeTimerRef.current = setTimeout(() => {
+			setExpanded(false)
+			closeTimerRef.current = null
+		}, 300)
+	}, [cancelClose])
+
+	return (
+		<CPopover
+			visible={expanded}
+			onHide={() => setExpanded(false)}
+			placement="bottom"
+			fallbackPlacements={['top', 'bottom', 'right', 'left']}
+			className="variable-value-expanded"
+			content={
+				<div
+					onMouseEnter={cancelClose}
+					onMouseLeave={scheduleClose}
+					style={{
+						maxWidth: '500px',
+						maxHeight: '300px',
+						overflowY: 'auto',
+						paddingRight: '0.25rem',
+					}}
+				>
+					{invalidReason && (
+						<CAlert color="danger" className="mb-2">
+							<FontAwesomeIcon icon={faTriangleExclamation} /> {invalidReason}
+						</CAlert>
+					)}
+					<VariableValueDisplay
+						value={value}
+						onCopied={onCopied}
+						showCopy={false}
+						showIcon={showIcon}
+						icon={icon}
+						forceExpanded
+						panelCollapseHelper={panelCollapseHelper}
+						collapsePanelId={collapsePanelId}
+					/>
+				</div>
+			}
+		>
+			<div
+				onMouseEnter={() => {
+					cancelClose()
+					setExpanded(true)
+				}}
+				onMouseLeave={scheduleClose}
+				style={{ minWidth: 0 }}
+			>
+				<VariableValueDisplay
+					value={value}
+					onCopied={onCopied}
+					showCopy={showCopy}
+					showIcon={showIcon}
+					icon={icon}
+					compact
+					showHoverTitle={false}
+					invalidReason={invalidReason}
+					panelCollapseHelper={panelCollapseHelper}
+					collapsePanelId={collapsePanelId}
+				/>
+			</div>
+		</CPopover>
 	)
 }

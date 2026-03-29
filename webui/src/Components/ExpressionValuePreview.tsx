@@ -5,7 +5,7 @@ import { CAlert, CSpinner } from '@coreui/react'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { VariableValueDisplay } from './VariableValueDisplay.js'
+import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { JsonValue } from 'type-fest'
 
@@ -122,11 +122,10 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 
 	return (
 		<div className="mt-1">
-			<VariableValueDisplay
+			<VariableValueDisplayPopover
 				value={displayData.value}
 				onCopied={onCopied}
 				showCopy={false}
-				compact
 				invalidReason={validationResult}
 			/>
 		</div>
