@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback, useContext } from 'react'
+import React, { useMemo, useState, useEffect, useCallback, useContext, useRef } from 'react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC.js'
 import { CAlert, CSpinner } from '@coreui/react'
@@ -78,7 +78,27 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 		)
 	)
 
-	if (!sub.data) {
+	// Keep the last known result so we can show it while waiting for new data
+	const lastDataRef = useRef(sub.data)
+	if (sub.data) {
+		lastDataRef.current = sub.data
+	}
+
+	// Only show spinner after 200ms of no data
+	const [showSpinner, setShowSpinner] = useState(false)
+	useEffect(() => {
+		if (sub.data) {
+			setShowSpinner(false)
+			return
+		}
+		const timer = setTimeout(() => setShowSpinner(true), 200)
+		return () => clearTimeout(timer)
+	}, [sub.data])
+
+	const displayData = sub.data ?? lastDataRef.current
+
+	if (!displayData) {
+		if (!showSpinner) return null
 		return (
 			<div className="mt-1">
 				<CSpinner size="sm" />
@@ -86,20 +106,20 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 		)
 	}
 
-	if (!sub.data.ok) {
+	if (!displayData.ok) {
 		return (
 			<CAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
-				Error: {sub.data.error}
+				Error: {displayData.error}
 			</CAlert>
 		)
 	}
 
-	const validationResult = validateExpressionResult(fieldDefinition, sub.data.value)
+	const validationResult = validateExpressionResult(fieldDefinition, displayData.value)
 
 	return (
 		<div className="mt-1">
 			<VariableValueDisplay
-				value={sub.data.value}
+				value={displayData.value}
 				onCopied={onCopied}
 				showCopy={false}
 				compact
