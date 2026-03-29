@@ -62,6 +62,7 @@ interface EntityLeafItem {
 	key: string
 	fullId: string
 	label: string
+	searchLabel: string
 	sortKey: string
 	description: string | undefined
 }
@@ -123,7 +124,7 @@ export const AddEntitiesModal = observer(
 
 		// Filter to only connections that have entity definitions matching our entity type + feedback filter
 		const getEntityLeaves = useCallback(
-			(connectionId: string, _connectionInfo: ClientConnectionConfig): EntityLeafItem[] => {
+			(connectionId: string, connectionInfo: ClientConnectionConfig): EntityLeafItem[] => {
 				const items = definitions.connections.get(connectionId)
 				if (!items || items.size === 0) return []
 
@@ -136,6 +137,7 @@ export const AddEntitiesModal = observer(
 						key: `${connectionId}:${id}`,
 						fullId: `${connectionId}:${id}`,
 						label: info.label,
+						searchLabel: `${connectionInfo.label}: ${info.label}`,
 						sortKey: info.sortKey ?? info.label,
 						description: info.description,
 					})
@@ -162,6 +164,7 @@ export const AddEntitiesModal = observer(
 					key: `internal:${id}`,
 					fullId: `internal:${id}`,
 					label: info.label,
+					searchLabel: `internal: ${info.label}`,
 					sortKey: info.sortKey ?? info.label,
 					description: info.description,
 				})
@@ -269,7 +272,7 @@ function filterTreeNodes(
 		const filteredLeaves =
 			node.leaves.length > 0
 				? fuzzySearch(filter, node.leaves, {
-						keys: ['label'],
+						keys: ['searchLabel'],
 						threshold: 0.5, // relatively strict.
 					}).map((x) => x.obj)
 				: []
