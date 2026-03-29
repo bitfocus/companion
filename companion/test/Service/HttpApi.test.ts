@@ -8,6 +8,7 @@ import { rgb } from '../../lib/Resources/Util.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
+import type { InstanceController } from '../../lib/Instance/Controller.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -1284,6 +1285,290 @@ describe('HttpApi', () => {
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
 				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+		})
+	})
+
+	describe('connections', () => {
+		function createServiceWithInstanceController() {
+			const serviceApi = mockDeep<ServiceApi>(mockOptions)
+			const userconfig = mockDeep<DataUserConfig>(mockOptions, {
+				getKey: () => true,
+			})
+			const instanceController = mockDeep<InstanceController>(mockOptions)
+
+			let router = express.Router()
+			let legacyRouter = express.Router()
+
+			const app = express()
+
+			const appHandler = {
+				set apiRouter(newRouter: express.Router) {
+					router = newRouter
+				},
+				set legacyApiRouter(newRouter: express.Router) {
+					legacyRouter = newRouter
+				},
+			} as any as UIExpress
+
+			app.use(Express.text())
+			app.use(Express.json())
+			app.use('/api', (r, s, n) => router(r, s, n))
+			app.use((r, s, n) => legacyRouter(r, s, n))
+			app.get('*any', (_req, res, _next) => {
+				res.status(421).send('')
+			})
+
+			const service = new ServiceHttpApi(serviceApi, userconfig, appHandler, instanceController)
+
+			return { app, serviceApi, userconfig, service, instanceController }
+		}
+
+		const mockConnectionConfigs = {
+			'conn-1': {
+				id: 'conn-1',
+				label: 'My OBS',
+				moduleId: 'obs-websocket',
+				enabled: true,
+				sortOrder: 0,
+				moduleType: 'connection' as any,
+				moduleVersionId: null,
+				updatePolicy: 'stable' as any,
+				hasRecordActionsHandler: false,
+				collectionId: null,
+			},
+			'conn-2': {
+				id: 'conn-2',
+				label: 'My ATEM',
+				moduleId: 'bmd-atem',
+				enabled: false,
+				sortOrder: 1,
+				moduleType: 'connection' as any,
+				moduleVersionId: null,
+				updatePolicy: 'stable' as any,
+				hasRecordActionsHandler: false,
+				collectionId: null,
+			},
+		}
+
+		const mockStatus = { category: 'good', level: 'ok', message: 'Connected' }
+
+		describe('list connections', () => {
+			test('returns array of connections', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.status.getInstanceStatus.mockImplementation((id: string) => {
+					if (id === 'conn-1') return mockStatus
+					return undefined
+				})
+
+				const res = await supertest(app).get('/api/connections').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual([
+					{
+						id: 'conn-1',
+						label: 'My OBS',
+						moduleId: 'obs-websocket',
+						enabled: true,
+						sortOrder: 0,
+						status: mockStatus,
+					},
+					{
+						id: 'conn-2',
+						label: 'My ATEM',
+						moduleId: 'bmd-atem',
+						enabled: false,
+						sortOrder: 1,
+						status: null,
+					},
+				])
+
+				expect(instanceController.getConnectionClientJson).toHaveBeenCalledTimes(1)
+				expect(instanceController.getConnectionClientJson).toHaveBeenCalledWith(true)
+			})
+
+			test('returns empty array when no connections', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue({})
+
+				const res = await supertest(app).get('/api/connections').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual([])
+			})
+
+			test('returns 500 without instance controller', async () => {
+				const { app } = createService()
+
+				const res = await supertest(app).get('/api/connections').send()
+				expect(res.status).toBe(500)
+				expect(res.body).toEqual({ status: 500, message: 'Connection management not available' })
+			})
+		})
+
+		describe('get connection status', () => {
+			test('returns status for existing connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.status.getInstanceStatus.mockReturnValue(mockStatus)
+
+				const res = await supertest(app).get('/api/connections/conn-1/status').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({
+					id: 'conn-1',
+					label: 'My OBS',
+					enabled: true,
+					status: mockStatus,
+				})
+
+				expect(instanceController.status.getInstanceStatus).toHaveBeenCalledWith('conn-1')
+			})
+
+			test('returns null status when no status available', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.status.getInstanceStatus.mockReturnValue(undefined)
+
+				const res = await supertest(app).get('/api/connections/conn-1/status').send()
+				expect(res.status).toBe(200)
+				expect(res.body.status).toBeNull()
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+
+				const res = await supertest(app).get('/api/connections/unknown-id/status').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('returns 500 without instance controller', async () => {
+				const { app } = createService()
+
+				const res = await supertest(app).get('/api/connections/conn-1/status').send()
+				expect(res.status).toBe(500)
+				expect(res.body).toEqual({ status: 500, message: 'Connection management not available' })
+			})
+		})
+
+		describe('reconnect connection', () => {
+			test('triggers reconnect for existing enabled connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.reconnectConnection.mockReturnValue(true)
+
+				const res = await supertest(app).post('/api/connections/conn-1/reconnect').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-1', message: 'Reconnect triggered' })
+
+				expect(instanceController.reconnectConnection).toHaveBeenCalledTimes(1)
+				expect(instanceController.reconnectConnection).toHaveBeenCalledWith('conn-1')
+			})
+
+			test('returns 409 for disabled connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.reconnectConnection.mockReturnValue(false)
+
+				const res = await supertest(app).post('/api/connections/conn-2/reconnect').send()
+				expect(res.status).toBe(409)
+				expect(res.body).toEqual({
+					status: 409,
+					message: 'Connection is disabled and cannot be reconnected',
+				})
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+
+				const res = await supertest(app).post('/api/connections/unknown-id/reconnect').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('returns 500 without instance controller', async () => {
+				const { app } = createService()
+
+				const res = await supertest(app).post('/api/connections/conn-1/reconnect').send()
+				expect(res.status).toBe(500)
+				expect(res.body).toEqual({ status: 500, message: 'Connection management not available' })
+			})
+		})
+
+		describe('enable connection', () => {
+			test('enables existing connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-2/enable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-2', enabled: true })
+
+				expect(instanceController.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(instanceController.enableDisableConnection).toHaveBeenCalledWith('conn-2', true)
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+
+				const res = await supertest(app).post('/api/connections/unknown-id/enable').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('returns 500 without instance controller', async () => {
+				const { app } = createService()
+
+				const res = await supertest(app).post('/api/connections/conn-1/enable').send()
+				expect(res.status).toBe(500)
+				expect(res.body).toEqual({ status: 500, message: 'Connection management not available' })
+			})
+		})
+
+		describe('disable connection', () => {
+			test('disables existing connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+				instanceController.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-1/disable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-1', enabled: false })
+
+				expect(instanceController.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(instanceController.enableDisableConnection).toHaveBeenCalledWith('conn-1', false)
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, instanceController } = createServiceWithInstanceController()
+
+				instanceController.getConnectionClientJson.mockReturnValue(mockConnectionConfigs as any)
+
+				const res = await supertest(app).post('/api/connections/unknown-id/disable').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('returns 500 without instance controller', async () => {
+				const { app } = createService()
+
+				const res = await supertest(app).post('/api/connections/conn-1/disable').send()
+				expect(res.status).toBe(500)
+				expect(res.body).toEqual({ status: 500, message: 'Connection management not available' })
 			})
 		})
 	})
