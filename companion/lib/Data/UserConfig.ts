@@ -48,6 +48,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		usb_hotplug: true,
 		auto_enable_discovered_surfaces: true,
 
+		satellite_subscriptions_enabled: false,
+
 		pin_enable: false,
 		link_lockouts: false,
 		pin: '',

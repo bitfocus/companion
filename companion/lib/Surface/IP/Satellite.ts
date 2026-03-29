@@ -12,7 +12,7 @@ import LogController from '../../Log/Controller.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
 	BrightnessConfigField,
@@ -217,6 +217,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
+		this.#logger.debug(`Device info: ${JSON.stringify(deviceInfo)}`)
 
 		this.#config = {
 			rotation: 0,
@@ -262,6 +263,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 						x: definition.column,
 						y: definition.row,
 						image: this.#getLockImage(definition.style),
+						location: null,
 					})
 				}
 			}
@@ -309,58 +311,12 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			params['CONTROLID'] = controlDefinition.id
 		}
 
-		const style = drawItem.image.style
+		const styleArgs = await buildSatelliteStyleArgs(drawItem.image, controlDefinition.style, this.#config.rotation)
+		Object.assign(params, styleArgs)
 
-		if (controlDefinition.style.bitmap) {
-			const buffer = await transformButtonImage(
-				drawItem.image,
-				this.#config.rotation,
-				controlDefinition.style.bitmap.w,
-				controlDefinition.style.bitmap.h,
-				'rgb'
-			)
-
-			if (buffer === undefined || buffer.length == 0) {
-				this.#logger.warn('buffer has invalid size')
-			} else {
-				params['BITMAP'] = buffer.toString('base64')
-			}
+		if (drawItem.location) {
+			params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
 		}
-
-		if (!this.socket) return
-
-		if (controlDefinition.style.colors) {
-			let bgcolor = typeof style !== 'string' && style ? parseColor(style.bgcolor).replaceAll(' ', '') : 'rgb(0,0,0)'
-			let fgcolor = typeof style !== 'string' && style ? parseColor(style.color).replaceAll(' ', '') : 'rgb(0,0,0)'
-
-			if (controlDefinition.style.colors !== 'rgb') {
-				bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
-				fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
-			}
-
-			params['COLOR'] = bgcolor
-			params['TEXTCOLOR'] = fgcolor
-		}
-
-		if (controlDefinition.style.text) {
-			const text = (typeof style !== 'string' && style?.text) || ''
-			params['TEXT'] = Buffer.from(text).toString('base64')
-		}
-		if (controlDefinition.style.textStyle) {
-			params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'
-		}
-
-		let type = 'BUTTON'
-		if (style === 'pageup') {
-			type = 'PAGEUP'
-		} else if (style === 'pagedown') {
-			type = 'PAGEDOWN'
-		} else if (style === 'pagenum') {
-			type = 'PAGENUM'
-		}
-
-		params['PRESSED'] = typeof style !== 'string' && !!style?.pushed
-		params['TYPE'] = type
 
 		if (!this.socket) return
 
