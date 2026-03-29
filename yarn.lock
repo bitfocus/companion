@@ -3347,7 +3347,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@elgato-stream-deck/tcp@npm:^7.6.0":
+"@elgato-stream-deck/tcp@npm:7.6.0":
   version: 7.6.0
   resolution: "@elgato-stream-deck/tcp@npm:7.6.0"
   dependencies:
@@ -3356,6 +3356,18 @@ __metadata:
     "@julusian/bonjour-service": "npm:^1.4.2"
     tslib: "npm:^2.8.1"
   checksum: 10c0/e590c9e2f72be44485a467ec79e9500b5e79288f0afeb9bb692ca4b199875f5bba13cdbbfb55b59237265b74509d31a14dd137a0223336cfc3ea84a609689205
+  languageName: node
+  linkType: hard
+
+"@elgato-stream-deck/tcp@patch:@elgato-stream-deck/tcp@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-tcp-npm-7.6.0-fce6c8ef81.patch":
+  version: 7.6.0
+  resolution: "@elgato-stream-deck/tcp@patch:@elgato-stream-deck/tcp@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-tcp-npm-7.6.0-fce6c8ef81.patch::version=7.6.0&hash=50c6ca"
+  dependencies:
+    "@elgato-stream-deck/core": "npm:7.6.0"
+    "@elgato-stream-deck/node-lib": "npm:7.6.0"
+    "@julusian/bonjour-service": "npm:^1.4.2"
+    tslib: "npm:^2.8.1"
+  checksum: 10c0/a5c2cc07efcc28b1285276153b30180c05d169f36d28492e3d4f0e4c3044e4a8d33c718b46934c69c61e99b29f5e953a6b560e066ac0c21f4f06667b6aeab9f9
   languageName: node
   linkType: hard
 
@@ -11212,7 +11224,7 @@ asn1@evs-broadcast/node-asn1:
     "@companion-app/shared": "npm:*"
     "@companion-module/base": "npm:^1.14.0"
     "@elgato-stream-deck/node": "npm:^7.6.0"
-    "@elgato-stream-deck/tcp": "npm:^7.6.0"
+    "@elgato-stream-deck/tcp": "patch:@elgato-stream-deck/tcp@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-tcp-npm-7.6.0-fce6c8ef81.patch"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.0.2"
     "@julusian/jpeg-turbo": "npm:^2.3.0"

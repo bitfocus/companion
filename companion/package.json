@@ -49,7 +49,7 @@
     "@companion-app/shared": "*",
     "@companion-module/base": "^1.14.0",
     "@elgato-stream-deck/node": "^7.6.0",
-    "@elgato-stream-deck/tcp": "^7.6.0",
+    "@elgato-stream-deck/tcp": "patch:@elgato-stream-deck/tcp@npm%3A7.6.0#~/.yarn/patches/@elgato-stream-deck-tcp-npm-7.6.0-fce6c8ef81.patch",
     "@julusian/bonjour-service": "^1.4.2",
     "@julusian/image-rs": "^2.0.2",
     "@julusian/jpeg-turbo": "^2.3.0",

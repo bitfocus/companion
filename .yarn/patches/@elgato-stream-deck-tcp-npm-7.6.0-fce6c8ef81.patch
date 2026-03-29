@@ -1,0 +1,34 @@
+diff --git a/dist/socketWrapper.js b/dist/socketWrapper.js
+index 019405abba385e6f5826ad849fcf042280c8786b..32cb5181de27ae8fd0b9c8e747a70f36ae53984f 100644
+--- a/dist/socketWrapper.js
++++ b/dist/socketWrapper.js
+@@ -25,6 +25,7 @@ class SocketWrapper extends events_1.EventEmitter {
+     #connected = false;
+     #retryConnectTimeout = null;
+     #connectionActive = false; // True when connected/connecting/reconnecting
++    #immediateReconnect = false // Set when a timeout-triggered destroy should reconnect without delay
+     #lastReceived = Date.now();
+     #receiveBuffer = null;
+     #packetMode = 'unknown';
+@@ -75,11 +76,19 @@ class SocketWrapper extends events_1.EventEmitter {
+         if (this.#lastReceived + constants_js_1.TIMEOUT_DURATION < Date.now()) {
+             this.#connected = false;
+             setImmediate(() => this.emit('disconnected', this));
+-            this._retryConnection();
++            // Destroy the socket so it is fully closed before reconnecting.
++			// Calling socket.connect() while the socket is still TCP-connected
++			// would throw EISCONN. The 'close' event will reconnect immediately
++			// (no RECONNECT_INTERVAL delay) via the #immediateReconnect flag.
++			this.#immediateReconnect = true
++			this.#socket.destroy()
+         }
+     }
+     _triggerRetryConnection() {
+-        if (!this.#retryConnectTimeout) {
++        if (this.#immediateReconnect) {
++			this.#immediateReconnect = false
++			setImmediate(() => this._retryConnection())
++		} else if (!this.#retryConnectTimeout) {
+             this.#retryConnectTimeout = setTimeout(() => {
+                 this._retryConnection();
+             }, constants_js_1.RECONNECT_INTERVAL);
