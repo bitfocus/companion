@@ -126,7 +126,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill text-truncate">
+			<span className="flex-fill text-truncate full-label">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
@@ -136,7 +136,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1" />}
+			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1 full-label" />}
 			{!!item.notifications && <item.notifications />}
 		</>
 	)
@@ -750,9 +750,9 @@ function CNavGroup({
 					{toggler}
 				</Link>
 			) : (
-				<a className="nav-link nav-group-toggle nav-group-toggle-basic" onClick={handleTogglerOnClick}>
+				<span className="nav-link nav-group-toggle nav-group-toggle-basic" onClick={handleTogglerOnClick}>
 					{toggler}
-				</a>
+				</span>
 			)}
 
 			<Transition
