@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback, useContext, useRef } from 'react'
+import React, { useMemo, useCallback, useContext, useRef, useState, useEffect } from 'react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC.js'
 import { CAlert, CSpinner } from '@coreui/react'
@@ -7,21 +7,13 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useDebounced } from '~/Resources/util.js'
 import type { JsonValue } from 'type-fest'
 
 interface ExpressionValuePreviewProps {
 	expression: string
 	controlId: string | null
 	fieldDefinition: SomeCompanionInputField
-}
-
-function useDebounced<T>(value: T, delayMs: number): T {
-	const [debounced, setDebounced] = useState(value)
-	useEffect(() => {
-		const timer = setTimeout(() => setDebounced(value), delayMs)
-		return () => clearTimeout(timer)
-	}, [value, delayMs])
-	return debounced
 }
 
 function isExpressionParseable(value: string): boolean {
