@@ -12,3 +12,5 @@ Each surface may have unique capabilities and limitations. See the individual su
 Since Companion 4.3, surface support is delivered through a module system — the same approach used for [connections](../3_config/modules.md). This means that as new surface models are released, or bugs are fixed in existing ones, you can update just the relevant surface module without updating all of Companion.
 
 The module list, install, update, and offline import workflows are the same as for connection modules. See [Modules](../3_config/modules.md) for full details.
+
+A full list of available surface modules, including the specific device models supported by each, can be found on the [Bitfocus Developer site](https://developer.bitfocus.io/modules/companion-surface/discover).
