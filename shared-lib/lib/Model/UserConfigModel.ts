@@ -10,6 +10,8 @@ export type UserConfigModel = {
 	usb_hotplug: boolean
 	auto_enable_discovered_surfaces: boolean
 
+	satellite_subscriptions_enabled: boolean
+
 	pin_enable: boolean
 	link_lockouts: boolean
 	pin: string

@@ -20,6 +20,7 @@ import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
 import { nanoid } from 'nanoid'
+import type { DataUserConfig } from '../../Data/UserConfig.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -106,6 +107,7 @@ export class ServiceSatelliteApi {
 
 	readonly #serviceApi: ServiceApi
 	readonly #surfaceController: SurfaceController
+	readonly #userconfig: DataUserConfig
 
 	/**
 	 * The remote devices
@@ -117,9 +119,10 @@ export class ServiceSatelliteApi {
 	 */
 	readonly #socketStates = new Map<SatelliteSocketWrapper, SatelliteSocketState>()
 
-	constructor(serviceApi: ServiceApi, surfaceController: SurfaceController) {
+	constructor(serviceApi: ServiceApi, surfaceController: SurfaceController, userconfig: DataUserConfig) {
 		this.#serviceApi = serviceApi
 		this.#surfaceController = surfaceController
+		this.#userconfig = userconfig
 	}
 
 	/**
@@ -363,6 +366,10 @@ export class ServiceSatelliteApi {
 			ApiVersion: API_VERSION,
 		})
 
+		socket.sendMessage('CAPS', null, null, {
+			SUBSCRIPTIONS: !!this.#userconfig.getKey('satellite_subscriptions_enabled'),
+		})
+
 		let receivebuffer = ''
 		return {
 			processMessage: (data) => {
@@ -588,6 +595,10 @@ export class ServiceSatelliteApi {
 	#addSub(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
 		const messageName = 'ADD-SUB'
 
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
+
 		const subId = params.SUBID
 		if (!subId || subId === true) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing SUBID')
@@ -664,6 +675,10 @@ export class ServiceSatelliteApi {
 	#removeSub(socket: SatelliteSocketWrapper, params: ParsedParams): void {
 		const messageName = 'REMOVE-SUB'
 
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
+
 		const subId = params.SUBID
 		if (!subId || subId === true) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing SUBID')
@@ -682,6 +697,10 @@ export class ServiceSatelliteApi {
 
 	#subPress(socket: SatelliteSocketWrapper, params: ParsedParams): void {
 		const messageName = 'SUB-PRESS'
+
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
 
 		const subId = params.SUBID
 		if (!subId || subId === true) {
@@ -714,6 +733,10 @@ export class ServiceSatelliteApi {
 
 	#subRotate(socket: SatelliteSocketWrapper, params: ParsedParams): void {
 		const messageName = 'SUB-ROTATE'
+
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
 
 		const subId = params.SUBID
 		if (!subId || subId === true) {
@@ -756,6 +779,18 @@ export class ServiceSatelliteApi {
 			SUBID: subId,
 			...styleArgs,
 		})
+	}
+
+	/**
+	 * Process an updated userconfig value.
+	 * When the subscriptions feature is toggled, close all connections so clients reconnect and re-read CAPS.
+	 */
+	updateUserConfig(key: string, _value: boolean | number | string): void {
+		if (key === 'satellite_subscriptions_enabled') {
+			for (const socket of this.#socketStates.keys()) {
+				socket.destroy()
+			}
+		}
 	}
 
 	/**

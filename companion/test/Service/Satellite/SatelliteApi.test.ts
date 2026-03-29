@@ -6,6 +6,7 @@ import type { SurfaceController } from '../../../lib/Surface/Controller.js'
 import type { SurfaceIPSatellite } from '../../../lib/Surface/IP/Satellite.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
+import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -37,13 +38,15 @@ class TestSocketWrapper extends SatelliteSocketWrapper {
 	}
 }
 
-function createService() {
+function createService({ subscriptionsEnabled = false }: { subscriptionsEnabled?: boolean } = {}) {
 	const serviceApi = mockDeep<ServiceApi>(mockOptions)
 	const surfaceController = mockDeep<SurfaceController>(mockOptions)
+	const userconfig = mockDeep<DataUserConfig>(mockOptions)
 
 	serviceApi.appInfo.appBuild = 'test-build-123'
+	userconfig.getKey.mockReturnValue(subscriptionsEnabled)
 
-	const api = new ServiceSatelliteApi(serviceApi, surfaceController)
+	const api = new ServiceSatelliteApi(serviceApi, surfaceController, userconfig)
 	const logger = mock<Logger>({
 		info: vi.fn(),
 		debug: vi.fn(),
@@ -52,7 +55,7 @@ function createService() {
 		warn: vi.fn(),
 	})
 
-	return { serviceApi, surfaceController, api, logger }
+	return { serviceApi, surfaceController, userconfig, api, logger }
 }
 
 function createSocketAndInit(api: ServiceSatelliteApi, logger: Logger) {
@@ -84,16 +87,36 @@ function addDeviceToSocket(
 
 describe('ServiceSatelliteApi', () => {
 	describe('initSocket', () => {
-		test('sends BEGIN message with version info', () => {
-			const { api, logger, serviceApi } = createService()
+		test('sends BEGIN and CAPS messages', () => {
+			const { api, logger } = createService()
 			const socket = new TestSocketWrapper()
 
 			api.initSocket(logger, socket)
 
-			expect(socket.writtenData).toHaveLength(1)
-			expect(socket.lastMessage).toContain('BEGIN')
-			expect(socket.lastMessage).toContain('CompanionVersion="test-build-123"')
-			expect(socket.lastMessage).toContain('ApiVersion="1.10.0"')
+			expect(socket.writtenData).toHaveLength(2)
+			expect(socket.writtenData[0]).toContain('BEGIN')
+			expect(socket.writtenData[0]).toContain('CompanionVersion="test-build-123"')
+			expect(socket.writtenData[0]).toContain('ApiVersion="1.10.0"')
+			expect(socket.writtenData[1]).toContain('CAPS')
+			expect(socket.writtenData[1]).toContain('SUBSCRIPTIONS=')
+		})
+
+		test('CAPS reports SUBSCRIPTIONS=0 when disabled', () => {
+			const { api, logger } = createService({ subscriptionsEnabled: false })
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('SUBSCRIPTIONS=0')
+		})
+
+		test('CAPS reports SUBSCRIPTIONS=1 when enabled', () => {
+			const { api, logger } = createService({ subscriptionsEnabled: true })
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('SUBSCRIPTIONS=1')
 		})
 
 		test('returns processMessage and cleanupDevices', () => {
@@ -1016,8 +1039,18 @@ describe('ServiceSatelliteApi', () => {
 	})
 
 	describe('ADD-SUB', () => {
+		test('error when subscriptions not enabled', () => {
+			const { api, logger } = createService({ subscriptionsEnabled: false })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Subscriptions not enabled')
+		})
+
 		test('error when missing SUBID', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('ADD-SUB LOCATION="1/2/3"\n')
@@ -1027,7 +1060,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when SUBID contains invalid characters', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('ADD-SUB SUBID="bad chars!" LOCATION="1/2/3"\n')
@@ -1037,7 +1070,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when missing LOCATION', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('ADD-SUB SUBID="sub1"\n')
@@ -1047,7 +1080,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when LOCATION is invalid format', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="invalid"\n')
@@ -1057,7 +1090,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when LOCATION has only two parts', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2"\n')
@@ -1067,7 +1100,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when SUBID already in use', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1083,7 +1116,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error for invalid STYLE', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const badStyle = Buffer.from('not valid json').toString('base64')
@@ -1095,7 +1128,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('successfully adds subscription', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1115,7 +1148,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('successfully adds subscription with BITMAP', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1129,7 +1162,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('successfully adds subscription with base64 STYLE', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1147,8 +1180,18 @@ describe('ServiceSatelliteApi', () => {
 	})
 
 	describe('REMOVE-SUB', () => {
+		test('error when subscriptions not enabled', () => {
+			const { api, logger } = createService({ subscriptionsEnabled: false })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('REMOVE-SUB SUBID="sub1"\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Subscriptions not enabled')
+		})
+
 		test('error when missing SUBID', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('REMOVE-SUB\n')
@@ -1158,7 +1201,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when SUBID unknown', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('REMOVE-SUB SUBID="nonexist"\n')
@@ -1168,7 +1211,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('successfully removes subscription', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1185,7 +1228,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('after removal, SUBID is unknown', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1203,8 +1246,18 @@ describe('ServiceSatelliteApi', () => {
 	})
 
 	describe('SUB-PRESS', () => {
+		test('error when subscriptions not enabled', () => {
+			const { api, logger } = createService({ subscriptionsEnabled: false })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('SUB-PRESS SUBID="sub1" PRESSED=1\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Subscriptions not enabled')
+		})
+
 		test('error when missing SUBID', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('SUB-PRESS PRESSED=1\n')
@@ -1214,7 +1267,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when SUBID unknown', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('SUB-PRESS SUBID="nonexist" PRESSED=1\n')
@@ -1224,7 +1277,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when missing PRESSED', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1240,7 +1293,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('successfully presses subscribed control', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1265,7 +1318,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('still succeeds when no control at location', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1283,8 +1336,18 @@ describe('ServiceSatelliteApi', () => {
 	})
 
 	describe('SUB-ROTATE', () => {
+		test('error when subscriptions not enabled', () => {
+			const { api, logger } = createService({ subscriptionsEnabled: false })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=1\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Subscriptions not enabled')
+		})
+
 		test('error when missing SUBID', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('SUB-ROTATE DIRECTION=1\n')
@@ -1294,7 +1357,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when SUBID unknown', () => {
-			const { api, logger } = createService()
+			const { api, logger } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			processMessage('SUB-ROTATE SUBID="nonexist" DIRECTION=1\n')
@@ -1304,7 +1367,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('error when missing DIRECTION', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1320,7 +1383,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('successfully rotates subscribed control', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1340,7 +1403,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('still succeeds when no control at location', () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1354,6 +1417,31 @@ describe('ServiceSatelliteApi', () => {
 
 			expect(serviceApi.rotateControl).not.toHaveBeenCalled()
 			expect(socket.lastMessage).toContain('OK')
+		})
+	})
+
+	describe('updateUserConfig', () => {
+		test('destroys all sockets when satellite_subscriptions_enabled is toggled', () => {
+			const { api, logger } = createService()
+			const socket1 = new TestSocketWrapper()
+			const socket2 = new TestSocketWrapper()
+			api.initSocket(logger, socket1)
+			api.initSocket(logger, socket2)
+
+			api.updateUserConfig('satellite_subscriptions_enabled', true)
+
+			expect(socket1.destroyed).toBe(true)
+			expect(socket2.destroyed).toBe(true)
+		})
+
+		test('does not destroy sockets for unrelated config keys', () => {
+			const { api, logger } = createService()
+			const socket = new TestSocketWrapper()
+			api.initSocket(logger, socket)
+
+			api.updateUserConfig('some_other_key', true)
+
+			expect(socket.destroyed).toBe(false)
 		})
 	})
 
@@ -1399,7 +1487,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('cleans up subscriptions for the socket', async () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage, cleanupDevices } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1421,7 +1509,7 @@ describe('ServiceSatelliteApi', () => {
 
 	describe('onButtonDrawn', () => {
 		test('routes render to matching subscriptions', async () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
@@ -1442,7 +1530,7 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test('does not route to non-matching subscriptions', async () => {
-			const { api, logger, serviceApi } = createService()
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
 			const mockRender = mock<ImageResult>()
