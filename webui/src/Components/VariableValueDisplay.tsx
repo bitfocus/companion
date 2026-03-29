@@ -198,24 +198,24 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 						title={compactValue}
 					>
 						{elms /*displayValue */}
-						{valueStr.length <= TRUNCATE_LENGTH ? (
-							''
-						) : collapser.isPanelCollapsed() ? (
-							<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(false)}>
-								More
-							</button>
-						) : (
-							<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(true)}>
-								Less
-							</button>
-						)}
+						{!compact &&
+							(valueStr.length <= TRUNCATE_LENGTH ? (
+								''
+							) : collapser.isPanelCollapsed() ? (
+								<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(false)}>
+									More
+								</button>
+							) : (
+								<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(true)}>
+									Less
+								</button>
+							))}
 					</code>
 					{compact && (
 						<CPopover
 							visible={expanded}
 							onHide={() => setExpanded(false)}
 							placement="auto"
-							trigger="focus"
 							className="variable-value-expanded"
 							content={
 								<div
@@ -246,19 +246,23 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 								</div>
 							}
 						>
-							<span
+							<button
+								type="button"
 								style={{
 									padding: '4px 4px 4px 2px',
 									cursor: 'pointer',
 									flexShrink: 0,
 									display: 'flex',
 									alignItems: 'center',
+									background: 'none',
+									border: 'none',
+									color: 'inherit',
 								}}
 								onClick={toggleExpanded}
 								title={expanded ? 'Collapse' : 'Expand to see full value'}
 							>
 								<FontAwesomeIcon icon={expanded ? faCaretDown : faCaretRight} fixedWidth style={{ fontSize: '10px' }} />
-							</span>
+							</button>
 						</CPopover>
 					)}
 				</div>

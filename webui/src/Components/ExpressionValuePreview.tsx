@@ -37,9 +37,13 @@ export function ExpressionValuePreview({
 	expression,
 	controlId,
 	fieldDefinition,
-}: ExpressionValuePreviewProps): React.JSX.Element {
+}: ExpressionValuePreviewProps): React.JSX.Element | null {
 	const debouncedExpression = useDebounced(expression, 300)
 	const isParseable = useMemo(() => isExpressionParseable(debouncedExpression), [debouncedExpression])
+
+	if (!debouncedExpression.trim()) {
+		return null
+	}
 
 	if (!isParseable) {
 		return (
