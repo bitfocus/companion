@@ -66,7 +66,7 @@ function circleInfo(stacked = false): ReactElement {
 export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHeaderProps) {
 	const { userConfig } = useContext(RootAppStoreContext)
 
-	const { showToggle, clickToggle } = useSidebarState()
+	const { mobileMode, handleShowSidebar } = useSidebarState()
 
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
@@ -76,8 +76,8 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
 		<CHeader className="p-0">
 			<CContainer fluid>
-				{showToggle && (
-					<CHeaderToggler className="ps-1" onClick={clickToggle}>
+				{mobileMode && (
+					<CHeaderToggler className="ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
 					</CHeaderToggler>
 				)}

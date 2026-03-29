@@ -20,7 +20,7 @@ import {
 	faCog,
 	faClipboardList,
 	faCloud,
-	faTh,
+	faTableCells,
 	faClock,
 	faPlug,
 	faDollarSign,
@@ -28,13 +28,21 @@ import {
 	faExternalLinkSquare,
 	faHeadset,
 	faSquareCaretRight,
+	faPeopleArrows,
 	faPuzzlePiece,
 	faInfo,
 	faStar,
+	faToolbox,
 	faHatWizard,
 	faSquareRootVariable,
 	faArrowsUpToLine,
 	faArrowsDownToLine,
+	faNetworkWired,
+	faFloppyDisk,
+	faHammer,
+	faScrewdriver,
+	faTable,
+	faTabletScreenButton,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faGithub, faFacebook, faSlack } from '@fortawesome/free-brands-svg-icons'
@@ -59,9 +67,9 @@ function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
 }
 export interface SidebarStateProps {
-	showToggle: boolean
-	clickToggle: () => void
-	toggleEvent: EventTarget
+	mobileMode: boolean
+	handleShowSidebar: () => void
+	showSidebarEvent: EventTarget
 }
 const SidebarStateContext = createContext<SidebarStateProps | null>(null)
 
@@ -73,19 +81,20 @@ export function useSidebarState(): SidebarStateProps {
 }
 
 export function SidebarStateProvider({ children }: React.PropsWithChildren): React.ReactNode {
-	const isOnMobile = useMobileMode()
+	const mobileMode = useMobileMode()
 
 	const event = useMemo(() => new EventTarget(), [])
 
 	const value = useMemo(() => {
 		return {
-			showToggle: isOnMobile,
-			clickToggle: () => {
+			mobileMode: mobileMode,
+			// the next two are for the hamburger toggle
+			handleShowSidebar: () => {
 				event.dispatchEvent(new Event('show'))
 			},
-			toggleEvent: event,
+			showSidebarEvent: event,
 		} satisfies SidebarStateProps
-	}, [isOnMobile, event])
+	}, [mobileMode, event])
 
 	return <SidebarStateContext.Provider value={value}>{children}</SidebarStateContext.Provider>
 }
@@ -102,9 +111,10 @@ interface SidebarMenuItemProps {
 }
 
 function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
+	// add title to icon for narrow mode. (currentlty: user clicks on narrow part of sidebar while in unfolding mode)
 	return (
 		<>
-			<span className="nav-icon-wrapper">
+			<span className="nav-icon-wrapper" title={item.title || item.name}>
 				{item.icon === 'empty' ? (
 					''
 				) : item.icon ? (
@@ -116,7 +126,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill text-truncate">
+			<span className="flex-fill text-truncate full-label">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
@@ -126,7 +136,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1" />}
+			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1 full-label" />}
 			{!!item.notifications && <item.notifications />}
 		</>
 	)
@@ -162,7 +172,7 @@ interface SidebarMenuItemGroupProps extends SidebarMenuItemProps {
 function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 	return (
 		<CNavGroup
-			toggler={<SidebarMenuItemLabel {...item} />}
+			toggler={<SidebarMenuItemLabel {...{ title: item.name + ' group', ...item }} />}
 			to={item.path}
 			visible={item.groupVisible}
 			setVisible={item.groupSetVisible}
@@ -176,11 +186,12 @@ export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
-	const sidebarState = useSidebarState()
+	const { mobileMode } = useSidebarState()
 
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
 	const [accordionMode, setAccordionMode] = useLocalStorage('sidebar_auto_collapse', false)
+	const [narrow, setNarrow] = useState(false)
 
 	const [surfacesGroupVis, setSurfacesGroupVis] = useState(false)
 	const [variablesGroupVis, setVariablesGroupVis] = useState(false)
@@ -188,7 +199,12 @@ export const MySidebar = memo(function MySidebar() {
 	const [ibuttonsGroupVis, setIbuttonsGroupVis] = useState(false)
 	const [supportGroupVis, setSupportGroupVis] = useState(false)
 
-	const doToggle = useCallback(() => setUnfoldable((val) => !val), [setUnfoldable])
+	const toggleUnfoldable = useCallback(() => {
+		setUnfoldable((val) => {
+			if (!val) setNarrow(true) // if new value is true, make sidebar narrow so it folds now
+			return !val
+		})
+	}, [setUnfoldable, setNarrow])
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
@@ -242,14 +258,14 @@ export const MySidebar = memo(function MySidebar() {
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
-			...(sidebarState.showToggle
+			...(mobileMode
 				? []
 				: [
 						{
 							id: 'hide-sidebar',
 							label: unfoldable ? 'Fixed-width Sidebar' : 'Folding Sidebar',
 							icon: () => foldableIcon(unfoldable),
-							do: doToggle,
+							do: toggleUnfoldable,
 							tooltip:
 								'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
 						},
@@ -262,14 +278,14 @@ export const MySidebar = memo(function MySidebar() {
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
-		[unfoldable, doToggle, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode, sidebarState]
+		[unfoldable, toggleUnfoldable, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode, mobileMode]
 	)
 
 	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
 	const contextState = useContextMenuState(contextMenuItems)
 
 	return (
-		<CSidebar unfoldable={unfoldable} onContextMenu={contextState.onContextMenu}>
+		<CSidebar unfoldable={unfoldable} narrow={narrow} setNarrow={setNarrow} onContextMenu={contextState.onContextMenu}>
 			<ContextMenu {...contextState} />
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>
@@ -290,7 +306,7 @@ export const MySidebar = memo(function MySidebar() {
 					notifications={ConnectionsTabNotifyIcon}
 					path="/connections"
 				/>
-				<SidebarMenuItem name="Buttons" icon={faTh} path="/buttons" />
+				<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 				<SidebarMenuItemGroup
 					name="Surfaces"
 					icon={faGamepad}
@@ -301,11 +317,11 @@ export const MySidebar = memo(function MySidebar() {
 				>
 					<SidebarMenuItem
 						name="Configured"
-						icon={null}
+						icon={faGamepad}
 						notifications={SurfacesTabNotifyIcon}
 						path="/surfaces/configured"
 					/>
-					<SidebarMenuItem name="Remote" icon={null} path="/surfaces/remote" />
+					<SidebarMenuItem name="Remote" icon={faPeopleArrows} path="/surfaces/remote" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 				<SidebarMenuItemGroup
@@ -317,7 +333,7 @@ export const MySidebar = memo(function MySidebar() {
 				>
 					<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/variables/custom" />
 					<SidebarMenuItem name="Expression Variables" icon={faSquareRootVariable} path="/variables/expression" />
-					<SidebarMenuItem name="Internal" icon={null} path="/variables/connection/internal" />
+					<SidebarMenuItem name="Internal" icon={faToolbox} path="/variables/connection/internal" />
 					<SidebarVariablesGroups />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
@@ -329,17 +345,17 @@ export const MySidebar = memo(function MySidebar() {
 					groupSetVisible={(expand) => smartExpand(setSettingsGroupVis, expand)}
 				>
 					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
-					<SidebarMenuItem name="General" icon={null} path="/settings/general" />
-					<SidebarMenuItem name="Buttons" icon={null} path="/settings/buttons" />
+					<SidebarMenuItem name="General" icon={faScrewdriver} path="/settings/general" />
+					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/settings/buttons" />
 					<SidebarMenuItem
 						name="Surfaces"
-						icon={null}
+						icon={faGamepad}
 						path="/surfaces/configured/integrations"
 						title="Surface settings have moved to the main Surfaces Page."
 					/>
-					<SidebarMenuItem name="Protocols" icon={null} path="/settings/protocols" />
-					<SidebarMenuItem name="Backups" icon={null} path="/settings/backups" />
-					<SidebarMenuItem name="Advanced" icon={null} path="/settings/advanced" />
+					<SidebarMenuItem name="Protocols" icon={faNetworkWired} path="/settings/protocols" />
+					<SidebarMenuItem name="Backups" icon={faFloppyDisk} path="/settings/backups" />
+					<SidebarMenuItem name="Advanced" icon={faHammer} path="/settings/advanced" />
 				</SidebarMenuItemGroup>
 				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
 				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
@@ -352,8 +368,8 @@ export const MySidebar = memo(function MySidebar() {
 					groupVisible={ibuttonsGroupVis}
 					groupSetVisible={(expand) => smartExpand(setIbuttonsGroupVis, expand)}
 				>
-					<SidebarMenuItem name="Emulator" icon={null} path="/emulator" target="_blank" />
-					<SidebarMenuItem name="Web buttons" icon={null} path="/tablet" target="_blank" />
+					<SidebarMenuItem name="Emulator" icon={faTabletScreenButton} path="/emulator" target="_blank" />
+					<SidebarMenuItem name="Web buttons" icon={faTable} path="/tablet" target="_blank" />
 				</SidebarMenuItemGroup>
 			</CSidebarNav>
 			<div className="sidebar-bottom-shadow-container">
@@ -400,8 +416,8 @@ export const MySidebar = memo(function MySidebar() {
 					</SidebarMenuItemGroup>
 				</CSidebarNav>
 			)}
-			<CSidebarHeader className="border-top d-none d-lg-flex sidebar-header-toggler">
-				<SidebarTogglerAndVersion doToggle={doToggle} />
+			<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
+				<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} />
 			</CSidebarHeader>
 		</CSidebar>
 	)
@@ -492,12 +508,17 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 	)
 })
 
-const SidebarTogglerAndVersion = observer(function SidebarTogglerAndVersion({ doToggle }: { doToggle: () => void }) {
+const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({
+	toggleUnfoldable,
+}: {
+	toggleUnfoldable: () => void
+}) {
 	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
+	const { mobileMode } = useSidebarState()
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span className="nav-icon-wrapper" onClick={doToggle}>
+			<span className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')} onClick={toggleUnfoldable}>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
 
@@ -521,17 +542,20 @@ interface CSidebarProps {
 	 * Expand narrowed sidebar on hover.
 	 */
 	unfoldable?: boolean
+	narrow: boolean
+	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
 	onContextMenu?: MouseEventHandler<HTMLDivElement>
 }
-function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
+function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
 
-	const sidebarState = useSidebarState()
+	const { showSidebarEvent: toggleEvent, mobileMode } = useSidebarState()
 
+	// handle the "hamburger" to show the sidebar in mobile mode
 	useEffect(() => {
-		const event = sidebarState.toggleEvent
+		const event = toggleEvent
 		const handler = () => {
 			setVisibleMobile(true)
 		}
@@ -540,86 +564,100 @@ function CSidebar({ children, unfoldable, onContextMenu }: React.PropsWithChildr
 		return () => {
 			event.removeEventListener('show', handler)
 		}
-	}, [sidebarState.toggleEvent, setVisibleMobile])
+	}, [toggleEvent, setVisibleMobile])
 
+	// default behavior in mobile mode: hide the sidebar
 	useEffect(() => {
-		if (sidebarState.showToggle) setVisibleMobile(false)
-	}, [sidebarState.showToggle])
+		if (mobileMode) setVisibleMobile(false)
+	}, [mobileMode])
 
+	// handle clicks in the sidebar for mobile mode and "unfolding" mode
 	const handleOnClick = useCallback(
 		(event: MouseEvent) => {
 			const target = event.target
+			// note: middle-click currently opens the nav-link target in a new tab, so it makes sense to close the sidebar in that case.
+			// Only context-menu should leave the sidebar alone, since it is acting on the current sidebar, hence "event.button === 2".
 			if (!(target instanceof Element) || event.button === 2) return // leave context menu alone (note button# is OS-independent)
 
-			// If the user clicked on the text, it's not a nav-link so the original code failed to close the navbar
-			// Instead we search up the DOM for a nav-link.
+			// If the user clicked on the text of a sidebar "button", it's not a nav-link so we need to
+			// search up the DOM for a nav-link to capture all possibilities.
 			const navLink = target.closest('.nav-link')
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
-			if (navLink && !navGroupToggle && sidebarState.showToggle) {
+			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu, blank areas,...)
+
+			// unfoldToggler: true if clicked in the "toggleFoldandVersion" area
+			const unfoldToggler = target.closest('.sidebar-header-toggler') // the latter isn't strictly necessary, but makes the intent clear
+			if (unfoldToggler && !target.closest('.nav-icon-wrapper')) return // ignore clicks on version text, etc.
+
+			// if we got here the user clicked on a nav-link, not a non-active area, group-toggle or context-menu item
+			if (mobileMode) {
+				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
+			} else if ((unfoldable && !unfoldToggler) || (!unfoldable && unfoldToggler)) {
+				// In folding mode make the sidebar temporarily narrow so it folds after the user clicks
+				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs so:
+				// unfoldable && !unfoldToggler: User clicked a _nav-link_ while in folding mode → collapse
+				// !unfoldable && unfoldToggler: User clicked the _toggler_ to enable folding → collapse now
+				setNarrow(true)
 			}
 		},
-		[sidebarState.showToggle]
+		[setNarrow, mobileMode, unfoldable]
 	)
 
-	const handleKeyup = useCallback(
+	// if in "temporary narrow-mode" return to folding mode after the mouse leaves the sidebar
+	const handleMouseLeave = useCallback(() => {
+		if (narrow) setNarrow(false)
+	}, [narrow, setNarrow])
+
+	const handleKeyOrClickOutside = useCallback(
 		(event: Event) => {
-			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
+			if (mobileMode && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
 				setVisibleMobile(false)
 			}
 		},
-		[sidebarState.showToggle, sidebarRef]
-	)
-	const handleClickOutside = useCallback(
-		(event: Event) => {
-			if (sidebarState.showToggle && sidebarRef.current && !sidebarRef.current.contains(event.target as HTMLElement)) {
-				setVisibleMobile(false)
-			}
-		},
-		[sidebarState.showToggle, sidebarRef]
+		[mobileMode, sidebarRef]
 	)
 
 	useEffect(() => {
-		window.addEventListener('mouseup', handleClickOutside)
-		window.addEventListener('keyup', handleKeyup)
+		window.addEventListener('mouseup', handleKeyOrClickOutside)
+		window.addEventListener('keyup', handleKeyOrClickOutside)
 
 		const sideBarElement = sidebarRef.current
 
 		sideBarElement?.addEventListener('mouseup', handleOnClick)
 
 		return () => {
-			window.removeEventListener('mouseup', handleClickOutside)
-			window.removeEventListener('keyup', handleKeyup)
+			window.removeEventListener('mouseup', handleKeyOrClickOutside)
+			window.removeEventListener('keyup', handleKeyOrClickOutside)
 
 			sideBarElement?.removeEventListener('mouseup', handleOnClick)
 		}
-	}, [sidebarRef, handleOnClick, handleKeyup, handleClickOutside])
+	}, [sidebarRef, handleOnClick, handleKeyOrClickOutside])
 
 	return (
 		<>
 			<div
 				className={classNames('sidebar sidebar-dark sidebar-fixed', {
 					// [`sidebar-${colorScheme}`]: colorScheme,
-					// 'sidebar-narrow': narrow,
+					'sidebar-narrow': narrow,
+					//'no-transition-all': narrow, // optional, but this works only after very long transitions (modules page)
 					// 'sidebar-overlaid': overlaid,
 					// [`sidebar-${placement}`]: placement,
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
 					'sidebar-narrow-unfoldable': unfoldable, // // unfold-able. This is a CoreUI class so can't be renamed.
-					show: sidebarState.showToggle && visibleMobile,
-					// hide: visibleDesktop === false && !sidebarState.showToggle && !overlaid,
+					show: mobileMode && visibleMobile,
+					// hide: visibleDesktop === false && !showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
 				onContextMenu={onContextMenu}
+				onMouseLeave={handleMouseLeave}
 			>
 				{children}
 			</div>
 			{typeof window !== 'undefined' &&
-				sidebarState.showToggle &&
-				createPortal(
-					<CBackdrop className="sidebar-backdrop" visible={sidebarState.showToggle && visibleMobile} />,
-					document.body
-				)}
+				mobileMode &&
+				createPortal(<CBackdrop className="sidebar-backdrop" visible={mobileMode && visibleMobile} />, document.body)}
 		</>
 	)
 }
@@ -664,8 +702,8 @@ function CNavGroup({
 
 	//const [_visible, setVisible] = useState(Boolean(visible))
 
-	const handleTogglerOnCLick = (event: React.MouseEvent<HTMLElement>) => {
-		event.preventDefault()
+	const handleTogglerOnClick = (_event: React.MouseEvent<HTMLElement>) => {
+		//event.preventDefault() // don't do this now that the action is taking place on Link
 		// but don't stop propagation, or it will prevent context-menus
 		setVisible(!visible)
 	}
@@ -708,21 +746,13 @@ function CNavGroup({
 	return (
 		<li className={classNames('nav-group', { show: visible }, className)} {...rest}>
 			{to ? (
-				<div
-					className="nav-link nav-group-toggle nav-group-toggle-link"
-					onClick={(event) => handleTogglerOnCLick(event)}
-				>
-					<Link to={to} className="nav-link">
-						{toggler}
-					</Link>
-				</div>
-			) : (
-				<a
-					className="nav-link nav-group-toggle nav-group-toggle-basic"
-					onClick={(event) => handleTogglerOnCLick(event)}
-				>
+				<Link to={to} className="nav-link nav-group-toggle nav-group-toggle-link" onClick={handleTogglerOnClick}>
 					{toggler}
-				</a>
+				</Link>
+			) : (
+				<span className="nav-link nav-group-toggle nav-group-toggle-basic" onClick={handleTogglerOnClick}>
+					{toggler}
+				</span>
 			)}
 
 			<Transition
