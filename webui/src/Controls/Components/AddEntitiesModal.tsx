@@ -138,7 +138,7 @@ export const AddEntitiesModal = observer(
 						fullId: `${connectionId}:${id}`,
 						label: info.label,
 						searchLabel: `${connectionInfo.label}: ${info.label}`,
-						sortKey: info.sortKey ?? info.label,
+						sortKey: String(info.sortKey ?? info.label),
 						description: info.description,
 					})
 

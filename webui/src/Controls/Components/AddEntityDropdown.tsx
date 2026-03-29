@@ -74,7 +74,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 					isRecent: false,
 					value: `${connectionId}:${definitionId}`,
 					label: optionLabel,
-					sortKey: definition.sortKey ?? definition.label,
+					sortKey: String(definition.sortKey ?? definition.label),
 					fuzzy: fuzzyPrepare(optionLabel),
 				})
 			}
