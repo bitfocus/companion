@@ -22,12 +22,13 @@ import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks
 import { Link } from '@tanstack/react-router'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { CloseButton } from '~/Layout/PanelIcons.js'
+import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
 
 	title: string
+	helpAction: ContextHelpButtonProps['action']
 	description: (storeCount: number) => React.ReactNode
 	isSubpanel?: boolean
 }
@@ -35,6 +36,7 @@ interface AddInstancePanelProps {
 export const AddInstancePanel = observer(function AddInstancePanel({
 	service,
 	title,
+	helpAction,
 	description,
 	isSubpanel,
 }: AddInstancePanelProps) {
@@ -108,6 +110,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
+					<ContextHelpButton action={helpAction}></ContextHelpButton>
 					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
 				</div>
 			</div>

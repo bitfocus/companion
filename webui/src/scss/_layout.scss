@@ -736,7 +736,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	.secondary-panel-simple-header {
 		background: #{$panel-header-bg};
 		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
-		padding: 1.25rem 1.5rem;
+		padding: 1rem 1.5rem; // 1rem to match the previous 1.25rem without CloseButton & ContextHelpButton -- almost all panels have at least one in the header now.
 		display: flex;
 		align-items: center;
 		justify-content: space-between;

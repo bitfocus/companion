@@ -17,6 +17,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 		<AddInstancePanel
 			service={service}
 			title="Add New Connection"
+			helpAction="/user-guide/config/connections#adding-a-connection"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>
