@@ -91,7 +91,7 @@ function SettingsPanelTitleBar() {
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Surface Integrations and General Settings</h4>
 			<div className="header-buttons">
-				<ContextHelpButton action="/user-guide/config/settings#surfaces">
+				<ContextHelpButton action="/user-guide/surfaces">
 					Manage surface integrations and global surface settings here.
 				</ContextHelpButton>
 
