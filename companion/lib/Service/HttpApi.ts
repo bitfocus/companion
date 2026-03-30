@@ -666,12 +666,18 @@ export class ServiceHttpApi {
 	#resolveConnection(
 		res: Express.Response,
 		connectionId: string
-	): { instanceController: InstanceController; connectionConfig: ReturnType<InstanceController['getConnectionClientJson']>[string] } | null
+	): {
+		instanceController: InstanceController
+		connectionConfig: ReturnType<InstanceController['getConnectionClientJson']>[string]
+	} | null
 	#resolveConnection(res: Express.Response): { instanceController: InstanceController } | null
 	#resolveConnection(
 		res: Express.Response,
 		connectionId?: string
-	): { instanceController: InstanceController; connectionConfig?: ReturnType<InstanceController['getConnectionClientJson']>[string] } | null {
+	): {
+		instanceController: InstanceController
+		connectionConfig?: ReturnType<InstanceController['getConnectionClientJson']>[string]
+	} | null {
 		if (!this.#instanceController) {
 			res.status(500).json({ status: 500, message: 'Connection management not available' })
 			return null
