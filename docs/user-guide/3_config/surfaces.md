@@ -12,17 +12,17 @@ Configured surfaces define the mapping from Companion's [buttons](./buttons/inde
 
 :::important
 
-Before Companion can recognize a new surface you must ensure that the appropriate **surface integration** module has been installed enabled.
+Before Companion can recognize a new surface you must ensure that the appropriate **surface integration** module has been installed and enabled.
 
 :::
 
 :::warning[Elgato Devices]
 
-If your streamdeck is missing from this list, you might need to close the Elgato Streamdeck application and click the Rescan button.
+If your Stream Deck is missing from this list, you might need to close the Elgato Stream Deck application and click the Rescan button.
 
 :::
 
-If any of your surface are not in the configured surfaces list, press the **Rescan USB** button. You can avoid needing to do this by enabling **Watch for new USB Devices** in the settings panel on the right.
+If any of your surfaces are not in the configured surfaces list, press the **Rescan USB** button. You can avoid needing to do this by enabling **Watch for new USB Devices** in the settings panel on the right.
 
 ![Surfaces](images/surfaces.png?raw=true 'Surfaces')
 
