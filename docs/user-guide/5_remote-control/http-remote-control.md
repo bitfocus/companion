@@ -74,16 +74,17 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: GET
   Path: `/api/connections`
   Response: JSON array of connection objects
+
   ```json
   [
-    {
-      "id": "abc123",
-      "label": "My OBS",
-      "moduleId": "obs-websocket",
-      "enabled": true,
-      "sortOrder": 0,
-      "status": { "category": "good", "level": "ok", "message": "Connected" }
-    }
+  	{
+  		"id": "abc123",
+  		"label": "My OBS",
+  		"moduleId": "obs-websocket",
+  		"enabled": true,
+  		"sortOrder": 0,
+  		"status": { "category": "good", "level": "ok", "message": "Connected" }
+  	}
   ]
   ```
 
@@ -91,22 +92,24 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: GET
   Path: `/api/connections/<id>/status`
   Response (200):
+
   ```json
   {
-    "id": "abc123",
-    "label": "My OBS",
-    "enabled": true,
-    "status": { "category": "good", "level": "ok", "message": "Connected" }
+  	"id": "abc123",
+  	"label": "My OBS",
+  	"enabled": true,
+  	"status": { "category": "good", "level": "ok", "message": "Connected" }
   }
   ```
+
   Error (404): `{ "status": 404, "message": "Connection not found" }`
 
-- Trigger a reconnect for a specific connection
+- Restart a connection process
   Method: POST
-  Path: `/api/connections/<id>/reconnect`
-  Response (200): `{ "id": "abc123", "message": "Reconnect triggered" }`
+  Path: `/api/connections/<id>/restart`
+  Response (200): `{ "id": "abc123", "message": "Restart triggered" }`
   Error (404): `{ "status": 404, "message": "Connection not found" }`
-  Error (409): `{ "status": 409, "message": "Connection is disabled and cannot be reconnected" }`
+  Error (409): `{ "status": 409, "message": "Connection is inactive and cannot be restarted" }`
 
 - Enable a connection
   Method: POST
@@ -119,8 +122,6 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Path: `/api/connections/<id>/disable`
   Response (200): `{ "id": "abc123", "enabled": false }`
   Error (404): `{ "status": 404, "message": "Connection not found" }`
-
-All connection endpoints return `500` with `{ "status": 500, "message": "Connection management not available" }` if the instance controller is not initialized.
 
 ## Examples
 
@@ -159,8 +160,8 @@ GET `/api/connections`
 Get status of a specific connection:
 GET `/api/connections/abc123/status`
 
-Reconnect a connection:
-POST `/api/connections/abc123/reconnect`
+Restart a connection:
+POST `/api/connections/abc123/restart`
 
 Enable a disabled connection:
 POST `/api/connections/abc123/enable`
