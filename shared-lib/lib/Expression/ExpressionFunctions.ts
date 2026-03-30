@@ -29,6 +29,24 @@ function getDatePart(v: any, tz: any, key: keyof DateParts): number | null {
 	return parts ? parts[key] : null
 }
 
+const monthNames = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December',
+]
+const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const dayShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
 function getDateParts(
 	d: Date,
 	tz?: string
@@ -350,4 +368,111 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	dateMinute: (v, tz) => getDatePart(v, tz, 'minute'),
 	dateSecond: (v, tz) => getDatePart(v, tz, 'second'),
 	dateWeekday: (v, tz) => getDatePart(v, tz, 'weekday'),
+	dateFormat: (v, fmt, tz) => {
+		const d = toDate(v)
+		if (!d) {
+			return ''
+		}
+
+		const format = fmt ? toString(fmt) : 'YYYY-MM-DDTHH:mm:ss'
+		const formatLower = format.toLowerCase()
+		if (formatLower === 'iso' || formatLower === 'iso8601') {
+			return d.toISOString()
+		}
+
+		const parts = getDateParts(d, tz)
+		if (!parts) {
+			return ''
+		}
+
+		const hours12 = parts.hour % 12 === 0 ? 12 : parts.hour % 12
+
+		// dayjs-compatible format tokens, sorted longest-first for greedy matching
+		const tokens: Record<string, string> = {
+			YYYY: String(parts.year),
+			YY: String(parts.year).slice(-2),
+			MMMM: monthNames[parts.month - 1],
+			MMM: monthShort[parts.month - 1],
+			MM: pad(parts.month, '0', 2),
+			M: String(parts.month),
+			dddd: dayNames[parts.weekday],
+			ddd: dayShort[parts.weekday],
+			DD: pad(parts.day, '0', 2),
+			D: String(parts.day),
+			HH: pad(parts.hour, '0', 2),
+			H: String(parts.hour),
+			hh: pad(hours12, '0', 2),
+			h: String(hours12),
+			mm: pad(parts.minute, '0', 2),
+			m: String(parts.minute),
+			ss: pad(parts.second, '0', 2),
+			s: String(parts.second),
+			SSS: pad(d.getMilliseconds(), '0', 3),
+			A: parts.hour >= 12 ? 'PM' : 'AM',
+			a: parts.hour >= 12 ? 'pm' : 'am',
+		}
+
+		const sortedKeys = Object.keys(tokens).sort((a, b) => b.length - a.length)
+
+		let result = ''
+		let i = 0
+		while (i < format.length) {
+			let matched = false
+			for (const key of sortedKeys) {
+				if (format.startsWith(key, i)) {
+					result += tokens[key]
+					i += key.length
+					matched = true
+					break
+				}
+			}
+			if (!matched) {
+				result += format[i]
+				i++
+			}
+		}
+
+		return result
+	},
+	dateAdd: (v, amount, unit) => {
+		const d = toDate(v)
+		if (!d) return null
+		amount = Number(amount)
+		if (isNaN(amount)) return null
+		unit = toString(unit).toLowerCase()
+		const result = new Date(d.getTime())
+		switch (unit) {
+			case 'second':
+			case 'seconds':
+				result.setSeconds(result.getSeconds() + amount)
+				break
+			case 'minute':
+			case 'minutes':
+				result.setMinutes(result.getMinutes() + amount)
+				break
+			case 'hour':
+			case 'hours':
+				result.setHours(result.getHours() + amount)
+				break
+			case 'day':
+			case 'days':
+				result.setDate(result.getDate() + amount)
+				break
+			case 'week':
+			case 'weeks':
+				result.setDate(result.getDate() + amount * 7)
+				break
+			case 'month':
+			case 'months':
+				result.setMonth(result.getMonth() + amount)
+				break
+			case 'year':
+			case 'years':
+				result.setFullYear(result.getFullYear() + amount)
+				break
+			default:
+				return null
+		}
+		return result.getTime()
+	},
 }

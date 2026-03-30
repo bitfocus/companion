@@ -591,6 +591,108 @@ describe('functions', () => {
 			// Invalid
 			expect(ExpressionFunctions.dateWeekday('invalid')).toBe(null)
 		})
+
+		it('dateFormat', () => {
+			const ts = new Date('2024-06-15T09:05:03.123Z').getTime()
+
+			// Individual tokens (dayjs format)
+			expect(ExpressionFunctions.dateFormat(ts, 'YYYY', 'UTC')).toBe('2024')
+			expect(ExpressionFunctions.dateFormat(ts, 'YY', 'UTC')).toBe('24')
+			expect(ExpressionFunctions.dateFormat(ts, 'MMMM', 'UTC')).toBe('June')
+			expect(ExpressionFunctions.dateFormat(ts, 'MMM', 'UTC')).toBe('Jun')
+			expect(ExpressionFunctions.dateFormat(ts, 'MM', 'UTC')).toBe('06')
+			expect(ExpressionFunctions.dateFormat(ts, 'M', 'UTC')).toBe('6')
+			expect(ExpressionFunctions.dateFormat(ts, 'dddd', 'UTC')).toBe('Saturday')
+			expect(ExpressionFunctions.dateFormat(ts, 'ddd', 'UTC')).toBe('Sat')
+			expect(ExpressionFunctions.dateFormat(ts, 'DD', 'UTC')).toBe('15')
+			expect(ExpressionFunctions.dateFormat(ts, 'D', 'UTC')).toBe('15')
+			expect(ExpressionFunctions.dateFormat(ts, 'HH', 'UTC')).toBe('09')
+			expect(ExpressionFunctions.dateFormat(ts, 'H', 'UTC')).toBe('9')
+			expect(ExpressionFunctions.dateFormat(ts, 'hh', 'UTC')).toBe('09')
+			expect(ExpressionFunctions.dateFormat(ts, 'h', 'UTC')).toBe('9')
+			expect(ExpressionFunctions.dateFormat(ts, 'mm', 'UTC')).toBe('05')
+			expect(ExpressionFunctions.dateFormat(ts, 'm', 'UTC')).toBe('5')
+			expect(ExpressionFunctions.dateFormat(ts, 'ss', 'UTC')).toBe('03')
+			expect(ExpressionFunctions.dateFormat(ts, 's', 'UTC')).toBe('3')
+			expect(ExpressionFunctions.dateFormat(ts, 'SSS', 'UTC')).toBe('123')
+			expect(ExpressionFunctions.dateFormat(ts, 'A', 'UTC')).toBe('AM')
+			expect(ExpressionFunctions.dateFormat(ts, 'a', 'UTC')).toBe('am')
+
+			// Single-digit day (padding test)
+			const day5 = new Date('2024-06-05T09:05:03Z').getTime()
+			expect(ExpressionFunctions.dateFormat(day5, 'DD', 'UTC')).toBe('05')
+			expect(ExpressionFunctions.dateFormat(day5, 'D', 'UTC')).toBe('5')
+
+			// Combined formats
+			expect(ExpressionFunctions.dateFormat(ts, 'YYYY-MM-DD', 'UTC')).toBe('2024-06-15')
+			expect(ExpressionFunctions.dateFormat(ts, 'HH:mm:ss', 'UTC')).toBe('09:05:03')
+			expect(ExpressionFunctions.dateFormat(ts, 'dddd, MMMM D, YYYY', 'UTC')).toBe('Saturday, June 15, 2024')
+
+			// 12-hour formatting
+			const noon = new Date('2024-06-15T12:00:00Z').getTime()
+			const midnight = new Date('2024-06-15T00:00:00Z').getTime()
+			const afternoon = new Date('2024-06-15T13:00:00Z').getTime()
+			expect(ExpressionFunctions.dateFormat(midnight, 'h:mm A', 'UTC')).toBe('12:00 AM')
+			expect(ExpressionFunctions.dateFormat(noon, 'h:mm A', 'UTC')).toBe('12:00 PM')
+			expect(ExpressionFunctions.dateFormat(afternoon, 'h:mm A', 'UTC')).toBe('1:00 PM')
+
+			// Default format
+			expect(ExpressionFunctions.dateFormat(ts, undefined, 'UTC')).toBe('2024-06-15T09:05:03')
+
+			// ISO preset (case-insensitive)
+			expect(ExpressionFunctions.dateFormat(ts, 'iso')).toBe('2024-06-15T09:05:03.123Z')
+			expect(ExpressionFunctions.dateFormat(ts, 'ISO')).toBe('2024-06-15T09:05:03.123Z')
+			expect(ExpressionFunctions.dateFormat(ts, 'ISO8601')).toBe('2024-06-15T09:05:03.123Z')
+			expect(ExpressionFunctions.dateFormat(ts, 'iso8601')).toBe('2024-06-15T09:05:03.123Z')
+
+			// Empty format uses default
+			expect(ExpressionFunctions.dateFormat(ts, '', 'UTC')).toBe('2024-06-15T09:05:03')
+
+			// Timezone
+			expect(ExpressionFunctions.dateFormat(ts, 'HH:mm', 'America/New_York')).toBe('05:05')
+
+			// Invalid input
+			expect(ExpressionFunctions.dateFormat('invalid', 'YYYY')).toBe('')
+			expect(ExpressionFunctions.dateFormat(null, 'YYYY')).toBe('')
+			// Invalid timezone
+			expect(ExpressionFunctions.dateFormat(ts, 'YYYY', 'Invalid/Zone')).toBe('')
+		})
+
+		it('dateAdd', () => {
+			const base = new Date('2024-01-15T12:00:00Z').getTime()
+
+			// Add each unit
+			expect(ExpressionFunctions.dateAdd(base, 30, 'seconds')).toBe(new Date('2024-01-15T12:00:30Z').getTime())
+			expect(ExpressionFunctions.dateAdd(base, 5, 'minutes')).toBe(new Date('2024-01-15T12:05:00Z').getTime())
+			expect(ExpressionFunctions.dateAdd(base, 3, 'hours')).toBe(new Date('2024-01-15T15:00:00Z').getTime())
+			expect(ExpressionFunctions.dateAdd(base, 5, 'days')).toBe(new Date('2024-01-20T12:00:00Z').getTime())
+			expect(ExpressionFunctions.dateAdd(base, 2, 'weeks')).toBe(new Date('2024-01-29T12:00:00Z').getTime())
+			expect(ExpressionFunctions.dateAdd(base, 1, 'months')).toBe(new Date('2024-02-15T12:00:00Z').getTime())
+			expect(ExpressionFunctions.dateAdd(base, 1, 'years')).toBe(new Date('2025-01-15T12:00:00Z').getTime())
+
+			// Subtract (negative)
+			expect(ExpressionFunctions.dateAdd(base, -5, 'days')).toBe(new Date('2024-01-10T12:00:00Z').getTime())
+
+			// Singular unit names
+			expect(ExpressionFunctions.dateAdd(base, 1, 'day')).toBe(ExpressionFunctions.dateAdd(base, 1, 'days'))
+			expect(ExpressionFunctions.dateAdd(base, 1, 'hour')).toBe(ExpressionFunctions.dateAdd(base, 1, 'hours'))
+
+			// String amount
+			expect(ExpressionFunctions.dateAdd(base, '5', 'days')).toBe(new Date('2024-01-20T12:00:00Z').getTime())
+
+			// Cross-boundary: year rollover
+			expect(ExpressionFunctions.dateAdd(base, 12, 'months')).toBe(new Date('2025-01-15T12:00:00Z').getTime())
+
+			// Month overflow: Jan 31 + 1 month = Mar 2 (JS Date behavior)
+			const jan31 = new Date('2024-01-31T12:00:00Z').getTime()
+			expect(ExpressionFunctions.dateAdd(jan31, 1, 'months')).toBe(new Date('2024-03-02T12:00:00Z').getTime())
+
+			// Invalid inputs
+			expect(ExpressionFunctions.dateAdd('invalid', 1, 'days')).toBe(null)
+			expect(ExpressionFunctions.dateAdd(base, 'abc', 'days')).toBe(null)
+			expect(ExpressionFunctions.dateAdd(base, 1, 'invalid')).toBe(null)
+			expect(ExpressionFunctions.dateAdd(null, 1, 'days')).toBe(null)
+		})
 	})
 
 	describe('time', () => {
