@@ -91,7 +91,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="d-flex align-items-center ctxt-float">
+				<div className="d-flex align-items-center help-button-float">
 					<CButtonGroup className="connection-group-actions m-1 me-auto">
 						<CButton
 							color="primary"
