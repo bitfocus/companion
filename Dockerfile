@@ -56,7 +56,7 @@ ENV COMPANION_ADMIN_PORT=8000
 
 USER companion
 # Export ports for web, Satellite API and WebSocket (Elgato Plugin)
-EXPOSE 8000 16622 16623 28492
+EXPOSE COMPANION_ADMIN_PORT 16622 16623 28492
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD [ "sh", "-c", "curl -fSsq http://localhost:${COMPANION_ADMIN_PORT:-8000}/" ]
