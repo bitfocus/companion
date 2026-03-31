@@ -47,7 +47,7 @@ legend {
 	}
 }
 
-// special case, mainly for context help buttons: add btn-inline to the <h4> or <h5> element to prevent it from floating right
+// special case, mainly for context help buttons: add btn-inline to the <h4> or <h5> element to prevent buttons from floating right
 h4.btn-inline,
 h5.btn-inline {
 	display: flex;
@@ -70,6 +70,7 @@ h5.btn-inline {
 	}
 }
 
+// set the size of context-help-buttons for "settings category rows" and similar circumstances (doesn't actually affect the position)
 .help-button-float,
 .settings-category-row {
 	.context-help-button-btn {

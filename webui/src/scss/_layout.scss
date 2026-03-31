@@ -659,7 +659,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	}
 }
 
-// everything but size can be globally applied
+// format context-help-buttons. Everything but size can be globally applied.
 .context-help-button-btn {
 	border: 0;
 	border-radius: 100%;
@@ -667,10 +667,10 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	background-color: white;
 }
 
-// panel headers.  (For h4, h5 headings see _common.scss)
+// context-help-buttons in panel headers.  (For h4, h5 headings see _common.scss)
 .header-buttons .context-help-button-btn {
 	box-shadow: 1px 1px 4px 1px rgb(0 0 0 / 25%);
-	margin-top: 1px; // centers it a bit better
+	margin-top: 1px; // centers it a bit better relative to the close button
 	width: 2em;
 	height: 2em;
 
@@ -680,6 +680,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	}
 }
 
+// is this used anywhere? (it's not explicitly in the code)
 .subhead-help-button {
 	border: 0;
 	background: none;
@@ -736,7 +737,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	.secondary-panel-simple-header {
 		background: #{$panel-header-bg};
 		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
-		padding: 1rem 1.5rem; // 1rem to match the previous 1.25rem without CloseButton & ContextHelpButton -- almost all panels have at least one in the header now.
+		padding: 1rem 1.5rem; // only 1rem y-padding now, to preserve the original header-height now that CloseButton & ContextHelpButton are in almost all panel headers.
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
