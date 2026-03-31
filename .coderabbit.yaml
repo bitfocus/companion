@@ -1,0 +1,24 @@
+reviews:
+  path_instructions:
+    - path: "companion/lib/Service/**"
+      instructions: |
+        Service layer architecture rules:
+
+        1. **Use ServiceApi, not direct controller injection.**
+           Service handlers (HttpApi, Tcp, Udp, etc.) must access backend
+           logic exclusively through `ServiceApi`. Never inject domain
+           controllers (e.g. `InstanceController`, `SurfaceController`)
+           directly into service classes. If a new capability is needed,
+           add a method to `ServiceApi` that wraps the controller call.
+
+        2. **No unnecessary optional parameters.**
+           Constructor parameters should not be optional unless there is a
+           real caller that legitimately omits them. Making a parameter
+           optional solely for unit-test convenience is not acceptable —
+           it introduces null-check noise and masks bugs.
+
+        3. **Import named types instead of computing them.**
+           Prefer importing a named type (e.g. `ClientConnectionConfig`)
+           over deriving it with `ReturnType<T[K]>[S]` or similar type
+           gymnastics. If the type has a name in the codebase, import and
+           use it directly.
