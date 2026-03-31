@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CModal, CModalBody, CModalHeader } from '@coreui/react'
 import { trpc } from '~/Resources/TRPC.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
@@ -21,7 +21,7 @@ export function UsageDataModal({ show, onHide }: UsageDataModalProps): JSX.Eleme
 	const errorMessage = error ? (error instanceof Error ? error.message : 'Failed to load usage data') : null
 
 	return (
-		<CModal visible={show} onClose={onHide} size="xl">
+		<CModal visible={show} onClose={onHide} size="xl" scrollable>
 			<CModalHeader closeButton>
 				<h5>Usage Statistics Data</h5>
 			</CModalHeader>
@@ -59,11 +59,6 @@ export function UsageDataModal({ show, onHide }: UsageDataModalProps): JSX.Eleme
 					</>
 				)}
 			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={onHide}>
-					Close
-				</CButton>
-			</CModalFooter>
 		</CModal>
 	)
 }

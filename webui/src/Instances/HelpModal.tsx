@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import { CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
+import { CModalBody, CModalHeader } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
@@ -96,7 +96,7 @@ export const HelpModal = observer(
 		const moduleInfo = content && modules.getModuleInfo(content.moduleType, content.moduleId)
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg">
+			<CModalExt scrollable visible={show} onClose={doClose} onClosed={onClosed} size="lg">
 				<CModalHeader closeButton>
 					<h5>
 						Help for {moduleInfo?.display?.name || content?.moduleId} {content?.versionDisplayName ?? ''}
@@ -105,11 +105,6 @@ export const HelpModal = observer(
 				<CModalBody>
 					<div dangerouslySetInnerHTML={html} />
 				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Close
-					</CButton>
-				</CModalFooter>
 			</CModalExt>
 		)
 	})

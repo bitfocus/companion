@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
+import { CModalBody, CModalHeader, CRow, CCol } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 
@@ -27,7 +27,7 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 		)
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="xl">
+			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="xl" scrollable>
 				<CModalHeader closeButton>
 					<h5>Variables for {connectionLabel}</h5>
 				</CModalHeader>
@@ -36,11 +36,6 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 						<CCol lg={12}>{connectionLabel && <VariablesTable label={connectionLabel} />}</CCol>
 					</CRow>
 				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Close
-					</CButton>
-				</CModalFooter>
 			</CModalExt>
 		)
 	}

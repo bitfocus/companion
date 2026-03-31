@@ -786,7 +786,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 				overflow-y: scroll;
 
 				&.default-scroll {
-					overflow: inherit;
+					overflow: inherit; // this suppresses the scrollbar entirely, which may not be desirable
 				}
 			}
 		}
@@ -799,6 +799,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 			overflow-y: scroll;
 
 			&.no-scroll {
+				// don't allocate space ahead of time (mainly for nonIdealState?)
 				overflow-y: auto;
 			}
 		}
@@ -878,6 +879,7 @@ hr.slim {
 	text-align: right;
 }
 
+// used only in RecorderSessionFinishModal
 .modal-full-height {
 	height: 100%;
 
