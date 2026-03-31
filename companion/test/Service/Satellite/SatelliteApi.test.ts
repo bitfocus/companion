@@ -568,6 +568,68 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('ERROR')
 			expect(socket.lastMessage).toContain('Invalid VARIABLES')
 		})
+
+		test('passes SERIAL to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" SERIAL="streamdeck:ABC123"\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('streamdeck:ABC123')
+			expect(callArgs.serialIsUnique).toBeUndefined()
+		})
+
+		test('passes SERIAL_IS_UNIQUE=false to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" SERIAL="shared-id" SERIAL_IS_UNIQUE=false\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('shared-id')
+			expect(callArgs.serialIsUnique).toBe(false)
+		})
+
+		test('passes SERIAL_IS_UNIQUE=true to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(
+				'ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" SERIAL="streamdeck:ABC123" SERIAL_IS_UNIQUE=true\n'
+			)
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('streamdeck:ABC123')
+			expect(callArgs.serialIsUnique).toBe(true)
+		})
+
+		test('serial and serialIsUnique are undefined when not provided', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBeUndefined()
+			expect(callArgs.serialIsUnique).toBeUndefined()
+		})
 	})
 
 	describe('REMOVE-DEVICE', () => {

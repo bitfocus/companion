@@ -39,9 +39,9 @@ interface DeviceCacheEntry {
 	prefixedDevicePath: `${string}:${string}`
 	/** The collision-resolved surface ID */
 	resolvedSurfaceId: string
-	/** The handler that can open this surface (only for HID-scanned surfaces) */
-	opener: SurfaceOpener
-	/** The discovered surface info (only for HID-scanned surfaces) */
+	/** The handler that can open this surface. Undefined for self-connecting surfaces (e.g. satellite) */
+	opener: SurfaceOpener | undefined
+	/** The discovered surface info */
 	surface: DiscoveredSurfaceInfo
 }
 
@@ -77,7 +77,7 @@ export class DiscoveredSurfaceRegistry {
 	trackSurface(
 		surface: DiscoveredSurfaceInfo,
 		prefixedDevicePath: `${string}:${string}`,
-		opener: SurfaceOpener
+		opener: SurfaceOpener | undefined
 	): string {
 		const cacheKey = `${surface.surfaceId}||${prefixedDevicePath}`
 
@@ -116,9 +116,13 @@ export class DiscoveredSurfaceRegistry {
 	 * @param devicePathsToKeep - Set of prefixed device paths that should not be pruned
 	 */
 	prepareForScan(devicePathsToKeep: Set<`${string}:${string}`>): void {
-		// Remove cache entries that aren't in the keep set
+		// Remove cache entries that aren't in the keep set.
+		// Only prune module-detected surfaces (those with an opener) — self-registering surfaces
+		// such as satellite pass opener=undefined and manage their own lifecycle, so their entries
+		// must not be wiped here or a concurrent ADD-DEVICE from a second device could steal the
+		// same surfaceId and forcibly disconnect the first device.
 		for (const [key, entry] of this.#deviceCache.entries()) {
-			if (!devicePathsToKeep.has(entry.prefixedDevicePath)) {
+			if (entry.opener !== undefined && !devicePathsToKeep.has(entry.prefixedDevicePath)) {
 				this.#deviceCache.delete(key)
 				this.#surfaceIdToKey.delete(entry.resolvedSurfaceId)
 			}
@@ -175,7 +179,7 @@ export class DiscoveredSurfaceRegistry {
 		if (!key) return undefined
 
 		const entry = this.#deviceCache.get(key)
-		if (!entry) return undefined
+		if (!entry?.opener) return undefined
 
 		return { opener: entry.opener, surface: entry.surface }
 	}

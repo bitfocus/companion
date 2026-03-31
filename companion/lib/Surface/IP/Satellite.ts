@@ -46,6 +46,8 @@ import { translateSatelliteConfigFields } from '../../Service/Satellite/Satellit
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
+	serial: string
+	serialIsUnique: boolean
 	productName: string
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
@@ -56,7 +58,7 @@ export interface SatelliteDeviceInfo {
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
 
-	configFields?: SatelliteConfigFields
+	configFields: SatelliteConfigFields | undefined
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -197,7 +199,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	// Cache for generated lock images by dimension
 	readonly #lockImageCache = new Map<string, ImageResult>()
 
-	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
+	constructor(deviceInfo: SatelliteDeviceInfo, surfaceId: string, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
 
 		this.#executeExpression = executeExpression
@@ -226,7 +228,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.info = {
 			description: deviceInfo.productName,
 			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
-			surfaceId: deviceInfo.deviceId,
+			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
 		}

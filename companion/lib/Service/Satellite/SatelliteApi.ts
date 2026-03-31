@@ -270,6 +270,8 @@ export class ServiceSatelliteApi {
 			gridSize,
 			socket,
 			deviceId: id,
+			serial: params.SERIAL ? `${params.SERIAL}` : id,
+			serialIsUnique: params.SERIAL_IS_UNIQUE !== undefined ? isTruthy(params.SERIAL_IS_UNIQUE) : true,
 			productName: `${params.PRODUCT_NAME}`,
 			supportsBrightness,
 			transferVariables,
@@ -417,7 +419,7 @@ export class ServiceSatelliteApi {
 				let count = 0
 				for (const [key, device] of this.#devices.entries()) {
 					if (device.socket === socket) {
-						this.#surfaceController.removeDevice(device.id)
+						this.#surfaceController.removeDevice(device.device.info.surfaceId, { physicallyGone: true })
 						this.#devices.delete(key)
 						count++
 					}
@@ -627,7 +629,7 @@ export class ServiceSatelliteApi {
 
 		socketLogger.info(`remove surface "${id}"`)
 
-		this.#surfaceController.removeDevice(id)
+		this.#surfaceController.removeDevice(device.device.info.surfaceId, { physicallyGone: true })
 		this.#devices.delete(id)
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
