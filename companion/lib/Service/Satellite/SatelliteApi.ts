@@ -21,6 +21,9 @@ import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
 import { nanoid } from 'nanoid'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
+// eslint-disable-next-line n/no-missing-import
+import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
+import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -43,6 +46,9 @@ import type { DataUserConfig } from '../../Data/UserConfig.js'
  * 1.9.0 - Add support for complex surface schemas
  * 1.10.0 - Add button subscription API (ADD-SUB, REMOVE-SUB, SUB-PRESS, SUB-ROTATE, SUB-STATE)
  *        - KEY-STATE now includes LOCATION=page/row/column for all button types when location is known
+ *        - Add FIRMWARE-UPDATE-INFO to report firmware update availability
+ *        - Add CONFIG_FIELDS to ADD-DEVICE for device-specific config fields
+ *        - Add DEVICE-CONFIG to relay current config values back to the device
  */
 const API_VERSION = '1.10.0'
 
@@ -246,6 +252,20 @@ export class ServiceSatelliteApi {
 			return this.#formatAndSendError(socket, messageName, id, 'Invalid VARIABLES')
 		}
 
+		let configFields: SatelliteConfigFields | undefined
+		if (params.CONFIG_FIELDS) {
+			let decoded: unknown
+			try {
+				decoded = JSON.parse(Buffer.from(String(params.CONFIG_FIELDS), 'base64').toString())
+			} catch (_e) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
+			}
+			if (!validateConfigFields(decoded)) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
+			}
+			configFields = decoded
+		}
+
 		const device = this.#surfaceController.addSatelliteDevice({
 			gridSize,
 			socket,
@@ -256,6 +276,7 @@ export class ServiceSatelliteApi {
 			supportsLockedState,
 			surfaceManifestFromClient,
 			surfaceManifest,
+			configFields,
 		})
 
 		this.#devices.set(id, {
@@ -320,6 +341,9 @@ export class ServiceSatelliteApi {
 				break
 			case 'SUB-ROTATE':
 				this.#subRotate(socket, params)
+				break
+			case 'FIRMWARE-UPDATE-INFO':
+				this.#firmwareUpdateInfo(socket, params)
 				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
@@ -577,6 +601,22 @@ export class ServiceSatelliteApi {
 
 		device.device.setVariableValue(variableName, variableValue)
 		socket.sendMessage(messageName, 'OK', id, { VARIABLE: variableName })
+	}
+
+	#firmwareUpdateInfo(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'FIRMWARE-UPDATE-INFO'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		if (params.UPDATE_URL === undefined || params.UPDATE_URL === true) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing UPDATE_URL')
+		}
+
+		const updateUrl = `${params.UPDATE_URL}`
+		device.device.updateFirmwareUpdateInfo(updateUrl || null)
+
+		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
 	#removeDevice(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {

@@ -41,6 +41,8 @@ import type {
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { SatelliteConfigFields } from '../../Service/Satellite/SatelliteConfigFieldsSchema.js'
+import { translateSatelliteConfigFields } from '../../Service/Satellite/SatelliteConfigFields.js'
 
 export interface SatelliteDeviceInfo {
 	deviceId: string
@@ -53,6 +55,8 @@ export interface SatelliteDeviceInfo {
 
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
+
+	configFields?: SatelliteConfigFields
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -82,6 +86,10 @@ function generateConfigFields(
 		fields.push(BrightnessConfigField)
 	}
 	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+
+	if (deviceInfo.configFields && deviceInfo.configFields.length > 0) {
+		fields.push(...translateSatelliteConfigFields(deviceInfo.configFields))
+	}
 
 	for (const variable of deviceInfo.transferVariables) {
 		if (BANNED_PROPS.has(variable.id)) continue
@@ -171,6 +179,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #writeQueue: ImageWriteQueue<string, [ResolvedControlDefinition, DrawButtonItem]>
 
 	#config: Record<string, any>
+	readonly #configFieldIds: ReadonlySet<string>
 
 	readonly surfaceManifestFromClient: boolean
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
@@ -203,6 +212,12 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
+
+		this.#configFieldIds = new Set(
+			(deviceInfo.configFields ?? [])
+				.filter((f) => !BANNED_PROPS.has(f.id) && f.type !== 'static-text')
+				.map((f) => f.id)
+		)
 
 		const anyControlHasBitmap = !!this.#controlDefinitions
 			.values()
@@ -486,6 +501,24 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		this.#config = config
+
+		if (this.#configFieldIds.size > 0) {
+			this.#sendDeviceConfig()
+		}
+	}
+
+	#sendDeviceConfig(): void {
+		const configValues: Record<string, unknown> = {}
+		for (const fieldId of this.#configFieldIds) {
+			configValues[fieldId] = this.#config[fieldId]
+		}
+		const encoded = Buffer.from(JSON.stringify(configValues)).toString('base64')
+		this.socket.sendMessage('DEVICE-CONFIG', null, this.deviceId, { CONFIG: encoded })
+	}
+
+	updateFirmwareUpdateInfo(firmwareUpdateUrl: string | null): void {
+		this.info.hasFirmwareUpdates = firmwareUpdateUrl ? { updaterDownloadUrl: firmwareUpdateUrl } : undefined
+		this.emit('firmwareUpdateInfo')
 	}
 
 	/**
