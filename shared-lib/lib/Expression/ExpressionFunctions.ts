@@ -436,11 +436,18 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	},
 	dateAdd: (v, amount, unit) => {
 		const d = toDate(v)
-		if (!d) return null
+		if (!d) {
+			return null
+		}
+
 		amount = Number(amount)
-		if (isNaN(amount)) return null
+		if (!Number.isFinite(amount)) {
+			return null
+		}
+
 		unit = toString(unit).toLowerCase()
 		const result = new Date(d.getTime())
+
 		switch (unit) {
 			case 'second':
 			case 'seconds':
@@ -473,6 +480,8 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			default:
 				return null
 		}
-		return result.getTime()
+
+		const ts = result.getTime()
+		return Number.isFinite(ts) ? ts : null
 	},
 }

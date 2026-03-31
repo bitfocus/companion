@@ -379,17 +379,17 @@ eg `dateWeekday(unixNow())` returns today's weekday number.
 
 Format a date value into a custom string representation. The format string uses [dayjs-compatible tokens](https://day.js.org/docs/en/display/format):
 
-| Token | Description | Example |
-|-------|-------------|---------|
-| `YYYY` / `YY` | Year | 2024 / 24 |
-| `MMMM` / `MMM` / `MM` / `M` | Month | June / Jun / 06 / 6 |
+| Token                       | Description                | Example                 |
+| --------------------------- | -------------------------- | ----------------------- |
+| `YYYY` / `YY`               | Year                       | 2024 / 24               |
+| `MMMM` / `MMM` / `MM` / `M` | Month                      | June / Jun / 06 / 6     |
 | `dddd` / `ddd` / `DD` / `D` | Day of week / Day of month | Saturday / Sat / 05 / 5 |
-| `HH` / `H` | 24-hour hour | 09 / 9 |
-| `hh` / `h` | 12-hour hour | 09 / 9 |
-| `mm` / `m` | Minutes | 05 / 5 |
-| `ss` / `s` | Seconds | 03 / 3 |
-| `SSS` | Milliseconds | 123 |
-| `A` / `a` | AM/PM | AM / am |
+| `HH` / `H`                  | 24-hour hour               | 09 / 9                  |
+| `hh` / `h`                  | 12-hour hour               | 09 / 9                  |
+| `mm` / `m`                  | Minutes                    | 05 / 5                  |
+| `ss` / `s`                  | Seconds                    | 03 / 3                  |
+| `SSS`                       | Milliseconds               | 123                     |
+| `A` / `a`                   | AM/PM                      | AM / am                 |
 
 Pass `'iso'` as the format to get an ISO 8601 string (always UTC): `dateFormat(value, 'iso')` returns `"2024-06-15T14:30:00.000Z"`
 
@@ -412,5 +412,5 @@ eg `dateFormat(dateAdd(unixNow(), 1, 'months'), 'YYYY-MM-DD')` formats the date 
 Note: when adding months, if the resulting day exceeds the target month's length, the date overflows into the next month (e.g. January 31 + 1 month = March 2, not February 28).
 
 :::tip
-All date functions accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, local time is used. All functions return `null` (or `''` for `dateFormat`) for invalid input.
+The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, local time is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
 :::

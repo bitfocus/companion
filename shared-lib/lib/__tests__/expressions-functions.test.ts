@@ -690,6 +690,8 @@ describe('functions', () => {
 			// Invalid inputs
 			expect(ExpressionFunctions.dateAdd('invalid', 1, 'days')).toBe(null)
 			expect(ExpressionFunctions.dateAdd(base, 'abc', 'days')).toBe(null)
+			expect(ExpressionFunctions.dateAdd(base, Infinity, 'days')).toBe(null)
+			expect(ExpressionFunctions.dateAdd(base, -Infinity, 'days')).toBe(null)
 			expect(ExpressionFunctions.dateAdd(base, 1, 'invalid')).toBe(null)
 			expect(ExpressionFunctions.dateAdd(null, 1, 'days')).toBe(null)
 		})
