@@ -42,7 +42,11 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const customVariableValues = useVariablesValuesForLabel('custom')
 
 	const allVariableNames = useComputed(
-		() => [...Array.from(customVariables.customVariables.keys()), ...customVariables.allCustomVariableCollectionIds],
+		() => [
+			...Array.from(customVariables.customVariables.keys()),
+			...customVariables.allCustomVariableCollectionIds,
+			UNGROUPED_PANEL_ID,
+		],
 		[customVariables]
 	)
 
