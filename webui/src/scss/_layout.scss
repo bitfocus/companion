@@ -784,10 +784,6 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 
 			.tab-content {
 				overflow-y: scroll;
-
-				&.default-scroll {
-					overflow: inherit; // this suppresses the scrollbar entirely, which may not be desirable
-				}
 			}
 		}
 
@@ -881,24 +877,23 @@ hr.slim {
 
 // used only in RecorderSessionFinishModal
 .modal-full-height {
-	height: 100%;
-
 	.modal-dialog {
-		height: 100%;
+		min-height: 500px; // if the window gets too small fall back to scrolling the window
 	}
 
 	.modal-content {
 		height: 100%;
-
-		& > div,
-		& > form {
-			height: 100%;
-		}
 	}
 
 	.modal-body {
 		display: grid;
 		grid-template-rows: auto 1fr;
+		overflow: hidden; // ← clip at body level, don't scroll
+
+		.default-scroll {
+			overflow: auto;
+			min-height: 0;
+		}
 	}
 }
 

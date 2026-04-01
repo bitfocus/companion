@@ -175,6 +175,10 @@ code {
 		height: calc(100% - var(--top-margin));
 		margin: var(--top-margin) auto 0 auto;
 
+		&.modal-dialog-scrollable {
+			min-height: 15rem; // if the window gets too small fall back to scrolling the window
+		}
+
 		.modal-content {
 			// this one controls the bottom margin correctly.
 			max-height: calc(100% - 0.5rem);

@@ -43,20 +43,16 @@ export function UsageDataModal({ show, onHide }: UsageDataModalProps): JSX.Eleme
 					</div>
 				)}
 				{!isLoading && !error && data && (
-					<>
-						<pre
-							style={{
-								maxHeight: '60vh',
-								overflow: 'auto',
-								backgroundColor: '#f5f5f5',
-								padding: '1rem',
-								borderRadius: '4px',
-								fontSize: '0.875rem',
-							}}
-						>
-							<code>{jsonData}</code>
-						</pre>
-					</>
+					<pre
+						style={{
+							backgroundColor: '#f5f5f5',
+							padding: '1rem',
+							borderRadius: '4px',
+							fontSize: '0.875rem',
+						}}
+					>
+						<code>{jsonData}</code>
+					</pre>
 				)}
 			</CModalBody>
 		</CModal>
