@@ -16,6 +16,7 @@ import type {
 	ActionInstance,
 	FeedbackInstance,
 	HostFeedbackValue,
+	JsonValue,
 	UpgradeActionInstance,
 	UpgradeFeedbackInstance,
 } from '@companion-module/host'
@@ -185,11 +186,18 @@ export interface ExecuteActionMessage {
 	surfaceId: string | undefined
 }
 
-export interface ExecuteActionResponseMessage {
-	success: boolean
-	/** If success=false, a reason for the failure */
-	errorMessage: string | undefined
+export interface ExecuteActionSuccess {
+	success: true
+	result: JsonValue | undefined
 }
+
+export interface ExecuteActionFailure {
+	success: false
+	/** A reason for the failure */
+	errorMessage: string
+}
+
+export type ExecuteActionResponseMessage = ExecuteActionSuccess | ExecuteActionFailure
 
 export interface UpdateFeedbackValuesMessage {
 	values: HostFeedbackValue[]

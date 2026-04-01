@@ -1,6 +1,7 @@
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import LogController from '../Log/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
@@ -32,53 +33,76 @@ export class ActionRunner {
 		this.#internalModule = internalModule
 	}
 
-	/**
-	 * Run a single action
-	 */
-	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
+	/** Run an action and return its result. */
+	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
 		this.#logger.silly('Running action', action)
 
 		if (action.connectionId === 'internal') {
 			await this.#internalModule.executeAction(action, extras)
-		} else {
-			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
-			if (instance) {
-				const entityModel = action.asEntityModel(false)
-				if (entityModel.type !== EntityModelType.Action)
-					throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
-				await instance.actionRun(entityModel, extras)
-			} else {
-				this.#logger.silly('trying to run action on a missing instance.', action)
-			}
+			return undefined
 		}
+
+		const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
+		if (!instance) {
+			this.#logger.silly('trying to run action on a missing instance.', action)
+			return undefined
+		}
+
+		const entityModel = action.asEntityModel(false)
+		if (entityModel.type !== EntityModelType.Action)
+			throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
+		return instance.actionRun(entityModel, extras)
+	}
+
+	/** Run a single action and return its result. */
+	async runSingleAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
+		if (action.type !== EntityModelType.Action || action.disabled || extras.abortDelayed.aborted) {
+			return undefined
+		}
+
+		return this.#runAction(action, extras).catch((e) => {
+			this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+			return undefined
+		})
 	}
 
 	/**
-	 * Run multiple actions
+	 * Run multiple actions, returning a promise that settles after all provided
+	 * actions have finished running.
+	 *
+	 * If there are no actions to execute, or if the actions are to be executed
+	 * concurrently, return `undefined`.
+	 *
+	 * Otherwise return the result of the last action sequentially executed.
 	 */
 	async runMultipleActions(
 		actions0: ControlEntityInstance[],
 		extras: RunActionExtras,
 		executeSequential = false
-	): Promise<void> {
+	): Promise<JsonValue | undefined> {
 		const actions = actions0.filter((act) => act.type === EntityModelType.Action && !act.disabled)
-		if (actions.length === 0) return
+		if (actions.length === 0) return undefined
 
-		if (extras.abortDelayed.aborted) return
+		if (extras.abortDelayed.aborted) return undefined
 
 		if (executeSequential) {
 			// Future: abort on error?
 
+			let result: JsonValue | undefined = undefined
 			for (const action of actions) {
-				if (extras.abortDelayed.aborted) break
-				await this.#runAction(action, extras).catch((e) => {
+				if (extras.abortDelayed.aborted) return undefined
+
+				result = await this.#runAction(action, extras).catch((e) => {
 					this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+					return undefined
 				})
 			}
+
+			return result
 		} else {
 			const groupedActions = this.#splitActionsAroundWaits(actions)
 
-			const ps: Promise<void>[] = []
+			const ps: Promise<JsonValue | undefined>[] = []
 
 			for (const { waitAction, actions } of groupedActions) {
 				if (extras.abortDelayed.aborted) break
@@ -97,6 +121,7 @@ export class ActionRunner {
 					ps.push(
 						this.#runAction(action, extras).catch((e) => {
 							this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+							return undefined
 						})
 					)
 				}
@@ -104,6 +129,7 @@ export class ActionRunner {
 
 			// Await all the actions, so that the abort signal is respected and the promise is pending until all actions are done
 			await Promise.all(ps)
+			return undefined
 		}
 	}
 
@@ -155,7 +181,7 @@ export class ControlActionRunner {
 	async runActions(
 		actions: ControlEntityInstance[],
 		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed' | 'executionMode'>
-	): Promise<void> {
+	): Promise<JsonValue | undefined> {
 		const controller = new AbortController()
 
 		const chainId = nanoid()

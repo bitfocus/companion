@@ -103,10 +103,15 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
 			const res = await instance.executeAction(msg.action, msg.surfaceId)
-			return {
-				success: res.success,
-				errorMessage: res.errorMessage,
-			}
+			return res.success
+				? {
+						success: true,
+						result: res.result,
+					}
+				: {
+						success: false,
+						errorMessage: res.errorMessage,
+					}
 		},
 		getConfigFields: async (): Promise<GetConfigFieldsResponseMessage> => {
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')

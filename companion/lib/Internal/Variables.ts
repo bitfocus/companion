@@ -9,6 +9,7 @@
  * this program.
  */
 
+import LogController from '../Log/Controller.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -21,7 +22,11 @@ import type {
 	FeedbackForInternalExecution,
 	ActionForInternalExecution,
 } from './Types.js'
-import { FeedbackEntitySubType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	FeedbackEntitySubType,
+	type SomeSocketEntityLocation,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { IPageStore } from '../Page/Store.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
@@ -32,6 +37,7 @@ import type { IControlStore } from '../Controls/IControlStore.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',
@@ -61,14 +67,18 @@ function compareValues(op: any, value: any, value2: any): boolean {
 }
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/Variables')
+
 	readonly #controlsStore: IControlStore
 	readonly #pageStore: IPageStore
+	readonly #actionRunner: ActionRunner
 
-	constructor(controlsStore: IControlStore, pageStore: IPageStore) {
+	constructor(controlsStore: IControlStore, pageStore: IPageStore, actionRunner: ActionRunner) {
 		super()
 
 		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
+		this.#actionRunner = actionRunner
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -232,6 +242,28 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 				optionsSupportExpressions: true,
 			},
+			local_variable_set_from_action_result: {
+				label: 'Local Variable: Set to result of an action',
+				description: 'Set a local variable to the result of executing an action',
+				options: [
+					CHOICES_LOCATION,
+					{
+						type: 'textinput',
+						label: 'Local variable',
+						id: 'name',
+					},
+				],
+				optionsSupportExpressions: true,
+				supportsChildGroups: [
+					{
+						type: EntityModelType.Action,
+						groupId: 'action_with_result',
+						entityTypeLabel: 'action',
+						label: 'Action',
+						maximumChildren: 1,
+					},
+				],
+			},
 			local_variable_reset_to_default: {
 				label: 'Local Variable: Reset to startup value',
 				description: undefined,
@@ -340,13 +372,29 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		updateValue(control.entities, 'local-variables', variableEntity) // TODO - dynamic listId
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): Promise<boolean> | boolean {
 		if (action.definitionId === 'local_variable_set_value') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
 				entityPool.entitySetVariableValue(listId, variableEntity.id, action.options.value)
 			})
 
 			return true
+		} else if (action.definitionId === 'local_variable_set_from_action_result') {
+			const childActions = action.rawEntity.getChildren('action_with_result')?.getDirectEntities() ?? []
+			if (childActions.length === 0) return true
+
+			return this.#actionRunner.runSingleAction(childActions[0], extras).then(
+				(result) => {
+					this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
+						entityPool.entitySetVariableValue(listId, variableEntity.id, result)
+					})
+					return true
+				},
+				(e) => {
+					this.#logger.error(`Running action to compute result failed: ${e.message}`)
+					return true
+				}
+			)
 		} else if (action.definitionId === 'local_variable_reset_to_default') {
 			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
 				// This isn't allowed to be an expression

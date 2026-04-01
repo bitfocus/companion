@@ -122,12 +122,12 @@ export class InternalController {
 			new InternalInstance(instanceController),
 			new InternalTime(),
 			new InternalControls(graphicsController, this.#controlsStore, this.#pageStore, controlEvents),
-			new InternalCustomVariables(this.#variablesController),
+			new InternalCustomVariables(this.#variablesController, actionRunner),
 			new InternalPage(this.#pageStore),
 			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
-			new InternalVariables(this.#controlsStore, this.#pageStore)
+			new InternalVariables(this.#controlsStore, this.#pageStore, actionRunner)
 		)
 
 		// Listen for events from the fragments
