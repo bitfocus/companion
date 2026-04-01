@@ -18,7 +18,10 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Link } from '@tanstack/react-router'
-import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
+import {
+	CollectionsNestingTable,
+	UNGROUPED_PANEL_ID,
+} from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
@@ -159,7 +162,11 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
 	const rootCustomVariables = Array.from(customVariables.customVariables.keys()) // TODO - filter
-	const rootPanels = [...customVariables.rootCustomVariableCollections().map((c) => c.id), ...rootCustomVariables]
+	const rootPanels = [
+		...customVariables.rootCustomVariableCollections().map((c) => c.id),
+		...rootCustomVariables,
+		UNGROUPED_PANEL_ID,
+	]
 
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
