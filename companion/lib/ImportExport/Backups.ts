@@ -297,8 +297,13 @@ export class BackupController {
 
 			this.#logger.info(`Cleaning up ${backupsToDelete.length} old backups for rule ${rule.name}`)
 
-			// Delete the old backup files
+			// Delete old local backup files. For HTTP push backups, only trim history.
 			const deletionPromises = backupsToDelete.map(async (backup) => {
+				if (this.#isHttpUrl(backup.filePath)) {
+					this.#logger.info(`Removed old push backup entry: ${backup.filePath}`)
+					return backup
+				}
+
 				try {
 					await fs.unlink(backup.filePath)
 					this.#logger.info(`Deleted old backup: ${backup.filePath}`)
@@ -376,12 +381,6 @@ export class BackupController {
 	 */
 	async #createBackup(logger: Logger, rule: BackupRulesConfig): Promise<PreviousBackupInfo | null> {
 		try {
-			await this.#ensureBackupDirExists()
-
-			// Determine backup directory - use rule path if specified, otherwise default
-			const backupDir = rule.backupPath ? rule.backupPath : this.#defaultBackupDir
-			await fs.mkdir(backupDir, { recursive: true })
-
 			// Generate backup filename
 			const parser = this.#variableValuesController.createVariablesAndExpressionParser(null, null, null)
 			const backupName = parser.parseVariables(rule.backupNamePattern).text
@@ -389,6 +388,21 @@ export class BackupController {
 				logger.info('No backup name generated, skipping backup')
 				return null
 			}
+
+			const backupPath = rule.backupPath ? rule.backupPath : this.#defaultBackupDir
+			if (this.#isHttpUrl(backupPath)) {
+				if (rule.backupType === 'db') {
+					throw new Error('Raw database backups must be saved to a local file path, not HTTP/HTTPS URLs')
+				}
+
+				return this.#pushExportBackup(logger, backupPath, backupName, rule.backupType)
+			}
+
+			await this.#ensureBackupDirExists()
+
+			// Determine backup directory - use rule path if specified, otherwise default
+			const backupDir = backupPath
+			await fs.mkdir(backupDir, { recursive: true })
 
 			// Create the backup based on type
 			switch (rule.backupType) {
@@ -422,6 +436,55 @@ export class BackupController {
 		} catch (err: any) {
 			logger.error(`Failed to create backup: ${err}`)
 			throw new Error(`Failed to create backup: ${err.message || err}`)
+		}
+	}
+
+	#isHttpUrl(value: string): boolean {
+		try {
+			const parsed = new URL(value)
+			return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+		} catch {
+			return false
+		}
+	}
+
+	async #pushExportBackup(
+		logger: Logger,
+		backupUrl: string,
+		filename: string,
+		backupType: BackupRulesConfig['backupType']
+	): Promise<PreviousBackupInfo> {
+		const data = this.#exportController.generateCustomExport(null)
+
+		const format: ExportFormat = backupType === 'export-gz' ? 'json-gz' : backupType === 'export-json' ? 'json' : 'yaml'
+		const exportData = await stringifyExport(logger, data, `${filename}.companionconfig`, format)
+		if (!exportData) throw new Error('Failed to stringify export data')
+
+		const contentType =
+			backupType === 'export-gz'
+				? 'application/gzip'
+				: backupType === 'export-yaml'
+					? 'application/yaml'
+					: 'application/json'
+
+		logger.info(`Pushing backup to ${backupUrl}`)
+
+		const response = await fetch(backupUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': contentType,
+			},
+			body: exportData.data,
+		})
+
+		if (!response.ok) {
+			throw new Error(`Push backup failed: HTTP ${response.status} ${response.statusText}`)
+		}
+
+		return {
+			filePath: backupUrl,
+			fileSize: typeof exportData.data === 'string' ? Buffer.byteLength(exportData.data) : exportData.data.length,
+			createdAt: Date.now(),
 		}
 	}
 
@@ -471,12 +534,14 @@ export class BackupController {
 				return false
 			}
 
-			// Delete the file if it exists
-			try {
-				await fs.unlink(filePath)
-				this.#logger.info(`Deleted backup file: ${filePath}`)
-			} catch (err) {
-				this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${err}`)
+			if (!this.#isHttpUrl(filePath)) {
+				// Delete the file if it exists
+				try {
+					await fs.unlink(filePath)
+					this.#logger.info(`Deleted backup file: ${filePath}`)
+				} catch (err) {
+					this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${err}`)
+				}
 			}
 
 			// Update backup rules to remove this backup from the specific rule
