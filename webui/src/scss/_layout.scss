@@ -432,18 +432,25 @@ form.row > * {
 	}
 
 	// note: in .sidebar, .show is present in mobile mode, during which we must ignore sidebar-narrow-unfoldable
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover),
-	&.sidebar-narrow:hover {
+	&.sidebar-narrow-unfoldable:not(.show, :hover),
+	&.sidebar-narrow {
 		// when sidebar is narrow hide things including the label and toggler
 		.nav-group-toggle::after,
-		.full-label,
-		.context-menu {
+		.full-label {
 			display: none;
 		}
+
 		// if there's a notification, cozy it up to the icon when the sidebar is narrow.
 		.notification-count {
 			margin-left: -0.75rem;
 			margin-top: -0.25rem;
+		}
+	}
+
+	// only hide the context menu in unfolding mode
+	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
+		.context-menu {
+			display: none;
 		}
 	}
 
@@ -489,7 +496,7 @@ form.row > * {
 	// we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0)
 	&.sidebar-narrow:hover .nav-group-items, // override CUI when in temporary narrow mode
 	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI if we ever implement narrow mode
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover) .nav-group-items, // override CUI
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, // override CUI
 	.nav-group-toggle-basic::after,
 	.nav-group-items {
 		// the box underneath and containing the expanded group
@@ -501,7 +508,7 @@ form.row > * {
 	// override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well)
 	&.sidebar-narrow:hover .nav-group-items, // override CUI so nav-group-items show when in temporary narrow mode
 	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show if we ever implement narrow mode
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover) .nav-group-items {
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
 		height: auto !important;
 		visibility: visible !important; // !important is not currently necessary on this, but CUI could change it
 		opacity: 1 !important; // !important is not currently necessary on this, but CUI could change it
@@ -584,7 +591,7 @@ form.row > * {
 	}
 
 	// when the sidebar is narrow, make more space for the contents and let centering create what margins there will be.
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover) .nav-main-scroller,
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
 	&.sidebar-narrow:hover .nav-main-scroller {
 		scrollbar-width: thin;
 		padding-left: 0;
