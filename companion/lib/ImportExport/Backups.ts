@@ -470,6 +470,7 @@ export class BackupController {
 		logger.info(`Pushing backup to ${backupUrl}`)
 
 		const response = await fetch(backupUrl, {
+			signal: AbortSignal.timeout(30000), // 30 second timeout
 			method: 'POST',
 			headers: {
 				'Content-Type': contentType,
