@@ -1,4 +1,4 @@
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
@@ -47,7 +47,8 @@ export interface IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		previousResult: VariableValue
 	): VariablesAndExpressionParser
 
 	/**

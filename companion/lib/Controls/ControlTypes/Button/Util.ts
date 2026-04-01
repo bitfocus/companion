@@ -25,7 +25,8 @@ export function parseVariablesInButtonStyle(
 		const parser = deps.variableValues.createVariablesAndExpressionParser(
 			location,
 			entities.getLocalVariableEntities(),
-			overrideVariableValues
+			overrideVariableValues,
+			undefined
 		)
 
 		if (style.textExpression) {

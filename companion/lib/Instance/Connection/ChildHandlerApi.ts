@@ -3,6 +3,7 @@ import type express from 'express'
 import type { InstanceStatus } from '../Status.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { JsonValue } from '@companion-module/host'
 import type { InstanceDefinitions } from '../Definitions.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { ActionRecorder } from '../ActionRecorder.js'
@@ -87,7 +88,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void>
+	actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<JsonValue | undefined>
 
 	/**
 	 *
@@ -106,4 +107,5 @@ export interface RunActionExtras {
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal
 	executionMode: 'sequential' | 'concurrent'
+	previousResult: JsonValue | undefined
 }

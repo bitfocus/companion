@@ -125,7 +125,8 @@ export class ControlButtonPreset
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
 						null, // This doesn't support local variables
-						injectedVariableValues ?? null
+						injectedVariableValues ?? null,
+						undefined
 					)
 					.executeExpression(expression, requiredType)
 		)

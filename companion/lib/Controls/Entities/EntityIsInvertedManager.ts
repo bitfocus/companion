@@ -3,7 +3,7 @@ import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstan
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { NewIsInvertedValue } from './Types.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 
 interface EntityWrapper {
@@ -16,7 +16,8 @@ interface EntityWrapper {
 
 export type UpdateIsInvertedValuesFn = (newValues: ReadonlyMap<string, NewIsInvertedValue>) => void
 export type CreateVariablesAndExpressionParser = (
-	overrideVariableValues: VariableValues | null
+	overrideVariableValues: VariableValues | null,
+	previousResult: VariableValue
 ) => VariablesAndExpressionParser
 
 /**
@@ -52,7 +53,7 @@ export class EntityPoolIsInvertedManager {
 
 			const updatedValues = new Map<string, NewIsInvertedValue>()
 
-			const parser = this.#createVariablesAndExpressionParser(null)
+			const parser = this.#createVariablesAndExpressionParser(null, undefined)
 
 			for (const [entityId, wrapper] of this.#entities) {
 				// Resolve the entity, and make sure it still exists

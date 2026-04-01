@@ -175,7 +175,7 @@ export class PreviewGraphics {
 						const changes = toIterable(self.#renderEvents, `reference:${id}`, signal)
 
 						const location = self.#pageStore.getLocationOfControlId(controlId)
-						const parser = self.#controlsController.createVariablesAndExpressionParser(controlId, null)
+						const parser = self.#controlsController.createVariablesAndExpressionParser(controlId, null, undefined)
 
 						// Do a resolve of the reference for the starting image
 						const locationValue = parser.parseEntityOption(options.location, {
@@ -265,7 +265,11 @@ export class PreviewGraphics {
 	#triggerRecheck(previewSession: PreviewSession): void {
 		try {
 			const location = this.#pageStore.getLocationOfControlId(previewSession.controlId)
-			const parser = this.#controlsController.createVariablesAndExpressionParser(previewSession.controlId, null)
+			const parser = this.#controlsController.createVariablesAndExpressionParser(
+				previewSession.controlId,
+				null,
+				undefined
+			)
 
 			// Resolve the new location
 			const locationValue = parser.parseEntityOption(previewSession.options.location, {

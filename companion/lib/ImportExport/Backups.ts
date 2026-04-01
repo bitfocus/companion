@@ -383,7 +383,7 @@ export class BackupController {
 			await fs.mkdir(backupDir, { recursive: true })
 
 			// Generate backup filename
-			const parser = this.#variableValuesController.createVariablesAndExpressionParser(null, null, null)
+			const parser = this.#variableValuesController.createVariablesAndExpressionParser(null, null, null, undefined)
 			const backupName = parser.parseVariables(rule.backupNamePattern).text
 			if (!backupName) {
 				logger.info('No backup name generated, skipping backup')

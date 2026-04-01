@@ -183,7 +183,7 @@ export class ConnectionEntityManager {
 							let updateOptions: CompanionOptionValues | undefined
 							try {
 								// Parse the options and track the variables referenced
-								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
+								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null, undefined)
 								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
 								if (!parseRes.ok) {
 									this.#logger.warn(

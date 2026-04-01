@@ -30,7 +30,7 @@ import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import z from 'zod'
 import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type {
@@ -662,8 +662,9 @@ export class ControlsController {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		previousResult: VariableValue
 	): VariablesAndExpressionParser {
-		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues)
+		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues, previousResult)
 	}
 }

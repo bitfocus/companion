@@ -31,6 +31,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import type { JsonValue } from '@companion-module/host'
 import {
 	ConnectionEntityManager,
 	type EntityManagerActionEntity,
@@ -277,7 +278,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			}
 			const learnTimeout = entityDefinition.learnTimeout
 
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null, undefined)
 			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options)
 			if (!parseRes.ok) {
 				this.logger.warn(
@@ -355,9 +356,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<JsonValue | undefined> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
-		if (action.disabled) return
+		if (action.disabled) return undefined
 
 		try {
 			// This means the new flow is being done, and the options must be parsed at this stage
@@ -369,7 +370,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 			// Note: for actions, this doesn't need to be reactive
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(
+				extras.controlId,
+				null,
+				extras.previousResult
+			)
 			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 			if (!parseRes.ok) {
 				this.logger.warn(
@@ -388,11 +393,15 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 				surfaceId: extras?.surfaceId,
 			})
-			if (result && !result.success) {
-				const message = result.errorMessage || 'Unknown error'
-				this.logger.warn(`Error executing action: ${message}`)
-				this.#sendToModuleLog('error', `Error executing action: ${message}`)
+
+			if (result && result.success) {
+				return result.result
 			}
+
+			const message = result?.errorMessage || 'Unknown error'
+			this.logger.warn(`Error executing action: ${message}`)
+			this.#sendToModuleLog('error', `Error executing action: ${message}`)
+			return undefined
 		} catch (e) {
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
 			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)

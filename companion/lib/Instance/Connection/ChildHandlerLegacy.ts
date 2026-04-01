@@ -569,7 +569,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<undefined> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
 		try {
@@ -584,7 +584,11 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 				// Note: for actions, this doesn't need to be reactive
-				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
+				const parser = this.#deps.controls.createVariablesAndExpressionParser(
+					extras.controlId,
+					null,
+					extras.previousResult
+				)
 				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 				if (!parseRes.ok) {
 					this.logger.warn(
@@ -621,6 +625,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			throw e
 		}
+
+		// Legacy instance actions can't return values.
+		return undefined
 	}
 
 	/**
@@ -931,7 +938,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		msg: ParseVariablesInStringMessage
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null)
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null, undefined)
 			const result = parser.parseVariables(msg.text)
 
 			return {

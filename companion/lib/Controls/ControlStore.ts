@@ -1,7 +1,7 @@
 import { TriggerEvents } from './TriggerEvents.js'
 import type { IControlStore } from './IControlStore.js'
 import type { SomeControl } from './IControlFragments.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { VariablesValues } from '../Variables/Values.js'
@@ -166,15 +166,16 @@ export class ControlStore implements IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		previousResult: VariableValue
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 
 		// If the control exists and supports entities, use its parser for local variables
 		if (control && control.supportsEntities)
-			return control.entities.createVariablesAndExpressionParser(overrideVariableValues)
+			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, previousResult)
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues)
+		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, previousResult)
 	}
 }

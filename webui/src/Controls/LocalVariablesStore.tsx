@@ -131,6 +131,10 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:page_name',
 		label: 'This page name',
 	},
+	{
+		value: 'this:result',
+		label: 'The result of the action sequentially preceding this one',
+	},
 ]
 
 export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
