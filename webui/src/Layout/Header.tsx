@@ -51,12 +51,13 @@ function circleInfo(stacked = false): ReactElement {
 		return (
 			<FontAwesomeIcon
 				icon={faInfo}
-				className="fa-xs"
 				style={{
-					border: '0.2em solid',
+					height: '0.75em',
+					width: '0.75em',
+					border: '0.15em solid',
 					borderRadius: '100%',
-					padding: '0.15em 0.05em 0.35em 0.1em', // top right bottom left
-					margin: '-0.05em 0em -0.45em -0.05em',
+					padding: '0.15em',
+					marginBottom: '-0.1em', // optional but centers slightly better vertically
 				}}
 			/>
 		)
