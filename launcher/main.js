@@ -954,6 +954,7 @@ if (!lock) {
 					[
 						// Build a new command string for each start
 						nodeBin,
+						'--use-system-ca',
 						path.join(companionRootPath, 'main.js'),
 						`--machine-id=${machineId}`,
 						`--config-dir=${configDir}`,
