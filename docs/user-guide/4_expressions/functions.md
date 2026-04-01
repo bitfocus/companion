@@ -409,7 +409,7 @@ eg `dateAdd(unixNow(), 7, 'days')` returns the Unix ms for 7 days from now
 
 eg `dateFormat(dateAdd(unixNow(), 1, 'months'), 'YYYY-MM-DD')` formats the date 1 month from now
 
-Note: when adding months, if the resulting day exceeds the target month's length, the date overflows into the next month (e.g. January 31 + 1 month = March 2, not February 28).
+Note: when adding months, if the resulting day exceeds the target month's length, the date overflows into the next month (e.g. January 31 + 1 month overflows into March, not February).
 
 :::tip
 The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, local time is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
