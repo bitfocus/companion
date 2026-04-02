@@ -185,12 +185,14 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 export const MySidebar = memo(function MySidebar() {
 	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
-	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar-foldable', false)
+	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar_foldable', false)
+	const [narrowMode, setNarrowMode] = useLocalStorage('sidebar_narrow_mode', false)
 	const { mobileMode } = useSidebarState()
 
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
 	const [accordionMode, setAccordionMode] = useLocalStorage('sidebar_auto_collapse', false)
+	// narrow can be used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
 	const [narrow, setNarrow] = useState(false)
 
 	const [surfacesGroupVis, setSurfacesGroupVis] = useState(false)
@@ -258,18 +260,25 @@ export const MySidebar = memo(function MySidebar() {
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
-			...(mobileMode
+			...(mobileMode || narrowMode
 				? []
 				: [
 						{
 							id: 'hide-sidebar',
-							label: unfoldable ? 'Fixed-width Sidebar' : 'Folding Sidebar',
+							label: unfoldable ? 'Full-width Sidebar' : 'Folding Sidebar',
 							icon: () => foldableIcon(unfoldable),
 							do: toggleUnfoldable,
 							tooltip:
 								'Toggle between a static, fixed-width sidebar and dynamic-width sidebar that expands when the mouse is over it.',
 						},
 					]),
+			{
+				id: 'narrow-sidebar',
+				label: 'Keep Sidebar Folded',
+				icon: narrowMode ? faCheck : undefined,
+				do: () => setNarrowMode((val) => !val),
+				tooltip: 'When active, the sidebar remains narrow.',
+			},
 			{
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
@@ -278,14 +287,31 @@ export const MySidebar = memo(function MySidebar() {
 				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
-		[unfoldable, toggleUnfoldable, hideHelp, expandAllGroups, accordionMode, setHideHelp, setAccordionMode, mobileMode]
+		[
+			accordionMode,
+			mobileMode,
+			unfoldable,
+			narrowMode,
+			toggleUnfoldable,
+			hideHelp,
+			expandAllGroups,
+			setAccordionMode,
+			setNarrowMode,
+			setHideHelp,
+		]
 	)
 
 	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
 	const contextState = useContextMenuState(contextMenuItems)
+	const DontSetOrUnset: React.Dispatch<React.SetStateAction<boolean>> = () => {}
 
 	return (
-		<CSidebar unfoldable={unfoldable} narrow={narrow} setNarrow={setNarrow} onContextMenu={contextState.onContextMenu}>
+		<CSidebar
+			unfoldable={unfoldable}
+			narrow={narrow || narrowMode}
+			setNarrow={narrowMode ? DontSetOrUnset : setNarrow}
+			onContextMenu={contextState.onContextMenu}
+		>
 			<ContextMenu {...contextState} />
 			<CSidebarHeader className="brand">
 				<CSidebarBrand>

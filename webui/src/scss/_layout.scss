@@ -431,6 +431,11 @@ form.row > * {
 		line-height: calc(var(--cui-body-line-height) * 0.85);
 	}
 
+	&.sidebar-narrow {
+		// CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here:
+		width: var(--cui-sidebar-narrow-width);
+	}
+
 	// note: in .sidebar, .show is present in mobile mode, during which we must ignore sidebar-narrow-unfoldable
 	&.sidebar-narrow-unfoldable:not(.show, :hover),
 	&.sidebar-narrow {
@@ -494,7 +499,6 @@ form.row > * {
 
 	// highlighting for the group-items container (contains all the items excluding the toggler)
 	// we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0)
-	&.sidebar-narrow:hover .nav-group-items, // override CUI when in temporary narrow mode
 	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI if we ever implement narrow mode
 	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, // override CUI
 	.nav-group-toggle-basic::after,
@@ -506,7 +510,6 @@ form.row > * {
 	}
 
 	// override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well)
-	&.sidebar-narrow:hover .nav-group-items, // override CUI so nav-group-items show when in temporary narrow mode
 	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show if we ever implement narrow mode
 	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
 		height: auto !important;
@@ -592,7 +595,7 @@ form.row > * {
 
 	// when the sidebar is narrow, make more space for the contents and let centering create what margins there will be.
 	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
-	&.sidebar-narrow:hover .nav-main-scroller {
+	&.sidebar-narrow .nav-main-scroller {
 		scrollbar-width: thin;
 		padding-left: 0;
 		padding-right: 0;
