@@ -32,7 +32,10 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 				className="float_right"
 				onClick={doRefreshModules}
 				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') doRefreshModules()
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault()
+						doRefreshModules()
+					}
 				}}
 				role="button"
 				tabIndex={0}
