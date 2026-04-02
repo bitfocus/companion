@@ -481,12 +481,12 @@ form.row > * {
 	}
 
 	// the container for both the toggler and the group-items (".show" = when open)
-	.nav-group.show {
+	.nav-group {
 		// border to include the toggler. The next rule thickens the border only for the group items.
 		border-left: 1px solid var(--cui-sidebar-nav-link-icon-color);
 		//border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); //optional bottom edge
 
-		> .nav-link {
+		&.show > .nav-link {
 			// make the toggler "active" when open
 			background: var(--cui-sidebar-nav-link-active-bg);
 		}
