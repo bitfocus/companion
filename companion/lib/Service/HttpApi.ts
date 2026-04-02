@@ -663,7 +663,6 @@ export class ServiceHttpApi {
 				label: config.label,
 				moduleId: config.moduleId,
 				enabled: config.enabled,
-				sortOrder: config.sortOrder,
 				status: status ?? null,
 			}
 		})

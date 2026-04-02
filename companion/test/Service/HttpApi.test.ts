@@ -8,6 +8,7 @@ import { rgb } from '../../lib/Resources/Util.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
+import { ModuleInstanceType, ModuleUpdatePolicy } from '../../../shared-lib/lib/Model/Instance.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -1296,9 +1297,9 @@ describe('HttpApi', () => {
 					moduleId: 'obs-websocket',
 					enabled: true,
 					sortOrder: 0,
-					moduleType: 'connection' as any,
+					moduleType: ModuleInstanceType.Connection,
 					moduleVersionId: null,
-					updatePolicy: 'stable' as any,
+					updatePolicy: ModuleUpdatePolicy.Stable,
 					hasRecordActionsHandler: false,
 					collectionId: null,
 				},
@@ -1308,9 +1309,9 @@ describe('HttpApi', () => {
 					moduleId: 'bmd-atem',
 					enabled: false,
 					sortOrder: 1,
-					moduleType: 'connection' as any,
+					moduleType: ModuleInstanceType.Connection,
 					moduleVersionId: null,
-					updatePolicy: 'stable' as any,
+					updatePolicy: ModuleUpdatePolicy.Stable,
 					hasRecordActionsHandler: false,
 					collectionId: null,
 				},
@@ -1337,7 +1338,6 @@ describe('HttpApi', () => {
 						label: 'My OBS',
 						moduleId: 'obs-websocket',
 						enabled: true,
-						sortOrder: 0,
 						status: mockStatus,
 					},
 					{
@@ -1345,7 +1345,6 @@ describe('HttpApi', () => {
 						label: 'My ATEM',
 						moduleId: 'bmd-atem',
 						enabled: false,
-						sortOrder: 1,
 						status: null,
 					},
 				])
@@ -1474,6 +1473,20 @@ describe('HttpApi', () => {
 				expect(res.status).toBe(404)
 				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
 			})
+
+			test('enables already-enabled connection (idempotent)', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-1/enable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-1', enabled: true })
+
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledWith('conn-1', true)
+			})
 		})
 
 		describe('disable connection', () => {
@@ -1499,6 +1512,20 @@ describe('HttpApi', () => {
 				const res = await supertest(app).post('/api/connections/unknown-id/disable').send()
 				expect(res.status).toBe(404)
 				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('disables already-disabled connection (idempotent)', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-2/disable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-2', enabled: false })
+
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledWith('conn-2', false)
 			})
 		})
 	})
