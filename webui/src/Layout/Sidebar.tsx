@@ -192,8 +192,8 @@ export const MySidebar = memo(function MySidebar() {
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
 	const [accordionMode, setAccordionMode] = useLocalStorage('sidebar_auto_collapse', false)
-	// narrow can be used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
-	const [narrow, setNarrow] = useState(false)
+	// tempNarrow is used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
+	const [tempNarrow, setTempNarrow] = useState(false)
 
 	const [surfacesGroupVis, setSurfacesGroupVis] = useState(false)
 	const [variablesGroupVis, setVariablesGroupVis] = useState(false)
@@ -203,10 +203,17 @@ export const MySidebar = memo(function MySidebar() {
 
 	const toggleUnfoldable = useCallback(() => {
 		setUnfoldable((val) => {
-			if (!val) setNarrow(true) // if new value is true, make sidebar narrow so it folds now
+			if (!val) setTempNarrow(true) // if new value is true, make sidebar narrow so it folds now
 			return !val
 		})
-	}, [setUnfoldable, setNarrow])
+	}, [setUnfoldable])
+
+	const toggleNarrowMode = useCallback(() => {
+		setNarrowMode((val) => {
+			if (!val) setTempNarrow(false) // so sidebar unfolds when we later turn narrowMode off
+			return !val
+		})
+	}, [setNarrowMode])
 
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
@@ -276,7 +283,7 @@ export const MySidebar = memo(function MySidebar() {
 				id: 'narrow-sidebar',
 				label: 'Keep Sidebar Folded',
 				icon: narrowMode ? faCheck : undefined,
-				do: () => setNarrowMode((val) => !val),
+				do: toggleNarrowMode,
 				tooltip: 'When active, the sidebar remains narrow.',
 			},
 			{
@@ -290,13 +297,13 @@ export const MySidebar = memo(function MySidebar() {
 		[
 			accordionMode,
 			mobileMode,
-			unfoldable,
 			narrowMode,
+			unfoldable,
 			toggleUnfoldable,
+			toggleNarrowMode,
 			hideHelp,
 			expandAllGroups,
 			setAccordionMode,
-			setNarrowMode,
 			setHideHelp,
 		]
 	)
@@ -308,8 +315,8 @@ export const MySidebar = memo(function MySidebar() {
 	return (
 		<CSidebar
 			unfoldable={unfoldable}
-			narrow={narrow || narrowMode}
-			setNarrow={narrowMode ? DontSetOrUnset : setNarrow}
+			narrow={tempNarrow || narrowMode}
+			setNarrow={narrowMode ? DontSetOrUnset : setTempNarrow}
 			onContextMenu={contextState.onContextMenu}
 		>
 			<ContextMenu {...contextState} />
@@ -442,9 +449,11 @@ export const MySidebar = memo(function MySidebar() {
 					</SidebarMenuItemGroup>
 				</CSidebarNav>
 			)}
-			<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
-				<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} />
-			</CSidebarHeader>
+			{!narrowMode && (
+				<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
+					<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} />
+				</CSidebarHeader>
+			)}
 		</CSidebar>
 	)
 })
