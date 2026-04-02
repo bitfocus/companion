@@ -645,10 +645,18 @@ $panel-header-bg: #dee2e5; // Darker gray background
 $panel-header-border-color: #dee2e6; // Subtle border
 $panel-header-color: #343a40; // title text -  Darker (?) text for better contrast
 $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
-.panel-close-button {
+.panel-close-button,
+.modal-header .btn-close {
 	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
 	border: none;
 	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
+}
+
+.modal-header .btn-close {
+	// CUI's "X" svg does not change with the "color" prop, so we use filter: invert() to make it white.
+	// First, invert the background color so the CSS invert returns it to the desired value while inverting the foreground
+	background-color: color.invert(color.adjust($panel-header-button-color, $lightness: -25%));
+	filter: invert(1);
 }
 
 .context-help-button-2xl {
