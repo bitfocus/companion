@@ -659,6 +659,14 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	}
 }
 
+// apply a similar effect to CModal close buttons:
+.modal-header .btn-close {
+	// CUI's "X" svg does not change with the "color" prop, so we use filter: invert() to make it white.
+	// First, invert the background color so the CSS invert returns it to the desired value while inverting the foreground
+	background-color: color.invert(color.adjust($panel-header-button-color, $lightness: -50%));
+	filter: invert(1) drop-shadow(2px 2px 4px rgb(0 0 0 / 25%));
+}
+
 // format context-help-buttons. Everything but size can be globally applied.
 .context-help-button-btn {
 	border: 0;
