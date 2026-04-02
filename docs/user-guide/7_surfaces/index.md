@@ -17,7 +17,7 @@ In the right panel, click the red <span style={{color: "white", background: "#CC
 
 ![Surface integrations panel](./images/surface-integrations-panel.png)
 
-From there, [Installing](../3_config/connections#adding-a-connection), [configuring](../3_config/connections#configuring-a-connection), and [updating](../3_config/connections#updating-a-connection) a surface module follows the same workflow as for Connections.
+From there, [Installing](../3_config/connections.md#adding-a-connection), [configuring](../3_config/connections.md#configuring-a-connection), and [updating](../3_config/connections.md#updating-a-connection) a surface module follows the same workflow as for Connections.
 
 The module list and offline import can be managed from the [Modules page](../3_config/modules.md).
 

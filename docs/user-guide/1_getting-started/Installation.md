@@ -75,5 +75,5 @@ Not currently supported, the usb libraries we use do not work in docker properly
 
 #### Remote USB
 
-To connect Stream Decks to companion from another machine, you can use [Companion Satellite](https://github.com/bitfocus/companion-satellite)  
+To connect Stream Decks or other surfaces to Companion from another machine, you can use [Companion Satellite](https://github.com/bitfocus/companion-satellite)  
 Make sure to forward tcp port 16622 for this to work.
