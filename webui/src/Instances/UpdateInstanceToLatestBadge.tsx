@@ -7,6 +7,7 @@ import semver from 'semver'
 import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import { faCircleUp } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface UpdateInstanceToLatestBadgeProps {
 	instance: ClientInstanceConfigBase
@@ -66,9 +67,9 @@ const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLates
 	if (!message) return null
 
 	return (
-		<>
+		<InlineHelp help={message}>
 			&nbsp;
-			<FontAwesomeIcon icon={faCircleUp} title={message} />
-		</>
+			<FontAwesomeIcon icon={faCircleUp} aria-label={message} />
+		</InlineHelp>
 	)
 })

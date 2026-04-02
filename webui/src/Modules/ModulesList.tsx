@@ -22,6 +22,7 @@ import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -297,7 +298,11 @@ const ModulesListRow = observer(function ModulesListRow({
 				)}
 			</td>
 			<td onClick={doEdit} className="hand">
-				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+				{!!moduleInfo.storeInfo?.deprecationReason && (
+					<InlineHelp help="Deprecated">
+						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
+					</InlineHelp>
+				)}
 				{moduleInfo.name}
 			</td>
 			<td className="compact">

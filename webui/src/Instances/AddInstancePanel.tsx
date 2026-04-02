@@ -23,6 +23,7 @@ import { Link } from '@tanstack/react-router'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
@@ -253,15 +254,15 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 			)}
 			&nbsp;
 			{moduleInfo.installedInfo?.stableVersion?.isLegacy && (
-				<>
+				<InlineHelp help="This module has not been updated for Companion 3.0, and may not work fully.">
 					<FontAwesomeIcon
 						icon={faExclamationTriangle}
 						color="#ff6600"
 						size={'xl'}
-						title="This module has not been updated for Companion 3.0, and may not work fully"
+						aria-label="This module has not been updated for Companion 3.0, and may not work fully."
 					/>
 					&nbsp;
-				</>
+				</InlineHelp>
 			)}
 			<div className="grow" style={{ alignContent: 'center' }}>
 				{moduleInfo.name}
