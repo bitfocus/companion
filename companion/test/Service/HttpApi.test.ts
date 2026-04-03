@@ -8,7 +8,8 @@ import { rgb } from '../../lib/Resources/Util.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
-import { ModuleInstanceType, ModuleUpdatePolicy } from '../../../shared-lib/lib/Model/Instance.js'
+import { ModuleInstanceType, InstanceVersionUpdatePolicy } from '../../../shared-lib/lib/Model/Instance.js'
+import type { ClientConnectionConfig } from '../../../shared-lib/lib/Model/Connections.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -1289,7 +1290,7 @@ describe('HttpApi', () => {
 	})
 
 	describe('connections', () => {
-		function createConnectionConfigs() {
+		function createConnectionConfigs(): Record<string, ClientConnectionConfig> {
 			return {
 				'conn-1': {
 					id: 'conn-1',
@@ -1299,7 +1300,7 @@ describe('HttpApi', () => {
 					sortOrder: 0,
 					moduleType: ModuleInstanceType.Connection,
 					moduleVersionId: null,
-					updatePolicy: ModuleUpdatePolicy.Stable,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
 					hasRecordActionsHandler: false,
 					collectionId: null,
 				},
@@ -1311,7 +1312,7 @@ describe('HttpApi', () => {
 					sortOrder: 1,
 					moduleType: ModuleInstanceType.Connection,
 					moduleVersionId: null,
-					updatePolicy: ModuleUpdatePolicy.Stable,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
 					hasRecordActionsHandler: false,
 					collectionId: null,
 				},
@@ -1324,7 +1325,7 @@ describe('HttpApi', () => {
 			test('returns array of connections', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.getConnectionStatus.mockImplementation((id: string) => {
 					if (id === 'conn-1') return mockStatus
 					return undefined
@@ -1367,7 +1368,7 @@ describe('HttpApi', () => {
 			test('returns status for existing connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.getConnectionStatus.mockReturnValue(mockStatus)
 
 				const res = await supertest(app).get('/api/connections/conn-1/status').send()
@@ -1385,7 +1386,7 @@ describe('HttpApi', () => {
 			test('returns null status when no status available', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.getConnectionStatus.mockReturnValue(undefined)
 
 				const res = await supertest(app).get('/api/connections/conn-1/status').send()
@@ -1401,7 +1402,7 @@ describe('HttpApi', () => {
 			test('returns 404 for unknown connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 
 				const res = await supertest(app).get('/api/connections/unknown-id/status').send()
 				expect(res.status).toBe(404)
@@ -1413,7 +1414,7 @@ describe('HttpApi', () => {
 			test('triggers restart for existing enabled connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.restartConnection.mockReturnValue(true)
 
 				const res = await supertest(app).post('/api/connections/conn-1/restart').send()
@@ -1427,7 +1428,7 @@ describe('HttpApi', () => {
 			test('returns 409 for inactive connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.restartConnection.mockReturnValue(false)
 
 				const res = await supertest(app).post('/api/connections/conn-2/restart').send()
@@ -1441,7 +1442,7 @@ describe('HttpApi', () => {
 			test('returns 404 for unknown connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 
 				const res = await supertest(app).post('/api/connections/unknown-id/restart').send()
 				expect(res.status).toBe(404)
@@ -1453,7 +1454,7 @@ describe('HttpApi', () => {
 			test('enables existing connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.enableDisableConnection.mockReturnValue(undefined)
 
 				const res = await supertest(app).post('/api/connections/conn-2/enable').send()
@@ -1467,7 +1468,7 @@ describe('HttpApi', () => {
 			test('returns 404 for unknown connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 
 				const res = await supertest(app).post('/api/connections/unknown-id/enable').send()
 				expect(res.status).toBe(404)
@@ -1477,7 +1478,7 @@ describe('HttpApi', () => {
 			test('enables already-enabled connection (idempotent)', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.enableDisableConnection.mockReturnValue(undefined)
 
 				const res = await supertest(app).post('/api/connections/conn-1/enable').send()
@@ -1493,7 +1494,7 @@ describe('HttpApi', () => {
 			test('disables existing connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.enableDisableConnection.mockReturnValue(undefined)
 
 				const res = await supertest(app).post('/api/connections/conn-1/disable').send()
@@ -1507,7 +1508,7 @@ describe('HttpApi', () => {
 			test('returns 404 for unknown connection', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 
 				const res = await supertest(app).post('/api/connections/unknown-id/disable').send()
 				expect(res.status).toBe(404)
@@ -1517,7 +1518,7 @@ describe('HttpApi', () => {
 			test('disables already-disabled connection (idempotent)', async () => {
 				const { app, serviceApi } = createService()
 
-				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs() as any)
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
 				serviceApi.enableDisableConnection.mockReturnValue(undefined)
 
 				const res = await supertest(app).post('/api/connections/conn-2/disable').send()
