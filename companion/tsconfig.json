@@ -23,7 +23,6 @@
 		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator"],
 		"types": ["node"],
 		"strict": true,
-		"alwaysStrict": false,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,

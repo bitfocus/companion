@@ -24,7 +24,6 @@
 		"lib": ["es2022"],
 		"types": ["node"],
 		"strict": true,
-		"alwaysStrict": false,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
