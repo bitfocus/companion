@@ -38,7 +38,7 @@ export function GeneralSection(): JSX.Element {
 					<div className="grid grid-cols-4 gap-4 items-center">
 						<Label htmlFor="log-level">Log Level</Label>
 						<div className="col-span-3">
-							<Select value={logLevel} onValueChange={handleLogLevelChange} items={LOG_LEVELS}>
+							<Select id="log-level" value={logLevel} onValueChange={handleLogLevelChange} items={LOG_LEVELS}>
 								<SelectTrigger className="w-48">
 									<SelectValue placeholder="Select log level" />
 								</SelectTrigger>

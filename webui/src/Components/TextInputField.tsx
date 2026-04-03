@@ -80,7 +80,7 @@ export const TextInputField = observer(function TextInputField({
 			{useVariables ? (
 				<>
 					<VariablesSelect
-						id={id}
+						inputId={id}
 						showValue={showValue}
 						style={extraStyle}
 						localVariables={localVariables}
@@ -169,7 +169,7 @@ interface VariablesSelectProps {
 	disabled: boolean | undefined
 	multiline: boolean | undefined
 	autoFocus: boolean | undefined
-	id?: string
+	inputId?: string
 }
 
 const VariablesSelect = observer(function VariablesSelect({
@@ -184,7 +184,7 @@ const VariablesSelect = observer(function VariablesSelect({
 	disabled,
 	multiline,
 	autoFocus,
-	id,
+	inputId,
 }: Readonly<VariablesSelectProps>) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -273,7 +273,7 @@ const VariablesSelect = observer(function VariablesSelect({
 	return (
 		<VariablesSelectContext.Provider value={selectContext}>
 			<Select
-				id={id}
+				inputId={inputId}
 				className="variable-select-root"
 				classNamePrefix="variable-select-root"
 				menuPortalTarget={menuPortal || document.body}
