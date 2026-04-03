@@ -35,6 +35,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	NoContent,
 	ItemRow,
 	GroupHeaderContent,
+	showCollapseButtons,
 	itemName,
 	dragId,
 	collectionsApi,
@@ -51,6 +52,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 		<CollectionsNestingTableContextProvider
 			ItemRow={ItemRow}
 			GroupHeaderContent={GroupHeaderContent}
+			showCollapseButtons={showCollapseButtons}
 			itemName={itemName}
 			collectionsApi={collectionsApi}
 			dragId={dragId}
@@ -75,6 +77,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 					ungroupedItems={ungroupedItems}
 					hasCollections={collections.length > 0}
 					itemName={itemName}
+					showCollapseButtons={showCollapseButtons}
 				/>
 
 				{items.length === 0 && (
@@ -95,43 +98,44 @@ const UngroupedSection = observer(function UngroupedSection<TItem extends Collec
 	ungroupedItems,
 	hasCollections,
 	itemName,
+	showCollapseButtons,
 }: {
 	isDragging: boolean
 	ungroupedItems: TItem[]
 	hasCollections: boolean
 	itemName: string
+	showCollapseButtons?: boolean
 }) {
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, UNGROUPED_PANEL_ID)
 	const isCollapsed = collapseHelper.isCollapsed
 
-	if (!(isDragging || ungroupedItems.length > 0) || !hasCollections) {
-		return (
-			<CollectionsNestingTableCollectionContents
-				items={ungroupedItems}
-				collectionId={null}
-				showNoItemsMessage={false}
-				nestingLevel={0}
-			/>
-		)
-	}
+	const showHeader = (isDragging || ungroupedItems.length > 0) && hasCollections
+	const isContentVisible = !showCollapseButtons || !isCollapsed
 
 	return (
 		<>
-			<div className="collections-nesting-table-row-group">
-				<div className="d-flex align-items-center justify-content-between" onClick={collapseHelper.toggleCollapsed}>
-					<div className="d-flex align-items-center">
-						<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon me-1" />
+			{showHeader &&
+				(showCollapseButtons ? (
+					<div className="collections-nesting-table-row-group">
+						<div className="d-flex align-items-center justify-content-between" onClick={collapseHelper.toggleCollapsed}>
+							<div className="d-flex align-items-center">
+								<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon me-1" />
+								<span className="collection-name">Ungrouped {capitalize(itemName)}s</span>
+							</div>
+							{!isCollapsed && ungroupedItems.length > 1 && (
+								<div className="d-flex align-items-center" onClick={(e) => e.stopPropagation()}>
+									<CollectionItemsCollapseButtons itemIds={ungroupedItems.map((item) => item.id)} />
+								</div>
+							)}
+						</div>
+					</div>
+				) : (
+					<div className="collections-nesting-table-ungrouped-header">
 						<span className="collection-name">Ungrouped {capitalize(itemName)}s</span>
 					</div>
-					{!isCollapsed && ungroupedItems.length > 1 && (
-						<div className="d-flex align-items-center" onClick={(e) => e.stopPropagation()}>
-							<CollectionItemsCollapseButtons itemIds={ungroupedItems.map((item) => item.id)} />
-						</div>
-					)}
-				</div>
-			</div>
+				))}
 
-			{!isCollapsed && (
+			{isContentVisible && (
 				<CollectionsNestingTableCollectionContents
 					items={ungroupedItems}
 					collectionId={null}

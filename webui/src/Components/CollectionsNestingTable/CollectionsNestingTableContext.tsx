@@ -8,6 +8,7 @@ export interface CollectionsNestingTableContextType<
 > {
 	ItemRow: (item: TItem, index: number) => React.ReactNode | null
 	GroupHeaderContent?: React.ComponentType<{ collection: TCollection }>
+	showCollapseButtons?: boolean
 	itemName: string
 	dragId: string
 	collectionsApi: NestingCollectionsApi
@@ -37,6 +38,7 @@ export function CollectionsNestingTableContextProvider<
 >({
 	ItemRow,
 	GroupHeaderContent,
+	showCollapseButtons,
 	itemName,
 	dragId,
 	collectionsApi,
@@ -47,12 +49,13 @@ export function CollectionsNestingTableContextProvider<
 		return {
 			ItemRow,
 			GroupHeaderContent,
+			showCollapseButtons,
 			itemName,
 			dragId,
 			collectionsApi,
 			selectedItemId,
 		}
-	}, [ItemRow, GroupHeaderContent, itemName, dragId, collectionsApi, selectedItemId])
+	}, [ItemRow, GroupHeaderContent, showCollapseButtons, itemName, dragId, collectionsApi, selectedItemId])
 
 	return <CollectionsNestingTableContext.Provider value={value}>{children}</CollectionsNestingTableContext.Provider>
 }

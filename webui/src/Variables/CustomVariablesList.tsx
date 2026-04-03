@@ -136,6 +136,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 								// Heading={TriggerListTableHeading}
 								NoContent={CustomVariableListNoContent}
 								ItemRow={CustomVariableItemRow}
+								showCollapseButtons
 								itemName="custom variable"
 								dragId="custom-variable"
 								collectionsApi={collectionsApi}
