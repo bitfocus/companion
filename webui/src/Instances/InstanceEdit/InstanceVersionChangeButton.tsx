@@ -182,7 +182,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 								</CAlert>
 							</CCol>
 
-							<CFormLabel htmlFor="moduleId" className="col-sm-3 col-form-label col-form-label-sm">
+							<CFormLabel htmlFor="changeModuleId" className="col-sm-3 col-form-label col-form-label-sm">
 								Module
 							</CFormLabel>
 							<CCol sm={9}>
@@ -190,6 +190,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									name="moduleId"
 									children={(field) => (
 										<SelectedModuleDropdown
+											id="changeModuleId"
 											moduleType={service.moduleType}
 											htmlName={field.name}
 											value={field.state.value}
@@ -237,6 +238,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 interface SelectedModuleDropdownProps {
 	moduleType: ModuleInstanceType
+	id: string
 	htmlName: string
 	value: string
 	onChange: (value: string) => void
@@ -245,6 +247,7 @@ interface SelectedModuleDropdownProps {
 
 const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 	moduleType,
+	id,
 	htmlName,
 	value,
 	onChange,
@@ -269,6 +272,7 @@ const SelectedModuleDropdown = observer(function SelectedModuleDropdown({
 
 	return (
 		<DropdownInputField
+			inputId={id}
 			htmlName={htmlName}
 			choices={choices}
 			value={value}
@@ -307,6 +311,7 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 	return (
 		<CFormSelect
 			name={htmlName}
+			id={htmlName}
 			value={value as string}
 			onChange={(e) => onChange(e.currentTarget.value)}
 			onBlur={onBlur}

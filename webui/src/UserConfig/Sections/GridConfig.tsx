@@ -60,7 +60,7 @@ interface GridSizeModalRef {
 }
 
 const GridSizeModal = observer<object, GridSizeModalRef>(
-	function GridSizeModal(_props, ref) {
+	React.forwardRef(function GridSizeModal(_props, ref) {
 		const { userConfig } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
@@ -246,6 +246,5 @@ const GridSizeModal = observer<object, GridSizeModalRef>(
 				</CModalFooter>
 			</CModal>
 		)
-	},
-	{ forwardRef: true }
+	})
 )

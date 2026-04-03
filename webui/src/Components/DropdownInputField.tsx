@@ -10,6 +10,7 @@ import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
 import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 
 interface DropdownInputFieldProps {
+	inputId?: string
 	htmlName?: string
 	className?: string
 	choices: DropdownChoicesOrGroups
@@ -29,6 +30,7 @@ interface DropdownInputFieldProps {
 }
 
 export const DropdownInputField = observer(function DropdownInputField({
+	inputId,
 	htmlName,
 	className,
 	choices,
@@ -125,6 +127,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
 		name: htmlName,
+		inputId: inputId,
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
 		className: 'select-control',

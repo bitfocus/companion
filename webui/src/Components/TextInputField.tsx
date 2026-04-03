@@ -26,6 +26,7 @@ interface TextInputFieldProps {
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
+	id?: string
 }
 
 export const TextInputField = observer(function TextInputField({
@@ -41,6 +42,7 @@ export const TextInputField = observer(function TextInputField({
 	multiline,
 	autoFocus,
 	onBlur,
+	id,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
@@ -78,6 +80,7 @@ export const TextInputField = observer(function TextInputField({
 			{useVariables ? (
 				<>
 					<VariablesSelect
+						id={id}
 						showValue={showValue}
 						style={extraStyle}
 						localVariables={localVariables}
@@ -93,6 +96,7 @@ export const TextInputField = observer(function TextInputField({
 				</>
 			) : multiline ? (
 				<CFormTextarea
+					id={id}
 					disabled={disabled}
 					value={showValue}
 					style={extraStyle}
@@ -106,6 +110,7 @@ export const TextInputField = observer(function TextInputField({
 				/>
 			) : (
 				<CFormInput
+					id={id}
 					type="text"
 					disabled={disabled}
 					value={showValue}
@@ -164,6 +169,7 @@ interface VariablesSelectProps {
 	disabled: boolean | undefined
 	multiline: boolean | undefined
 	autoFocus: boolean | undefined
+	id?: string
 }
 
 const VariablesSelect = observer(function VariablesSelect({
@@ -178,6 +184,7 @@ const VariablesSelect = observer(function VariablesSelect({
 	disabled,
 	multiline,
 	autoFocus,
+	id,
 }: Readonly<VariablesSelectProps>) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -266,6 +273,7 @@ const VariablesSelect = observer(function VariablesSelect({
 	return (
 		<VariablesSelectContext.Provider value={selectContext}>
 			<Select
+				id={id}
 				className="variable-select-root"
 				classNamePrefix="variable-select-root"
 				menuPortalTarget={menuPortal || document.body}
