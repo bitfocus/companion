@@ -63,18 +63,6 @@ export class SurfaceOutboundController {
 		this.#collections = new OutboundSurfaceCollections(
 			db,
 			(validCollectionIds) => this.#cleanUnknownCollectionIds(validCollectionIds),
-			() => {
-				// // Emit event to trigger feedback updates for outbound surface collection enabled states
-				// this.events.emit('clientInfo', {
-				// 	type: 'init',
-				// 	items: this.#storage,
-				// })
-			}
-		)
-
-		this.#collections = new OutboundSurfaceCollections(
-			db,
-			(validCollectionIds) => this.#cleanUnknownCollectionIds(validCollectionIds),
 			() => this.#startStopAllConnections()
 		)
 	}
@@ -185,7 +173,7 @@ export class SurfaceOutboundController {
 			this.#enabledConnectionIds.delete(connectionInfo.id)
 		}
 
-		this.events.emit(`startStop:${connectionInfo.instanceId}`, connectionInfo)
+		this.events.emit(`startStop:${connectionInfo.instanceId}`, { ...connectionInfo, enabled })
 	}
 
 	createTrpcRouter() {
@@ -438,7 +426,10 @@ export class SurfaceOutboundController {
 			.values()
 			.filter((surfaceInfo) => {
 				return (
-					surfaceInfo && surfaceInfo.type === 'plugin' && surfaceInfo.instanceId === instanceId && surfaceInfo.enabled
+					surfaceInfo &&
+					surfaceInfo.type === 'plugin' &&
+					surfaceInfo.instanceId === instanceId &&
+					this.#enabledConnectionIds.has(surfaceInfo.id)
 				)
 			})
 			.toArray()
