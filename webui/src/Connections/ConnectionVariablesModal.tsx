@@ -31,7 +31,7 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 				<CModalHeader closeButton>
 					<h5>Variables for {connectionLabel}</h5>
 				</CModalHeader>
-				<CModalBody>
+				<CModalBody className="variables-table-modal-body">
 					<CRow>
 						<CCol lg={12}>{connectionLabel && <VariablesTable label={connectionLabel} />}</CCol>
 					</CRow>
