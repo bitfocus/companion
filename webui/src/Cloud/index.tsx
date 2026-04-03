@@ -128,7 +128,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 			<CFormLabel>Logged in as</CFormLabel>
 			<CFormInput readOnly type="text" value={authenticatedAs} />
 			{!cloudActive && (
-				<p>
+				<div className="my-3">
 					<CButton
 						color="success"
 						onClick={() => {
@@ -138,7 +138,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 					>
 						Log out
 					</CButton>
-				</p>
+				</div>
 			)}
 		</CCol>
 	)
@@ -205,11 +205,11 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 
 			<CAlert color="success">{uuid}</CAlert>
 
-			<p>
+			<div className="my-3">
 				<CButton color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
 					Regenerate secret key
 				</CButton>
-			</p>
+			</div>
 		</CCol>
 	)
 })

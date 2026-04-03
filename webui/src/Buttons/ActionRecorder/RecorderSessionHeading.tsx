@@ -106,9 +106,8 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 
 						<div>
 							<CFormLabel>Recording</CFormLabel>
-							<p>
-								<CFormSwitch color="success" size="xl" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-							</p>
+							<br />
+							<CFormSwitch color="success" size="xl" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
 						</div>
 					</div>
 				</CRow>
