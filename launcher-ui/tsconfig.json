@@ -4,19 +4,15 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"baseUrl": "./",
 		"paths": {
 			"*": ["./node_modules/*"],
 			"~/*": ["./src/*"]
 		},
 		"module": "esnext",
 		"moduleResolution": "bundler",
-		"jsx": "react",
-		// "allowJs": true,
-		// "checkJs": true,
+		"jsx": "react-jsx",
 		"strictPropertyInitialization": true,
 		"noEmit": true,
-		// "composite": true,
 
 		"target": "ESNext",
 		"noImplicitAny": true,
@@ -29,7 +25,6 @@
 		"lib": ["DOM", "DOM.Iterable", "ESNext"],
 		"types": ["node", "react"],
 		"strict": true,
-		"alwaysStrict": false,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
@@ -38,7 +33,8 @@
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"erasableSyntaxOnly": true
 	},
 	"references": [{ "path": "../companion" }, { "path": "../shared-lib" }]
 }

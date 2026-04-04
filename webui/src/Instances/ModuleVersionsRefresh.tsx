@@ -1,4 +1,4 @@
-import React, { useContext, useCallback } from 'react'
+import { useContext, useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -28,17 +28,29 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 
 	if (refreshProgress === 1) {
 		return (
-			<div className="float_right" onClick={doRefreshModules}>
-				<FontAwesomeIcon icon={faSync} title="Refresh module versions" />
+			<div
+				className="float_right"
+				onClick={doRefreshModules}
+				onKeyDown={(e) => {
+					if (e.key === 'Enter' || e.key === ' ') {
+						e.preventDefault()
+						doRefreshModules()
+					}
+				}}
+				role="button"
+				tabIndex={0}
+				title="Refresh module versions"
+			>
+				<FontAwesomeIcon icon={faSync} aria-label="Refresh module versions" />
 			</div>
 		)
 	} else {
 		return (
-			<div className="float_right">
+			<div className="float_right" title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}>
 				<FontAwesomeIcon
 					icon={faSync}
 					spin={true}
-					title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
+					aria-label={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
 				/>
 			</div>
 		)

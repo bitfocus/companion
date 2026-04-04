@@ -273,6 +273,18 @@ export const builtinFunctionCompletions: Array<{
 		documentation:
 			'Returns the day of the week (0-6) from a date value. 0 = Sunday, 6 = Saturday. Optional IANA timezone.',
 	},
+	{
+		name: 'dateFormat',
+		detail: 'dateFormat(value, formatString, timezone?)',
+		documentation:
+			"Formats a date using dayjs-compatible tokens: YYYY, YY, MMMM, MMM, MM, M, dddd, ddd, DD, D, HH, H, hh, h, mm, m, ss, s, SSS, A, a. Pass 'iso' for ISO 8601. Optional IANA timezone.",
+	},
+	{
+		name: 'dateAdd',
+		detail: 'dateAdd(value, amount, unit)',
+		documentation:
+			'Adds a duration to a date and returns Unix ms. Units: seconds, minutes, hours, days, weeks, months, years. Use negative amount to subtract.',
+	},
 ]
 
 const keywords = ['return', 'undefined']

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CInputGroup, CButton, CFormInput } from '@coreui/react'
 import JSON5 from 'json5'
 import { VariableTypeIcon } from './VariableTypeIcon.js'

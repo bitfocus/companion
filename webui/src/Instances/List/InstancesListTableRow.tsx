@@ -12,7 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useCallback } from 'react'
+import { useContext, useCallback } from 'react'
 import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
 import { MyErrorBoundary } from '~/Resources/Error'

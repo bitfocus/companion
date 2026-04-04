@@ -1,5 +1,5 @@
 import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { LoadingBar } from '~/Resources/Loading.js'
 import { CButton, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { CModalExt } from '~/Components/CModalExt.js'

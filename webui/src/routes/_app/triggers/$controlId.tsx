@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { EditTriggerPanel } from '~/Triggers/EditPanel.js'
 import { useComputed } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error'

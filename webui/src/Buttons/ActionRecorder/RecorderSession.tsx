@@ -1,7 +1,7 @@
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { CCol, CCallout } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import React from 'react'
+
 import { useActionRecorderActionService } from '~/Services/Controls/ControlActionsService.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'

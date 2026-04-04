@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { BackupRuleEditor } from '../../../../UserConfig/BackupRuleEditor.js'
 import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
 import { useComputed } from '../../../../Resources/util.js'

@@ -1,5 +1,5 @@
 import { CButton, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { CModalExt } from './CModalExt.js'
 
 export interface GenericConfirmModalRef {

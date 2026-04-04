@@ -2,7 +2,7 @@ import type { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 import { observer } from 'mobx-react-lite'

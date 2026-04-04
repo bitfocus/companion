@@ -34,8 +34,7 @@ describe('upgrade', () => {
 	SuppressLogging()
 
 	const db = CreateDataDatabase()
-	let data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v5.json', 'utf8')
-	data = JSON.parse(data)
+	const data = JSON.parse(fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v5.json', 'utf8'))
 	v4tov5.upgradeStartup(db, LogController.createLogger('test-logger'))
 	it('main', () => {
 		expect(db.getTableView('main').all()).toEqual(data['main'])

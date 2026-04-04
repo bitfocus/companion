@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { observable, runInAction } from 'mobx'
-import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
 
 interface CollapsedState {

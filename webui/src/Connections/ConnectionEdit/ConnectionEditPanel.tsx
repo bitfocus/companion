@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { CRow, CCol } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'

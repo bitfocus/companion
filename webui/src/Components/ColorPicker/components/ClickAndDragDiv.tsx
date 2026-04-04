@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import cssStyles from './ClickAndDragDiv.module.css'
 import classNames from 'classnames'
 

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'

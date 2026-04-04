@@ -3,7 +3,7 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
@@ -131,6 +131,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									isLocatedInGrid={!!location}
 									entityType={entity.type}
 									connectionId={entity.connectionId}
+									controlId={controlId}
 									option={FeedbackInvertOption}
 									value={'isInverted' in entity ? entity.isInverted : undefined}
 									setValue={setInverted}
@@ -161,6 +162,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
 								connectionId={entity.connectionId}
+								controlId={controlId}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
 								setValue={service.setValue}

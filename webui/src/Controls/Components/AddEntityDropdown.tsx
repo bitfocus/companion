@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { useComputed } from '~/Resources/util.js'
 import Select, { type createFilter } from 'react-select'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
@@ -74,7 +74,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 					isRecent: false,
 					value: `${connectionId}:${definitionId}`,
 					label: optionLabel,
-					sortKey: definition.sortKey ?? definition.label,
+					sortKey: String(definition.sortKey ?? definition.label),
 					fuzzy: fuzzyPrepare(optionLabel),
 				})
 			}

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { CCol, CFormInput, CFormRange, CRow } from '@coreui/react'
 
 interface NumberInputFieldProps {

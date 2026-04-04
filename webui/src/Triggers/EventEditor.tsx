@@ -8,7 +8,7 @@ import {
 	faPencil,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react'
+import { useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react'
 import classNames from 'classnames'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'

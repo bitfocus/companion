@@ -9,7 +9,7 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 import { CButton, CCol, CForm, CFormInput, CFormCheck, CRow } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

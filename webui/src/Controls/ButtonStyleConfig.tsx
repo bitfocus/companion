@@ -1,5 +1,5 @@
 import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CFormLabel } from '@coreui/react'
-import React, { useCallback, useMemo, useState, type MutableRefObject } from 'react'
+import { useCallback, useMemo, useState, type MutableRefObject } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
 	AlignmentInputField,

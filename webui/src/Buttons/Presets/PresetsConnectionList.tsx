@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { createContext, memo, useCallback, useContext } from 'react'
 import { CCallout } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { faLifeRing, faArrowRight } from '@fortawesome/free-solid-svg-icons'
@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useComputed } from '~/Resources/util'
 import { assertNever } from '@companion-app/shared/Util.js'
 
-const PresetsStoreContext = React.createContext<PresetDefinitionsStore | null>(null)
+const PresetsStoreContext = createContext<PresetDefinitionsStore | null>(null)
 
 const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const presetsDefinitionsStore = useContext(PresetsStoreContext)
@@ -69,7 +69,7 @@ const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeaf
 	)
 })
 
-const PresetGroupHeader = React.memo(function PresetGroupHeader({
+const PresetGroupHeader = memo(function PresetGroupHeader({
 	node,
 }: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
 	return <span>{node.metadata.label}</span>

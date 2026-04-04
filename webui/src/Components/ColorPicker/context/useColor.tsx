@@ -1,5 +1,5 @@
 import debounceFn from 'debounce-fn'
-import React, { type Context, createContext, useContext, useEffect, useMemo } from 'react'
+import { type Context, createContext, useContext, useEffect, useMemo } from 'react'
 import type { Color, ColorResult, HexColor, HsvColor, RgbColor } from '../colors'
 import { ColorsStore } from './store'
 import { colord } from 'colord'

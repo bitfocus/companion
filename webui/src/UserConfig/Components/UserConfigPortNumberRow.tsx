@@ -1,4 +1,3 @@
-import React from 'react'
 import type { UserConfigProps } from './Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { UserConfigNumberInputRow } from './UserConfigNumberInputRow.js'
