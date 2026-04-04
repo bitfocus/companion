@@ -81,7 +81,9 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 		const doClose = useCallback(() => {
 			setShow(false)
 
-			// Delay clearing the data so the modal can animate out (otherwise React complains about changing a controlled input to be uncontrolled)
+			// Delay clearing the data so the modal can animate out:
+			// - during Cancel this avoids flicker
+			// - during Save, which calls doClose, otherwise React complains about changing a controlled input to be uncontrolled.
 			setTimeout(() => {
 				setNewGridSize(null)
 			}, 1500)
