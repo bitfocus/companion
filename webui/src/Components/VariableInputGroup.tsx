@@ -9,9 +9,16 @@ interface VariableInputGroupProps {
 	setCurrentValue: (name: string, value: JsonValue | undefined) => void
 	name: string
 	disabled?: boolean
+	id?: string
 }
 
-const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurrentValue, name, disabled = false }) => {
+const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
+	value,
+	setCurrentValue,
+	name,
+	disabled = false,
+	id,
+}) => {
 	// Determine initial type
 	const isStringInitial = typeof value === 'string'
 
@@ -132,6 +139,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 					{buttonProps.label}
 				</CButton>
 				<CFormInput
+					id={id}
 					value={localValue}
 					onChange={(e) => handleInputChange(e.target.value)}
 					style={{ outline: 'none', boxShadow: 'none', color: !isValueValid ? 'red' : undefined }}
