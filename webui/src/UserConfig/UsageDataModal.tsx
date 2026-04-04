@@ -1,4 +1,3 @@
-import React from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { trpc } from '~/Resources/TRPC.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

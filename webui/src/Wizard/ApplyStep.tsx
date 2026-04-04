@@ -1,4 +1,3 @@
-import React from 'react'
 import { WIZARD_VERSION_3_0 } from './Constants.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import classnames from 'classnames'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
@@ -12,7 +12,7 @@ export interface ButtonPreviewProps extends Omit<ButtonPreviewBaseProps, 'onClic
 	location: ControlLocation
 }
 
-export const ButtonPreview = React.memo(function ButtonPreview(props: ButtonPreviewProps) {
+export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewProps) {
 	const classes = {
 		'button-control': true,
 		fixed: !!props.fixedSize,
@@ -99,7 +99,7 @@ export interface ButtonPreviewBaseProps {
 	title?: string
 }
 
-export const ButtonPreviewBase = React.memo(function ButtonPreview(props: ButtonPreviewBaseProps) {
+export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPreviewBaseProps) {
 	const classes = {
 		'button-control': true,
 		fixed: !!props.fixedSize,

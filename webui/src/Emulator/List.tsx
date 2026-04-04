@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CAlert, CButton, CCol, CContainer, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'

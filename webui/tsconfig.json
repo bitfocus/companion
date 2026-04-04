@@ -11,12 +11,9 @@
 		},
 		"module": "esnext",
 		"moduleResolution": "bundler",
-		"jsx": "react",
-		// "allowJs": true,
-		// "checkJs": true,
+		"jsx": "react-jsx",
 		"strictPropertyInitialization": true,
 		"noEmit": true,
-		// "composite": true,
 
 		"target": "ESNext",
 		"noImplicitAny": true,

@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { useCallback, useEffect, useState, type DependencyList } from 'react'
+import { useCallback, useEffect, useState, type DependencyList } from 'react'
 import { useEventListener } from 'usehooks-ts'
 import type { ReadonlyDeep } from 'type-fest'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CRow, CInputGroup, CFormInput } from '@coreui/react'
 import { useComputed } from '~/Resources/util'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

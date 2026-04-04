@@ -1,4 +1,3 @@
-import React from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ControlEntitiesEditor } from './EntitiesEditor.js'
 import {

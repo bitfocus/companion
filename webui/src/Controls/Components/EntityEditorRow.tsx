@@ -5,7 +5,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useState, useCallback, useRef, useEffect } from 'react'
+import { useContext, useState, useCallback, useRef, useEffect } from 'react'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'

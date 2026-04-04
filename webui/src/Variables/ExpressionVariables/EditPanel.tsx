@@ -1,5 +1,5 @@
 import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
-import React, { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PreventDefaultHandler } from '~/Resources/util'
 import { MyErrorBoundary } from '~/Resources/Error'

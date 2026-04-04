@@ -1,7 +1,7 @@
 import { CInputGroup, CButton, CFormInput } from '@coreui/react'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 
 export interface SearchBoxProps {
 	filter: string

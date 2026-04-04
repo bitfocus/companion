@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { CModalBody, CModalHeader, CModalFooter, CButton } from '@coreui/react'
 import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'

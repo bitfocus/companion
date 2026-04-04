@@ -1,4 +1,4 @@
-import React, { type ReactElement, useCallback, useContext, useMemo } from 'react'
+import { type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,

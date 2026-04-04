@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import { CCard, CCol, CRow } from '@coreui/react'
 import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'

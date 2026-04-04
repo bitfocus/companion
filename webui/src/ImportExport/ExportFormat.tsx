@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import { memo } from 'react'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'

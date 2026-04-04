@@ -1,4 +1,3 @@
-import React from 'react'
 import { CPopover } from '@coreui/react'
 
 export const InlineHelp = ({

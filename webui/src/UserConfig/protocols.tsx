@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react'
+import { memo, useState } from 'react'
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
 import { EmberPlusConfig } from './Sections/EmberPlusConfig.js'
 import { SatelliteConfig } from './Sections/SatelliteConfig.js'
