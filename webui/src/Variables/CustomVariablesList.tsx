@@ -89,7 +89,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 				<div>
 					<h4 className="btn-inline">
 						Custom Variables
-						<ContextHelpButton action="/user-guide/config/variables#custom-variables"></ContextHelpButton>
+						<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
 					</h4>
 					<p className="mb-2">
 						Here you can create some variables which you can define the values of, and update with actions

@@ -52,7 +52,7 @@ function BackupRuleEditPanelHeading({ doCloseRule }: BackupRuleEditPanelHeadingP
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Edit Backup Rule</h4>
 			<div className="header-buttons">
-				<ContextHelpButton action="/user-guide/config/settings#backups"></ContextHelpButton>
+				<ContextHelpButton action="/user-guide/config/settings#backups" />
 				<CloseButton closeFn={doCloseRule} />
 			</div>
 		</div>

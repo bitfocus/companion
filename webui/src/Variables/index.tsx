@@ -86,7 +86,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				<div className="fixed-header">
 					<h4 className="btn-inline">
 						Variables
-						<ContextHelpButton action="/user-guide/config/variables"></ContextHelpButton>
+						<ContextHelpButton action="/user-guide/config/variables" />
 					</h4>
 					<p>
 						Variables are dynamic placeholders that can be used in text, actions, and feedbacks. They automatically

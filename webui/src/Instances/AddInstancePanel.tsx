@@ -111,7 +111,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
-					<ContextHelpButton action={helpAction}></ContextHelpButton>
+					<ContextHelpButton action={helpAction} />
 					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
 				</div>
 			</div>

@@ -132,7 +132,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<h4 className="btn-inline">
 					Expression Variables
-					<ContextHelpButton action="/user-guide/config/variables#expression-variables"></ContextHelpButton>
+					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
 				</h4>
 				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
@@ -311,7 +311,7 @@ function ExpressionVariableEditPanelHeading({ doCloseVariable }: ExpressionVaria
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Edit Expression variable</h4>
 			<div className="header-buttons">
-				<ContextHelpButton action="/user-guide/config/variables#expression-variables"></ContextHelpButton>
+				<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
 				<CloseButton closeFn={doCloseVariable} />
 			</div>
 		</div>

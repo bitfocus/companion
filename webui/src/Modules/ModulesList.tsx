@@ -136,7 +136,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 			<div className="fixed-header">
 				<h4 className="btn-inline">
 					Manage Modules
-					<ContextHelpButton action="/user-guide/config/modules"></ContextHelpButton>
+					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
 
 				<p>

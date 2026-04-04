@@ -156,7 +156,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<EditPagePropertiesModal ref={editRef} includeName />
 
 				<h4 className="btn-inline">
-					Buttons<ContextHelpButton action="/user-guide/config/buttons/"></ContextHelpButton>
+					Buttons
+					<ContextHelpButton action="/user-guide/config/buttons/" />
 				</h4>
 				<p style={{ marginBottom: '0.5rem' }}>
 					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,

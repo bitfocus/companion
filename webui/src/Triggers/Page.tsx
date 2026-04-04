@@ -126,7 +126,8 @@ export const TriggersPage = observer(function Triggers() {
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<h4 className="btn-inline">
-							Triggers<ContextHelpButton action="/user-guide/config/triggers"></ContextHelpButton>
+							Triggers
+							<ContextHelpButton action="/user-guide/config/triggers" />
 						</h4>
 						<p style={{ marginBottom: '0.5rem' }}>
 							Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or

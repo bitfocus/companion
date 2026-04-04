@@ -175,7 +175,7 @@ export const ImportExportPage = observer(function ImportExport() {
 
 			<h4 className="btn-inline">
 				Import / Export Configuration
-				<ContextHelpButton action="/user-guide/config/import-export"></ContextHelpButton>
+				<ContextHelpButton action="/user-guide/config/import-export" />
 			</h4>
 			<p>On this page, you can import, export, and reset all settings stored in your Companion installation.</p>
 

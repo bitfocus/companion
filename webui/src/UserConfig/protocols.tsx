@@ -29,7 +29,7 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 							<div>
 								<h4 className="btn-inline">
 									Settings - Protocols
-									<ContextHelpButton action="/user-guide/config/settings#protocols"></ContextHelpButton>
+									<ContextHelpButton action="/user-guide/config/settings#protocols" />
 								</h4>
 								<p>Settings apply instantaneously, don't worry about it!</p>
 							</div>

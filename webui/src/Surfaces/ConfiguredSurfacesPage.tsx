@@ -91,7 +91,8 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 			>
 				<div className="fixed-header">
 					<h4 className="btn-inline">
-						Configured Surfaces<ContextHelpButton action="/user-guide/config/surfaces"></ContextHelpButton>
+						Configured Surfaces
+						<ContextHelpButton action="/user-guide/config/surfaces" />
 					</h4>
 
 					<p style={{ marginBottom: '0.5rem' }}>
