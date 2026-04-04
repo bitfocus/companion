@@ -269,6 +269,14 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 					{
+						type: 'textinput',
+						label: 'Working Directory',
+						id: 'cwd',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+						description:
+							'Optional. If not set, the command will be run with the current working directory of companion',
+					},
+					{
 						type: 'number',
 						label: 'Timeout (ms, between 500 and 20000)',
 						id: 'timeout',
@@ -329,7 +337,9 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		if (action.definitionId === 'exec') {
 			if (action.options.path) {
 				const command = stringifyVariableValue(action.options.path)
-				this.#logger.silly(`Running command: '${command}'`)
+				const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined
+				const cwd = cwdRaw?.trim() !== '' ? cwdRaw : undefined
+				this.#logger.silly(`Running command: '${command}' in '${cwd ?? process.cwd()}'`)
 
 				if (!command || command.trim() === '') {
 					this.#logger.warn('No command specified')
@@ -338,6 +348,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 
 				try {
 					const { stdout } = await execAsync(command, {
+						cwd: cwd,
 						timeout: Number(action.options.timeout) || 5000,
 					})
 

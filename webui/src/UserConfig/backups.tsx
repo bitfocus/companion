@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -14,6 +14,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { backupTypes } from './BackupConstants.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 export const SettingsBackupsPage = observer(function UserConfig() {
 	const navigate = useNavigate({ from: '/settings/backups' })
@@ -54,7 +55,13 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4>Settings - Backups</h4>
+								<h4 className="btn-inline">
+									Settings - Backups
+									<ContextHelpButton action="/user-guide/config/settings#backups">
+										Companion can back itself up on a schedule to multiple directories if desired. These backups can be
+										synced to cloud storage or backed up during OS backup to give more peace of mind to administrators.
+									</ContextHelpButton>
+								</h4>
 								<p>Scheduled backups of your Companion configuration. Settings apply instantaneously!</p>
 							</div>
 						</div>

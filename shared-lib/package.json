@@ -30,6 +30,6 @@
   },
   "devDependencies": {
     "@types/semver": "^7.7.1",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.2"
   }
 }

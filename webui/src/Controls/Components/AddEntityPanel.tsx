@@ -1,7 +1,7 @@
 import { CButton } from '@coreui/react'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { AddEntitiesModal, type AddEntitiesModalRef } from './AddEntitiesModal.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'

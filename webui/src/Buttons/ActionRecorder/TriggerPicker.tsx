@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'

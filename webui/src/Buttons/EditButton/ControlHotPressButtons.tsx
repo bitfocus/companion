@@ -2,7 +2,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faPlay, faUndo, faRedo, faStop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { MyErrorBoundary } from '~/Resources/Error'
 

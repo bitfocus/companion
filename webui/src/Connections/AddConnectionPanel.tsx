@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react'
+import { useContext, useMemo } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -17,6 +17,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 		<AddInstancePanel
 			service={service}
 			title="Add New Connection"
+			helpAction="/user-guide/config/connections#adding-a-connection"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>

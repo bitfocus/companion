@@ -659,20 +659,46 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
 	border: none;
 	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
-}
+	display: flex;
+	align-items: center; // center the "X" in the button's background
 
-.context-help-button-2xl {
-	border: 0;
-	border-radius: 100%;
-	box-shadow: 2px 3px 4px 1px rgb(0 0 0 / 25%);
-	color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
-	background-color: white;
-
-	.fa-2xl {
-		margin: 0px -4px -2px -4px;
+	.svg-inline--fa {
+		height: 1.25em;
+		width: 1.25em;
+		margin: 2px;
 	}
 }
 
+// apply a similar effect to CModal close buttons:
+.modal-header .btn-close {
+	// CUI's "X" svg does not change with the "color" prop, so we use filter: invert() to make it white.
+	// First, invert the background color so the CSS invert returns it to the desired value while inverting the foreground
+	background-color: color.invert(color.adjust($panel-header-button-color, $lightness: -50%));
+	filter: invert(1) drop-shadow(2px 2px 4px rgb(0 0 0 / 25%));
+}
+
+// format context-help-buttons. Everything but size can be globally applied.
+.context-help-button-btn {
+	border: 0;
+	border-radius: 100%;
+	--cui-btn-color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
+	background-color: white;
+}
+
+// context-help-buttons in panel headers.  (For h4, h5 headings see _common.scss)
+.header-buttons .context-help-button-btn {
+	box-shadow: 1px 1px 4px 1px rgb(0 0 0 / 25%);
+	margin-top: 1px; // centers it a bit better relative to the close button
+	width: 2em;
+	height: 2em;
+
+	.svg-inline--fa {
+		width: 2em;
+		height: 2em;
+	}
+}
+
+// is this used anywhere? (it's not explicitly in the code)
 .subhead-help-button {
 	border: 0;
 	background: none;
@@ -729,7 +755,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 	.secondary-panel-simple-header {
 		background: #{$panel-header-bg};
 		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
-		padding: 1.25rem 1.5rem;
+		padding: 1rem 1.5rem; // only 1rem y-padding now, to preserve the original header-height now that CloseButton & ContextHelpButton are in almost all panel headers.
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -794,10 +820,6 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 
 			.tab-content {
 				overflow-y: scroll;
-
-				&.default-scroll {
-					overflow: inherit;
-				}
 			}
 		}
 
@@ -809,6 +831,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 			overflow-y: scroll;
 
 			&.no-scroll {
+				// don't allocate space ahead of time (mainly for nonIdealState?)
 				overflow-y: auto;
 			}
 		}
@@ -888,25 +911,25 @@ hr.slim {
 	text-align: right;
 }
 
+// used only in RecorderSessionFinishModal
 .modal-full-height {
-	height: 100%;
-
 	.modal-dialog {
-		height: 100%;
+		min-height: 500px; // if the window gets too small fall back to scrolling the window
 	}
 
 	.modal-content {
 		height: 100%;
-
-		& > div,
-		& > form {
-			height: 100%;
-		}
 	}
 
 	.modal-body {
 		display: grid;
 		grid-template-rows: auto 1fr;
+		overflow: hidden; // ← clip at body level, don't scroll
+
+		.default-scroll {
+			overflow: auto;
+			min-height: 0;
+		}
 	}
 }
 

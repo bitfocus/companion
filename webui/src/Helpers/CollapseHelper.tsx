@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { observable, runInAction } from 'mobx'
-import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
 
 interface CollapsedState {
@@ -18,6 +18,7 @@ export interface PanelCollapseHelper {
 	canExpandAll(parentId: string | null, panelIds: string[]): boolean
 	canCollapseAll(parentId: string | null, panelIds: string[]): boolean
 	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
+	setMultipleCollapsed: (panelIds: string[], collapsed: boolean) => void
 	togglePanelCollapsed: (parentId: string | null, panelId: string) => void
 	isPanelCollapsed: (parentId: string | null, panelId: string) => boolean
 }
@@ -114,6 +115,16 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 	setPanelCollapsed = (panelId: string, collapsed: boolean): void => {
 		runInAction(() => {
 			this.#ids.set(panelId, collapsed)
+
+			this.#writeState()
+		})
+	}
+
+	setMultipleCollapsed = (panelIds: string[], collapsed: boolean): void => {
+		runInAction(() => {
+			for (const panelId of panelIds) {
+				this.#ids.set(panelId, collapsed)
+			}
 
 			this.#writeState()
 		})

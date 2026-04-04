@@ -4,7 +4,6 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./lib",
-		"baseUrl": "./",
 		"paths": {
 			"*": ["./node_modules/*"]
 		},
@@ -25,7 +24,6 @@
 		"lib": ["es2022"],
 		"types": ["node"],
 		"strict": true,
-		"alwaysStrict": false,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,

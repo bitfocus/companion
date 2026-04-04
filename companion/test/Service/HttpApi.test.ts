@@ -8,6 +8,9 @@ import { rgb } from '../../lib/Resources/Util.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
+import { ModuleInstanceType, InstanceVersionUpdatePolicy } from '../../../shared-lib/lib/Model/Instance.js'
+import type { ClientConnectionConfig } from '../../../shared-lib/lib/Model/Connections.js'
+import { JsonValue } from 'type-fest'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -52,7 +55,6 @@ describe('HttpApi', () => {
 			serviceApi,
 			userconfig,
 			service,
-			// logger,
 		}
 	}
 
@@ -1040,7 +1042,7 @@ describe('HttpApi', () => {
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
-			async function testSetStyle(queryStr, body, expected) {
+			async function testSetStyle(queryStr: string, body: JsonValue | undefined, expected: Record<string, any> | null) {
 				const { app, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 
@@ -1057,7 +1059,7 @@ describe('HttpApi', () => {
 					? supertest(app)
 							.post(`/api/location/1/2/3/style?${queryStr}`)
 							.set('Content-Type', 'application/json')
-							.send(body)
+							.send(body as any)
 					: supertest(app).post(`/api/location/1/2/3/style?${queryStr}`).send())
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')
@@ -1284,6 +1286,248 @@ describe('HttpApi', () => {
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
 				expect(mockFn).toHaveBeenCalledWith('ConnectionLabel', 'variableName')
+			})
+		})
+	})
+
+	describe('connections', () => {
+		function createConnectionConfigs(): Record<string, ClientConnectionConfig> {
+			return {
+				'conn-1': {
+					id: 'conn-1',
+					label: 'My OBS',
+					moduleId: 'obs-websocket',
+					enabled: true,
+					sortOrder: 0,
+					moduleType: ModuleInstanceType.Connection,
+					moduleVersionId: null,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
+					hasRecordActionsHandler: false,
+					collectionId: null,
+				},
+				'conn-2': {
+					id: 'conn-2',
+					label: 'My ATEM',
+					moduleId: 'bmd-atem',
+					enabled: false,
+					sortOrder: 1,
+					moduleType: ModuleInstanceType.Connection,
+					moduleVersionId: null,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
+					hasRecordActionsHandler: false,
+					collectionId: null,
+				},
+			}
+		}
+
+		const mockStatus = { category: 'good', level: 'ok', message: 'Connected' }
+
+		describe('list connections', () => {
+			test('returns array of connections', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.getConnectionStatus.mockImplementation((id: string) => {
+					if (id === 'conn-1') return mockStatus
+					return undefined
+				})
+
+				const res = await supertest(app).get('/api/connections').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual([
+					{
+						id: 'conn-1',
+						label: 'My OBS',
+						moduleId: 'obs-websocket',
+						enabled: true,
+						status: mockStatus,
+					},
+					{
+						id: 'conn-2',
+						label: 'My ATEM',
+						moduleId: 'bmd-atem',
+						enabled: false,
+						status: null,
+					},
+				])
+
+				expect(serviceApi.getConnectionsList).toHaveBeenCalledTimes(1)
+			})
+
+			test('returns empty array when no connections', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue({})
+
+				const res = await supertest(app).get('/api/connections').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual([])
+			})
+		})
+
+		describe('get connection status', () => {
+			test('returns status for existing connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.getConnectionStatus.mockReturnValue(mockStatus)
+
+				const res = await supertest(app).get('/api/connections/conn-1/status').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({
+					id: 'conn-1',
+					label: 'My OBS',
+					enabled: true,
+					status: mockStatus,
+				})
+
+				expect(serviceApi.getConnectionStatus).toHaveBeenCalledWith('conn-1')
+			})
+
+			test('returns null status when no status available', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.getConnectionStatus.mockReturnValue(undefined)
+
+				const res = await supertest(app).get('/api/connections/conn-1/status').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({
+					id: 'conn-1',
+					label: 'My OBS',
+					enabled: true,
+					status: null,
+				})
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+
+				const res = await supertest(app).get('/api/connections/unknown-id/status').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+		})
+
+		describe('restart connection', () => {
+			test('triggers restart for existing enabled connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.restartConnection.mockReturnValue(true)
+
+				const res = await supertest(app).post('/api/connections/conn-1/restart').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-1', message: 'Restart triggered' })
+
+				expect(serviceApi.restartConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.restartConnection).toHaveBeenCalledWith('conn-1')
+			})
+
+			test('returns 409 for inactive connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.restartConnection.mockReturnValue(false)
+
+				const res = await supertest(app).post('/api/connections/conn-2/restart').send()
+				expect(res.status).toBe(409)
+				expect(res.body).toEqual({
+					status: 409,
+					message: 'Connection is inactive and cannot be restarted',
+				})
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+
+				const res = await supertest(app).post('/api/connections/unknown-id/restart').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+		})
+
+		describe('enable connection', () => {
+			test('enables existing connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-2/enable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-2', enabled: true })
+
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledWith('conn-2', true)
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+
+				const res = await supertest(app).post('/api/connections/unknown-id/enable').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('enables already-enabled connection (idempotent)', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-1/enable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-1', enabled: true })
+
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledWith('conn-1', true)
+			})
+		})
+
+		describe('disable connection', () => {
+			test('disables existing connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-1/disable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-1', enabled: false })
+
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledWith('conn-1', false)
+			})
+
+			test('returns 404 for unknown connection', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+
+				const res = await supertest(app).post('/api/connections/unknown-id/disable').send()
+				expect(res.status).toBe(404)
+				expect(res.body).toEqual({ status: 404, message: 'Connection not found' })
+			})
+
+			test('disables already-disabled connection (idempotent)', async () => {
+				const { app, serviceApi } = createService()
+
+				serviceApi.getConnectionsList.mockReturnValue(createConnectionConfigs())
+				serviceApi.enableDisableConnection.mockReturnValue(undefined)
+
+				const res = await supertest(app).post('/api/connections/conn-2/disable').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual({ id: 'conn-2', enabled: false })
+
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledTimes(1)
+				expect(serviceApi.enableDisableConnection).toHaveBeenCalledWith('conn-2', false)
 			})
 		})
 	})

@@ -1,4 +1,3 @@
-import React from 'react'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { SurfaceDiscoveryTable } from '../Discovery/SurfaceDiscoveryTable'
 

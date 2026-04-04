@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { memo, useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
 import type { EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -69,7 +69,7 @@ interface KeypadButtonProps {
 	onClick: (digit: number) => void
 }
 
-const KeypadButton = React.memo(function KeypadButton({ digit, onClick }: KeypadButtonProps) {
+const KeypadButton = memo(function KeypadButton({ digit, onClick }: KeypadButtonProps) {
 	const handleClick = useCallback(
 		(e: React.MouseEvent | React.TouchEvent) => {
 			e.preventDefault()

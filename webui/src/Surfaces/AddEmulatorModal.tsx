@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import {
 	CAlert,
 	CButton,

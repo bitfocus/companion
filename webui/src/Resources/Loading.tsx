@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PRIMARY_COLOR } from './Constants.js'
 import { BarLoader, PuffLoader } from 'react-spinners'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'

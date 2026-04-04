@@ -1,5 +1,3 @@
-import React from 'react'
-
 export const Tuck = ({ children }: { children: React.ReactNode }): React.JSX.Element => {
 	return (
 		<div

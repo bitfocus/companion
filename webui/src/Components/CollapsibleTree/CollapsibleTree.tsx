@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCaretRight, faCaretDown } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { EditExpressionVariablePanel } from '~/Variables/ExpressionVariables/EditPanel.js'
 import { useComputed } from '~/Resources/util'
 import { MyErrorBoundary } from '~/Resources/Error'

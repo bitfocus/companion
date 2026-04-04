@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -21,6 +21,8 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -132,7 +134,10 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	return (
 		<div className="flex-column-layout">
 			<div className="fixed-header">
-				<h4>Manage Modules</h4>
+				<h4 className="btn-inline">
+					Manage Modules
+					<ContextHelpButton action="/user-guide/config/modules" />
+				</h4>
 
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
@@ -293,7 +298,11 @@ const ModulesListRow = observer(function ModulesListRow({
 				)}
 			</td>
 			<td onClick={doEdit} className="hand">
-				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+				{!!moduleInfo.storeInfo?.deprecationReason && (
+					<InlineHelp help="Deprecated">
+						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
+					</InlineHelp>
+				)}
 				{moduleInfo.name}
 			</td>
 			<td className="compact">

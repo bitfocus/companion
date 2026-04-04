@@ -567,6 +567,29 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 	}
 
+	/**
+	 * Force a restart of a running connection process
+	 * @returns true if the connection was found and restart was triggered
+	 */
+	restartConnection(id: string): boolean {
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
+		if (!connectionConfig) return false
+
+		if (connectionConfig.enabled === false) {
+			this.#logger.warn(`Cannot restart disabled connection "${connectionConfig.label}"`)
+			return false
+		}
+
+		if (!this.#connectionCollectionsController.isCollectionEnabled(connectionConfig.collectionId)) {
+			this.#logger.warn(`Cannot restart connection "${connectionConfig.label}" in disabled collection`)
+			return false
+		}
+
+		this.#logger.info(`Restarting connection "${connectionConfig.label}"`)
+		this.#queueUpdateInstanceState(id, false, true)
+		return true
+	}
+
 	async removeConnection(connectionId: string): Promise<void> {
 		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!config) {
