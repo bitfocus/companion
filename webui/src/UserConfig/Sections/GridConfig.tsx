@@ -81,28 +81,25 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 		const doClose = useCallback(() => {
 			setShow(false)
 
-			// Delay clearing the data so the modal can animate out
+			// Delay clearing the data so the modal can animate out (otherwise React complains about changing a controlled input to be uncontrolled)
 			setTimeout(() => {
 				setNewGridSize(null)
 			}, 1500)
 		}, [])
+
 		const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 		const doAction = useCallback(
 			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
 
-				setShow(false)
-				// Delay clearing the data so the modal can animate out (otherwise React complains about changing a controlled input to be uncontrolled)
-				setTimeout(() => {
-					setNewGridSize(null)
-				}, 1500)
+				doClose() // close the popup in an orderly way
 
 				if (!newGridSize) return
 
 				console.log('set gridSize', newGridSize)
 				setConfigKeyMutation.mutate({ key: 'gridSize', value: newGridSize })
 			},
-			[setConfigKeyMutation, newGridSize]
+			[doClose, newGridSize, setConfigKeyMutation]
 		)
 
 		useImperativeHandle(
@@ -197,7 +194,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 							<CFormInput
 								label="Min Row"
 								type="number"
-								value={newGridSize?.minRow}
+								value={newGridSize?.minRow ?? '' /* avoid switch to/from uncontrolled */}
 								max={0}
 								step={1}
 								onChange={setMinRow}
@@ -207,7 +204,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 							<CFormInput
 								label="Max Row"
 								type="number"
-								value={newGridSize?.maxRow}
+								value={newGridSize?.maxRow ?? ''}
 								min={0}
 								step={1}
 								onChange={setMaxRow}
@@ -217,7 +214,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 							<CFormInput
 								label="Min Column"
 								type="number"
-								value={newGridSize?.minColumn}
+								value={newGridSize?.minColumn ?? ''}
 								max={0}
 								step={1}
 								onChange={setMinColumn}
@@ -227,7 +224,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 							<CFormInput
 								label="Max Column"
 								type="number"
-								value={newGridSize?.maxColumn}
+								value={newGridSize?.maxColumn ?? ''}
 								min={0}
 								step={1}
 								onChange={setMaxColumn}

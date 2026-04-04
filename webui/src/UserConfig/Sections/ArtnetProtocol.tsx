@@ -8,7 +8,12 @@ export function ArtnetProtocol(): React.JSX.Element {
 	return (
 		<>
 			<div className="my-3">
-				<CButton color="success" href={makeAbsolutePath('/Bitfocus_Companion_v20.d4')} target="_blank">
+				<CButton
+					color="success"
+					href={makeAbsolutePath('/Bitfocus_Companion_v20.d4')}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
 					<FontAwesomeIcon icon={faFileImport} /> Download Avolites Fixture file (v2.0)
 				</CButton>
 			</div>
