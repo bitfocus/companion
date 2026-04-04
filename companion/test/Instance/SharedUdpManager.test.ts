@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, test } from 'vitest'
 import EventEmitter from 'events'
 import type { createSocket } from 'dgram'
+import { InstanceSharedUdpManager } from '../../lib/Instance/Connection/SharedUdpManager.js'
 
 const mockCreateSocket = vi.fn((...args: Parameters<typeof createSocket>): MockSocket => {
 	throw new Error('Not implemented')
@@ -10,8 +11,6 @@ vi.mock('dgram', () => ({
 	Socket: null, // Only needed for types
 	createSocket: mockCreateSocket,
 }))
-
-const { InstanceSharedUdpManager } = await import('../../lib/Instance/Connection/SharedUdpManager.js')
 
 class MockSocket extends EventEmitter {
 	// TODO
@@ -229,7 +228,7 @@ describe('SharedUdpManager', () => {
 	})
 
 	describe('callbacks', () => {
-		async function join(service) {
+		async function join(service: InstanceSharedUdpManager) {
 			const messageFn = vi.fn()
 			const errorFn = vi.fn()
 
