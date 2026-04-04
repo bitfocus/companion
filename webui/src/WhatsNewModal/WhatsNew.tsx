@@ -1,16 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
-import {
-	CModalBody,
-	CModalHeader,
-	CModalFooter,
-	CButton,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CTabContent,
-	CTabPane,
-	CAlert,
-} from '@coreui/react'
+import { CModalBody, CModalHeader, CNav, CNavItem, CNavLink, CTabContent, CTabPane, CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useQuery } from '@tanstack/react-query'
 import { CModalExt } from '~/Components/CModalExt.js'
@@ -91,7 +80,7 @@ export const WhatsNewModal = observer(
 		)
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" className="modal-whatsnew">
+			<CModalExt scrollable visible={show} onClose={doClose} onClosed={onClosed} size="lg" className="modal-whatsnew">
 				<CModalHeader closeButton>
 					<h5>What's New in Companion</h5>
 				</CModalHeader>
@@ -113,9 +102,9 @@ export const WhatsNewModal = observer(
 									</CNavItem>
 								))}
 							</CNav>
-							<CTabContent className="default-scroll">
+							<CTabContent>
 								{selectedPage && (
-									<CTabPane className="" visible>
+									<CTabPane visible>
 										<MyErrorBoundary>
 											<DocsContent file={selectedPage.file} />
 										</MyErrorBoundary>
@@ -125,11 +114,6 @@ export const WhatsNewModal = observer(
 						</>
 					)}
 				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Close
-					</CButton>
-				</CModalFooter>
 			</CModalExt>
 		)
 	})
