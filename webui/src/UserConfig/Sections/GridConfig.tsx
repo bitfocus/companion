@@ -9,16 +9,17 @@ import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
-export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
-	const gridSizeRef = useRef<GridSizeModalRef>(null)
-
+export interface GridConfigRowsProps extends UserConfigProps {
+	// the current prop of the ref object:
+	gridSizePopup: React.RefObject<GridSizeModalRef>
+}
+export const GridConfigRows = observer(function GridConfigRows(props: GridConfigRowsProps) {
 	const editGridSize = useCallback(() => {
-		gridSizeRef.current?.show()
-	}, [])
+		props.gridSizePopup.current?.show()
+	}, [props.gridSizePopup])
 
 	return (
 		<>
-			<GridSizeModal ref={gridSizeRef} />
 			<UserConfigHeadingRow label="Button Grid" />
 
 			<UserConfigStaticTextRow
@@ -55,12 +56,12 @@ export const GridConfig = observer(function GridConfig(props: UserConfigProps) {
 	)
 })
 
-interface GridSizeModalRef {
+export interface GridSizeModalRef {
 	show(): void
 }
 
-const GridSizeModal = observer<object, GridSizeModalRef>(
-	function GridSizeModal(_props, ref) {
+export const GridSizeModal = observer<object, GridSizeModalRef>(
+	React.forwardRef(function GridSizeModal(_props, ref) {
 		const { userConfig } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
@@ -91,7 +92,10 @@ const GridSizeModal = observer<object, GridSizeModalRef>(
 				if (e) e.preventDefault()
 
 				setShow(false)
-				setNewGridSize(null)
+				// Delay clearing the data so the modal can animate out (otherwise React complains about changing a controlled input to be uncontrolled)
+				setTimeout(() => {
+					setNewGridSize(null)
+				}, 1500)
 
 				if (!newGridSize) return
 
@@ -246,6 +250,5 @@ const GridSizeModal = observer<object, GridSizeModalRef>(
 				</CModalFooter>
 			</CModal>
 		)
-	},
-	{ forwardRef: true }
+	})
 )

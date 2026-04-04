@@ -17,9 +17,10 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 
 	// Local editing state
 	const [isEditing, setIsEditing] = useState(false)
-	const [localValue, setLocalValue] = useState<string>(isStringInitial ? (value ?? '') : JSON.stringify(value))
-	const [isValueValid, setIsValid] = useState<boolean>(true)
-	const [isString, setIsString] = useState<boolean>(isStringInitial)
+	// note: localValue can't be "undefined" in order to avoid React controlled/uncontrolled errors
+	const [localValue, setLocalValue] = useState((isStringInitial ? value : JSON.stringify(value)) ?? '')
+	const [isValueValid, setIsValid] = useState(true)
+	const [isString, setIsString] = useState(isStringInitial)
 
 	// Ref for the input group to manage focus
 	const groupRef = useRef<HTMLDivElement>(null)
