@@ -29,6 +29,11 @@ export const CModalExt = forwardRef<HTMLDivElement, CModalExtProps>(function CMo
 
 		if (onClosed) clearTimeoutRef.current = setTimeout(onClosed, fadeOutDuration)
 
+		// Move focus away before the modal sets aria-hidden (avoids a complaint about blocked aria-hidden in whats-new, possibly others)
+		if (document.activeElement instanceof HTMLElement) {
+			document.activeElement.blur()
+		}
+
 		onClose?.()
 	}, [onClose, onClosed])
 
