@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CCol, CContainer, CRow } from '@coreui/react'

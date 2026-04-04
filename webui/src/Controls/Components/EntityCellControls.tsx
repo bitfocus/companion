@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
 import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

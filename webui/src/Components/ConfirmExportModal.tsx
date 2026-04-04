@@ -9,7 +9,7 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState, useContext } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState, useContext } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'

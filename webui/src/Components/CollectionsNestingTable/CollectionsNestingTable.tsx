@@ -1,4 +1,3 @@
-import React from 'react'
 import { capitalize } from 'lodash-es'
 import { CollectionsNestingTableCollectionsList } from './CollectionsNestingTableGroupsList.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'

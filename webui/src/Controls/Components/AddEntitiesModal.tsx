@@ -1,5 +1,5 @@
 import { CButton, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import { createContext, forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { capitalize } from 'lodash-es'
@@ -52,7 +52,7 @@ interface AddEntitiesModalProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 }
-const EntityTypeLabelContext = React.createContext<string>('')
+const EntityTypeLabelContext = createContext<string>('')
 
 export interface AddEntitiesModalRef {
 	show(): void

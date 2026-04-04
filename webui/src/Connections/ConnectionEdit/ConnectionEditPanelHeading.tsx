@@ -2,7 +2,7 @@ import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connect
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useCallback } from 'react'
+import { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfo } from '../../Instances/Util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'

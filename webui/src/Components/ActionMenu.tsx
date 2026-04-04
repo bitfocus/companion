@@ -1,4 +1,4 @@
-import React, { type ElementType, type ReactElement } from 'react'
+import { type ElementType, type ReactElement } from 'react'
 import { CDropdownMenu, CDropdownItem, CDropdownDivider } from '@coreui/react'
 import { faExternalLinkSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

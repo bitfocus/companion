@@ -482,7 +482,7 @@ describe('InstanceDefinitions', () => {
 			expect(result).not.toBeNull()
 			expect(result!.type).toBe(EntityModelType.Feedback)
 			if (result!.type === EntityModelType.Feedback) {
-				expect(result.style).toEqual({ color: 0xff0000, bgcolor: 0x00ff00 })
+				expect(result!.style).toEqual({ color: 0xff0000, bgcolor: 0x00ff00 })
 			}
 		})
 
@@ -498,7 +498,7 @@ describe('InstanceDefinitions', () => {
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
-				expect(result.style).toEqual({})
+				expect(result!.style).toEqual({})
 			}
 		})
 
@@ -510,7 +510,7 @@ describe('InstanceDefinitions', () => {
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
-				expect(result.isInverted).toEqual(exprVal(false))
+				expect(result!.isInverted).toEqual(exprVal(false))
 			}
 		})
 
@@ -536,7 +536,7 @@ describe('InstanceDefinitions', () => {
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
-				expect(result.style).toEqual({})
+				expect(result!.style).toEqual({})
 			}
 		})
 
@@ -573,7 +573,7 @@ describe('InstanceDefinitions', () => {
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
-				expect(result.style).toEqual({ color: 0xff0000, bgcolor: 0x00ff00 })
+				expect(result!.style).toEqual({ color: 0xff0000, bgcolor: 0x00ff00 })
 			}
 		})
 	})
@@ -1610,7 +1610,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.text).toEqual(exprVal('Hello $(conn1:variable)'))
 		})
 
@@ -1709,7 +1709,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.expr).toEqual(exprVal('$(conn1:count) + 10'))
 		})
 
@@ -1763,7 +1763,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.text).toEqual(exprExpr('$(conn1:var1) + " text"'))
 		})
 
@@ -1817,7 +1817,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			// Should NOT replace because isExpression is false (literal dropdown value case)
 			expect(action.options.text).toEqual(exprVal('$(label:var1)'))
 		})
@@ -1872,7 +1872,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.text).toEqual(exprVal('$(label:var) should not change'))
 		})
 
@@ -1990,7 +1990,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.text).toEqual(exprVal('$(conn1:var1) and $(conn1:var2) and $(conn1:var3)'))
 		})
 
@@ -2045,7 +2045,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.text).toEqual({ value: '$(conn1:var)', isExpression: true })
 		})
 
@@ -2086,7 +2086,7 @@ describe('InstanceDefinitions', () => {
 			expect(result).not.toBeNull()
 
 			// Variable replacement should not happen for missing definitions
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.text).toEqual(exprVal('$(label:var)'))
 		})
 
@@ -2181,7 +2181,7 @@ describe('InstanceDefinitions', () => {
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
 
-			const action = result!.steps.step1.action_sets.down[0]
+			const action = result!.steps.step1.action_sets.down![0]
 			expect(action.options.number).toEqual(exprVal(42))
 			expect(action.options.checkbox).toEqual(exprVal(true))
 		})

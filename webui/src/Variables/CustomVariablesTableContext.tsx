@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { CustomVariablesApi } from './CustomVariablesApi'
 import type { ObservableMap } from 'mobx'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'

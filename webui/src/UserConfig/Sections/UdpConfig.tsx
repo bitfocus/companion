@@ -1,4 +1,3 @@
-import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'

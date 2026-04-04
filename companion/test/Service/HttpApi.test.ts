@@ -8,6 +8,7 @@ import { rgb } from '../../lib/Resources/Util.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
+import { JsonValue } from 'type-fest'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -1040,7 +1041,7 @@ describe('HttpApi', () => {
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
-			async function testSetStyle(queryStr, body, expected) {
+			async function testSetStyle(queryStr: string, body: JsonValue | undefined, expected: Record<string, any> | null) {
 				const { app, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 
@@ -1057,7 +1058,7 @@ describe('HttpApi', () => {
 					? supertest(app)
 							.post(`/api/location/1/2/3/style?${queryStr}`)
 							.set('Content-Type', 'application/json')
-							.send(body)
+							.send(body as any)
 					: supertest(app).post(`/api/location/1/2/3/style?${queryStr}`).send())
 				expect(res.status).toBe(200)
 				expect(res.text).toBe('ok')

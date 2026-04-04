@@ -1,4 +1,3 @@
-import React from 'react'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useQuery } from '@tanstack/react-query'

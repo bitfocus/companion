@@ -1,5 +1,3 @@
-import React from 'react'
-
 // eslint-disable-next-line react-refresh/only-export-components
 export const windowLinkOpen = ({ href, sameWindow }: { href: string; sameWindow?: boolean; title?: string }): void => {
 	window.open(href, !sameWindow ? '_blank' : '', 'noreferrer')

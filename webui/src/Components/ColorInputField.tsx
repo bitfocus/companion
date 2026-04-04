@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from 'react'
+import { useState, useCallback, useContext } from 'react'
 import { SketchPicker } from './ColorPicker/Sketch.js'
 import type { ColorResult } from './ColorPicker/colors.js'
 import { createPortal } from 'react-dom'

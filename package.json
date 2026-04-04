@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@tanstack/eslint-plugin-query": "^5.95.0",
+    "@tanstack/eslint-plugin-query": "^5.96.1",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/node": "^22.19.15",
     "@types/ps-tree": "^1.1.6",
@@ -71,12 +71,12 @@
     "json-schema-to-typescript": "^15.0.4",
     "lint-staged": "^16.4.0",
     "openapi-typescript": "^7.13.0",
-    "p-retry": "^7.1.1",
+    "p-retry": "^8.0.0",
     "prettier": "^3.8.1",
-    "socket": "^1.1.76",
+    "socket": "^1.1.77",
     "tsx": "^4.21.0",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.57.2",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.0",
     "vitest": "^4.1.2",
     "vitest-mock-extended": "^3.1.0",
     "yaml": "^2.8.3",
@@ -92,7 +92,8 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "node-gyp": "^12.1.0"
+    "node-gyp": "^12.1.0",
+    "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

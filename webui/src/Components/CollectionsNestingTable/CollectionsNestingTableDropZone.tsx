@@ -1,4 +1,3 @@
-import React from 'react'
 import type { ConnectDropTarget } from 'react-dnd'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
 

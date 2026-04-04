@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
 import type { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import classNames from 'classnames'

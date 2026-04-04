@@ -7,7 +7,7 @@ import {
 import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'

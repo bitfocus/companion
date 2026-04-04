@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
