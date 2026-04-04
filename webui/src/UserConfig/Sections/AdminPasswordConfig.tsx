@@ -9,7 +9,7 @@ import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow
 export const AdminPasswordConfig = observer(function AdminPasswordConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow label="Admin UI Password" />
+			<UserConfigHeadingRow label="Admin UI Password" helpAction="/user-guide/config/settings#admin-ui-password" />
 
 			<tr>
 				<td colSpan={3}>

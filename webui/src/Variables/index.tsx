@@ -14,6 +14,7 @@ import {
 	type CollectionGroupMeta,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
 
 const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const { variablesStore } = useContext(RootAppStoreContext)
@@ -83,7 +84,10 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		<CRow>
 			<CCol xs={12} className="flex-column-layout">
 				<div className="fixed-header">
-					<h4>Variables</h4>
+					<h4 className="btn-inline">
+						Variables
+						<ContextHelpButton action="/user-guide/config/variables" />
+					</h4>
 					<p>
 						Variables are dynamic placeholders that can be used in text, actions, and feedbacks. They automatically
 						update with live content, making it easy to create customized and responsive displays.

@@ -47,6 +47,44 @@ legend {
 	}
 }
 
+// special case, mainly for context help buttons: add btn-inline to the <h4> or <h5> element to prevent buttons from floating right
+h4.btn-inline,
+h5.btn-inline {
+	display: flex;
+
+	.context-help-button,
+	.btn,
+	.btn-group {
+		display: inline-flex;
+		align-items: center;
+		padding-left: 0.75em;
+	}
+
+	.context-help-button-btn {
+		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+
+		.svg-inline--fa {
+			width: 1.5em;
+			height: 1.5em;
+		}
+	}
+}
+
+// set the size of context-help-buttons for "settings category rows" and similar circumstances (doesn't actually affect the position)
+.help-button-float,
+.settings-category-row {
+	.context-help-button-btn {
+		width: 1.5em;
+		height: 1.5em;
+		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+
+		.svg-inline--fa {
+			width: 1.5em;
+			height: 1.5em;
+		}
+	}
+}
+
 .btn-group {
 	// do not set "overflow: hidden;" globally! if needed put it in an appropriate scope. If set here it prevents dropdown menus!
 	&.margin-bottom {

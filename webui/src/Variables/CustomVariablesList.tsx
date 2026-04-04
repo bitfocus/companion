@@ -29,6 +29,7 @@ import { CustomVariablesTableContextProvider } from './CustomVariablesTableConte
 import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
 import { CustomVariableRow } from './CustomVariablesListRow'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
@@ -86,7 +87,10 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={allVariableNames}>
 				<div>
-					<h4>Custom Variables</h4>
+					<h4 className="btn-inline">
+						Custom Variables
+						<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
+					</h4>
 					<p className="mb-2">
 						Here you can create some variables which you can define the values of, and update with actions
 					</p>

@@ -1,12 +1,14 @@
 import { useCallback } from 'react'
 import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable'
 import { MyErrorBoundary } from '~/Resources/Error'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
+import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { CloseButton } from '~/Layout/PanelIcons'
 
 export function SurfaceDiscoveryPage(): React.JSX.Element {
 	const navigate = useNavigate()
+	const twoPanelMode = useTwoPanelMode()
+
 	const closeDiscover = useCallback(() => {
 		void navigate({ to: '/surfaces/remote' })
 	}, [navigate])
@@ -15,11 +17,7 @@ export function SurfaceDiscoveryPage(): React.JSX.Element {
 		<>
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">Discover Surfaces</h4>
-				<div className="header-buttons">
-					<div className="float_right ms-1 d-xl-none" onClick={closeDiscover} title="Close">
-						<FontAwesomeIcon icon={faTimes} size="lg" />
-					</div>
-				</div>
+				<div className="header-buttons">{!twoPanelMode && <CloseButton closeFn={closeDiscover} />}</div>
 			</div>
 			<div className="secondary-panel-simple-body">
 				<div className="fixed-header">

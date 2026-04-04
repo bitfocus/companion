@@ -91,7 +91,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="d-flex align-items-center">
+				<div className="d-flex align-items-center help-button-float">
 					<CButtonGroup className="connection-group-actions m-1 me-auto">
 						<CButton
 							color="primary"
@@ -103,18 +103,13 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 						</CButton>
 						<CreateCollectionButton />
 					</CButtonGroup>
-					<ContextHelpButton
-						size="xl"
-						tooltip={
-							<>
-								<p>
-									Surface integrations are like connections but for input surfaces: they provide the ability to use
-									different hardware or virtual surfaces to trigger buttons in Companion.
-								</p>
-								<p>Click on any row to configure the integration.</p>
-							</>
-						}
-					/>
+					<ContextHelpButton action="/user-guide/surfaces">
+						<p>
+							Surface integrations are like connections but for input surfaces: they provide the ability to use
+							different hardware or virtual surfaces to trigger buttons in Companion.
+						</p>
+						<p>Click on any row to configure the integration. Click this icon for further help.</p>
+					</ContextHelpButton>
 				</div>
 			</div>
 

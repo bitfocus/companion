@@ -20,6 +20,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 			service={service}
 			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
+			helpAction="/user-guide/surfaces/"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>

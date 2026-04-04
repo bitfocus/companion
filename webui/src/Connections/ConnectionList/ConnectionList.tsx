@@ -23,6 +23,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -87,7 +88,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="connections-list-header fixed-header">
-				<h4>Connections</h4>
+				<h4 className="btn-inline">
+					Connections <ContextHelpButton action="/user-guide/config/connections" />
+				</h4>
 
 				<p>
 					When you want to control devices or software with Companion, you need to add a connection to let Companion

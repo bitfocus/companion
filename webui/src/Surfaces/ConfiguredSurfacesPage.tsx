@@ -12,6 +12,7 @@ import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
 	const twoPanelMode = useTwoPanelMode()
@@ -89,7 +90,10 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
 			>
 				<div className="fixed-header">
-					<h4>Configured Surfaces</h4>
+					<h4 className="btn-inline">
+						Configured Surfaces
+						<ContextHelpButton action="/user-guide/config/surfaces" />
+					</h4>
 
 					<p style={{ marginBottom: '0.5rem' }}>
 						Click on any item to edit the configuration of a currently-known surface or group.
