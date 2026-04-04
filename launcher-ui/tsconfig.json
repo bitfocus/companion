@@ -4,7 +4,6 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"baseUrl": "./",
 		"paths": {
 			"*": ["./node_modules/*"],
 			"~/*": ["./src/*"]
@@ -29,7 +28,6 @@
 		"lib": ["DOM", "DOM.Iterable", "ESNext"],
 		"types": ["node", "react"],
 		"strict": true,
-		"alwaysStrict": false,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
