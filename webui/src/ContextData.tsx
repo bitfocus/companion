@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { NotificationsManager, type NotificationsManagerRef } from '~/Components/Notifications.js'
 import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { usePagesInfoSubscription } from './Hooks/usePagesInfoSubscription.js'

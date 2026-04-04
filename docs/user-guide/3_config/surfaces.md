@@ -4,9 +4,25 @@ sidebar_position: 3
 description: Configure Stream Decks and control surfaces.
 ---
 
-**Surfaces** are the Stream Deck's or similar devices that translate the button grid in Companion to a physical device you can interact with.
+Surfaces in Companion map physical input devices such as keypads, knobs, and sliders to the button grid in Companion. Several of the most popular such surfaces are made by Elgato (the Stream Deck series) and XKeys. Integrations for controlling these surfaces are bundled with Companion. Starting with Companion 4.3 many other surfaces are supported through "independent" surface modules. See the [Surface Modules](../7_surfaces/index.md) help page for details.
 
-If any of your Stream Decks are not showing up, press the **Rescan USB** button. You can avoid needing to do this by enabling **Watch for new USB Devices** on the settings page.
+## Configured Surfaces
+
+Configured surfaces define the mapping from Companion's [buttons](./buttons/index.md) to the physical keys and knobs on the physical surface as well as certain surface-specific attributes such as button brightness.
+
+:::important
+
+Before Companion can recognize a new surface you must ensure that the appropriate **surface integration** module has been installed and enabled.
+
+:::
+
+:::warning[Elgato Devices]
+
+If your Stream Deck is missing from this list, you might need to close the Elgato Stream Deck application and click the Rescan button.
+
+:::
+
+If any of your surfaces are not in the configured surfaces list, press the **Rescan USB** button. You can avoid needing to do this by enabling **Watch for new USB Devices** in the settings panel on the right.
 
 ![Surfaces](images/surfaces.png?raw=true 'Surfaces')
 

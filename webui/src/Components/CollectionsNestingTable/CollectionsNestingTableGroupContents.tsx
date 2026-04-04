@@ -1,6 +1,6 @@
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+
 import { observer } from 'mobx-react-lite'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
 import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'

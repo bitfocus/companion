@@ -1,7 +1,7 @@
 import { CButton } from '@coreui/react'
 import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { ExpressionInputField } from './ExpressionInputField'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'

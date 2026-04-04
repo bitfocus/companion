@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
 import { usePanelCollapseHelperContext, usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'

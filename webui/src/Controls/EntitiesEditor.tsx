@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'

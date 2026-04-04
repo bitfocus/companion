@@ -3,7 +3,7 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'

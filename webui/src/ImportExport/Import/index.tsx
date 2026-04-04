@@ -1,5 +1,5 @@
 import { CButton } from '@coreui/react'
-import React, { useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { ImportPageWizard } from './Page.js'
 import { ImportFullWizard } from './Full.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'

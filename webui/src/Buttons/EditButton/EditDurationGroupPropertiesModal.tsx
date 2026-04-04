@@ -9,7 +9,7 @@ import {
 	CModalFooter,
 	CButton,
 } from '@coreui/react'
-import React, { forwardRef, useState, useRef, useCallback, useImperativeHandle } from 'react'
+import { forwardRef, useState, useRef, useCallback, useImperativeHandle } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void

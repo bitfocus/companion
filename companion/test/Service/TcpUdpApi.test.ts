@@ -521,7 +521,7 @@ describe('TcpUdpApi', () => {
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
-				mockControl.setCurrentStep = vi.fn<typeof mockControl.setCurrentStep>().mockReturnValue(true)
+				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 set-step 2')
@@ -700,7 +700,9 @@ describe('TcpUdpApi', () => {
 				})
 			})
 
-			async function runColor(input, expected) {
+			async function runColor(input: string, expected: number | false) {
+				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
+
 				const { router, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 
@@ -755,7 +757,9 @@ describe('TcpUdpApi', () => {
 				})
 			})
 
-			async function runColor(input, expected) {
+			async function runColor(input: string, expected: number | false) {
+				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
+
 				const { router, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 

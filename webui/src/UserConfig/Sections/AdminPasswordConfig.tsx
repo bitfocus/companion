@@ -1,4 +1,3 @@
-import React from 'react'
 import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -10,7 +9,7 @@ import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow
 export const AdminPasswordConfig = observer(function AdminPasswordConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow label="Admin UI Password" />
+			<UserConfigHeadingRow label="Admin UI Password" helpAction="/user-guide/config/settings#admin-ui-password" />
 
 			<tr>
 				<td colSpan={3}>

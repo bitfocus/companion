@@ -277,7 +277,8 @@ export class Registry {
 			this.surfaces,
 			this.variables,
 			this.graphics,
-			controlEvents
+			controlEvents,
+			this.instance
 		)
 
 		this.services = new ServiceController(

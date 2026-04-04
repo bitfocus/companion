@@ -1,4 +1,3 @@
-import React from 'react'
 import { capitalize } from 'lodash-es'
 import {
 	CollectionItemsCollapseButtons,

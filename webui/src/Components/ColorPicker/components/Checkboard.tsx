@@ -1,4 +1,3 @@
-import React from 'react'
 import { renderCheckboardCached } from '../helpers/checkboard.js'
 
 export type CheckboardProps = {

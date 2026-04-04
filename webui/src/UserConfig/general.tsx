@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import { memo } from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useUserConfigProps } from './Context.js'
@@ -13,7 +13,7 @@ export const SettingsGeneralPage = memo(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4>Settings - Advanced</h4>
+								<h4>Settings - General</h4>
 								<p>Settings apply instantaneously, don't worry about it!</p>
 							</div>
 						</div>

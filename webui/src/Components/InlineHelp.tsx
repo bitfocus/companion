@@ -1,12 +1,14 @@
-import React from 'react'
 import { CPopover } from '@coreui/react'
+import classnames from 'classnames'
 
 export const InlineHelp = ({
 	help,
 	children,
+	className,
 }: {
 	help: string | React.ReactNode
 	children: React.ReactNode
+	className?: string
 }): JSX.Element => {
 	return (
 		<>
@@ -17,7 +19,7 @@ export const InlineHelp = ({
 				animation={false}
 				placement="bottom"
 			>
-				<span className="inline-help-outer">{children}</span>
+				<span className={classnames('inline-help-outer', className)}>{children}</span>
 			</CPopover>
 		</>
 	)

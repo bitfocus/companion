@@ -1,6 +1,5 @@
 import { faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import React from 'react'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 
 export const Route = createFileRoute('/_app/variables/expression/')({

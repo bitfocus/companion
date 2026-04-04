@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { DropdownInputField } from './DropdownInputField.js'
 import type { DropdownChoice, DropdownChoiceId, ClientBonjourService } from '@companion-app/shared/Model/Common.js'
 import { useSubscription } from '@trpc/tanstack-react-query'

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -20,6 +20,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 			service={service}
 			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
+			helpAction="/user-guide/surfaces/"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>

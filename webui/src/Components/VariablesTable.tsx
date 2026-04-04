@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState, useMemo } from 'react'
+import { useCallback, useContext, useState, useMemo } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { useComputed } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'

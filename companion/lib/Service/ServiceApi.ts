@@ -15,6 +15,9 @@ import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecord
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import EventEmitter from 'events'
 import type { ModuleVariableDefinitions, VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 
 /**
  * Class providing an abstract api for consumption by services.
@@ -46,6 +49,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #surfaceController: SurfaceController
 	readonly #variablesController: VariablesController
 	readonly #graphicsController: GraphicsController
+	readonly #instanceController: InstanceController
 
 	get appInfo(): AppInfo {
 		return this.#appInfo
@@ -59,7 +63,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		surfaceController: SurfaceController,
 		variablesController: VariablesController,
 		graphicsController: GraphicsController,
-		controlEvents: EventEmitter<ControlCommonEvents>
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		instanceController: InstanceController
 	) {
 		super()
 		this.#appInfo = appInfo
@@ -69,6 +74,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		this.#surfaceController = surfaceController
 		this.#variablesController = variablesController
 		this.#graphicsController = graphicsController
+		this.#instanceController = instanceController
 
 		this.#actionRecorder.on('action_recorder_is_running', (...args) => {
 			this.emit('action_recorder_is_running', ...args)
@@ -233,6 +239,35 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 	actionRecorderGetSession(): RecordSessionInfo {
 		return this.#actionRecorder.getSession()
+	}
+
+	/**
+	 * Get all connections as a client-facing JSON map
+	 */
+	getConnectionsList(): Record<string, ClientConnectionConfig> {
+		return this.#instanceController.getConnectionClientJson(true)
+	}
+
+	/**
+	 * Get the status of a specific connection
+	 */
+	getConnectionStatus(connectionId: string): InstanceStatusEntry | undefined {
+		return this.#instanceController.getInstanceStatus(connectionId)
+	}
+
+	/**
+	 * Restart a connection process
+	 * @returns true if the restart was triggered, false if the connection is inactive
+	 */
+	restartConnection(connectionId: string): boolean {
+		return this.#instanceController.restartConnection(connectionId)
+	}
+
+	/**
+	 * Enable or disable a connection
+	 */
+	enableDisableConnection(connectionId: string, enabled: boolean): void {
+		this.#instanceController.enableDisableConnection(connectionId, enabled)
 	}
 }
 

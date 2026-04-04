@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { useComputed } from '~/Resources/util.js'
 import Select, { type createFilter } from 'react-select'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'

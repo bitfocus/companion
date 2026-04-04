@@ -154,6 +154,15 @@
 	}
 }
 
+.variables-table-modal-body {
+	// move padding of the viewport to the filter so that the header sticks to the top w/o a gap
+	padding-top: 0;
+
+	.variables-table-filter {
+		padding-top: var(--cui-modal-padding);
+	}
+}
+
 .variables-table-filter {
 	margin: 0 0 0.4rem 0;
 }
@@ -161,8 +170,7 @@
 .variables-table-count {
 	font-size: 0.85em;
 	opacity: 0.75;
-	margin: 0 0 0.6rem 0;
-	text-align: right;
+	margin: 0 0 0.6rem 1rem;
 }
 
 .import-module {
