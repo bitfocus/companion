@@ -2,7 +2,7 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 import { CSpinner } from '@coreui/react'
 import { faCheckCircle, faTriangleExclamation, faPowerOff } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { observer } from 'mobx-react-lite'
 

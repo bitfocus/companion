@@ -1,6 +1,6 @@
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
-import React, { useContext, useMemo, useCallback, useState } from 'react'
+import { useContext, useMemo, useCallback, useState } from 'react'
 import Select, { createFilter, components, type InputActionMeta } from 'react-select'
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
 // import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'

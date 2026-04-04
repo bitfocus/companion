@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { memo, useCallback, useContext } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -44,7 +44,7 @@ const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: Connection
 	)
 })
 
-const VariableGroupHeader = React.memo(function VariableGroupHeader({
+const VariableGroupHeader = memo(function VariableGroupHeader({
 	node,
 }: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
 	return <span>{node.metadata.label}</span>

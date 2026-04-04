@@ -1,5 +1,5 @@
 import type { EntityOwner, SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import React from 'react'
+
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { EntityTableRow, EntityTableRowContent } from './EntityEditorRow.js'
 import { EntityDropPlaceholderZone, type EntityListDragItem } from './EntityListDropZone.js'

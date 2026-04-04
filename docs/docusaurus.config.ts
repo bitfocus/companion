@@ -1,6 +1,7 @@
 import { themes as prismThemes } from 'prism-react-renderer'
 import type { Config } from '@docusaurus/types'
 import type * as Preset from '@docusaurus/preset-classic'
+// @ts-expect-error No types provided for this plugin
 import lunrPlugin from 'docusaurus-lunr-search'
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)

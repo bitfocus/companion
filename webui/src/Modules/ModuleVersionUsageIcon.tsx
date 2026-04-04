@@ -1,7 +1,7 @@
 import { faPlug, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React from 'react'
+
 import { InlineHelp } from '~/Components/InlineHelp'
 
 interface ModuleVersionUsageIconProps {

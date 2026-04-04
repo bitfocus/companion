@@ -196,7 +196,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						selectedButton={selectedButton}
 						gridSize={gridSize}
 						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
-						buttonIconFactory={PrimaryButtonGridIcon}
+						ButtonIconFactory={PrimaryButtonGridIcon}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
 					/>

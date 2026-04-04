@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
+import { useCallback, useContext, useEffect, useState, useRef, useMemo } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CButton, CButtonGroup, CCol, CRow, CForm, CFormLabel } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -168,7 +168,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 						pageNumber={pageNumber}
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
-						buttonIconFactory={ButtonGridIcon}
+						ButtonIconFactory={ButtonGridIcon}
 						drawScale={1} // TODO
 					/>
 				)}

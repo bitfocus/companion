@@ -1,5 +1,5 @@
 import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import {
 	CheckboxInputField,
 	ColorInputField,

@@ -4,7 +4,6 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"baseUrl": "./",
 		"paths": {
 			"*": ["./node_modules/*"],
 			"~/*": ["./src/*"],
@@ -12,12 +11,9 @@
 		},
 		"module": "esnext",
 		"moduleResolution": "bundler",
-		"jsx": "react",
-		// "allowJs": true,
-		// "checkJs": true,
+		"jsx": "react-jsx",
 		"strictPropertyInitialization": true,
 		"noEmit": true,
-		// "composite": true,
 
 		"target": "ESNext",
 		"noImplicitAny": true,
@@ -30,7 +26,6 @@
 		"lib": ["DOM", "DOM.Iterable", "ESNext"],
 		"types": ["node", "react"],
 		"strict": true,
-		"alwaysStrict": false,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,

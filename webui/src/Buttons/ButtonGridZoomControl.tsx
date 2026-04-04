@@ -8,7 +8,7 @@ import {
 	CInputGroupText,
 	CLink,
 } from '@coreui/react'
-import React from 'react'
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { NumberInputField } from '~/Components/NumberInputField.js'

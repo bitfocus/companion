@@ -1,4 +1,3 @@
-import React from 'react'
 import { ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons'
 
 interface UserConfigHeadingRowProps {

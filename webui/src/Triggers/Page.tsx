@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow, CInputGroup, CFormInput } from '@coreui/react'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { single as fuzzySingle } from 'fuzzysort'

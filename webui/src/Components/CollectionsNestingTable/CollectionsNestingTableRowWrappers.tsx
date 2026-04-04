@@ -1,7 +1,7 @@
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 import {
 	useDrag,
 	type ConnectDragSource,

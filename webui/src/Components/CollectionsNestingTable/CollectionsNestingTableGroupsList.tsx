@@ -1,4 +1,3 @@
-import React from 'react'
 import { observer } from 'mobx-react-lite'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, type ElementType } from 'react'
+import { useCallback, useRef, type ElementType } from 'react'
 import { CButton } from '@coreui/react'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

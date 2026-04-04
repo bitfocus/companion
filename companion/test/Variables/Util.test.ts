@@ -17,7 +17,7 @@ function createDefinition(
 		sortKey: null,
 		description: '',
 		optionsToMonitorForInvalidations: [],
-		feedbackType: undefined,
+		feedbackType: null,
 		feedbackStyle: undefined,
 		hasLifecycleFunctions: false,
 		hasLearn: false,

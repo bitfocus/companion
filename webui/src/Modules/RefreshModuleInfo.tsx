@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'

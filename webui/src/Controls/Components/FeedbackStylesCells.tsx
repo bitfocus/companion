@@ -2,7 +2,7 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
 import { CAlert, CFormLabel, CCol } from '@coreui/react'
-import React, { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonStyleConfigFields } from '../ButtonStyleConfig.js'

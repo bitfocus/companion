@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
 import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 import { useUserConfigProps } from '~/UserConfig/Context'
