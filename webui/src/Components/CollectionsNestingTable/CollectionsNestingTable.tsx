@@ -109,7 +109,7 @@ const UngroupedSection = observer(function UngroupedSection<TItem extends Collec
 	const isCollapsed = collapseHelper.isCollapsed
 
 	const showHeader = (isDragging || ungroupedItems.length > 0) && hasCollections
-	const isContentVisible = !showCollapseButtons || !isCollapsed
+	const isContentVisible = !showCollapseButtons || !isCollapsed || !showHeader
 
 	return (
 		<>
