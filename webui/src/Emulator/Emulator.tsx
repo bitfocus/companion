@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useMountEffect, PreventDefaultHandler } from '~/Resources/util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CButton, CCol, CForm, CRow } from '@coreui/react'

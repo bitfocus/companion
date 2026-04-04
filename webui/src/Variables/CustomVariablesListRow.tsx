@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { CButton, CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'

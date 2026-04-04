@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'

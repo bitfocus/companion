@@ -1,4 +1,3 @@
-import React from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { observer } from 'mobx-react-lite'

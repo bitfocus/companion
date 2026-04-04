@@ -1,4 +1,4 @@
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import Select from 'react-select'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'

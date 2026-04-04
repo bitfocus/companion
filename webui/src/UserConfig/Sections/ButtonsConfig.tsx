@@ -1,4 +1,3 @@
-import React from 'react'
 import { observer } from 'mobx-react-lite'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -9,8 +8,8 @@ export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigPr
 		<>
 			<UserConfigHeadingRow
 				label="Buttons"
-				tooltip="Setup button appearances."
-				action="/user-guide/config/settings#buttons"
+				helpMessage="Setup button appearances."
+				helpAction="/user-guide/config/settings#buttons"
 			/>
 
 			<UserConfigSwitchRow

@@ -6,7 +6,6 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
 import { EditableEntityList } from './EntityList.js'

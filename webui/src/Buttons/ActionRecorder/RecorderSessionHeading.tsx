@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, type RefObject } from 'react'
+import { useCallback, useContext, type RefObject } from 'react'
 import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { CButton, CButtonGroup, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
 import { MultiDropdownInputField } from '~/Components/index.js'

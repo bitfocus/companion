@@ -1,5 +1,5 @@
 import { CModal, type CModalProps } from '@coreui/react/dist/esm/components/modal/CModal.js'
-import React, { forwardRef, useCallback, useRef } from 'react'
+import { forwardRef, useCallback, useRef } from 'react'
 
 export interface CModalExtProps extends CModalProps {
 	onClosed?: () => void

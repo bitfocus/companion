@@ -4,7 +4,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faChevronLeft, faChevronRight, faPlus, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'

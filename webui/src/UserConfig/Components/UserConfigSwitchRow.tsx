@@ -1,4 +1,3 @@
-import React from 'react'
 import { CFormSwitch } from '@coreui/react'
 import { ResetButton, type UserConfigProps } from './Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'

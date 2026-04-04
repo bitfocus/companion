@@ -1,5 +1,6 @@
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
 import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
+import type { ObservableMap } from 'mobx'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export interface CanEnableSurfaceInstanceResult {
@@ -13,7 +14,7 @@ export interface CanEnableSurfaceInstanceResult {
 function canEnableSurfaceInstance(
 	surfaceInstanceId: string,
 	instance: ClientSurfaceInstanceConfig,
-	allInstances: Map<string, ClientSurfaceInstanceConfig>,
+	allInstances: ObservableMap<string, ClientSurfaceInstanceConfig>,
 	moduleInfoStore: ModuleInfoStore
 ): string | null {
 	// Get the module info to check allowMultipleInstances
@@ -89,7 +90,7 @@ function canEnableSurfaceInstance(
  */
 export function getSurfaceInstanceCannotEnableReason(
 	surfaceInstanceId: string,
-	allInstances: Map<string, ClientSurfaceInstanceConfig>,
+	allInstances: ObservableMap<string, ClientSurfaceInstanceConfig>,
 	moduleInfoStore: ModuleInfoStore
 ): string | null {
 	const instance = allInstances.get(surfaceInstanceId)

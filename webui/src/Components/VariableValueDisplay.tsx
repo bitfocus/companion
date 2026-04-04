@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'

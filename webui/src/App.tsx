@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useContext, useEffect, useState } from 'react'
+import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { CContainer, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
 import { useMountEffect } from '~/Resources/util.js'
 import { MyErrorBoundary } from './Resources/Error.js'

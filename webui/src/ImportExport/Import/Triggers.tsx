@@ -1,5 +1,5 @@
 import { CButton, CButtonGroup, CCallout, CFormCheck } from '@coreui/react'
-import React, { useCallback, useEffect, useState, useContext } from 'react'
+import { useCallback, useEffect, useState, useContext } from 'react'
 import { ImportRemap } from './Page.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'

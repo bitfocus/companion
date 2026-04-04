@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { useRemoteSurfacesListContext } from './RemoteSurfacesListContext.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'

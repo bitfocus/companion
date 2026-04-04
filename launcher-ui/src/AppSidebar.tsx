@@ -1,5 +1,4 @@
 import { CogIcon } from 'lucide-react'
-import React from 'react'
 import {
 	Sidebar,
 	SidebarContent,

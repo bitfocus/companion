@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { IEntityEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
