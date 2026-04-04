@@ -1,5 +1,5 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CModalBody, CModalHeader, CModalFooter, CButton, CRow, CCol } from '@coreui/react'
+import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import { CModalBody, CModalHeader, CRow, CCol } from '@coreui/react'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 
