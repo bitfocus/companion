@@ -59,8 +59,11 @@ async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, a
 		headers: {
 			'User-Agent': userAgent,
 		},
-		signal: abortControl.signal,
+		signal: AbortSignal.any([abortControl.signal, AbortSignal.timeout(30000)]),
 	})
+	if (!response.ok) {
+		throw new Error(`Failed to fetch module: HTTP ${response.status} ${response.statusText}`)
+	}
 	if (!response.body) throw new Error('Failed to fetch module, got no body')
 
 	// Download into memory with a size limit
@@ -87,6 +90,7 @@ async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, a
 		throw new Error('Failed to decompress data')
 	}
 
+	await fs.remove(moduleDir).catch(() => null)
 	await fs.mkdirp(moduleDir)
 
 	await new Promise((resolve, reject) => {
