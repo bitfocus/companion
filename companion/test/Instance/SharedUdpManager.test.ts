@@ -3,9 +3,11 @@ import EventEmitter from 'events'
 import type { createSocket } from 'dgram'
 import { InstanceSharedUdpManager } from '../../lib/Instance/Connection/SharedUdpManager.js'
 
-const mockCreateSocket = vi.fn((...args: Parameters<typeof createSocket>): MockSocket => {
-	throw new Error('Not implemented')
-})
+const mockCreateSocket = vi.hoisted(() =>
+	vi.fn((...args: Parameters<typeof createSocket>): MockSocket => {
+		throw new Error('Not implemented')
+	})
+)
 
 vi.mock('dgram', () => ({
 	Socket: null, // Only needed for types
