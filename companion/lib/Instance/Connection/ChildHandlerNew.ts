@@ -377,7 +377,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				if (extras.surfaceId && extras.surfaceId.startsWith('trigger'))
 					location = `Trigger ${extras.surfaceId.split(':')[1]}`
 
-				if (extras.surfaceId && extras.controlId.startsWith('bank'))
+				if (extras.controlId && extras.controlId.startsWith('bank') && extras.location)
 					location = `Button ${extras.location.pageNumber}/${extras.location.row}/${extras.location.column}`
 
 				this.logger.warn(
