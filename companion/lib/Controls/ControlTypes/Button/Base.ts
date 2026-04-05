@@ -87,7 +87,8 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
 						this.entities.getLocalVariableEntities(),
-						injectedVariableValues ?? null
+						injectedVariableValues ?? null,
+						undefined
 					)
 					.executeExpression(expression, requiredType)
 		)
@@ -314,6 +315,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 						.runActions(actions, {
 							surfaceId,
 							location,
+							previousResult: undefined,
 						})
 						.catch((e) => {
 							this.logger.error(`action execution failed: ${e}`)
@@ -360,6 +362,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 			.runActions(actions, {
 				surfaceId,
 				location,
+				previousResult: undefined,
 			})
 			.catch((e) => {
 				this.logger.error(`action execution failed: ${e}`)

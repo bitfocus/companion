@@ -13,7 +13,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import isEqual from 'fast-deep-equal'
 import type { InstanceDefinitionsForEntity, NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import debounceFn from 'debounce-fn'
 import type { VariablesValues } from '../../Variables/Values.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
@@ -159,14 +159,18 @@ export abstract class ControlEntityListPoolBase {
 		if (changed) this.invalidateControl()
 	}
 
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		previousResult: VariableValue
+	): VariablesAndExpressionParser {
 		const controlLocation = this.#pageStore.getLocationOfControlId(this.controlId)
 		const variableEntities = this.getLocalVariableEntities()
 
 		return this.#variableValues.createVariablesAndExpressionParser(
 			controlLocation,
 			variableEntities,
-			overrideVariableValues
+			overrideVariableValues,
+			previousResult
 		)
 	}
 

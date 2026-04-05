@@ -310,7 +310,7 @@ export class ExportController {
 	#generateFilename(filename: string, exportType: string, fileExt: string): string {
 		//If the user isn't using their default file name, don't append any extra info in file name since it was a manual choice
 		const useDefault = filename == this.#userConfigController.getKey('default_export_filename')
-		const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+		const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null, undefined)
 		const parsedName = parser.parseVariables(filename).text
 
 		return parsedName && parsedName !== 'undefined'

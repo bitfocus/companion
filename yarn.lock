@@ -1915,25 +1915,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:~2.0.3":
+"@companion-module/base@file:/home/jwalden/Christianity/Sound/github/module-base/packages/base/::locator=%40companion-module%2Fhost%40file%3A%2Fhome%2Fjwalden%2FChristianity%2FSound%2Fgithub%2Fmodule-base%2Fpackages%2Fhost%2F%23%2Fhome%2Fjwalden%2FChristianity%2FSound%2Fgithub%2Fmodule-base%2Fpackages%2Fhost%2F%3A%3Ahash%3D95c8d1%26locator%3Dcompanion%2540workspace%253Acompanion":
   version: 2.0.3
-  resolution: "@companion-module/base@npm:2.0.3"
+  resolution: "@companion-module/base@file:/home/jwalden/Christianity/Sound/github/module-base/packages/base/#/home/jwalden/Christianity/Sound/github/module-base/packages/base/::hash=9897ad&locator=%40companion-module%2Fhost%40file%3A%2Fhome%2Fjwalden%2FChristianity%2FSound%2Fgithub%2Fmodule-base%2Fpackages%2Fhost%2F%23%2Fhome%2Fjwalden%2FChristianity%2FSound%2Fgithub%2Fmodule-base%2Fpackages%2Fhost%2F%3A%3Ahash%3D95c8d1%26locator%3Dcompanion%2540workspace%253Acompanion"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/a6b3be873fbc52e9a842cebe9201e670df1c79655975678aefb045d6b83e76ec8be77a507136e28153aca0cc5dab19dcf6c138c0eeeb365c1ada609c28b00ab8
+  checksum: 10c0/8b2e26a1708a44132c5b7bd4cc7aad9ae1f4e946963d3b56c92beee3295d6ebf53d3e8f2d7dc5c021fd10646cc62bc396a588f275668c65b62713fe8de44c3fc
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.2":
+"@companion-module/host@file:/home/jwalden/Christianity/Sound/github/module-base/packages/host/::locator=companion%40workspace%3Acompanion":
   version: 1.0.2
-  resolution: "@companion-module/host@npm:1.0.2"
+  resolution: "@companion-module/host@file:/home/jwalden/Christianity/Sound/github/module-base/packages/host/#/home/jwalden/Christianity/Sound/github/module-base/packages/host/::hash=95c8d1&locator=companion%40workspace%3Acompanion"
   dependencies:
-    "@companion-module/base": "npm:~2.0.3"
+    "@companion-module/base": "file:/home/jwalden/Christianity/Sound/github/module-base/packages/base/"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/5ca7f9db0dfd14c9a183bd63fe26854a79db1182207144336b43db82d3095f3be5b7942e4d32335a12c976036e4c9d54799b025d781eca8a51b3fd38d4a9be4c
+  checksum: 10c0/57043df7abc9ef715288f1a15d00ed4c3e5254a43dd294c49d7c213135c2f61b31d5a5cce99d431ef021a2c8308599d2250008682d2dbb0176eee6419a2179ec
   languageName: node
   linkType: hard
 
@@ -11074,7 +11074,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
-    "@companion-module/host": "npm:1.0.2"
+    "@companion-module/host": "file:/home/jwalden/Christianity/Sound/github/module-base/packages/host/"
     "@companion-surface/host": "npm:~1.1.5"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.1.1"

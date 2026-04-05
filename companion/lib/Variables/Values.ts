@@ -62,10 +62,11 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		previousResult: VariableValue
 	): VariablesAndExpressionParser {
 		const thisValues: VariablesCache = new Map()
-		this.addInjectedVariablesForLocation(thisValues, controlLocation)
+		this.#addInjectedVariablesForLocation(thisValues, controlLocation, previousResult)
 
 		return new VariablesAndExpressionParser(
 			this.#blinker,
@@ -174,7 +175,11 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	/**
 	 * Variables to inject based on location
 	 */
-	addInjectedVariablesForLocation(values: VariablesCache, location: ControlLocation | null | undefined): void {
+	#addInjectedVariablesForLocation(
+		values: VariablesCache,
+		location: ControlLocation | null | undefined,
+		previousResult: VariableValue
+	): void {
 		values.set('$(this:page)', location?.pageNumber)
 		values.set('$(this:column)', location?.column)
 		values.set('$(this:row)', location?.row)
@@ -214,6 +219,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		// 		? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
 		// 		: VARIABLE_UNKNOWN_VALUE
 		// )
+
+		values.set('$(this:result)', previousResult)
 	}
 }
 

@@ -104,14 +104,14 @@ export class PreviewExpressionStream {
 		controlId: string | null,
 		requiredType: string | undefined
 	): ExecuteExpressionResult => {
-		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null, undefined)
 
 		// TODO - make reactive to control moving?
 		return parser.executeExpression(expression, requiredType)
 	}
 
 	#parseVariables = (str: string, controlId: string | null): ExecuteExpressionResult => {
-		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null, undefined)
 
 		// TODO - make reactive to control moving?
 		const res = parser.parseVariables(str)

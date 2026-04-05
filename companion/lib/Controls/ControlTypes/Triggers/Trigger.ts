@@ -249,6 +249,7 @@ export class ControlTrigger
 			.runActions(actions, {
 				surfaceId: this.controlId,
 				location: undefined,
+				previousResult: undefined,
 			})
 			.catch((e) => {
 				this.logger.error(`Failed to run actions: ${e.message}`)

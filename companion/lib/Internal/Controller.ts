@@ -312,7 +312,7 @@ export class InternalController {
 				return undefined
 			}
 
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null, undefined)
 
 			// Parse the options if enabled
 			let parsedOptions: CompanionOptionValues
@@ -462,7 +462,11 @@ export class InternalController {
 			const overrideVariableValues: VariableValues = {
 				'$(this:surface_id)': extras.surfaceId,
 			}
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues)
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(
+				extras.controlId,
+				overrideVariableValues,
+				extras.previousResult
+			)
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
