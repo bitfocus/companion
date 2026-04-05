@@ -80,13 +80,6 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 
 		const doClose = useCallback(() => {
 			setShow(false)
-
-			// Delay clearing the data so the modal can animate out:
-			// - during Cancel this avoids flicker
-			// - during Save, which calls doClose, otherwise React complains about changing a controlled input to be uncontrolled.
-			setTimeout(() => {
-				setNewGridSize(null)
-			}, 1500)
 		}, [])
 
 		const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
@@ -94,14 +87,16 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
 
-				doClose() // close the popup in an orderly way
+				setShow(false)
+				if (!newGridSize) return // this should be impossible in the callback!
 
-				if (!newGridSize) return
-
-				console.log('set gridSize', newGridSize)
+				if (import.meta.env.DEV) {
+					// note: newGridSize is a proxy object and doesn't print much on its own, so stringify it.
+					console.log('set gridSize', JSON.stringify(newGridSize))
+				}
 				setConfigKeyMutation.mutate({ key: 'gridSize', value: newGridSize })
 			},
-			[doClose, newGridSize, setConfigKeyMutation]
+			[newGridSize, setConfigKeyMutation]
 		)
 
 		useImperativeHandle(
@@ -120,7 +115,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 		useEffect(() => {
 			if (show) {
 				setNewGridSize((oldGridSize) => {
-					if (!oldGridSize && userConfig.properties) return userConfig.properties.gridSize
+					if (userConfig.properties) return userConfig.properties.gridSize
 					return oldGridSize
 				})
 			}
