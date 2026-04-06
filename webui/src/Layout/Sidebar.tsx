@@ -12,7 +12,7 @@ import {
 	type MouseEventHandler,
 	type ReactElement,
 } from 'react'
-import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop } from '@coreui/react'
+import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop, CPopover } from '@coreui/react'
 import {
 	type IconDefinition,
 	faFileImport,
@@ -50,7 +50,7 @@ import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabN
 import { createPortal } from 'react-dom'
 import classNames from 'classnames'
 import { useLocalStorage } from 'usehooks-ts'
-import { Link } from '@tanstack/react-router'
+import { Link, useMatchRoute } from '@tanstack/react-router'
 import { Transition } from 'react-transition-group'
 import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -72,6 +72,7 @@ export interface SidebarStateProps {
 	showSidebarEvent: EventTarget
 }
 const SidebarStateContext = createContext<SidebarStateProps | null>(null)
+const NarrowModeContext = createContext(false) // used locally for labelling: true if in narrow mode
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useSidebarState(): SidebarStateProps {
@@ -110,11 +111,41 @@ interface SidebarMenuItemProps {
 	title?: string
 }
 
+/**
+ * NarrowModePopover - creates a CPopover "tooltip" showing the label text in narrow mode; otherwise is a no-op.
+ * @param label - the tooltip text
+ */
+function NarrowModePopover({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
+	const isNarrow = useContext(NarrowModeContext)
+	if (isNarrow) {
+		// CPopover defaulted to black-on-black text. Also override the default padding defined in App.scss
+		const customVars = {
+			'--cui-popover-body-color': 'white',
+			'--cui-popover-bg': '#111',
+			'--cui-popover-body-padding-y': '.5rem',
+		} as React.CSSProperties
+
+		return (
+			<CPopover
+				style={customVars}
+				content={<span>{title}</span>}
+				trigger={['hover', 'focus']} // better for keyboard navigation and, possibly, screen readers.
+				delay={{ show: 100, hide: 100 }}
+				animation={false}
+				placement="right"
+			>
+				{children}
+			</CPopover>
+		)
+	} else {
+		return <>{children}</>
+	}
+}
+
 function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
-	// add title to icon for narrow mode. (currentlty: user clicks on narrow part of sidebar while in unfolding mode)
 	return (
 		<>
-			<span className="nav-icon-wrapper" title={item.title || item.name}>
+			<span className="nav-icon-wrapper">
 				{item.icon === 'empty' ? (
 					''
 				) : item.icon ? (
@@ -143,22 +174,32 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 }
 
 function SidebarMenuItem(item: SidebarMenuItemProps) {
+	const isNarrow = useContext(NarrowModeContext)
 	const onClick2 = (e: React.MouseEvent) => {
 		if (!item.onClick) return
 		e.preventDefault()
 		item.onClick()
 	}
+	// note: NarrowModePopover must wrap CNavLink directly to get a ref-forwarding component. It didn't work with CNavItem
 	return (
 		<CNavItem idx={item.path ?? item.name} className={item.subheading ? 'nav-two-line' : undefined}>
-			{item.path ? (
-				<CNavLink to={item.path} target={item.target} as={Link} onClick={onClick2} title={item.title}>
-					<SidebarMenuItemLabel {...item} />
-				</CNavLink>
-			) : (
-				<CNavLink onClick={onClick2} style={{ cursor: 'pointer' }} title={item.title}>
-					<SidebarMenuItemLabel {...item} />
-				</CNavLink>
-			)}
+			<NarrowModePopover title={item.title || item.name}>
+				{item.path ? (
+					<CNavLink
+						to={item.path}
+						target={item.target}
+						as={Link}
+						onClick={onClick2}
+						title={isNarrow ? undefined : item.title /* In narrow mode we put the title in the popover */}
+					>
+						<SidebarMenuItemLabel {...item} />
+					</CNavLink>
+				) : (
+					<CNavLink onClick={onClick2} style={{ cursor: 'pointer' }} title={isNarrow ? undefined : item.title}>
+						<SidebarMenuItemLabel {...item} />
+					</CNavLink>
+				)}
+			</NarrowModePopover>
 		</CNavItem>
 	)
 }
@@ -172,7 +213,8 @@ interface SidebarMenuItemGroupProps extends SidebarMenuItemProps {
 function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 	return (
 		<CNavGroup
-			toggler={<SidebarMenuItemLabel {...{ title: item.name + ' group', ...item }} />}
+			toggler={<SidebarMenuItemLabel {...item} />}
+			title={item.title || item.name + ' group'}
 			to={item.path}
 			visible={item.groupVisible}
 			setVisible={item.groupSetVisible}
@@ -313,148 +355,145 @@ export const MySidebar = memo(function MySidebar() {
 	const DontSetOrUnset: React.Dispatch<React.SetStateAction<boolean>> = () => {}
 
 	return (
-		<CSidebar
-			unfoldable={unfoldable}
-			narrow={tempNarrow || narrowMode}
-			setNarrow={narrowMode ? DontSetOrUnset : setTempNarrow}
-			onContextMenu={contextState.onContextMenu}
-		>
-			<ContextMenu {...contextState} />
-			<CSidebarHeader className="brand">
-				<CSidebarBrand>
-					<div className="sidebar-brand-full">
-						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
-						&nbsp; Bitfocus&nbsp;
-						<span style={{ fontWeight: 'bold' }}>Companion</span>
-					</div>
-					<div className="sidebar-brand-narrow">
-						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="42px" alt="logo" />
-					</div>
-				</CSidebarBrand>
-			</CSidebarHeader>
-			<CSidebarNav className="nav-main-scroller">
-				<SidebarMenuItem
-					name="Connections"
-					icon={faPlug}
-					notifications={ConnectionsTabNotifyIcon}
-					path="/connections"
-				/>
-				<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
-				<SidebarMenuItemGroup
-					name="Surfaces"
-					icon={faGamepad}
-					notifications={SurfacesTabNotifyIcon}
-					path="/surfaces"
-					groupVisible={surfacesGroupVis}
-					groupSetVisible={(expand) => smartExpand(setSurfacesGroupVis, expand)}
-				>
+		<NarrowModeContext.Provider value={tempNarrow || narrowMode}>
+			<CSidebar
+				unfoldable={unfoldable}
+				narrow={tempNarrow || narrowMode}
+				setNarrow={narrowMode ? DontSetOrUnset : setTempNarrow}
+				onContextMenu={contextState.onContextMenu}
+			>
+				<ContextMenu {...contextState} />
+				<CSidebarHeader className="brand">
+					<CSidebarBrand>
+						<div className="sidebar-brand-full">
+							<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
+							&nbsp; Bitfocus&nbsp;
+							<span style={{ fontWeight: 'bold' }}>Companion</span>
+						</div>
+						<div className="sidebar-brand-narrow">
+							<img src={makeAbsolutePath('/img/icons/48x48.png')} height="42px" alt="logo" />
+						</div>
+					</CSidebarBrand>
+				</CSidebarHeader>
+				<CSidebarNav className="nav-main-scroller">
 					<SidebarMenuItem
-						name="Configured"
+						name="Connections"
+						icon={faPlug}
+						notifications={ConnectionsTabNotifyIcon}
+						path="/connections"
+					/>
+					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
+					<SidebarMenuItemGroup
+						name="Surfaces"
 						icon={faGamepad}
 						notifications={SurfacesTabNotifyIcon}
 						path="/surfaces/configured"
-					/>
-					<SidebarMenuItem name="Remote" icon={faPeopleArrows} path="/surfaces/remote" />
-				</SidebarMenuItemGroup>
-				<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
-				<SidebarMenuItemGroup
-					name="Variables"
-					icon={faDollarSign}
-					path="/variables"
-					groupVisible={variablesGroupVis}
-					groupSetVisible={(expand) => smartExpand(setVariablesGroupVis, expand)}
-				>
-					<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/variables/custom" />
-					<SidebarMenuItem name="Expression Variables" icon={faSquareRootVariable} path="/variables/expression" />
-					<SidebarMenuItem name="Internal" icon={faToolbox} path="/variables/connection/internal" />
-					<SidebarVariablesGroups />
-				</SidebarMenuItemGroup>
-				<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-				<SidebarMenuItemGroup
-					name="Settings"
-					icon={faCog}
-					path="/settings"
-					groupVisible={settingsGroupVis}
-					groupSetVisible={(expand) => smartExpand(setSettingsGroupVis, expand)}
-				>
-					<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
-					<SidebarMenuItem name="General" icon={faScrewdriver} path="/settings/general" />
-					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/settings/buttons" />
-					<SidebarMenuItem
-						name="Surfaces"
-						icon={faGamepad}
-						path="/surfaces/configured/integrations"
-						title="Surface settings have moved to the main Surfaces Page."
-					/>
-					<SidebarMenuItem name="Protocols" icon={faNetworkWired} path="/settings/protocols" />
-					<SidebarMenuItem name="Backups" icon={faFloppyDisk} path="/settings/backups" />
-					<SidebarMenuItem name="Advanced" icon={faHammer} path="/settings/advanced" />
-				</SidebarMenuItemGroup>
-				<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
-				<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
-				{window.localStorage.getItem('show_companion_cloud') === '1' && (
-					<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
-				)}
-				<SidebarMenuItemGroup
-					name="Interactive Buttons"
-					icon={faSquareCaretRight}
-					groupVisible={ibuttonsGroupVis}
-					groupSetVisible={(expand) => smartExpand(setIbuttonsGroupVis, expand)}
-				>
-					<SidebarMenuItem name="Emulator" icon={faTabletScreenButton} path="/emulator" target="_blank" />
-					<SidebarMenuItem name="Web buttons" icon={faTable} path="/tablet" target="_blank" />
-				</SidebarMenuItemGroup>
-			</CSidebarNav>
-			<div className="sidebar-bottom-shadow-container">
-				<div className="sidebar-bottom-shadow" />
-			</div>
-			{showHelpButtons && (
-				<CSidebarNav className="nav-secondary border-top">
-					<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
-					<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
-					<SidebarMenuItemGroup
-						name="Support"
-						icon={faHeadset}
-						groupVisible={supportGroupVis}
-						groupSetVisible={(expand) => smartExpand(setSupportGroupVis, expand)}
+						groupVisible={surfacesGroupVis}
+						groupSetVisible={(expand) => smartExpand(setSurfacesGroupVis, expand)}
 					>
+						<SidebarMenuItem name="Remote" icon={faPeopleArrows} path="/surfaces/remote" />
+					</SidebarMenuItemGroup>
+					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
+					<SidebarMenuItemGroup
+						name="Variables"
+						icon={faDollarSign}
+						path="/variables"
+						groupVisible={variablesGroupVis}
+						groupSetVisible={(expand) => smartExpand(setVariablesGroupVis, expand)}
+					>
+						<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/variables/custom" />
+						<SidebarMenuItem name="Expression Variables" icon={faSquareRootVariable} path="/variables/expression" />
+						<SidebarMenuItem name="Internal" icon={faToolbox} path="/variables/connection/internal" />
+						<SidebarVariablesGroups />
+					</SidebarMenuItemGroup>
+					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
+					<SidebarMenuItemGroup
+						name="Settings"
+						icon={faCog}
+						path="/settings"
+						groupVisible={settingsGroupVis}
+						groupSetVisible={(expand) => smartExpand(setSettingsGroupVis, expand)}
+					>
+						<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
+						<SidebarMenuItem name="General" icon={faScrewdriver} path="/settings/general" />
+						<SidebarMenuItem name="Buttons" icon={faTableCells} path="/settings/buttons" />
 						<SidebarMenuItem
-							name="Report an Issue"
-							title="Report bugs or request features on GitHub."
-							icon={faGithub}
-							path="https://l.companion.free/q/QZbI6mdNd"
-							target="_blank"
+							name="Surfaces"
+							icon={faGamepad}
+							path="/surfaces/configured/integrations"
+							title="Surface settings have moved to the main Surfaces Page."
 						/>
-						<SidebarMenuItem
-							name="Community Forum"
-							title="Share your experience or ask questions to your Companions."
-							icon={faFacebook}
-							path="https://l.companion.free/q/6pc9ciJR5"
-							target="_blank"
-						/>
-						<SidebarMenuItem
-							name="Slack Chat"
-							title="Discuss technical issues on Slack."
-							icon={faSlack}
-							path="https://l.companion.free/q/OWxbBnDKG"
-							target="_blank"
-						/>
-						<SidebarMenuItem
-							name="Sponsor"
-							title="Contribute funds to Bitfocus Companion."
-							icon={faDollarSign}
-							path="https://l.companion.free/q/6PtdAvZab"
-							target="_blank"
-						/>
+						<SidebarMenuItem name="Protocols" icon={faNetworkWired} path="/settings/protocols" />
+						<SidebarMenuItem name="Backups" icon={faFloppyDisk} path="/settings/backups" />
+						<SidebarMenuItem name="Advanced" icon={faHammer} path="/settings/advanced" />
+					</SidebarMenuItemGroup>
+					<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
+					<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
+					{window.localStorage.getItem('show_companion_cloud') === '1' && (
+						<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
+					)}
+					<SidebarMenuItemGroup
+						name="Interactive Buttons"
+						icon={faSquareCaretRight}
+						groupVisible={ibuttonsGroupVis}
+						groupSetVisible={(expand) => smartExpand(setIbuttonsGroupVis, expand)}
+					>
+						<SidebarMenuItem name="Emulator" icon={faTabletScreenButton} path="/emulator" target="_blank" />
+						<SidebarMenuItem name="Web buttons" icon={faTable} path="/tablet" target="_blank" />
 					</SidebarMenuItemGroup>
 				</CSidebarNav>
-			)}
-			{!narrowMode && (
-				<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
-					<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} />
-				</CSidebarHeader>
-			)}
-		</CSidebar>
+				<div className="sidebar-bottom-shadow-container">
+					<div className="sidebar-bottom-shadow" />
+				</div>
+				{showHelpButtons && (
+					<CSidebarNav className="nav-secondary border-top">
+						<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
+						<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
+						<SidebarMenuItemGroup
+							name="Support"
+							title="Support options (click to expand)."
+							icon={faHeadset}
+							groupVisible={supportGroupVis}
+							groupSetVisible={(expand) => smartExpand(setSupportGroupVis, expand)}
+						>
+							<SidebarMenuItem
+								name="Report an Issue"
+								title="Report bugs or request features on GitHub."
+								icon={faGithub}
+								path="https://l.companion.free/q/QZbI6mdNd"
+								target="_blank"
+							/>
+							<SidebarMenuItem
+								name="Community Forum"
+								title="Share your experience or ask questions to your Companions on Facebook."
+								icon={faFacebook}
+								path="https://l.companion.free/q/6pc9ciJR5"
+								target="_blank"
+							/>
+							<SidebarMenuItem
+								name="Slack Chat"
+								title="Discuss technical issues on Slack."
+								icon={faSlack}
+								path="https://l.companion.free/q/OWxbBnDKG"
+								target="_blank"
+							/>
+							<SidebarMenuItem
+								name="Sponsor"
+								title="Contribute funds to Bitfocus Companion."
+								icon={faDollarSign}
+								path="https://l.companion.free/q/6PtdAvZab"
+								target="_blank"
+							/>
+						</SidebarMenuItemGroup>
+					</CSidebarNav>
+				)}
+				{!narrowMode && (
+					<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
+						<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} />
+					</CSidebarHeader>
+				)}
+			</CSidebar>
+		</NarrowModeContext.Provider>
 	)
 })
 
@@ -633,13 +672,14 @@ function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: Re
 				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs so:
 				// unfoldable && !unfoldToggler: User clicked a _nav-link_ while in folding mode → collapse
 				// !unfoldable && unfoldToggler: User clicked the _toggler_ to enable folding → collapse now
-				setNarrow(true)
+				setTimeout(() => setNarrow(true), 0) // we need to defer this action or navigation can fail due to an apparent race with re-rendering the sidebar.
 			}
 		},
 		[setNarrow, mobileMode, unfoldable]
 	)
 
 	// if in "temporary narrow-mode" return to folding mode after the mouse leaves the sidebar
+	// note that in "permanent" narrow-mode, setNarrow is passed as a no-op, so this callback is active only when not in narrow-mode
 	const handleMouseLeave = useCallback(() => {
 		if (narrow) setNarrow(false)
 	}, [narrow, setNarrow])
@@ -680,7 +720,7 @@ function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: Re
 					// [`sidebar-${placement}`]: placement,
 					// [`sidebar-${position}`]: position,
 					// [`sidebar-${size}`]: size,
-					'sidebar-narrow-unfoldable': unfoldable, // // unfold-able. This is a CoreUI class so can't be renamed.
+					'sidebar-narrow-unfoldable': unfoldable, // // unfold-able. This is a CoreUI class so can't be renamed for clarity.
 					show: mobileMode && visibleMobile,
 					// hide: visibleDesktop === false && !showToggle && !overlaid,
 				})}
@@ -713,6 +753,11 @@ interface CNavGroupProps {
 	 */
 	toggler: ReactNode
 	/**
+	 * Set group toggler title (popover) in narrow mode.
+	 */
+	title: ReactNode
+
+	/**
 	 * Show nav group items.
 	 */
 	visible: boolean
@@ -728,19 +773,32 @@ function CNavGroup({
 	className,
 	compact,
 	toggler,
+	title,
 	visible,
 	setVisible,
 	...rest
 }: React.PropsWithChildren<CNavGroupProps>) {
 	const [height, setHeight] = useState<number | string>()
 	const navItemsRef = useRef<HTMLUListElement>(null)
-
+	const matchRoute = useMatchRoute()
 	//const [_visible, setVisible] = useState(Boolean(visible))
 
-	const handleTogglerOnClick = (_event: React.MouseEvent<HTMLElement>) => {
+	const handleTogglerOnClick = (e: React.MouseEvent<HTMLElement>) => {
 		//event.preventDefault() // don't do this now that the action is taking place on Link
-		// but don't stop propagation, or it will prevent context-menus
-		setVisible(!visible)
+		// and don't stop propagation, or it will prevent context-menus
+		if (!(e.target instanceof Element)) return
+		// if clicking on the caret, which is ::after, the target class will be it's "parent"
+		// otherwise, clicking on the nav-link parts of the component, the target will be a child of nav-group-toggle
+		if (
+			e.target.classList.contains('nav-group-toggle') ||
+			e.target.closest('.toggle-basic') ||
+			(to && matchRoute({ to })) // note: the guard isn't strictly necessary since the previous condition implicitly excludes undefined `to`
+		) {
+			setVisible(!visible)
+		} else {
+			// open but don't close the group if clicking on a nav element. (Option: close if already on that element?)
+			setVisible(true)
+		}
 	}
 
 	const style: CSSProperties = {
@@ -773,23 +831,27 @@ function CNavGroup({
 	const transitionStyles = {
 		entering: { display: 'block', height: height },
 		entered: { display: 'block', height: height },
-		exiting: { display: 'block', height: height },
+		exiting: { height: height }, // adding display: block here causes it to bounce in narrow-moode when closing hides the scrollbar
 		exited: { height: height },
 		unmounted: {},
 	}
 
+	// note: we need nav-link on both the div and Link/span elements for the sidebar to format correctly
+	// also note: the <div> around the toggler Link/span creates the split-button effect by placing the ::after caret
+	// relative to the outer <div> rather than relative to the Link/span element.
 	return (
 		<li className={classNames('nav-group', { show: visible }, className)} {...rest}>
-			{to ? (
-				<Link to={to} className="nav-link nav-group-toggle nav-group-toggle-link" onClick={handleTogglerOnClick}>
-					{toggler}
-				</Link>
-			) : (
-				<span className="nav-link nav-group-toggle nav-group-toggle-basic" onClick={handleTogglerOnClick}>
-					{toggler}
-				</span>
-			)}
-
+			<NarrowModePopover title={title}>
+				<div className="nav-link nav-group-toggle" onClick={handleTogglerOnClick}>
+					{to ? (
+						<Link to={to} className="nav-link">
+							{toggler}
+						</Link>
+					) : (
+						<span className="nav-link toggle-basic">{toggler}</span>
+					)}
+				</div>
+			</NarrowModePopover>
 			<Transition
 				in={visible}
 				nodeRef={navItemsRef}
