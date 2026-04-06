@@ -12,6 +12,7 @@ import type { VariablesStore } from './VariablesStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { ViewControlStore } from './ViewControlStore.js'
+import type { EntityClipboardStore } from './EntityClipboardStore.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
 import type { SurfaceInstancesStore } from './SurfaceInstancesStore.js'
@@ -51,4 +52,6 @@ export interface RootAppStore {
 	readonly showWizard: () => void
 
 	readonly viewControl: ViewControlStore
+
+	readonly entityClipboard: EntityClipboardStore
 }

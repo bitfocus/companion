@@ -1,11 +1,19 @@
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { CButtonGroup, CButton, CFormSwitch } from '@coreui/react'
-import { faPencil, faExpandArrowsAlt, faCompressArrowsAlt, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCopy,
+	faPencil,
+	faExpandArrowsAlt,
+	faCompressArrowsAlt,
+	faClone,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface EntityCellControlProps {
 	service: IEntityEditorActionService
@@ -36,6 +44,12 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	readonly,
 	localVariablePrefix,
 }: EntityCellControlProps) {
+	const { entityClipboard } = useContext(RootAppStoreContext)
+
+	const handleCopy = useCallback(() => {
+		entityClipboard.copyEntity(entity)
+	}, [entityClipboard, entity])
+
 	const innerSetEnabled = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
 		[service]
@@ -82,6 +96,9 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 							<FontAwesomeIcon icon={faCompressArrowsAlt} />
 						</CButton>
 					)}
+					<CButton size="sm" onClick={handleCopy} title={`Copy ${entityTypeLabel} to clipboard`}>
+						<FontAwesomeIcon icon={faCopy} />
+					</CButton>
 					<CButton
 						size="sm"
 						disabled={readonly}

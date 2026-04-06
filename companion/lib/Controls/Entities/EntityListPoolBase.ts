@@ -287,6 +287,41 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
+	 * Paste one or more entities into this control, regenerating IDs
+	 */
+	entityPaste(
+		listId: SomeSocketEntityLocation,
+		ownerId: EntityOwner | null,
+		...entityModels: SomeEntityModel[]
+	): boolean {
+		if (entityModels.length === 0) return false
+
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		let newEntities: ControlEntityInstance[]
+		if (ownerId) {
+			const parent = entityList.findById(ownerId.parentId)
+			if (!parent) throw new Error(`Failed to find parent entity ${ownerId.parentId} when pasting child entity`)
+
+			newEntities = entityModels.map((entity) => parent.addChild(ownerId.childGroup, entity, true))
+		} else {
+			newEntities = entityModels.map((entity) => entityList.addEntity(entity, true))
+		}
+
+		// Inform relevant module
+		for (const entity of newEntities) {
+			entity.subscribe(true)
+		}
+
+		this.tryTriggerLocalVariablesChanged(...newEntities)
+
+		this.commitChange()
+
+		return true
+	}
+
+	/**
 	 * Duplicate an entity on this control
 	 */
 	entityDuplicate(listId: SomeSocketEntityLocation, id: string): boolean {

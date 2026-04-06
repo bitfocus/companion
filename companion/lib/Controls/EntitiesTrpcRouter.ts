@@ -2,7 +2,12 @@ import z from 'zod'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
-import { EntityModelType, zodEntityLocation, type EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	zodEntityLocation,
+	zodSomeEntityModel,
+	type EntityOwner,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import LogController from '../Log/Controller.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -155,6 +160,26 @@ export function createEntitiesTrpcRouter(
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 				return control.entities.entityDuplicate(entityLocation, entityId)
+			}),
+
+		paste: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					ownerId: zodEntityOwner.nullable(),
+					entities: z.array(zodSomeEntityModel),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { controlId, entityLocation, ownerId, entities } = input
+
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+				return control.entities.entityPaste(entityLocation, ownerId, ...entities)
 			}),
 
 		setOption: publicProcedure
