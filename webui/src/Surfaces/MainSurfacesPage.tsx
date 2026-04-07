@@ -92,12 +92,23 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 			>
 				<div className="fixed-header">
 					<h4 className="btn-inline">
-						Configured Surfaces
-						<ContextHelpButton action="/user-guide/config/surfaces" />
+						Surfaces
+						<ContextHelpButton action="/user-guide/config/surfaces">
+							Use the table, below to configure currently-known surfaces and groups.
+							<br />
+							To configure a surface integration or global setting,
+							<span className="d-inline d-xl-none">
+								{' '}
+								click the "Show Settings" button, above the table on the right
+							</span>
+							<span className="d-none d-xl-inline"> use the panel to the right</span>.
+							<br />
+							Click this icon for more help.
+						</ContextHelpButton>
 					</h4>
 
 					<p style={{ marginBottom: '0.5rem' }}>
-						Click on any item to edit the configuration of a currently-known surface or group.
+						Click on any item below to edit the configuration of a currently-known surface or group.
 						<br />
 						If your streamdeck is missing from this list, you might need to close the Elgato Streamdeck application and
 						click the Rescan button below.
