@@ -29,6 +29,7 @@ import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companio
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
 import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { createSurfaceConfigPayload, sanitizePluginConfigFields } from './ConfigUtil.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -410,9 +411,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 				return
 			}
 
+			const sanitizedInfo: HostOpenDeviceResult = {
+				...info,
+				configFields: sanitizePluginConfigFields(this.logger, info.configFields),
+			}
+
 			// Fetch the initial config for this surface from the surfaceController
 			const surfaceConfig = this.#deps.surfaceController.getDeviceConfig(info.surfaceId)
-			const initialConfig = surfaceConfig?.config || {}
+			const initialConfig = createSurfaceConfigPayload(sanitizedInfo, surfaceConfig?.config || {})
 			this.#ipcWrapper
 				.sendWithCb('readySurface', {
 					surfaceId: info.surfaceId,
@@ -425,7 +431,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			const panel = new SurfacePluginPanel(
 				this.#ipcWrapper,
 				this.instanceId,
-				info,
+				sanitizedInfo,
 				this.#deps.surfaceController.surfaceExecuteExpression.bind(this.#deps.surfaceController)
 			)
 			this.#panels.set(info.surfaceId, panel)
@@ -439,7 +445,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 				this.#ipcWrapper
 					.sendWithCb('updateConfig', {
 						surfaceId,
-						newConfig: newConfig || {},
+						newConfig: createSurfaceConfigPayload(sanitizedInfo, newConfig || {}),
 					})
 					.catch((e) => {
 						this.logger.warn(`Failed forwarding surface config to child for ${surfaceId}: ${e}`)

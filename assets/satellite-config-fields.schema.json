@@ -45,8 +45,7 @@
 							"type": "string"
 						}
 					},
-					"required": ["type", "value"],
-					"additionalProperties": false
+					"required": ["type", "value"]
 				}
 			]
 		},
@@ -70,8 +69,7 @@
 							"type": "boolean"
 						}
 					},
-					"required": ["type"],
-					"additionalProperties": false
+					"required": ["type"]
 				}
 			]
 		},
@@ -112,8 +110,7 @@
 							"type": "boolean"
 						}
 					},
-					"required": ["type", "choices"],
-					"additionalProperties": false
+					"required": ["type", "choices"]
 				}
 			]
 		},
@@ -141,8 +138,7 @@
 							"type": "number"
 						}
 					},
-					"required": ["type", "min", "max"],
-					"additionalProperties": false
+					"required": ["type", "min", "max"]
 				}
 			]
 		},
@@ -158,8 +154,7 @@
 							"type": "boolean"
 						}
 					},
-					"required": ["type"],
-					"additionalProperties": false
+					"required": ["type"]
 				}
 			]
 		},

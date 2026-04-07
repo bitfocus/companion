@@ -31,6 +31,7 @@ export interface SurfacePanelInfo {
 	location: string | null
 	isRemote: boolean
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
+	canChangePage?: boolean
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
