@@ -49,6 +49,7 @@ import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
  *        - Add FIRMWARE-UPDATE-INFO to report firmware update availability
  *        - Add CONFIG_FIELDS to ADD-DEVICE for device-specific config fields
  *        - Add DEVICE-CONFIG to relay current config values back to the device
+ *        - Add CHANGE-PAGE message for surfaces to navigate pages
  */
 const API_VERSION = '1.10.0'
 
@@ -245,6 +246,8 @@ export class ServiceSatelliteApi {
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
+		const canChangePage =
+			typeof params.CAN_CHANGE_PAGE === 'string' && params.CAN_CHANGE_PAGE ? params.CAN_CHANGE_PAGE : undefined
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
@@ -280,6 +283,7 @@ export class ServiceSatelliteApi {
 			surfaceManifestFromClient,
 			surfaceManifest,
 			configFields,
+			canChangePage,
 		})
 
 		this.#devices.set(id, {
@@ -347,6 +351,9 @@ export class ServiceSatelliteApi {
 				break
 			case 'FIRMWARE-UPDATE-INFO':
 				this.#firmwareUpdateInfo(socket, params)
+				break
+			case 'CHANGE-PAGE':
+				this.#changePage(socket, params)
 				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
@@ -618,6 +625,22 @@ export class ServiceSatelliteApi {
 
 		const updateUrl = `${params.UPDATE_URL}`
 		device.device.updateFirmwareUpdateInfo(updateUrl || null)
+
+		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
+	#changePage(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'CHANGE-PAGE'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		if (params.DIRECTION === undefined) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+		}
+
+		const forward = isTruthy(params.DIRECTION)
+		device.device.doChangePage(forward)
 
 		socket.sendMessage(messageName, 'OK', id, {})
 	}

@@ -59,6 +59,8 @@ export interface SatelliteDeviceInfo {
 	surfaceManifest: SatelliteSurfaceLayout
 
 	configFields: SatelliteConfigFields | undefined
+
+	canChangePage: string | undefined
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -88,6 +90,15 @@ function generateConfigFields(
 		fields.push(BrightnessConfigField)
 	}
 	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+
+	if (deviceInfo.canChangePage) {
+		fields.push({
+			id: 'canChangePage',
+			type: 'checkbox',
+			label: deviceInfo.canChangePage,
+			default: false,
+		})
+	}
 
 	if (deviceInfo.configFields && deviceInfo.configFields.length > 0) {
 		fields.push(...translateSatelliteConfigFields(deviceInfo.configFields))
@@ -231,6 +242,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
+			canChangePage: !!deviceInfo.canChangePage,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -390,6 +402,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 	doPincodeKey(pincodeKey: number): void {
 		this.emit('pincodeKey', pincodeKey)
+	}
+
+	doChangePage(forward: boolean): void {
+		if (!this.info.canChangePage || !this.#config.canChangePage) return
+		this.emit('changePage', forward)
 	}
 
 	/**
