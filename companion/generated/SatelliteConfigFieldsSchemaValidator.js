@@ -40,7 +40,6 @@ const schema31 = {
 						value: { description: 'Static text content to display.', type: 'string' },
 					},
 					required: ['type', 'value'],
-					additionalProperties: false,
 				},
 			],
 		},
@@ -56,7 +55,6 @@ const schema31 = {
 						multiline: { description: 'Whether the input is a multiline text area.', type: 'boolean' },
 					},
 					required: ['type'],
-					additionalProperties: false,
 				},
 			],
 		},
@@ -89,7 +87,6 @@ const schema31 = {
 						},
 					},
 					required: ['type', 'choices'],
-					additionalProperties: false,
 				},
 			],
 		},
@@ -106,7 +103,6 @@ const schema31 = {
 						step: { description: 'Step increment for the input.', type: 'number' },
 					},
 					required: ['type', 'min', 'max'],
-					additionalProperties: false,
 				},
 			],
 		},
@@ -120,7 +116,6 @@ const schema31 = {
 						default: { description: 'Default checked state.', type: 'boolean' },
 					},
 					required: ['type'],
-					additionalProperties: false,
 				},
 			],
 		},
@@ -154,7 +149,6 @@ const schema33 = {
 				value: { description: 'Static text content to display.', type: 'string' },
 			},
 			required: ['type', 'value'],
-			additionalProperties: false,
 		},
 	],
 }
@@ -336,33 +330,35 @@ function validate22(
 					]
 					return false
 				} else {
-					const _errs15 = errors
-					for (const key0 in data) {
-						if (!(key0 === 'type' || key0 === 'value')) {
+					if (data.type !== undefined) {
+						const _errs15 = errors
+						if ('static-text' !== data.type) {
 							validate22.errors = [
 								{
-									instancePath,
-									schemaPath: '#/allOf/1/additionalProperties',
-									keyword: 'additionalProperties',
-									params: { additionalProperty: key0 },
-									message: 'must NOT have additional properties',
+									instancePath: instancePath + '/type',
+									schemaPath: '#/allOf/1/properties/type/const',
+									keyword: 'const',
+									params: { allowedValue: 'static-text' },
+									message: 'must be equal to constant',
 								},
 							]
 							return false
-							break
 						}
+						var valid3 = _errs15 === errors
+					} else {
+						var valid3 = true
 					}
-					if (_errs15 === errors) {
-						if (data.type !== undefined) {
+					if (valid3) {
+						if (data.value !== undefined) {
 							const _errs16 = errors
-							if ('static-text' !== data.type) {
+							if (typeof data.value !== 'string') {
 								validate22.errors = [
 									{
-										instancePath: instancePath + '/type',
-										schemaPath: '#/allOf/1/properties/type/const',
-										keyword: 'const',
-										params: { allowedValue: 'static-text' },
-										message: 'must be equal to constant',
+										instancePath: instancePath + '/value',
+										schemaPath: '#/allOf/1/properties/value/type',
+										keyword: 'type',
+										params: { type: 'string' },
+										message: 'must be string',
 									},
 								]
 								return false
@@ -370,26 +366,6 @@ function validate22(
 							var valid3 = _errs16 === errors
 						} else {
 							var valid3 = true
-						}
-						if (valid3) {
-							if (data.value !== undefined) {
-								const _errs17 = errors
-								if (typeof data.value !== 'string') {
-									validate22.errors = [
-										{
-											instancePath: instancePath + '/value',
-											schemaPath: '#/allOf/1/properties/value/type',
-											keyword: 'type',
-											params: { type: 'string' },
-											message: 'must be string',
-										},
-									]
-									return false
-								}
-								var valid3 = _errs17 === errors
-							} else {
-								var valid3 = true
-							}
 						}
 					}
 				}
@@ -411,7 +387,19 @@ function validate22(
 	validate22.errors = vErrors
 	return errors === 0
 }
-validate22.evaluated = { props: true, dynamicProps: false, dynamicItems: false }
+validate22.evaluated = {
+	props: {
+		type: true,
+		value: true,
+		id: true,
+		label: true,
+		description: true,
+		tooltip: true,
+		isVisibleExpression: true,
+	},
+	dynamicProps: false,
+	dynamicItems: false,
+}
 const schema35 = {
 	allOf: [
 		{ $ref: '#/$defs/commonFields' },
@@ -424,7 +412,6 @@ const schema35 = {
 				multiline: { description: 'Whether the input is a multiline text area.', type: 'boolean' },
 			},
 			required: ['type'],
-			additionalProperties: false,
 		},
 	],
 }
@@ -588,33 +575,35 @@ function validate24(
 					]
 					return false
 				} else {
-					const _errs15 = errors
-					for (const key0 in data) {
-						if (!(key0 === 'type' || key0 === 'default' || key0 === 'regex' || key0 === 'multiline')) {
+					if (data.type !== undefined) {
+						const _errs15 = errors
+						if ('textinput' !== data.type) {
 							validate24.errors = [
 								{
-									instancePath,
-									schemaPath: '#/allOf/1/additionalProperties',
-									keyword: 'additionalProperties',
-									params: { additionalProperty: key0 },
-									message: 'must NOT have additional properties',
+									instancePath: instancePath + '/type',
+									schemaPath: '#/allOf/1/properties/type/const',
+									keyword: 'const',
+									params: { allowedValue: 'textinput' },
+									message: 'must be equal to constant',
 								},
 							]
 							return false
-							break
 						}
+						var valid3 = _errs15 === errors
+					} else {
+						var valid3 = true
 					}
-					if (_errs15 === errors) {
-						if (data.type !== undefined) {
+					if (valid3) {
+						if (data.default !== undefined) {
 							const _errs16 = errors
-							if ('textinput' !== data.type) {
+							if (typeof data.default !== 'string') {
 								validate24.errors = [
 									{
-										instancePath: instancePath + '/type',
-										schemaPath: '#/allOf/1/properties/type/const',
-										keyword: 'const',
-										params: { allowedValue: 'textinput' },
-										message: 'must be equal to constant',
+										instancePath: instancePath + '/default',
+										schemaPath: '#/allOf/1/properties/default/type',
+										keyword: 'type',
+										params: { type: 'string' },
+										message: 'must be string',
 									},
 								]
 								return false
@@ -624,13 +613,13 @@ function validate24(
 							var valid3 = true
 						}
 						if (valid3) {
-							if (data.default !== undefined) {
-								const _errs17 = errors
-								if (typeof data.default !== 'string') {
+							if (data.regex !== undefined) {
+								const _errs18 = errors
+								if (typeof data.regex !== 'string') {
 									validate24.errors = [
 										{
-											instancePath: instancePath + '/default',
-											schemaPath: '#/allOf/1/properties/default/type',
+											instancePath: instancePath + '/regex',
+											schemaPath: '#/allOf/1/properties/regex/type',
 											keyword: 'type',
 											params: { type: 'string' },
 											message: 'must be string',
@@ -638,48 +627,28 @@ function validate24(
 									]
 									return false
 								}
-								var valid3 = _errs17 === errors
+								var valid3 = _errs18 === errors
 							} else {
 								var valid3 = true
 							}
 							if (valid3) {
-								if (data.regex !== undefined) {
-									const _errs19 = errors
-									if (typeof data.regex !== 'string') {
+								if (data.multiline !== undefined) {
+									const _errs20 = errors
+									if (typeof data.multiline !== 'boolean') {
 										validate24.errors = [
 											{
-												instancePath: instancePath + '/regex',
-												schemaPath: '#/allOf/1/properties/regex/type',
+												instancePath: instancePath + '/multiline',
+												schemaPath: '#/allOf/1/properties/multiline/type',
 												keyword: 'type',
-												params: { type: 'string' },
-												message: 'must be string',
+												params: { type: 'boolean' },
+												message: 'must be boolean',
 											},
 										]
 										return false
 									}
-									var valid3 = _errs19 === errors
+									var valid3 = _errs20 === errors
 								} else {
 									var valid3 = true
-								}
-								if (valid3) {
-									if (data.multiline !== undefined) {
-										const _errs21 = errors
-										if (typeof data.multiline !== 'boolean') {
-											validate24.errors = [
-												{
-													instancePath: instancePath + '/multiline',
-													schemaPath: '#/allOf/1/properties/multiline/type',
-													keyword: 'type',
-													params: { type: 'boolean' },
-													message: 'must be boolean',
-												},
-											]
-											return false
-										}
-										var valid3 = _errs21 === errors
-									} else {
-										var valid3 = true
-									}
 								}
 							}
 						}
@@ -703,7 +672,21 @@ function validate24(
 	validate24.errors = vErrors
 	return errors === 0
 }
-validate24.evaluated = { props: true, dynamicProps: false, dynamicItems: false }
+validate24.evaluated = {
+	props: {
+		type: true,
+		default: true,
+		regex: true,
+		multiline: true,
+		id: true,
+		label: true,
+		description: true,
+		tooltip: true,
+		isVisibleExpression: true,
+	},
+	dynamicProps: false,
+	dynamicItems: false,
+}
 const schema37 = {
 	allOf: [
 		{ $ref: '#/$defs/commonFields' },
@@ -724,7 +707,6 @@ const schema37 = {
 				},
 			},
 			required: ['type', 'choices'],
-			additionalProperties: false,
 		},
 	],
 }
@@ -900,216 +882,198 @@ function validate26(
 					]
 					return false
 				} else {
-					const _errs15 = errors
-					for (const key0 in data) {
-						if (!(key0 === 'type' || key0 === 'choices' || key0 === 'default' || key0 === 'allowCustom')) {
+					if (data.type !== undefined) {
+						const _errs15 = errors
+						if ('dropdown' !== data.type) {
 							validate26.errors = [
 								{
-									instancePath,
-									schemaPath: '#/allOf/1/additionalProperties',
-									keyword: 'additionalProperties',
-									params: { additionalProperty: key0 },
-									message: 'must NOT have additional properties',
+									instancePath: instancePath + '/type',
+									schemaPath: '#/allOf/1/properties/type/const',
+									keyword: 'const',
+									params: { allowedValue: 'dropdown' },
+									message: 'must be equal to constant',
 								},
 							]
 							return false
-							break
 						}
+						var valid3 = _errs15 === errors
+					} else {
+						var valid3 = true
 					}
-					if (_errs15 === errors) {
-						if (data.type !== undefined) {
+					if (valid3) {
+						if (data.choices !== undefined) {
+							let data6 = data.choices
 							const _errs16 = errors
-							if ('dropdown' !== data.type) {
-								validate26.errors = [
-									{
-										instancePath: instancePath + '/type',
-										schemaPath: '#/allOf/1/properties/type/const',
-										keyword: 'const',
-										params: { allowedValue: 'dropdown' },
-										message: 'must be equal to constant',
-									},
-								]
-								return false
+							if (errors === _errs16) {
+								if (Array.isArray(data6)) {
+									if (data6.length < 1) {
+										validate26.errors = [
+											{
+												instancePath: instancePath + '/choices',
+												schemaPath: '#/allOf/1/properties/choices/minItems',
+												keyword: 'minItems',
+												params: { limit: 1 },
+												message: 'must NOT have fewer than 1 items',
+											},
+										]
+										return false
+									} else {
+										var valid4 = true
+										const len0 = data6.length
+										for (let i0 = 0; i0 < len0; i0++) {
+											let data7 = data6[i0]
+											const _errs18 = errors
+											const _errs19 = errors
+											if (errors === _errs19) {
+												if (data7 && typeof data7 == 'object' && !Array.isArray(data7)) {
+													let missing2
+													if (
+														(data7.id === undefined && (missing2 = 'id')) ||
+														(data7.label === undefined && (missing2 = 'label'))
+													) {
+														validate26.errors = [
+															{
+																instancePath: instancePath + '/choices/' + i0,
+																schemaPath: '#/$defs/dropdownChoice/required',
+																keyword: 'required',
+																params: { missingProperty: missing2 },
+																message: "must have required property '" + missing2 + "'",
+															},
+														]
+														return false
+													} else {
+														const _errs21 = errors
+														for (const key0 in data7) {
+															if (!(key0 === 'id' || key0 === 'label')) {
+																validate26.errors = [
+																	{
+																		instancePath: instancePath + '/choices/' + i0,
+																		schemaPath: '#/$defs/dropdownChoice/additionalProperties',
+																		keyword: 'additionalProperties',
+																		params: { additionalProperty: key0 },
+																		message: 'must NOT have additional properties',
+																	},
+																]
+																return false
+																break
+															}
+														}
+														if (_errs21 === errors) {
+															if (data7.id !== undefined) {
+																let data8 = data7.id
+																const _errs22 = errors
+																if (typeof data8 !== 'string' && !(typeof data8 == 'number' && isFinite(data8))) {
+																	validate26.errors = [
+																		{
+																			instancePath: instancePath + '/choices/' + i0 + '/id',
+																			schemaPath: '#/$defs/dropdownChoice/properties/id/type',
+																			keyword: 'type',
+																			params: { type: schema39.properties.id.type },
+																			message: 'must be string,number',
+																		},
+																	]
+																	return false
+																}
+																var valid6 = _errs22 === errors
+															} else {
+																var valid6 = true
+															}
+															if (valid6) {
+																if (data7.label !== undefined) {
+																	const _errs24 = errors
+																	if (typeof data7.label !== 'string') {
+																		validate26.errors = [
+																			{
+																				instancePath: instancePath + '/choices/' + i0 + '/label',
+																				schemaPath: '#/$defs/dropdownChoice/properties/label/type',
+																				keyword: 'type',
+																				params: { type: 'string' },
+																				message: 'must be string',
+																			},
+																		]
+																		return false
+																	}
+																	var valid6 = _errs24 === errors
+																} else {
+																	var valid6 = true
+																}
+															}
+														}
+													}
+												} else {
+													validate26.errors = [
+														{
+															instancePath: instancePath + '/choices/' + i0,
+															schemaPath: '#/$defs/dropdownChoice/type',
+															keyword: 'type',
+															params: { type: 'object' },
+															message: 'must be object',
+														},
+													]
+													return false
+												}
+											}
+											var valid4 = _errs18 === errors
+											if (!valid4) {
+												break
+											}
+										}
+									}
+								} else {
+									validate26.errors = [
+										{
+											instancePath: instancePath + '/choices',
+											schemaPath: '#/allOf/1/properties/choices/type',
+											keyword: 'type',
+											params: { type: 'array' },
+											message: 'must be array',
+										},
+									]
+									return false
+								}
 							}
 							var valid3 = _errs16 === errors
 						} else {
 							var valid3 = true
 						}
 						if (valid3) {
-							if (data.choices !== undefined) {
-								let data6 = data.choices
-								const _errs17 = errors
-								if (errors === _errs17) {
-									if (Array.isArray(data6)) {
-										if (data6.length < 1) {
-											validate26.errors = [
-												{
-													instancePath: instancePath + '/choices',
-													schemaPath: '#/allOf/1/properties/choices/minItems',
-													keyword: 'minItems',
-													params: { limit: 1 },
-													message: 'must NOT have fewer than 1 items',
-												},
-											]
-											return false
-										} else {
-											var valid4 = true
-											const len0 = data6.length
-											for (let i0 = 0; i0 < len0; i0++) {
-												let data7 = data6[i0]
-												const _errs19 = errors
-												const _errs20 = errors
-												if (errors === _errs20) {
-													if (data7 && typeof data7 == 'object' && !Array.isArray(data7)) {
-														let missing2
-														if (
-															(data7.id === undefined && (missing2 = 'id')) ||
-															(data7.label === undefined && (missing2 = 'label'))
-														) {
-															validate26.errors = [
-																{
-																	instancePath: instancePath + '/choices/' + i0,
-																	schemaPath: '#/$defs/dropdownChoice/required',
-																	keyword: 'required',
-																	params: { missingProperty: missing2 },
-																	message: "must have required property '" + missing2 + "'",
-																},
-															]
-															return false
-														} else {
-															const _errs22 = errors
-															for (const key1 in data7) {
-																if (!(key1 === 'id' || key1 === 'label')) {
-																	validate26.errors = [
-																		{
-																			instancePath: instancePath + '/choices/' + i0,
-																			schemaPath: '#/$defs/dropdownChoice/additionalProperties',
-																			keyword: 'additionalProperties',
-																			params: { additionalProperty: key1 },
-																			message: 'must NOT have additional properties',
-																		},
-																	]
-																	return false
-																	break
-																}
-															}
-															if (_errs22 === errors) {
-																if (data7.id !== undefined) {
-																	let data8 = data7.id
-																	const _errs23 = errors
-																	if (typeof data8 !== 'string' && !(typeof data8 == 'number' && isFinite(data8))) {
-																		validate26.errors = [
-																			{
-																				instancePath: instancePath + '/choices/' + i0 + '/id',
-																				schemaPath: '#/$defs/dropdownChoice/properties/id/type',
-																				keyword: 'type',
-																				params: { type: schema39.properties.id.type },
-																				message: 'must be string,number',
-																			},
-																		]
-																		return false
-																	}
-																	var valid6 = _errs23 === errors
-																} else {
-																	var valid6 = true
-																}
-																if (valid6) {
-																	if (data7.label !== undefined) {
-																		const _errs25 = errors
-																		if (typeof data7.label !== 'string') {
-																			validate26.errors = [
-																				{
-																					instancePath: instancePath + '/choices/' + i0 + '/label',
-																					schemaPath: '#/$defs/dropdownChoice/properties/label/type',
-																					keyword: 'type',
-																					params: { type: 'string' },
-																					message: 'must be string',
-																				},
-																			]
-																			return false
-																		}
-																		var valid6 = _errs25 === errors
-																	} else {
-																		var valid6 = true
-																	}
-																}
-															}
-														}
-													} else {
-														validate26.errors = [
-															{
-																instancePath: instancePath + '/choices/' + i0,
-																schemaPath: '#/$defs/dropdownChoice/type',
-																keyword: 'type',
-																params: { type: 'object' },
-																message: 'must be object',
-															},
-														]
-														return false
-													}
-												}
-												var valid4 = _errs19 === errors
-												if (!valid4) {
-													break
-												}
-											}
-										}
-									} else {
-										validate26.errors = [
-											{
-												instancePath: instancePath + '/choices',
-												schemaPath: '#/allOf/1/properties/choices/type',
-												keyword: 'type',
-												params: { type: 'array' },
-												message: 'must be array',
-											},
-										]
-										return false
-									}
+							if (data.default !== undefined) {
+								let data10 = data.default
+								const _errs26 = errors
+								if (typeof data10 !== 'string' && !(typeof data10 == 'number' && isFinite(data10))) {
+									validate26.errors = [
+										{
+											instancePath: instancePath + '/default',
+											schemaPath: '#/allOf/1/properties/default/type',
+											keyword: 'type',
+											params: { type: schema37.allOf[1].properties.default.type },
+											message: 'must be string,number',
+										},
+									]
+									return false
 								}
-								var valid3 = _errs17 === errors
+								var valid3 = _errs26 === errors
 							} else {
 								var valid3 = true
 							}
 							if (valid3) {
-								if (data.default !== undefined) {
-									let data10 = data.default
-									const _errs27 = errors
-									if (typeof data10 !== 'string' && !(typeof data10 == 'number' && isFinite(data10))) {
+								if (data.allowCustom !== undefined) {
+									const _errs28 = errors
+									if (typeof data.allowCustom !== 'boolean') {
 										validate26.errors = [
 											{
-												instancePath: instancePath + '/default',
-												schemaPath: '#/allOf/1/properties/default/type',
+												instancePath: instancePath + '/allowCustom',
+												schemaPath: '#/allOf/1/properties/allowCustom/type',
 												keyword: 'type',
-												params: { type: schema37.allOf[1].properties.default.type },
-												message: 'must be string,number',
+												params: { type: 'boolean' },
+												message: 'must be boolean',
 											},
 										]
 										return false
 									}
-									var valid3 = _errs27 === errors
+									var valid3 = _errs28 === errors
 								} else {
 									var valid3 = true
-								}
-								if (valid3) {
-									if (data.allowCustom !== undefined) {
-										const _errs29 = errors
-										if (typeof data.allowCustom !== 'boolean') {
-											validate26.errors = [
-												{
-													instancePath: instancePath + '/allowCustom',
-													schemaPath: '#/allOf/1/properties/allowCustom/type',
-													keyword: 'type',
-													params: { type: 'boolean' },
-													message: 'must be boolean',
-												},
-											]
-											return false
-										}
-										var valid3 = _errs29 === errors
-									} else {
-										var valid3 = true
-									}
 								}
 							}
 						}
@@ -1133,7 +1097,21 @@ function validate26(
 	validate26.errors = vErrors
 	return errors === 0
 }
-validate26.evaluated = { props: true, dynamicProps: false, dynamicItems: false }
+validate26.evaluated = {
+	props: {
+		type: true,
+		choices: true,
+		default: true,
+		allowCustom: true,
+		id: true,
+		label: true,
+		description: true,
+		tooltip: true,
+		isVisibleExpression: true,
+	},
+	dynamicProps: false,
+	dynamicItems: false,
+}
 const schema40 = {
 	allOf: [
 		{ $ref: '#/$defs/commonFields' },
@@ -1147,7 +1125,6 @@ const schema40 = {
 				step: { description: 'Step increment for the input.', type: 'number' },
 			},
 			required: ['type', 'min', 'max'],
-			additionalProperties: false,
 		},
 	],
 }
@@ -1315,33 +1292,36 @@ function validate28(
 					]
 					return false
 				} else {
-					const _errs15 = errors
-					for (const key0 in data) {
-						if (!(key0 === 'type' || key0 === 'min' || key0 === 'max' || key0 === 'default' || key0 === 'step')) {
+					if (data.type !== undefined) {
+						const _errs15 = errors
+						if ('number' !== data.type) {
 							validate28.errors = [
 								{
-									instancePath,
-									schemaPath: '#/allOf/1/additionalProperties',
-									keyword: 'additionalProperties',
-									params: { additionalProperty: key0 },
-									message: 'must NOT have additional properties',
+									instancePath: instancePath + '/type',
+									schemaPath: '#/allOf/1/properties/type/const',
+									keyword: 'const',
+									params: { allowedValue: 'number' },
+									message: 'must be equal to constant',
 								},
 							]
 							return false
-							break
 						}
+						var valid3 = _errs15 === errors
+					} else {
+						var valid3 = true
 					}
-					if (_errs15 === errors) {
-						if (data.type !== undefined) {
+					if (valid3) {
+						if (data.min !== undefined) {
+							let data6 = data.min
 							const _errs16 = errors
-							if ('number' !== data.type) {
+							if (!(typeof data6 == 'number' && isFinite(data6))) {
 								validate28.errors = [
 									{
-										instancePath: instancePath + '/type',
-										schemaPath: '#/allOf/1/properties/type/const',
-										keyword: 'const',
-										params: { allowedValue: 'number' },
-										message: 'must be equal to constant',
+										instancePath: instancePath + '/min',
+										schemaPath: '#/allOf/1/properties/min/type',
+										keyword: 'type',
+										params: { type: 'number' },
+										message: 'must be number',
 									},
 								]
 								return false
@@ -1351,14 +1331,14 @@ function validate28(
 							var valid3 = true
 						}
 						if (valid3) {
-							if (data.min !== undefined) {
-								let data6 = data.min
-								const _errs17 = errors
-								if (!(typeof data6 == 'number' && isFinite(data6))) {
+							if (data.max !== undefined) {
+								let data7 = data.max
+								const _errs18 = errors
+								if (!(typeof data7 == 'number' && isFinite(data7))) {
 									validate28.errors = [
 										{
-											instancePath: instancePath + '/min',
-											schemaPath: '#/allOf/1/properties/min/type',
+											instancePath: instancePath + '/max',
+											schemaPath: '#/allOf/1/properties/max/type',
 											keyword: 'type',
 											params: { type: 'number' },
 											message: 'must be number',
@@ -1366,19 +1346,19 @@ function validate28(
 									]
 									return false
 								}
-								var valid3 = _errs17 === errors
+								var valid3 = _errs18 === errors
 							} else {
 								var valid3 = true
 							}
 							if (valid3) {
-								if (data.max !== undefined) {
-									let data7 = data.max
-									const _errs19 = errors
-									if (!(typeof data7 == 'number' && isFinite(data7))) {
+								if (data.default !== undefined) {
+									let data8 = data.default
+									const _errs20 = errors
+									if (!(typeof data8 == 'number' && isFinite(data8))) {
 										validate28.errors = [
 											{
-												instancePath: instancePath + '/max',
-												schemaPath: '#/allOf/1/properties/max/type',
+												instancePath: instancePath + '/default',
+												schemaPath: '#/allOf/1/properties/default/type',
 												keyword: 'type',
 												params: { type: 'number' },
 												message: 'must be number',
@@ -1386,19 +1366,19 @@ function validate28(
 										]
 										return false
 									}
-									var valid3 = _errs19 === errors
+									var valid3 = _errs20 === errors
 								} else {
 									var valid3 = true
 								}
 								if (valid3) {
-									if (data.default !== undefined) {
-										let data8 = data.default
-										const _errs21 = errors
-										if (!(typeof data8 == 'number' && isFinite(data8))) {
+									if (data.step !== undefined) {
+										let data9 = data.step
+										const _errs22 = errors
+										if (!(typeof data9 == 'number' && isFinite(data9))) {
 											validate28.errors = [
 												{
-													instancePath: instancePath + '/default',
-													schemaPath: '#/allOf/1/properties/default/type',
+													instancePath: instancePath + '/step',
+													schemaPath: '#/allOf/1/properties/step/type',
 													keyword: 'type',
 													params: { type: 'number' },
 													message: 'must be number',
@@ -1406,30 +1386,9 @@ function validate28(
 											]
 											return false
 										}
-										var valid3 = _errs21 === errors
+										var valid3 = _errs22 === errors
 									} else {
 										var valid3 = true
-									}
-									if (valid3) {
-										if (data.step !== undefined) {
-											let data9 = data.step
-											const _errs23 = errors
-											if (!(typeof data9 == 'number' && isFinite(data9))) {
-												validate28.errors = [
-													{
-														instancePath: instancePath + '/step',
-														schemaPath: '#/allOf/1/properties/step/type',
-														keyword: 'type',
-														params: { type: 'number' },
-														message: 'must be number',
-													},
-												]
-												return false
-											}
-											var valid3 = _errs23 === errors
-										} else {
-											var valid3 = true
-										}
 									}
 								}
 							}
@@ -1454,7 +1413,22 @@ function validate28(
 	validate28.errors = vErrors
 	return errors === 0
 }
-validate28.evaluated = { props: true, dynamicProps: false, dynamicItems: false }
+validate28.evaluated = {
+	props: {
+		type: true,
+		min: true,
+		max: true,
+		default: true,
+		step: true,
+		id: true,
+		label: true,
+		description: true,
+		tooltip: true,
+		isVisibleExpression: true,
+	},
+	dynamicProps: false,
+	dynamicItems: false,
+}
 const schema42 = {
 	allOf: [
 		{ $ref: '#/$defs/commonFields' },
@@ -1462,7 +1436,6 @@ const schema42 = {
 			type: 'object',
 			properties: { type: { const: 'checkbox' }, default: { description: 'Default checked state.', type: 'boolean' } },
 			required: ['type'],
-			additionalProperties: false,
 		},
 	],
 }
@@ -1626,33 +1599,35 @@ function validate30(
 					]
 					return false
 				} else {
-					const _errs15 = errors
-					for (const key0 in data) {
-						if (!(key0 === 'type' || key0 === 'default')) {
+					if (data.type !== undefined) {
+						const _errs15 = errors
+						if ('checkbox' !== data.type) {
 							validate30.errors = [
 								{
-									instancePath,
-									schemaPath: '#/allOf/1/additionalProperties',
-									keyword: 'additionalProperties',
-									params: { additionalProperty: key0 },
-									message: 'must NOT have additional properties',
+									instancePath: instancePath + '/type',
+									schemaPath: '#/allOf/1/properties/type/const',
+									keyword: 'const',
+									params: { allowedValue: 'checkbox' },
+									message: 'must be equal to constant',
 								},
 							]
 							return false
-							break
 						}
+						var valid3 = _errs15 === errors
+					} else {
+						var valid3 = true
 					}
-					if (_errs15 === errors) {
-						if (data.type !== undefined) {
+					if (valid3) {
+						if (data.default !== undefined) {
 							const _errs16 = errors
-							if ('checkbox' !== data.type) {
+							if (typeof data.default !== 'boolean') {
 								validate30.errors = [
 									{
-										instancePath: instancePath + '/type',
-										schemaPath: '#/allOf/1/properties/type/const',
-										keyword: 'const',
-										params: { allowedValue: 'checkbox' },
-										message: 'must be equal to constant',
+										instancePath: instancePath + '/default',
+										schemaPath: '#/allOf/1/properties/default/type',
+										keyword: 'type',
+										params: { type: 'boolean' },
+										message: 'must be boolean',
 									},
 								]
 								return false
@@ -1660,26 +1635,6 @@ function validate30(
 							var valid3 = _errs16 === errors
 						} else {
 							var valid3 = true
-						}
-						if (valid3) {
-							if (data.default !== undefined) {
-								const _errs17 = errors
-								if (typeof data.default !== 'boolean') {
-									validate30.errors = [
-										{
-											instancePath: instancePath + '/default',
-											schemaPath: '#/allOf/1/properties/default/type',
-											keyword: 'type',
-											params: { type: 'boolean' },
-											message: 'must be boolean',
-										},
-									]
-									return false
-								}
-								var valid3 = _errs17 === errors
-							} else {
-								var valid3 = true
-							}
 						}
 					}
 				}
@@ -1701,7 +1656,19 @@ function validate30(
 	validate30.errors = vErrors
 	return errors === 0
 }
-validate30.evaluated = { props: true, dynamicProps: false, dynamicItems: false }
+validate30.evaluated = {
+	props: {
+		type: true,
+		default: true,
+		id: true,
+		label: true,
+		description: true,
+		tooltip: true,
+		isVisibleExpression: true,
+	},
+	dynamicProps: false,
+	dynamicItems: false,
+}
 function validate21(
 	data,
 	{ instancePath = '', parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}
@@ -1727,7 +1694,14 @@ function validate21(
 	if (_valid0) {
 		valid0 = true
 		passing0 = 0
-		var props0 = true
+		var props0 = {}
+		props0.type = true
+		props0.value = true
+		props0.id = true
+		props0.label = true
+		props0.description = true
+		props0.tooltip = true
+		props0.isVisibleExpression = true
 	}
 	const _errs2 = errors
 	if (!validate24(data, { instancePath, parentData, parentDataProperty, rootData, dynamicAnchors })) {
@@ -1743,7 +1717,16 @@ function validate21(
 			valid0 = true
 			passing0 = 1
 			if (props0 !== true) {
-				props0 = true
+				props0 = props0 || {}
+				props0.type = true
+				props0.default = true
+				props0.regex = true
+				props0.multiline = true
+				props0.id = true
+				props0.label = true
+				props0.description = true
+				props0.tooltip = true
+				props0.isVisibleExpression = true
 			}
 		}
 		const _errs3 = errors
@@ -1760,7 +1743,16 @@ function validate21(
 				valid0 = true
 				passing0 = 2
 				if (props0 !== true) {
-					props0 = true
+					props0 = props0 || {}
+					props0.type = true
+					props0.choices = true
+					props0.default = true
+					props0.allowCustom = true
+					props0.id = true
+					props0.label = true
+					props0.description = true
+					props0.tooltip = true
+					props0.isVisibleExpression = true
 				}
 			}
 			const _errs4 = errors
@@ -1777,7 +1769,17 @@ function validate21(
 					valid0 = true
 					passing0 = 3
 					if (props0 !== true) {
-						props0 = true
+						props0 = props0 || {}
+						props0.type = true
+						props0.min = true
+						props0.max = true
+						props0.default = true
+						props0.step = true
+						props0.id = true
+						props0.label = true
+						props0.description = true
+						props0.tooltip = true
+						props0.isVisibleExpression = true
 					}
 				}
 				const _errs5 = errors
@@ -1794,7 +1796,14 @@ function validate21(
 						valid0 = true
 						passing0 = 4
 						if (props0 !== true) {
-							props0 = true
+							props0 = props0 || {}
+							props0.type = true
+							props0.default = true
+							props0.id = true
+							props0.label = true
+							props0.description = true
+							props0.tooltip = true
+							props0.isVisibleExpression = true
 						}
 					}
 				}

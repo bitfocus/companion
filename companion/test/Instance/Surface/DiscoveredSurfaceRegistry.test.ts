@@ -675,11 +675,7 @@ describe('DiscoveredSurfaceRegistry – satellite scenarios', () => {
 		const registry = new DiscoveredSurfaceRegistry()
 
 		// A module-detected HID device registers
-		const hidId = registry.trackSurface(
-			createSurface('1234:5678', false),
-			'hid-instance:/dev/hidraw0',
-			mockOpener
-		)
+		const hidId = registry.trackSurface(createSurface('1234:5678', false), 'hid-instance:/dev/hidraw0', mockOpener)
 		expect(hidId).toBe('1234:5678')
 
 		// A satellite device registers with the same serial string (unlikely but possible)
@@ -691,11 +687,7 @@ describe('DiscoveredSurfaceRegistry – satellite scenarios', () => {
 
 		// After the scan the HID entry should be gone; a new HID device of the same type
 		// can claim the base serial again (satellite still holds -dev2)
-		const hidId2 = registry.trackSurface(
-			createSurface('1234:5678', false),
-			'hid-instance:/dev/hidraw1',
-			mockOpener
-		)
+		const hidId2 = registry.trackSurface(createSurface('1234:5678', false), 'hid-instance:/dev/hidraw1', mockOpener)
 		expect(hidId2).toBe('1234:5678')
 
 		// The satellite entry is unchanged

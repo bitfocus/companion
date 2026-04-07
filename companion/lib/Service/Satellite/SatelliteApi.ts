@@ -144,10 +144,11 @@ export class ServiceSatelliteApi {
 		}
 
 		const id = `${params.DEVICEID}`
+		const serial = params.SERIAL ? `${params.SERIAL}` : id
 
-		if (id.startsWith('emulator:') || id.startsWith('group:')) {
+		if (serial.startsWith('emulator:') || serial.startsWith('group:')) {
 			// Some deviceId values are 'special' and cannot be used by satellite
-			return this.#formatAndSendError(socket, messageName, id, 'Reserved DEVICEID')
+			return this.#formatAndSendError(socket, messageName, id, params.SERIAL ? 'Reserved SERIAL' : 'Reserved DEVICEID')
 		}
 
 		const existing = this.#findDeviceById(id)
@@ -270,7 +271,7 @@ export class ServiceSatelliteApi {
 			gridSize,
 			socket,
 			deviceId: id,
-			serial: params.SERIAL ? `${params.SERIAL}` : id,
+			serial: serial,
 			serialIsUnique: params.SERIAL_IS_UNIQUE !== undefined ? isTruthy(params.SERIAL_IS_UNIQUE) : true,
 			productName: `${params.PRODUCT_NAME}`,
 			supportsBrightness,

@@ -12,6 +12,7 @@ export type StaticTextField = CommonFields & {
 	 * Static text content to display.
 	 */
 	value: string
+	[k: string]: unknown
 }
 export type TextInputField = CommonFields & {
 	type: 'textinput'
@@ -27,6 +28,7 @@ export type TextInputField = CommonFields & {
 	 * Whether the input is a multiline text area.
 	 */
 	multiline?: boolean
+	[k: string]: unknown
 }
 export type DropdownField = CommonFields & {
 	type: 'dropdown'
@@ -44,6 +46,7 @@ export type DropdownField = CommonFields & {
 	 * Whether the user can type a custom value not in the choices list.
 	 */
 	allowCustom?: boolean
+	[k: string]: unknown
 }
 export type NumberField = CommonFields & {
 	type: 'number'
@@ -63,6 +66,7 @@ export type NumberField = CommonFields & {
 	 * Step increment for the input.
 	 */
 	step?: number
+	[k: string]: unknown
 }
 export type CheckboxField = CommonFields & {
 	type: 'checkbox'
@@ -70,6 +74,7 @@ export type CheckboxField = CommonFields & {
 	 * Default checked state.
 	 */
 	default?: boolean
+	[k: string]: unknown
 }
 /**
  * Schema describing an array of custom config field definitions for a satellite device. These fields are rendered in the Companion UI surface settings panel and the stored values are pushed back to the device via DEVICE-CONFIG.
