@@ -51,6 +51,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const [filterType, setFilterType] = useState<ModuleInstanceType | null>(null)
 	const [filter, setFilter] = useState('')
+	const filterName =
+		filterType === null ? ' ' : filterType === ModuleInstanceType.Connection ? ' Connection ' : ' Surface '
 
 	const allProducts = useAllModuleProducts(null, true, true).filter((p) => !filterType || filterType === p.moduleType)
 	const typeProducts = allProducts.filter((p) => {
@@ -128,8 +130,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		)
 	}
 
-	const hiddenCount =
-		new Set(allProducts.map((p) => p.moduleId)).size - new Set(typeProducts.map((p) => p.moduleId)).size
+	const modulesCount = new Set(allProducts.map((p) => p.moduleId)).size
+	const hiddenCount = modulesCount - new Set(typeProducts.map((p) => p.moduleId)).size
 
 	return (
 		<div className="flex-column-layout">
@@ -138,7 +140,10 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					Manage Modules
 					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
-
+				<p className="mb-2">
+					<strong>Companion supports over {allProducts.length} different devices</strong> in {modulesCount + filterName}
+					modules, and the list grows every day.
+				</p>
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}

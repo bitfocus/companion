@@ -21,12 +21,13 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
 			helpAction="/user-guide/surfaces/"
-			description={(storeCount) =>
+			description={(storeCount, modulesCount) =>
 				storeCount > 0 ? (
 					<>
 						<div className="intro-text">
 							<p className="mb-2">
-								<strong>Companion supports over {storeCount} different surfaces</strong> and the list grows every day.
+								<strong>Companion supports over {storeCount} different surfaces</strong> in {modulesCount} modules, and
+								the list grows every day.
 							</p>
 						</div>
 						<div>
