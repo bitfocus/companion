@@ -26,8 +26,8 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 					<>
 						<div className="intro-text">
 							<p className="mb-2">
-								<strong>Companion supports over {storeCount} different surfaces</strong> in {modulesCount} modules, and
-								the list grows every day.
+								<strong>Companion supports over {storeCount} different surfaces</strong> in {modulesCount} Surface
+								modules, and the list grows every day.
 							</p>
 						</div>
 						<div>

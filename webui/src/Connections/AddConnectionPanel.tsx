@@ -23,8 +23,8 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 					<>
 						<div className="intro-text">
 							<p className="mb-2">
-								<strong>Companion supports over {storeCount} different devices</strong> in {moduleCount} modules, and
-								the list grows every day.
+								<strong>Companion supports over {storeCount} different devices</strong> in {moduleCount} Connection
+								modules, and the list grows every day.
 							</p>
 						</div>
 						<div>

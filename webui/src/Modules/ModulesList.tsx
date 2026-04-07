@@ -130,8 +130,9 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		)
 	}
 
-	const modulesCount = new Set(allProducts.map((p) => p.moduleId)).size
-	const hiddenCount = modulesCount - new Set(typeProducts.map((p) => p.moduleId)).size
+	const moduleKey = (p: FuzzyProduct) => `${p.moduleType}:${p.moduleId}`
+	const modulesCount = new Set(allProducts.map(moduleKey)).size
+	const hiddenCount = modulesCount - new Set(typeProducts.map(moduleKey)).size
 
 	return (
 		<div className="flex-column-layout">
@@ -141,7 +142,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
 				<p className="mb-2">
-					<strong>Companion supports over {allProducts.length} different devices</strong> in {modulesCount + filterName}
+					<strong>Companion supports over {allProducts.length} different devices</strong> in{' '}
+					{`${modulesCount}${filterName}`}
 					modules, and the list grows every day.
 				</p>
 				<p>
