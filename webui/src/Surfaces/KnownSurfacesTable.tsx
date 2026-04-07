@@ -94,8 +94,8 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 			<GenericConfirmModal ref={confirmRef} />
 
 			<div className="scrollable-content surfaces-grid-container">
-				<div className="grid-header-cell">NO</div>
-				<div className="grid-header-cell">Info</div>
+				<div className="grid-header-cell">Nr.</div>
+				<div className="grid-header-cell">Configured Surfaces and Groups</div>
 				<div className="grid-header-cell"></div>
 				{surfacesList.map((group) => {
 					if (group.isAutoGroup && (group.surfaces || []).length === 1) {
