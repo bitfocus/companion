@@ -162,12 +162,11 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<br />
-			<p>
+			<div className="my-3">
 				<CButton onClick={() => service.appendSet(selectedKey)} color="primary">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</CButton>
-			</p>
+			</div>
 		</>
 	)
 }
