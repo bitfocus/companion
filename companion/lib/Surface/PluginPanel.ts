@@ -57,6 +57,15 @@ function generateConfigFields(
 		fields.push(RotationConfigField, ...LockConfigFields)
 	}
 
+	if (surfaceInfo.canChangePage) {
+		fields.push({
+			id: 'canChangePage',
+			type: 'checkbox',
+			label: surfaceInfo.canChangePage.label,
+			default: false,
+		})
+	}
+
 	// Add any additional config fields from the surface info
 	if (surfaceInfo.configFields) fields.push(...surfaceInfo.configFields)
 
@@ -259,6 +268,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			surfaceId: surfaceInfo.surfaceId,
 			description: surfaceInfo.description,
 			configFields: configFields,
+			canChangePage: !!surfaceInfo.canChangePage,
 			location: surfaceInfo.location ?? null,
 			isRemote: surfaceInfo.isRemote,
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
@@ -314,8 +324,6 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.#config = config
 	}
-
-	getDefaultConfig?: (() => any) | undefined
 
 	/**
 	 * Propagate variable changes
@@ -413,6 +421,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	changePage(forward: boolean): void {
+		if (!this.info.canChangePage || !this.#config.canChangePage) return
 		this.emit('changePage', forward)
 	}
 
