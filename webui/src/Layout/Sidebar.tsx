@@ -233,6 +233,7 @@ export const MySidebar = memo(function MySidebar() {
 
 	const [hideHelp, setHideHelp] = useLocalStorage('hide_sidebar_help', false)
 	const showHelpButtons = !hideHelp
+	const [hideModuleVars, setHideModuleVars] = useLocalStorage('hide_sidebar_module_vars', false)
 	const [accordionMode, setAccordionMode] = useLocalStorage('sidebar_auto_collapse', false)
 	// tempNarrow is used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
 	const [tempNarrow, setTempNarrow] = useState(false)
@@ -328,6 +329,15 @@ export const MySidebar = memo(function MySidebar() {
 				do: toggleNarrowMode,
 				tooltip: 'When active, the sidebar remains narrow.',
 			},
+			MenuSeparator,
+			{
+				id: 'hide-module-vars',
+				label: hideModuleVars ? 'Show Module Variables' : 'Hide Module Variables',
+				icon: faDollarSign,
+				do: () => setHideModuleVars((value) => !value),
+				tooltip:
+					'Toggle whether to show individual modules in the sidebar Variables group. They are always accessible from the main Variables page.',
+			},
 			{
 				id: 'hide-help',
 				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
@@ -343,9 +353,11 @@ export const MySidebar = memo(function MySidebar() {
 			unfoldable,
 			toggleUnfoldable,
 			toggleNarrowMode,
+			hideModuleVars,
 			hideHelp,
 			expandAllGroups,
 			setAccordionMode,
+			setHideModuleVars,
 			setHideHelp,
 		]
 	)
@@ -404,7 +416,7 @@ export const MySidebar = memo(function MySidebar() {
 						<SidebarMenuItem name="Custom Variables" icon={faDollarSign} path="/variables/custom" />
 						<SidebarMenuItem name="Expression Variables" icon={faSquareRootVariable} path="/variables/expression" />
 						<SidebarMenuItem name="Internal" icon={faToolbox} path="/variables/connection/internal" />
-						<SidebarVariablesGroups />
+						{!hideModuleVars && <SidebarVariablesGroups />}
 					</SidebarMenuItemGroup>
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
 					<SidebarMenuItemGroup
