@@ -310,6 +310,22 @@ export const MySidebar = memo(function MySidebar() {
 					'Allow only one top-level group to be expanded at a time: opening one top-level group closes all others.',
 			},
 			MenuSeparator,
+			{
+				id: 'hide-module-vars',
+				label: hideModuleVars ? 'Show Module Variables' : 'Hide Module Variables',
+				icon: faDollarSign,
+				do: () => setHideModuleVars((value) => !value),
+				tooltip:
+					'Toggle whether to show individual modules in the sidebar Variables group. They are always accessible from the main Variables page.',
+			},
+			{
+				id: 'hide-help',
+				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
+				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
+				do: () => setHideHelp((value) => !value),
+				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
+			},
+			MenuSeparator,
 			...(mobileMode || narrowMode
 				? []
 				: [
@@ -328,22 +344,6 @@ export const MySidebar = memo(function MySidebar() {
 				icon: narrowMode ? faCheck : undefined,
 				do: toggleNarrowMode,
 				tooltip: 'When active, the sidebar remains narrow.',
-			},
-			MenuSeparator,
-			{
-				id: 'hide-module-vars',
-				label: hideModuleVars ? 'Show Module Variables' : 'Hide Module Variables',
-				icon: faDollarSign,
-				do: () => setHideModuleVars((value) => !value),
-				tooltip:
-					'Toggle whether to show individual modules in the sidebar Variables group. They are always accessible from the main Variables page.',
-			},
-			{
-				id: 'hide-help',
-				label: hideHelp ? 'Show Sidebar Help' : 'Hide Sidebar Help',
-				icon: hideHelp ? faArrowsUpToLine : faArrowsDownToLine,
-				do: () => setHideHelp((value) => !value),
-				tooltip: 'Free up some space: the help items are available from the help menu in the top-right corner.',
 			},
 		],
 		[
