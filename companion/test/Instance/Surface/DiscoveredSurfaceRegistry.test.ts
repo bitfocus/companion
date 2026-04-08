@@ -579,4 +579,151 @@ describe('DiscoveredSurfaceRegistry', () => {
 		const id2New = generator.trackSurface(createSurface('1234:5678', false), 'test-instance:/dev/hidraw1', mockOpener)
 		expect(id2New).toBe('1234:5678-dev2')
 	})
+
+	test('trackSurface with undefined opener still resolves IDs correctly', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		// Simulate satellite-style: no opener, collision resolution must still work
+		const id1 = generator.trackSurface(createSurface('serial-abc', false), 'satellite:device-1', undefined)
+		const id2 = generator.trackSurface(createSurface('serial-abc', false), 'satellite:device-2', undefined)
+
+		expect(id1).toBe('serial-abc')
+		expect(id2).toBe('serial-abc-dev2')
+	})
+
+	test('getOpenerInfo returns undefined when surface tracked without opener', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		const id = generator.trackSurface(createSurface('serial-abc', false), 'satellite:device-1', undefined)
+
+		expect(id).toBe('serial-abc')
+		expect(generator.getOpenerInfo(id)).toBeUndefined()
+	})
+
+	test('re-tracking with undefined opener clears the opener', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		const surface = createSurface('1234:5678', false)
+		const id = generator.trackSurface(surface, 'test-instance:/dev/hidraw0', mockOpener)
+
+		expect(generator.getOpenerInfo(id)?.opener).toBe(mockOpener)
+
+		// Re-track with undefined opener
+		generator.trackSurface(surface, 'test-instance:/dev/hidraw0', undefined)
+
+		expect(generator.getOpenerInfo(id)).toBeUndefined()
+	})
+
+	test('getSurfacePath works for surfaces tracked without opener', () => {
+		const generator = new DiscoveredSurfaceRegistry()
+
+		const id = generator.trackSurface(createSurface('serial-abc', false), 'satellite:device-1', undefined)
+
+		expect(generator.getSurfacePath(id)).toBe('satellite:device-1')
+	})
+})
+
+/**
+ * Satellite-specific scenarios.
+ *
+ * Satellite devices self-register via ADD-DEVICE (opener = undefined).  They must
+ * never be evicted by a HID module scan.  The bug that motivated these tests was:
+ *
+ *   1. Device A registers with serial "abc123"  → gets surfaceId "abc123"
+ *   2. A HID scan fires → prepareForScan() was called with only HID paths, so the
+ *      entry for "abc123" was purged from the registry.
+ *   3. Device B registers with serial "abc123"  → registry thinks "abc123" is free,
+ *      hands it to B, which then calls removeDevice("abc123") and kicks A off.
+ *
+ * The fix: prepareForScan() must skip entries whose opener is undefined.
+ */
+describe('DiscoveredSurfaceRegistry – satellite scenarios', () => {
+	test('two satellite devices with the same serial get distinct surfaceIds', () => {
+		const registry = new DiscoveredSurfaceRegistry()
+
+		// Device A registers first: deviceId "abc123-dev2", serial "abc123"
+		const idA = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123-dev2', undefined)
+		// Device B registers second: deviceId "abc123", serial "abc123"
+		const idB = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123', undefined)
+
+		expect(idA).toBe('abc123')
+		expect(idB).toBe('abc123-dev2')
+		expect(idA).not.toBe(idB)
+	})
+
+	test('prepareForScan does not evict satellite entries (opener = undefined)', () => {
+		const registry = new DiscoveredSurfaceRegistry()
+
+		// Device A self-registers (satellite)
+		const idA = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123-dev2', undefined)
+		expect(idA).toBe('abc123')
+
+		// A HID module scan fires — its keep-set only contains HID paths, not satellite paths
+		registry.prepareForScan(
+			new Set(['hid-instance:/dev/hidraw0', 'hid-instance:/dev/hidraw1'] as Array<`${string}:${string}`>)
+		)
+
+		// Device B self-registers with the same serial shortly after the scan
+		const idB = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123', undefined)
+
+		// B must NOT steal A's surfaceId
+		expect(idA).not.toBe(idB)
+		expect(idB).toBe('abc123-dev2')
+	})
+
+	test('prepareForScan still evicts stale HID module entries', () => {
+		const registry = new DiscoveredSurfaceRegistry()
+
+		// A module-detected HID device registers
+		const hidId = registry.trackSurface(createSurface('1234:5678', false), 'hid-instance:/dev/hidraw0', mockOpener)
+		expect(hidId).toBe('1234:5678')
+
+		// A satellite device registers with the same serial string (unlikely but possible)
+		const satId = registry.trackSurface(createSurface('1234:5678', false), 'satellite:sat-dev1', undefined)
+		expect(satId).toBe('1234:5678-dev2')
+
+		// Scan fires and the HID device is no longer present
+		registry.prepareForScan(new Set([] as Array<`${string}:${string}`>))
+
+		// After the scan the HID entry should be gone; a new HID device of the same type
+		// can claim the base serial again (satellite still holds -dev2)
+		const hidId2 = registry.trackSurface(createSurface('1234:5678', false), 'hid-instance:/dev/hidraw1', mockOpener)
+		expect(hidId2).toBe('1234:5678')
+
+		// The satellite entry is unchanged
+		expect(registry.getSurfacePath(satId)).toBe('satellite:sat-dev1')
+	})
+
+	test('satellite entries survive multiple consecutive HID scans', () => {
+		const registry = new DiscoveredSurfaceRegistry()
+
+		const idA = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123-dev2', undefined)
+		const idB = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123', undefined)
+
+		expect(idA).toBe('abc123')
+		expect(idB).toBe('abc123-dev2')
+
+		// Simulate several HID scans with no satellite paths in the keep-set
+		for (let scan = 0; scan < 5; scan++) {
+			registry.prepareForScan(new Set([] as Array<`${string}:${string}`>))
+		}
+
+		// Both satellite entries must still be present and unchanged
+		expect(registry.getSurfacePath(idA)).toBe('satellite:abc123-dev2')
+		expect(registry.getSurfacePath(idB)).toBe('satellite:abc123')
+	})
+
+	test('forgetSurface explicitly removes a satellite device so its serial is reusable', () => {
+		const registry = new DiscoveredSurfaceRegistry()
+
+		const idA = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123-dev2', undefined)
+		expect(idA).toBe('abc123')
+
+		// Device A disconnects cleanly (cleanupDevices → removeDevice → forgetSurface)
+		registry.forgetSurface('satellite:abc123-dev2')
+
+		// Device B now registers with the same serial and should get the base id
+		const idB = registry.trackSurface(createSurface('abc123', false), 'satellite:abc123', undefined)
+		expect(idB).toBe('abc123')
+	})
 })

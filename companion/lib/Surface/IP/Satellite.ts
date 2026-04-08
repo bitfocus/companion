@@ -41,9 +41,13 @@ import type {
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 
 export interface SatelliteDeviceInfo {
+	connectionId: string
 	deviceId: string
+	serial: string
+	serialIsUnique: boolean
 	productName: string
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
@@ -53,6 +57,10 @@ export interface SatelliteDeviceInfo {
 
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
+
+	configFields: CompanionSurfaceConfigField[] | undefined
+
+	canChangePage: string | undefined
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -82,6 +90,19 @@ function generateConfigFields(
 		fields.push(BrightnessConfigField)
 	}
 	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+
+	if (deviceInfo.canChangePage) {
+		fields.push({
+			id: 'canChangePage',
+			type: 'checkbox',
+			label: deviceInfo.canChangePage,
+			default: false,
+		})
+	}
+
+	if (deviceInfo.configFields && deviceInfo.configFields.length > 0) {
+		fields.push(...deviceInfo.configFields)
+	}
 
 	for (const variable of deviceInfo.transferVariables) {
 		if (BANNED_PROPS.has(variable.id)) continue
@@ -171,6 +192,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #writeQueue: ImageWriteQueue<string, [ResolvedControlDefinition, DrawButtonItem]>
 
 	#config: Record<string, any>
+	readonly #hasDeviceConfigFields: boolean
 
 	readonly surfaceManifestFromClient: boolean
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
@@ -188,7 +210,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	// Cache for generated lock images by dimension
 	readonly #lockImageCache = new Map<string, ImageResult>()
 
-	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
+	constructor(deviceInfo: SatelliteDeviceInfo, surfaceId: string, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
 
 		this.#executeExpression = executeExpression
@@ -204,6 +226,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 
+		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
+
 		const anyControlHasBitmap = !!this.#controlDefinitions
 			.values()
 			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
@@ -211,9 +235,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.info = {
 			description: deviceInfo.productName,
 			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
-			surfaceId: deviceInfo.deviceId,
+			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
+			canChangePage: !!deviceInfo.canChangePage,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -375,6 +400,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.emit('pincodeKey', pincodeKey)
 	}
 
+	doChangePage(forward: boolean): void {
+		if (!this.info.canChangePage || !this.#config.canChangePage) return
+		this.emit('changePage', forward)
+	}
+
 	/**
 	 * Produce a rotation event
 	 */
@@ -486,6 +516,21 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		this.#config = config
+
+		if (this.#hasDeviceConfigFields) {
+			this.#sendDeviceConfig()
+		}
+	}
+
+	#sendDeviceConfig(): void {
+		const configValues = createSurfaceConfigPayload(this.info.configFields, this.#config)
+		const encoded = Buffer.from(JSON.stringify(configValues)).toString('base64')
+		this.socket.sendMessage('DEVICE-CONFIG', null, this.deviceId, { CONFIG: encoded })
+	}
+
+	updateFirmwareUpdateInfo(firmwareUpdateUrl: string | null): void {
+		this.info.hasFirmwareUpdates = firmwareUpdateUrl ? { updaterDownloadUrl: firmwareUpdateUrl } : undefined
+		this.emit('firmwareUpdateInfo')
 	}
 
 	/**

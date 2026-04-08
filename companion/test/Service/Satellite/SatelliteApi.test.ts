@@ -77,6 +77,7 @@ function addDeviceToSocket(
 ) {
 	const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 	Object.defineProperty(mockDevice, 'surfaceManifestFromClient', { value: opts.surfaceManifestFromClient ?? false })
+	Object.defineProperty(mockDevice, 'info', { value: { surfaceId: deviceId }, configurable: true })
 	surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
 
 	processMessage(`ADD-DEVICE DEVICEID="${deviceId}" PRODUCT_NAME="TestProduct"\n`)
@@ -568,6 +569,128 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('ERROR')
 			expect(socket.lastMessage).toContain('Invalid VARIABLES')
 		})
+
+		test('passes SERIAL to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" SERIAL="streamdeck:ABC123"\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('streamdeck:ABC123')
+			expect(callArgs.serialIsUnique).toBe(true)
+		})
+
+		test('passes SERIAL_IS_UNIQUE=false to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" SERIAL="shared-id" SERIAL_IS_UNIQUE=false\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('shared-id')
+			expect(callArgs.serialIsUnique).toBe(false)
+		})
+
+		test('passes SERIAL_IS_UNIQUE=true to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(
+				'ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" SERIAL="streamdeck:ABC123" SERIAL_IS_UNIQUE=true\n'
+			)
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('streamdeck:ABC123')
+			expect(callArgs.serialIsUnique).toBe(true)
+		})
+
+		test('serial defaults to deviceId and serialIsUnique defaults to true when not provided', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.serial).toBe('dev1')
+			expect(callArgs.serialIsUnique).toBe(true)
+		})
+
+		test('adds device with valid CONFIG_FIELDS', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			const configFields = [{ id: 'cfg1', type: 'textinput', label: 'My Config Field' }]
+			const encoded = Buffer.from(JSON.stringify(configFields)).toString('base64')
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" CONFIG_FIELDS="${encoded}"\n`)
+
+			expect(socket.lastMessage).toContain('ADD-DEVICE')
+			expect(socket.lastMessage).toContain('OK')
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.configFields).toMatchObject([
+				{ id: 'plugin_cfg_cfg1', type: 'textinput', label: 'My Config Field' },
+			])
+		})
+
+		test('error for invalid CONFIG_FIELDS JSON', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const encoded = Buffer.from('not valid json').toString('base64')
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" CONFIG_FIELDS="${encoded}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid CONFIG_FIELDS')
+		})
+
+		test('error for CONFIG_FIELDS that fails schema validation', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			// Missing required 'id' and 'label'
+			const badFields = [{ type: 'textinput' }]
+			const encoded = Buffer.from(JSON.stringify(badFields)).toString('base64')
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" CONFIG_FIELDS="${encoded}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid CONFIG_FIELDS')
+		})
+
+		test('configFields is undefined when CONFIG_FIELDS not provided', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"\n')
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.configFields).toBeUndefined()
+		})
 	})
 
 	describe('REMOVE-DEVICE', () => {
@@ -600,7 +723,7 @@ describe('ServiceSatelliteApi', () => {
 
 			processMessage('REMOVE-DEVICE DEVICEID="dev1"\n')
 
-			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev1')
+			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev1', { physicallyGone: true })
 			expect(socket.lastMessage).toContain('REMOVE-DEVICE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
@@ -1038,6 +1161,58 @@ describe('ServiceSatelliteApi', () => {
 		})
 	})
 
+	describe('FIRMWARE-UPDATE-INFO', () => {
+		test('error when device not found', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('FIRMWARE-UPDATE-INFO DEVICEID="nonexist" UPDATE_URL="https://example.com/fw"\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Device not found')
+		})
+
+		test('error when missing UPDATE_URL', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+
+			processMessage('FIRMWARE-UPDATE-INFO DEVICEID="dev1"\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Missing UPDATE_URL')
+		})
+
+		test('successfully reports firmware update URL', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.updateFirmwareUpdateInfo.mockReturnValue(undefined)
+
+			processMessage('FIRMWARE-UPDATE-INFO DEVICEID="dev1" UPDATE_URL="https://example.com/fw.bin"\n')
+
+			expect(mockDevice.updateFirmwareUpdateInfo).toHaveBeenCalledWith('https://example.com/fw.bin')
+			expect(socket.lastMessage).toContain('FIRMWARE-UPDATE-INFO')
+			expect(socket.lastMessage).toContain('OK')
+			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+		})
+
+		test('empty UPDATE_URL clears firmware update (calls with null)', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.updateFirmwareUpdateInfo.mockReturnValue(undefined)
+
+			processMessage('FIRMWARE-UPDATE-INFO DEVICEID="dev1" UPDATE_URL=""\n')
+
+			expect(mockDevice.updateFirmwareUpdateInfo).toHaveBeenCalledWith(null)
+			expect(socket.lastMessage).toContain('OK')
+		})
+	})
+
 	describe('ADD-SUB', () => {
 		test('error when subscriptions not enabled', () => {
 			const { api, logger } = createService({ subscriptionsEnabled: false })
@@ -1457,8 +1632,8 @@ describe('ServiceSatelliteApi', () => {
 			const count = cleanupDevices()
 
 			expect(count).toBe(2)
-			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev1')
-			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev2')
+			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev1', { physicallyGone: true })
+			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev2', { physicallyGone: true })
 		})
 
 		test('returns 0 when no devices', () => {
@@ -1482,8 +1657,8 @@ describe('ServiceSatelliteApi', () => {
 			const count = cleanup1()
 
 			expect(count).toBe(1)
-			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev1')
-			expect(surfaceController.removeDevice).not.toHaveBeenCalledWith('dev2')
+			expect(surfaceController.removeDevice).toHaveBeenCalledWith('dev1', { physicallyGone: true })
+			expect(surfaceController.removeDevice).not.toHaveBeenCalledWith('dev2', { physicallyGone: true })
 		})
 
 		test('cleans up subscriptions for the socket', async () => {
