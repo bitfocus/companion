@@ -30,7 +30,7 @@ interface AddInstancePanelProps {
 
 	title: string
 	helpAction: ContextHelpButtonProps['action']
-	description: (storeCount: number) => React.ReactNode
+	description: (devicesCount: number, modulesCount: number) => React.ReactNode
 	isSubpanel?: boolean
 }
 
@@ -122,7 +122,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 					<div className="add-connection-intro-section mb-3">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
-								{description(storeModulesOfTypeCount)}
+								{description(allProducts.length, storeModulesOfTypeCount)}
 								<div className="intro-filter">
 									<CButtonGroup role="group" aria-label="Module visibility filter">
 										<CButton
@@ -148,7 +148,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							<CAlert color="info" className="mb-0">
 								<div className="d-flex align-items-center gap-2">
 									<FontAwesomeIcon icon={faPlug} className="text-info" />
-									{description(0)}
+									{description(0, 0)}
 								</div>
 							</CAlert>
 						)}
