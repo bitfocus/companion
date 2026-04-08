@@ -30,11 +30,12 @@ const legacyRenames: ReadonlyArray<[oldKey: string, newKey: string]> = [
 function applyRenamesOnConfig(config: Record<string, unknown>): boolean {
 	let changed = false
 	for (const [oldKey, newKey] of legacyRenames) {
-		if (Object.hasOwn(config, oldKey) && !Object.hasOwn(config, newKey)) {
+		if (!Object.hasOwn(config, oldKey)) continue
+		if (!Object.hasOwn(config, newKey)) {
 			config[newKey] = config[oldKey]
-			delete config[oldKey]
-			changed = true
 		}
+		delete config[oldKey]
+		changed = true
 	}
 	return changed
 }
