@@ -1,5 +1,5 @@
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { Logger } from '../../Log/Controller.js'
+import type { Logger } from '../Log/Controller.js'
 
 export const PluginConfigFieldPrefix = 'plugin_cfg_'
 

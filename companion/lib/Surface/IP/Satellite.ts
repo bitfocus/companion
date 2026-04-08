@@ -41,7 +41,7 @@ import type {
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { createSurfaceConfigPayload } from '../../Instance/Surface/ConfigUtil.js'
+import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 
 export interface SatelliteDeviceInfo {
 	connectionId: string

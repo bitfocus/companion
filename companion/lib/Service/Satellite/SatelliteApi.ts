@@ -25,7 +25,7 @@ import type { DataUserConfig } from '../../Data/UserConfig.js'
 import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
 import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
 import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
-import { sanitizePluginConfigFields } from '../../Instance/Surface/ConfigUtil.js'
+import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility

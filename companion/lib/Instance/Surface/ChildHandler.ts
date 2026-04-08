@@ -29,7 +29,7 @@ import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companio
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
 import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { createSurfaceConfigPayload, sanitizePluginConfigFields } from './ConfigUtil.js'
+import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
