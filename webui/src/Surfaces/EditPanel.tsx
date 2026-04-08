@@ -38,7 +38,7 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 	const navigate = useNavigate()
 
 	const doCloseSurface = useCallback(() => {
-		void navigate({ to: '/surfaces/configured' })
+		void navigate({ to: '/surfaces' })
 	}, [navigate])
 
 	let surfaceInfo: SurfaceInfo | null = null
