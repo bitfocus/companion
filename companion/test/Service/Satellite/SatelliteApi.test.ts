@@ -648,10 +648,9 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('OK')
 			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
 			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
-			expect(callArgs.configFields).toHaveLength(1)
-			expect(callArgs.configFields[0].id).toBe('plugin_cfg_cfg1')
-			expect(callArgs.configFields[0].label).toBe('My Config Field')
-			expect(callArgs.configFields[0].type).toBe('textinput')
+			expect(callArgs.configFields).toMatchObject([
+				{ id: 'plugin_cfg_cfg1', type: 'textinput', label: 'My Config Field' },
+			])
 		})
 
 		test('error for invalid CONFIG_FIELDS JSON', () => {
