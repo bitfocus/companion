@@ -137,7 +137,12 @@ export class ServiceSatelliteApi {
 	/**
 	 *
 	 */
-	#addDevice(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
+	#addDevice(
+		socketLogger: Logger,
+		socket: SatelliteSocketWrapper,
+		socketState: SatelliteSocketState,
+		params: ParsedParams
+	): void {
 		const messageName = 'ADD-DEVICE'
 		if (!params.DEVICEID || params.DEVICEID === true) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DEVICEID')
@@ -277,7 +282,7 @@ export class ServiceSatelliteApi {
 			: undefined
 
 		const device = this.#surfaceController.addSatelliteDevice({
-			connectionId: this.#socketStates.get(socket)!.clientId,
+			connectionId: socketState.clientId,
 			gridSize,
 			socket,
 			deviceId: id,
@@ -315,7 +320,12 @@ export class ServiceSatelliteApi {
 	/**
 	 * Process a command from a client
 	 */
-	#handleCommand(socketLogger: Logger, socket: SatelliteSocketWrapper, line: string): void {
+	#handleCommand(
+		socketLogger: Logger,
+		socket: SatelliteSocketWrapper,
+		socketState: SatelliteSocketState,
+		line: string
+	): void {
 		if (!line.trim().toUpperCase().startsWith('PING')) {
 			socketLogger.silly(`received "${line}"`)
 		}
@@ -327,7 +337,7 @@ export class ServiceSatelliteApi {
 
 		switch (cmd.toUpperCase()) {
 			case 'ADD-DEVICE':
-				this.#addDevice(socketLogger, socket, params)
+				this.#addDevice(socketLogger, socket, socketState, params)
 				break
 			case 'REMOVE-DEVICE':
 				this.#removeDevice(socketLogger, socket, params)
@@ -345,16 +355,16 @@ export class ServiceSatelliteApi {
 				this.#pincodeKey(socket, params)
 				break
 			case 'ADD-SUB':
-				this.#addSub(socketLogger, socket, params)
+				this.#addSub(socketLogger, socket, socketState, params)
 				break
 			case 'REMOVE-SUB':
-				this.#removeSub(socket, params)
+				this.#removeSub(socket, socketState, params)
 				break
 			case 'SUB-PRESS':
-				this.#subPress(socket, params)
+				this.#subPress(socket, socketState, params)
 				break
 			case 'SUB-ROTATE':
-				this.#subRotate(socket, params)
+				this.#subRotate(socket, socketState, params)
 				break
 			case 'FIRMWARE-UPDATE-INFO':
 				this.#firmwareUpdateInfo(socket, params)
@@ -423,7 +433,7 @@ export class ServiceSatelliteApi {
 					line = receivebuffer.substr(offset, i - offset)
 					offset = i + 1
 					try {
-						this.#handleCommand(socketLogger, socket, line.toString().replace(/\r/, ''))
+						this.#handleCommand(socketLogger, socket, socketState, line.toString().replace(/\r/, ''))
 					} catch (e) {
 						socketLogger.error(`Error processing command: ${stringifyError(e)}`)
 					}
@@ -665,7 +675,12 @@ export class ServiceSatelliteApi {
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
-	#addSub(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
+	#addSub(
+		socketLogger: Logger,
+		socket: SatelliteSocketWrapper,
+		socketState: SatelliteSocketState,
+		params: ParsedParams
+	): void {
 		const messageName = 'ADD-SUB'
 
 		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
@@ -679,11 +694,6 @@ export class ServiceSatelliteApi {
 		const subIdStr = String(subId)
 		if (!/^[a-zA-Z0-9\-/]+$/.test(subIdStr)) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid SUBID')
-		}
-
-		const socketState = this.#socketStates.get(socket)
-		if (!socketState) {
-			return this.#formatAndSendError(socket, messageName, undefined, 'Socket failed to initialise')
 		}
 
 		if (socketState.subscriptions.has(subIdStr)) {
@@ -745,7 +755,7 @@ export class ServiceSatelliteApi {
 		socketState.writeQueue.queue(subIdStr, render)
 	}
 
-	#removeSub(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+	#removeSub(socket: SatelliteSocketWrapper, socketState: SatelliteSocketState, params: ParsedParams): void {
 		const messageName = 'REMOVE-SUB'
 
 		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
@@ -758,8 +768,7 @@ export class ServiceSatelliteApi {
 		}
 		const subIdStr = String(subId)
 
-		const socketState = this.#socketStates.get(socket)
-		if (!socketState || !socketState.subscriptions.has(subIdStr)) {
+		if (!socketState.subscriptions.has(subIdStr)) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
 		}
 
@@ -768,7 +777,7 @@ export class ServiceSatelliteApi {
 		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
 	}
 
-	#subPress(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+	#subPress(socket: SatelliteSocketWrapper, socketState: SatelliteSocketState, params: ParsedParams): void {
 		const messageName = 'SUB-PRESS'
 
 		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
@@ -781,10 +790,6 @@ export class ServiceSatelliteApi {
 		}
 		const subIdStr = String(subId)
 
-		const socketState = this.#socketStates.get(socket)
-		if (!socketState) {
-			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
-		}
 		const sub = socketState.subscriptions.get(subIdStr)
 		if (!sub) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
@@ -804,7 +809,7 @@ export class ServiceSatelliteApi {
 		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
 	}
 
-	#subRotate(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+	#subRotate(socket: SatelliteSocketWrapper, socketState: SatelliteSocketState, params: ParsedParams): void {
 		const messageName = 'SUB-ROTATE'
 
 		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
@@ -817,10 +822,6 @@ export class ServiceSatelliteApi {
 		}
 		const subIdStr = String(subId)
 
-		const socketState = this.#socketStates.get(socket)
-		if (!socketState) {
-			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
-		}
 		const sub = socketState.subscriptions.get(subIdStr)
 		if (!sub) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
