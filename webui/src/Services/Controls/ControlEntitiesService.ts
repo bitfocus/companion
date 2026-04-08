@@ -31,6 +31,7 @@ export interface IEntityEditorService {
 	) => void
 	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
+	performPaste: (ownerId: EntityOwner | null, entities: SomeEntityModel[]) => void
 	setConnection: (entityId: string, connectionId: string) => void
 	moveCard: (
 		dragListId: SomeSocketEntityLocation,
@@ -76,6 +77,7 @@ export function useControlEntitiesEditorService(
 	const setConnectionMutation = useMutationExt(trpc.controls.entities.setConnection.mutationOptions())
 	const removeMutation = useMutationExt(trpc.controls.entities.remove.mutationOptions())
 	const duplicateMutation = useMutationExt(trpc.controls.entities.duplicate.mutationOptions())
+	const pasteMutation = useMutationExt(trpc.controls.entities.paste.mutationOptions())
 	const learnOptionsMutation = useMutationExt(trpc.controls.entities.learnOptions.mutationOptions())
 	const setEnabledMutation = useMutationExt(trpc.controls.entities.setEnabled.mutationOptions())
 	const setHeadlineMutation = useMutationExt(trpc.controls.entities.setHeadline.mutationOptions())
@@ -183,6 +185,19 @@ export function useControlEntitiesEditorService(
 					})
 					.catch((e) => {
 						console.error('Failed to duplicate control entity', e)
+					})
+			},
+
+			performPaste: (ownerId: EntityOwner | null, entities: SomeEntityModel[]) => {
+				pasteMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						ownerId,
+						entities,
+					})
+					.catch((e) => {
+						console.error('Failed to paste control entity', e)
 					})
 			},
 
@@ -296,6 +311,7 @@ export function useControlEntitiesEditorService(
 			setConnectionMutation,
 			removeMutation,
 			duplicateMutation,
+			pasteMutation,
 			learnOptionsMutation,
 			setEnabledMutation,
 			setHeadlineMutation,

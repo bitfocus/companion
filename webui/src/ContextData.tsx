@@ -26,6 +26,7 @@ import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStor
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
 import { HelpModal, type HelpModalRef } from './Instances/HelpModal.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
+import { EntityClipboardStore } from '~/Stores/EntityClipboardStore.js'
 import { WhatsNewModal, type WhatsNewModalRef } from './WhatsNewModal/WhatsNew.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
@@ -95,6 +96,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
 
 			viewControl: new ViewControlStore(),
+
+			entityClipboard: new EntityClipboardStore(),
 		} satisfies RootAppStore
 	}, [notifierObj, helpModalRef, whatsNewModalRef])
 

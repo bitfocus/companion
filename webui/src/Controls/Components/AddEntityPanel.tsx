@@ -1,13 +1,15 @@
 import { CButton } from '@coreui/react'
-import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
+import { faFolderOpen, faPaste } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { AddEntitiesModal, type AddEntitiesModalRef } from './AddEntitiesModal.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
+import { observer } from 'mobx-react-lite'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface AddEntityPanelProps {
 	ownerId: EntityOwner | null
@@ -16,13 +18,14 @@ interface AddEntityPanelProps {
 	entityTypeLabel: string
 }
 
-export function AddEntityPanel({
+export const AddEntityPanel = observer(function AddEntityPanel({
 	ownerId,
 	entityType,
 	feedbackListType,
 	entityTypeLabel,
 }: AddEntityPanelProps): React.JSX.Element {
 	const { serviceFactory, readonly } = useEntityEditorContext()
+	const { entityClipboard } = useContext(RootAppStoreContext)
 
 	const addEntitiesRef = useRef<AddEntitiesModalRef>(null)
 	const showAddModal = useCallback(() => addEntitiesRef.current?.show(), [])
@@ -46,6 +49,14 @@ export function AddEntityPanel({
 		[serviceFactory, entityType, ownerId, panelCollapseHelper]
 	)
 
+	const canPaste = entityClipboard.copiedEntityType === entityType
+
+	const handlePaste = useCallback(() => {
+		const entity = entityClipboard.copiedEntity
+		if (!entity) return
+		serviceFactory.performPaste(ownerId, [entity])
+	}, [entityClipboard, serviceFactory, ownerId])
+
 	return (
 		<div className="add-dropdown-wrapper">
 			<AddEntityDropdown
@@ -67,6 +78,17 @@ export function AddEntityPanel({
 			>
 				<FontAwesomeIcon icon={faFolderOpen} />
 			</CButton>
+			{canPaste && (
+				<CButton
+					color="success"
+					onClick={handlePaste}
+					disabled={readonly}
+					title={`Paste ${entityTypeLabel} from clipboard`}
+					style={{ marginLeft: 4 }}
+				>
+					<FontAwesomeIcon icon={faPaste} />
+				</CButton>
+			)}
 
 			<MyErrorBoundary>
 				<AddEntitiesModal
@@ -79,4 +101,4 @@ export function AddEntityPanel({
 			</MyErrorBoundary>
 		</div>
 	)
-}
+})

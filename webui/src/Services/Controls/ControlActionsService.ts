@@ -68,6 +68,10 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				})
 			},
 
+			performPaste: (_ownerId: EntityOwner | null, _entities: SomeEntityModel[]) => {
+				// Not supported in action recorder
+			},
+
 			performLearn: undefined,
 			setEnabled: undefined,
 			setHeadline: undefined,
