@@ -1,6 +1,5 @@
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type { Logger } from '../../Log/Controller.js'
-import type { HostOpenDeviceResult } from './IpcTypes.js'
 
 export const PluginConfigFieldPrefix = 'plugin_cfg_'
 
@@ -34,12 +33,12 @@ export function sanitizePluginConfigFields(
  * fields are not included here.
  */
 export function createSurfaceConfigPayload(
-	surfaceInfo: HostOpenDeviceResult,
+	configFields: CompanionSurfaceConfigField[] | null | undefined,
 	config: Record<string, any>
 ): Record<string, any> {
 	const surfaceConfig: Record<string, any> = {}
 
-	for (const field of surfaceInfo.configFields ?? []) {
+	for (const field of configFields ?? []) {
 		if (!field.id.startsWith(PluginConfigFieldPrefix)) continue
 		if (!Object.hasOwn(config, field.id)) continue
 

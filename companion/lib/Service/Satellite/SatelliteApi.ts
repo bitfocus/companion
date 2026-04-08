@@ -24,6 +24,8 @@ import type { DataUserConfig } from '../../Data/UserConfig.js'
 // eslint-disable-next-line n/no-missing-import
 import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
 import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
+import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
+import { sanitizePluginConfigFields } from '../../Instance/Surface/ConfigUtil.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -270,6 +272,10 @@ export class ServiceSatelliteApi {
 			configFields = decoded
 		}
 
+		const processedConfigFields = configFields
+			? sanitizePluginConfigFields(socketLogger, translateSatelliteConfigFields(configFields))
+			: undefined
+
 		const device = this.#surfaceController.addSatelliteDevice({
 			connectionId: this.#socketStates.get(socket)!.clientId,
 			gridSize,
@@ -283,7 +289,7 @@ export class ServiceSatelliteApi {
 			supportsLockedState,
 			surfaceManifestFromClient,
 			surfaceManifest,
-			configFields,
+			configFields: processedConfigFields,
 			canChangePage,
 		})
 

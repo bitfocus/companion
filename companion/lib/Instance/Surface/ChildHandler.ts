@@ -418,7 +418,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 			// Fetch the initial config for this surface from the surfaceController
 			const surfaceConfig = this.#deps.surfaceController.getDeviceConfig(info.surfaceId)
-			const initialConfig = createSurfaceConfigPayload(sanitizedInfo, surfaceConfig?.config || {})
+			const initialConfig = createSurfaceConfigPayload(sanitizedInfo.configFields, surfaceConfig?.config || {})
 			this.#ipcWrapper
 				.sendWithCb('readySurface', {
 					surfaceId: info.surfaceId,
@@ -445,7 +445,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 				this.#ipcWrapper
 					.sendWithCb('updateConfig', {
 						surfaceId,
-						newConfig: createSurfaceConfigPayload(sanitizedInfo, newConfig || {}),
+						newConfig: createSurfaceConfigPayload(sanitizedInfo.configFields, newConfig || {}),
 					})
 					.catch((e) => {
 						this.logger.warn(`Failed forwarding surface config to child for ${surfaceId}: ${e}`)
