@@ -1387,7 +1387,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			surfaceIdIsNotUnique: !deviceInfo.serialIsUnique,
 			description: deviceInfo.productName,
 		}
-		const prefixedDevicePath = `satellite:${deviceInfo.deviceId}` as const
+		const prefixedDevicePath = `satellite:${deviceInfo.connectionId}:${deviceInfo.deviceId}` as const
 		const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
 			discoveredSurface,
 			prefixedDevicePath,

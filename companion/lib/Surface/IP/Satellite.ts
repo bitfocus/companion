@@ -46,6 +46,7 @@ import { translateSatelliteConfigFields } from '../../Service/Satellite/Satellit
 import { PluginConfigFieldPrefix } from '../../Instance/Surface/ConfigUtil.js'
 
 export interface SatelliteDeviceInfo {
+	connectionId: string
 	deviceId: string
 	serial: string
 	serialIsUnique: boolean
