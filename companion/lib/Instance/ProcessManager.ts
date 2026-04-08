@@ -694,6 +694,11 @@ export class InstanceProcessManager {
 	} | null> {
 		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
 		const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
+		const resolvedBasePath = path.resolve(moduleInfo.basePath)
+		if (!jsFullPath.startsWith(resolvedBasePath + path.sep)) {
+			this.#logger.error(`Module entrypoint "${jsFullPath}" is outside module directory`)
+			return null
+		}
 		if (!(await fs.pathExists(jsFullPath))) {
 			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
 			return null
