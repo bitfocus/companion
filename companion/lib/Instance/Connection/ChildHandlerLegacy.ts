@@ -569,7 +569,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<undefined> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 
 		try {
@@ -621,6 +621,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			throw e
 		}
+
+		// Legacy instance actions can't return values.
+		return undefined
 	}
 
 	/**
