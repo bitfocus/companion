@@ -30,7 +30,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { PanelDefaults } from './Config.js'
+import { createDefaultSurfacePanelConfig } from './Config.js'
 import debounceFn from 'debounce-fn'
 
 /**
@@ -558,7 +558,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			startup_page_id: this.#pageStore.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
-		this.setPanelConfig(structuredClone(PanelDefaults))
+		this.setPanelConfig(createDefaultSurfacePanelConfig(this.panel))
 	}
 
 	/**
