@@ -238,11 +238,11 @@ export const MySidebar = memo(function MySidebar() {
 	// tempNarrow is used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
 	const [tempNarrow, setTempNarrow] = useState(false)
 
-	const [surfacesGroupVis, setSurfacesGroupVis] = useState(false)
-	const [variablesGroupVis, setVariablesGroupVis] = useState(false)
-	const [settingsGroupVis, setSettingsGroupVis] = useState(false)
-	const [ibuttonsGroupVis, setIbuttonsGroupVis] = useState(false)
-	const [supportGroupVis, setSupportGroupVis] = useState(false)
+	const [surfacesGroupVis, setSurfacesGroupVis] = useLocalStorage('surface_group_vis', false)
+	const [variablesGroupVis, setVariablesGroupVis] = useLocalStorage('variables_group_vis', false)
+	const [settingsGroupVis, setSettingsGroupVis] = useLocalStorage('settings_group_vis', false)
+	const [ibuttonsGroupVis, setIbuttonsGroupVis] = useLocalStorage('ibuttons_group_vis', false)
+	const [supportGroupVis, setSupportGroupVis] = useLocalStorage('support_group_vis', false)
 
 	const toggleUnfoldable = useCallback(() => {
 		setUnfoldable((val) => {
