@@ -395,6 +395,7 @@ form.row > * {
 	.nav-link {
 		--cui-sidebar-nav-link-bg: #191919;
 
+		// note: .nav-group-toggle, below, overrides these three lines.
 		margin-bottom: 0.15rem;
 		padding-top: 0.7rem;
 		padding-bottom: 0.7rem;
@@ -431,19 +432,40 @@ form.row > * {
 		line-height: calc(var(--cui-body-line-height) * 0.85);
 	}
 
-	// note: in .sidebar, .show is present in mobile mode, during which we must ignore sidebar-narrow-unfoldable
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover),
-	&.sidebar-narrow:hover {
-		// when sidebar is narrow hide things including the label and toggler
-		.nav-group-toggle::after,
-		.full-label,
-		.context-menu {
+	// specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer.
+	// i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already.
+	&.sidebar-narrow.show {
+		// CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here:
+		width: var(--cui-sidebar-narrow-width);
+
+		.sidebar-brand-narrow {
+			display: block;
+		}
+		.sidebar-brand-full {
 			display: none;
 		}
+	}
+
+	// note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow
+	&.sidebar-narrow-unfoldable:not(.show, :hover),
+	&.sidebar-narrow {
+		// when sidebar is narrow hide things including the label and toggler
+		.nav-group-toggle::after,
+		.full-label {
+			display: none;
+		}
+
 		// if there's a notification, cozy it up to the icon when the sidebar is narrow.
 		.notification-count {
 			margin-left: -0.75rem;
 			margin-top: -0.25rem;
+		}
+	}
+
+	// In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds
+	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
+		.context-menu {
+			display: none;
 		}
 	}
 
@@ -462,8 +484,30 @@ form.row > * {
 		}
 	}
 
+	// Sidebar groups, DOM:
+	//    .nav-group (".show" = when open)
+	//       .nav-link.nav-group-toggle
+	//           .nav-link
+	//       .nav-group-items
+	.nav-group {
+		// border to include the toggler. A subsequent rule thickens the border for the group items section.
+		border-left: 1px solid var(--cui-sidebar-nav-link-icon-color);
+		//border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); //optional bottom edge
+
+		> .nav-link > .nav-link {
+			// compensate for the border, so the icons stays centered relative to non-group items
+			padding-left: calc(var(--cui-sidebar-nav-link-padding-x) - 1px);
+		}
+
+		&.show > .nav-link {
+			// make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div)
+			background: var(--cui-sidebar-nav-link-active-bg);
+		}
+	}
+
 	.nav-group-toggle {
-		padding-right: 0;
+		// override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above)
+		padding: 0;
 
 		&::after {
 			// affects the caret
@@ -471,26 +515,15 @@ form.row > * {
 			margin-right: 16px;
 			background-color: white;
 		}
-	}
-
-	// the container for both the toggler and the group-items (".show" = when open)
-	.nav-group.show {
-		// border to include the toggler. The next rule thickens the border only for the group items.
-		border-left: 1px solid var(--cui-sidebar-nav-link-icon-color);
-		//border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); //optional bottom edge
-
-		> .nav-link {
-			// make the toggler "active" when open
-			background: var(--cui-sidebar-nav-link-active-bg);
+		.nav-link {
+			margin-bottom: 0;
 		}
 	}
 
-	// highlighting for the group-items container (contains all the items excluding the toggler)
+	// highlighting for the group-items container (contains all the items excluding the group-toggler line)
 	// we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0)
-	&.sidebar-narrow:hover .nav-group-items, // override CUI when in temporary narrow mode
-	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI if we ever implement narrow mode
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover) .nav-group-items, // override CUI
-	.nav-group-toggle-basic::after,
+	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI in narrow mode
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, // override CUI
 	.nav-group-items {
 		// the box underneath and containing the expanded group
 		padding-left: 1px !important; // to separate nested groups
@@ -499,9 +532,8 @@ form.row > * {
 	}
 
 	// override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well)
-	&.sidebar-narrow:hover .nav-group-items, // override CUI so nav-group-items show when in temporary narrow mode
-	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show if we ever implement narrow mode
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover) .nav-group-items {
+	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show in narrow mode
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
 		height: auto !important;
 		visibility: visible !important; // !important is not currently necessary on this, but CUI could change it
 		opacity: 1 !important; // !important is not currently necessary on this, but CUI could change it
@@ -517,8 +549,8 @@ form.row > * {
 	.sidebar-nav .nav-group-items .nav-link {
 		// even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here
 		padding-left: var(--cui-sidebar-nav-link-padding-x);
-		// this prevent a bouncy transition when expanding the sidebar. The exact number isn't critical but it should be less than 0.3 (the expansion transition)
-		transition: padding-left 0.15s;
+		// smoother transition for icons when expanding the sidebar. The exact number isn't critical.
+		transition: padding-left 0.1s;
 		padding-right: 0;
 		justify-content: center;
 	}
@@ -584,8 +616,8 @@ form.row > * {
 	}
 
 	// when the sidebar is narrow, make more space for the contents and let centering create what margins there will be.
-	&.sidebar-narrow-unfoldable:not(.show):not(:hover) .nav-main-scroller,
-	&.sidebar-narrow:hover .nav-main-scroller {
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
+	&.sidebar-narrow .nav-main-scroller {
 		scrollbar-width: thin;
 		padding-left: 0;
 		padding-right: 0;
