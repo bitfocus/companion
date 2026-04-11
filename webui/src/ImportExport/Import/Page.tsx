@@ -66,12 +66,14 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 		}
 	}, [snapshot.pages, snapshot.page, isSinglePage])
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 	const {
 		pageNumber: importPageNumber,
 		setPageNumber: setImportPageNumber,
 		changePage: changeImportPage,
 	} = usePagePicker(pageCount, 1)
+
+	const defaultDestinationPage = isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, defaultDestinationPage)
 
 	const setConnectionRemap2 = useCallback(
 		(fromId: string, toId: string) => {
