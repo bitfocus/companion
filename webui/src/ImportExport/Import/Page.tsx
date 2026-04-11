@@ -66,12 +66,21 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 		}
 	}, [snapshot.pages, snapshot.page, isSinglePage])
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 	const {
 		pageNumber: importPageNumber,
 		setPageNumber: setImportPageNumber,
 		changePage: changeImportPage,
 	} = usePagePicker(pageCount, 1)
+
+	const defaultDestinationPage = useMemo(() => {
+		if (!isSinglePage) return importPageNumber
+		const oldPage = snapshot.oldPageNumber
+		if (typeof oldPage === 'number' && Number.isInteger(oldPage) && oldPage >= 1 && oldPage <= pages.data.length) {
+			return oldPage
+		}
+		return -1
+	}, [isSinglePage, importPageNumber, snapshot.oldPageNumber, pages.data.length])
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, defaultDestinationPage)
 
 	const setConnectionRemap2 = useCallback(
 		(fromId: string, toId: string) => {
