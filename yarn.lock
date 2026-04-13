@@ -1715,7 +1715,7 @@ __metadata:
     tw-animate-css: "npm:^1.4.0"
     typescript: "npm:~6.0.2"
     usehooks-ts: "npm:^3.1.1"
-    vite: "npm:^7.3.1"
+    vite: "npm:^7.3.2"
     vite-tsconfig-paths: "npm:^6.1.1"
   languageName: unknown
   linkType: soft
@@ -1845,7 +1845,7 @@ __metadata:
     typescript: "npm:~6.0.2"
     use-deep-compare: "npm:^1.3.0"
     usehooks-ts: "npm:^3.1.1"
-    vite: "npm:^7.3.1"
+    vite: "npm:^7.3.2"
     vite-tsconfig-paths: "npm:^6.1.1"
     vitest: "npm:^4.1.2"
   languageName: unknown
@@ -25562,9 +25562,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^7.3.1":
-  version: 7.3.1
-  resolution: "vite@npm:7.3.1"
+"vite@npm:^7.3.2":
+  version: 7.3.2
+  resolution: "vite@npm:7.3.2"
   dependencies:
     esbuild: "npm:^0.27.0"
     fdir: "npm:^6.5.0"
@@ -25613,7 +25613,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: 10c0/5c7548f5f43a23533e53324304db4ad85f1896b1bfd3ee32ae9b866bac2933782c77b350eb2b52a02c625c8ad1ddd4c000df077419410650c982cd97fde8d014
+  checksum: 10c0/74be36907e208916f18bfec81c8eba18b869f0a170f1ece0a4dcb14874d0f0e7c022fb6c2ad896e3ee6c973fe88f53ac23b4078879ada340d8b263260868b8d4
   languageName: node
   linkType: hard
 
