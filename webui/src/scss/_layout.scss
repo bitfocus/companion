@@ -553,9 +553,13 @@ form.row > * {
 		transition: padding-left 0.1s;
 		padding-right: 0;
 		justify-content: center;
+
+		&.nav-group-toggle {
+			padding-left: 0;
+		}
 	}
 
-	// The mobile-mode toggler
+	//  The mobile-mode toggler
 	.sidebar-header.sidebar-header-toggler {
 		justify-content: left;
 		padding: 0.5rem 1rem;

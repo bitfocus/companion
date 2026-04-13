@@ -106,6 +106,7 @@ interface SidebarMenuItemProps {
 	icon: IconDefinition | null | 'empty'
 	notifications?: React.ComponentType<Record<string, never>>
 	path?: string
+	activePath?: string
 	onClick?: () => void
 	target?: string
 	title?: string
@@ -216,6 +217,7 @@ function SidebarMenuItemGroup(item: SidebarMenuItemGroupProps) {
 			toggler={<SidebarMenuItemLabel {...item} />}
 			title={item.title || item.name + ' group'}
 			to={item.path}
+			activePath={item.activePath}
 			visible={item.groupVisible}
 			setVisible={item.groupSetVisible}
 		>
@@ -400,6 +402,7 @@ export const MySidebar = memo(function MySidebar() {
 						icon={faGamepad}
 						notifications={SurfacesTabNotifyIcon}
 						path="/surfaces/configured"
+						activePath="/surfaces"
 						groupVisible={surfacesGroupVis}
 						groupSetVisible={(expand) => smartExpand(setSurfacesGroupVis, expand)}
 					>
@@ -751,6 +754,7 @@ function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: Re
 
 interface CNavGroupProps {
 	to?: string
+	activePath?: string
 
 	/**
 	 * A string of all className you want applied to the component.
@@ -782,6 +786,7 @@ interface CNavGroupProps {
 function CNavGroup({
 	children,
 	to,
+	activePath,
 	className,
 	compact,
 	toggler,
@@ -856,7 +861,12 @@ function CNavGroup({
 			<NarrowModePopover title={title}>
 				<div className="nav-link nav-group-toggle" onClick={handleTogglerOnClick}>
 					{to ? (
-						<Link to={to} className="nav-link">
+						<Link
+							to={to}
+							className={classNames('nav-link', {
+								active: !!activePath && !!matchRoute({ to: activePath, fuzzy: true }),
+							})}
+						>
 							{toggler}
 						</Link>
 					) : (
