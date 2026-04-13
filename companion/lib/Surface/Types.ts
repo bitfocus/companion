@@ -31,6 +31,7 @@ export interface SurfacePanelInfo {
 	location: string | null
 	isRemote: boolean
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
+	canChangePage?: boolean
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
@@ -41,7 +42,6 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void
-	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: ReadonlySet<string>) => void
 	quit(): void
 

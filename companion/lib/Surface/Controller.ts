@@ -1382,11 +1382,23 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Add a satellite device
 	 */
 	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
-		this.removeDevice(deviceInfo.deviceId)
+		const discoveredSurface: DiscoveredSurfaceInfo = {
+			surfaceId: deviceInfo.serial,
+			surfaceIdIsNotUnique: !deviceInfo.serialIsUnique,
+			description: deviceInfo.productName,
+		}
+		const prefixedDevicePath = `satellite:${deviceInfo.connectionId}:${deviceInfo.deviceId}` as const
+		const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
+			discoveredSurface,
+			prefixedDevicePath,
+			undefined
+		)
 
-		const device = new SurfaceIPSatellite(deviceInfo, this.surfaceExecuteExpression.bind(this))
+		this.removeDevice(resolvedSurfaceId)
 
-		this.#createSurfaceHandler(deviceInfo.deviceId, 'satellite', device)
+		const device = new SurfaceIPSatellite(deviceInfo, resolvedSurfaceId, this.surfaceExecuteExpression.bind(this))
+
+		this.#createSurfaceHandler(device.info.surfaceId, 'satellite', device)
 
 		this.triggerUpdateDevicesList()
 

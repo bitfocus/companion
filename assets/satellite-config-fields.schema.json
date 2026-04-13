@@ -1,0 +1,171 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"title": "Satellite Config Fields",
+	"description": "Schema describing an array of custom config field definitions for a satellite device. These fields are rendered in the Companion UI surface settings panel and the stored values are pushed back to the device via DEVICE-CONFIG.",
+	"type": "array",
+	"items": {
+		"$ref": "#/$defs/configField"
+	},
+	"$defs": {
+		"commonFields": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object.",
+					"type": "string"
+				},
+				"label": {
+					"description": "Human-readable label shown in the UI.",
+					"type": "string"
+				},
+				"description": {
+					"description": "Optional longer description shown in the UI to explain the field.",
+					"type": "string"
+				},
+				"tooltip": {
+					"description": "Optional tooltip text shown on hover.",
+					"type": "string"
+				},
+				"isVisibleExpression": {
+					"description": "Optional expression that controls field visibility. When provided, the field is only shown when the expression evaluates to true.",
+					"type": "string"
+				}
+			},
+			"required": ["id", "label"]
+		},
+		"staticTextField": {
+			"allOf": [
+				{ "$ref": "#/$defs/commonFields" },
+				{
+					"type": "object",
+					"properties": {
+						"type": { "const": "static-text" },
+						"value": {
+							"description": "Static text content to display.",
+							"type": "string"
+						}
+					},
+					"required": ["type", "value"]
+				}
+			]
+		},
+		"textInputField": {
+			"allOf": [
+				{ "$ref": "#/$defs/commonFields" },
+				{
+					"type": "object",
+					"properties": {
+						"type": { "const": "textinput" },
+						"default": {
+							"description": "Default value.",
+							"type": "string"
+						},
+						"regex": {
+							"description": "Optional regex pattern the value must match.",
+							"type": "string"
+						},
+						"multiline": {
+							"description": "Whether the input is a multiline text area.",
+							"type": "boolean"
+						}
+					},
+					"required": ["type"]
+				}
+			]
+		},
+		"dropdownChoice": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "The value stored when this choice is selected.",
+					"type": ["string", "number"]
+				},
+				"label": {
+					"description": "Human-readable label for the choice.",
+					"type": "string"
+				}
+			},
+			"required": ["id", "label"],
+			"additionalProperties": false
+		},
+		"dropdownField": {
+			"allOf": [
+				{ "$ref": "#/$defs/commonFields" },
+				{
+					"type": "object",
+					"properties": {
+						"type": { "const": "dropdown" },
+						"choices": {
+							"description": "List of selectable choices.",
+							"type": "array",
+							"items": { "$ref": "#/$defs/dropdownChoice" },
+							"minItems": 1
+						},
+						"default": {
+							"description": "Default selected choice id.",
+							"type": ["string", "number"]
+						},
+						"allowCustom": {
+							"description": "Whether the user can type a custom value not in the choices list.",
+							"type": "boolean"
+						}
+					},
+					"required": ["type", "choices"]
+				}
+			]
+		},
+		"numberField": {
+			"allOf": [
+				{ "$ref": "#/$defs/commonFields" },
+				{
+					"type": "object",
+					"properties": {
+						"type": { "const": "number" },
+						"min": {
+							"description": "Minimum allowed value.",
+							"type": "number"
+						},
+						"max": {
+							"description": "Maximum allowed value.",
+							"type": "number"
+						},
+						"default": {
+							"description": "Default value.",
+							"type": "number"
+						},
+						"step": {
+							"description": "Step increment for the input.",
+							"type": "number"
+						}
+					},
+					"required": ["type", "min", "max"]
+				}
+			]
+		},
+		"checkboxField": {
+			"allOf": [
+				{ "$ref": "#/$defs/commonFields" },
+				{
+					"type": "object",
+					"properties": {
+						"type": { "const": "checkbox" },
+						"default": {
+							"description": "Default checked state.",
+							"type": "boolean"
+						}
+					},
+					"required": ["type"]
+				}
+			]
+		},
+		"configField": {
+			"oneOf": [
+				{ "$ref": "#/$defs/staticTextField" },
+				{ "$ref": "#/$defs/textInputField" },
+				{ "$ref": "#/$defs/dropdownField" },
+				{ "$ref": "#/$defs/numberField" },
+				{ "$ref": "#/$defs/checkboxField" }
+			]
+		}
+	}
+}

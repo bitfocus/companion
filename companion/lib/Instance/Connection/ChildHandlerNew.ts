@@ -372,10 +372,20 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
 			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 			if (!parseRes.ok) {
+				let location = 'Unknown'
+
+				if (extras.surfaceId && extras.surfaceId.startsWith('trigger'))
+					location = `Trigger ${extras.surfaceId.split(':')[1]}`
+
+				if (extras.controlId && extras.controlId.startsWith('bank') && extras.location)
+					location = `Button ${extras.location.pageNumber}/${extras.location.row}/${extras.location.column}`
+
 				this.logger.warn(
 					`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
 				)
-				throw new Error(`Failed to parse action options. One or more options were invalid`)
+				throw new Error(
+					`Failed to parse action options. One or more options were invalid\nAction: ${actionDefinition.label} - Location: ${location} - Errors: ${JSON.stringify(parseRes.optionErrors)}`
+				)
 			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
@@ -395,7 +405,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			}
 		} catch (e) {
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
-			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)
+
+			if (e instanceof Error) {
+				this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e.message)}`)
+			}
 
 			throw e
 		}
