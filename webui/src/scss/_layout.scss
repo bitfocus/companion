@@ -460,6 +460,10 @@ form.row > * {
 			margin-left: -0.75rem;
 			margin-top: -0.25rem;
 		}
+
+		.sidebar-nav .nav-group-items .nav-link {
+			padding-right: 0;
+		}
 	}
 
 	// In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds
@@ -514,6 +518,7 @@ form.row > * {
 			margin-left: 16px;
 			margin-right: 16px;
 			background-color: white;
+			mask-repeat: no-repeat;
 		}
 		.nav-link {
 			margin-bottom: 0;
@@ -551,7 +556,6 @@ form.row > * {
 		padding-left: var(--cui-sidebar-nav-link-padding-x);
 		// smoother transition for icons when expanding the sidebar. The exact number isn't critical.
 		transition: padding-left 0.1s;
-		padding-right: 0;
 		justify-content: center;
 
 		&.nav-group-toggle {
