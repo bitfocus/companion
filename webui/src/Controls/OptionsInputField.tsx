@@ -278,6 +278,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 				value={rawExpressionValue}
 				setValue={(val) => setValue(option.id, val)}
 				disabled={!!readonly}
+				controlId={controlId ?? null}
 				entityType={entityType}
 				isLocatedInGrid={isLocatedInGrid}
 			>

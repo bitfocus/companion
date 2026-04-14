@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { ParseExpression, FindAllReferencedVariables } from '../Expression/ExpressionParse.js'
+import {
+	ParseExpression,
+	FindAllReferencedVariables,
+	tryExtractExpressionPlainValue,
+} from '../Expression/ExpressionParse.js'
 
 function ParseExpression2(str: string) {
 	const node = ParseExpression(str)
@@ -1126,6 +1130,124 @@ describe('parser', () => {
 				},
 				variableIds: [],
 			})
+		})
+	})
+})
+
+describe('tryExtractExpressionPlainValue', () => {
+	describe('plain values (should return extracted value)', () => {
+		it('string literal', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('"major"'))).toEqual({ value: 'major' })
+		})
+
+		it('number literal', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('42'))).toEqual({ value: 42 })
+		})
+
+		it('zero', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('0'))).toEqual({ value: 0 })
+		})
+
+		it('float literal', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('3.14'))).toEqual({ value: 3.14 })
+		})
+
+		it('boolean true', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('true'))).toEqual({ value: true })
+		})
+
+		it('boolean false', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('false'))).toEqual({ value: false })
+		})
+
+		it('null', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('null'))).toEqual({ value: null })
+		})
+
+		it('negative number', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('-42'))).toEqual({ value: -42 })
+		})
+
+		it('positive unary on number', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('+5'))).toEqual({ value: 5 })
+		})
+
+		it('simple array', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('[1, "a", true]'))).toEqual({ value: [1, 'a', true] })
+		})
+
+		it('array with negative number', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('[-42, 0]'))).toEqual({ value: [-42, 0] })
+		})
+
+		it('simple object', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('{ key: "a" }'))).toEqual({ value: { key: 'a' } })
+		})
+
+		it('object with numeric value', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('{ x: 1, y: -2 }'))).toEqual({ value: { x: 1, y: -2 } })
+		})
+
+		it('nested plain value', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('[-42, { x: 1 }]'))).toEqual({ value: [-42, { x: 1 }] })
+		})
+
+		it('empty array', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('[]'))).toEqual({ value: [] })
+		})
+
+		it('empty object', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('{}'))).toEqual({ value: {} })
+		})
+	})
+
+	describe('lossy values (should return null)', () => {
+		it('binary expression: addition', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('2 + 2'))).toBeNull()
+		})
+
+		it('binary expression: string concatenation', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('"a" + "b"'))).toBeNull()
+		})
+
+		it('variable reference', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('$(companion:time_hms)'))).toBeNull()
+		})
+
+		it('unary minus on variable', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('-$(var:x)'))).toBeNull()
+		})
+
+		it('function call', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('floor(3.7)'))).toBeNull()
+		})
+
+		it('conditional expression', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('true ? 1 : 2'))).toBeNull()
+		})
+
+		it('array containing variable', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('[$(var:x)]'))).toBeNull()
+		})
+
+		it('array containing expression', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('[1 + 2]'))).toBeNull()
+		})
+
+		it('object with variable value', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('{ key: $(var:x) }'))).toBeNull()
+		})
+
+		it('object with expression value', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('{ key: 1 + 2 }'))).toBeNull()
+		})
+
+		it('identifier (not a keyword)', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('major'))).toBeNull()
+		})
+
+		it('unary logical not', () => {
+			expect(tryExtractExpressionPlainValue(ParseExpression('!true'))).toBeNull()
 		})
 	})
 })
