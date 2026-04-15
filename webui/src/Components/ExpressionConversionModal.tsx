@@ -63,7 +63,7 @@ export function ExpressionConversionModal({
 		if (!displayData.ok) {
 			return <span className="text-danger">Error: {displayData.error}</span>
 		}
-		return <VariableValueDisplay value={displayData.value} showCopy={false} onCopied={() => {}} />
+		return <VariableValueDisplay value={displayData.value} showCopy={false} onCopied={() => {}} forceExpanded />
 	}
 
 	return (
@@ -97,7 +97,7 @@ export function ExpressionConversionModal({
 				<CButton color="secondary" onClick={onCancel}>
 					Cancel
 				</CButton>
-				<CButton color="primary" onClick={doConfirm}>
+				<CButton color="primary" onClick={doConfirm} disabled={!displayData?.ok}>
 					Use computed value
 				</CButton>
 			</CModalFooter>
