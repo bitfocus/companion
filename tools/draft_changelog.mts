@@ -63,7 +63,7 @@ function buildDraftBlock(version: string, feats: string[], fixes: string[]): str
  * Returns the updated changelog text.
  */
 function mergeIntoDraft(changelog: string, version: string, feats: string[], fixes: string[]): string {
-	const draftHeading = `## Companion v${version} - Release Notes\n${DRAFT_MARKER}`
+	const draftHeading = `## Companion v${version} - Release Notes\n\n${DRAFT_MARKER}`
 	const draftStart = changelog.indexOf(draftHeading)
 	if (draftStart === -1) throw new Error(`Draft block for ${version} not found`)
 
@@ -147,7 +147,7 @@ await goSilent(async () => {
 
 	// --- 4. Read changelog and detect existing draft (identified by DRAFT_MARKER) ---
 	const changelog = await fs.readFile(CHANGELOG_PATH, 'utf-8')
-	const draftHeading = `## Companion v${targetVersion} - Release Notes\n${DRAFT_MARKER}`
+	const draftHeading = `## Companion v${targetVersion} - Release Notes\n\n${DRAFT_MARKER}`
 	const draftExists = changelog.includes(draftHeading)
 
 	// --- 5. Determine commit range ---
