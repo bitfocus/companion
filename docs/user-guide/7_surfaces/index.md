@@ -17,11 +17,15 @@ In the right panel, click the red <span style={{color: "white", background: "#CC
 
 ![Surface integrations panel](./images/surface-integrations-panel.png)
 
+If the "All Available" button isn't blue, click it to show modules you haven't yet installed. When it looks like this: <span style={{color: "white", background: "#89bdff", borderTopRightRadius: "5px", borderBottomRightRadius: "5px", fontSize: "0.8em", padding: "0.5em"}}>All&nbsp;Available</span> you're seeing all available surface modules.
+
+![Add Surface integration panel](./images/surface-integrations-add-panel.png)
+
 From there, [Installing](../3_config/connections.md#adding-a-connection), [configuring](../3_config/connections.md#configuring-a-connection), and [updating](../3_config/connections.md#updating-a-connection) a surface module follows the same workflow as for Connections.
 
-The module list and offline import can be managed from the [Modules page](../3_config/modules.md).
+You can also add surface modules from the [Modules page](../3_config/modules.md), including importing offline surface modules.
 
-A full list of available surface modules and supported device models is on the [Bitfocus Developer site](https://developer.bitfocus.io/modules/companion-surface/discover).
+A full list of available surface modules and supported device models is also available at the [Bitfocus Developer site](https://developer.bitfocus.io/modules/companion-surface/discover).
 
 ## General Surface Settings
 
