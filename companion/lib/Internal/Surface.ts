@@ -278,6 +278,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						max: 100,
 						step: 1,
 						range: true,
+						clampValues: true,
 					},
 				],
 

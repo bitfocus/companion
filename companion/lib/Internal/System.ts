@@ -283,6 +283,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						default: 5000,
 						min: 500,
 						max: 20000,
+						clampValues: true,
 					},
 					{
 						type: 'internal:custom_variable',
