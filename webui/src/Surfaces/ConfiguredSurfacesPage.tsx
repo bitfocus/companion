@@ -96,11 +96,9 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 							Use the table, below to configure currently-known surfaces and groups.
 							<br />
 							To configure a surface integration or global setting,
-							<span className="d-inline d-xl-none">
-								{' '}
-								click the "Show Settings" button, above the table on the right
-							</span>
-							<span className="d-none d-xl-inline"> use the panel to the right</span>.
+							{twoPanelMode
+								? ' use the panel to the right.'
+								: '	click the "Show Settings" button on the right, just above the table.'}
 							<br />
 							Click this icon for more help.
 						</ContextHelpButton>
