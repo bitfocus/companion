@@ -5,7 +5,7 @@ import { useCallback, useState } from 'react'
 import { ExpressionInputField } from './ExpressionInputField'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import {
@@ -13,6 +13,7 @@ import {
 	tryExtractExpressionPlainValue,
 	valueToExpressionLiteral,
 } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { ExpressionConversionModal } from './ExpressionConversionModal.js'
 import type { JsonValue } from 'type-fest'
 
@@ -27,6 +28,8 @@ interface FieldOrExpressionProps {
 	entityType: EntityModelType | null
 	isLocatedInGrid: boolean
 
+	fieldDefinition?: SomeCompanionInputField
+
 	children: React.ReactNode
 }
 export const FieldOrExpression = observer(function FieldOrExpression({
@@ -37,6 +40,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 	controlId,
 	entityType,
 	isLocatedInGrid,
+	fieldDefinition,
 	children,
 }: FieldOrExpressionProps) {
 	const [pendingConversion, setPendingConversion] = useState<string | null>(null)
@@ -65,8 +69,19 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 					const parsed = ParseExpression(expressionStr)
 					const plain = tryExtractExpressionPlainValue(parsed)
 					if (plain !== null) {
-						setValue({ isExpression: false, value: plain.value })
-						return
+						// If we have a field definition, validate the extracted value against it.
+						// If the value is invalid (e.g. true in a number field), fall through to modal.
+						if (fieldDefinition) {
+							const validation = validateInputValue(fieldDefinition, plain.value)
+							if (!validation.validationError && validation.validationWarnings.length === 0) {
+								setValue({ isExpression: false, value: plain.value })
+								return
+							}
+							// Invalid — fall through to modal
+						} else {
+							setValue({ isExpression: false, value: plain.value })
+							return
+						}
 					}
 				} catch {
 					// parse failed — fall through to modal
@@ -100,6 +115,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 				<ExpressionConversionModal
 					expression={pendingConversion}
 					controlId={controlId}
+					fieldDefinition={fieldDefinition}
 					onConfirm={onConversionConfirm}
 					onCancel={onConversionCancel}
 				/>

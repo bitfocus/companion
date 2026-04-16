@@ -281,6 +281,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 				controlId={controlId ?? null}
 				entityType={entityType}
 				isLocatedInGrid={isLocatedInGrid}
+				fieldDefinition={option}
 			>
 				{control}
 			</FieldOrExpression>
