@@ -7,6 +7,7 @@ import { VariableValueDisplay } from './VariableValueDisplay.js'
 import type { JsonValue } from 'type-fest'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { ExpressionInputField } from './ExpressionInputField.js'
 
 interface ExpressionConversionModalProps {
 	expression: string
@@ -58,9 +59,6 @@ export function ExpressionConversionModal({
 		return validateInputValue(fieldDefinition, displayData.value as JsonValue | undefined)
 	}, [fieldDefinition, displayData])
 
-	const hasValidationError = !!computedValueValidation?.validationError
-	const hasValidationWarnings = (computedValueValidation?.validationWarnings.length ?? 0) > 0
-
 	// The value to use when confirming — sanitised when validation ran, otherwise raw
 	const sanitisedValue =
 		computedValueValidation?.sanitisedValue ?? (displayData?.ok ? (displayData.value as JsonValue) : undefined)
@@ -76,27 +74,6 @@ export function ExpressionConversionModal({
 		onConfirm(defaultValue)
 	}, [onConfirm, defaultValue])
 
-	const computedValueDisplay = (): React.ReactNode => {
-		if (!displayData) {
-			if (!showSpinner) return <em>Evaluating&hellip;</em>
-			return <CSpinner size="sm" />
-		}
-		if (!displayData.ok) {
-			return <span className="text-danger">Error: {displayData.error}</span>
-		}
-		// Show the sanitised value if validation ran, otherwise the raw computed value
-		const displayValue = computedValueValidation ? computedValueValidation.sanitisedValue : displayData.value
-		return (
-			<VariableValueDisplay
-				value={displayValue}
-				showCopy={false}
-				onCopied={() => {}}
-				forceExpanded
-				invalidReason={computedValueValidation?.validationError}
-			/>
-		)
-	}
-
 	return (
 		<CModalExt visible onClose={onCancel} transition={false}>
 			<CModalHeader closeButton>
@@ -108,39 +85,48 @@ export function ExpressionConversionModal({
 				</CAlert>
 
 				<h6>Expression</h6>
-				<pre
-					style={{
-						whiteSpace: 'pre-wrap',
-						wordBreak: 'break-all',
-						maxHeight: '8em',
-						overflowY: 'auto',
-						padding: '0.5rem 0.75rem',
-						borderRadius: '0.25rem',
-						border: '1px solid var(--cui-border-color)',
-						background: 'var(--cui-tertiary-bg)',
-					}}
-				>
-					{expression}
-				</pre>
+				<ExpressionInputField value={expression} setValue={() => null} disabled />
+
 				<hr />
+
 				<h6>Computed value</h6>
-				{hasValidationError && (
-					<CAlert color="danger" className="mb-2 py-2">
-						{computedValueValidation?.validationError}
-					</CAlert>
-				)}
-				{computedValueDisplay()}
-				{!hasValidationError && hasValidationWarnings && (
-					<CAlert color="warning" className="mt-2 mb-0 py-2">
-						{computedValueValidation!.validationWarnings.join(', ')}
-					</CAlert>
+				{!displayData ? (
+					showSpinner ? (
+						<CSpinner size="sm" />
+					) : (
+						<em>Evaluating&hellip;</em>
+					)
+				) : !displayData.ok ? (
+					<span className="text-danger">Error: {displayData.error}</span>
+				) : (
+					<>
+						{!!computedValueValidation?.validationError && (
+							<CAlert color="danger" className="mb-2 py-2">
+								{computedValueValidation.validationError}
+							</CAlert>
+						)}
+						<VariableValueDisplay
+							value={
+								computedValueValidation ? computedValueValidation.sanitisedValue : (displayData.value as JsonValue)
+							}
+							showCopy={false}
+							onCopied={() => {}}
+							forceExpanded
+						/>
+						{!computedValueValidation?.validationError &&
+							(computedValueValidation?.validationWarnings.length ?? 0) > 0 && (
+								<CAlert color="warning" className="mt-2 mb-0 py-2">
+									{computedValueValidation!.validationWarnings.join(', ')}
+								</CAlert>
+							)}
+					</>
 				)}
 			</CModalBody>
 			<CModalFooter>
 				<CButton color="secondary" onClick={onCancel}>
 					Cancel
 				</CButton>
-				{hasValidationError ? (
+				{computedValueValidation?.validationError ? (
 					<CButton color="primary" onClick={doUseDefault} disabled={defaultValue === undefined}>
 						Use default value
 					</CButton>
