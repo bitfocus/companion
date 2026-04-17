@@ -57,16 +57,22 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 
 	const setIsExpression = useCallback(
 		(isExpression: boolean) => {
+			// For free-text fields, toggle mode directly — no literal wrapping or modal
+			if (fieldDefinition?.type === 'textinput' || fieldDefinition?.type === 'secret-text') {
+				setValue({ isExpression, value: stringifyVariableValue(value.value) ?? '' })
+				return
+			}
+
 			if (isExpression) {
 				setValue({
 					isExpression: true,
 					value: valueToExpressionLiteral(value.value),
 				})
 			} else {
+				const strValue = stringifyVariableValue(value.value) ?? ''
 				// If the expression is a plain value literal, extract it directly without a modal
-				const expressionStr = stringifyVariableValue(value.value) ?? ''
 				try {
-					const parsed = ParseExpression(expressionStr)
+					const parsed = ParseExpression(strValue)
 					const plain = tryExtractExpressionPlainValue(parsed)
 					if (plain !== null) {
 						// If we have a field definition, validate the extracted value against it.
@@ -86,7 +92,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 				} catch {
 					// parse failed — fall through to modal
 				}
-				setPendingConversion(expressionStr)
+				setPendingConversion(strValue)
 			}
 		},
 		[setValue, value]

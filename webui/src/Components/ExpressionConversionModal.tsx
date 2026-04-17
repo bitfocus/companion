@@ -56,6 +56,18 @@ export function ExpressionConversionModal({
 
 	const computedValueValidation = useMemo(() => {
 		if (!fieldDefinition || !displayData?.ok) return null
+
+		const { type } = fieldDefinition
+		// These types accept any value — no validation needed
+		if (
+			type === 'textinput' ||
+			type === 'secret-text' ||
+			type === 'static-text' ||
+			type === 'bonjour-device' ||
+			type === 'expression'
+		)
+			return null
+
 		return validateInputValue(fieldDefinition, displayData.value as JsonValue | undefined)
 	}, [fieldDefinition, displayData])
 
