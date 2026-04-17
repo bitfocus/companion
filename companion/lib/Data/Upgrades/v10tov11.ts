@@ -716,7 +716,7 @@ function convertOldLocationToExpressionOrValue(options: CompanionOptionValues, i
 	} else if (options.location_target === 'this') {
 		options.location = {
 			isExpression: false,
-			value: isTrigger ? '"this"' : '$(this:location)',
+			value: isTrigger ? 'this' : '$(this:location)',
 		} satisfies ExpressionOrValue<string>
 	} else if (options.location_target === 'expression') {
 		options.location = {
