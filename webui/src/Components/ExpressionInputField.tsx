@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useContext, useEffect } from 'react'
+import { useState, useCallback, useContext, useEffect } from 'react'
 import { observer } from 'mobx-react-lite'
-import type { DropdownChoiceInt } from '~/DropDownInputFancy.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import Editor, { type Monaco } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch'
@@ -60,9 +60,6 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	const handleEditorDidMount = useCallback((editor: editor.IStandaloneCodeEditor, _monaco: Monaco) => {
 		setEditor(editor)
 
-		editor.onDidFocusEditorText(() => {
-			setTmpValue(editor.getValue())
-		})
 		editor.onDidBlurEditorText(() => {
 			setTmpValue(null)
 		})

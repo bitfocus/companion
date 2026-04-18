@@ -1,13 +1,12 @@
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
-import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { OptionsInputField } from '../OptionsInputField.js'
@@ -20,7 +19,7 @@ import { TextInputField } from '../../Components/TextInputField.js'
 import { observer } from 'mobx-react-lite'
 import { useEntityEditorContext } from './EntityEditorContext.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -30,6 +29,9 @@ import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 import { LoadingBar } from '~/Resources/Loading.js'
 import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { JsonValue } from 'type-fest'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -46,6 +48,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	entityDefinition,
 	service,
 }: EntityCommonCellsProps): React.JSX.Element {
+	const { notifier } = useContext(RootAppStoreContext)
 	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
 	const { connections } = useContext(RootAppStoreContext)
 
@@ -67,6 +70,10 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 		[service]
 	)
 
+	const onCopied = useCallback(() => {
+		notifier.show(`Copied`, 'Copied to clipboard', 3000)
+	}, [notifier])
+
 	return (
 		<>
 			<div className="entity-cells-wrapper">
@@ -77,20 +84,25 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 				)}
 
 				<CForm className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
-					{!!entity && localVariablePrefix && (
+					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
+									Variable name
 									<InlineHelp help={`The name to give this value as a ${localVariablePrefix} variable`}>
-										Variable name
+										<FontAwesomeIcon icon={faQuestionCircle} />
 									</InlineHelp>
+									<CopyToClipboard text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`} onCopy={onCopied}>
+										<CButton size="sm" title="Copy variable name" className="ps-0">
+											<FontAwesomeIcon icon={faCopy} color="#d50215" />
+										</CButton>
+									</CopyToClipboard>
 								</CFormLabel>
 								<CCol sm={8}>
 									<TextInputField
-										// regex?: string TODO - validate value syntax
-										value={(entity as FeedbackEntityModel).variableName ?? ''}
+										value={entity.variableName ?? ''}
 										setValue={service.setVariableName}
-										// setValid?: (valid: boolean) => void
+										checkValid={(str) => str === '' || isLabelValid(str)}
 										disabled={readonly}
 									/>
 								</CCol>
@@ -119,6 +131,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									isLocatedInGrid={!!location}
 									entityType={entity.type}
 									allowInternalFields={entity.connectionId === 'internal'}
+									controlId={controlId}
 									option={FeedbackInvertOption}
 									value={'isInverted' in entity ? entity.isInverted : undefined}
 									setValue={setInverted}
@@ -149,6 +162,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
 								allowInternalFields={entity.connectionId === 'internal'}
+								controlId={controlId}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
 								setValue={service.setValue}

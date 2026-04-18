@@ -12,7 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useCallback } from 'react'
+import { useContext, useCallback } from 'react'
 import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -85,29 +85,23 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			: `Enable ${labelStr}`
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
+		<div className="flex flex-row align-items-center gap-2 hand" title={`Click to configure the ${moduleDisplayName}.`}>
 			<div onClick={doEdit} className="flex flex-column grow" style={{ minWidth: 0 }}>
 				<b>{instance.label}</b>
-				<span className="auto-ellipsis" title={moduleDisplayName}>
-					{moduleDisplayName}
-				</span>
+				<span className="auto-ellipsis">{moduleDisplayName}</span>
 			</div>
 
 			<div onClick={doEdit} className="no-break">
 				<MyErrorBoundary>
 					{moduleVersion?.isLegacy && (
-						<>
-							<FontAwesomeIcon
-								icon={faExclamationTriangle}
-								color="#f80"
-								title="This module has not been updated for Companion 3.0, and may not work fully"
-							/>{' '}
-						</>
+						<span title="This module has not been updated for Companion 3.0, and may not work fully">
+							<FontAwesomeIcon icon={faExclamationTriangle} color="#f80" />{' '}
+						</span>
 					)}
 					{moduleVersion?.isBeta && (
-						<>
-							<FontAwesomeIcon icon={faFlask} title="Beta" />{' '}
-						</>
+						<span title="Beta">
+							<FontAwesomeIcon icon={faFlask} />{' '}
+						</span>
 					)}
 					{moduleVersion?.displayName ?? instance.moduleVersionId}
 
@@ -187,7 +181,13 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						</>
 					}
 				>
-					<CButton color="secondary" style={{ padding: '3px 8px' }} onClick={(e) => e.currentTarget.focus()}>
+					<CButton
+						color="secondary"
+						style={{ padding: '3px 8px' }}
+						onClick={(e) => e.currentTarget.focus()}
+						title="Click for additional options."
+						aria-label="Click for additional options."
+					>
 						<FontAwesomeIcon icon={faEllipsisV} />
 					</CButton>
 				</CPopover>

@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { useCallback, useEffect, type DependencyList } from 'react'
+import { useCallback, useEffect, useState, type DependencyList } from 'react'
 import { useEventListener } from 'usehooks-ts'
 import type { ReadonlyDeep } from 'type-fest'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
@@ -48,6 +48,15 @@ export function KeyReceiver({ children, ...props }: KeyReceiverProps): React.JSX
 
 // eslint-disable-next-line react-hooks/exhaustive-deps
 export const useMountEffect = (fun: React.EffectCallback): void => useEffect(fun, [])
+
+export function useDebounced<T>(value: T, delayMs: number): T {
+	const [debounced, setDebounced] = useState(value)
+	useEffect(() => {
+		const timer = setTimeout(() => setDebounced(value), delayMs)
+		return () => clearTimeout(timer)
+	}, [value, delayMs])
+	return debounced
+}
 
 /**
  * Slight modification of useClickoutside from usehooks-ts, which expects an array of refs to check

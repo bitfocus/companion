@@ -25,6 +25,8 @@ const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({
 
 console.log('existing modules:\n', existingModules)
 
+const errors: Error[] = []
+
 const moduleQueue = new pQueue({
 	concurrency: 10,
 })
@@ -35,6 +37,7 @@ for (const moduleId of Object.keys(existingModules)) {
 				const { data: moduleInfoData, error } = await ModuleOpenApiClient.GET(
 					`/v1/companion/modules/{moduleType}/{moduleName}`,
 					{
+						signal: AbortSignal.timeout(10000),
 						params: {
 							path: { moduleType: 'surface', moduleName: moduleId },
 						},
@@ -78,13 +81,19 @@ for (const moduleId of Object.keys(existingModules)) {
 				retries: 3,
 			}
 		).catch((err) => {
-			throw new Error(`Failed to fetch ${moduleId}: ${err}`)
+			errors.push(new Error(`Failed to fetch ${moduleId}: ${err}`))
 		})
 	})
 }
 
 // Wait for all modules to be processed
 await moduleQueue.onIdle()
+
+if (errors.length > 0) {
+	console.error('Errors occurred while fetching modules:')
+	errors.forEach((err) => console.error(err.message))
+	process.exit(1)
+}
 
 console.log('All modules processed')
 

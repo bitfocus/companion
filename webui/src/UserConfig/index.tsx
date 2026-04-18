@@ -1,4 +1,3 @@
-import React from 'react'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import { CCard, CCol, CRow } from '@coreui/react'
 import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
@@ -18,7 +17,12 @@ export function SettingsSelectPage(): React.JSX.Element {
 					<CRow>
 						<SettingsLinkCard label="General" to="/settings/general" icon={faCog} />
 						<SettingsLinkCard label="Buttons" to="/settings/buttons" icon={faTh} />
-						<SettingsLinkCard label="Surfaces" to="/settings/surfaces" icon={faGamepad} />
+						<SettingsLinkCard
+							label="Surfaces"
+							sublabel="settings are in the Surfaces Page"
+							to="/surfaces/configured/integrations"
+							icon={faGamepad}
+						/>
 						<SettingsLinkCard label="Protocols" to="/settings/protocols" icon={faNetworkWired} />
 						<SettingsLinkCard label="Backups" to="/settings/backups" icon={faFloppyDisk} />
 						<SettingsLinkCard label="Advanced" to="/settings/advanced" icon={faWarning} />
@@ -31,6 +35,7 @@ export function SettingsSelectPage(): React.JSX.Element {
 
 interface SettingsLinkCardProps<TFrom extends string = string, TTo extends string | undefined = undefined> {
 	label: string
+	sublabel?: string
 	to: ToPathOption<RegisteredRouter, TFrom, TTo>
 	icon: IconProp
 	center?: boolean
@@ -38,6 +43,7 @@ interface SettingsLinkCardProps<TFrom extends string = string, TTo extends strin
 
 function SettingsLinkCard<const TFrom extends string = string, const TTo extends string | undefined = undefined>({
 	label,
+	sublabel,
 	to,
 	icon,
 	center,
@@ -48,6 +54,7 @@ function SettingsLinkCard<const TFrom extends string = string, const TTo extends
 				<CCard>
 					<NonIdealState icon={icon} style={{ padding: '5vh 1rem' }}>
 						<h3>{label}</h3>
+						{sublabel}
 					</NonIdealState>
 				</CCard>
 			</Link>

@@ -1,7 +1,7 @@
 import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faPlus, faImage, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useContext, useState, useMemo, useRef } from 'react'
+import { useCallback, useContext, useState, useMemo, useRef } from 'react'
 import { useComputed } from '~/Resources/util'
 import { observer } from 'mobx-react-lite'
 import { ImageThumbnail } from './ImageThumbnail'

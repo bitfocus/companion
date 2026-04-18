@@ -24,8 +24,8 @@ import jsonPatch from 'fast-json-patch'
 import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { JsonValue } from 'type-fest'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 /**
  * Class for an expression variable.
@@ -107,7 +107,7 @@ export class ControlExpressionVariable
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
-			variableValues: deps.variables.values,
+			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 		})
 
@@ -231,12 +231,14 @@ export class ControlExpressionVariable
 	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
 		// Handle expression variable name changes
 		if (key === 'variableName') {
 			// Make sure the new name is valid
 			if (value != '' && (typeof value !== 'string' || !isLabelValid(value))) {
-				throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
+				// throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
+				return false
 			}
 
 			const oldVariableName = this.options.variableName
@@ -329,7 +331,7 @@ export class ControlExpressionVariable
 			// Only emit variable value if this control is the active one for this variable name
 			if (!this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) return
 
-			this.deps.variables.values.setVariableValues('expression', [
+			this.deps.variableValues.setVariableValues('expression', [
 				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
 			])
 		},

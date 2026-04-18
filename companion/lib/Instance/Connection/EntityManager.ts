@@ -10,7 +10,7 @@ import {
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { nanoid } from 'nanoid'
-import type { ControlsController } from '../../Controls/Controller.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -70,7 +70,7 @@ export class ConnectionEntityManager {
 	readonly #logger: Logger
 
 	readonly #adapter: EntityManagerAdapter
-	readonly #controlsController: ControlsController
+	readonly controlsStore: IControlStore
 
 	readonly #entities = new Map<string, EntityWrapper>()
 
@@ -78,10 +78,10 @@ export class ConnectionEntityManager {
 	#ready = false
 	#currentUpgradeIndex = 0
 
-	constructor(adapter: EntityManagerAdapter, controlsController: ControlsController, connectionId: string) {
+	constructor(adapter: EntityManagerAdapter, controlsStore: IControlStore, connectionId: string) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
 		this.#adapter = adapter
-		this.#controlsController = controlsController
+		this.controlsStore = controlsStore
 	}
 
 	readonly #debounceProcessPending = debounceFn(
@@ -157,6 +157,11 @@ export class ConnectionEntityManager {
 						if (entity.upgradeIndex === undefined || entity.upgradeIndex === this.#currentUpgradeIndex) {
 							wrapper.state = EntityState.READY
 
+							if (entity.disabled) {
+								// Disabled entities should not be subscribed to the module
+								continue
+							}
+
 							const entityDefinition = entity.getEntityDefinition()
 							if (!entityDefinition || !entityDefinition.hasLifecycleFunctions) {
 								// The entity does not have lifecycle functions, so we can skip informing the module about it
@@ -168,13 +173,16 @@ export class ConnectionEntityManager {
 							let updateOptions: CompanionOptionValues | undefined
 							try {
 								// Parse the options and track the variables referenced
-								const parser = this.#controlsController.createVariablesAndExpressionParser(wrapper.controlId, null)
-								const { parsedOptions, referencedVariableIds } = parser.parseEntityOptions(
-									entityDefinition,
-									entityModel.options
-								)
-								updateOptions = parsedOptions
-								wrapper.lastReferencedVariableIds = referencedVariableIds
+								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
+								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
+								if (!parseRes.ok) {
+									this.#logger.warn(
+										`Failed to parse options for entity ${entity.id} in control ${wrapper.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+									)
+								} else {
+									updateOptions = parseRes.parsedOptions
+								}
+								wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
 							} catch (e) {
 								this.#logger.warn(
 									`Error parsing options for entity ${entity.id} in control ${wrapper.controlId}, marking as inactive: ${stringifyError(e, false)}`
@@ -363,7 +371,7 @@ export class ConnectionEntityManager {
 					// It has been upgraded, so we can update the entity
 
 					// We need to do this via the EntityPool method, so that it gets persisted correctly
-					const control = this.#controlsController.getControl(wrapper.controlId)
+					const control = this.controlsStore.getControl(wrapper.controlId)
 					if (!control || !control.supportsEntities) {
 						this.#logger.warn(`Control ${wrapper.controlId} not found`)
 						continue

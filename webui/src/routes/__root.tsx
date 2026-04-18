@@ -10,7 +10,7 @@ export const Route = createRootRoute({
 			<QueryClientProvider client={queryClient}>
 				<Outlet />
 				<Suspense>
-					<TanStackRouterDevtools position="top-left" />
+					<TanStackRouterDevtools position="bottom-right" />
 					<TanStackQueryDevtools />
 				</Suspense>
 			</QueryClientProvider>

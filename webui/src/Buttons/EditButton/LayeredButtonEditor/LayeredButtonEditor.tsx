@@ -1,6 +1,6 @@
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import React, { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { ControlOptionsEditor } from './ControlOptionsEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { type ButtonEditorExtraTabs, ButtonEditorTabs } from '../ButtonEditorTabs.js'

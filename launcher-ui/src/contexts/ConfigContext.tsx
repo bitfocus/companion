@@ -1,4 +1,4 @@
-import React, { createContext, useReducer, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useReducer, useEffect, useState, type ReactNode } from 'react'
 import type { ConfigData } from '~/types/config'
 
 interface ConfigState {

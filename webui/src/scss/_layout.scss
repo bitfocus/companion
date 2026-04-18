@@ -82,14 +82,31 @@ form.row > * {
 // 	margin: 0 auto;
 // }
 
-// not used? looks like only sidebar-header-toggler is used
-// .header-toggler svg {
-// 	color: #fff;
-// }
+// header-toggler is a coreui/bootstrap built-in class. It refers to the hamburger icon
+// that opens the sidebar in "mobile" mode (narrow window).
+// OTOH, .sidebar-header-toggler (in this file) refers to the toggler at the bottom of the sidebar in the other modes
+.header-toggler {
+	--cui-header-toggler-color: white; // kinder than color: #fff; ?
+	--cui-header-toggler-hover-color: white;
+
+	// the next two keep the hover highlight border more uniform w/o changing spacing
+	padding: var(--cui-header-toggler-padding-y) !important; // !important overrides .ps-1, just in case
+	margin-right: calc(var(--cui-header-toggler-padding-x) - var(--cui-header-toggler-padding-y));
+
+	//  make the color similar to --cui-btn-hover-bg, which is not accessible here;  alt: #{$header-brand-bg} is a bit darker.
+	&:hover {
+		background-color: color.adjust($header-bg, $lightness: -6%);
+	}
+}
 
 .header-right {
 	margin-right: 5px;
 }
+
+// uncomment this if CHeader is assigned position=sticky in Header.tsx
+// .header.header-sticky {
+// 	z-index: 40; // monaco-edit's suggest-details pane is buried if z-index > 41; use 40 just as a round number
+// }
 
 .header {
 	.nav-link:hover {
@@ -111,13 +128,15 @@ form.row > * {
 	margin-right: 0.5em;
 }
 
-.help-menu {
+.help-menu,
+.context-menu {
 	// gather the color scheme up front:
 	--menu-color: #000;
 	--menu-bg: var(--cui-tertiary-bg); // or just use white?
 	--menu-hover-color: #fff;
 	--menu-hover-bg: var(--cui-info);
 	color: var(--menu-color); // this may not affect anything
+	//overflow: visible; // uncomment this if unscoped .btn-group defined in _common.scss needs to make overflow hidden
 
 	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
 	.help-toggle {
@@ -125,6 +144,9 @@ form.row > * {
 		margin-left: 1em; // buffer between this and the lock icon
 		// the following line makes the focus/hover-highlight a square that is the same size as the notification
 		padding: 0.2em 0em;
+		// CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override
+		// override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455)
+		border-radius: var(--cui-border-radius) !important;
 	}
 
 	// The nesting within .dropdown-menu is mostly for clarity, to emphasize the DOM structure:
@@ -133,6 +155,10 @@ form.row > * {
 		--cui-dropdown-link-color: var(--menu-color);
 		--cui-dropdown-link-hover-bg: var(--menu-hover-bg);
 		--cui-dropdown-link-hover-color: var(--menu-hover-color); // only works if .dropdown-item doesn't define color:
+		// next two: don't change during click (but note that item is also "active" when its route is the current one...)
+		--cui-dropdown-link-active-bg: var(--menu-hover-bg);
+		--cui-dropdown-link-active-color: var(--menu-hover-color);
+
 		padding: 0.5em 0;
 		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border to the dropdown
 		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
@@ -143,6 +169,11 @@ form.row > * {
 			font-size: 0.95rem; // Slightly smaller, more refined
 			padding: 0.4em 0.75em; // More vertical padding, balanced horizontal
 			transition: background-color 0.15s ease-in-out; // Smooth hover transition
+
+			&:focus-visible {
+				// override button focus behavior (when "to" is a function), so it highlights the same way as the other items
+				outline: none;
+			}
 
 			.dropdown-item-icon {
 				// let the rules above and below control its padding
@@ -166,6 +197,31 @@ form.row > * {
 			padding-left: 0.75em;
 			color: rgba(0, 0, 0, 0.5);
 		}
+
+		.dropdown-item-version {
+			white-space: pre; // or pre-wrap to keep narrow but show all?
+
+			.dropdown-item-label {
+				display: block;
+				font-size: 0.85em;
+				min-width: 0;
+				max-width: 20em; // 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line?
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+	}
+}
+
+// override parts that differ from (dropdown) help-menus
+.context-menu {
+	--menu-bg: #f3f4f7; // sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here.
+	.dropdown-menu {
+		min-width: 0;
+
+		.dropdown-item {
+			font-size: 0.85rem;
+		}
 	}
 }
 
@@ -187,7 +243,8 @@ form.row > * {
 
 	max-width: 1900px;
 	min-height: 300px;
-	max-height: 100%;
+	//max-height: 100%;
+	height: 100%;
 
 	display: flex;
 	flex-direction: column;
@@ -205,6 +262,7 @@ form.row > * {
 	// }
 
 	.tab-pane {
+		height: 100%;
 		padding: 1rem 1rem 1rem 1rem;
 
 		// display: flex;
@@ -319,6 +377,8 @@ form.row > * {
 }
 
 .sidebar {
+	will-change: contents;
+
 	.sidebar-brand {
 		font-size: 1.3em;
 		text-decoration: none;
@@ -344,6 +404,7 @@ form.row > * {
 	.nav-link {
 		--cui-sidebar-nav-link-bg: #191919;
 
+		// note: .nav-group-toggle, below, overrides these three lines.
 		margin-bottom: 0.15rem;
 		padding-top: 0.7rem;
 		padding-bottom: 0.7rem;
@@ -356,7 +417,8 @@ form.row > * {
 		.nav-icon-wrapper {
 			width: 32px;
 			min-width: 32px;
-			margin-right: 12px;
+			min-height: calc(var(--cui-body-line-height) * 1em); // so nav-link height doesn't change when we hide the text
+			margin: 0; // let .full-label handle the margin so the icon can be on its own in narrow sidebars
 			text-align: center;
 			justify-content: center;
 
@@ -366,10 +428,56 @@ form.row > * {
 				align-self: center;
 			}
 		}
+
+		.full-label {
+			margin-left: 12px;
+		}
 	}
 
-	&.sidebar-narrow-unfoldable:not(:hover) {
-		.nav-group-toggle::after {
+	.nav-two-line .nav-link {
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+
+		line-height: calc(var(--cui-body-line-height) * 0.85);
+	}
+
+	// specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer.
+	// i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already.
+	&.sidebar-narrow.show {
+		// CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here:
+		width: var(--cui-sidebar-narrow-width);
+
+		.sidebar-brand-narrow {
+			display: block;
+		}
+		.sidebar-brand-full {
+			display: none;
+		}
+	}
+
+	// note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow
+	&.sidebar-narrow-unfoldable:not(.show, :hover),
+	&.sidebar-narrow {
+		// when sidebar is narrow hide things including the label and toggler
+		.nav-group-toggle::after,
+		.full-label {
+			display: none;
+		}
+
+		// if there's a notification, cozy it up to the icon when the sidebar is narrow.
+		.notification-count {
+			margin-left: -0.75rem;
+			margin-top: -0.25rem;
+		}
+
+		.sidebar-nav .nav-group-items .nav-link {
+			padding-right: 0;
+		}
+	}
+
+	// In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds
+	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
+		.context-menu {
 			display: none;
 		}
 	}
@@ -389,7 +497,29 @@ form.row > * {
 		}
 	}
 
-	.nav-group-toggle-link {
+	// Sidebar groups, DOM:
+	//    .nav-group (".show" = when open)
+	//       .nav-link.nav-group-toggle
+	//           .nav-link
+	//       .nav-group-items
+	.nav-group {
+		// border to include the toggler. A subsequent rule thickens the border for the group items section.
+		border-left: 1px solid var(--cui-sidebar-nav-link-icon-color);
+		//border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); //optional bottom edge
+
+		> .nav-link > .nav-link {
+			// compensate for the border, so the icons stays centered relative to non-group items
+			padding-left: calc(var(--cui-sidebar-nav-link-padding-x) - 1px);
+		}
+
+		&.show > .nav-link {
+			// make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div)
+			background: var(--cui-sidebar-nav-link-active-bg);
+		}
+	}
+
+	.nav-group-toggle {
+		// override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above)
 		padding: 0;
 
 		&::after {
@@ -397,33 +527,52 @@ form.row > * {
 			margin-left: 16px;
 			margin-right: 16px;
 			background-color: white;
+			mask-repeat: no-repeat;
 		}
-
 		.nav-link {
 			margin-bottom: 0;
 		}
 	}
 
-	$group-background-color: #2a2a2a;
-	.nav-group-toggle-basic::after,
+	// highlighting for the group-items container (contains all the items excluding the group-toggler line)
+	// we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0)
+	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI in narrow mode
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, // override CUI
 	.nav-group-items {
-		// the box underneath the expanded group
-		padding-left: 0.5em !important;
-		padding-right: 0.1em !important;
-		padding-top: 0px !important;
+		// the box underneath and containing the expanded group
+		padding-left: 1px !important; // to separate nested groups
+		border-left: 2px solid var(--cui-sidebar-nav-link-icon-color); // to visually group the items in a group
+		border-bottom-left-radius: var(--cui-sidebar-nav-link-border-radius);
 	}
 
-	.sidebar-nav .nav-group-items .nav-link {
-		// the individual buttons in a group
-		padding-left: var(--cui-sidebar-nav-link-padding-x);
-		box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.2);
-		--cui-sidebar-nav-link-bg: #{$group-background-color};
+	// override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well)
+	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show in narrow mode
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
+		height: auto !important;
+		visibility: visible !important; // !important is not currently necessary on this, but CUI could change it
+		opacity: 1 !important; // !important is not currently necessary on this, but CUI could change it
 
-		&:hover {
-			background-color: color.adjust($group-background-color, $lightness: 5%) !important;
+		.nav-link {
+			// when narrow, remove the default padding set in the next rule.
+			// the borders defined above still provide a bit of offset in this case.
+			padding-left: 0;
 		}
 	}
 
+	// the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise)
+	.sidebar-nav .nav-group-items .nav-link {
+		// even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here
+		padding-left: var(--cui-sidebar-nav-link-padding-x);
+		// smoother transition for icons when expanding the sidebar. The exact number isn't critical.
+		transition: padding-left 0.1s;
+		justify-content: center;
+
+		&.nav-group-toggle {
+			padding-left: 0;
+		}
+	}
+
+	//  The mobile-mode toggler
 	.sidebar-header.sidebar-header-toggler {
 		justify-content: left;
 		padding: 0.5rem 1rem;
@@ -478,9 +627,20 @@ form.row > * {
 		padding-left: 11px;
 	}
 
+	// the scrolling container in the sidebar:
 	.nav-main-scroller {
 		padding-bottom: 20px;
 	}
+
+	// when the sidebar is narrow, make more space for the contents and let centering create what margins there will be.
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
+	&.sidebar-narrow .nav-main-scroller {
+		scrollbar-width: thin;
+		padding-left: 0;
+		padding-right: 0;
+		align-self: center;
+	}
+
 	.sidebar-bottom-shadow-container {
 		position: relative;
 
@@ -530,6 +690,61 @@ form.row > * {
 	}
 }
 
+$panel-header-bg: #dee2e5; // Darker gray background
+$panel-header-border-color: #dee2e6; // Subtle border
+$panel-header-color: #343a40; // title text -  Darker (?) text for better contrast
+$panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
+.panel-close-button {
+	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
+	border: none;
+	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
+	display: flex;
+	align-items: center; // center the "X" in the button's background
+
+	.svg-inline--fa {
+		height: 1.25em;
+		width: 1.25em;
+		margin: 2px;
+	}
+}
+
+// apply a similar effect to CModal close buttons:
+.modal-header .btn-close {
+	// CUI's "X" svg does not change with the "color" prop, so we use filter: invert() to make it white.
+	// First, invert the background color so the CSS invert returns it to the desired value while inverting the foreground
+	background-color: color.invert(color.adjust($panel-header-button-color, $lightness: -50%));
+	filter: invert(1) drop-shadow(2px 2px 4px rgb(0 0 0 / 25%));
+}
+
+// format context-help-buttons. Everything but size can be globally applied.
+.context-help-button-btn {
+	border: 0;
+	border-radius: 100%;
+	--cui-btn-color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
+	background-color: white;
+}
+
+// context-help-buttons in panel headers.  (For h4, h5 headings see _common.scss)
+.header-buttons .context-help-button-btn {
+	box-shadow: 1px 1px 4px 1px rgb(0 0 0 / 25%);
+	margin-top: 1px; // centers it a bit better relative to the close button
+	width: 2em;
+	height: 2em;
+
+	.svg-inline--fa {
+		width: 2em;
+		height: 2em;
+	}
+}
+
+// is this used anywhere? (it's not explicitly in the code)
+.subhead-help-button {
+	border: 0;
+	background: none;
+	padding: 0;
+	cursor: pointer;
+}
+
 .secondary-panel {
 	padding-left: 15px;
 	padding-right: 5px;
@@ -577,9 +792,9 @@ form.row > * {
 	margin-right: 12px;
 
 	.secondary-panel-simple-header {
-		background: #e9ecef; /* Darker gray background */
-		border-bottom: 1px solid #dee2e6; /* Subtle border */
-		padding: 1.25rem 1.5rem;
+		background: #{$panel-header-bg};
+		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
+		padding: 1rem 1.5rem; // only 1rem y-padding now, to preserve the original header-height now that CloseButton & ContextHelpButton are in almost all panel headers.
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -589,7 +804,7 @@ form.row > * {
 			margin: 0;
 			font-size: 1.25rem;
 			font-weight: 600;
-			color: #343a40; /* Darker text for better contrast */
+			color: #{$panel-header-color};
 		}
 
 		.header-buttons {
@@ -623,47 +838,45 @@ form.row > * {
 	}
 }
 
-// scroll if side-by-side
-@include coreui.media-breakpoint-up('xl') {
-	.split-panels {
+// scroll tabs panel (note the split-panels class exists regardless on panel mode, so
+// the breakpoint restriction doesn't seem warranted (it actually "broke" single-panel mode scrolling for buttons page).
+//@include coreui.media-breakpoint-up('xl') {
+.split-panels {
+	height: 100%;
+
+	> .primary-panel {
+		height: 100%;
+		overflow-y: auto;
+	}
+
+	> .secondary-panel {
 		height: 100%;
 
-		> .primary-panel {
+		.secondary-panel-inner {
 			height: 100%;
-			overflow-y: auto;
+			display: grid;
+			grid-template-rows: auto 1fr;
+
+			.tab-content {
+				overflow-y: scroll;
+			}
 		}
 
-		> .secondary-panel {
-			height: 100%;
+		.secondary-panel-simple {
+			margin-right: 0px;
+		}
 
-			.secondary-panel-inner {
-				height: 100%;
-				display: grid;
-				grid-template-rows: auto 1fr;
+		.secondary-panel-simple-body {
+			overflow-y: scroll;
 
-				.tab-content {
-					overflow-y: scroll;
-
-					&.default-scroll {
-						overflow: inherit;
-					}
-				}
-			}
-
-			.secondary-panel-simple {
-				margin-right: 0px;
-			}
-
-			.secondary-panel-simple-body {
-				overflow-y: scroll;
-
-				&.no-scroll {
-					overflow-y: auto;
-				}
+			&.no-scroll {
+				// don't allocate space ahead of time (mainly for nonIdealState?)
+				overflow-y: auto;
 			}
 		}
 	}
 }
+//}
 
 // For bigger screens, like 1440p and 4K, allow scaling
 @media only screen and (min-width: 2000px) {
@@ -729,23 +942,6 @@ hr.slim {
 	margin-top: 2rem;
 }
 
-.add-browse-card .header {
-	padding: 6px 12px;
-	font-size: 1.6em;
-	font-weight: bold;
-	background-color: $primary;
-	color: white;
-	border-radius: 4px;
-}
-
-.add-browse-card .clickable-add-item {
-	cursor: pointer;
-}
-
-.add-browse-card .clickable-add-item:hover {
-	background-color: rgba(0, 0, 0, 0.1);
-}
-
 .shadow-inset {
 	box-shadow: inset 0 10px 20px -10px rgba(0, 0, 0, 0.3);
 }
@@ -754,25 +950,25 @@ hr.slim {
 	text-align: right;
 }
 
+// used only in RecorderSessionFinishModal
 .modal-full-height {
-	height: 100%;
-
 	.modal-dialog {
-		height: 100%;
+		min-height: 500px; // if the window gets too small fall back to scrolling the window
 	}
 
 	.modal-content {
 		height: 100%;
-
-		& > div,
-		& > form {
-			height: 100%;
-		}
 	}
 
 	.modal-body {
 		display: grid;
 		grid-template-rows: auto 1fr;
+		overflow: hidden; // ← clip at body level, don't scroll
+
+		.default-scroll {
+			overflow: auto;
+			min-height: 0;
+		}
 	}
 }
 

@@ -1,5 +1,5 @@
 import { CButton, CCol } from '@coreui/react'
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
@@ -57,7 +57,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 
 	const setSizeRef = useRef(null)
 	const holderSize = useResizeObserver({ ref: setSizeRef })
-	const useCompactButtons = (holderSize.width ?? 0) < 650 // Cutoff for what of the action buttons fit in their large mode
+	const useCompactButtons = (holderSize.width ?? 0) < 670 // Cutoff for what of the action buttons fit in their large mode
 
 	const getButton = (label: string, icon: IconProp, func: string) => {
 		let color = 'light'

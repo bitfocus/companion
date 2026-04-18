@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { CAlert, CButton, CCol, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'

@@ -1,6 +1,7 @@
 import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
+	type CompanionPresetSection,
 	type CompanionPresetDefinitions,
 	type CompanionRecordedAction,
 	type CompanionVariableValue,
@@ -26,8 +27,7 @@ import type {
 	SharedUdpSocketMessageLeave,
 	SharedUdpSocketMessageSend,
 } from '@companion-module/base/host-api'
-import { ConvertPresetDefinition } from './Presets.js'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinitions } from './Presets.js'
 import type { CompositeElementDefinition } from '../../Definitions.js'
 import { ConvertLayerPresetElements } from './PresetsLayered.js'
 
@@ -35,7 +35,7 @@ import { ConvertLayerPresetElements } from './PresetsLayered.js'
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
  */
 export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig, TSecrets> {
-	readonly #logger = createModuleLogger()
+	readonly #logger = createModuleLogger('HostContext')
 	readonly #ipcWrapper: ModuleChildIpcWrapper
 
 	readonly #connectionId: string
@@ -59,6 +59,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
+				sortKey: rawAction.sortName ? String(rawAction.sortName) : null,
 				description: rawAction.description,
 				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
 				optionsToMonitorForInvalidations: rawAction.optionsToMonitorForSubscribe || null,
@@ -89,6 +90,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
+				sortKey: rawFeedback.sortName ? String(rawFeedback.sortName) : null,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
 				optionsToMonitorForInvalidations: null,
@@ -116,24 +118,18 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		})
 	}
 	/** The presets provided by the connection have changed */
-	setPresetDefinitions(presets: CompanionPresetDefinitions): void {
-		const convertedPresets: PresetDefinition[] = []
-
-		for (const [id, rawPreset] of Object.entries(presets)) {
-			if (!rawPreset) continue
-
-			const convertedPreset = ConvertPresetDefinition(
-				this.#logger,
-				this.#connectionId,
-				this.#currentUpgradeIndex,
-				id,
-				rawPreset
-			)
-			if (convertedPreset) convertedPresets.push(convertedPreset)
-		}
+	setPresetDefinitions(rawSections: CompanionPresetSection[], rawPresets: CompanionPresetDefinitions): void {
+		const { presets, uiPresets } = ConvertPresetDefinitions(
+			this.#logger,
+			this.#connectionId,
+			this.#currentUpgradeIndex,
+			rawSections,
+			rawPresets
+		)
 
 		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', {
-			presets: convertedPresets,
+			presets: presets,
+			uiPresets: uiPresets,
 		})
 	}
 	/** The composite graphics elements provided by the connection have changed */

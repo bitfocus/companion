@@ -1,9 +1,10 @@
-import type { Registry } from '../Registry.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import LogController from '../Log/Controller.js'
+import type { InternalController } from '../Internal/Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
 
 /**
  * Class to handle execution of actions.
@@ -23,10 +24,12 @@ import LogController from '../Log/Controller.js'
 export class ActionRunner {
 	readonly #logger = LogController.createLogger('Control/ActionRunner')
 
-	readonly #registry: Pick<Registry, 'internalModule' | 'instance'>
+	readonly #instanceController: InstanceController
+	readonly #internalModule: InternalController
 
-	constructor(registry: Pick<Registry, 'internalModule' | 'instance'>) {
-		this.#registry = registry
+	constructor(instanceController: InstanceController, internalModule: InternalController) {
+		this.#instanceController = instanceController
+		this.#internalModule = internalModule
 	}
 
 	/**
@@ -36,9 +39,9 @@ export class ActionRunner {
 		this.#logger.silly('Running action', action)
 
 		if (action.connectionId === 'internal') {
-			await this.#registry.internalModule.executeAction(action, extras)
+			await this.#internalModule.executeAction(action, extras)
 		} else {
-			const instance = this.#registry.instance.processManager.getConnectionChild(action.connectionId)
+			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
 			if (instance) {
 				const entityModel = action.asEntityModel(false)
 				if (entityModel.type !== EntityModelType.Action)

@@ -8,7 +8,7 @@ import Transport from 'winston-transport'
 import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
 import supportsColor from 'supports-color'
 import { LogColors } from './Colors.js'
-import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration } from '@sentry/node'
+import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration, httpIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
 import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
 import type { AppInfo } from '../Registry.js'
@@ -304,6 +304,12 @@ class LogController {
 	 * Initialize Sentry and UI logging
 	 */
 	init(appInfo: AppInfo): void {
+		// Check if Sentry is explicitly disabled
+		if (process.env.SENTRY_DISABLE) {
+			this.#logger.info('Sentry error reporting is disabled (SENTRY_DISABLE env var set)')
+			return
+		}
+
 		// Allow the DSN to be provided as an env variable
 		let sentryDsn = process.env.SENTRY_DSN
 		if (!sentryDsn) {
@@ -317,7 +323,7 @@ class LogController {
 			}
 		}
 
-		if (sentryDsn && sentryDsn.substring(0, 8) == 'https://') {
+		if (sentryDsn && sentryDsn.startsWith('https://')) {
 			try {
 				init({
 					dsn: sentryDsn,
@@ -328,7 +334,14 @@ class LogController {
 						}
 						return event
 					},
-					integrations: [rewriteFramesIntegration()],
+					integrations: [
+						rewriteFramesIntegration(),
+						httpIntegration({
+							trackIncomingRequestsAsSessions: false,
+						}),
+					],
+					// Disable periodic client reports - we only care about actual errors
+					sendClientReports: false,
 				})
 
 				const scope = getCurrentScope()

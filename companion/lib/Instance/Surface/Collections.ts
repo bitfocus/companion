@@ -7,6 +7,7 @@ import type {
 	SurfaceInstanceCollection,
 	SurfaceInstanceCollectionData,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class SurfaceInstanceCollections extends CollectionsBaseController<SurfaceInstanceCollectionData> {
 	readonly #emitUpdated: () => void
@@ -41,7 +42,7 @@ export class SurfaceInstanceCollections extends CollectionsBaseController<Surfac
 	 * Ensure that all collectionIds in surface integrations are valid collections
 	 */
 	override removeUnknownCollectionReferences(): void {
-		this.#configStore.cleanUnknownCollectionIds(this.collectAllCollectionIds())
+		this.#configStore.cleanUnknownCollectionIds(ModuleInstanceType.Surface, this.collectAllCollectionIds())
 	}
 
 	override emitUpdateUser(_rows: SurfaceInstanceCollection[]): void {

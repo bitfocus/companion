@@ -102,9 +102,15 @@ export class ControlButtonPreset
 		return this.#lastRender
 	}
 
-	constructor(deps: ControlDependencies, connectionId: string, presetId: string, storage: PresetButtonModel) {
-		const controlId = CreatePresetControlId(connectionId, presetId)
-		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}`, true)
+	constructor(
+		deps: ControlDependencies,
+		connectionId: string,
+		presetId: string,
+		variablesHash: string,
+		storage: PresetButtonModel
+	) {
+		const controlId = CreatePresetControlId(connectionId, presetId, variablesHash)
+		super(deps, controlId, `Controls/Button/Preset/${connectionId}/${presetId}/${variablesHash}`, true)
 
 		this.#connectionId = connectionId
 		this.#presetId = presetId
@@ -116,12 +122,12 @@ export class ControlButtonPreset
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
-				variableValues: deps.variables.values,
+				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType, injectedVariableValues) =>
-				deps.variables.values
+				deps.variableValues
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
 						null, // This doesn't support local variables
@@ -224,7 +230,7 @@ export class ControlButtonPreset
 	 * @returns the processed style of the button
 	 */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
-		const parser = this.deps.variables.values.createVariablesAndExpressionParser(
+		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
 			null,
 			this.entities.getLocalVariableEntities(),
 			null

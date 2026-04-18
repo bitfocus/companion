@@ -21,6 +21,7 @@ import type {
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -35,7 +36,7 @@ import {
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base'
+import type { CompanionOptionValues, Complete } from '@companion-module/base'
 import { InternalSystem } from './System.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -58,6 +59,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
 import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
 
 interface FeedbackEntityState {
 	controlId: string
@@ -70,56 +72,63 @@ interface FeedbackEntityState {
 export class InternalController {
 	readonly #logger = LogController.createLogger('Internal/Controller')
 
-	readonly #controlsController: ControlsController
+	readonly #controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
 
 	readonly #feedbacks = new Map<string, FeedbackEntityState>()
 
-	readonly #buildingBlocksFragment: InternalBuildingBlocks
+	#buildingBlocksFragment: InternalBuildingBlocks | undefined
 	readonly #fragments: InternalModuleFragment[]
 
 	#initialized = false
 
 	constructor(
-		appInfo: AppInfo,
-		controlsController: ControlsController,
+		controlStore: IControlStore,
 		pageStore: IPageStore,
 		instanceController: InstanceController,
-		variablesController: VariablesController,
-		surfaceController: SurfaceController,
-		graphicsController: GraphicsController,
-		userConfigController: DataUserConfig,
-		controlEvents: EventEmitter<ControlCommonEvents>,
-		requestExit: (fromInternal: boolean, restart: boolean) => void
+		variablesController: VariablesController
 	) {
-		this.#controlsController = controlsController
+		this.#controlsStore = controlStore
 		this.#pageStore = pageStore
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
 
-		this.#buildingBlocksFragment = new InternalBuildingBlocks()
 		this.#fragments = [
-			this.#buildingBlocksFragment,
-			new InternalActionRecorder(controlsController.actionRecorder, pageStore),
-			new InternalInstance(instanceController),
-			new InternalTime(),
-			new InternalControls(graphicsController, controlsController, pageStore, controlEvents),
-			new InternalCustomVariables(variablesController),
-			new InternalPage(pageStore),
-			new InternalSurface(surfaceController, controlsController, pageStore),
-			new InternalSystem(appInfo, userConfigController, variablesController, requestExit),
-			new InternalTriggers(controlsController),
-			new InternalVariables(controlsController, pageStore),
+			// These are pushed during init
 		]
-
-		this.#init()
 	}
 
-	#init(): void {
+	init(
+		appInfo: AppInfo,
+		controls: ControlsController,
+		instanceController: InstanceController,
+		surfaceController: SurfaceController,
+		graphicsController: GraphicsController,
+		userConfigController: DataUserConfig,
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		actionRunner: ActionRunner,
+		requestExit: (fromInternal: boolean, restart: boolean) => void
+	): void {
 		if (this.#initialized) throw new Error(`InternalController already initialized`)
 		this.#initialized = true
+
+		this.#buildingBlocksFragment = new InternalBuildingBlocks(actionRunner)
+
+		this.#fragments.push(
+			this.#buildingBlocksFragment,
+			new InternalActionRecorder(instanceController.actionRecorder, this.#pageStore),
+			new InternalInstance(instanceController),
+			new InternalTime(),
+			new InternalControls(graphicsController, this.#controlsStore, this.#pageStore, controlEvents),
+			new InternalCustomVariables(this.#variablesController),
+			new InternalPage(this.#pageStore),
+			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
+			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
+			new InternalTriggers(controls),
+			new InternalVariables(this.#controlsStore, this.#pageStore)
+		)
 
 		// Listen for events from the fragments
 		for (const fragment of this.#fragments) {
@@ -142,7 +151,7 @@ export class InternalController {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		// Find all the feedbacks on controls
-		const allControls = this.#controlsController.getAllControls()
+		const allControls = this.#controlsStore.getAllControls()
 		for (const control of allControls.values()) {
 			if (!control.supportsEntities) continue
 
@@ -256,7 +265,7 @@ export class InternalController {
 		}
 		this.#feedbacks.set(feedback.id, feedbackState)
 
-		this.#controlsController.updateFeedbackValues('internal', [
+		this.#controlsStore.updateFeedbackValues('internal', [
 			{
 				entityId: feedback.id,
 				controlId: controlId,
@@ -303,15 +312,27 @@ export class InternalController {
 				return undefined
 			}
 
-			const parser = this.#controlsController.createVariablesAndExpressionParser(feedbackState.controlId, null)
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
 
 			// Parse the options if enabled
-			const { parsedOptions, referencedVariableIds } = entityDefinition.optionsSupportExpressions
-				? parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
-				: {
-						parsedOptions: convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options),
-						referencedVariableIds: new Set<string>(),
-					}
+			let parsedOptions: CompanionOptionValues
+			if (entityDefinition.optionsSupportExpressions) {
+				const parseRes = parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
+				if (!parseRes.ok) {
+					this.#logger.warn(
+						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId} in control ${feedbackState.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+					)
+					throw new Error(
+						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId}. One or more options were invalid`
+					)
+				} else {
+					parsedOptions = parseRes.parsedOptions
+					feedbackState.referencedVariables = parseRes.referencedVariableIds
+				}
+			} else {
+				parsedOptions = convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options)
+				feedbackState.referencedVariables = new Set<string>()
+			}
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
 				controlId: feedbackState.controlId,
@@ -322,7 +343,6 @@ export class InternalController {
 				id: feedbackState.entityModel.id,
 				definitionId: feedbackState.entityModel.definitionId,
 			}
-			feedbackState.referencedVariables = referencedVariableIds
 
 			for (const fragment of this.#fragments) {
 				if ('executeFeedback' in fragment && typeof fragment.executeFeedback === 'function') {
@@ -442,15 +462,22 @@ export class InternalController {
 			const overrideVariableValues: VariableValues = {
 				'$(this:surface_id)': extras.surfaceId,
 			}
-			const parser = this.#controlsController.createVariablesAndExpressionParser(
-				extras.controlId,
-				overrideVariableValues
-			)
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues)
 
-			// Parse the options if enabled
-			const parsedOptions = entityDefinition.optionsSupportExpressions
-				? parser.parseEntityOptions(entityDefinition, action.rawOptions).parsedOptions
-				: convertExpressionOptionsWithoutParsing(action.rawOptions)
+			let parsedOptions: CompanionOptionValues
+			if (entityDefinition.optionsSupportExpressions) {
+				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions)
+				if (!parseRes.ok) {
+					this.#logger.warn(
+						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+					)
+					throw new Error(`Failed to parse options for action ${action.definitionId}. One or more options were invalid`)
+				} else {
+					parsedOptions = parseRes.parsedOptions
+				}
+			} else {
+				parsedOptions = convertExpressionOptionsWithoutParsing(action.rawOptions)
+			}
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,
@@ -463,7 +490,7 @@ export class InternalController {
 
 			for (const fragment of this.#fragments) {
 				if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
-					let value = fragment.executeAction(executionAction, extras, this.#controlsController.actionRunner, parser)
+					let value = fragment.executeAction(executionAction, extras, parser)
 					// Only await if it is a promise, to avoid unnecessary async pauses
 					value = value instanceof Promise ? await value : value
 
@@ -486,7 +513,7 @@ export class InternalController {
 	 * Execute a logic feedback
 	 */
 	executeLogicFeedback(feedback: FeedbackEntityModel, isInverted: boolean, childValues: boolean[]): boolean {
-		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+		if (!this.#initialized || !this.#buildingBlocksFragment) throw new Error(`InternalController is not initialized`)
 
 		return this.#buildingBlocksFragment.executeLogicFeedback(feedback, isInverted, childValues)
 	}
@@ -525,7 +552,7 @@ export class InternalController {
 			}
 		}
 
-		this.#controlsController.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues('internal', newValues)
 	}
 	/**
 	 * Recheck all feedbacks of specified id
@@ -546,7 +573,7 @@ export class InternalController {
 			}
 		}
 
-		this.#controlsController.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues('internal', newValues)
 	}
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -558,6 +585,7 @@ export class InternalController {
 				for (const [id, action] of Object.entries(fragment.getActionDefinitions())) {
 					actions[id] = {
 						...action,
+						sortKey: action.sortKey ?? null,
 						hasLifecycleFunctions: false,
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
@@ -590,6 +618,7 @@ export class InternalController {
 				for (const [id, feedback] of Object.entries(fragment.getFeedbackDefinitions())) {
 					feedbacks[id] = {
 						...feedback,
+						sortKey: feedback.sortKey ?? null,
 						hasLifecycleFunctions: false,
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
@@ -646,7 +675,7 @@ export class InternalController {
 			})
 		}
 
-		this.#controlsController.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues('internal', newValues)
 	}
 
 	/**

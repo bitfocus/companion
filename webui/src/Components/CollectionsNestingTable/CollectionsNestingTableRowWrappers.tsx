@@ -1,8 +1,14 @@
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import React, { useRef } from 'react'
-import { useDrag, type ConnectDragSource, type ConnectDropTarget, type ConnectDragPreview } from 'react-dnd'
+import { useRef } from 'react'
+import {
+	useDrag,
+	type ConnectDragSource,
+	type ConnectDropTarget,
+	type ConnectDragPreview,
+	useDragLayer,
+} from 'react-dnd'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
@@ -11,6 +17,9 @@ import { useCollectionListCollectionDrop, type CollectionsNestingTableCollection
 import { CollectionsNestingTableGridTile } from './CollectionsNestingTableGridTile.js'
 import { observer } from 'mobx-react-lite'
 
+/* 
+	The INDIVIDUAL items in the table
+ */
 export const CollectionsNestingTableItemRow = observer(function CollectionsNestingTableItemRow<
 	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
@@ -34,11 +43,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 		index,
 		gridLayout ?? false
 	)
-	const [{ isDragging }, drag, preview] = useDrag<
-		CollectionsNestingTableItemDragItem,
-		unknown,
-		{ isDragging: boolean }
-	>({
+	const [_c, drag, preview] = useDrag<CollectionsNestingTableItemDragItem, unknown, { isDragging: boolean }>({
 		type: dragId,
 		item: {
 			itemId: item.id,
@@ -46,10 +51,13 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 			index,
 			dragState: null,
 		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
-		}),
 	})
+
+	// Check if the current item is being dragged
+	const { draggingItem } = useDragLayer((monitor) => ({
+		draggingItem: monitor.getItem<CollectionsNestingTableItemDragItem>(),
+	}))
+	const isDragging = draggingItem?.itemId === item.id
 
 	if (gridLayout) {
 		return (
@@ -81,6 +89,9 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 	)
 })
 
+/* 
+	The COLLECTIONS items in the table
+ */
 export const CollectionsNestingTableCollectionRowWrapper = observer(
 	function CollectionsNestingTableCollectionRowWrapper<TCollection extends CollectionsNestingTableCollection>({
 		collection,
@@ -94,10 +105,8 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 		index: number
 		nestingLevel: number
 	}>) {
-		const { dragId, collectionsApi, gridLayout } = useCollectionsNestingTableContext<
-			TCollection,
-			CollectionsNestingTableItem
-		>()
+		const collData = useCollectionsNestingTableContext<TCollection, CollectionsNestingTableItem>()
+		const { dragId, collectionsApi, gridLayout } = collData
 
 		// Allow dropping items onto the collection, to add them to the collection
 		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1, gridLayout ?? false)
@@ -109,11 +118,7 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 			collection.id
 		)
 
-		const [{ isDragging }, drag, preview] = useDrag<
-			CollectionsNestingTableCollectionDragItem,
-			unknown,
-			{ isDragging: boolean }
-		>({
+		const [_c, drag, preview] = useDrag<CollectionsNestingTableCollectionDragItem, unknown, { isDragging: boolean }>({
 			type: `${dragId}-collection`,
 			item: {
 				collectionId: collection.id,
@@ -121,10 +126,14 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 				parentId: parentId,
 				dragState: null,
 			},
-			collect: (monitor) => ({
-				isDragging: monitor.isDragging(),
-			}),
 		})
+
+		// Check if the current item is being dragged
+		const { draggingItem } = useDragLayer((monitor) => ({
+			draggingItem: monitor.getItem<CollectionsNestingTableCollectionDragItem>(),
+		}))
+		// dragging the collection itself and not an item inside the collection
+		const isDragging = draggingItem?.collectionId === collection.id && !('itemId' in draggingItem)
 
 		return (
 			<CollectionsNestingTableRowBase

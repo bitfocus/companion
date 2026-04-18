@@ -1,5 +1,5 @@
 import { CAlert, CButton } from '@coreui/react'
-import React from 'react'
+
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 

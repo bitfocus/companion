@@ -23,6 +23,7 @@ import type {
 	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from './Types.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { JsonValue } from 'type-fest'
@@ -287,18 +288,21 @@ export class ControlEntityInstance {
 	 */
 	subscribe(recursive: boolean, onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		if (
-			!this.#data.disabled &&
 			(!onlyConnectionId || this.#data.connectionId === onlyConnectionId) &&
 			(!onlyType || this.#data.type === onlyType)
 		) {
 			if (this.#data.connectionId === 'internal') {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
+				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
+				// The EntityManager will not subscribe disabled entities to the module.
 				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 				})
 			}
-			this.#isInvertedManager.trackEntity(this)
+			if (!this.#data.disabled) {
+				this.#isInvertedManager.trackEntity(this)
+			}
 		}
 
 		if (recursive) {
@@ -439,6 +443,7 @@ export class ControlEntityInstance {
 	 * Set an option for this entity
 	 */
 	setOption(key: string, value: ExpressionOrValue<JsonValue | undefined>): void {
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 		this.#data.options[key] = value
 
 		// Remove from cached feedback values
@@ -630,7 +635,7 @@ export class ControlEntityInstance {
 	 * Prune all entities referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
-	verifyChildConnectionIds(knownConnectionIds: Set<string>): boolean {
+	verifyChildConnectionIds(knownConnectionIds: ReadonlySet<string>): boolean {
 		let changed = false
 		for (const childGroup of this.#children.values()) {
 			if (childGroup.verifyConnectionIds(knownConnectionIds)) {

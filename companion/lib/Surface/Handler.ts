@@ -21,7 +21,7 @@ import type {
 	SurfaceConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from './Controller.js'
@@ -30,7 +30,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { PanelDefaults } from './Config.js'
+import { createDefaultSurfacePanelConfig } from './Config.js'
 import debounceFn from 'debounce-fn'
 
 /**
@@ -101,7 +101,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * The core controls controller
 	 */
-	readonly #controls: ControlsController
+	readonly #controls: IControlStore
 	/**
 	 * The core graphics controller
 	 */
@@ -253,6 +253,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 							x,
 							y,
 							defaultRender: image,
+							location,
 						})
 					}
 				}
@@ -339,6 +340,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					x: location.column - xOffset,
 					y: location.row - yOffset,
 					defaultRender: render,
+					location,
 				},
 			]
 			const transformedEntries = this.#transformButtonRenders(rawEntries)
@@ -395,7 +397,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!this.panel) return
 
 		try {
-			this.#surfaces.removeDevice(this.panel.info.surfaceId)
+			this.#surfaces.removeDevice(this.panel.info.surfaceId, { physicallyGone: true })
 		} catch (e) {
 			this.#logger.error(`Remove failed: ${e}`)
 		}
@@ -560,7 +562,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			startup_page_id: this.#pageStore.getFirstPageId(),
 		}
 		this.#surfaceConfig.groupId = null
-		this.setPanelConfig(structuredClone(PanelDefaults))
+		this.setPanelConfig(createDefaultSurfacePanelConfig(this.panel))
 	}
 
 	/**

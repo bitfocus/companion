@@ -9,10 +9,10 @@
  * this program.
  */
 import LogController from '../../Log/Controller.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
-import { parseColor } from '@companion-app/shared/Graphics/Util.js'
+import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
 	BrightnessConfigField,
@@ -41,9 +41,13 @@ import type {
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 
 export interface SatelliteDeviceInfo {
+	connectionId: string
 	deviceId: string
+	serial: string
+	serialIsUnique: boolean
 	productName: string
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
@@ -53,6 +57,10 @@ export interface SatelliteDeviceInfo {
 
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
+
+	configFields: CompanionSurfaceConfigField[] | undefined
+
+	canChangePage: string | undefined
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -83,7 +91,21 @@ function generateConfigFields(
 	}
 	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
 
+	if (deviceInfo.canChangePage) {
+		fields.push({
+			id: 'canChangePage',
+			type: 'checkbox',
+			label: deviceInfo.canChangePage,
+			default: false,
+		})
+	}
+
+	if (deviceInfo.configFields && deviceInfo.configFields.length > 0) {
+		fields.push(...deviceInfo.configFields)
+	}
+
 	for (const variable of deviceInfo.transferVariables) {
+		if (BANNED_PROPS.has(variable.id)) continue
 		if (variable.type === 'input') {
 			const id = `satellite_input_${variable.id}`
 			fields.push({
@@ -102,10 +124,10 @@ function generateConfigFields(
 
 			fields.push({
 				id,
-				type: 'textinput',
+				type: 'expression',
 				label: variable.name,
 				tooltip: variable.description,
-				isExpression: true,
+				allowInvalidValues: true,
 			})
 
 			outputVariables[variable.id] = {
@@ -170,6 +192,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #writeQueue: ImageWriteQueue<string, [ResolvedControlDefinition, DrawButtonItem]>
 
 	#config: Record<string, any>
+	readonly #hasDeviceConfigFields: boolean
 
 	readonly surfaceManifestFromClient: boolean
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
@@ -187,7 +210,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	// Cache for generated lock images by dimension
 	#lockImage: ImageResult | null = null
 
-	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
+	constructor(deviceInfo: SatelliteDeviceInfo, surfaceId: string, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
 
 		this.#executeExpression = executeExpression
@@ -203,6 +226,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 
+		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
+
 		const anyControlHasBitmap = !!this.#controlDefinitions
 			.values()
 			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
@@ -210,12 +235,14 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.info = {
 			description: deviceInfo.productName,
 			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
-			surfaceId: deviceInfo.deviceId,
+			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
+			canChangePage: !!deviceInfo.canChangePage,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
+		this.#logger.debug(`Device info: ${JSON.stringify(deviceInfo)}`)
 
 		this.#config = {
 			rotation: 0,
@@ -261,6 +288,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 						x: definition.column,
 						y: definition.row,
 						defaultRender: this.#getLockImage(),
+						location: null,
 					})
 				}
 			}
@@ -296,57 +324,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			params['CONTROLID'] = controlDefinition.id
 		}
 
-		const style = drawItem.defaultRender.style
-
-		if (controlDefinition.style.bitmap) {
-			const buffer = await drawItem.defaultRender.drawNative(
-				controlDefinition.style.bitmap.w,
-				controlDefinition.style.bitmap.h,
-				this.#config.rotation,
-				'rgb'
-			)
-
-			if (buffer === undefined || buffer.length == 0) {
-				this.#logger.warn('buffer has invalid size')
-			} else {
-				params['BITMAP'] = uint8ArrayToBuffer(buffer).toString('base64')
-			}
-		}
-
-		if (!this.socket) return
-
-		if (controlDefinition.style.colors) {
-			let bgcolor = style?.color ? parseColor(style.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
-			let fgcolor = style?.text ? parseColor(style.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
-
-			if (controlDefinition.style.colors !== 'rgb') {
-				bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
-				fgcolor = '#' + parseColorToNumber(fgcolor).toString(16).padStart(6, '0')
-			}
-
-			params['COLOR'] = bgcolor
-			params['TEXTCOLOR'] = fgcolor
-		}
-
-		if (controlDefinition.style.text) {
-			const text = style?.text?.text || ''
-			params['TEXT'] = Buffer.from(text).toString('base64')
-		}
-		if (controlDefinition.style.textStyle) {
-			params['FONT_SIZE'] = style?.text?.size ?? 'auto'
-		}
-
-		let type = 'BUTTON'
-		if (style?.type === 'pageup') {
-			type = 'PAGEUP'
-		} else if (style?.type === 'pagedown') {
-			type = 'PAGEDOWN'
-		} else if (style?.type === 'pagenum') {
-			type = 'PAGENUM'
-		}
-
-		params['PRESSED'] = typeof style !== 'string' && !!style?.state?.pushed
-		params['TYPE'] = type
+		const styleArgs = await buildSatelliteStyleArgs(drawItem, controlDefinition.style, this.#config.rotation)
+		Object.assign(params, styleArgs)
 
 		if (!this.socket) return
 
@@ -403,6 +382,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 	doPincodeKey(pincodeKey: number): void {
 		this.emit('pincodeKey', pincodeKey)
+	}
+
+	doChangePage(forward: boolean): void {
+		if (!this.info.canChangePage || !this.#config.canChangePage) return
+		this.emit('changePage', forward)
 	}
 
 	/**
@@ -516,6 +500,21 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		this.#config = config
+
+		if (this.#hasDeviceConfigFields) {
+			this.#sendDeviceConfig()
+		}
+	}
+
+	#sendDeviceConfig(): void {
+		const configValues = createSurfaceConfigPayload(this.info.configFields, this.#config)
+		const encoded = Buffer.from(JSON.stringify(configValues)).toString('base64')
+		this.socket.sendMessage('DEVICE-CONFIG', null, this.deviceId, { CONFIG: encoded })
+	}
+
+	updateFirmwareUpdateInfo(firmwareUpdateUrl: string | null): void {
+		this.info.hasFirmwareUpdates = firmwareUpdateUrl ? { updaterDownloadUrl: firmwareUpdateUrl } : undefined
+		this.emit('firmwareUpdateInfo')
 	}
 
 	/**

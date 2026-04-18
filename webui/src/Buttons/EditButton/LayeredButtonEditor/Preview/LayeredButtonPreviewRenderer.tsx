@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { GraphicsImage } from './Image.js'

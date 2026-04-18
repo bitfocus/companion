@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use strict'
 export const validate = validate20
 export default validate20
@@ -55,6 +54,7 @@ const schema31 = {
 			type: 'object',
 			patternProperties: {
 				'^[a-zA-Z0-9\\-\\/]+$': {
+					title: 'SatelliteControlDefinition',
 					description:
 						'Single control definition. The id must be unique and may be user facing in logs. Typically the id would be in the form of 1/0, matching the row/column of the control.',
 					type: 'object',

@@ -1,0 +1,50 @@
+{
+  "fill" : {
+    "solid" : "extended-gray:0.92626,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "companion-content.png",
+          "name" : "companion-content",
+          "position" : {
+            "scale" : 0.4,
+            "translation-in-points" : [
+              35,
+              0
+            ]
+          }
+        },
+        {
+          "glass" : false,
+          "hidden" : false,
+          "image-name" : "satellite-bg.png",
+          "name" : "satellite-bg",
+          "position" : {
+            "scale" : 0.44,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

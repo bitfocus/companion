@@ -86,7 +86,7 @@ export class ServiceSurfaceDiscovery {
 		}
 	}
 	instanceConnectionsFound(instanceId: string, connectionInfos: DiscoveredRemoteSurfaceInfo[]): void {
-		const connections = this.#knownSurfaces.get(instanceId) ?? new Map()
+		const connections = this.#knownSurfaces.get(instanceId) ?? new Map<string, DiscoveredRemoteSurfaceInfo>()
 		this.#knownSurfaces.set(instanceId, connections)
 
 		for (const info of connectionInfos) {
@@ -315,6 +315,7 @@ function convertPluginConnectionToUi(
 		instanceId: instanceId,
 		name: info.displayName,
 		description: info.description,
+		address: info.addresses,
 		config: info.config,
 	}
 }

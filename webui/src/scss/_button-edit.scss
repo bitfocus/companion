@@ -87,12 +87,6 @@ table.variables-table,
 		&:last-child {
 			margin-bottom: 0;
 		}
-
-		// &.drag-preview {
-		// 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		// 	border-radius: 4px;
-		// 	opacity: 0.95;
-		// }
 	}
 
 	.entity-row-reorder {
@@ -112,7 +106,10 @@ table.variables-table,
 	}
 
 	.entitylist-dragging {
-		opacity: 0.5;
+		// affects both the layer in the table and the layer that floats with the cursor
+		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
+		// first arg keeps the top sharp, second make bg translucent (dragging actions in v4.3 work differently than other lists)
+		@include dragging-style(0, 0.5);
 	}
 
 	.entitylist-dropzone {
@@ -193,6 +190,8 @@ table.variables-table,
 		}
 
 		.cell-children {
+			margin-top: 0.5rem;
+
 			h4 {
 				margin-top: 0 !important;
 			}
@@ -208,6 +207,12 @@ table.variables-table,
 	}
 }
 
+// apparently this excludes .entity-list-drag-layer
+.entity-list > .entitylist-dragging {
+	// blurs the bottom only (blurs the top one too if dragging in an action group)
+	filter: blur(1px);
+}
+
 .entity-list {
 	background-color: #f0f0f0;
 	padding: 0 0 10px;
@@ -219,37 +224,39 @@ table.variables-table,
 	grid-template-columns: 1fr auto;
 }
 
-.add-browse-card {
-	.card-header {
-		cursor: pointer;
-		font-weight: bold;
-		// background-color: #ccc;
+.presets-section-content {
+	padding: 4px 6px;
+	border-bottom: 1px solid #ddd;
 
-		&:hover {
-			text-decoration: underline;
-		}
+	h5 {
+		margin-bottom: 0.25rem;
 	}
 
-	.card-body {
-		padding: 0;
-	}
-
-	.table {
+	p {
 		margin-bottom: 0;
-
-		td {
-			vertical-align: middle;
-		}
-
-		.item-label {
-			font-weight: bold;
-		}
+		font-size: 0.96em;
 	}
+}
 
-	p.no-entries {
-		padding: 0.75rem;
-		margin: 0;
-	}
+.presets-section-row {
+	font-size: 1.1em;
+}
+
+.presets-section-description {
+	display: block;
+	font-size: 0.8em;
+	font-weight: 400;
+	opacity: 0.7;
+	margin-top: 2px;
+	padding-left: 14px; // align with section name text (past caret)
+}
+
+.presets-icon-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 3px;
+	padding: 5px;
+	background-color: #222;
 }
 
 .button-layer-style-editor {

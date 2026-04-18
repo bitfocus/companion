@@ -1,0 +1,150 @@
+@use 'variables' as *;
+@use 'sass:color';
+
+.collapsible-tree {
+	border: 1px solid #ddd;
+	border-collapse: collapse;
+	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
+	font-size: 1.05em;
+
+	--collapsible-tree-nesting-level: 0;
+
+	.collapsible-tree-ungrouped-header {
+		background-color: #f0f0f0;
+		padding: 6px 10px;
+		padding-left: 20px;
+
+		border-bottom: 1px solid #ddd;
+
+		font-weight: 700;
+	}
+
+	.collapsible-tree-group-row {
+		padding: 5px 10px;
+		border-bottom: 1px solid #ddd;
+
+		background-color: #f0f0f0;
+		font-weight: 600;
+		cursor: pointer;
+
+		.collapsible-tree-caret {
+			width: 9px;
+			margin-right: 5px;
+		}
+
+		&:hover {
+			background-color: color.adjust(#f0f0f0, $lightness: -3%);
+		}
+
+		// Connection nodes get a slightly different style to stand out from collections
+		.collapsible-tree-connection-header {
+			color: #303030;
+			display: inline-flex;
+			justify-content: space-between;
+			align-items: center;
+			width: calc(100% - 15px); // Account for caret width
+		}
+
+		// Collection headers also show counts
+		.collapsible-tree-collection-header {
+			display: inline-flex;
+			justify-content: space-between;
+			align-items: center;
+			width: calc(100% - 15px); // Account for caret width
+		}
+
+		.collapsible-tree-connection-count {
+			opacity: 0.6;
+			font-weight: normal;
+			margin-left: 1em;
+		}
+	}
+
+	.collapsible-tree-connection-module {
+		display: inline;
+		font-weight: normal;
+		opacity: 0.6;
+		margin-left: 0.5em;
+		font-size: 0.85em;
+	}
+
+	.collapsible-tree-leaf-row {
+		padding: 5px 10px;
+		border-bottom: 1px solid #ddd;
+		cursor: pointer;
+
+		&:hover {
+			background-color: rgba(200, 200, 200, 0.15);
+
+			.collapsible-tree-leaf-add-icon {
+				opacity: 0.6;
+			}
+
+			.collapsible-tree-leaf-arrow-icon {
+				opacity: 0.8;
+			}
+		}
+
+		.collapsible-tree-leaf-content {
+			display: flex;
+			align-items: center;
+		}
+
+		.collapsible-tree-leaf-text {
+			flex: 1;
+			min-width: 0;
+		}
+
+		.collapsible-tree-connection-label {
+			font-weight: 600;
+		}
+
+		.collapsible-tree-leaf-description {
+			display: block;
+			font-size: 0.9em;
+			opacity: 0.7;
+			margin-top: 0;
+		}
+
+		.collapsible-tree-leaf-add-icon {
+			opacity: 0;
+			margin-left: 10px;
+			flex-shrink: 0;
+			transition: opacity 0.15s ease;
+		}
+
+		.collapsible-tree-leaf-arrow-icon {
+			opacity: 0.3;
+			margin-left: 10px;
+			flex-shrink: 0;
+			transition: opacity 0.15s ease;
+		}
+	}
+
+	.collapsible-tree-nesting {
+		padding-left: calc(var(--collapsible-tree-nesting-level) * 10px) !important;
+		position: relative;
+
+		&:before {
+			content: '';
+			position: absolute;
+			left: 0px;
+			top: -5px;
+			height: calc(100% + 10px);
+			width: 1px;
+			background-color: #ccc;
+			z-index: 1;
+		}
+
+		&:after {
+			content: '';
+			position: absolute;
+			left: 0px;
+			top: 50%;
+			width: calc(var(--collapsible-tree-nesting-level) * 10px - 5px);
+			height: 1px;
+			background-color: #ccc;
+			z-index: 1;
+		}
+	}
+}

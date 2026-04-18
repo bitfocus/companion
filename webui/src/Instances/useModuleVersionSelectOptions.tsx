@@ -1,6 +1,6 @@
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
-import type { DropdownChoiceInt } from '~/DropDownInputFancy.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'

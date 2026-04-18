@@ -1,5 +1,96 @@
 # Bitfocus Companion
 
+## Companion v4.3.0 - Release Notes
+
+<!-- DRAFT -->
+
+### IMPORTANT CHANGES
+
+- Support for different surfaces is now using a module system, similar to connections. This means that as new Stream Deck models are released, you can enable support by updating just the module and not the whole of Companion.
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Surfaces are now implemented through a module system, similar to connections.
+- Option to enable/disable individual surfaces
+  - This allows Companion to run alongside other software with each using just some of the connected stream decks
+- Support expressions in any action/feedback field
+  - This requires modules to opt into supporting it for now
+- Get custom-variable via tcp #3999
+- preview local variable value next to editor
+- Ability to execute trigger at random intervals
+- Improving expressions
+  - add URI encode/decode functions #3771
+  - Add `blink()` function to expressions. This can be used in feedbacks to provide customisable blinking behaviour
+  - Extended time formatting options
+  - Date expression functions (#4021)
+- Rework various panels/lists to group connections by collections instead of as a flat list
+- Improve performance of some button drawing #3902 #3891
+- Various styling refinement
+  - Rework button grid presentation
+  - Add help icon to header bar
+  - improve drag and drop previews
+  - Update app icon on macos
+  - add collapse/expand all buttons for collection items (#4063)
+  - add or update help and close icons in panel headers (#4053)
+- Add support for `SENTRY_DISABLE` environment variable, to disable sentry reporting
+- Option to suppress header notifications (#4004)
+- Add docker COMPANION_ADMIN_PORT environment variable for admin port configuration (#4042)
+- Expand satellite api to cover full module and elgato plugin functionality
+- Add HTTP API endpoints for connection management (#4048)
+
+### 🐞 BUG FIXES
+
+- Improve presentation of missing values in dropdowns
+- navigation to anchor link in /user-guide (#4036)
+- Local variable updates do not immediately apply #3953
+- show modules which only have prerelease version in the add list
+- upgrade scripts isInverted failing
+- certain triggers not being disabled with the collection (#3981)
+- respect multiline for connection config fields #3986
+- connection collections being lost during full import
+- udp service not listening when ipv6 enabled
+- preserve type of expressions when writing to custom/local variables #3954
+- child entities not being upgraded #3924
+- improve confusing trigger terminology "depress" (#3922)
+- ensure module manifest doesn't load root file from outside of package
+- Launch main companion process with the `--use-system-ca` flag (#4060)
+
+## Companion v4.2.6 - Release Notes
+
+### 🐞 BUG FIXES
+
+- stream deck + xl not working on windows
+- unable to export some pages
+- run upgrade scripts for disabled actions/feedbacks
+- prevent prototype pollution in expressions
+
+## Companion v4.2.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- support stream deck + xl
+- improve import resiliency/performance for large configs
+- ux issues in the expression editor
+- better respect collections when ordering connections
+- incorrect urls into module docs
+- suppress some unnecessary errors
+- allow connection configs to use multiline input fields
+
+## Companion v4.2.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- support corsair galleon k100 sd
+- add SENTRY_DISABLE env var to disable sentry integration
+- fix: unable to clear local variable name
+- fix: reduce monaco suggest-details line-spacing (#3948)
+- fix: improve presentation of missing values in dropdowns
+- fix: surface table stretching
+- fix: 'internal: User Value' feedback field order refinement
+- fix: added TMPDIR to preserved env vars list (#3929)
+- fix: attempt to suppress mirabox stream dock error flood
+- fix: disable sentry http session tracking
+
 ## Companion v4.2.3 - Release Notes
 
 ### 🐞 BUG FIXES

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useCallback, useRef } from 'react'
+import { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup, CTooltip } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -7,7 +7,6 @@ import {
 	faExternalLink,
 	faPlug,
 	faQuestionCircle,
-	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -23,18 +22,24 @@ import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks
 import { Link } from '@tanstack/react-router'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
 
 	title: string
+	helpAction: ContextHelpButtonProps['action']
 	description: (storeCount: number) => React.ReactNode
+	isSubpanel?: boolean
 }
 
 export const AddInstancePanel = observer(function AddInstancePanel({
 	service,
 	title,
+	helpAction,
 	description,
+	isSubpanel,
 }: AddInstancePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
@@ -106,9 +111,8 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
-					<div className="float_right d-xl-none" onClick={service.closeAddInstance} title="Close">
-						<FontAwesomeIcon icon={faTimes} size="lg" />
-					</div>
+					<ContextHelpButton action={helpAction} />
+					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
 				</div>
 			</div>
 
@@ -250,15 +254,15 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 			)}
 			&nbsp;
 			{moduleInfo.installedInfo?.stableVersion?.isLegacy && (
-				<>
+				<InlineHelp help="This module has not been updated for Companion 3.0, and may not work fully.">
 					<FontAwesomeIcon
 						icon={faExclamationTriangle}
 						color="#ff6600"
 						size={'xl'}
-						title="This module has not been updated for Companion 3.0, and may not work fully"
+						aria-label="This module has not been updated for Companion 3.0, and may not work fully."
 					/>
 					&nbsp;
-				</>
+				</InlineHelp>
 			)}
 			<div className="grow" style={{ alignContent: 'center' }}>
 				{moduleInfo.name}

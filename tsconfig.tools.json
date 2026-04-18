@@ -1,0 +1,22 @@
+{
+	"exclude": ["node_modules/**", "webui/**", "module-local-dev/**"],
+	"include": ["tools/**/*.mts", "tools/**/*.ts", "tools/**/*.cts"],
+	"compilerOptions": {
+		"composite": true,
+		"paths": {},
+		"module": "node20",
+		"moduleResolution": "node16",
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"importHelpers": true,
+		"pretty": true,
+		"types": ["node"],
+		"esModuleInterop": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"allowImportingTsExtensions": true,
+		"strict": true
+	},
+	"references": [{ "path": "./companion" }, { "path": "./shared-lib" }]
+}

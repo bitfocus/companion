@@ -1,7 +1,7 @@
-import { CRow, CCol, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
-import { faSync, faAdd } from '@fortawesome/free-solid-svg-icons'
+import { CCol, CRow, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
+import { faSync, faAdd, faCog } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
@@ -10,13 +10,18 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { trpc } from '~/Resources/TRPC'
 import { useMutation } from '@tanstack/react-query'
+import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
+	const twoPanelMode = useTwoPanelMode()
+
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
 
 	const routeMatch = matchRoute({ to: '/surfaces/configured/$itemId' })
-	const selectedItemId = routeMatch ? routeMatch.itemId : null
+	const selectedSurfaceId = routeMatch ? routeMatch.itemId : null
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
 	const addEmulatorModalRef = useRef<AddEmulatorModalRef>(null)
@@ -45,9 +50,22 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 		addGroupModalRef.current?.show()
 	}, [])
 
-	const selectItem = useCallback(
+	// Handle action when the user clicks the "Show Settings" button
+	const handleShowSettings = useCallback(() => {
+		void navigate({ to: '/surfaces/configured/integrations' })
+	}, [navigate])
+
+	// Handle the various cases in which we want to show the secondary panel in one-panel mode
+	// 1. if one of the integration subpanels are currently visible or user clicked "Show Settings"
+	const showSettings = useShowSecondaryPanel({
+		baseRoute: '/surfaces/configured',
+		secondaryRoute: '/surfaces/configured/integrations',
+	})
+
+	// 2. if editing known-surfaces (aka configured surfaces)
+	const selectKnownSurface = useCallback(
 		(itemId: string | null) => {
-			if (itemId === null) {
+			if (itemId === null || selectedSurfaceId === itemId) {
 				void navigate({ to: '/surfaces/configured' })
 			} else {
 				void navigate({
@@ -58,21 +76,39 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				})
 			}
 		},
-		[navigate]
+		[navigate, selectedSurfaceId]
 	)
 
-	const showPrimaryPanel = !selectedItemId
-	const showSecondaryPanel = !!selectedItemId
+	// the following constants determine if the panel will actually be shown (previously these only established if it was "allowed" to be shown)
+	const showPrimaryPanel = twoPanelMode || (!selectedSurfaceId && !showSettings)
+	const showSecondaryPanel = twoPanelMode || !!selectedSurfaceId || showSettings
 
 	return (
 		<CRow className="surfaces-page split-panels">
-			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-flex d-none'} flex-column-layout`}>
+			<CCol
+				xs={twoPanelMode ? 6 : 12}
+				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
+			>
 				<div className="fixed-header">
-					<h4>Configured Surfaces</h4>
+					<h4 className="btn-inline">
+						Surfaces
+						<ContextHelpButton action="/user-guide/config/surfaces">
+							Use the table, below to configure currently-known surfaces and groups.
+							<br />
+							To configure a surface integration or global setting,
+							{twoPanelMode
+								? ' use the panel to the right.'
+								: '	click the "Show Settings" button on the right, just above the table.'}
+							<br />
+							Click this icon for more help.
+						</ContextHelpButton>
+					</h4>
 
 					<p style={{ marginBottom: '0.5rem' }}>
-						Currently connected surfaces. If your streamdeck is missing from this list, you might need to close the
-						Elgato Streamdeck application and click the Rescan button below.
+						Click on any item below to edit the configuration of a currently-known surface or group.
+						<br />
+						If your streamdeck is missing from this list, you might need to close the Elgato Streamdeck application and
+						click the Rescan button below.
 					</p>
 
 					<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
@@ -94,14 +130,20 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />
+
+					{!twoPanelMode && (
+						<CButton color="info" className="float-end" size="sm" onClick={handleShowSettings}>
+							<FontAwesomeIcon icon={faCog} /> Show Settings
+						</CButton>
+					)}
 				</div>
 
-				<KnownSurfacesTable selectedItemId={selectedItemId} selectItem={selectItem} />
+				<KnownSurfacesTable selectedItemId={selectedSurfaceId} selectItem={selectKnownSurface} />
 
 				<div className="fixed-header">
 					<CCallout color="info">
 						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
-						<a target="_blank" rel="noreferrer" href="https://bfoc.us/70n2m47akw">
+						<a target="_blank" rel="noreferrer" href="https://l.companion.free/q/YH8dZkH1Q">
 							Companion Satellite
 						</a>
 						?
@@ -109,7 +151,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				</div>
 			</CCol>
 
-			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<CCol xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />

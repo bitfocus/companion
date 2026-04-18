@@ -90,10 +90,14 @@ export function filterProducts(allProducts: FuzzyProduct[], filter: string, incl
 	const keys: Array<keyof FuzzyProduct> = ['product', 'name', 'keywords']
 	if (includeType) keys.push('moduleType')
 
-	return fuzzySearch(filter, allProducts, {
+	const result = fuzzySearch(filter, allProducts, {
 		keys,
-		threshold: -10_000,
-	}).map((x) => x.obj)
+		// threshold is 0 - 1, where 1 is "perfect". But note that even exact word matches may not get a score of 1!
+		// ("Elgato", for example scores 0.8 - 0.9. -- you may need the whole field to match for 1.0...)
+		// Version 2.0 of fuzzysort used a range of -Infinity to 0. Apparently the old value of 10,000 is equivalent to 0.5
+		threshold: 0.5, // 0.5 looks like a good "strict" threshold; 0.3 tolerates some typos.
+	})
+	return result.map((x) => x.obj)
 }
 
 export interface FuzzyProduct {

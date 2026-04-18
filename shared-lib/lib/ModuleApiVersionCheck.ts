@@ -2,8 +2,8 @@ import semver from 'semver'
 import { ModuleInstanceType } from './Model/Instance.js'
 import { assertNever } from './Util.js'
 
-export const MODULE_BASE_VERSIONS = ['1.14.0', '2.0.0-0-nightly-feat-2-0-20260131-124809-4f9655d']
-export const SURFACE_BASE_VERSION = '1.1.0'
+export const MODULE_BASE_VERSIONS = ['1.14.0', '2.0.0']
+export const SURFACE_BASE_VERSION = '1.2.0'
 
 const moduleBaseRules = MODULE_BASE_VERSIONS.map((v) => {
 	const parsedVersion = semver.parse(v)
@@ -20,6 +20,7 @@ const validSurfaceApiRange = new semver.Range(
 )
 
 export function isModuleApiVersionCompatible(version: string): boolean {
+	// TODO - rework to use // { SupportedApiVersions } from '@companion-module/host' for 2.0+
 	return MODULE_BASE_VERSIONS.includes(version) || validModuleApiRange.test(version)
 }
 

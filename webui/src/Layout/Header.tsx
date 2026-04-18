@@ -1,4 +1,4 @@
-import React, { type ElementType, type ReactElement, useCallback, useContext, useMemo } from 'react'
+import { type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
 	CHeader,
 	CHeaderBrand,
@@ -9,9 +9,6 @@ import {
 	CContainer,
 	CDropdownToggle,
 	CDropdown,
-	CDropdownItem,
-	CDropdownMenu,
-	CDropdownDivider,
 } from '@coreui/react'
 import {
 	faBars,
@@ -25,34 +22,19 @@ import {
 import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import { faSlack, faFacebook, faGithub } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { type IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
 import { useSidebarState } from './Sidebar.js'
 import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { Link } from '@tanstack/react-router'
+import { useCompanionVersion } from './useCompanionVersion.js'
+import { ActionMenu, type MenuItemProps, type MenuActionItemProps } from '~/Components/ActionMenu.js'
+import { MenuSeparator } from '~/Components/useContextMenuProps.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface MyHeaderProps {
 	canLock: boolean
 	setLocked: (locked: boolean) => void
-}
-
-// provide a declarative menu specification:
-interface MenuItemData {
-	readonly label: string
-	readonly to: string | (() => void) // URL string or action callback
-	readonly id?: string // used for key and to allow individually styled items, see code
-	readonly icon?: IconDefinition | (() => ReactElement)
-	readonly tooltip?: string
-	readonly inNewTab?: boolean
-	readonly isSeparator?: boolean // currently, everything else is ignored if this is true
-}
-
-const MenuSeparatorSpec: MenuItemData = {
-	label: '',
-	to: '',
-	isSeparator: true,
 }
 
 // make our own circleInfo since it's not in the free FontAwesome offering (two options here)
@@ -69,12 +51,13 @@ function circleInfo(stacked = false): ReactElement {
 		return (
 			<FontAwesomeIcon
 				icon={faInfo}
-				className="fa-xs"
 				style={{
-					border: '0.2em solid',
+					height: '0.75em',
+					width: '0.75em',
+					border: '0.15em solid',
 					borderRadius: '100%',
-					padding: '0.15em 0.05em 0.35em 0.1em', // top right bottom left
-					margin: '-0.05em 0em -0.45em -0.05em',
+					padding: '0.15em',
+					marginBottom: '-0.1em', // optional but centers slightly better vertically
 				}}
 			/>
 		)
@@ -84,15 +67,18 @@ function circleInfo(stacked = false): ReactElement {
 export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHeaderProps) {
 	const { userConfig } = useContext(RootAppStoreContext)
 
-	const { showToggle, clickToggle } = useSidebarState()
+	const { mobileMode, handleShowSidebar } = useSidebarState()
 
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
 	return (
-		<CHeader position="sticky" className="p-0">
+		// note: position="sticky" is not necessary since the header is never part of a scrolling element.
+		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
+		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
+		<CHeader className="p-0">
 			<CContainer fluid>
-				{showToggle && (
-					<CHeaderToggler className="ps-1" onClick={clickToggle}>
+				{mobileMode && (
+					<CHeaderToggler className="ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
 					</CHeaderToggler>
 				)}
@@ -107,7 +93,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 					{updateData.data?.message ? (
 						<CNavItem className="header-notification-item">
-							<CNavLink target="_blank" href={updateData.data.link || 'https://bitfocus.io/companion/'}>
+							<CNavLink target="_blank" href={updateData.data.link || 'https://companion.free/'}>
 								<div className="flex">
 									<div className="align-self-center">
 										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
@@ -152,14 +138,42 @@ function HelpMenu() {
 	const { whatsNewModal } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
 
+	// get notifier for adding a toast notification when copied to clipboard.
+	const { notifier } = useContext(RootAppStoreContext)
+
+	const { versionName, versionBuild, os, browser } = useCompanionVersion(true)
+	const sysinfo = useMemo(() => {
+		let version = versionName || 'version unknown'
+		let versionPlus = 'Companion: ' + version
+		if (versionBuild) {
+			version += '\n' + versionBuild
+			versionPlus += ' ' + versionBuild
+		}
+		versionPlus += `\nOS: ${os}\nBrowser: ${browser}\n`
+		return { version, versionPlus }
+	}, [versionName, versionBuild, os, browser])
+
+	const copyVersionToClipboard = useMemo(
+		// return a props object to be passed to <CopyToClipboard>
+		(): MenuActionItemProps['copyToClipboard'] => ({
+			text: sysinfo.versionPlus,
+			onCopy: (_text, result) => {
+				const success = 'Version info copied!'
+				const failure = 'Failed to copy version-string to the clipboard'
+				notifier.show('', result ? success : failure, 1000)
+			},
+		}),
+		[sysinfo, notifier]
+	)
+
 	// note: the definition has to be inside a component so that we can grab `whatsNewOpen` which is a useCallback...
-	const helpMenuItems: MenuItemData[] = useMemo(
+	const helpMenuItems: MenuItemProps[] = useMemo(
 		() => [
 			{
 				id: 'user-guide',
 				label: 'User Guide / Help',
 				icon: circleInfo, // this is a function call, unlike the rest.
-				to: '/user-guide/',
+				href: makeAbsolutePath('/user-guide/'),
 				tooltip: 'Open the User Guide in a new tab.',
 				inNewTab: true,
 			},
@@ -167,16 +181,16 @@ function HelpMenu() {
 				id: 'whats-new',
 				label: "What's New",
 				icon: faStar,
-				to: whatsNewOpen,
+				do: whatsNewOpen,
 				tooltip: 'Show the current release notes.',
 				inNewTab: false,
 			},
-			{ ...MenuSeparatorSpec, label: 'Additional Support' },
+			{ ...MenuSeparator, label: 'Additional Support' },
 			{
 				id: 'fb',
 				label: 'Community Support',
 				icon: faFacebook,
-				to: 'https://bfoc.us/qjk0reeqmy',
+				href: 'https://l.companion.free/q/6pc9ciJR5',
 				tooltip: 'Share your experience or ask questions to your Companions.',
 				inNewTab: true,
 			},
@@ -184,7 +198,7 @@ function HelpMenu() {
 				id: 'slack',
 				label: 'Slack Workspace',
 				icon: faSlack,
-				to: 'https://bfoc.us/ke7e9dqgaz',
+				href: 'https://l.companion.free/q/OWxbBnDKG',
 				tooltip: 'Discuss technical issues on Slack.',
 				inNewTab: true,
 			},
@@ -192,87 +206,45 @@ function HelpMenu() {
 				id: 'github',
 				label: 'Report an Issue',
 				icon: faGithub,
-				to: 'https://bfoc.us/fiobkz0yqs',
+				href: 'https://l.companion.free/q/QZbI6mdNd',
 				tooltip: 'Report bugs or request features on GitHub.',
 				inNewTab: true,
 			},
-			MenuSeparatorSpec,
+			MenuSeparator,
 			{
-				id: 'donate',
-				label: 'Donate',
+				id: 'sponsor',
+				label: 'Sponsor Companion',
 				icon: faDollarSign,
-				to: 'https://bfoc.us/ccfbf8wm2x',
+				href: 'https://l.companion.free/q/6PtdAvZab',
 				tooltip: 'Contribute funds to Bitfocus Companion.',
 				inNewTab: true,
 			},
+			MenuSeparator,
+			{
+				id: 'version',
+				label: sysinfo.version,
+				fullWidth: true,
+				do: () => {}, // no additional action needed
+				tooltip: 'Click to copy version info including OS and browser to the clipboard.',
+				copyToClipboard: copyVersionToClipboard,
+			},
 		],
-		[whatsNewOpen]
+		[copyVersionToClipboard, sysinfo, whatsNewOpen]
 	)
 
 	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
 	// but worse, if you add it manually, `caret={false}` is ignored, so it's named 'help-toggle' here.
 	return (
-		//note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
-		<CDropdown className="position-static help-menu" offset={[10, 0]}>
+		// note: CDropdown is assigned class btn-group. Previously _common.scss incorrectly assigned "overflow: hidden" to this class
+		//  which caused the dropdown to be clipped out of existence. Leading to the former note... now all is good.
+		//  and the dropdown is automatically assigned z-index: 1000 (--cui-dropdown-zindex)
+		// former note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
+		<CDropdown className="help-menu" offset={[10, 0]}>
 			<CDropdownToggle color="primary" caret={false} className="help-toggle" aria-label="Help and support menu">
 				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
 			</CDropdownToggle>
 
-			<CDropdownMenu>
-				{helpMenuItems.map((option, idx) => (
-					<MenuItem key={option.id || `item-${idx}`} data={option} />
-				))}
-			</CDropdownMenu>
+			<ActionMenu menuItems={helpMenuItems} />
 		</CDropdown>
 	)
-}
-
-// create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
-// The menu action can be either a URL or a function call
-function MenuItem({ data }: { data: MenuItemData }) {
-	if (data.isSeparator) {
-		return (
-			<div className={data.id && `dropdown-sep-${data.id}`}>
-				<CDropdownDivider />
-				{data.label && <div className="dropdown-group-label">{data.label}</div>}
-			</div>
-		)
-	} else {
-		const isUrl = typeof data.to === 'string'
-		const isHTTP = isUrl && /^https?:\/\//i.test(data.to) // "http://" or "https://"
-
-		const navProps = isUrl
-			? {
-					...(isHTTP ? { href: data.to, as: 'a' as ElementType } : { to: data.to, as: Link }),
-					rel: 'noopener noreferrer',
-					target: data.inNewTab ? '_blank' : '_self',
-				}
-			: { as: 'button' as ElementType, onClick: data.to }
-
-		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
-		return (
-			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
-			<CDropdownItem
-				type={isUrl ? undefined : 'button'}
-				className={'d-flex justify-content-start' + (data.id ? ` dropdown-item-${data.id}` : '')}
-				title={data.tooltip}
-				{...navProps}
-			>
-				<span className="dropdown-item-icon">
-					{typeof data.icon === 'function' ? (
-						data.icon()
-					) : (
-						<FontAwesomeIcon
-							icon={data.icon ? data.icon : faOpenCircle}
-							className={data.icon ? 'visible' : 'invisible'}
-						/>
-					)}
-				</span>
-
-				<span className="dropdown-item-label">{data.label}</span>
-
-				{data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' '}
-			</CDropdownItem>
-		)
-	}
 }

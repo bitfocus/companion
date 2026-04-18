@@ -44,8 +44,8 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 		return this.connections.get(connectionId)?.label
 	}
 
-	public getAllOfModuleId(moduleId: string): [id: string, info: ClientConnectionConfig][] {
-		return Array.from(this.connections.entries()).filter(([_id, info]) => info && info.moduleId === moduleId)
+	public getAllOfModuleId(moduleId: string): ClientConnectionConfig[] {
+		return this.sortedConnections().filter((info) => info && info.moduleId === moduleId)
 	}
 
 	public updateConnections = action((changes: ClientConnectionsUpdate[] | null) => {

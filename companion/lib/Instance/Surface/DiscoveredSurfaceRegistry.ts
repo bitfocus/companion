@@ -39,9 +39,9 @@ interface DeviceCacheEntry {
 	prefixedDevicePath: `${string}:${string}`
 	/** The collision-resolved surface ID */
 	resolvedSurfaceId: string
-	/** The handler that can open this surface (only for HID-scanned surfaces) */
-	opener: SurfaceOpener
-	/** The discovered surface info (only for HID-scanned surfaces) */
+	/** The handler that can open this surface. Undefined for self-connecting surfaces (e.g. satellite) */
+	opener: SurfaceOpener | undefined
+	/** The discovered surface info */
 	surface: DiscoveredSurfaceInfo
 }
 
@@ -69,17 +69,15 @@ export class DiscoveredSurfaceRegistry {
 	/**
 	 * Return a cached identifier or assign the next available one.
 	 *
-	 * @param uniquenessKey - Device-type key (e.g. "vendor:product").
-	 * @param alwaysAddSuffix - Force numeric suffix on the first id when true.
+	 * @param surface - The discovered surface info.
 	 * @param prefixedDevicePath - Path used for caching, prefixed with instanceId (e.g. "instance123:/dev/hidraw0").
-	 * @param opener - Optional handler that can open this surface (for HID-scanned surfaces).
-	 * @param surface - Optional discovered surface info (for HID-scanned surfaces).
+	 * @param opener - Handler that can open this surface.
 	 * @returns The collision-resolved surface ID.
 	 */
 	trackSurface(
 		surface: DiscoveredSurfaceInfo,
 		prefixedDevicePath: `${string}:${string}`,
-		opener: SurfaceOpener
+		opener: SurfaceOpener | undefined
 	): string {
 		const cacheKey = `${surface.surfaceId}||${prefixedDevicePath}`
 
@@ -118,9 +116,13 @@ export class DiscoveredSurfaceRegistry {
 	 * @param devicePathsToKeep - Set of prefixed device paths that should not be pruned
 	 */
 	prepareForScan(devicePathsToKeep: Set<`${string}:${string}`>): void {
-		// Remove cache entries that aren't in the keep set
+		// Remove cache entries that aren't in the keep set.
+		// Only prune module-detected surfaces (those with an opener) — self-registering surfaces
+		// such as satellite pass opener=undefined and manage their own lifecycle, so their entries
+		// must not be wiped here or a concurrent ADD-DEVICE from a second device could steal the
+		// same surfaceId and forcibly disconnect the first device.
 		for (const [key, entry] of this.#deviceCache.entries()) {
-			if (!devicePathsToKeep.has(entry.prefixedDevicePath)) {
+			if (entry.opener !== undefined && !devicePathsToKeep.has(entry.prefixedDevicePath)) {
 				this.#deviceCache.delete(key)
 				this.#surfaceIdToKey.delete(entry.resolvedSurfaceId)
 			}
@@ -144,19 +146,6 @@ export class DiscoveredSurfaceRegistry {
 	}
 
 	/**
-	 * Forget a specific device by its resolved surface ID.
-	 * This should be called when a discovered surface is no longer available.
-	 * @param resolvedSurfaceId - The resolved surface ID to forget
-	 */
-	forgetSurfaceById(resolvedSurfaceId: string): void {
-		const key = this.#surfaceIdToKey.get(resolvedSurfaceId)
-		if (!key) return
-
-		this.#deviceCache.delete(key)
-		this.#surfaceIdToKey.delete(resolvedSurfaceId)
-	}
-
-	/**
 	 * Forget all devices belonging to a specific instance.
 	 * @param instanceId - The instance ID prefix to match
 	 */
@@ -171,6 +160,16 @@ export class DiscoveredSurfaceRegistry {
 	}
 
 	/**
+	 * Get the prefixed device path for a surface by its resolved ID.
+	 * Returns undefined if the surface is not in the registry.
+	 */
+	getSurfacePath(resolvedSurfaceId: string): `${string}:${string}` | undefined {
+		const key = this.#surfaceIdToKey.get(resolvedSurfaceId)
+		if (!key) return undefined
+		return this.#deviceCache.get(key)?.prefixedDevicePath
+	}
+
+	/**
 	 * Get the opener info for a surface by its resolved ID.
 	 * @param resolvedSurfaceId - The surface ID to look up
 	 * @returns The opener and surface info if available, or undefined
@@ -180,7 +179,7 @@ export class DiscoveredSurfaceRegistry {
 		if (!key) return undefined
 
 		const entry = this.#deviceCache.get(key)
-		if (!entry) return undefined
+		if (!entry?.opener) return undefined
 
 		return { opener: entry.opener, surface: entry.surface }
 	}

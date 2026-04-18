@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -7,13 +7,20 @@ import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
-export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel() {
+interface AddSurfaceInstancePanelProps {
+	isSubpanel?: boolean
+}
+export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel({
+	isSubpanel,
+}: AddSurfaceInstancePanelProps) {
 	const service = useAddSurfaceInstanceService()
 
 	return (
 		<AddInstancePanel
 			service={service}
+			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
+			helpAction="/user-guide/surfaces/"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>
@@ -27,7 +34,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 								Can't find your surface?{' '}
 								<a
 									target="_blank"
-									href={makeAbsolutePath('/getting-started#6_modules.md')}
+									href={makeAbsolutePath('/user-guide/config/modules')}
 									className="text-decoration-none"
 								>
 									Check our guidance for getting device support
@@ -39,7 +46,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 					<div>
 						<strong>You can use many different surfaces to control</strong> Companion. Ensure you have an internet
 						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://user.bitfocus.io/download" className="text-decoration-none">
+						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="text-decoration-none">
 							download a module bundle
 						</a>
 					</div>
@@ -50,18 +57,20 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 })
 
 function useAddSurfaceInstanceService(): AddInstanceService {
-	const navigate = useNavigate({ from: '/surfaces/integrations' })
 	const addMutation = useMutationExt(trpc.instances.surfaces.add.mutationOptions())
+	const navigate = useNavigate() // from: is only needed to resolve relative paths, so not needed here...
 
 	return useMemo(
 		() => ({
 			moduleType: ModuleInstanceType.Surface,
 
 			closeAddInstance: () => {
-				void navigate({ to: '/surfaces/integrations' })
+				// it's always safe to return to /surfaces/configured/integrations (i.e. it will always display correctly)
+				// if the window is wide-enough, ConfigureSurfacesPage will remove the last part of the path.
+				void navigate({ to: '/surfaces/configured/integrations' })
 			},
 			openConfigureInstance: (instanceId) => {
-				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
+				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
 			},
 
 			performAddInstance: async (moduleInfo, label, versionId) => {

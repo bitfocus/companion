@@ -5,166 +5,299 @@ import { assertNever } from './Util.js'
 import { stringifyVariableValue } from './Model/Variables.js'
 import isEqual from 'fast-deep-equal'
 
+export interface ValidateInputValueOptions {
+	/** If true, skip validating expression fields */
+	skipValidateExpression?: boolean
+}
+
+/**
+ * Check if a value is valid for a given input field definition, returning true/false
+ * @param definition The input field definition
+ * @param value The value to validate
+ * @param options Optional validation options
+ * @returns True if the value is valid for the given input field definition, false otherwise
+ */
+export function checkInputValueIsGood(
+	definition: SomeCompanionInputField,
+	value: JsonValue | undefined,
+	options?: ValidateInputValueOptions
+): boolean {
+	const result = validateInputValue(definition, value, options)
+	return result.validationError === undefined && result.validationWarnings.length === 0
+}
+
 /**
  * Check if a value is valid for a given input field definition
  * @param definition The input field definition
  * @param value The value to validate
- * @returns An error message if invalid, or undefined if valid
+ * @param options Optional validation options
+ * @returns An object with the sanitised value, an optional error message, and an array of warnings
  */
 export function validateInputValue(
 	definition: SomeCompanionInputField,
-	value: JsonValue | undefined
-): string | undefined {
+	value: JsonValue | undefined,
+	options?: ValidateInputValueOptions
+): {
+	sanitisedValue: JsonValue | undefined
+	validationError: string | undefined
+	validationWarnings: string[]
+} {
+	const validationWarnings: string[] = []
+
 	switch (definition.type) {
 		case 'static-text':
 			// Not editable
-			return undefined
+			return { sanitisedValue: undefined, validationError: undefined, validationWarnings }
 
 		case 'textinput': {
-			value = value ?? ''
+			if (definition.disableSanitisation)
+				return { sanitisedValue: value, validationError: undefined, validationWarnings }
 
-			const valueStr = stringifyVariableValue(value) ?? ''
-			if (definition.minLength !== undefined && valueStr.length < definition.minLength) {
-				return `Value must be at least ${definition.minLength} characters long`
-			}
+			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
 
-			if (definition.isExpression) {
-				try {
-					ParseExpression(valueStr)
-				} catch (_e) {
-					return 'Expression is not valid'
+			if (definition.minLength !== undefined && sanitisedValue.length < definition.minLength) {
+				return {
+					sanitisedValue,
+					validationError: `Value must be at least ${definition.minLength} characters long`,
+					validationWarnings,
 				}
 			}
 
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
-				if (!compiledRegex.exec(valueStr)) {
-					return `Value does not match regex: ${definition.regex}`
+				if (!compiledRegex.exec(sanitisedValue)) {
+					return {
+						sanitisedValue,
+						validationError: `Value does not match regex: ${definition.regex}`,
+						validationWarnings,
+					}
 				}
 			}
 
-			return undefined
+			return { sanitisedValue, validationError: undefined, validationWarnings }
+		}
+
+		case 'expression': {
+			// Skip validating the expression as it has already been parsed
+			if (options?.skipValidateExpression)
+				return { sanitisedValue: value, validationError: undefined, validationWarnings }
+
+			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
+
+			try {
+				ParseExpression(sanitisedValue)
+			} catch (_e) {
+				return { sanitisedValue, validationError: 'Expression is not valid', validationWarnings }
+			}
+
+			// An expression could be wanting any return type, so we can't continue with further checks.
+			return { sanitisedValue, validationError: undefined, validationWarnings }
 		}
 
 		case 'secret-text': {
-			value = value ?? ''
+			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
 
-			const valueStr = stringifyVariableValue(value) ?? ''
-			if (definition.minLength !== undefined && valueStr.length < definition.minLength) {
-				return `Value must be at least ${definition.minLength} characters long`
+			if (definition.minLength !== undefined && sanitisedValue.length < definition.minLength) {
+				return {
+					sanitisedValue,
+					validationError: `Value must be at least ${definition.minLength} characters long`,
+					validationWarnings,
+				}
 			}
 
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex) {
-				if (!compiledRegex.exec(valueStr)) {
-					return `Value does not match regex: ${definition.regex}`
+				if (!compiledRegex.exec(sanitisedValue)) {
+					return {
+						sanitisedValue,
+						validationError: `Value does not match regex: ${definition.regex}`,
+						validationWarnings,
+					}
 				}
 			}
 
-			return undefined
+			return { sanitisedValue, validationError: undefined, validationWarnings }
 		}
 
 		case 'number': {
 			if (value === undefined || value === '' || value === null) {
-				return 'A value must be provided'
+				return { sanitisedValue: value, validationError: 'A value must be provided', validationWarnings }
 			}
 
 			// Coerce to number
-			const numValue = typeof value === 'number' ? value : Number(value)
-			if (isNaN(numValue)) {
-				return 'Value must be a number'
+			let sanitisedValue = typeof value === 'number' ? value : Number(value)
+			if (isNaN(sanitisedValue)) {
+				return { sanitisedValue: value, validationError: 'Value must be a number', validationWarnings }
 			}
 
-			// Verify the value range
-			if (definition.min !== undefined && numValue < definition.min) {
-				return `Value must be greater than or equal to ${definition.min}`
-			}
-			if (definition.max !== undefined && numValue > definition.max) {
-				return `Value must be less than or equal to ${definition.max}`
+			// Round to integer if required
+			const isNotInteger = definition.asInteger && !Number.isInteger(sanitisedValue)
+			if (isNotInteger) {
+				validationWarnings.push('Value was rounded to nearest integer')
+				sanitisedValue = Math.round(sanitisedValue)
 			}
 
-			return undefined
+			// Verify the value range - allowInvalidValues takes priority over clampValues
+			if (definition.min !== undefined && sanitisedValue < definition.min) {
+				if (definition.allowInvalidValues) {
+					validationWarnings.push(`Value is below ${definition.min}`)
+				} else if (definition.clampValues) {
+					sanitisedValue = definition.min
+					validationWarnings.push(`Value was clamped to ${definition.min}`)
+				} else {
+					return {
+						sanitisedValue,
+						validationError: `Value must be greater than or equal to ${definition.min}`,
+						validationWarnings,
+					}
+				}
+			}
+			if (definition.max !== undefined && sanitisedValue > definition.max) {
+				if (definition.allowInvalidValues) {
+					validationWarnings.push(`Value is above ${definition.max}`)
+				} else if (definition.clampValues) {
+					sanitisedValue = definition.max
+					validationWarnings.push(`Value was clamped to ${definition.max}`)
+				} else {
+					return {
+						sanitisedValue,
+						validationError: `Value must be less than or equal to ${definition.max}`,
+						validationWarnings,
+					}
+				}
+			}
+
+			return { sanitisedValue, validationError: undefined, validationWarnings }
 		}
 
-		case 'checkbox':
+		case 'checkbox': {
 			// Coerce to boolean
-			if (value !== undefined && typeof value !== 'boolean') {
-				return 'Value must be a boolean'
-			}
-			return undefined
+			const sanitisedValue = !!value
 
-		case 'colorpicker':
-			if (value === undefined) return undefined
+			return { sanitisedValue, validationError: undefined, validationWarnings }
+		}
+
+		case 'colorpicker': {
+			const sanitisedValue = value
 
 			// Validate based on returnType
 			if (definition.returnType === 'number') {
 				const numValue = typeof value === 'number' ? value : Number(value)
 				if (isNaN(numValue)) {
-					return 'Value must be a number'
+					return { sanitisedValue, validationError: 'Value must be a number', validationWarnings }
 				}
 			} else {
 				if (typeof value !== 'string' && typeof value !== 'number') {
-					return 'Value must be a string or number'
+					return { sanitisedValue, validationError: 'Value must be a string or number', validationWarnings }
 				}
 			}
-			return undefined
+			return { sanitisedValue, validationError: undefined, validationWarnings }
+		}
 
 		case 'bonjour-device':
 		case 'custom-variable':
 			// Nothing to check
-			return undefined
+			return { sanitisedValue: value, validationError: undefined, validationWarnings }
 
 		case 'dropdown': {
 			// Check if value is in choices
-			const isInChoices = definition.choices.some((c) => isEqual(c.id, value))
-			if (isInChoices) return undefined
+			const isInChoices = definition.choices.find((c) => isEqual(c.id, value) || c.id == value) // intentionally loose for backwards compatibility
+			if (isInChoices) return { sanitisedValue: isInChoices.id, validationError: undefined, validationWarnings }
+
+			const stringValue = stringifyVariableValue(value) ?? ''
 
 			if (!definition.allowCustom) {
-				return 'Value is not in the list of choices'
+				return {
+					sanitisedValue: stringValue,
+					validationError: 'Value is not in the list of choices',
+					validationWarnings,
+				}
 			}
 
 			// If allowCustom is true, and the value is not in the choices, check the regex
 			const strValue = stringifyVariableValue(value) ?? ''
 			const compiledRegex = compileRegex(definition.regex)
 			if (compiledRegex && !compiledRegex.exec(strValue)) {
-				return `Value does not match regex: ${definition.regex}`
+				return {
+					sanitisedValue: stringValue,
+					validationError: `Value does not match regex: ${definition.regex}`,
+					validationWarnings,
+				}
 			}
 
-			return undefined
+			return { sanitisedValue: stringValue, validationError: undefined, validationWarnings }
 		}
 
 		case 'multidropdown': {
-			if (value === undefined) return undefined
+			if (value === undefined) return { sanitisedValue: [], validationError: undefined, validationWarnings }
 
 			if (!Array.isArray(value)) {
-				return 'Value must be an array'
+				// Try to help modules which relied on old behaviour where non-array values were coerced into an array, by coercing strings/numbers/booleans into an array with a warning
+				if (
+					(typeof value === 'string' && value.trim() !== '') ||
+					typeof value === 'number' ||
+					typeof value === 'boolean'
+				) {
+					validationWarnings.push('Value was coerced into an array')
+					value = [value]
+				} else {
+					return { sanitisedValue: value, validationError: 'Value must be an array', validationWarnings }
+				}
 			}
 
-			// Check min/max selection
-			if (definition.minSelection !== undefined && value.length < definition.minSelection) {
-				return `Must select at least ${definition.minSelection} items`
-			}
-			if (definition.maxSelection !== undefined && value.length > definition.maxSelection) {
-				return `Must select at most ${definition.maxSelection} items`
-			}
+			const sanitisedValue: JsonValue[] = []
+			const invalidValues: JsonValue[] = []
 
 			// Validate each value
 			for (const val of value) {
 				// Check if value is in choices
-				const isInChoices = definition.choices.some((c) => isEqual(c.id, val))
-				if (isInChoices) continue
+				const isInChoices = definition.choices.find((c) => isEqual(c.id, val) || c.id == val) // intentionally loose for backwards compatibility
+				if (isInChoices) {
+					sanitisedValue.push(isInChoices.id)
+					continue
+				}
 
-				if (!definition.allowCustom) return 'Value is not in the list of choices'
+				if (!definition.allowCustom) {
+					invalidValues.push(val)
+					continue
+				}
 
 				// If allowCustom is true, and the value is not in the choices, check the regex
 				const strVal = stringifyVariableValue(val) ?? ''
 				const compiledRegex = compileRegex(definition.regex)
 				if (compiledRegex && !compiledRegex.exec(strVal)) {
-					return `Value does not match regex: ${definition.regex}`
+					invalidValues.push(val)
+					continue
+				}
+
+				sanitisedValue.push(strVal)
+			}
+
+			if (invalidValues.length > 0) {
+				return {
+					sanitisedValue: value,
+					validationError: `The following selected values are not valid: ${invalidValues.map(stringifyVariableValue).join(', ')}`,
+					validationWarnings,
 				}
 			}
 
-			return undefined
+			// Check min/max selection
+			if (definition.minSelection !== undefined && value.length < definition.minSelection) {
+				return {
+					sanitisedValue,
+					validationError: `Must select at least ${definition.minSelection} items`,
+					validationWarnings,
+				}
+			}
+			if (definition.maxSelection !== undefined && value.length > definition.maxSelection) {
+				return {
+					sanitisedValue,
+					validationError: `Must select at most ${definition.maxSelection} items`,
+					validationWarnings,
+				}
+			}
+
+			return { sanitisedValue, validationError: undefined, validationWarnings }
 		}
 
 		case 'internal:connection_id':
@@ -181,11 +314,11 @@ export function validateInputValue(
 		case 'internal:vertical-alignment':
 		case 'internal:png-image':
 			// Not supported
-			return undefined
+			return { sanitisedValue: value, validationError: undefined, validationWarnings }
 
 		default:
 			assertNever(definition)
-			return undefined
+			return { sanitisedValue: value, validationError: 'Unknown input field type', validationWarnings }
 	}
 }
 

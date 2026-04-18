@@ -79,7 +79,7 @@ export async function goSilent<T>(fcn: () => Promise<T>): Promise<T> {
 	}
 }
 
-export function $withoutEscaping(pieces, ...args) {
+export function $withoutEscaping(pieces: TemplateStringsArray, ...args: any[]) {
 	const origQuote = $.quote
 	try {
 		$.quote = (unescapedCmd) => unescapedCmd

@@ -11,6 +11,7 @@ import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 import { convertOpenDeviceResult } from './Util.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -40,6 +41,27 @@ let pluginInitialized = false
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>(
 	{
+		init: async () => {
+			if (pluginInitialized) throw new Error('Already initialized')
+			if (!plugin) throw new Error('Plugin not loaded')
+
+			await plugin.init()
+
+			pluginInitialized = true
+
+			logger.info('Module initialized successfully')
+		},
+		destroy: async () => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			pluginInitialized = false
+
+			await plugin.destroy()
+
+			// Ensure the process exits after responding to the message
+			setTimeout(() => process.exit(0), 100)
+		},
+
 		openHidDevice: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
@@ -106,16 +128,6 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 
 			await plugin.updateConfig(msg.surfaceId, msg.newConfig)
 		},
-		destroy: async () => {
-			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
-
-			pluginInitialized = false
-
-			await plugin.destroy()
-
-			// Ensure the process exits after responding to the message
-			setTimeout(() => process.exit(0), 100)
-		},
 
 		setBrightness: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
@@ -181,23 +193,19 @@ registerLoggingSink((source, level, message) => {
 	}
 })
 
-const ensureFileUrl = (url: string) => {
-	if (process.platform === 'win32' && !url.startsWith('file://')) {
-		// Windows is picky about import paths, this is a crude hack to 'fix' it
-		return `file://${url}`
-	} else {
-		return url
-	}
+const moduleImport = await importModuleFromPath(moduleEntrypoint)
+
+const isSurfaceModule = (obj: any) => {
+	if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return false
+	return typeof obj.init === 'function' && typeof obj.destroy === 'function'
 }
 
+const moduleConstructor = isSurfaceModule(moduleImport) ? moduleImport : moduleImport.default
+if (!isSurfaceModule(moduleConstructor))
+	throw new Error(`Module entrypoint did not return a valid constructor function`)
+
 // Now load the plugin
-plugin = new PluginWrapper(
-	new HostContext(ipcWrapper),
-	// Future: Once webpacked, the dynamic import() doesn't work, so fallback to require()
-	typeof __non_webpack_require__ === 'function'
-		? __non_webpack_require__(moduleEntrypoint)
-		: (await import(ensureFileUrl(moduleEntrypoint))).default
-)
+plugin = new PluginWrapper(new HostContext(ipcWrapper), moduleConstructor)
 
 const pluginFeatures = plugin.getPluginFeatures()
 ipcWrapper
@@ -217,15 +225,6 @@ ipcWrapper
 	})
 	.then(async () => {
 		logger.info(`Module-host accepted registration`)
-
-		await plugin.init()
-
-		pluginInitialized = true
-
-		logger.info('Module initialized successfully')
-
-		// Report the plugin is now ready for use
-		ipcWrapper.sendWithNoCb('ready', {})
 	})
 	.catch((err) => {
 		logger.error(`Module registration failed: ${err}`)

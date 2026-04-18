@@ -1,5 +1,5 @@
 import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import {
 	CheckboxInputField,
 	ColorInputField,
@@ -21,14 +21,22 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from 'type-fest'
+
+const ExpressionModeFeatures: InputFeatureIconsProps = Object.freeze({
+	variables: true,
+	local: true,
+})
 
 interface OptionsInputFieldProps {
 	allowInternalFields: boolean
+	controlId?: string | null
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
@@ -56,6 +64,7 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 
 export const OptionsInputField = observer(function OptionsInputField({
 	allowInternalFields,
+	controlId,
 	isLocatedInGrid,
 	entityType,
 	option,
@@ -68,7 +77,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	let features = getInputFeatures(option)
 
-	const isExpression = !!(option.type === 'textinput' && option.isExpression)
+	const isExpression = !!(option.type === 'expression')
+	let isInExpressionMode = isExpression
 
 	const setControlValue = useCallback(
 		(val: JsonValue) =>
@@ -93,9 +103,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 		/>
 	)
 
-	let description = option.description
-
-	if (fieldSupportsExpression) {
+	if (fieldSupportsExpression && option.type !== 'expression') {
 		const rawExpressionValue = rawValue || { isExpression: false, value: undefined }
 
 		control = (
@@ -113,15 +121,12 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 		// Update the features in the label when toggling the mode
 		if (rawExpressionValue?.isExpression) {
-			if (!features) features = {}
-			features.local = true
-			features.variables = true
-
-			if (option.expressionDescription !== undefined) {
-				description = option.expressionDescription
-			}
+			isInExpressionMode = true
 		}
 	}
+
+	const description =
+		isInExpressionMode && option.expressionDescription !== undefined ? option.expressionDescription : option.description
 
 	return (
 		<>
@@ -129,7 +134,14 @@ export const OptionsInputField = observer(function OptionsInputField({
 				htmlFor="colFormConnection"
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
-				<OptionLabel option={option} features={features} />
+				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
+				{isInExpressionMode && (
+					<ExpressionValuePreview
+						expression={stringifyVariableValue(rawValue?.value) ?? ''}
+						controlId={controlId ?? null}
+						fieldDefinition={option}
+					/>
+				)}
 			</CFormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
@@ -162,48 +174,44 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	localVariablesStore,
 	features,
 }: Readonly<OptionsInputControlProps>): React.JSX.Element {
-	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(option, value) === undefined,
-		[option]
-	)
+	const checkValid = useCallback((value: JsonValue | undefined) => checkInputValueIsGood(option, value), [option])
 
 	if (!option) return <p>Bad option</p>
 
 	switch (option.type) {
 		case 'textinput': {
-			if (option.isExpression) {
-				const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+			const localVariables = features?.local
+				? localVariablesStore?.getOptions(
+						entityType,
+						option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+						isLocatedInGrid
+					)
+				: undefined
 
-				return (
-					<ExpressionInputField
-						value={value as any}
-						localVariables={localVariables}
-						disabled={readonly}
-						setValue={setValue}
-					/>
-				)
-			} else {
-				const localVariables = features?.local
-					? localVariablesStore?.getOptions(
-							entityType,
-							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-							isLocatedInGrid
-						)
-					: undefined
+			return (
+				<TextInputField
+					value={value as any}
+					placeholder={option.placeholder}
+					useVariables={features?.variables ?? false}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setValue}
+					checkValid={checkValid}
+					multiline={option.multiline}
+				/>
+			)
+		}
+		case 'expression': {
+			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
 
-				return (
-					<TextInputField
-						value={value as any}
-						placeholder={option.placeholder}
-						useVariables={features?.variables ?? false}
-						localVariables={localVariables}
-						disabled={readonly}
-						setValue={setValue}
-						checkValid={checkValid}
-						multiline={option.multiline}
-					/>
-				)
-			}
+			return (
+				<ExpressionInputField
+					value={value as any}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setValue}
+				/>
+			)
 		}
 		case 'dropdown': {
 			return (
@@ -228,6 +236,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 					minSelection={option.minSelection}
 					minChoicesForSearch={option.minChoicesForSearch}
 					maxSelection={option.maxSelection}
+					sortSelection={option.sortSelection}
 					regex={option.regex}
 					disabled={readonly}
 					setValue={setValue}
@@ -315,8 +324,17 @@ export interface InputFeatureIconsProps {
 export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
 	const featureIcons: JSX.Element[] = []
 	if (props.variables)
-		featureIcons.push(<FontAwesomeIcon key="variables" icon={faDollarSign} title={'Supports global variables'} />)
-	if (props.local) featureIcons.push(<FontAwesomeIcon key="local" icon={faGlobe} title={'Supports local variables'} />)
+		featureIcons.push(
+			<InlineHelp key="variables" help="Supports global variables">
+				<FontAwesomeIcon icon={faDollarSign} />
+			</InlineHelp>
+		)
+	if (props.local)
+		featureIcons.push(
+			<InlineHelp key="local" help="Supports local variables">
+				<FontAwesomeIcon icon={faGlobe} />
+			</InlineHelp>
+		)
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
 }
@@ -330,6 +348,8 @@ export function getInputFeatures(option: SomeCompanionInputField): InputFeatureI
 				option.useVariables === CompanionFieldVariablesSupport.InternalParser ||
 				option.useVariables === CompanionFieldVariablesSupport.LocalVariables,
 		}
+	} else if (option.type === 'expression') {
+		return ExpressionModeFeatures
 	}
 	return undefined
 }

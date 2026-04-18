@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import React, { useContext, useCallback } from 'react'
+import { useContext, useCallback } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { ClientSurfaceInstanceConfigWithId } from './SurfaceInstanceList.js'
 import { useSurfaceInstancesListContext } from './SurfaceInstancesListContext.js'

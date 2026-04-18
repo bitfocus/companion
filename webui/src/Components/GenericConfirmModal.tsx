@@ -1,4 +1,4 @@
-import React, { CButton, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { CModalExt } from './CModalExt.js'
 

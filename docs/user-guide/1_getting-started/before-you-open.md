@@ -8,13 +8,13 @@ description: Prepare hardware and software before launching Companion.
 
 The easiest way to begin is to run Companion on your main Computer; probably the one you are reading this on. But often it can be beneficial to run it on another computer, perhaps one that never gets turned off, or a Raspberry Pi. As long as they are on the same network, anything is possible!
 
-The admin interface for Companion can be setup to be available from other machines on your network, and you can use [Companion Satellite](https://user.bitfocus.io/product/companion-satellite) to connect Stream Decks and similar surfaces to Companion over the network.
+The admin interface for Companion can be setup to be available from other machines on your network, and you can use [Companion Satellite](https://l.companion.free/q/YH8dZkH1Q) to connect Stream Decks and similar surfaces to Companion over the network.
 
 If you are unsure, run it on your main Computer. It is easy to export and reimport your config if you decide to change it later on.
 
 ## Preparation
 
-Close the Elgato Stream Deck app. While it is possible to run them both, Companion runs best when it has full control over your Stream Decks. If you need to run them both, you can use the Companion plugin from [the Elgato store](https://bfoc.us/857in8sce6). You can read how to set this up on the [Elgato Plugin](../7_surfaces/elgato-plugin.md) page.
+Close the Elgato Stream Deck app. While it is possible to run them both, Companion runs best when it has full control over your Stream Decks. If you need to run them both, you can use the Companion plugin from [the Elgato store](https://l.companion.free/q/g80LeP8dx). You can read how to set this up on the [Elgato Plugin](../7_surfaces/elgato-plugin.md) page.
 
 Connect any Stream Decks or other supported Surfaces to your computer, and make sure any devices you wish to control are powered on and connected to the network. You should make sure that the networking is configured properly and your computer is able to talk to them.
 

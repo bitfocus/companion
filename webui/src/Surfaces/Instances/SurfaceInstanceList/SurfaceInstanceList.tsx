@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
@@ -25,6 +25,7 @@ import type {
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 export interface VisibleSurfaceInstancesState {
 	disabled: boolean
@@ -42,13 +43,14 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 }: SurfaceInstancesListProps) {
 	const { surfaceInstances, instanceStatuses } = useContext(RootAppStoreContext)
 
-	const navigate = useNavigate({ from: '/surfaces/integrations' })
+	const navigate = useNavigate()
+
 	const doConfigureInstance = useCallback(
 		(instanceId: string | null) => {
 			if (!instanceId) {
-				void navigate({ to: '/surfaces/integrations' })
+				void navigate({ to: '/surfaces/configured/integrations' })
 			} else {
-				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
+				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
 			}
 		},
 		[navigate]
@@ -84,35 +86,34 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="connections-list-header fixed-header">
-				<h4>Surface Integrations</h4>
-
-				<p>
-					Similar to connections, surface integrations represent the ability to use different hardware or virtual
-					surfaces to trigger buttons in Companion. Here you enable and configure the types of surfaces you want to use.
-				</p>
-
+			<div className="connections-list-header fixed-header d-flex flex-column">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="connection-group-actions mb-2">
-					<CButtonGroup>
+				<div className="d-flex align-items-center help-button-float">
+					<CButtonGroup className="connection-group-actions m-1 me-auto">
 						<CButton
 							color="primary"
 							size="sm"
-							className="d-xl-none"
-							onClick={() => void navigate({ to: '/surfaces/integrations/add' })}
+							onClick={() => void navigate({ to: '/surfaces/configured/integrations/add' })}
 						>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Surface Integration
 						</CButton>
 						<CreateCollectionButton />
 					</CButtonGroup>
+					<ContextHelpButton action="/user-guide/surfaces">
+						<p>
+							Surface integrations are like connections but for input surfaces: they provide the ability to use
+							different hardware or virtual surfaces to trigger buttons in Companion.
+						</p>
+						<p>Click on any row to configure the integration. Click this icon for further help.</p>
+					</ContextHelpButton>
 				</div>
 			</div>
 
-			<div className="connections-list-table-container scrollable-content">
+			<div className="connections-list-table-container scrollable-content mt-2">
 				<PanelCollapseHelperProvider
 					storageId="connection-collections"
 					knownPanelIds={surfaceInstances.allCollectionIds}
@@ -152,7 +153,7 @@ function SurfaceInstancesListTableHeading() {
 
 	return (
 		<div className="flex flex-row">
-			<div className="grow">Instance</div>
+			<div className="grow">Surface Integrations </div>
 			<div className="no-break">
 				<CButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />

@@ -4,6 +4,7 @@ import type {
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldCustomVariableExtended,
 	CompanionInputFieldDropdownExtended,
+	CompanionInputFieldExpressionExtended,
 	CompanionInputFieldNumberExtended,
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
@@ -201,6 +202,7 @@ export interface ClientDiscoveredSurfaceInfoPlugin {
 
 	name: string
 	description: string
+	address: string | null
 
 	config: Record<string, any>
 }
@@ -234,6 +236,7 @@ export type CompanionSurfaceInputFieldTextInput = Omit<CompanionInputFieldTextIn
 export type CompanionSurfaceConfigField =
 	| CompanionInputFieldStaticTextExtended
 	| CompanionSurfaceInputFieldTextInput
+	| CompanionInputFieldExpressionExtended
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldNumberExtended
 	| CompanionInputFieldCheckboxExtended

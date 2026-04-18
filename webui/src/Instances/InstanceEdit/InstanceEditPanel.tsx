@@ -375,7 +375,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 						</CButton>
 
 						<CButton color="secondary" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
-							Cancel
+							{panelStore.isDirty() ? 'Cancel' : 'Done'}
 						</CButton>
 					</div>
 

@@ -203,7 +203,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#entityManager.start(config.lastUpgradeIndex)
 
 		// Inform action recorder
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
 	}
 
 	/**
@@ -257,7 +257,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
-		if (entity.disabled) return
 
 		this.#entityManager.trackEntity(entity, controlId)
 	}
@@ -284,7 +283,13 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			const learnTimeout = entityDefinition.learnTimeout
 
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
-			const { parsedOptions } = parser.parseEntityOptions(entityDefinition, entity.options)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options)
+			if (!parseRes.ok) {
+				this.logger.warn(
+					`Failed to parse action options for ${entity.type} ${entity.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse ${entity.type} options. One or more options were invalid`)
+			}
 
 			switch (entity.type) {
 				case EntityModelType.Action: {
@@ -295,10 +300,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
-								options: parsedOptions,
-
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
+								options: parseRes.parsedOptions,
 							},
 						},
 						undefined,
@@ -322,12 +324,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								id: entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
-								options: parsedOptions,
+								options: parseRes.parsedOptions,
 
 								image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
-
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
 							},
 						},
 						undefined,
@@ -363,6 +362,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
+		if (action.disabled) return
 
 		try {
 			// This means the new flow is being done, and the options must be parsed at this stage
@@ -375,17 +375,30 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			// Note: for actions, this doesn't need to be reactive
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
-			const actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
+			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+			if (!parseRes.ok) {
+				let location = 'Unknown'
+
+				if (extras.surfaceId && extras.surfaceId.startsWith('trigger'))
+					location = `Trigger ${extras.surfaceId.split(':')[1]}`
+
+				if (extras.controlId && extras.controlId.startsWith('bank') && extras.location)
+					location = `Button ${extras.location.pageNumber}/${extras.location.row}/${extras.location.column}`
+
+				this.logger.warn(
+					`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(
+					`Failed to parse action options. One or more options were invalid\nAction: ${actionDefinition.label} - Location: ${location} - Errors: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
 					id: action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
-					options: actionOptions,
-
-					upgradeIndex: null,
-					disabled: !!action.disabled,
+					options: parseRes.parsedOptions,
 				},
 
 				surfaceId: extras?.surfaceId,
@@ -397,7 +410,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			}
 		} catch (e) {
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
-			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)
+
+			if (e instanceof Error) {
+				this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e.message)}`)
+			}
 
 			throw e
 		}
@@ -427,7 +443,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
 		this.#entityManager.destroy()
@@ -583,7 +599,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, msg.presets)
+			const presetsMap = new Map(Object.entries(msg.presets))
+
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -634,7 +652,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		if (isNaN(delay) || delay < 0) delay = 0
 
 		try {
-			this.#deps.controls.actionRecorder.receiveAction(
+			this.#deps.actionRecorder.receiveAction(
 				this.connectionId,
 				msg.actionId,
 				msg.options,
@@ -730,15 +748,12 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
-			if (value) {
+			if (value && !value.entity.disabled) {
 				updateMessage.actions[id] = {
 					id: value.entity.id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
 					options: value.parsedOptions,
-
-					upgradeIndex: value.entity.upgradeIndex ?? null,
-					disabled: !!value.entity.disabled,
 				}
 			} else {
 				updateMessage.actions[id] = null
@@ -752,7 +767,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
 
 		for (const [id, value] of feedbacks) {
-			if (value) {
+			if (value && !value.entity.disabled) {
 				const control = this.#controlsController.getControl(value.controlId)
 
 				updateMessage.feedbacks[id] = {
@@ -762,9 +777,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					options: value.parsedOptions,
 
 					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
-
-					upgradeIndex: value.entity.upgradeIndex ?? null,
-					disabled: !!value.entity.disabled,
 				}
 			} else {
 				updateMessage.feedbacks[id] = null
@@ -784,7 +796,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					options: act.entity.options,
 
 					upgradeIndex: act.entity.upgradeIndex ?? null,
-					disabled: !!act.entity.disabled,
 				})),
 				defaultUpgradeIndex: 0, // Unused
 			})
@@ -816,7 +827,6 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 						: exprVal(!!fb.entity.isInverted),
 
 					upgradeIndex: fb.entity.upgradeIndex ?? null,
-					disabled: !!fb.entity.disabled,
 				})),
 				defaultUpgradeIndex: 0, // Unused
 			})

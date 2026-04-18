@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { isLabelValid } from '@companion-app/shared/Label.js'

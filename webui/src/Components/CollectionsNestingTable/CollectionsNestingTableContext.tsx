@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { NestingCollectionsApi, CollectionsNestingTableItem, CollectionsNestingTableCollection } from './Types.js'
 
 export interface CollectionsNestingTableContextType<
@@ -8,6 +8,7 @@ export interface CollectionsNestingTableContextType<
 > {
 	ItemRow: (item: TItem, index: number) => React.ReactNode | null
 	GroupHeaderContent?: React.ComponentType<{ collection: TCollection }>
+	showCollapseButtons?: boolean
 	itemName: string
 	dragId: string
 	collectionsApi: NestingCollectionsApi
@@ -38,6 +39,7 @@ export function CollectionsNestingTableContextProvider<
 >({
 	ItemRow,
 	GroupHeaderContent,
+	showCollapseButtons,
 	itemName,
 	dragId,
 	collectionsApi,
@@ -49,13 +51,14 @@ export function CollectionsNestingTableContextProvider<
 		return {
 			ItemRow,
 			GroupHeaderContent,
+			showCollapseButtons,
 			itemName,
 			dragId,
 			collectionsApi,
 			selectedItemId,
 			gridLayout,
 		}
-	}, [ItemRow, GroupHeaderContent, itemName, dragId, collectionsApi, selectedItemId, gridLayout])
+	}, [ItemRow, GroupHeaderContent, showCollapseButtons, itemName, dragId, collectionsApi, selectedItemId, gridLayout])
 
 	return <CollectionsNestingTableContext.Provider value={value}>{children}</CollectionsNestingTableContext.Provider>
 }

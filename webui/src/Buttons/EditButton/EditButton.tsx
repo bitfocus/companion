@@ -1,5 +1,5 @@
 import { CAlert, CCol } from '@coreui/react'
-import React, { useContext, useRef } from 'react'
+import { useContext, useRef } from 'react'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { KeyReceiver } from '~/Resources/util.js'

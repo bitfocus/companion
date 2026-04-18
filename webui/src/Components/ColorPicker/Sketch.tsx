@@ -2,7 +2,6 @@
 // typos:disable-line
 // MIT Copyright (c) 2022 Reece Carolan Copyright (c) 2015 Case Sandberg
 
-import React from 'react'
 import { useColor, ColorProvider, type ColorProviderProps } from './context/useColor'
 import { SketchFields } from './components/SketchFields'
 import { SketchPresetColors } from './components/SketchPresetColors.js'

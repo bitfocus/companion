@@ -215,8 +215,11 @@ The second parameter is an optional value between 0 - 1 which specifies the port
 
 eg `blink(1000)` to flash once a second, on for 500ms then off for 500ms. `blink(1000, 0.25)` flashes once a second, on for 250ms off for 750ms
 
-:::tip
-The 0/1 returned from this can be treated as a boolean, you do not need to explicitly do this yourself
+:::tip[TIPS]
+
+- The 0/1 returned from this function can be treated as a boolean, you do not need to explicitly do this yourself
+- If you prefer specifying the number of flashes per second, use `1000/n` for the first parameter. For example, to flash three times per second write `blink(1000/3)`.
+
 :::
 
 ### Bool operations
@@ -330,3 +333,84 @@ eg `timeDiff($(internal:time_hms), "18:00:00")` will return the seconds until `1
 An example using a Date Time String could be `timeDiff($(internal:time_hms), "2024-07-04T20:00-04:00")` which would return the number of seconds from the current Companion time until 4th July 2024, 8pm, in the UTC-4 Timezone.
 
 The returned seconds can also be used within `secondsToTimestamp` to format the result as needed.
+
+### Date operations
+
+**parseDate(value)**
+
+Parse a date value and return the Unix timestamp in milliseconds. Accepts:
+
+- Numbers: treated as Unix milliseconds
+- Strings: parsed using JavaScript's [`Date()` constructor](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/Date). ISO 8601 format (e.g. `"2024-06-15T14:30:00Z"`) is recommended for reliable results. Ambiguous formats like `MM/DD/YYYY` are not reliably supported.
+
+Returns `null` if the value cannot be parsed.
+
+eg `parseDate("2024-06-15T12:00:00Z")` returns the Unix ms for that date.
+
+The returned value is Unix ms, the same format as `unixNow()`, so it can be used with all other date functions.
+
+**dateYear(value, timezone?)**, **dateMonth(value, timezone?)**, **dateDay(value, timezone?)**
+
+Extract date components from a date value (Unix ms or date string).
+
+- `dateYear` returns the full year (e.g. 2024)
+- `dateMonth` returns the month from 1 (January) to 12 (December)
+- `dateDay` returns the day of the month from 1 to 31
+
+eg `dateYear(unixNow())` returns the current year, `dateMonth(unixNow(), 'UTC')` returns the current month in UTC.
+
+**dateHour(value, timezone?)**, **dateMinute(value, timezone?)**, **dateSecond(value, timezone?)**
+
+Extract time components from a date value.
+
+- `dateHour` returns 0–23
+- `dateMinute` returns 0–59
+- `dateSecond` returns 0–59
+
+eg `dateHour(unixNow())` returns the current hour in local time, `dateHour(unixNow(), 'America/New_York')` returns the current hour in New York.
+
+**dateWeekday(value, timezone?)**
+
+Returns the day of the week as a number: 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
+
+eg `dateWeekday(unixNow())` returns today's weekday number.
+
+**dateFormat(value, formatString, timezone?)**
+
+Format a date value into a custom string representation. The format string uses [dayjs-compatible tokens](https://day.js.org/docs/en/display/format):
+
+| Token                       | Description                | Example                 |
+| --------------------------- | -------------------------- | ----------------------- |
+| `YYYY` / `YY`               | Year                       | 2024 / 24               |
+| `MMMM` / `MMM` / `MM` / `M` | Month                      | June / Jun / 06 / 6     |
+| `dddd` / `ddd` / `DD` / `D` | Day of week / Day of month | Saturday / Sat / 05 / 5 |
+| `HH` / `H`                  | 24-hour hour               | 09 / 9                  |
+| `hh` / `h`                  | 12-hour hour               | 09 / 9                  |
+| `mm` / `m`                  | Minutes                    | 05 / 5                  |
+| `ss` / `s`                  | Seconds                    | 03 / 3                  |
+| `SSS`                       | Milliseconds               | 123                     |
+| `A` / `a`                   | AM/PM                      | AM / am                 |
+
+Pass `'iso'` as the format to get an ISO 8601 string (always UTC): `dateFormat(value, 'iso')` returns `"2024-06-15T14:30:00.000Z"`
+
+eg `dateFormat(unixNow(), 'YYYY-MM-DD HH:mm:ss')` returns something like `"2024-06-15 14:30:00"`
+
+eg `dateFormat(unixNow(), 'dddd, MMMM D, YYYY')` returns something like `"Saturday, June 15, 2024"`
+
+**dateAdd(value, amount, unit)**
+
+Add (or subtract) a duration from a date value. Returns the result as Unix timestamp in milliseconds.
+
+Supported units: `seconds`, `minutes`, `hours`, `days`, `weeks`, `months`, `years` (both singular and plural).
+
+Use a negative amount to subtract time.
+
+eg `dateAdd(unixNow(), 7, 'days')` returns the Unix ms for 7 days from now
+
+eg `dateFormat(dateAdd(unixNow(), 1, 'months'), 'YYYY-MM-DD')` formats the date 1 month from now
+
+Note: when adding months, if the resulting day exceeds the target month's length, the date overflows into the next month (e.g. January 31 + 1 month overflows into March, not February).
+
+:::tip
+The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, local time is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
+:::

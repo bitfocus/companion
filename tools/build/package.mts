@@ -136,7 +136,6 @@ if (process.env.ELECTRON !== '0') {
 			appId: 'test-companion.bitfocus.no',
 			dmg: {
 				artifactName: 'companion-mac-${arch}.dmg',
-				sign: !!process.env.CSC_LINK, // Only sign in ci
 			},
 			mac: {
 				target: 'dmg',
@@ -151,6 +150,8 @@ if (process.env.ELECTRON !== '0') {
 				gatekeeperAssess: false,
 				entitlements: 'launcher/entitlements.mac.plist',
 				entitlementsInherit: 'launcher/entitlements.mac.plist',
+				icon: 'icon-macos-glass.icon',
+				identity: process.env.CSC_LINK ? undefined : null, // Disable signing when CSC_LINK is not set
 			},
 			win: {
 				target: 'nsis',
@@ -241,6 +242,14 @@ if (process.env.ELECTRON !== '0') {
 		// undo the changes made
 		await fs.writeFile(launcherPkgJsonPath, launcherPkgJsonStr)
 	}
+
+	// Ensure the node_modules was included, as that requires our patch to app-builder-lib to be applied
+	const expectedPathGlob =
+		platformInfo.runtimePlatform === 'darwin'
+			? 'electron-output/*/Companion.app/Contents/Resources/node_modules'
+			: 'electron-output/*/resources/node_modules'
+	const nodeModulesDirs = await glob(expectedPathGlob, { onlyDirectories: true })
+	if (nodeModulesDirs.length === 0) throw new Error('node_modules was not included in the electron build!')
 } else {
 	// TODO - populate dist with the rest of the bits
 }

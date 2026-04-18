@@ -1,125 +1,71 @@
 import type { DataStoreBase } from '../StoreBase.js'
 import type { Logger } from '../../Log/Controller.js'
 import { cloneDeep } from 'lodash-es'
-import type {
-	ExportFullv6,
-	ExportPageModelv6,
-	ExportTriggersListv6,
-	SomeExportv6,
-} from '@companion-app/shared/Model/ExportModel.js'
-import type {
-	NormalButtonSteps,
-	LayeredButtonModel,
-	LayeredButtonOptions,
-} from '@companion-app/shared/Model/ButtonModel.js'
-import type { Complete } from '@companion-module/base'
-import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
-import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 
-interface NormalButtonModel {
-	readonly type: 'button'
+// Snapshot of the plugin config field prefix at the time this migration was introduced
+const pluginCfgPrefix = 'plugin_cfg_'
 
-	options: NormalButtonOptions
+/**
+ * Rename map: old stored key -> new stored key.
+ *
+ * These are point-in-time renames needed when the plugin config namespace
+ * (`plugin_cfg_` prefix) was introduced. Keys that previously had no prefix, or
+ * had a different prefix, are migrated to their correct stored form here.
+ */
+const legacyRenames: ReadonlyArray<[oldKey: string, newKey: string]> = [
+	['tbarValueVariable', 'transfer_input_tbarValueVariable'],
+	['shuttleValueVariable', 'transfer_input_shuttleValueVariable'],
+	['jogValueVariable', 'transfer_input_jogValueVariable'],
+	['illuminate_pressed', `${pluginCfgPrefix}illuminate_pressed`],
+	['tbarLeds', 'transfer_output_tbarLeds'],
+	['swipe_can_change_page', 'canChangePage'],
+	['nfc', 'transfer_input_nfc'],
+	['invertFaderValues', `${pluginCfgPrefix}invertFaderValues`],
+	['leftFaderValueVariable', 'transfer_input_leftFaderValueVariable'],
+	['rightFaderValueVariable', 'transfer_input_rightFaderValueVariable'],
+]
 
-	style: ButtonStyleProperties
-
-	feedbacks: SomeEntityModel[]
-
-	steps: NormalButtonSteps
-
-	localVariables: SomeEntityModel[]
-}
-interface NormalButtonOptions {
-	stepProgression: 'auto' | 'manual' | 'expression'
-	stepExpression?: string
-	rotaryActions: boolean
+/** Mutates `config` in place. Returns true if any key was renamed. */
+function applyRenamesOnConfig(config: Record<string, unknown>): boolean {
+	let changed = false
+	for (const [oldKey, newKey] of legacyRenames) {
+		if (!Object.hasOwn(config, oldKey)) continue
+		if (!Object.hasOwn(config, newKey)) {
+			config[newKey] = config[oldKey]
+		}
+		delete config[oldKey]
+		changed = true
+	}
+	return changed
 }
 
 /**
- * do the database upgrades to convert from the v9 to the v10 format
+ * do the database upgrades to convert from the v11 to the v12 format
  */
 function convertDatabaseToV12(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
-	const controls = db.getTableView('controls')
+	const surfaces = db.getTableView('surfaces')
+	for (const [id, surface] of Object.entries(surfaces.all())) {
+		const config: Record<string, unknown> = surface?.config
+		if (!config || typeof config !== 'object') continue
 
-	for (const [controlId, control] of Object.entries(controls.all())) {
-		if (control.type === 'button') {
-			// Fixup control
-			controls.set(controlId, convertControlToLayered(control))
-		}
-	}
-}
-
-function convertControlToLayered(control: NormalButtonModel): LayeredButtonModel {
-	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null)
-	return {
-		type: 'button-layered',
-		options: {
-			...(control.options as Complete<NormalButtonOptions>),
-			canModifyStyleInApis: true, // Backwards compatibility
-		} satisfies Complete<LayeredButtonOptions>,
-		localVariables: control.localVariables,
-		steps: control.steps,
-		feedbacks: parsed.feedbacks,
-		style: {
-			layers: parsed.layers,
-		},
+		if (applyRenamesOnConfig(config)) surfaces.set(id, surface)
 	}
 }
 
 function convertImportToV12(obj: SomeExportv6): SomeExportv6 {
-	if (obj.type == 'full') {
-		const newObj: ExportFullv6 = {
-			...cloneDeep(obj),
-			version: 12,
-		}
-
-		if (newObj.pages) {
-			for (const page of Object.values(newObj.pages)) {
-				for (const row of Object.values(page.controls)) {
-					for (const [key, control] of Object.entries(row)) {
-						if (control.type === 'button') {
-							// Fixup control
-							row[key as any] = convertControlToLayered(control as NormalButtonModel)
-						}
-					}
-				}
-			}
-		}
-
-		return newObj
-	} else if (obj.type == 'page') {
-		const newObj: ExportPageModelv6 = {
-			...cloneDeep(obj),
-			version: 12,
-		}
-
-		for (const row of Object.values(newObj.page.controls)) {
-			for (const [key, control] of Object.entries(row)) {
-				if (control.type === 'button') {
-					// Fixup control
-					row[key as any] = convertControlToLayered(control as NormalButtonModel)
-				}
-			}
-		}
-
-		return newObj
-	} else if (obj.type == 'trigger_list') {
-		const newObj: ExportTriggersListv6 = {
-			...cloneDeep(obj),
-			version: 12,
-		}
-
-		return newObj
-	} else {
-		// No change
-		return obj
+	if (obj.type !== 'full' || !obj.surfaces || typeof obj.surfaces !== 'object') {
+		return { ...obj, version: 12 as const }
 	}
+
+	const newObj = { ...cloneDeep(obj), version: 12 as const }
+	for (const surface of Object.values(newObj.surfaces as Record<string, any>)) {
+		const config: Record<string, unknown> = surface?.config
+		if (config && typeof config === 'object') applyRenamesOnConfig(config)
+	}
+	return newObj
 }
 
-export default {
-	upgradeStartup: convertDatabaseToV12,
-	upgradeImport: convertImportToV12,
-}
+export default { upgradeStartup: convertDatabaseToV12, upgradeImport: convertImportToV12 }

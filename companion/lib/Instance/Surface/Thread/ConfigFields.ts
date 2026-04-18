@@ -20,26 +20,29 @@ import type {
 	CompanionSurfaceConfigField,
 	CompanionSurfaceInputFieldTextInput,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 export function translateSurfaceConfigFields(fields: SurfaceInputField[]): CompanionSurfaceConfigField[] {
-	return fields.map((o) => {
-		switch (o.type) {
-			case 'static-text':
-				return translateStaticTextField(o)
-			case 'textinput':
-				return translateTextInputField(o)
-			case 'checkbox':
-				return translateCheckboxField(o)
-			case 'number':
-				return translateNumberField(o)
-			case 'dropdown':
-				return translateDropdownField(o)
+	return fields
+		.filter((o) => !BANNED_PROPS.has(o.id))
+		.map((o) => {
+			switch (o.type) {
+				case 'static-text':
+					return translateStaticTextField(o)
+				case 'textinput':
+					return translateTextInputField(o)
+				case 'checkbox':
+					return translateCheckboxField(o)
+				case 'number':
+					return translateNumberField(o)
+				case 'dropdown':
+					return translateDropdownField(o)
 
-			default:
-				assertNever(o)
-				return generateUnsupportedField(o)
-		}
-	})
+				default:
+					assertNever(o)
+					return generateUnsupportedField(o)
+			}
+		})
 }
 
 function generateUnsupportedField<T extends CompanionInputFieldBase>(
@@ -73,7 +76,7 @@ function translateTextInputField(field: CompanionInputFieldTextInput): Complete<
 		minLength: undefined,
 		multiline: false,
 		placeholder: undefined, // Not supported from modules
-		isExpression: false, // Not supported from modules
+		disableSanitisation: false, // Not supported from modules
 	}
 }
 function translateCheckboxField(field: CompanionInputFieldCheckbox): Complete<CompanionInputFieldCheckboxExtended> {
@@ -95,6 +98,8 @@ function translateNumberField(field: CompanionInputFieldNumber): Complete<Compan
 		range: undefined,
 		showMinAsNegativeInfinity: undefined,
 		showMaxAsPositiveInfinity: undefined,
+		clampValues: false,
+		asInteger: false,
 	}
 }
 function translateDropdownField(field: CompanionInputFieldDropdown): Complete<CompanionInputFieldDropdownExtended> {

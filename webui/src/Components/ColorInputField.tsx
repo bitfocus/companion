@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useContext } from 'react'
+import { useState, useCallback, useContext } from 'react'
 import { SketchPicker } from './ColorPicker/Sketch.js'
 import type { ColorResult } from './ColorPicker/colors.js'
 import { createPortal } from 'react-dom'
 import { useOnClickOutsideExt } from '~/Resources/util.js'
-import { usePopper } from 'react-popper'
+import { useFloating, autoUpdate, flip, shift } from '@floating-ui/react'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { colord } from 'colord'
 import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
@@ -136,7 +136,11 @@ export function ColorInputField<T extends 'string' | 'number'>({
 
 	const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null)
 	const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null)
-	const { styles: popperStyles, attributes } = usePopper(referenceElement, popperElement)
+	const { floatingStyles } = useFloating({
+		elements: { reference: referenceElement, floating: popperElement },
+		whileElementsMounted: autoUpdate,
+		middleware: [flip(), shift()],
+	})
 	useOnClickOutsideExt([{ current: referenceElement }, { current: popperElement }], setHide)
 
 	return (
@@ -147,7 +151,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 				</div>
 				{displayPicker &&
 					createPortal(
-						<div ref={setPopperElement} style={{ ...popperStyles.popper, zIndex: 3 }} {...attributes.popper}>
+						<div ref={setPopperElement} style={{ ...floatingStyles, zIndex: 3 }}>
 							<SketchPicker
 								// disabled={disabled}
 								color={color}

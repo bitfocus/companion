@@ -344,15 +344,13 @@ export class InstanceConfigStore {
 		return true
 	}
 
-	cleanUnknownCollectionIds(validCollectionIds: Set<string>): void {
+	cleanUnknownCollectionIds(moduleType: ModuleInstanceType, validCollectionIds: Set<string>): void {
 		const changedIds: string[] = []
-
-		// Note: only connections have collections
 
 		// Figure out the first sort order
 		let nextSortOrder = 0
 		for (const config of this.#store.values()) {
-			if (config && !config?.collectionId && config.moduleInstanceType === ModuleInstanceType.Connection) {
+			if (config && !config?.collectionId && config.moduleInstanceType === moduleType) {
 				nextSortOrder = Math.max(nextSortOrder, config.sortOrder + 1)
 			}
 		}
@@ -362,7 +360,7 @@ export class InstanceConfigStore {
 		for (const [id, config] of this.#store) {
 			if (
 				config &&
-				config.moduleInstanceType === ModuleInstanceType.Connection &&
+				config.moduleInstanceType === moduleType &&
 				config.collectionId &&
 				!validCollectionIds.has(config.collectionId)
 			) {

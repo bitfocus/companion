@@ -1,5 +1,5 @@
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import React, { useContext } from 'react'
+import { useContext } from 'react'
 import { observer } from 'mobx-react-lite'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { CForm } from '@coreui/react'

@@ -14,7 +14,6 @@ export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurf
 
 export interface SurfaceModuleToHostEvents {
 	register: (msg: RegisterMessage) => RegisterResponseMessage
-	ready: (msg: Record<string, never>) => never
 
 	disconnect: (msg: DisconnectMessage) => never
 
@@ -40,7 +39,9 @@ export interface SurfaceModuleToHostEvents {
 }
 
 export interface HostToSurfaceModuleEvents {
-	/** Cleanup the connection in preparation for the thread/process to be terminated */
+	/** Initialise the surface in preparation for use */
+	init: (msg: Record<string, never>) => void
+	/** Cleanup the surface in preparation for the thread/process to be terminated */
 	destroy: (msg: Record<string, never>) => void
 
 	checkHidDevices: (msg: CheckHidDevicesMessage) => CheckHidDevicesResponseMessage

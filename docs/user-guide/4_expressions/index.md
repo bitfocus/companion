@@ -4,12 +4,13 @@ sidebar_position: 5
 description: Write expressions using operators, functions, and variables.
 ---
 
-:::note
-We are actively working on wider support for expressions in the next release of Companion.  
-Please bear with us as we work on implementing this.
-:::
+Many modules support using variables in input fields. Since Companion 4.3, modules can support expressions in **any** action or feedback field — look for the expression toggle button next to an input field to switch it into expression mode. Expressions are more powerful than plain variables but require a small expression language.
 
-Many modules support using variables in input fields. A subset of places also support expressions (for example, button text when in expression mode). Expressions are more powerful than plain variables but require a small expression language.
+:::note
+
+Not all modules support expressions, this will improve over time as they are updated to the newer APIs
+
+:::
 
 Key points
 

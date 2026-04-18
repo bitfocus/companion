@@ -1,4 +1,3 @@
-import React from 'react'
 import classnames from 'classnames'
 import type { CompanionAlignment } from '@companion-module/base'
 import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CCol, CFormSwitch, CRow, CInputGroup, CFormInput } from '@coreui/react'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { single as fuzzySingle } from 'fuzzysort'
@@ -29,9 +29,13 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import classnames from 'classnames'
+import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 
 export const TriggersPage = observer(function Triggers() {
 	const { triggersList } = useContext(RootAppStoreContext)
+	const twoPanelMode = useTwoPanelMode()
 
 	const navigate = useNavigate({ from: '/triggers' })
 
@@ -81,7 +85,7 @@ export const TriggersPage = observer(function Triggers() {
 		// Perform a fuzzy filter to hide irrelevant items
 		if (filter) {
 			const search = fuzzySingle(filter, item.name)
-			if (!search || search.score < -10000) return null
+			if (!search || search.score < 0.5) return null
 		}
 		return <TriggersTableRow item={item} />
 	}
@@ -110,18 +114,21 @@ export const TriggersPage = observer(function Triggers() {
 		void navigate({ to: '/triggers' })
 	}, [navigate])
 
-	const showPrimaryPanel = !selectedTriggerId
-	const showSecondaryPanel = !!selectedTriggerId
+	const showPrimaryPanel = twoPanelMode || !selectedTriggerId
+	const showSecondaryPanel = twoPanelMode || !!selectedTriggerId
 
 	return (
 		<CRow className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
-			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<CCol xs={twoPanelMode ? 6 : 12} className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<h4>Triggers</h4>
+						<h4 className="btn-inline">
+							Triggers
+							<ContextHelpButton action="/user-guide/config/triggers" />
+						</h4>
 						<p style={{ marginBottom: '0.5rem' }}>
 							Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
 							variable updates.
@@ -179,9 +186,11 @@ export const TriggersPage = observer(function Triggers() {
 				</div>
 			</CCol>
 
-			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<CCol xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
 				<div className="secondary-panel-simple">
-					{!!selectedTriggerId && <TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} />}
+					{!!selectedTriggerId && (
+						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
+					)}
 					<Outlet />
 				</div>
 			</CCol>
@@ -251,6 +260,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				console.error('failed to toggle trigger state', e)
 			})
 	}, [setOptionsFieldMutation, item.id, item.enabled])
+
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
 			'Delete trigger',
@@ -287,8 +297,10 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 		[item.description]
 	)
 
+	const collectionDisabled = !(item.collectionEnabled ?? true)
+
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
+		<div className={classnames('flex flex-row align-items-center gap-2 hand', { disabled: collectionDisabled })}>
 			<div className="flex flex-column grow" style={{ minWidth: 0 }} onClick={doEdit}>
 				<b>{item.name}</b>
 				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
@@ -301,7 +313,10 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						color="success"
 						checked={item.enabled}
 						onChange={doEnableDisable}
-						title={item.enabled ? 'Disable trigger' : 'Enable trigger'}
+						title={
+							(item.enabled ? 'Disable trigger' : 'Enable trigger') +
+							(collectionDisabled ? ' when collection is enabled.' : '')
+						}
 						size="xl"
 					/>
 
@@ -343,16 +358,18 @@ function CreateCollectionButton() {
 
 interface TriggerEditPanelHeadingProps {
 	doCloseTrigger: () => void
+	twoPanelMode: boolean
 }
 
-function TriggerEditPanelHeading({ doCloseTrigger }: TriggerEditPanelHeadingProps) {
+function TriggerEditPanelHeading({ doCloseTrigger, twoPanelMode }: TriggerEditPanelHeadingProps) {
 	return (
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Edit Trigger</h4>
 			<div className="header-buttons">
-				<div className="float_right ms-1" onClick={doCloseTrigger} title="Close">
-					<FontAwesomeIcon icon={faTimes} size="lg" />
-				</div>
+				<ContextHelpButton action="/user-guide/config/triggers#configuring">
+					Define your trigger here.
+				</ContextHelpButton>
+				{!twoPanelMode && <CloseButton closeFn={doCloseTrigger} />}
 			</div>
 		</div>
 	)

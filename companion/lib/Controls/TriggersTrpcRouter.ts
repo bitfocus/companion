@@ -2,12 +2,9 @@ import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import type { TriggerCollections } from './TriggerCollections.js'
-import type { SomeControl } from './IControlFragments.js'
-import type { TriggerEvents } from './TriggerEvents.js'
 import { nanoid } from 'nanoid'
 import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
 import z from 'zod'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { validateTriggerControlId } from './Util.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import type EventEmitter from 'events'
@@ -16,15 +13,13 @@ import type {
 	TriggersUpdate,
 	TriggersUpdateInitOp,
 } from '@companion-app/shared/Model/TriggerModel.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type { ControlStore } from './ControlStore.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createTriggersTrpcRouter(
 	changeEvents: EventEmitter<ControlChangeEvents>,
 	triggerCollections: TriggerCollections,
-	dbTable: DataStoreTableView<Record<string, SomeControlModel>>,
-	controlsMap: Map<string, SomeControl<any>>,
-	triggerEvents: TriggerEvents,
+	controlStore: ControlStore,
 	deps: ControlDependencies
 ) {
 	return router({
@@ -35,7 +30,7 @@ export function createTriggersTrpcRouter(
 
 			const triggers: Record<string, ClientTriggerData> = {}
 
-			for (const [controlId, control] of controlsMap.entries()) {
+			for (const [controlId, control] of controlStore.controls.entries()) {
 				if (control instanceof ControlTrigger) {
 					triggers[controlId] = control.toTriggerJSON()
 				}
@@ -54,12 +49,12 @@ export function createTriggersTrpcRouter(
 		create: publicProcedure.mutation(() => {
 			const controlId = CreateTriggerControlId(nanoid())
 
-			const newControl = new ControlTrigger(deps, triggerEvents, controlId, null, false)
-			controlsMap.set(controlId, newControl)
+			const newControl = new ControlTrigger(deps, controlStore.triggerEvents, controlId, null, false)
+			controlStore.controls.set(controlId, newControl)
 
 			// Add trigger to the end of the list
 			const allTriggers: ControlTrigger[] = []
-			for (const control of controlsMap.values()) {
+			for (const control of controlStore.controls.values()) {
 				if (control instanceof ControlTrigger) {
 					allTriggers.push(control)
 				}
@@ -82,13 +77,11 @@ export function createTriggersTrpcRouter(
 				return false
 			}
 
-			const control = controlsMap.get(controlId)
+			const control = controlStore.controls.get(controlId)
 			if (control) {
 				control.destroy()
 
-				controlsMap.delete(controlId)
-
-				dbTable.delete(controlId)
+				controlStore.deleteControl(controlId)
 
 				return true
 			}
@@ -104,12 +97,12 @@ export function createTriggersTrpcRouter(
 
 			const newControlId = CreateTriggerControlId(nanoid())
 
-			const fromControl = controlsMap.get(controlId)
+			const fromControl = controlStore.controls.get(controlId)
 			if (fromControl && fromControl instanceof ControlTrigger) {
 				const controlJson = fromControl.toJSON(true)
 
-				const newControl = new ControlTrigger(deps, triggerEvents, newControlId, controlJson, true)
-				controlsMap.set(newControlId, newControl)
+				const newControl = new ControlTrigger(deps, controlStore.triggerEvents, newControlId, controlJson, true)
+				controlStore.controls.set(newControlId, newControl)
 
 				setImmediate(() => {
 					// Ensure the trigger is enabled, on a slight debounce
@@ -128,7 +121,7 @@ export function createTriggersTrpcRouter(
 				return false
 			}
 
-			const control = controlsMap.get(controlId)
+			const control = controlStore.controls.get(controlId)
 			if (control && control instanceof ControlTrigger) {
 				control.executeActions(Date.now(), TriggerExecutionSource.Test)
 			}
@@ -146,7 +139,7 @@ export function createTriggersTrpcRouter(
 			.mutation(({ input }) => {
 				const { collectionId, controlId, dropIndex } = input
 
-				const thisTrigger = controlsMap.get(controlId)
+				const thisTrigger = controlStore.controls.get(controlId)
 				if (!thisTrigger || !(thisTrigger instanceof ControlTrigger)) return false
 
 				if (!triggerCollections.doesCollectionIdExist(collectionId)) return false
@@ -158,7 +151,7 @@ export function createTriggersTrpcRouter(
 				}
 
 				// find all the other triggers with the matching collectionId
-				const sortedTriggers = controlsMap
+				const sortedTriggers = controlStore.controls
 					.values()
 					.filter(
 						(control): control is ControlTrigger =>

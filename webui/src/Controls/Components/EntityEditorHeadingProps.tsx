@@ -2,7 +2,7 @@ import type { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { CButtonGroup, CButton } from '@coreui/react'
 import { faExpandArrowsAlt, faCompressArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 import { observer } from 'mobx-react-lite'
@@ -24,14 +24,9 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 
 	const ownerIdString = stringifyEntityOwnerId(ownerId)
 
-	// Hide this element if there's no defined content
-	// TODO: This is a bit of a hack, ideally this should be informed by the parent component
-	if (!heading && (!headingActions || headingActions.length === 0)) return null
-
 	return (
 		<h5>
-			{heading}
-
+			{heading}&nbsp;
 			<CButtonGroup className="right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
 					<CButton

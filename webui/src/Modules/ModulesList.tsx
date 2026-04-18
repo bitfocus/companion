@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -21,6 +21,8 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -132,17 +134,20 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	return (
 		<div className="flex-column-layout">
 			<div className="fixed-header">
-				<h4>Manage Modules</h4>
+				<h4 className="btn-inline">
+					Manage Modules
+					<ContextHelpButton action="/user-guide/config/modules" />
+				</h4>
 
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/user-guide/modules')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')} className="text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />
 					For offline systems, download module bundles from the{' '}
-					<a href="https://user.bitfocus.io/download" target="_blank" className="text-decoration-none">
+					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank" className="text-decoration-none">
 						Bitfocus website
 					</a>
 					.
@@ -185,7 +190,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							<tr>
 								<td colSpan={4} style={{ padding: '10px 5px' }}>
 									<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-									<strong>{hiddenCount} Modules are ignored</strong>
+									<strong>{hiddenCount} Modules are ignored</strong>. <br /> Enable{' '}
+									{(visibleModules.visibility.installed ? '' : '"Installed" ') +
+										(visibleModules.visibility.available ? '' : '"Available" ') +
+										(visibleModules.visibility.availableDeprecated ? '' : '"Deprecated"') +
+										' to include them in the search'}
 								</td>
 							</tr>
 						)}
@@ -289,7 +298,11 @@ const ModulesListRow = observer(function ModulesListRow({
 				)}
 			</td>
 			<td onClick={doEdit} className="hand">
-				{!!moduleInfo.storeInfo?.deprecationReason && <FontAwesomeIcon icon={faWarning} title="Deprecated" />}
+				{!!moduleInfo.storeInfo?.deprecationReason && (
+					<InlineHelp help="Deprecated">
+						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
+					</InlineHelp>
+				)}
 				{moduleInfo.name}
 			</td>
 			<td className="compact">

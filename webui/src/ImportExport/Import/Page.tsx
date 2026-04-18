@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { CButton, CCol, CRow, CFormSelect, CCallout } from '@coreui/react'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { ButtonGridHeader, PageNumberPicker, type PageNumberOption } from '~/Buttons/ButtonGridHeader.js'
@@ -137,7 +137,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										ref={sourceGridRef}
 										pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 										gridSize={sourceGridSize}
-										buttonIconFactory={ButtonImportPreview}
+										ButtonIconFactory={ButtonImportPreview}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
 									/>
@@ -170,7 +170,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										ref={destinationGridRef}
 										pageNumber={pageNumber}
 										gridSize={destinationGridSize}
-										buttonIconFactory={ButtonGridIcon}
+										ButtonIconFactory={ButtonGridIcon}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
 									/>
@@ -298,8 +298,8 @@ const ImportRemapRow = observer(function ImportRemapRow({
 				<CFormSelect value={connectionRemap[id] ?? ''} onChange={onChange}>
 					<option value="_blank">[ Create new connection ]</option>
 					<option value="_ignore">[ Ignore ]</option>
-					{currentConnections.map(([id, conn]) => (
-						<option key={id} value={id}>
+					{currentConnections.map((conn) => (
+						<option key={conn.id} value={conn.id}>
 							Link to {conn.label}
 						</option>
 					))}

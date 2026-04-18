@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { EditableInput } from './EditableInput.js'
 import { useColor, type OnChangeFn } from '../context/useColor.js'
 

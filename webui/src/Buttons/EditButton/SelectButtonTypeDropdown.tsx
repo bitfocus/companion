@@ -1,7 +1,7 @@
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { CDropdown, CButtonGroup, CButton, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react'
-import React, { useCallback } from 'react'
+import { CDropdown, CButton, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react'
+import { useCallback } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -55,21 +55,17 @@ export function SelectButtonTypeDropdown({
 	)
 
 	return (
-		<CDropdown className="" style={{ display: 'inline-block', marginRight: -4, position: 'inherit' }}>
-			<CButtonGroup>
-				{/* This could be simplified to use the split property on CDropdownToggle, but then onClick doesnt work https://github.com/coreui/coreui-react/issues/179 */}
-				<CButton color="danger" onClick={() => setButtonType('button-layered')}>
-					Create button
-				</CButton>
-				<CDropdownToggle
-					caret
-					color="danger"
-					style={{ opacity: 0.7, paddingLeft: 14, paddingRight: 16 }}
-					className="dropdown-toggle dropdown-toggle-split"
-				>
-					{/* <span className="sr-only">Toggle Dropdown</span> */}
-				</CDropdownToggle>
-			</CButtonGroup>
+		<CDropdown variant="btn-group">
+			<CButton color="danger" onClick={() => setButtonType('button-layered')} title="Create regular button.">
+				Create button
+			</CButton>
+			<CDropdownToggle
+				color="danger"
+				split
+				style={{ opacity: 0.7, padding: '0 0.75em' }}
+				aria-label="Toggle Button-Type Dropdown"
+				title="Toggle Button-Type Dropdown"
+			/>
 			<CDropdownMenu>
 				<CDropdownItem onClick={() => setButtonType('button-layered')}>Regular button</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>

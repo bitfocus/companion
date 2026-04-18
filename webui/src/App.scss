@@ -29,6 +29,7 @@
 @use 'scss/wizard';
 @use 'scss/import-export';
 @use 'scss/collections-nesting-table';
+@use 'scss/collapsible-tree';
 @use 'scss/sticky-tables';
 @use 'scss/expression';
 @use 'scss/image-library';
@@ -189,4 +190,18 @@ body {
 	align-items: center;
 	padding-left: 0.75rem;
 	pointer-events: none;
+}
+
+.variable-value-expanded {
+	background-color: #fff;
+	min-width: 250px;
+
+	.alert {
+		--cui-alert-padding-x: 0.75rem;
+		--cui-alert-padding-y: 0.5rem;
+	}
+
+	.popover-body {
+		padding: 0.75rem;
+	}
 }

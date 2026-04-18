@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
@@ -69,20 +69,18 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="connection-group-actions mb-2">
-					<CButtonGroup size="sm">
-						<AddRemoteSurfaceButton />
-						<CButton
-							color="info"
-							className="d-xl-none"
-							onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
-						>
-							<FontAwesomeIcon icon={faPlug} className="me-1" />
-							Discover Remote Surfaces
-						</CButton>
-						<CreateCollectionButton />
-					</CButtonGroup>
-				</div>
+				<CButtonGroup size="sm" className="connection-group-actions mb-2">
+					<AddRemoteSurfaceButton />
+					<CButton
+						color="warning"
+						className="d-xl-none"
+						onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
+					>
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
+						Discover Remote Surfaces
+					</CButton>
+					<CreateCollectionButton />
+				</CButtonGroup>
 			</div>
 
 			<div className="connections-list-table-container scrollable-content">

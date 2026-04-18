@@ -4,7 +4,7 @@ import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Mod
 import { CButton } from '@coreui/react'
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useRef, useCallback } from 'react'
+import { useRef, useCallback } from 'react'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import {

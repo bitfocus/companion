@@ -4,6 +4,7 @@ import type { DataDatabase } from '../../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../../UI/TRPC.js'
 import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class ConnectionsCollections extends EnabledCollectionsBaseController<ConnectionCollectionData> {
 	readonly #emitUpdated: () => void
@@ -35,7 +36,7 @@ export class ConnectionsCollections extends EnabledCollectionsBaseController<Con
 	 * Ensure that all collectionId fields in connection objects point to valid collections
 	 */
 	override removeUnknownCollectionReferences(): void {
-		this.#configStore.cleanUnknownCollectionIds(this.collectAllCollectionIds())
+		this.#configStore.cleanUnknownCollectionIds(ModuleInstanceType.Connection, this.collectAllCollectionIds())
 	}
 
 	override emitUpdateUser(_rows: ConnectionCollection[]): void {

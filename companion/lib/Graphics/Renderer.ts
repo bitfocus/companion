@@ -12,8 +12,7 @@
 import { Image } from './Image.js'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
-import { type GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
-import type { DrawImageBuffer, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
@@ -25,6 +24,7 @@ import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 import QuickLRU from 'quick-lru'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
+import type { RendererDrawStyle } from './Types.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
@@ -105,7 +105,7 @@ export class GraphicsRenderer {
 	 */
 	static drawBlank(
 		resolution: { width: number; height: number },
-		options: GraphicsOptions,
+		showTopbar: boolean,
 		location: ControlLocation | null
 	): ImageResult {
 		// let now = performance.now()
@@ -115,12 +115,12 @@ export class GraphicsRenderer {
 
 		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
 			// console.timeEnd('drawBlankImage')
-			GraphicsRenderer.#drawBlankImage(img, options, location)
+			GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
 
 			return new ImageResult(img.toDataURLSync(), null, async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
 				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
-					GraphicsRenderer.#drawBlankImage(img, options, location)
+					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
 				})
@@ -128,13 +128,13 @@ export class GraphicsRenderer {
 		})
 	}
 
-	static #drawBlankImage(img: Image, options: GraphicsOptions, location: ControlLocation | null) {
+	static #drawBlankImage(img: Image, showTopbar: boolean, location: ControlLocation | null) {
 		// Calculate some constants for drawing without reinventing the numbers
 		const { drawScale, transformX } = GraphicsRenderer.calculateTransforms(img)
 
 		img.fillColor('black')
 
-		if (!options.remove_topbar) {
+		if (showTopbar) {
 			img.drawTextLine(
 				transformX(2),
 				3 * drawScale,
@@ -150,10 +150,7 @@ export class GraphicsRenderer {
 	 * Draw the image for a button
 	 */
 	static async drawButtonBareImageUnwrapped(
-		options: GraphicsOptions,
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined,
+		drawStyle: RendererDrawStyle,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
@@ -165,7 +162,7 @@ export class GraphicsRenderer {
 			dimensions[1],
 			resolution.oversampling,
 			async (img) => {
-				await GraphicsRenderer.#drawButtonImageInternal(img, options, drawStyle, location, pagename, {
+				await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle, {
 					width: dimensions[0],
 					height: dimensions[1],
 				})
@@ -184,27 +181,15 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for a button
 	 */
-	static async drawButtonImageUnwrapped(
-		options: GraphicsOptions,
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined
-	): Promise<{
+	static async drawButtonImageUnwrapped(drawStyle: RendererDrawStyle): Promise<{
 		dataUrl: string
 		processedStyle: ImageResultProcessedStyle
 	}> {
 		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
-			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(
-				img,
-				options,
-				drawStyle,
-				location,
-				pagename,
-				{
-					width: 72,
-					height: 72,
-				}
-			)
+			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle, {
+				width: 72,
+				height: 72,
+			})
 
 			return {
 				dataUrl: img.toDataURLSync(),
@@ -215,10 +200,7 @@ export class GraphicsRenderer {
 
 	static async #drawButtonImageInternal(
 		img: Image,
-		options: GraphicsOptions,
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined,
+		drawStyle: RendererDrawStyle,
 		resolution: { width: number; height: number }
 	): Promise<ImageResultProcessedStyle> {
 		// console.log('starting drawButtonImage '+ performance.now())
@@ -235,11 +217,11 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (options.page_plusminus) {
+			if (drawStyle.plusminus) {
 				img.drawTextLine(
 					transformX(31),
 					transformY(20),
-					options.page_direction_flipped ? '–' : '+',
+					drawStyle.direction_flipped ? '–' : '+',
 					colorWhite,
 					18 * drawScale
 				)
@@ -260,11 +242,11 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (options.page_plusminus) {
+			if (drawStyle.plusminus) {
 				img.drawTextLine(
 					transformX(31),
 					transformY(36),
-					options.page_direction_flipped ? '+' : '–',
+					drawStyle.direction_flipped ? '+' : '–',
 					colorWhite,
 					18 * drawScale
 				)
@@ -293,7 +275,7 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (location === undefined) {
+			if (drawStyle.pageNumber <= 0) {
 				// Preview (no location)
 				img.drawTextLineAligned(
 					transformX(36),
@@ -305,24 +287,34 @@ export class GraphicsRenderer {
 					'top'
 				)
 				img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
-			} else if (!pagename || pagename.toLowerCase() == 'page') {
+			} else if (!drawStyle.pageName || drawStyle.pageName.toLowerCase() == 'page') {
 				img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
 				img.drawTextLineAligned(
 					transformX(36),
 					transformY(32),
-					'' + location.pageNumber,
+					'' + drawStyle.pageNumber,
 					colorWhite,
 					18 * drawScale,
 					'center',
 					'top'
 				)
 			} else {
-				img.drawAlignedText(0, 0, img.width, img.height, pagename, colorWhite, 18 * drawScale, 'center', 'center')
+				img.drawAlignedText(
+					0,
+					0,
+					img.width,
+					img.height,
+					drawStyle.pageName,
+					colorWhite,
+					18 * drawScale,
+					'center',
+					'center'
+				)
 			}
 		} else if (drawStyle.style === 'button-layered') {
 			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
-			await GraphicsLayeredButtonRenderer.draw(img, options, drawStyle, location, emptySet, null, {
+			await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {
 				x: 0,
 				y: 0,
 			})

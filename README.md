@@ -13,7 +13,7 @@ Slack is also the perfect place for asking questions, especially when you're get
 
 **Slack / Chat**
 
-- https://bfoc.us/ke7e9dqgaz
+- https://l.companion.free/q/78U0Kpbc9
 
 **Our websites**
 

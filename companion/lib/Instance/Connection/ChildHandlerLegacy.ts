@@ -85,10 +85,10 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import { ConvertPresetDefinition } from './PresetsLegacy.js'
-import type { PresetDefinition } from '@companion-app/shared/Model/Presets.js'
+import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
 import type { ControlsController } from '../../Controls/Controller.js'
 
@@ -249,7 +249,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#entityManager?.start(config.lastUpgradeIndex)
 
 		// Inform action recorder
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
 	}
 
 	/**
@@ -394,7 +394,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
 		if (this.#entityManager) {
 			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
-			if (entity.disabled) return
 
 			this.#entityManager.trackEntity(entity, controlId)
 			return
@@ -588,7 +587,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				// Note: for actions, this doesn't need to be reactive
 				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
-				actionOptions = parser.parseEntityOptions(actionDefinition, action.options).parsedOptions
+				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+				if (!parseRes.ok) {
+					this.logger.warn(
+						`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
+					)
+					throw new Error(`Failed to parse action options. One or more options were invalid`)
+				}
+				actionOptions = parseRes.parsedOptions
 			} else {
 				actionOptions = convertExpressionOptionsWithoutParsing(action.options)
 			}
@@ -643,7 +649,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
-		this.#deps.controls.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
+		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
 		this.#entityManager?.destroy()
@@ -748,12 +754,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
 
 		for (const rawAction of msg.actions || []) {
+			if (BANNED_PROPS.has(rawAction.id)) continue
 			const optionsToIgnoreForSubscribeSet = new Set<string>(rawAction.optionsToIgnoreForSubscribe || [])
 			const options = translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager)
 
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
+				sortKey: null,
 				description: rawAction.description,
 				options: options,
 				optionsToMonitorForInvalidations: options
@@ -789,11 +797,13 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
 		for (const rawFeedback of msg.feedbacks || []) {
+			if (BANNED_PROPS.has(rawFeedback.id)) continue
 			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
 
 			feedbacks[rawFeedback.id] = {
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
+				sortKey: null,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
 				optionsToMonitorForInvalidations: null, // All should be monitored
@@ -854,7 +864,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			// Ensure it is correctly formed
 			if (variable && typeof variable.name === 'string' && typeof variable.id === 'string') {
 				// Ensure the ids are valid
-				if (variable.id.match(idCheckRegex)) {
+				if (!BANNED_PROPS.has(variable.id) && variable.id.match(idCheckRegex)) {
 					newVariables.push({
 						description: variable.name,
 						name: variable.id,
@@ -886,20 +896,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			if (!this.#label) throw new Error(`Got call to handleSetPresetDefinitions before init was called`)
 
-			const convertedPresets: PresetDefinition[] = []
+			const { presets, uiPresets } = ConvertPresetDefinitions(
+				this.logger,
+				this.connectionId,
+				this.#currentUpgradeIndex ?? undefined,
+				msg.presets
+			)
 
-			for (const rawPreset of msg.presets) {
-				const convertedPreset = ConvertPresetDefinition(
-					this.logger,
-					this.connectionId,
-					this.#currentUpgradeIndex ?? undefined,
-					rawPreset.id,
-					rawPreset
-				)
-				if (convertedPreset) convertedPresets.push(convertedPreset)
-			}
-
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, convertedPresets)
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -951,7 +955,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		if (isNaN(delay) || delay < 0) delay = 0
 
 		try {
-			this.#deps.controls.actionRecorder.receiveAction(
+			this.#deps.actionRecorder.receiveAction(
 				this.connectionId,
 				msg.actionId,
 				msg.options,

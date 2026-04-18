@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
@@ -11,6 +11,8 @@ import { observer } from 'mobx-react-lite'
 import CryptoJS from 'crypto-js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_config_file'
 
@@ -116,6 +118,7 @@ export const ImportExportPage = observer(function ImportExport() {
 													}
 												}
 
+												if (BANNED_PROPS.has(id)) continue
 												if (matchingLabelId) {
 													initialRemap[id] = matchingLabelId
 												} else {
@@ -171,7 +174,10 @@ export const ImportExportPage = observer(function ImportExport() {
 			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
-			<h4>Import / Export Configuration</h4>
+			<h4 className="btn-inline">
+				Import / Export Configuration
+				<ContextHelpButton action="/user-guide/config/import-export" />
+			</h4>
 			<p>On this page, you can import, export, and reset all settings stored in your Companion installation.</p>
 
 			<CCallout color="success">

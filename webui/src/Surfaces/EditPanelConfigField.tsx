@@ -3,14 +3,14 @@ import { CFormSwitch, CFormLabel, CCol } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { TextInputField, NumberInputField, DropdownInputField } from '~/Components'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { DropdownChoiceInt } from '~/DropDownInputFancy'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
@@ -42,7 +42,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => validateInputValue(definition, value) === undefined,
+		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
 		[definition]
 	)
 	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])
@@ -53,28 +53,28 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'textinput':
-			features = definition.isExpression
-				? {
-						variables: true,
-						local: true,
-					}
-				: {}
-
-			control = definition.isExpression ? (
-				<ExpressionInputField
-					value={stringifyVariableValue(value) ?? ''}
-					localVariables={features.local ? SurfaceLocalVariables : undefined}
-					setValue={setValue2}
-				/>
-			) : (
+			control = (
 				<TextInputField
 					value={stringifyVariableValue(value) ?? ''}
 					placeholder={definition.placeholder}
-					useVariables={features.variables}
-					localVariables={features.local ? SurfaceLocalVariables : undefined}
 					multiline={definition.multiline}
 					setValue={setValue2}
 					checkValid={checkValid}
+				/>
+			)
+
+			break
+		case 'expression':
+			features = {
+				variables: true,
+				local: true,
+			}
+
+			control = (
+				<ExpressionInputField
+					value={stringifyVariableValue(value) ?? ''}
+					localVariables={SurfaceLocalVariables}
+					setValue={setValue2}
 				/>
 			)
 

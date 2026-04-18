@@ -20,18 +20,15 @@ import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import os from 'os'
 import debounceFn from 'debounce-fn'
+import { assertNever } from '@companion-module/base'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import {
-	ButtonGraphicsDecorationType,
-	type DrawImageBuffer,
-	type DrawStyleModel,
-} from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EventEmitter } from 'events'
 import LogController from '../Log/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import type { GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
@@ -46,6 +43,7 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
+import type { RendererButtonStyle, RendererDrawStyle } from './Types.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
@@ -79,7 +77,7 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #logger = LogController.createLogger('Graphics/Controller')
 
-	readonly #controlsController: ControlsController
+	readonly controlsStore: IControlStore
 	readonly #pageStore: IPageStore
 	readonly #userConfigController: DataUserConfig
 	readonly #variableValuesController: VariablesValues
@@ -202,7 +200,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	)
 
 	constructor(
-		controlsController: ControlsController,
+		controlsStore: IControlStore,
 		pageStore: IPageStore,
 		userConfigController: DataUserConfig,
 		variablesController: VariablesController,
@@ -211,7 +209,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	) {
 		super()
 
-		this.#controlsController = controlsController
+		this.controlsStore = controlsStore
 		this.#pageStore = pageStore
 		this.#userConfigController = userConfigController
 		this.#variableValuesController = variablesController.values
@@ -234,7 +232,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			async (_id: string, args: RenderArguments, skipInvalidation: boolean) => {
 				try {
 					if (args.type === 'preset') {
-						const control = this.#controlsController.getControl(args.controlId)
+						const control = this.controlsStore.getControl(args.controlId)
 						const buttonStyle = (await control?.getDrawStyle()) ?? undefined
 
 						let render: ImageResult | undefined
@@ -250,17 +248,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							render = this.#renderLRUCache.get(cacheKey)
 
 							if (!render) {
+								const renderStyle: RendererDrawStyle = {
+									...buttonStyle,
+									show_topbar: this.#resolveShowTopBar(buttonStyle.elements),
+									location: undefined, // Presets don't have a location, and it isn't needed for rendering
+								}
+
 								const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
-									buttonStyle,
-									undefined,
-									undefined,
+									renderStyle,
 									CRASHED_WORKER_RETRY_COUNT
 								)
 								render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
 									this.#executePoolDrawButtonBareImage(
-										buttonStyle,
-										undefined,
-										undefined,
+										renderStyle,
 										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
 										rotation,
 										format,
@@ -270,7 +270,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, null)
+							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, null)
 						}
 
 						this.emit('presetDrawn', args.controlId, render)
@@ -289,61 +289,84 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						location.row >= gridSize.minRow
 
 					const controlId = this.#pageStore.getControlIdAt(location)
-					const control = controlId ? this.#controlsController.getControl(controlId) : undefined
+					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
 					const buttonStyle = (await control?.getDrawStyle()) ?? undefined
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const pagename = this.#pageStore.getPageName(location.pageNumber)
 
-						const cacheKeyObj: Record<string, any> = {
-							options: this.#drawOptions,
-							pagename,
-							location,
-							...buttonStyle,
-						}
+						let renderStyle: RendererDrawStyle | undefined
+						let cacheKey: string | undefined
 
-						// Check if the image is already present in the render cache and if so, return it
-						if (buttonStyle.style === 'button-layered') {
-							const canvasElement = buttonStyle.elements.find((el) => el.type === 'canvas')
+						switch (buttonStyle.style) {
+							case 'button-layered': {
+								const showTopBar = this.#resolveShowTopBar(buttonStyle.elements)
 
-							const globalShowTopBar =
-								!this.#drawOptions.remove_topbar &&
-								canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
+								renderStyle = {
+									...buttonStyle,
 
-							if (canvasElement?.decoration !== ButtonGraphicsDecorationType.TopBar && !globalShowTopBar) {
-								// Location is not needed in the cache key if topbar is not shown
-								delete cacheKeyObj.location
+									show_topbar: showTopBar,
+									location: showTopBar ? location : undefined, // Only needed if the topbar is shown
+								}
+
+								const cacheKeyObj: Record<string, any> = {
+									...renderStyle,
+									elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
+								}
+								cacheKey = JSON.stringify(cacheKeyObj)
+
+								break
 							}
-
-							cacheKeyObj.elements = collectContentHashes(buttonStyle.elements)
+							case 'pageup':
+							case 'pagedown': {
+								renderStyle = {
+									style: buttonStyle.style,
+									plusminus: this.#drawOptions.page_plusminus,
+									direction_flipped: this.#drawOptions.page_direction_flipped,
+								}
+								cacheKey = JSON.stringify(renderStyle)
+								break
+							}
+							case 'pagenum': {
+								renderStyle = {
+									style: 'pagenum',
+									pageNumber: location.pageNumber,
+									pageName: pagename,
+								}
+								cacheKey = JSON.stringify(renderStyle)
+								break
+							}
+							default:
+								assertNever(buttonStyle)
+								break
 						}
 
-						const cacheKey = JSON.stringify(cacheKeyObj)
-						render = this.#renderLRUCache.get(cacheKey)
+						if (renderStyle && cacheKey) {
+							// Check if the image is already present in the render cache and if so, return it
+							render = this.#renderLRUCache.get(cacheKey)
 
-						if (!render) {
-							const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
-								buttonStyle,
-								location,
-								pagename,
-								CRASHED_WORKER_RETRY_COUNT
-							)
-							render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
-								this.#executePoolDrawButtonBareImage(
-									buttonStyle,
-									location,
-									pagename,
-									{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-									rotation,
-									format,
+							if (!render) {
+								const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
+									renderStyle,
 									CRASHED_WORKER_RETRY_COUNT
 								)
-							)
-							this.#renderLRUCache.set(cacheKey, render)
+								render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
+									this.#executePoolDrawButtonBareImage(
+										renderStyle,
+										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+										rotation,
+										format,
+										CRASHED_WORKER_RETRY_COUNT
+									)
+								)
+								this.#renderLRUCache.set(cacheKey, render)
+							}
+						} else {
+							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
+						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
 					}
 
 					if (location && locationIsInBounds) {
@@ -445,12 +468,33 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
+				const blankRender = GraphicsRenderer.drawBlank(
+					{ width: 72, height: 72 },
+					!this.#drawOptions.remove_topbar,
+					location
+				)
 
 				this.#updateCacheWithRender(location, blankRender)
 				this.emit('button_drawn', location, blankRender)
 			}
 		}
+	}
+
+	#resolveShowTopBar(elements: SomeButtonGraphicsDrawElement[]): boolean {
+		const canvasElement = elements.find((el) => el.type === 'canvas')
+
+		const globalShowTopBar =
+			!this.#drawOptions.remove_topbar && canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
+
+		// Should never happen, but sanity check
+		if (!canvasElement) {
+			return globalShowTopBar
+		}
+
+		return (
+			canvasElement.decoration === ButtonGraphicsDecorationType.TopBar ||
+			(canvasElement.decoration === ButtonGraphicsDecorationType.FollowDefault && globalShowTopBar)
+		)
 	}
 
 	/**
@@ -476,8 +520,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Redraw the page controls on every page
 	 */
 	invalidatePageControls(): void {
-		const allControls = this.#controlsController.getAllControls()
-		for (const control of Object.values(allControls)) {
+		const allControls = this.controlsStore.getAllControls()
+		for (const control of allControls.values()) {
 			if (control.type === 'pageup' || control.type === 'pagedown') {
 				this.invalidateControl(control.controlId)
 			}
@@ -488,7 +532,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Draw a preview of a button
 	 */
 	async drawPreview(elements: SomeButtonGraphicsDrawElement[]): Promise<ImageResult> {
-		const drawStyle: DrawStyleModel = {
+		const drawStyle: RendererButtonStyle = {
 			style: 'button-layered',
 
 			elements: elements,
@@ -499,19 +543,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 			stepCurrent: 1,
 			stepCount: 1,
+
+			show_topbar: this.#resolveShowTopBar(elements),
+
+			location: undefined,
 		}
 
-		const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
-			drawStyle,
-			undefined,
-			undefined,
-			CRASHED_WORKER_RETRY_COUNT
-		)
+		const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(drawStyle, CRASHED_WORKER_RETRY_COUNT)
 		return new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
 			this.#executePoolDrawButtonBareImage(
 				drawStyle,
-				undefined,
-				undefined,
 				{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
 				rotation,
 				format,
@@ -636,15 +677,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank({ width: 72, height: 72 }, this.#drawOptions, location)
+		return GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
 	}
 
 	/**
 	 * Compute the target size for the render LRU cache based on control count
 	 */
 	#computeRenderCacheSize(): number {
-		const allControls = this.#controlsController.getAllControls()
-		const totalControls = Object.keys(allControls).length
+		const allControls = this.controlsStore.getAllControls()
+		const totalControls = allControls.size
 		const computed = Math.ceil(totalControls * RENDER_CACHE_AVG_ACTIVE_STATES * RENDER_CACHE_PER_BUTTON_RATIO)
 		return Math.max(RENDER_CACHE_MIN_SIZE, Math.min(computed, RENDER_CACHE_MAX_SIZE))
 	}
@@ -661,15 +702,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @returns Image render object
 	 */
 	async #executePoolDrawButtonImage(
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined,
+		drawStyle: RendererDrawStyle,
 		remainingAttempts: number
 	): Promise<{
 		dataUrl: string
 		processedStyle: ImageResultProcessedStyle
 	}> {
-		return this.#poolExec('drawButtonImage', [this.#drawOptions, drawStyle, location, pagename], remainingAttempts)
+		return this.#poolExec('drawButtonImage', [drawStyle], remainingAttempts)
 	}
 
 	/**
@@ -677,19 +716,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @returns Image render object
 	 */
 	async #executePoolDrawButtonBareImage(
-		drawStyle: DrawStyleModel,
-		location: ControlLocation | undefined,
-		pagename: string | undefined,
+		drawStyle: RendererDrawStyle,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		return this.#poolExec(
-			'drawButtonBareImage',
-			[this.#drawOptions, drawStyle, location, pagename, resolution, rotation, format],
-			remainingAttempts
-		)
+		return this.#poolExec('drawButtonBareImage', [drawStyle, resolution, rotation, format], remainingAttempts)
 	}
 
 	/**

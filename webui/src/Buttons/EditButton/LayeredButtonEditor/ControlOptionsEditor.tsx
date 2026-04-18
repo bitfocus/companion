@@ -1,5 +1,5 @@
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import React, { type MutableRefObject, useCallback, useRef } from 'react'
+import { type MutableRefObject, useCallback, useRef } from 'react'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'

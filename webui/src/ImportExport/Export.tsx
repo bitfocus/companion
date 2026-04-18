@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
 import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'

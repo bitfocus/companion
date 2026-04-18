@@ -1,6 +1,6 @@
 # Developer Guide
 
-For documentation on developing modules, please see [the Wiki](https://github.com/bitfocus/companion-module-base/wiki)
+For documentation on developing modules, please see [the website](https://companion.free/for-developers/module-development/home)
 
 To develop Companion itself (aka core Companion, i.e. this repo), [start here](https://companion.free/for-developers/)
 

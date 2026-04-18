@@ -19,6 +19,7 @@ import type { ModuleManifest } from '@companion-module/base/manifest'
 import fs from 'fs/promises'
 import { HostContext } from './HostContext.js'
 import { translateConnectionConfigFields } from './ConfigFields.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')
@@ -42,7 +43,7 @@ if (typeof verificationToken !== 'string' || !verificationToken)
 
 const logger = createModuleLogger('Entrypoint')
 
-let instance: InstanceWrapper<any, any> | null = null
+let instance: InstanceWrapper<any> | null = null
 let instanceInitialized = false
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
@@ -180,15 +181,6 @@ registerLoggingSink((source, level, message) => {
 	}
 })
 
-const ensureFileUrl = (url: string) => {
-	if (process.platform === 'win32' && !url.startsWith('file://')) {
-		// Windows is picky about import paths, this is a crude hack to 'fix' it
-		return `file://${url}`
-	} else {
-		return url
-	}
-}
-
 ipcWrapper
 	.sendWithCb('register', {
 		verificationToken,
@@ -196,12 +188,7 @@ ipcWrapper
 	.then(async (msg) => {
 		logger.info(`Module-host accepted registration`)
 
-		// Future: Once webpacked, the dynamic import() doesn't work, so fallback to require()
-		const moduleImport =
-			typeof __non_webpack_require__ === 'function'
-				? __non_webpack_require__(moduleEntrypoint)
-				: await import(ensureFileUrl(moduleEntrypoint))
-
+		const moduleImport = await importModuleFromPath(moduleEntrypoint)
 		const moduleConstructor = typeof moduleImport === 'function' ? moduleImport : moduleImport.default
 		if (typeof moduleConstructor !== 'function')
 			throw new Error(`Module entrypoint did not return a valid constructor function`)

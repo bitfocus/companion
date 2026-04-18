@@ -420,6 +420,7 @@ export class InstanceProcessManager {
 					moduleInfo.basePath,
 					enableInspect
 				),
+				...runtimeInfo.arguments,
 				enableInspect ? `--inspect=${inspectPort}` : undefined,
 				runtimeInfo.entrypoint,
 			].filter((v): v is string => !!v)
@@ -686,12 +687,19 @@ export class InstanceProcessManager {
 		lastLabel: string
 	): Promise<{
 		entrypoint: string
+		arguments: string[]
 		moduleEntrypoint: string
 		apiVersion: string
 		env: Record<string, string>
 	} | null> {
 		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
-		const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
+		const jsFullPath = path.resolve(path.join(moduleInfo.basePath, jsPath))
+		const relativeToBase = path.relative(moduleInfo.basePath, jsFullPath)
+		if (relativeToBase.startsWith('..') || path.isAbsolute(relativeToBase)) {
+			this.#logger.error(`Module entrypoint "${jsFullPath}" is outside module directory`)
+			return null
+		}
+
 		if (!(await fs.pathExists(jsFullPath))) {
 			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
 			return null
@@ -715,7 +723,7 @@ export class InstanceProcessManager {
 						const moduleLibPackagePath = require.resolve('@companion-module/base/package.json', {
 							paths: [moduleInfo.basePath],
 						})
-						const moduleLibPackage = require(moduleLibPackagePath)
+						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
 						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
@@ -735,6 +743,7 @@ export class InstanceProcessManager {
 							import.meta.dirname,
 							isPackaged() ? './ConnectionThread.js' : './Connection/Thread/Entrypoint.js'
 						),
+						arguments: ['--enable-source-maps'],
 						moduleEntrypoint: jsFullPath,
 						env: {
 							MODULE_ENTRYPOINT: jsFullPath,
@@ -744,6 +753,7 @@ export class InstanceProcessManager {
 					return {
 						apiVersion: moduleApiVersion,
 						entrypoint: jsFullPath,
+						arguments: [],
 						moduleEntrypoint: jsFullPath,
 						env: {
 							CONNECTION_ID: instanceId,
@@ -762,7 +772,7 @@ export class InstanceProcessManager {
 						const moduleLibPackagePath = require.resolve('@companion-surface/base/package.json', {
 							paths: [moduleInfo.basePath],
 						})
-						const moduleLibPackage = require(moduleLibPackagePath)
+						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
 						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
@@ -781,6 +791,7 @@ export class InstanceProcessManager {
 						import.meta.dirname,
 						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
 					),
+					arguments: ['--enable-source-maps'],
 					moduleEntrypoint: jsFullPath,
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,

@@ -58,14 +58,15 @@ body:
     attributes:
       label: Environment (please complete the following information)
       description: |
+        If you are using Companion v4.3 or later just tap/click the version info in the help menu (right-side of the header) and it will copy the information ready to paste here.
         examples:
-          - **OS**: Windows 10
-          - **Browser**: Chrome 94
-          - **Companion Version**: 2.2.0-b177f8fb-3722
+          - **Companion Version**: 4.3-stable
+          - **OS**: Windows 11
+          - **Browser**: Chrome 145
       value: |
+        - Companion Version:
         - OS:
         - Browser:
-        - Companion Version:
       render: markdown
     validations:
       required: false

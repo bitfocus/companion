@@ -28,7 +28,6 @@ import type {
 	IpcDrawProps,
 	SurfaceModuleToHostEvents,
 } from '../Instance/Surface/IpcTypes.js'
-import type * as imageRs from '@julusian/image-rs'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 
@@ -59,6 +58,15 @@ function generateConfigFields(
 		fields.push(RotationConfigField, ...LockConfigFields)
 	}
 
+	if (surfaceInfo.canChangePage) {
+		fields.push({
+			id: 'canChangePage',
+			type: 'checkbox',
+			label: surfaceInfo.canChangePage.label,
+			default: false,
+		})
+	}
+
 	// Add any additional config fields from the surface info
 	if (surfaceInfo.configFields) fields.push(...surfaceInfo.configFields)
 
@@ -81,10 +89,10 @@ function generateConfigFields(
 
 			fields.push({
 				id,
-				type: 'textinput',
+				type: 'expression',
 				label: variable.name,
 				tooltip: variable.description,
-				isExpression: true,
+				allowInvalidValues: true,
 			})
 
 			outputVariables[variable.id] = {
@@ -195,17 +203,11 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				const style = drawItem.defaultRender.style
 
 				if (controlDefinition.style.bitmap) {
-					// TODO - support more pixel formats, for now this is all we can handle
-					let format: imageRs.PixelFormat = 'rgb'
-					if (controlDefinition.style.bitmap.format === 'rgba') {
-						format = controlDefinition.style.bitmap.format
-					}
-
 					const buffer = await drawItem.defaultRender.drawNative(
 						controlDefinition.style.bitmap.w,
 						controlDefinition.style.bitmap.h,
 						this.#config.rotation,
-						format
+						controlDefinition.style.bitmap.format || 'rgb'
 					)
 
 					if (buffer === undefined || buffer.length == 0) {
@@ -265,6 +267,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			surfaceId: surfaceInfo.surfaceId,
 			description: surfaceInfo.description,
 			configFields: configFields,
+			canChangePage: !!surfaceInfo.canChangePage,
 			location: surfaceInfo.location ?? null,
 			isRemote: surfaceInfo.isRemote,
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
@@ -320,8 +323,6 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.#config = config
 	}
-
-	getDefaultConfig?: (() => any) | undefined
 
 	/**
 	 * Propagate variable changes
@@ -419,6 +420,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	changePage(forward: boolean): void {
+		if (!this.info.canChangePage || !this.#config.canChangePage) return
 		this.emit('changePage', forward)
 	}
 

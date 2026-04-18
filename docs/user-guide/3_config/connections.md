@@ -44,7 +44,7 @@ Once you have added your connections, you can reorder or filter them in the tabl
 - **Variables** will show a list of all the variables that a connection provides. These can be used in various places either explained later on.
 - **View Logs** is a debug log for the module. When reporting a bug, module developers may want extra information from here to help figure out the bug. To most users this will not be interesting.
 
-A full list of supported devices can also be found on the website. [Companion Module Support List](https://bfoc.us/m6idfk19cm)
+A full list of supported devices can also be found on the website. [Companion Module Support List](https://l.companion.free/q/5LT04sXCC)
 
 ## Configuring a connection
 

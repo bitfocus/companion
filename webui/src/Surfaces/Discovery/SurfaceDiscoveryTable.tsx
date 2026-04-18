@@ -2,7 +2,7 @@ import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
 } from '@companion-app/shared/Model/Surfaces.js'
-import React, { useCallback, useContext, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { assertNever, useComputed } from '~/Resources/util.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import { faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
@@ -158,7 +158,6 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 	const { surfaceInstances, surfaces } = useContext(RootAppStoreContext)
 
 	const instanceInfo = surfaceInstances.instances.get(surfaceInfo.instanceId)
-	const surfaceInstanceDisplayName = instanceInfo?.label ?? 'Unknown Surface Integration'
 
 	const isAlreadyAdded = useComputed(() => {
 		// If no expression, can't match
@@ -213,7 +212,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 				</div>
 			</td>
 			<td>
-				<p className="p-no-margin">{surfaceInstanceDisplayName}</p>
+				<p className="p-no-margin">{surfaceInfo.address ?? '-'}</p>
 			</td>
 			<td>
 				<CButtonGroup>

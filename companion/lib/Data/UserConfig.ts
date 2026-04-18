@@ -1,5 +1,6 @@
 import selfsigned from 'selfsigned'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import LogController from '../Log/Controller.js'
@@ -46,6 +47,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		elgato_plugin_enable: false,
 		usb_hotplug: true,
 		auto_enable_discovered_surfaces: true,
+
+		satellite_subscriptions_enabled: false,
 
 		pin_enable: false,
 		link_lockouts: false,
@@ -417,6 +420,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			)
 			return
 		}
+
+		if (BANNED_PROPS.has(String(key))) throw new Error(`Setting config key "${String(key)}" is not allowed`)
 
 		this.setKeyUnchecked(key, value, save)
 	}

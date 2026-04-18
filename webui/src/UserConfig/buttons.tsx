@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import { memo } from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useUserConfigProps } from './Context.js'

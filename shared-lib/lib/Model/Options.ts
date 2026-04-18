@@ -1,6 +1,6 @@
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 import type { JsonValue } from 'type-fest'
-import type { CompanionOptionValues } from '@companion-module/host'
+import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
 import z from 'zod'
 
 export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
@@ -51,6 +51,7 @@ export interface CompanionInputFieldBaseExtended {
 	type:
 		| 'static-text'
 		| 'textinput'
+		| 'expression'
 		| 'dropdown'
 		| 'multidropdown'
 		| 'colorpicker'
@@ -208,9 +209,20 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	useVariables?: CompanionFieldVariablesSupport
 
 	placeholder?: string
-	/** A UI hint indicating the field is an expression */
-	isExpression?: boolean
 	multiline?: boolean
+
+	/**
+	 * Internal use only: disable the sanitisation and validation rules defined above, and allow any value to be passed to the execution
+	 * This is so that expression results don't get mangled
+	 */
+	disableSanitisation?: boolean
+}
+export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended {
+	type: 'expression'
+
+	default?: string
+
+	// placeholder?: string
 }
 export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended {
 	type: 'dropdown'
@@ -232,6 +244,11 @@ export interface CompanionInputFieldMultiDropdownExtended extends CompanionInput
 	minSelection?: number
 	/** The maximum number of selected values */
 	maxSelection?: number
+	/**
+	 * If true, the ui should sort the selected values by the order they appear in the choices array
+	 * Any custom values will be sorted alphabetically at the end of the list
+	 */
+	sortSelection?: boolean
 
 	allowCustom?: boolean
 	regex?: string
@@ -258,6 +275,11 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	showMinAsNegativeInfinity?: boolean
 	/** When true, show the max value as a visual ∞ when value >= max */
 	showMaxAsPositiveInfinity?: boolean
+
+	/** When value validation occurs, clamp values to the min/max instead of rejecting them as invalid */
+	clampValues?: boolean
+	/** Whether to only allow integer values */
+	asInteger?: boolean
 }
 export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended {
 	type: 'checkbox'
@@ -275,6 +297,7 @@ export type ExtendedInputField =
 	| CompanionInputFieldStaticTextExtended
 	| CompanionInputFieldColorExtended
 	| CompanionInputFieldTextInputExtended
+	| CompanionInputFieldExpressionExtended
 	| CompanionInputFieldDropdownExtended
 	| CompanionInputFieldMultiDropdownExtended
 	| CompanionInputFieldNumberExtended
@@ -318,7 +341,7 @@ export function isExpressionOrValue(input: any): input is ExpressionOrValue<any>
 }
 
 export function optionsObjectToExpressionOptions(
-	options: CompanionOptionValues,
+	options: CompanionOptionValues | CompanionPresetOptionValues<any>,
 	allowExpressions = true
 ): ExpressionableOptionsObject {
 	const res: ExpressionableOptionsObject = {}
@@ -340,7 +363,7 @@ export function convertExpressionOptionsWithoutParsing(options: ExpressionableOp
 	return res
 }
 
-export function exprVal<T extends JsonValue>(value: T): ExpressionOrValue<T> {
+export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {
 	return { value: value, isExpression: false }
 }
 export function exprExpr(value: string): ExpressionOrValue<any> {

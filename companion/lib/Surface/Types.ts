@@ -8,7 +8,8 @@ import type {
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { EventEmitter } from 'events'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -30,6 +31,7 @@ export interface SurfacePanelInfo {
 	location: string | null
 	isRemote: boolean
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
+	canChangePage?: boolean
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
@@ -40,7 +42,6 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void
-	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: ReadonlySet<string>) => void
 	quit(): void
 
@@ -56,6 +57,9 @@ export interface DrawButtonItem {
 	y: number
 
 	defaultRender: ImageResult
+
+	/** The absolute page/row/column location of the button being drawn, if known */
+	location: ControlLocation | null
 }
 
 export interface SurfacePanelEvents {
@@ -78,7 +82,7 @@ export interface SurfaceHandlerDependencies {
 	/**
 	 * The core controls controller
 	 */
-	readonly controls: ControlsController
+	readonly controls: IControlStore
 	/**
 	 * The core graphics controller
 	 */

@@ -65,6 +65,8 @@ export class InternalCustomVariables
 						default: '',
 						description: 'The raw value will be written to the variable',
 						expressionDescription: 'The expression will be executed with the result written to the variable',
+						allowInvalidValues: true,
+						disableSanitisation: true,
 					},
 				],
 				optionsSupportExpressions: true,

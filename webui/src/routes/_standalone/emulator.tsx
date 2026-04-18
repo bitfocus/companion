@@ -1,7 +1,7 @@
 import { CRow } from '@coreui/react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { useDocumentTitle } from 'usehooks-ts'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'

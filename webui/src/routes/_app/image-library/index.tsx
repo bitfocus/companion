@@ -1,7 +1,6 @@
 import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { faImage } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import React from 'react'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 
 export const Route = createFileRoute('/_app/image-library/')({

@@ -45,7 +45,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				after: true,
 			}
 		)
-		this.#controlsController.triggers.on('trigger_enabled', () => debounceCheckFeedbacks())
+		this.#controlsController.triggerEvents.on('trigger_enabled', () => debounceCheckFeedbacks())
 
 		const debounceCheckFeedbackCollections = debounceFn(
 			() => {
@@ -57,7 +57,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				after: true,
 			}
 		)
-		this.#controlsController.triggers.on('trigger_collections_enabled', () => debounceCheckFeedbackCollections())
+		this.#controlsController.triggerEvents.on('trigger_collections_enabled', () => debounceCheckFeedbackCollections())
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {

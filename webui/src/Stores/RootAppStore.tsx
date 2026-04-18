@@ -1,5 +1,5 @@
-import React from 'react'
 import type { ObservableMap, ObservableSet } from 'mobx'
+import { createContext } from 'react'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { PagesStore } from './PagesStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
@@ -19,7 +19,7 @@ import type { ExpressionVariablesListStore } from './ExpressionVariablesListStor
 import type { SurfaceInstancesStore } from './SurfaceInstancesStore.js'
 import type { InstanceStatusesStore } from './InstanceStatusesStore.js'
 
-export const RootAppStoreContext = React.createContext<RootAppStore>(null as any) // TODO - fix this?
+export const RootAppStoreContext = createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
 	readonly notifier: NotificationsManagerRef

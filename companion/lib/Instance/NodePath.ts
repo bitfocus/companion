@@ -3,6 +3,7 @@ import { isPackaged } from '../Resources/Util.js'
 import path from 'path'
 import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { ModuleManifestRuntime } from '@companion-module/base/manifest'
 import { createRequire } from 'module'
 
 /**
@@ -37,42 +38,53 @@ export function getNodeJsPermissionArguments(
 	moduleDir: string,
 	enableInspect: boolean
 ): string[] {
+	const args: string[] = []
+
 	// Not supported by surfaces
-	if (manifest.type === 'surface') return []
+	if (manifest.type === 'surface') return args
 
-	// Not supported by node18
-	if (enableInspect || manifest.runtime.type === 'node18' || !doesModuleSupportPermissionsModel(moduleApiVersion))
-		return []
+	// Check module api is new enough
+	if (!doesModuleSupportPermissionsModel(moduleApiVersion)) return args
 
-	const args = [
-		'--no-warnings=SecurityWarning',
-		'--permission',
-		// Always allow read access to the module source directory
-		`--allow-fs-read=${moduleDir}`,
-		`--allow-fs-read=${isPackaged() ? import.meta.dirname : path.join(import.meta.dirname, '../../..')}`, // Allow read access to companion code, because of some esm loader issues
-	]
+	const manifestPermissions: ModuleManifestRuntime['permissions'] = manifest.runtime.permissions || {}
 
-	if (!isPackaged()) {
-		// Always allow read access to module host package, needed when running a dev version
-		const require = createRequire(import.meta.url)
-		args.push(`--allow-fs-read=${path.join(path.dirname(require.resolve('@companion-module/host')), '../../..')}`)
-	}
+	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
 
-	let forceReadWriteAll = false
-	if (process.platform === 'win32' && moduleDir.startsWith('\\\\')) {
-		// This is a network path, which nodejs does not support for the permissions model
-		forceReadWriteAll = true
-	}
+	// Node18 is more limited in supported arguments
+	if (manifest.runtime.type === 'node18') return args
 
-	const manifestPermissions = manifest.runtime.permissions || {}
-	if (manifestPermissions['worker-threads']) args.push('--allow-worker')
-	if (manifestPermissions['child-process'] || manifestPermissions['native-addons']) args.push('--allow-child-process')
-	if (manifestPermissions['native-addons']) args.push('--allow-addons')
-	if (manifestPermissions['native-addons'] || manifestPermissions['filesystem'] || forceReadWriteAll) {
-		// Note: Using native addons usually means probing random filesystem paths to check the current platform
+	args.push('--use-system-ca')
 
-		// Future: This should be scoped to some limited directories as specified by the user in the connection settings
-		args.push('--allow-fs-read=*', '--allow-fs-write=*')
+	if (!enableInspect) {
+		args.push(
+			'--no-warnings=SecurityWarning',
+			'--permission',
+			// Always allow read access to the module source directory
+			`--allow-fs-read=${moduleDir}`,
+			`--allow-fs-read=${isPackaged() ? import.meta.dirname : path.join(import.meta.dirname, '../../..')}` // Allow read access to companion code, because of some esm loader issues
+		)
+
+		if (!isPackaged()) {
+			// Always allow read access to module host package, needed when running a dev version
+			const require = createRequire(import.meta.url)
+			args.push(`--allow-fs-read=${path.join(path.dirname(require.resolve('@companion-module/host')), '../../..')}`)
+		}
+
+		let forceReadWriteAll = false
+		if (process.platform === 'win32' && moduleDir.startsWith('\\\\')) {
+			// This is a network path, which nodejs does not support for the permissions model
+			forceReadWriteAll = true
+		}
+
+		if (manifestPermissions['worker-threads']) args.push('--allow-worker')
+		if (manifestPermissions['child-process'] || manifestPermissions['native-addons']) args.push('--allow-child-process')
+		if (manifestPermissions['native-addons']) args.push('--allow-addons')
+		if (manifestPermissions['native-addons'] || manifestPermissions['filesystem'] || forceReadWriteAll) {
+			// Note: Using native addons usually means probing random filesystem paths to check the current platform
+
+			// Future: This should be scoped to some limited directories as specified by the user in the connection settings
+			args.push('--allow-fs-read=*', '--allow-fs-write=*')
+		}
 	}
 
 	return args

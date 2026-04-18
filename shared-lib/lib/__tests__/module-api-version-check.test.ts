@@ -71,7 +71,7 @@ describe('isModuleApiVersionCompatible', () => {
 		expect(versionStr).toBeTruthy()
 		expect(versionStr).not.toBe(moduleBasePkg.version)
 
-		expect(isModuleApiVersionCompatible(versionStr)).toBe(false)
+		expect(isModuleApiVersionCompatible(versionStr)).toBe(true) // It is compatible for now
 	})
 
 	test('prerelease of next major version', () => {
@@ -104,5 +104,11 @@ describe('isModuleApiVersionCompatible', () => {
 	})
 	test('check 1.2.5 compatibility', () => {
 		expect(isModuleApiVersionCompatible('1.2.5')).toBe(true)
+	})
+	test('check 2.0.2 compatibility', () => {
+		expect(isModuleApiVersionCompatible('2.0.2')).toBe(true)
+	})
+	test('check 2.5.0 compatibility', () => {
+		expect(isModuleApiVersionCompatible('2.5.0')).toBe(false)
 	})
 })

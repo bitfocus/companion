@@ -100,24 +100,47 @@ export abstract class ControlEntityListPoolBase {
 	protected tryTriggerLocalVariablesChanged(...entitiesOrNames: (ControlEntityInstance | string | null)[]): void {
 		if (entitiesOrNames.length === 0) return
 
+		const changedVariableNames = new Set<string>()
 		for (const entityOrName of entitiesOrNames) {
 			if (!entityOrName) continue
 
 			const variableName = typeof entityOrName === 'string' ? entityOrName : entityOrName.localVariableName
-			if (variableName) this.#pendingChangedVariables.add(variableName)
+			if (variableName) changedVariableNames.add(variableName)
 		}
 
-		if (this.#pendingChangedVariables.size === 0) return
+		if (changedVariableNames.size === 0) return
+
+		for (const name of changedVariableNames) {
+			this.#pendingChangedVariables.add(name)
+		}
 
 		/*
-		 * This is debounced to ensure that a loop of references between variables doesn't cause an infinite loop of updates
-		 * Future: This could be improved by using a 'rate limit' style approach, where we allow a bunch of updates to happen immediately,
-		 * but then throttle the updates after that. Perhaps allow 10 within the first 2ms, then limit to 1 every Xms.
+		 * The debounce ensures that rapid bursts of local variable updates (including circular
+		 * computed-variable chains) are rate-limited before notifying the rest of the app.
+		 *
+		 * Additionally, we synchronously call internalModule.onVariablesChanged for this control
+		 * so that condition feedbacks inside logic_while / logic_if have their cached values
+		 * updated immediately, without needing a wait action.
+		 *
+		 * A re-entrance guard on the sync call prevents recursion: if a computed local variable's
+		 * cached value changes as a side effect of the sync update (detected by updateFeedbackValues
+		 * calling tryTriggerLocalVariablesChanged again), that nested call still queues to the
+		 * debounce but does not re-enter the sync path.
 		 */
 		this.#debouncedLocalVariablesChanged()
+
+		if (!this.#isSyncUpdatingInternalFeedbacks) {
+			this.#isSyncUpdatingInternalFeedbacks = true
+			try {
+				this.#internalModule.onVariablesChanged(changedVariableNames, this.controlId)
+			} finally {
+				this.#isSyncUpdatingInternalFeedbacks = false
+			}
+		}
 	}
 
 	#pendingChangedVariables = new Set<string>()
+	#isSyncUpdatingInternalFeedbacks = false
 	#debouncedLocalVariablesChanged = debounceFn(
 		() => {
 			const allChangedVariables = this.#pendingChangedVariables
@@ -743,7 +766,7 @@ export abstract class ControlEntityListPoolBase {
 	 * Prune all entities referencing unknown connections
 	 * Doesn't do any cleanup, as it is assumed that the connection has not been running
 	 */
-	verifyConnectionIds(knownConnectionIds: Set<string>): void {
+	verifyConnectionIds(knownConnectionIds: ReadonlySet<string>): void {
 		let changed = false
 
 		for (const list of this.getAllEntityLists()) {

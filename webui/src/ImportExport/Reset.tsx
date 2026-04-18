@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'

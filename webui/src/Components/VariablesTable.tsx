@@ -1,9 +1,10 @@
-import React, { useCallback, useContext, useState, useMemo } from 'react'
+import { useCallback, useContext, useState, useMemo } from 'react'
 import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { useComputed } from '~/Resources/util.js'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
@@ -77,6 +78,9 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		)
 	}
 
+	const totalCount = variableDefinitions.length
+	const shownCount = candidates?.length ?? 0
+
 	return (
 		<>
 			<CInputGroup className="variables-table-filter">
@@ -91,6 +95,17 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 					<FontAwesomeIcon icon={faTimes} />
 				</CButton>
 			</CInputGroup>
+			<p className="variables-table-count">
+				{filter ? (
+					<>
+						Showing <strong>{shownCount}</strong> of <strong>{totalCount}</strong> variables
+					</>
+				) : (
+					<>
+						<strong>{totalCount}</strong> variables
+					</>
+				)}
+			</p>
 			<div className="variables-table-scroller ">
 				<table className="table table-responsive-sm variables-table">
 					<thead>
@@ -108,6 +123,13 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 										<br />
 										{errorMsg}
 									</CAlert>
+								</td>
+							</tr>
+						)}
+						{candidates?.length === 0 && !!filter && (
+							<tr>
+								<td colSpan={2}>
+									<NonIdealState icon={faSearch} text="No variables match the filter" />
 								</td>
 							</tr>
 						)}

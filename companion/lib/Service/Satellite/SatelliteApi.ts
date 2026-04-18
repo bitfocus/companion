@@ -6,15 +6,26 @@ import {
 	type ParsedParams,
 } from '../../Resources/Util.js'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import type { Logger } from '../../Log/Controller.js'
+import { type Logger } from '../../Log/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
-import type { AppInfo } from '../../Registry.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
-import type { SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
+import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
 // eslint-disable-next-line n/no-missing-import
 import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { ServiceApi } from '../ServiceApi.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
+import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
+import { nanoid } from 'nanoid'
+import type { DataUserConfig } from '../../Data/UserConfig.js'
+// eslint-disable-next-line n/no-missing-import
+import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
+import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
+import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
+import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -35,8 +46,14 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
  * 1.7.1 - Respond with variable name in SET-VARIABLE-VALUE success message
  * 1.8.0 - Add support for remote surface to handle display of locked state
  * 1.9.0 - Add support for complex surface schemas
+ * 1.10.0 - Add button subscription API (ADD-SUB, REMOVE-SUB, SUB-PRESS, SUB-ROTATE, SUB-STATE)
+ *        - KEY-STATE now includes LOCATION=page/row/column for all button types when location is known
+ *        - Add FIRMWARE-UPDATE-INFO to report firmware update availability
+ *        - Add CONFIG_FIELDS to ADD-DEVICE for device-specific config fields
+ *        - Add DEVICE-CONFIG to relay current config values back to the device
+ *        - Add CHANGE-PAGE message for surfaces to navigate pages
  */
-const API_VERSION = '1.9.0'
+const API_VERSION = '1.10.0'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
@@ -97,23 +114,35 @@ export interface SatelliteInitSocketResult {
 export class ServiceSatelliteApi {
 	// readonly #logger = LogController.createLogger('Service/SatelliteApi')
 
-	readonly #appInfo: AppInfo
+	readonly #serviceApi: ServiceApi
 	readonly #surfaceController: SurfaceController
+	readonly #userconfig: DataUserConfig
 
 	/**
 	 * The remote devices
 	 */
 	#devices = new Map<string, SatelliteDevice>()
 
-	constructor(appInfo: AppInfo, surfaceController: SurfaceController) {
-		this.#appInfo = appInfo
+	/**
+	 * Per-socket state for subscriptions
+	 */
+	readonly #socketStates = new Map<SatelliteSocketWrapper, SatelliteSocketState>()
+
+	constructor(serviceApi: ServiceApi, surfaceController: SurfaceController, userconfig: DataUserConfig) {
+		this.#serviceApi = serviceApi
 		this.#surfaceController = surfaceController
+		this.#userconfig = userconfig
 	}
 
 	/**
 	 *
 	 */
-	#addDevice(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
+	#addDevice(
+		socketLogger: Logger,
+		socket: SatelliteSocketWrapper,
+		socketState: SatelliteSocketState,
+		params: ParsedParams
+	): void {
 		const messageName = 'ADD-DEVICE'
 		if (!params.DEVICEID || params.DEVICEID === true) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DEVICEID')
@@ -123,10 +152,11 @@ export class ServiceSatelliteApi {
 		}
 
 		const id = `${params.DEVICEID}`
+		const serial = params.SERIAL ? `${params.SERIAL}` : id
 
-		if (id.startsWith('emulator:') || id.startsWith('group:')) {
+		if (serial.startsWith('emulator:') || serial.startsWith('group:')) {
 			// Some deviceId values are 'special' and cannot be used by satellite
-			return this.#formatAndSendError(socket, messageName, id, 'Reserved DEVICEID')
+			return this.#formatAndSendError(socket, messageName, id, params.SERIAL ? 'Reserved SERIAL' : 'Reserved DEVICEID')
 		}
 
 		const existing = this.#findDeviceById(id)
@@ -223,6 +253,8 @@ export class ServiceSatelliteApi {
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
+		const canChangePage =
+			typeof params.CAN_CHANGE_PAGE === 'string' && params.CAN_CHANGE_PAGE ? params.CAN_CHANGE_PAGE : undefined
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
@@ -231,16 +263,39 @@ export class ServiceSatelliteApi {
 			return this.#formatAndSendError(socket, messageName, id, 'Invalid VARIABLES')
 		}
 
+		let configFields: SatelliteConfigFields | undefined
+		if (params.CONFIG_FIELDS) {
+			let decoded: unknown
+			try {
+				decoded = JSON.parse(Buffer.from(String(params.CONFIG_FIELDS), 'base64').toString())
+			} catch (_e) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
+			}
+			if (!validateConfigFields(decoded)) {
+				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
+			}
+			configFields = decoded
+		}
+
+		const processedConfigFields = configFields
+			? sanitizePluginConfigFields(socketLogger, translateSatelliteConfigFields(configFields))
+			: undefined
+
 		const device = this.#surfaceController.addSatelliteDevice({
+			connectionId: socketState.clientId,
 			gridSize,
 			socket,
 			deviceId: id,
+			serial: serial,
+			serialIsUnique: params.SERIAL_IS_UNIQUE !== undefined ? isTruthy(params.SERIAL_IS_UNIQUE) : true,
 			productName: `${params.PRODUCT_NAME}`,
 			supportsBrightness,
 			transferVariables,
 			supportsLockedState,
 			surfaceManifestFromClient,
 			surfaceManifest,
+			configFields: processedConfigFields,
+			canChangePage,
 		})
 
 		this.#devices.set(id, {
@@ -265,7 +320,12 @@ export class ServiceSatelliteApi {
 	/**
 	 * Process a command from a client
 	 */
-	#handleCommand(socketLogger: Logger, socket: SatelliteSocketWrapper, line: string): void {
+	#handleCommand(
+		socketLogger: Logger,
+		socket: SatelliteSocketWrapper,
+		socketState: SatelliteSocketState,
+		line: string
+	): void {
 		if (!line.trim().toUpperCase().startsWith('PING')) {
 			socketLogger.silly(`received "${line}"`)
 		}
@@ -277,7 +337,7 @@ export class ServiceSatelliteApi {
 
 		switch (cmd.toUpperCase()) {
 			case 'ADD-DEVICE':
-				this.#addDevice(socketLogger, socket, params)
+				this.#addDevice(socketLogger, socket, socketState, params)
 				break
 			case 'REMOVE-DEVICE':
 				this.#removeDevice(socketLogger, socket, params)
@@ -294,6 +354,24 @@ export class ServiceSatelliteApi {
 			case 'PINCODE-KEY':
 				this.#pincodeKey(socket, params)
 				break
+			case 'ADD-SUB':
+				this.#addSub(socketLogger, socket, socketState, params)
+				break
+			case 'REMOVE-SUB':
+				this.#removeSub(socket, socketState, params)
+				break
+			case 'SUB-PRESS':
+				this.#subPress(socket, socketState, params)
+				break
+			case 'SUB-ROTATE':
+				this.#subRotate(socket, socketState, params)
+				break
+			case 'FIRMWARE-UPDATE-INFO':
+				this.#firmwareUpdateInfo(socket, params)
+				break
+			case 'CHANGE-PAGE':
+				this.#changePage(socket, params)
+				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
 				break
@@ -306,7 +384,7 @@ export class ServiceSatelliteApi {
 				break
 			default:
 				socket.sendMessage('ERROR', null, null, {
-					MESSAGE: 'Unknown command: ${cmd.toUpperCase()}',
+					MESSAGE: `Unknown command: ${cmd.toUpperCase()}`,
 				})
 		}
 	}
@@ -317,9 +395,30 @@ export class ServiceSatelliteApi {
 	initSocket(socketLogger: Logger, socket: SatelliteSocketWrapper): SatelliteInitSocketResult {
 		socketLogger.info(`new connection`)
 
+		const clientId = nanoid()
+
+		const socketState: SatelliteSocketState = {
+			clientId,
+			subscriptions: new Map(),
+			writeQueue: new ImageWriteQueue(socketLogger, async (subId: string, image: ImageResult) => {
+				const sub = socketState.subscriptions.get(subId)
+				if (!sub) return
+				try {
+					await this.#sendSubState(socket, subId, sub.style, image)
+				} catch (e) {
+					socketLogger.debug(`sendSubState failed: ${stringifyError(e)}`)
+				}
+			}),
+		}
+		this.#socketStates.set(socket, socketState)
+
 		socket.sendMessage('BEGIN', null, null, {
-			CompanionVersion: this.#appInfo.appBuild,
+			CompanionVersion: this.#serviceApi.appInfo.appBuild,
 			ApiVersion: API_VERSION,
+		})
+
+		socket.sendMessage('CAPS', null, null, {
+			SUBSCRIPTIONS: !!this.#userconfig.getKey('satellite_subscriptions_enabled'),
 		})
 
 		let receivebuffer = ''
@@ -334,7 +433,7 @@ export class ServiceSatelliteApi {
 					line = receivebuffer.substr(offset, i - offset)
 					offset = i + 1
 					try {
-						this.#handleCommand(socketLogger, socket, line.toString().replace(/\r/, ''))
+						this.#handleCommand(socketLogger, socket, socketState, line.toString().replace(/\r/, ''))
 					} catch (e) {
 						socketLogger.error(`Error processing command: ${stringifyError(e)}`)
 					}
@@ -345,11 +444,12 @@ export class ServiceSatelliteApi {
 				let count = 0
 				for (const [key, device] of this.#devices.entries()) {
 					if (device.socket === socket) {
-						this.#surfaceController.removeDevice(device.id)
+						this.#surfaceController.removeDevice(device.device.info.surfaceId, { physicallyGone: true })
 						this.#devices.delete(key)
 						count++
 					}
 				}
+				this.#socketStates.delete(socket)
 				return count
 			},
 		}
@@ -530,6 +630,38 @@ export class ServiceSatelliteApi {
 		socket.sendMessage(messageName, 'OK', id, { VARIABLE: variableName })
 	}
 
+	#firmwareUpdateInfo(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'FIRMWARE-UPDATE-INFO'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		if (params.UPDATE_URL === undefined || params.UPDATE_URL === true) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing UPDATE_URL')
+		}
+
+		const updateUrl = `${params.UPDATE_URL}`
+		device.device.updateFirmwareUpdateInfo(updateUrl || null)
+
+		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
+	#changePage(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'CHANGE-PAGE'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		if (params.DIRECTION === undefined) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
+		}
+
+		const forward = isTruthy(params.DIRECTION)
+		device.device.doChangePage(forward)
+
+		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
 	#removeDevice(socketLogger: Logger, socket: SatelliteSocketWrapper, params: ParsedParams): void {
 		const messageName = 'REMOVE-DEVICE'
 		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
@@ -538,9 +670,219 @@ export class ServiceSatelliteApi {
 
 		socketLogger.info(`remove surface "${id}"`)
 
-		this.#surfaceController.removeDevice(id)
+		this.#surfaceController.removeDevice(device.device.info.surfaceId, { physicallyGone: true })
 		this.#devices.delete(id)
 		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
+	#addSub(
+		socketLogger: Logger,
+		socket: SatelliteSocketWrapper,
+		socketState: SatelliteSocketState,
+		params: ParsedParams
+	): void {
+		const messageName = 'ADD-SUB'
+
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
+
+		const subId = params.SUBID
+		if (!subId || subId === true) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing SUBID')
+		}
+		const subIdStr = String(subId)
+		if (!/^[a-zA-Z0-9\-/]+$/.test(subIdStr)) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid SUBID')
+		}
+
+		if (socketState.subscriptions.has(subIdStr)) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'SUBID already in use')
+		}
+
+		const locationStr = params.LOCATION
+		if (!locationStr || locationStr === true) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing LOCATION')
+		}
+		const locationMatch = String(locationStr).match(/^(\d+)\/(\d+)\/(\d+)$/)
+		if (!locationMatch) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid LOCATION')
+		}
+		const location: ControlLocation = {
+			pageNumber: Number(locationMatch[1]),
+			row: Number(locationMatch[2]),
+			column: Number(locationMatch[3]),
+		}
+
+		// Parse style
+		let style: SatelliteControlStylePreset
+		if (params.STYLE && params.STYLE !== true) {
+			try {
+				style = JSON.parse(Buffer.from(String(params.STYLE), 'base64').toString())
+			} catch (_e) {
+				return this.#formatAndSendError(socket, messageName, undefined, 'Invalid STYLE')
+			}
+		} else {
+			style = {}
+
+			if (params.BITMAP !== undefined && !isFalsey(params.BITMAP)) {
+				let bitmapSize = Number(params.BITMAP)
+				if (isNaN(bitmapSize) || bitmapSize < 5) {
+					bitmapSize = 72
+				}
+				style.bitmap = { w: bitmapSize, h: bitmapSize }
+			}
+
+			const colorsResult = parseStringParamWithBooleanFallback(['hex', 'rgb'], 'hex', params.COLORS)
+			if (colorsResult) style.colors = colorsResult
+			style.text = params.TEXT !== undefined && isTruthy(params.TEXT)
+			style.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
+		}
+
+		const sub: SatelliteSubscription = {
+			subId: subIdStr,
+			location,
+			style,
+		}
+		socketState.subscriptions.set(subIdStr, sub)
+
+		socketLogger.debug(`add subscription "${subIdStr}" for ${locationStr}`)
+
+		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
+
+		// Send initial state
+		const render = this.#serviceApi.getCachedRenderOrGeneratePlaceholder(location)
+		socketState.writeQueue.queue(subIdStr, render)
+	}
+
+	#removeSub(socket: SatelliteSocketWrapper, socketState: SatelliteSocketState, params: ParsedParams): void {
+		const messageName = 'REMOVE-SUB'
+
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
+
+		const subId = params.SUBID
+		if (!subId || subId === true) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing SUBID')
+		}
+		const subIdStr = String(subId)
+
+		if (!socketState.subscriptions.has(subIdStr)) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
+		}
+
+		socketState.subscriptions.delete(subIdStr)
+
+		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
+	}
+
+	#subPress(socket: SatelliteSocketWrapper, socketState: SatelliteSocketState, params: ParsedParams): void {
+		const messageName = 'SUB-PRESS'
+
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
+
+		const subId = params.SUBID
+		if (!subId || subId === true) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing SUBID')
+		}
+		const subIdStr = String(subId)
+
+		const sub = socketState.subscriptions.get(subIdStr)
+		if (!sub) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
+		}
+
+		if (!params.PRESSED) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing PRESSED')
+		}
+		const pressed = !isFalsey(params.PRESSED)
+
+		const controlId = this.#serviceApi.getControlIdAt(sub.location)
+		if (controlId) {
+			const surfaceId = `satellite-sub:${socketState.clientId}:${subIdStr}`
+			this.#serviceApi.pressControl(controlId, pressed, surfaceId)
+		}
+
+		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
+	}
+
+	#subRotate(socket: SatelliteSocketWrapper, socketState: SatelliteSocketState, params: ParsedParams): void {
+		const messageName = 'SUB-ROTATE'
+
+		if (!this.#userconfig.getKey('satellite_subscriptions_enabled')) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Subscriptions not enabled')
+		}
+
+		const subId = params.SUBID
+		if (!subId || subId === true) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing SUBID')
+		}
+		const subIdStr = String(subId)
+
+		const sub = socketState.subscriptions.get(subIdStr)
+		if (!sub) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
+		}
+
+		if (!params.DIRECTION) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DIRECTION')
+		}
+		const direction = params.DIRECTION >= '1'
+
+		const controlId = this.#serviceApi.getControlIdAt(sub.location)
+		if (controlId) {
+			const surfaceId = `satellite-sub:${socketState.clientId}:${subIdStr}`
+			this.#serviceApi.rotateControl(controlId, direction, surfaceId)
+		}
+
+		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
+	}
+
+	async #sendSubState(
+		socket: SatelliteSocketWrapper,
+		subId: string,
+		style: SatelliteControlStylePreset,
+		image: ImageResult
+	): Promise<void> {
+		const styleArgs = await buildSatelliteStyleArgs(image, style, null)
+
+		socket.sendMessage('SUB-STATE', null, null, {
+			SUBID: subId,
+			...styleArgs,
+		})
+	}
+
+	/**
+	 * Process an updated userconfig value.
+	 * When the subscriptions feature is toggled, close all connections so clients reconnect and re-read CAPS.
+	 */
+	updateUserConfig(key: string, _value: boolean | number | string): void {
+		if (key === 'satellite_subscriptions_enabled') {
+			for (const socket of this.#socketStates.keys()) {
+				socket.destroy()
+			}
+		}
+	}
+
+	/**
+	 * Called when a button is drawn at a location.
+	 * Routes the update to any subscriptions that match.
+	 */
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		for (const socketState of this.#socketStates.values()) {
+			for (const sub of socketState.subscriptions.values()) {
+				if (
+					sub.location.pageNumber === location.pageNumber &&
+					sub.location.row === location.row &&
+					sub.location.column === location.column
+				) {
+					socketState.writeQueue.queue(sub.subId, render)
+				}
+			}
+		}
 	}
 }
 
@@ -548,6 +890,18 @@ interface SatelliteDevice {
 	id: string
 	socket: SatelliteSocketWrapper
 	device: SurfaceIPSatellite
+}
+
+interface SatelliteSubscription {
+	subId: string
+	location: ControlLocation
+	style: SatelliteControlStylePreset
+}
+
+interface SatelliteSocketState {
+	clientId: string
+	subscriptions: Map<string, SatelliteSubscription>
+	writeQueue: ImageWriteQueue<string, [ImageResult]>
 }
 
 function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {

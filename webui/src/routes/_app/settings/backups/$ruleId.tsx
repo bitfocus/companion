@@ -1,12 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useCallback, useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import { BackupRuleEditor } from '../../../../UserConfig/BackupRuleEditor.js'
 import { RootAppStoreContext } from '../../../../Stores/RootAppStore.js'
 import { useComputed } from '../../../../Resources/util.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { observer } from 'mobx-react-lite'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { userConfig } = useContext(RootAppStoreContext)
@@ -53,9 +52,8 @@ function BackupRuleEditPanelHeading({ doCloseRule }: BackupRuleEditPanelHeadingP
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Edit Backup Rule</h4>
 			<div className="header-buttons">
-				<div className="float_right ms-1" onClick={doCloseRule} title="Close">
-					<FontAwesomeIcon icon={faTimes} size="lg" />
-				</div>
+				<ContextHelpButton action="/user-guide/config/settings#backups" />
+				<CloseButton closeFn={doCloseRule} />
 			</div>
 		</div>
 	)

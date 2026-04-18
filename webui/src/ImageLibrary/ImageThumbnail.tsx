@@ -1,4 +1,3 @@
-import React from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import classNames from 'classnames'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
