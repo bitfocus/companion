@@ -7,7 +7,7 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import type { DropdownChoice, DropdownChoiceId } from '@companion-module/base'
+import type { DropdownChoiceId, DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'

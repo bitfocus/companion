@@ -274,13 +274,24 @@ function parseCompositeElementChildOptions(
 				const rawValue = element[optionKey]
 				if (!rawValue) {
 					propOverrides[overrideKey] = option.default ?? ''
-				} else if (option.isExpression || rawValue.isExpression) {
+				} else if (rawValue.isExpression) {
 					const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
 					propOverrides[overrideKey] = res.ok ? res.value : option.default
 				} else if (option.useVariables) {
 					propOverrides[overrideKey] = helper.parseVariablesInString(rawValue.value, option.default ?? '')
 				} else {
 					propOverrides[overrideKey] = String(rawValue.value)
+				}
+				break
+			}
+
+			case 'expression': {
+				const rawValue = element[optionKey]
+				if (!rawValue) {
+					propOverrides[overrideKey] = option.default ?? ''
+				} else {
+					const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
+					propOverrides[overrideKey] = res.ok ? res.value : option.default
 				}
 				break
 			}

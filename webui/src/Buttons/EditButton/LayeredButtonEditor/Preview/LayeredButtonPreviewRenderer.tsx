@@ -10,11 +10,11 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import FontLoader from './FontLoader.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import type { DropdownChoice } from '@companion-module/base'
-import { isEqual } from 'lodash-es'
 import { useLocalStorage } from 'usehooks-ts'
 import { CFormLabel } from '@coreui/react'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import QuickLRU from 'quick-lru'
+import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 
 const PAD_X = 10
 const PAD_Y = 10
@@ -108,19 +108,19 @@ function LayeredButtonCanvas({
 		if (!canvas || !drawStyle) return
 
 		// Setup the context on the first run, or when something changes
-		if (
-			!drawContext.current ||
-			drawContext.current.canvas !== canvas ||
-			!isEqual(drawContext.current.location, location)
-		)
-			drawContext.current = new RendererDrawContext(canvas, location)
+		if (!drawContext.current || drawContext.current.canvas !== canvas)
+			drawContext.current = new RendererDrawContext(canvas)
 
 		// Update any cached properties
 		drawContext.current.setHiddenElements(hiddenElements)
 		drawContext.current.setSelectedElementId(selectedElementId)
 
 		// Pass the new draw style to the context
-		drawContext.current.draw(drawStyle)
+		drawContext.current.draw({
+			...drawStyle,
+			location: location,
+			show_topbar: true,
+		})
 	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
 
 	// Ensure the fonts are loaded
@@ -154,24 +154,22 @@ function LayeredButtonCanvas({
 class RendererDrawContext {
 	readonly #image: GraphicsImage
 	readonly #debounce: PromiseDebounce
-	readonly location: ControlLocation
 	readonly canvas: HTMLCanvasElement
 
 	#hiddenElements: ReadonlySet<string> = new Set()
 	#selectedElementId: string | null = null
 
-	constructor(canvas: HTMLCanvasElement, location: ControlLocation) {
+	constructor(canvas: HTMLCanvasElement) {
 		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
 		const image = GraphicsImage.create(canvas, textLayoutCache)
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
-		this.location = location
 		this.canvas = canvas
 	}
 
-	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
+	#lastDrawStyle: RendererButtonStyle | null = null
 	#debounceDraw = async () => {
 		try {
 			if (!this.#lastDrawStyle) throw new Error('No draw style!')
@@ -193,17 +191,9 @@ class RendererDrawContext {
 				}
 			}
 
-			console.log('draw', this.#lastDrawStyle)
-
 			await GraphicsLayeredButtonRenderer.draw(
 				this.#image,
-				{
-					page_direction_flipped: false,
-					page_plusminus: false,
-					remove_topbar: false,
-				},
 				this.#lastDrawStyle,
-				this.location,
 				this.#hiddenElements,
 				this.#selectedElementId,
 				{ x: PAD_X, y: PAD_Y }
@@ -225,7 +215,7 @@ class RendererDrawContext {
 		this.#debounce.trigger()
 	}
 
-	draw(drawStyleFull: DrawStyleLayeredButtonModel) {
+	draw(drawStyleFull: RendererButtonStyle) {
 		this.#lastDrawStyle = drawStyleFull
 		this.#debounce.trigger()
 	}

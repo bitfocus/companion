@@ -324,7 +324,15 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			params['CONTROLID'] = controlDefinition.id
 		}
 
-		const styleArgs = await buildSatelliteStyleArgs(drawItem, controlDefinition.style, this.#config.rotation)
+		if (drawItem.location) {
+			params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
+		}
+
+		const styleArgs = await buildSatelliteStyleArgs(
+			drawItem.defaultRender,
+			controlDefinition.style,
+			this.#config.rotation
+		)
 		Object.assign(params, styleArgs)
 
 		if (!this.socket) return

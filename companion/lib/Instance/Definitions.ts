@@ -479,6 +479,18 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets, uiDefinitions)
 	}
 
+	setCompositeElementDefinitions(connectionId: string, rawDefinitions: CompositeElementDefinition[]): void {
+		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
+		if (!config) return
+
+		const newDefinitions: Record<string, CompositeElementDefinition> = {}
+		for (const rawDefinition of rawDefinitions) {
+			newDefinitions[rawDefinition.id] = rawDefinition
+		}
+
+		this.#updateVariablePrefixesAndStoreCompositeElements(connectionId, config.label, newDefinitions)
+	}
+
 	/**
 	 * Simplify composite element definitions for UI by removing the element property
 	 */

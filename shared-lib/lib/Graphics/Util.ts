@@ -6,12 +6,6 @@ export type VerticalAlignment = 'top' | 'bottom' | 'center'
 
 export type LineOrientation = 'inside' | 'center' | 'outside'
 
-export interface GraphicsOptions {
-	page_direction_flipped: boolean
-	page_plusminus: boolean
-	remove_topbar: boolean
-}
-
 export class DrawBounds {
 	readonly x: number
 	readonly y: number

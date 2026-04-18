@@ -31,7 +31,6 @@ import type { IPageStore } from '../Page/Store.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
-import type { GraphicsOptions } from '@companion-app/shared/Graphics/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import type Express from 'express'
 import compressionMiddleware from 'compression'
@@ -62,6 +61,12 @@ interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
 	presetDrawn: [controlId: string, render: ImageResult]
 	resubscribeFeedbacks: []
+}
+
+interface GraphicsOptions {
+	page_direction_flipped: boolean
+	page_plusminus: boolean
+	remove_topbar: boolean
 }
 
 interface RenderArgumentsButton {

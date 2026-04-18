@@ -1,6 +1,5 @@
 import { assertNever } from '../Util.js'
-import type { ControlLocation } from '../Model/Common.js'
-import { ButtonGraphicsDecorationType, type DrawStyleLayeredButtonModel } from '../Model/StyleModel.js'
+import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
@@ -12,15 +11,14 @@ import type {
 	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsCircleDrawElement,
 } from '../Model/StyleLayersModel.js'
-import { DrawBounds, parseColor, rgbRev, type GraphicsOptions } from './Util.js'
+import { DrawBounds, parseColor, rgbRev } from './Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
+import type { RendererButtonStyle } from '../Model/Render.js'
 
 export class GraphicsLayeredButtonRenderer {
 	static async draw(
 		img: ImageBase<any>,
-		options: GraphicsOptions,
-		drawStyle: DrawStyleLayeredButtonModel,
-		location: ControlLocation | undefined,
+		drawStyle: RendererButtonStyle,
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
 		paddingPx: { x: number; y: number }
@@ -32,7 +30,7 @@ export class GraphicsLayeredButtonRenderer {
 
 		let decoration = backgroundElement?.decoration
 		if (decoration === ButtonGraphicsDecorationType.FollowDefault || decoration === undefined) {
-			decoration = options.remove_topbar ? ButtonGraphicsDecorationType.Border : ButtonGraphicsDecorationType.TopBar
+			decoration = drawStyle.show_topbar ? ButtonGraphicsDecorationType.TopBar : ButtonGraphicsDecorationType.Border
 		}
 		const showTopBar = decoration === ButtonGraphicsDecorationType.TopBar
 
@@ -65,7 +63,7 @@ export class GraphicsLayeredButtonRenderer {
 				ButtonDecorationRenderer.drawBorderWhenPushed(img, drawStyle, drawBounds)
 				break
 			case ButtonGraphicsDecorationType.TopBar:
-				ButtonDecorationRenderer.drawStatusBar(img, drawStyle, location, topBarBounds)
+				ButtonDecorationRenderer.drawStatusBar(img, drawStyle, topBarBounds)
 				break
 			default:
 				assertNever(decoration)
@@ -73,7 +71,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		// Draw top status icons
-		ButtonDecorationRenderer.drawIcons(img, drawStyle, location, topBarBounds)
+		ButtonDecorationRenderer.drawIcons(img, drawStyle, topBarBounds)
 
 		// Draw a border around the selected element, do this last so it's on top
 		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)

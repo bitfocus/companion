@@ -54,7 +54,7 @@ import {
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { ControlsController } from '../../Controls/Controller.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 
 const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
 
@@ -737,11 +737,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 	readonly #ipcWrapper: ModuleIpcWrapper
-	readonly #controlsController: ControlsController
+	readonly #controlsStore: IControlStore
 
-	constructor(ipcWrapper: ModuleIpcWrapper, controlsController: ControlsController) {
+	constructor(ipcWrapper: ModuleIpcWrapper, controlsStore: IControlStore) {
 		this.#ipcWrapper = ipcWrapper
-		this.#controlsController = controlsController
+		this.#controlsStore = controlsStore
 	}
 
 	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
@@ -768,7 +768,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 
 		for (const [id, value] of feedbacks) {
 			if (value && !value.entity.disabled) {
-				const control = this.#controlsController.getControl(value.controlId)
+				const control = this.#controlsStore.getControl(value.controlId)
 
 				updateMessage.feedbacks[id] = {
 					id: value.entity.id,

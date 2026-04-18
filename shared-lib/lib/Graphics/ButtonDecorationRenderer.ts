@@ -1,5 +1,5 @@
 import { formatLocation } from '../ControlId.js'
-import type { ControlLocation } from '../Model/Common.js'
+import type { RendererButtonStyle } from '../Model/Render.js'
 import type { DrawStyleButtonStateProps } from '../Model/StyleModel.js'
 import type { ImageBase } from './ImageBase.js'
 import type { DrawBounds } from './Util.js'
@@ -10,12 +10,7 @@ const colorBlack = 'black'
 export class ButtonDecorationRenderer {
 	static readonly DEFAULT_HEIGHT = 14
 
-	static drawStatusBar(
-		img: ImageBase<any>,
-		drawStyle: DrawStyleButtonStateProps,
-		location: ControlLocation | undefined,
-		topBarBounds: DrawBounds
-	): void {
+	static drawStatusBar(img: ImageBase<any>, drawStyle: RendererButtonStyle, topBarBounds: DrawBounds): void {
 		let step = ''
 		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
 		img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
@@ -23,7 +18,7 @@ export class ButtonDecorationRenderer {
 			width: 1,
 		})
 
-		if (drawStyle.stepCount > 1 && location) {
+		if (drawStyle.stepCount > 1 && drawStyle.location) {
 			step = `.${drawStyle.stepCurrent}`
 		}
 
@@ -31,17 +26,23 @@ export class ButtonDecorationRenderer {
 		const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
 		const locationDrawSize = Math.round(topBarBounds.height * 0.65)
 
-		if (location === undefined) {
+		if (drawStyle.location === undefined) {
 			// Preview (no location)
 			img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, colorButtonYellow, locationDrawSize)
 		} else if (drawStyle.pushed) {
 			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, colorButtonYellow)
-			img.drawTextLine(locationDrawX, locationDrawY, `${formatLocation(location)}${step}`, colorBlack, locationDrawSize)
+			img.drawTextLine(
+				locationDrawX,
+				locationDrawY,
+				`${formatLocation(drawStyle.location)}${step}`,
+				colorBlack,
+				locationDrawSize
+			)
 		} else {
 			img.drawTextLine(
 				locationDrawX,
 				locationDrawY,
-				`${formatLocation(location)}${step}`,
+				`${formatLocation(drawStyle.location)}${step}`,
 				colorButtonYellow,
 				locationDrawSize
 			)
@@ -65,19 +66,14 @@ export class ButtonDecorationRenderer {
 		}
 	}
 
-	static drawIcons(
-		img: ImageBase<any>,
-		drawStyle: DrawStyleButtonStateProps,
-		location: ControlLocation | undefined,
-		topBarBounds: DrawBounds
-	): void {
+	static drawIcons(img: ImageBase<any>, drawStyle: RendererButtonStyle, topBarBounds: DrawBounds): void {
 		// const iconHeight
 		let rightMax = topBarBounds.x + topBarBounds.width
 
 		// next error or warning icon
 		const iconSize = Math.floor(topBarBounds.height * 0.65)
 		const iconPadding = Math.floor(topBarBounds.height * 0.175)
-		if (location) {
+		if (drawStyle.location) {
 			let statusColor: string | undefined
 			switch (drawStyle.button_status) {
 				case 'error':

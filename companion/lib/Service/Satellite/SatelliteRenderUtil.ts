@@ -2,7 +2,7 @@ import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
 import type { SatelliteControlStylePreset } from './SatelliteSurfaceManifestSchema.js'
 import type { SatelliteMessageArgs } from './SatelliteApi.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
-import type { DrawButtonItem } from '../../Surface/Types.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 
 /**
@@ -12,12 +12,12 @@ import { parseColor } from '@companion-app/shared/Graphics/Util.js'
  * Shared between KEY-STATE (surface mode) and SUB-STATE (subscription mode).
  */
 export async function buildSatelliteStyleArgs(
-	drawItem: DrawButtonItem,
+	image: ImageResult,
 	style: SatelliteControlStylePreset,
 	rotation: SurfaceRotation | null
 ): Promise<SatelliteMessageArgs> {
 	const params: SatelliteMessageArgs = {}
-	const drawStyle = drawItem.defaultRender.style
+	const drawStyle = image.style
 
 	params['PRESSED'] = typeof drawStyle !== 'string' && !!drawStyle?.state?.pushed
 
@@ -26,12 +26,8 @@ export async function buildSatelliteStyleArgs(
 	else if (drawStyle?.type === 'pagenum') params['TYPE'] = 'PAGENUM'
 	else params['TYPE'] = 'BUTTON'
 
-	if (drawItem.location) {
-		params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
-	}
-
 	if (style.bitmap) {
-		const buffer = await drawItem.defaultRender.drawNative(style.bitmap.w, style.bitmap.h, rotation, 'rgb')
+		const buffer = await image.drawNative(style.bitmap.w, style.bitmap.h, rotation, 'rgb')
 
 		if (buffer !== undefined && buffer.length > 0) {
 			params['BITMAP'] = uint8ArrayToBuffer(buffer).toString('base64')

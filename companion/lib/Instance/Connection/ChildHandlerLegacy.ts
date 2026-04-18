@@ -90,7 +90,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
-import type { ControlsController } from '../../Controls/Controller.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 
 const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
 
@@ -1094,14 +1094,11 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
-	readonly #controlsController: ControlsController
+	readonly #controlsStore: IControlStore
 
-	constructor(
-		ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>,
-		controlsController: ControlsController
-	) {
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>, controlsStore: IControlStore) {
 		this.#ipcWrapper = ipcWrapper
-		this.#controlsController = controlsController
+		this.#controlsStore = controlsStore
 	}
 
 	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
@@ -1131,7 +1128,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 		for (const [id, value] of feedbacks) {
 			if (value) {
-				const control = this.#controlsController.getControl(value.controlId)
+				const control = this.#controlsStore.getControl(value.controlId)
 
 				updateMessage.feedbacks[id] = {
 					id: value.entity.id,
