@@ -12,7 +12,7 @@ Configured surfaces define the mapping from Companion's [buttons](./buttons/inde
 
 :::important
 
-Before Companion can recognize a new surface you must ensure that the appropriate **surface integration** module has been installed and enabled.
+Before Companion can recognize a new surface you must ensure that the appropriate [**surface integration** module](../7_surfaces/index.md) has been installed and enabled.
 
 :::
 

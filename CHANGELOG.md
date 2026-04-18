@@ -22,6 +22,7 @@
   - add URI encode/decode functions #3771
   - Add `blink()` function to expressions. This can be used in feedbacks to provide customisable blinking behaviour
   - Extended time formatting options
+  - Date expression functions (#4021)
 - Rework various panels/lists to group connections by collections instead of as a flat list
 - Improve performance of some button drawing #3902 #3891
 - Various styling refinement
@@ -29,9 +30,13 @@
   - Add help icon to header bar
   - improve drag and drop previews
   - Update app icon on macos
+  - add collapse/expand all buttons for collection items (#4063)
+  - add or update help and close icons in panel headers (#4053)
 - Add support for `SENTRY_DISABLE` environment variable, to disable sentry reporting
 - Option to suppress header notifications (#4004)
 - Add docker COMPANION_ADMIN_PORT environment variable for admin port configuration (#4042)
+- Expand satellite api to cover full module and elgato plugin functionality
+- Add HTTP API endpoints for connection management (#4048)
 
 ### 🐞 BUG FIXES
 
@@ -47,6 +52,8 @@
 - preserve type of expressions when writing to custom/local variables #3954
 - child entities not being upgraded #3924
 - improve confusing trigger terminology "depress" (#3922)
+- ensure module manifest doesn't load root file from outside of package
+- Launch main companion process with the `--use-system-ca` flag (#4060)
 
 ## Companion v4.2.6 - Release Notes
 

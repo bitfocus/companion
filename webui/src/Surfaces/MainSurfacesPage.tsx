@@ -99,7 +99,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 							To configure a surface integration or global setting,
 							{twoPanelMode
 								? ' use the panel to the right.'
-								: '	click the "Show Settings" button above the table on the right.'}
+								: '	click the "Show Settings" button on the right, just above the table.'}
 							<br />
 							Click this icon for more help.
 						</ContextHelpButton>
