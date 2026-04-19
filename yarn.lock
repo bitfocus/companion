@@ -1919,25 +1919,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260417-204738-cee3dd2":
-  version: 2.0.3-nightly-feat-graphics-overhaul-20260417-204738-cee3dd2
-  resolution: "@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260417-204738-cee3dd2"
+"@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89":
+  version: 2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89
+  resolution: "@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/2d8d66d50eeb2fb64413f609e4d1fdf9f753bdda067a6662cb36cf88a02753f904d1ce1fbe68b67aa5953d984c7d5e613ddc34c95bb9c43e9b6e0abb2757f62b
+  checksum: 10c0/ec62a8c7993d3e0efd390e018a5ad9ca79e48fc1b7e7e3500e55566df7789041a3578e1700c774d079304f796b3fc089e5e02f8ff67ecc0d61550f860abebf8c
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260417-204852-cee3dd2":
-  version: 1.0.2-nightly-feat-graphics-overhaul-20260417-204852-cee3dd2
-  resolution: "@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260417-204852-cee3dd2"
+"@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89":
+  version: 1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89
+  resolution: "@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89"
   dependencies:
     "@companion-module/base": "npm:~2.0.3"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/0ac7bdb6dfc25ca85c7e6544d4a35a15b05da83effd0128396b5dbc9ea0f5589044e2fe951c164263c5215433362c18e49856f724b129dcd29310b4160a45732
+  checksum: 10c0/4a574b56f9ff64f454438b8874265eccc86a9db3f95772bc7e83574931ba6904b9420f3351a2f94a90030c74be7330149569661f50deb0b01749045c3633e0d8
   languageName: node
   linkType: hard
 

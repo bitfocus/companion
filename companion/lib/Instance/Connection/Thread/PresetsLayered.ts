@@ -228,7 +228,7 @@ function convertLayeredPresetElement(
 		}
 		default:
 			assertNever(element)
-			logger.info(`Unsupported element type in layered-button preset: ${elementType}`)
+			logger.info(`Unsupported element type in layered preset: ${elementType}`)
 			return null
 	}
 }

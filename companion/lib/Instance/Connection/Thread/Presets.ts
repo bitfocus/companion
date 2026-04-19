@@ -329,7 +329,7 @@ function ConvertPresetDefinition(
 
 				return presetDefinition
 			}
-			case 'layered-button': {
+			case 'layered': {
 				const { steps, hasRotaryActions } = ConvertStepsForPreset(
 					logger,
 					connectionId,
@@ -361,7 +361,7 @@ function ConvertPresetDefinition(
 						steps,
 						localVariables: ConvertLocalVariablesForPreset(logger, rawPreset.localVariables),
 					},
-					presetExtraFeedbacks: [], // No preview style for layered-button presets
+					presetExtraFeedbacks: [], // No preview style for layered presets
 					keywords: structuredClone(rawPreset.keywords),
 				}
 
