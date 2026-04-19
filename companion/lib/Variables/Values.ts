@@ -65,7 +65,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		overrideVariableValues: VariableValues | null
 	): VariablesAndExpressionParser {
 		const thisValues: VariablesCache = new Map()
-		this.addInjectedVariablesForLocation(thisValues, controlLocation)
+		this.#addInjectedVariablesForLocation(thisValues, controlLocation)
 
 		return new VariablesAndExpressionParser(
 			this.#blinker,
@@ -174,7 +174,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	/**
 	 * Variables to inject based on location
 	 */
-	addInjectedVariablesForLocation(values: VariablesCache, location: ControlLocation | null | undefined): void {
+	#addInjectedVariablesForLocation(values: VariablesCache, location: ControlLocation | null | undefined): void {
 		values.set('$(this:page)', location?.pageNumber)
 		values.set('$(this:column)', location?.column)
 		values.set('$(this:row)', location?.row)
