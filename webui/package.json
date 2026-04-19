@@ -73,7 +73,7 @@
     "react-time-picker": "^8.0.2",
     "react-use": "^17.6.0",
     "remark-gfm": "^4.0.1",
-    "sanitize-html": "^2.17.2",
+    "sanitize-html": "^2.17.3",
     "sass-embedded": "^1.98.0",
     "terser": "^5.46.1",
     "type-fest": "^5.5.0",

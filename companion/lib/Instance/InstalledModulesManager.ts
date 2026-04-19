@@ -383,7 +383,7 @@ export class InstanceInstalledModulesManager {
 			this.#logger.warn(msg)
 			return msg
 		}
-		if (manifestJson.type !== moduleType) {
+		if ((manifestJson.type as ModuleInstanceType) !== moduleType) {
 			const msg = `Module type does not match requested module type. Got ${manifestJson.type}, expected ${moduleType}`
 			this.#logger.warn(msg)
 			return msg
