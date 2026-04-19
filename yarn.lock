@@ -1729,7 +1729,7 @@ __metadata:
     "@types/plist": "npm:^3.0.5"
     chokidar: "npm:^5.0.0"
     debounce-fn: "npm:^6.0.0"
-    electron: "npm:41.1.1"
+    electron: "npm:41.2.1"
     electron-builder: "npm:26.8.2"
     electron-reloader: "npm:^1.2.3"
     electron-store: "npm:^11.0.2"
@@ -12588,16 +12588,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:41.1.1":
-  version: 41.1.1
-  resolution: "electron@npm:41.1.1"
+"electron@npm:41.2.1":
+  version: 41.2.1
+  resolution: "electron@npm:41.2.1"
   dependencies:
     "@electron/get": "npm:^2.0.0"
     "@types/node": "npm:^24.9.0"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/b52df5c263ee612e62b7d804bf97d739f2876b5b16cf46cf99ec338d59093cb066bf85d1ad77115d4839a5ea64bba66ecb27111696a409cbe64eb81c3e71449e
+  checksum: 10c0/f67bddb0e40bb78b44d48e92170ac69c17b8d8ef469434dd0fb1d76def9999f3725a36337d966258214d8362ea3d7adfa7773485f7bf3b05db1ff42eb4e86df9
   languageName: node
   linkType: hard
 
