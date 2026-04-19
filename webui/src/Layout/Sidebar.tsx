@@ -401,8 +401,7 @@ export const MySidebar = memo(function MySidebar() {
 						name="Surfaces"
 						icon={faGamepad}
 						notifications={SurfacesTabNotifyIcon}
-						path="/surfaces/configured"
-						activePath="/surfaces"
+						path="/surfaces"
 						groupVisible={surfacesGroupVis}
 						groupSetVisible={(expand) => smartExpand(setSurfacesGroupVis, expand)}
 					>
@@ -435,7 +434,7 @@ export const MySidebar = memo(function MySidebar() {
 						<SidebarMenuItem
 							name="Surfaces"
 							icon={faGamepad}
-							path="/surfaces/configured/integrations"
+							path="/surfaces/integrations"
 							title="Surface settings have moved to the main Surfaces Page."
 						/>
 						<SidebarMenuItem name="Protocols" icon={faNetworkWired} path="/settings/protocols" />

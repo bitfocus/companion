@@ -11,12 +11,12 @@ const ModuleConfigComponent = observer(function ModuleConfigComponent() {
 	// Ensure the selected instance is valid
 	// note: Currently Companion displays a "loading" bar until surfaceInstances have been loaded, so we don't test for "data is ready"
 	if (!surfaceInstances.instances.has(instanceId)) {
-		return <Navigate to="/surfaces/configured/integrations" replace />
+		return <Navigate to="/surfaces/integrations" replace />
 	} else {
 		return <SurfaceInstanceEditPanel key={instanceId} instanceId={instanceId} />
 	}
 })
 
-export const Route = createFileRoute('/_app/surfaces/configured/integrations/$instanceId')({
+export const Route = createFileRoute('/_app/surfaces/integrations/$instanceId')({
 	component: ModuleConfigComponent,
 })

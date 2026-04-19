@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { AddSurfaceInstancePanel } from '~/Surfaces/Instances/AddSurfaceInstancePanel.js'
 
-export const Route = createFileRoute('/_app/surfaces/configured/integrations/add')({
+export const Route = createFileRoute('/_app/surfaces/integrations/add')({
 	component: RouteComponent,
 })
 

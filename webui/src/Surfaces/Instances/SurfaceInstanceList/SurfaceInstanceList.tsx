@@ -48,9 +48,9 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	const doConfigureInstance = useCallback(
 		(instanceId: string | null) => {
 			if (!instanceId) {
-				void navigate({ to: '/surfaces/configured/integrations' })
+				void navigate({ to: '/surfaces/integrations' })
 			} else {
-				void navigate({ to: '/surfaces/configured/integrations/$instanceId', params: { instanceId } })
+				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
 			}
 		},
 		[navigate]
@@ -93,11 +93,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 				<div className="d-flex align-items-center help-button-float">
 					<CButtonGroup className="connection-group-actions m-1 me-auto">
-						<CButton
-							color="primary"
-							size="sm"
-							onClick={() => void navigate({ to: '/surfaces/configured/integrations/add' })}
-						>
+						<CButton color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Surface Integration
 						</CButton>
