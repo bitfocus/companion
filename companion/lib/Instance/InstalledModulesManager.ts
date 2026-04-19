@@ -383,7 +383,7 @@ export class InstanceInstalledModulesManager {
 			this.#logger.warn(msg)
 			return msg
 		}
-		if (manifestJson.type !== moduleType) {
+		if ((manifestJson.type as ModuleInstanceType) !== moduleType) {
 			const msg = `Module type does not match requested module type. Got ${manifestJson.type}, expected ${moduleType}`
 			this.#logger.warn(msg)
 			return msg
@@ -507,7 +507,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 
 					try {
 						const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-						if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+						if (!parsedManifest.type) (parsedManifest as Partial<SomeModuleManifest>).type = 'connection' // Backwards compatibility
 
 						resolve(parsedManifest)
 					} catch (e) {
@@ -584,7 +584,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 
 						try {
 							const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-							if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+							if (!parsedManifest.type) (parsedManifest as Partial<SomeModuleManifest>).type = 'connection' // Backwards compatibility
 
 							moduleInfos.push({
 								subDir: moduleDirName,

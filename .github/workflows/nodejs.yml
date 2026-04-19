@@ -45,7 +45,7 @@ jobs:
 
     outputs:
       version: ${{ steps.filenames.outputs.longversion }}
-      do-docker: ${{ steps.upload-beta.outputs.upload-url || steps.upload-stable.outputs.upload-url }}
+      upload-url: ${{ steps.upload-beta.outputs.upload-url || steps.upload-stable.outputs.upload-url }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -131,7 +131,7 @@ jobs:
           s3-access-key: ${{ secrets.RELEASE_S3_KEY }}
           s3-secret-key: ${{ secrets.RELEASE_S3_SECRET }}
 
-          upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
+          public-bucket-url: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}
 
           api-version: ${{ github.ref_name }}
           api-branch: "stable"
@@ -143,6 +143,9 @@ jobs:
     runs-on: ubuntu-22.04-arm
     needs: check-types
     timeout-minutes: 20
+
+    outputs:
+      upload-url: ${{ steps.upload-beta.outputs.upload-url || steps.upload-stable.outputs.upload-url }}
 
     steps:
       - uses: actions/checkout@v6
@@ -201,6 +204,7 @@ jobs:
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
+        id: upload-beta
         uses: bitfocus/actions/upload-and-notify-for-branch@main
         if: ${{ github.repository_owner == 'bitfocus' && github.ref == 'refs/heads/main' }}
         with:
@@ -217,6 +221,7 @@ jobs:
           api-target: "linux-arm64-tgz"
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
       - name: Upload build (stable)
+        id: upload-stable
         uses: bitfocus/actions/upload-and-notify-for-branch@main
         if: ${{ github.repository_owner == 'bitfocus' && startsWith(github.ref, 'refs/tags/') }}
         with:
@@ -227,7 +232,7 @@ jobs:
           s3-access-key: ${{ secrets.RELEASE_S3_KEY }}
           s3-secret-key: ${{ secrets.RELEASE_S3_SECRET }}
 
-          upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
+          public-bucket-url: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}
 
           api-version: ${{ github.ref_name }}
           api-branch: "stable"
@@ -334,7 +339,7 @@ jobs:
           s3-access-key: ${{ secrets.RELEASE_S3_KEY }}
           s3-secret-key: ${{ secrets.RELEASE_S3_SECRET }}
 
-          upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
+          public-bucket-url: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}
 
           api-version: ${{ github.ref_name }}
           api-branch: "stable"
@@ -434,7 +439,7 @@ jobs:
           s3-access-key: ${{ secrets.RELEASE_S3_KEY }}
           s3-secret-key: ${{ secrets.RELEASE_S3_SECRET }}
 
-          upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
+          public-bucket-url: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}
 
           api-version: ${{ github.ref_name }}
           api-branch: "stable"
@@ -545,7 +550,7 @@ jobs:
           s3-access-key: ${{ secrets.RELEASE_S3_KEY }}
           s3-secret-key: ${{ secrets.RELEASE_S3_SECRET }}
 
-          upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
+          public-bucket-url: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}
 
           api-version: ${{ github.ref_name }}
           api-branch: "stable"
@@ -570,7 +575,7 @@ jobs:
 
     steps:
       - name: Docker meta
-        if: ${{ needs.linux-x64.outputs.do-docker }}
+        if: ${{ needs.linux-x64.outputs.upload-url }}
         id: meta
         uses: docker/metadata-action@v6
         with:
@@ -623,4 +628,5 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           tags: "${{ steps.meta.outputs.tags }}"
           build-args: |
-            build_name=${{ needs.linux-x64.outputs.version }}
+            linux_x64_url=${{ needs.linux-x64.outputs.upload-url }}
+            linux_arm64_url=${{ needs.linux-arm64.outputs.upload-url }}

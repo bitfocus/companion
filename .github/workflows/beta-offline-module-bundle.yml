@@ -90,7 +90,7 @@ jobs:
           s3-access-key: ${{ secrets.RELEASE_S3_KEY }}
           s3-secret-key: ${{ secrets.RELEASE_S3_SECRET }}
 
-          upload-url-override: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}/${{ steps.filenames.outputs.targetname }}
+          public-bucket-url: ${{ vars.RELEASE_S3_URL }}/${{ env.API_PRODUCT }}
 
           api-version: ${{ github.ref_name }}
           api-branch: "stable"

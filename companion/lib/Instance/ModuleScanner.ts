@@ -66,6 +66,7 @@ export class InstanceModuleScanner {
 			}
 			const manifestJsonStr = await fs.readFile(manifestPath)
 			const manifestJson: SomeModuleManifest = JSON.parse(manifestJsonStr.toString())
+			const manifestType = manifestJson.type
 
 			// Parse the manifest based on the type
 			if (manifestJson.type === undefined) {
@@ -75,8 +76,8 @@ export class InstanceModuleScanner {
 			} else if (manifestJson.type === 'surface') {
 				return await this.#parseSurfaceManifest(manifestJson, fullpath, isPackaged)
 			} else {
-				assertNever(manifestJson.type)
-				throw new Error(`Unknown module type "${manifestJson.type}" in manifest`)
+				assertNever(manifestJson)
+				throw new Error(`Unknown module type "${manifestType}" in manifest`)
 			}
 		} catch (e) {
 			this.#logger.silly(`Error loading module from ${fullpath}`, e)
