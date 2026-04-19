@@ -507,7 +507,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 
 					try {
 						const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-						if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+						if (!parsedManifest.type) (parsedManifest as Partial<SomeModuleManifest>).type = 'connection' // Backwards compatibility
 
 						resolve(parsedManifest)
 					} catch (e) {
@@ -584,7 +584,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 
 						try {
 							const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-							if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+							if (!parsedManifest.type) (parsedManifest as Partial<SomeModuleManifest>).type = 'connection' // Backwards compatibility
 
 							moduleInfos.push({
 								subDir: moduleDirName,
