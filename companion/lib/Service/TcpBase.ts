@@ -1,7 +1,7 @@
+import net, { type Socket } from 'net'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'
-import net, { type Socket } from 'net'
 
 /**
  * Abstract class providing base functionality for TCP services.

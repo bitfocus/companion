@@ -1,13 +1,13 @@
+import { on, type EventEmitter } from 'node:events'
+import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
 import { initTRPC, TRPCError } from '@trpc/server'
-import type { Registry } from '../Registry.js'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
-import { on, type EventEmitter } from 'node:events'
+import { nanoid } from 'nanoid'
 import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
 import LogController from '../Log/Controller.js'
-import { nanoid } from 'nanoid'
+import type { Registry } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
-import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
 
 export interface TrpcContext {
 	clientId: string

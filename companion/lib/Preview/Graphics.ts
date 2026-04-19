@@ -1,21 +1,21 @@
-import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
-import { ParseLocationString } from '../Internal/Util.js'
-import type { ImageResult } from '../Graphics/ImageResult.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import z from 'zod'
+import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import {
 	ExpressionableOptionsObjectSchema,
 	JsonValueSchema,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
+import { ParseLocationString } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	pageNumber: z.number().min(1),

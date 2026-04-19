@@ -1,37 +1,37 @@
+import { nanoid } from 'nanoid'
+import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	ExportFullv6,
 	ExportInstancesv6,
 	ExportPageContentv6,
 	ExportTriggerContentv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientImportOrResetSelection,
 	ConnectionRemappings,
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { InternalController } from '../Internal/Controller.js'
+import LogController from '../Log/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
 import {
 	fixupControl,
 	fixupExpressionVariableControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
 } from './ImportFixup.js'
-import type { InternalController } from '../Internal/Controller.js'
-import { nanoid } from 'nanoid'
-import type { InstanceController } from '../Instance/Controller.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { PageController } from '../Page/Controller.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
 import { find_smallest_grid_for_page } from './Util.js'
-import LogController from '../Log/Controller.js'
-import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { VariablesController } from '../Variables/Controller.js'
 
 export class ImportController {
 	readonly #logger = LogController.createLogger('ImportExport/Import')

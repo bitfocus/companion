@@ -1,9 +1,9 @@
 import { useMemo, useRef } from 'react'
+import type { JsonValue } from 'type-fest'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import type { JsonValue } from 'type-fest'
 
 export interface IEventEditorService {
 	addEvent: (eventType: DropdownChoiceId) => void

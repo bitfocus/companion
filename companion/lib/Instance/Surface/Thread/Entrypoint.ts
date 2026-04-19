@@ -1,17 +1,17 @@
 /* eslint-disable n/no-process-exit */
-import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import type { SurfaceModuleToHostEvents, HostToSurfaceModuleEvents, CheckDeviceInfo } from '../IpcTypes.js'
+import fs from 'fs/promises'
 import {
-	type SurfaceModuleManifest,
-	registerLoggingSink,
 	createModuleLogger,
 	PluginWrapper,
+	registerLoggingSink,
+	type SurfaceModuleManifest,
 } from '@companion-surface/host'
-import fs from 'fs/promises'
-import { HostContext } from './HostContext.js'
-import { translateSurfaceConfigFields } from './ConfigFields.js'
-import { convertOpenDeviceResult } from './Util.js'
+import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import { importModuleFromPath } from '../../Common/ThreadUtil.js'
+import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
+import { translateSurfaceConfigFields } from './ConfigFields.js'
+import { HostContext } from './HostContext.js'
+import { convertOpenDeviceResult } from './Util.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')

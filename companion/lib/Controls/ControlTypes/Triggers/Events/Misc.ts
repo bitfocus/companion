@@ -1,8 +1,8 @@
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import LogController, { type Logger } from '../../../../Log/Controller.js'
-import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
-import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
+import LogController, { type Logger } from '../../../../Log/Controller.js'
+import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 
 interface ConnectEvent {
 	id: string

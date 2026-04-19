@@ -1,12 +1,11 @@
-import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import { CCol, CCallout } from '@coreui/react'
+import { CCallout, CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-
-import { useActionRecorderActionService } from '~/Services/Controls/ControlActionsService.js'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
 import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
+import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { useActionRecorderActionService } from '~/Services/Controls/ControlActionsService.js'
 
 interface RecorderSessionProps {
 	sessionId: string

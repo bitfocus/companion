@@ -1,23 +1,23 @@
-import { memo, useState } from 'react'
 import {
-	CFormInput,
+	CAlert,
 	CButton,
 	CCallout,
 	CCard,
 	CCardBody,
 	CCardHeader,
-	CListGroup,
-	CFormSwitch,
-	CAlert,
 	CCol,
+	CFormInput,
 	CFormLabel,
+	CFormSwitch,
+	CListGroup,
 } from '@coreui/react'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { memo, useState } from 'react'
+import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export function CloudPage(): React.JSX.Element {
 	const cloudState = useCloudState()

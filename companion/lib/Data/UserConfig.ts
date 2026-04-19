@@ -1,12 +1,12 @@
-import selfsigned from 'selfsigned'
-import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
-import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
-import LogController from '../Log/Controller.js'
-import type { DataStoreTableView } from './StoreBase.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import selfsigned from 'selfsigned'
 import z from 'zod'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
+import type { DataStoreTableView } from './StoreBase.js'
 
 export interface DataUserConfigEvents {
 	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]

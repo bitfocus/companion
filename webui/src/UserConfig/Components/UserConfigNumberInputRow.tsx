@@ -1,7 +1,7 @@
-import { ResetButton, type UserConfigProps } from './Common.js'
+import { observer } from 'mobx-react-lite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
-import { observer } from 'mobx-react-lite'
+import { ResetButton, type UserConfigProps } from './Common.js'
 
 interface UserConfigNumberInputRowProps {
 	userConfig: UserConfigProps

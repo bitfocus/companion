@@ -1,12 +1,12 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useCallback } from 'react'
-import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
-import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
-import { useUserConfigProps } from '~/UserConfig/Context'
-import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
-import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
+import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
+import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
+import { useUserConfigProps } from '~/UserConfig/Context'
+import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 
 // settings panel (shown when no configured surface is selected)
 //  Shows surface user-settings and the integrations table (SurfaceInstancesList)

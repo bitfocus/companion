@@ -1,13 +1,13 @@
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
-import { createContext, useContext, useMemo, useCallback } from 'react'
+import { observer } from 'mobx-react-lite'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 import Select, { createFilter, components as SelectComponents, type MultiValueRemoveProps } from 'react-select'
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
-import { observer } from 'mobx-react-lite'
-import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { useComputed } from '~/Resources/util.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 const IsAtMinimumContext = createContext(false)
 

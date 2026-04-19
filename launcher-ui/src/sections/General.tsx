@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useConfig } from '~/hooks/useConfig'
+import { useEffect, useState } from 'react'
 import { Label } from '~/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
+import { useConfig } from '~/hooks/useConfig'
 
 const LOG_LEVELS = [
 	{ value: 'error', label: 'Error' },

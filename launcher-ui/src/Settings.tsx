@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react'
-import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar.js'
 import { LoadingSpinner } from '~/components/ui/loading-spinner'
+import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar.js'
 import { AppSidebar } from './AppSidebar'
-import { SectionDefinitions, type SectionDefinition } from './Sections'
-import { SectionVisibilityProvider, useSectionVisibility } from './contexts/SectionVisibilityContext'
 import { ConfigProvider } from './contexts/ConfigContext'
+import { SectionVisibilityProvider, useSectionVisibility } from './contexts/SectionVisibilityContext'
 import { useConfig } from './hooks/useConfig'
 import { useSectionVisibilityObserver } from './hooks/useSectionVisibilityObserver'
 import { cn } from './lib/utils'
+import { SectionDefinitions, type SectionDefinition } from './Sections'
 
 function SectionWithObserver({ section, isLast }: { section: SectionDefinition; isLast: boolean }): JSX.Element {
 	const SectionComponent = section.component

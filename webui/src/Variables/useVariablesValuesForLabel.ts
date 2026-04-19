@@ -1,7 +1,7 @@
+import { useQuery } from '@tanstack/react-query'
 import { observable, runInAction, type ObservableMap } from 'mobx'
 import { useEffect, useMemo } from 'react'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { useQuery } from '@tanstack/react-query'
 import { trpc } from '~/Resources/TRPC'
 
 export function useVariablesValuesForLabel(label: string): ObservableMap<string, VariableValue | undefined> {

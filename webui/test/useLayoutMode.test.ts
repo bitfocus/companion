@@ -1,5 +1,5 @@
 // test/useLayoutMode.test.ts
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import '../src/App.scss' // Points to your entry Sass file
 import { getBreakpoints } from '../src/Hooks/useLayoutMode'
 

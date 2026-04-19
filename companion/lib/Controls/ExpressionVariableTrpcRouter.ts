@@ -1,20 +1,20 @@
-import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { nanoid } from 'nanoid'
-import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
-import z from 'zod'
 import type EventEmitter from 'events'
-import type { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
-import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
-import { validateExpressionVariableControlId } from './Util.js'
+import { nanoid } from 'nanoid'
+import z from 'zod'
+import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
 	ExpressionVariableUpdateInitOp,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
+import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
+import type { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
+import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
+import { validateExpressionVariableControlId } from './Util.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createExpressionVariableTrpcRouter(

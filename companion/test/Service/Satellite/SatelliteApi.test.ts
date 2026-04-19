@@ -1,12 +1,12 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ServiceSatelliteApi, SatelliteSocketWrapper } from '../../../lib/Service/Satellite/SatelliteApi.js'
+import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
+import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
+import type { Logger } from '../../../lib/Log/Controller.js'
+import { SatelliteSocketWrapper, ServiceSatelliteApi } from '../../../lib/Service/Satellite/SatelliteApi.js'
 import type { ServiceApi } from '../../../lib/Service/ServiceApi.js'
 import type { SurfaceController } from '../../../lib/Surface/Controller.js'
 import type { SurfaceIPSatellite } from '../../../lib/Surface/IP/Satellite.js'
-import type { Logger } from '../../../lib/Log/Controller.js'
-import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
-import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {

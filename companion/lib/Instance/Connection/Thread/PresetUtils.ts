@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -6,7 +7,6 @@ import {
 import { exprExpr, exprVal, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompanionButtonStyleProps, CompanionPresetAction, CompanionPresetFeedback } from '@companion-module/base'
-import { nanoid } from 'nanoid'
 
 export function convertActionsDelay(
 	actions: CompanionPresetAction[],

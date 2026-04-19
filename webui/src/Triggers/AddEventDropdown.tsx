@@ -1,10 +1,10 @@
+import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import Select from 'react-select'
-import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
+import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const noOptionsMessage = () => {
 	return 'No events found'

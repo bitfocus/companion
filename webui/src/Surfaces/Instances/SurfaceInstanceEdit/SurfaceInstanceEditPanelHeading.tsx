@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite'
-import { useContext, useCallback } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { getModuleVersionInfo } from '~/Instances/Util.js'
+import { useCallback, useContext } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
+import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface SurfaceInstanceEditPanelHeadingProps {
 	instanceInfo: ClientSurfaceInstanceConfig

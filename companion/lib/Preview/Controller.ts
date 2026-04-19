@@ -1,11 +1,11 @@
+import type EventEmitter from 'node:events'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
+import { router } from '../UI/TRPC.js'
 import { PreviewExpressionStream } from './ExpressionStream.js'
 import { PreviewGraphics } from './Graphics.js'
-import { router } from '../UI/TRPC.js'
-import type EventEmitter from 'node:events'
-import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 
 export class PreviewController {
 	readonly #graphics: PreviewGraphics

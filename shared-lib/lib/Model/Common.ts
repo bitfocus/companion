@@ -1,5 +1,5 @@
-import type { SomeCompanionInputField } from './Options.js'
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { SomeCompanionInputField } from './Options.js'
 
 export interface ObjectsDiff<T> {
 	added: Record<string, T>

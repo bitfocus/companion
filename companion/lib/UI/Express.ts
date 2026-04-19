@@ -9,14 +9,14 @@
  * this program.
  */
 
-import Express from 'express'
-import path from 'path'
-import { isPackaged } from '../Resources/Util.js'
-import cors from 'cors'
 import fs from 'fs'
+import path from 'path'
+import compression from 'compression'
+import cors from 'cors'
+import Express from 'express'
 // @ts-expect-error no types for this package
 import serveZip from 'express-serve-zip'
-import compression from 'compression'
+import { isPackaged } from '../Resources/Util.js'
 import { createRewriteMiddleware, getCustomPrefixHeader } from './middleware/rewriteRootUrl.js'
 
 /**

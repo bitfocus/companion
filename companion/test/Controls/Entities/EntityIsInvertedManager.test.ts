@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import {
 	EntityPoolIsInvertedManager,
@@ -6,8 +8,6 @@ import {
 	type UpdateIsInvertedValuesFn,
 } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
 import type { NewIsInvertedValue } from '../../../lib/Controls/Entities/Types.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 
 describe('EntityPoolIsInvertedManager', () => {
 	// Create mock functions

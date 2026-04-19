@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { ImportExportThreadMethods } from './ThreadMethods.js'
 import workerPool from 'workerpool'
+import { ImportExportThreadMethods } from './ThreadMethods.js'
 
 workerPool.worker(ImportExportThreadMethods)

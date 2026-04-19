@@ -1,7 +1,7 @@
+import semver from 'semver'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import semver from 'semver'
 
 export function doesInstanceVersionExist(moduleInfo: ClientModuleInfo | undefined, versionId: string | null): boolean {
 	if (versionId === null) return false

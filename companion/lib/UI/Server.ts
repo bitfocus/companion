@@ -10,9 +10,9 @@
  */
 
 import { Server as HttpServer } from 'http'
+import type express from 'express'
 import LogController from '../Log/Controller.js'
 import { sendOverIpc } from '../Resources/Util.js'
-import type express from 'express'
 
 export class UIServer extends HttpServer {
 	readonly #logger = LogController.createLogger('UI/Server')

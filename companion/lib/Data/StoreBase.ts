@@ -1,10 +1,10 @@
-import fs from 'fs-extra'
 import path from 'path'
 import type { Database as SQLiteDB, Statement } from 'better-sqlite3'
+import fs from 'fs-extra'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
 import { createSqliteDatabase } from './Util.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 enum DatabaseStartupState {
 	Normal = 0,

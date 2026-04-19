@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo } from 'react'
-import type { CustomVariablesApi } from './CustomVariablesApi'
 import type { ObservableMap } from 'mobx'
+import { createContext, useContext, useMemo } from 'react'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { CustomVariablesApi } from './CustomVariablesApi'
 
 export interface CustomVariablesTableContextType {
 	customVariablesApi: CustomVariablesApi

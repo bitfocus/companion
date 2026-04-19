@@ -1,12 +1,12 @@
-import { useState, useCallback, useContext } from 'react'
-import { SketchPicker } from './ColorPicker/Sketch.js'
-import type { ColorResult } from './ColorPicker/colors.js'
-import { createPortal } from 'react-dom'
-import { useOnClickOutsideExt } from '~/Resources/util.js'
-import { useFloating, autoUpdate, flip, shift } from '@floating-ui/react'
-import { MenuPortalContext } from './MenuPortalContext.js'
+import { autoUpdate, flip, shift, useFloating } from '@floating-ui/react'
 import { colord } from 'colord'
+import { useCallback, useContext, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
+import { useOnClickOutsideExt } from '~/Resources/util.js'
+import type { ColorResult } from './ColorPicker/colors.js'
+import { SketchPicker } from './ColorPicker/Sketch.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 function splitColor(color: number | string) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {

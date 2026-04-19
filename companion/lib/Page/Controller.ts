@@ -1,5 +1,5 @@
-import { default_nav_buttons_definitions } from './Defaults.js'
-import type { IPageStore, PageStore } from './Store.js'
+import { EventEmitter } from 'events'
+import z from 'zod'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,
@@ -7,14 +7,14 @@ import type {
 	PageModelChangesItem,
 	PageModelChangesUpdate,
 } from '@companion-app/shared/Model/PageModel.js'
-import LogController from '../Log/Controller.js'
-import { EventEmitter } from 'events'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { ControlsController } from '../Controls/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { default_nav_buttons_definitions } from './Defaults.js'
+import type { IPageStore, PageStore } from './Store.js'
 
 interface PageControllerEvents {
 	controlIdsMoved: [controlIds: string[]]

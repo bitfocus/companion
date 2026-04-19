@@ -1,27 +1,27 @@
-import { useCallback, useState } from 'react'
-import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
 	CButton,
 	CCol,
-	CRow,
 	CForm,
 	CModal,
-	CModalHeader,
 	CModalBody,
 	CModalFooter,
+	CModalHeader,
 	CNav,
 	CNavItem,
 	CNavLink,
+	CRow,
 	CTabContent,
 	CTabPane,
 } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useCallback, useState } from 'react'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import { ButtonPicker } from './ButtonPicker.js'
 import { TriggerPicker } from './TriggerPicker.js'
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface RecorderSessionFinishModalProps {
 	doClose: () => void

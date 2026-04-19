@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
-import cssStyles from './EditableInput.module.css'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { OnChangeFn } from '../context/useColor'
 import { ClickAndDragDiv } from './ClickAndDragDiv'
+import cssStyles from './EditableInput.module.css'
 
 const DEFAULT_ARROW_OFFSET = 1
 

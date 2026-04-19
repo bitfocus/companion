@@ -1,20 +1,20 @@
-import type { SurfaceController } from '../Surface/Controller.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { InternalController } from '../Internal/Controller.js'
-import type { InstanceController } from '../Instance/Controller.js'
-import type { ActionRunner } from './ActionRunner.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { EventEmitter } from 'events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
-import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { InternalController } from '../Internal/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
+import type { ActionRunner } from './ActionRunner.js'
 
 export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController

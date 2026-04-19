@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useContext } from 'react'
-import { EditTriggerPanel } from '~/Triggers/EditPanel.js'
-import { useComputed } from '~/Resources/util.js'
-import { MyErrorBoundary } from '~/Resources/Error'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { MyErrorBoundary } from '~/Resources/Error'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { EditTriggerPanel } from '~/Triggers/EditPanel.js'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { controlId } = Route.useParams()

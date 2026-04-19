@@ -1,11 +1,11 @@
-import { describe, test, expect, vi } from 'vitest'
+import type { CanvasRenderingContext2D } from '@napi-rs/canvas'
+import { describe, expect, test, vi } from 'vitest'
 import {
-	resolveFontSizes,
 	computeTextLayout,
+	resolveFontSizes,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
 } from '../../lib/Graphics/TextParser.js'
-import type { CanvasRenderingContext2D } from '@napi-rs/canvas'
 
 // Mock context that simulates measuring text with roughly 10px per character for simplicity
 function createMockContext(charWidth: number = 10, lineHeight: number = 14): CanvasRenderingContext2D {

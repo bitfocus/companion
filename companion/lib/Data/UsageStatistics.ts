@@ -9,27 +9,27 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import type { InstanceController } from '../Instance/Controller.js'
-import type { AppInfo } from '../Registry.js'
-import type {
-	paths as CompanionUpdatesApiPaths,
-	operations as CompanionUpdatesApiOperations,
-} from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import * as Sentry from '@sentry/node'
 import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
-import { compileUpdatePayload } from '../UI/UpdatePayload.js'
-import * as Sentry from '@sentry/node'
-import type { DataUserConfig } from './UserConfig.js'
-import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { PageController } from '../Page/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { CloudController } from '../Cloud/Controller.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { ServiceController } from '../Service/Controller.js'
-import { publicProcedure, router } from '../UI/TRPC.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type {
+	operations as CompanionUpdatesApiOperations,
+	paths as CompanionUpdatesApiPaths,
+} from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import type { CloudController } from '../Cloud/Controller.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import LogController from '../Log/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import type { ServiceController } from '../Service/Controller.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import { compileUpdatePayload } from '../UI/UpdatePayload.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { DataUserConfig } from './UserConfig.js'
 
 type DetailedUsagePayload =
 	CompanionUpdatesApiOperations['companion_detailed-usage_post']['requestBody']['content']['application/json']

@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
-import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import type { UserConfigProps } from '../Components/Common.js'
-import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 
 export const TcpConfig = observer(function TcpConfig(props: UserConfigProps) {
 	return (

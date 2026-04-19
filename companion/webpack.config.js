@@ -1,5 +1,5 @@
-import path from 'path'
 import fs from 'fs'
+import path from 'path'
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin'
 // eslint-disable-next-line n/no-extraneous-import
 import TerserPlugin from 'terser-webpack-plugin'

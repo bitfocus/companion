@@ -1,3 +1,4 @@
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type {
 	CompanionInputFieldBaseExtended,
 	CompanionInputFieldCheckboxExtended,
@@ -5,12 +6,11 @@ import type {
 	CompanionInputFieldNumberExtended,
 	CompanionInputFieldStaticTextExtended,
 } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type {
 	CompanionSurfaceConfigField,
 	CompanionSurfaceInputFieldTextInput,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'
 import type {
 	CheckboxField,

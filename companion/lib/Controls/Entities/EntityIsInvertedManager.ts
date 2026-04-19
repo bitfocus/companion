@@ -1,10 +1,10 @@
 import debounceFn from 'debounce-fn'
-import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import LogController, { type Logger } from '../../Log/Controller.js'
-import type { NewIsInvertedValue } from './Types.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type { NewIsInvertedValue } from './Types.js'
 
 interface EntityWrapper {
 	readonly entity: WeakRef<ControlEntityInstance>

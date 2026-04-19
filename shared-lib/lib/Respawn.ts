@@ -21,17 +21,17 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { EventEmitter } from 'events'
 import {
-	spawn,
 	fork,
+	spawn,
 	type ChildProcessByStdio,
-	type SpawnOptionsWithoutStdio,
 	type ForkOptions,
 	type Serializable,
+	type SpawnOptionsWithoutStdio,
 	type StdioOptions,
 } from 'child_process'
-import type { Writable, Readable } from 'stream'
+import { EventEmitter } from 'events'
+import type { Readable, Writable } from 'stream'
 import { kill } from './ProcessKill.js'
 
 function defaultSleep(sleep: number | number[] | undefined) {

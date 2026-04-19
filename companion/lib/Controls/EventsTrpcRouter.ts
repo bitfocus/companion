@@ -1,8 +1,8 @@
 import z from 'zod'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
-import type { InstanceDefinitions } from '../Instance/Definitions.js'
-import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createEventsTrpcRouter(

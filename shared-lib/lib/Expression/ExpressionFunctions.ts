@@ -1,6 +1,6 @@
-import { msToStamp, pad } from '../Util.js'
 import { JSONPath } from 'jsonpath-plus'
 import { countGraphemes } from 'unicode-segmenter/grapheme'
+import { msToStamp, pad } from '../Util.js'
 
 function toString(v: any): string {
 	if (v === undefined) return ''

@@ -1,3 +1,40 @@
+import { CBackdrop, CNavItem, CNavLink, CPopover, CSidebarBrand, CSidebarHeader, CSidebarNav } from '@coreui/react'
+import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
+import {
+	faArrowsDownToLine,
+	faArrowsUpToLine,
+	faCheck,
+	faClipboardList,
+	faClock,
+	faCloud,
+	faCog,
+	faDollarSign,
+	faExternalLinkSquare,
+	faFileImport,
+	faFloppyDisk,
+	faGamepad,
+	faHammer,
+	faHatWizard,
+	faHeadset,
+	faInfo,
+	faNetworkWired,
+	faPeopleArrows,
+	faPlug,
+	faPuzzlePiece,
+	faScrewdriver,
+	faSquareCaretRight,
+	faSquareRootVariable,
+	faStar,
+	faTable,
+	faTableCells,
+	faTabletScreenButton,
+	faToolbox,
+	type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Link, useMatchRoute } from '@tanstack/react-router'
+import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
 import {
 	createContext,
 	memo,
@@ -8,60 +45,23 @@ import {
 	useRef,
 	useState,
 	type CSSProperties,
-	type ReactNode,
 	type MouseEventHandler,
 	type ReactElement,
+	type ReactNode,
 } from 'react'
-import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop, CPopover } from '@coreui/react'
-import {
-	type IconDefinition,
-	faFileImport,
-	faCheck,
-	faCog,
-	faClipboardList,
-	faCloud,
-	faTableCells,
-	faClock,
-	faPlug,
-	faDollarSign,
-	faGamepad,
-	faExternalLinkSquare,
-	faHeadset,
-	faSquareCaretRight,
-	faPeopleArrows,
-	faPuzzlePiece,
-	faInfo,
-	faStar,
-	faToolbox,
-	faHatWizard,
-	faSquareRootVariable,
-	faArrowsUpToLine,
-	faArrowsDownToLine,
-	faNetworkWired,
-	faFloppyDisk,
-	faHammer,
-	faScrewdriver,
-	faTable,
-	faTabletScreenButton,
-} from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGithub, faFacebook, faSlack } from '@fortawesome/free-brands-svg-icons'
-import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { createPortal } from 'react-dom'
-import classNames from 'classnames'
-import { useLocalStorage } from 'usehooks-ts'
-import { Link, useMatchRoute } from '@tanstack/react-router'
 import { Transition } from 'react-transition-group'
-import { observer } from 'mobx-react-lite'
+import { useLocalStorage } from 'usehooks-ts'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import { type MenuItemProps } from '~/Components/ActionMenu'
+import { ContextMenu } from '~/Components/ContextMenu'
+import { MenuSeparator, useContextMenuState } from '~/Components/useContextMenuProps'
+import { useMobileMode } from '~/Hooks/useLayoutMode'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useSortedConnectionsThatHaveVariables, type ClientConnectionConfigWithId } from '~/Stores/Util.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
+import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { useCompanionVersion } from './useCompanionVersion'
-import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
-import { ContextMenu } from '~/Components/ContextMenu'
-import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
-import { type MenuItemProps } from '~/Components/ActionMenu'
-import { useMobileMode } from '~/Hooks/useLayoutMode'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />

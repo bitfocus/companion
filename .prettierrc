@@ -14,5 +14,10 @@
 				"singleQuote": false
 			}
 		}
-	]
+	],
+	"plugins": ["@ianvs/prettier-plugin-sort-imports"],
+	"importOrder": ["<BUILTIN_MODULES>", "<THIRD_PARTY_MODULES>", "^@companion-(.*)$", "^~/(.*)$", "^[./]"],
+	"importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
+	"importOrderTypeScriptVersion": "6.0.0",
+	"importOrderCaseSensitive": false
 }

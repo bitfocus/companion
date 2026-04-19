@@ -1,11 +1,11 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CRow } from '@coreui/react'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
+import { PresetDefinitionsStore, usePresetsDefinitions } from './PresetDefinitionsStore.js'
 import { PresetsConnectionList } from './PresetsConnectionList.js'
 import { PresetsSectionsList } from './PresetsSectionsList.js'
-import { PresetDefinitionsStore, usePresetsDefinitions } from './PresetDefinitionsStore.js'
 
 interface ConnectionPresetsProps {
 	resetToken: string

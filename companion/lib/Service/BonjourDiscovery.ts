@@ -1,14 +1,14 @@
-import { ServiceBase } from './Base.js'
-import { Bonjour, type DiscoveredService, type Browser } from '@julusian/bonjour-service'
+import EventEmitter from 'events'
 import { isIPv4, isIPv6 } from 'net'
+import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
+import z from 'zod'
 import type { ClientBonjourEvent, ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import EventEmitter from 'events'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { assertNever } from '@companion-app/shared/Util.js'
+import { ServiceBase } from './Base.js'
 
 /**
  * Class providing Bonjour discovery for modules.

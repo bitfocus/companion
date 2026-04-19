@@ -1,19 +1,19 @@
 import debounceFn from 'debounce-fn'
-import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { assertNever } from '@companion-app/shared/Util.js'
+import { nanoid } from 'nanoid'
 import {
 	EntityModelType,
-	type ReplaceableActionEntityModel,
-	type ReplaceableFeedbackEntityModel,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
+	type ReplaceableActionEntityModel,
+	type ReplaceableFeedbackEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { nanoid } from 'nanoid'
-import type { IControlStore } from '../../Controls/IControlStore.js'
-import type { CompanionOptionValues } from '@companion-module/base'
-import LogController, { type Logger } from '../../Log/Controller.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { CompanionOptionValues } from '@companion-module/base'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 

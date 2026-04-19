@@ -1,7 +1,7 @@
-import type { VariableValue } from '../Model/Variables.js'
-import type { SomeExpressionNode } from './ExpressionParse.js'
 import type jsep from 'jsep'
-import { VARIABLE_UNKNOWN_VALUE, SplitVariableId } from '../Variables.js'
+import type { VariableValue } from '../Model/Variables.js'
+import { SplitVariableId, VARIABLE_UNKNOWN_VALUE } from '../Variables.js'
+import type { SomeExpressionNode } from './ExpressionParse.js'
 
 /** Properties that must never be accessed or written via MemberExpression to prevent prototype pollution */
 export const BANNED_PROPS = new Set([

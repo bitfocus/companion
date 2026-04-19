@@ -1,15 +1,15 @@
-import { useCallback } from 'react'
+import { CButton } from '@coreui/react'
+import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
 import { usePanelCollapseHelperContext, usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
+import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
+import { CollectionsNestingTableCollectionRow } from './CollectionsNestingTableGroupRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionListCollectionDrop } from './useCollectionDrop.js'
-import { CollectionsNestingTableCollectionRow } from './CollectionsNestingTableGroupRow.js'
-import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
-import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
-import { CButton } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 
 interface CollectionsNestingTableCollectionsListProps<
 	TCollection extends CollectionsNestingTableCollection,

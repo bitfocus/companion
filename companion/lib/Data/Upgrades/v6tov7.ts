@@ -1,6 +1,3 @@
-import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
-import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type {
 	ExportControlv6,
 	ExportFullv6,
@@ -9,8 +6,11 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
+import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base'
+import type { Logger } from '../../Log/Controller.js'
+import type { DataStoreBase } from '../StoreBase.js'
 import type { ActionEntityModelV10, FeedbackEntityModelV10 } from './v10tov11.js'
 
 /**

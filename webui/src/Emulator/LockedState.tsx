@@ -1,10 +1,10 @@
-import { memo, useCallback } from 'react'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { memo, useCallback } from 'react'
 import type { EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import { useMutationExt, trpc } from '~/Resources/TRPC.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLock } from '@fortawesome/free-solid-svg-icons'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface EmulatorLockedPageProps {
 	emulatorId: string
