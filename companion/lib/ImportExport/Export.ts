@@ -9,8 +9,8 @@
  * this program.
  */
 
-import os from 'os'
-import path from 'path'
+import os from 'node:os'
+import path from 'node:path'
 import { stringify as csvStringify } from 'csv-stringify/sync'
 import type express from 'express'
 import type { RequestHandler } from 'express'

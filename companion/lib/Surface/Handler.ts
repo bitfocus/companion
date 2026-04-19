@@ -10,7 +10,7 @@
  *
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {

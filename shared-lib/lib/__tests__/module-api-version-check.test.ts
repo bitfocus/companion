@@ -1,4 +1,4 @@
-import { createRequire } from 'module'
+import { createRequire } from 'node:module'
 import semver from 'semver'
 import { describe, expect, test } from 'vitest'
 import { isModuleApiVersionCompatible } from '../ModuleApiVersionCheck.js'

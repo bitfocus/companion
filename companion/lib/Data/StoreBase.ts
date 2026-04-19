@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 import type { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import fs from 'fs-extra'
 import { stringifyError } from '@companion-app/shared/Stringify.js'

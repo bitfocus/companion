@@ -1,7 +1,7 @@
 // @ts-check
-import os from 'os'
-import path from 'path'
-import url, { fileURLToPath } from 'url'
+import os from 'node:os'
+import path from 'node:path'
+import url, { fileURLToPath } from 'node:url'
 import { getCurrentScope, init } from '@sentry/electron/main'
 import chokidar from 'chokidar'
 import debounceFn from 'debounce-fn'

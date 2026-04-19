@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type {
 	ActionForVisitor,

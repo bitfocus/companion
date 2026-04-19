@@ -1,4 +1,4 @@
-import type { EventEmitter } from 'events'
+import type { EventEmitter } from 'node:events'
 import type { SetOptional } from 'type-fest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'

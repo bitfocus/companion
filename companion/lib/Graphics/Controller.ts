@@ -9,9 +9,9 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
-import os from 'os'
-import path from 'path'
+import { EventEmitter } from 'node:events'
+import os from 'node:os'
+import path from 'node:path'
 import { GlobalFonts } from '@napi-rs/canvas'
 import debounceFn from 'debounce-fn'
 import QuickLRU from 'quick-lru'

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import z from 'zod'

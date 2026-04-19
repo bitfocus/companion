@@ -1,4 +1,4 @@
-import type { RemoteInfo } from 'dgram'
+import type { RemoteInfo } from 'node:dgram'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { PresetDefinition, UIPresetSection } from '@companion-app/shared/Model/Presets.js'

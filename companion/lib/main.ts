@@ -4,9 +4,9 @@
 import './Resources/FixImports.js'
 // Setup segfault handler
 import '@julusian/segfault-raub'
-import net, { isIPv6 } from 'net'
-import os from 'os'
-import path from 'path'
+import net, { isIPv6 } from 'node:net'
+import os from 'node:os'
+import path from 'node:path'
 // Now we can think about startup
 import { Command } from 'commander'
 import envPaths from 'env-paths'

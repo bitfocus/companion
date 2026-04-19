@@ -1,5 +1,5 @@
 /* eslint-disable n/no-process-exit */
-import fs from 'fs/promises'
+import fs from 'node:fs/promises'
 import {
 	createModuleLogger,
 	PluginWrapper,

@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'

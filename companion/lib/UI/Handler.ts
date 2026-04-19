@@ -9,8 +9,8 @@
  * this program.
  */
 
-import type { Server as HttpServer } from 'http'
-import type { Server as HttpsServer } from 'https'
+import type { Server as HttpServer } from 'node:http'
+import type { Server as HttpsServer } from 'node:https'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
 import { nanoid } from 'nanoid'
 import { WebSocketServer } from 'ws'

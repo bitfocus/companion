@@ -29,9 +29,9 @@ import {
 	type Serializable,
 	type SpawnOptionsWithoutStdio,
 	type StdioOptions,
-} from 'child_process'
-import { EventEmitter } from 'events'
-import type { Readable, Writable } from 'stream'
+} from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import type { Readable, Writable } from 'node:stream'
 import { kill } from './ProcessKill.js'
 
 function defaultSleep(sleep: number | number[] | undefined) {

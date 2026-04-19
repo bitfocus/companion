@@ -1,4 +1,4 @@
-import { createSocket, type RemoteInfo, type Socket } from 'dgram'
+import { createSocket, type RemoteInfo, type Socket } from 'node:dgram'
 import { nanoid } from 'nanoid'
 import LogController, { type Logger } from '../../Log/Controller.js'
 

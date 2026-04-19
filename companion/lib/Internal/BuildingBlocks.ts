@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import { setTimeout } from 'node:timers/promises'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import {

@@ -10,8 +10,8 @@
  *
  */
 
-import fs from 'fs/promises'
-import path from 'path'
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { nanoid } from 'nanoid'
 import nodeCron from 'node-cron'
 import z from 'zod'

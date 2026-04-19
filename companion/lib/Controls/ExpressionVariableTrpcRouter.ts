@@ -1,4 +1,4 @@
-import type EventEmitter from 'events'
+import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'

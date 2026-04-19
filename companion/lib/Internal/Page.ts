@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IPageStore } from '../Page/Store.js'

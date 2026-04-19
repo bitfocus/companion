@@ -9,8 +9,8 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
-import os from 'os'
+import { EventEmitter } from 'node:events'
+import os from 'node:os'
 import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
 import z from 'zod'

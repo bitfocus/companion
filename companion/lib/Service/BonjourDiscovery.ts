@@ -1,5 +1,5 @@
-import EventEmitter from 'events'
-import { isIPv4, isIPv6 } from 'net'
+import EventEmitter from 'node:events'
+import { isIPv4, isIPv6 } from 'node:net'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import z from 'zod'
 import type { ClientBonjourEvent, ClientBonjourService } from '@companion-app/shared/Model/Common.js'

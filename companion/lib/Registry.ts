@@ -1,6 +1,6 @@
 /* eslint-disable n/no-process-exit */
-import EventEmitter from 'events'
-import path from 'path'
+import EventEmitter from 'node:events'
+import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'

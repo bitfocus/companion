@@ -1,5 +1,5 @@
 // @ts-check
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, dialog, shell } from 'electron'
 
 /** @type {BrowserWindow | null} */

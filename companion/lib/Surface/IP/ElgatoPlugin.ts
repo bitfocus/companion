@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'

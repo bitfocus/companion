@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'

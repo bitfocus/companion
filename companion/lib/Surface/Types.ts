@@ -1,4 +1,4 @@
-import type { EventEmitter } from 'events'
+import type { EventEmitter } from 'node:events'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'

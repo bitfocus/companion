@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'node:path'
 import fs from 'fs-extra'
 import semver from 'semver'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'

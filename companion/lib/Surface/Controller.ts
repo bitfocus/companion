@@ -10,8 +10,8 @@
  *
  */
 
-import { EventEmitter } from 'events'
 import { createHash } from 'node:crypto'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'

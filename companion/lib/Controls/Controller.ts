@@ -1,5 +1,5 @@
-import crypto from 'crypto'
-import { EventEmitter } from 'events'
+import crypto from 'node:crypto'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import z from 'zod'
