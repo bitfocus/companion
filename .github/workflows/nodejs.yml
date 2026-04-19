@@ -91,7 +91,7 @@ jobs:
           VERSION=$(cat ./dist/BUILD)
 
           echo "sourcename=electron-output/companion-x64.tar.gz" >> $GITHUB_OUTPUT
-          echo "targetname=companion-linux-x64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
+          echo "targetname=companion-linux-x64-${VERSION//+/-}.tar.gz" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
@@ -189,7 +189,7 @@ jobs:
           VERSION=$(cat ./dist/BUILD)
 
           echo "sourcename=electron-output/companion-arm64.tar.gz" >> $GITHUB_OUTPUT
-          echo "targetname=companion-linux-arm64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
+          echo "targetname=companion-linux-arm64-${VERSION//+/-}.tar.gz" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
@@ -296,7 +296,7 @@ jobs:
           VERSION=$(cat ./dist/BUILD)
 
           echo "sourcename=electron-output/companion-mac-x64.dmg" >> $GITHUB_OUTPUT
-          echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
+          echo "targetname=companion-mac-x64-${VERSION//+/-}.dmg" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
@@ -396,7 +396,7 @@ jobs:
           VERSION=$(cat ./dist/BUILD)
 
           echo "sourcename=electron-output/companion-mac-arm64.dmg" >> $GITHUB_OUTPUT
-          echo "targetname=companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
+          echo "targetname=companion-mac-arm64-${VERSION//+/-}.dmg" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
@@ -507,7 +507,7 @@ jobs:
           VERSION=$(cat ./dist/BUILD)
 
           echo "sourcename=electron-output/companion-win64.exe" >> $GITHUB_OUTPUT
-          echo "targetname=companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
+          echo "targetname=companion-win64-${VERSION//+/-}.exe" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
