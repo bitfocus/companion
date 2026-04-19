@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { CButton, CCol, CRow, CFormSelect, CCallout } from '@coreui/react'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { ButtonGridHeader, PageNumberPicker, type PageNumberOption } from '~/Buttons/ButtonGridHeader.js'
@@ -27,7 +27,7 @@ interface ImportPageWizardProps {
 	snapshot: ClientImportObject
 	connectionRemap: Record<string, string | undefined>
 	setConnectionRemap: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
-	doImport: (importPageNumber: number, pageNumber: number, connectionRemap: Record<string, string | undefined>) => void
+	doImport: (sourcePageNumber: number, pageNumber: number, connectionRemap: Record<string, string | undefined>) => void
 }
 
 export const ImportPageWizard = observer(function ImportPageWizard({
@@ -66,12 +66,23 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 		}
 	}, [snapshot.pages, snapshot.page, isSinglePage])
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
 	const {
-		pageNumber: importPageNumber,
-		setPageNumber: setImportPageNumber,
-		changePage: changeImportPage,
+		pageNumber: sourcePageNumber,
+		setPageNumber: setSourcePageNumber,
+		changePage: changeSourcePage,
 	} = usePagePicker(pageCount, 1)
+
+	const pageOrNew = (page: number | undefined): number =>
+		typeof page === 'number' && Number.isInteger(page) && page >= 1 && page <= pages.data.length ? page : -1
+
+	const validOldPage = pageOrNew(snapshot.oldPageNumber)
+	const defaultDestinationPage = validOldPage !== -1 ? validOldPage : pageOrNew(sourcePageNumber)
+	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, defaultDestinationPage)
+
+	useEffect(() => {
+		if (isSinglePage) return
+		setPageNumber(pageOrNew(sourcePageNumber))
+	}, [sourcePageNumber, pages.data.length, setPageNumber, isSinglePage])
 
 	const setConnectionRemap2 = useCallback(
 		(fromId: string, toId: string) => {
@@ -84,8 +95,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 	)
 
 	const doImport2 = useCallback(() => {
-		doImport(importPageNumber, pageNumber, connectionRemap)
-	}, [doImport, importPageNumber, pageNumber, connectionRemap])
+		doImport(sourcePageNumber, pageNumber, connectionRemap)
+	}, [doImport, sourcePageNumber, pageNumber, connectionRemap])
 
 	const destinationGridSize = userConfig.properties?.gridSize
 
@@ -101,7 +112,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 
 	const isRunning = false
 
-	const sourcePageInfo = isSinglePage ? snapshot.page : snapshot.pages?.[importPageNumber]
+	const sourcePageInfo = isSinglePage ? snapshot.page : snapshot.pages?.[sourcePageNumber]
 	const sourceGridSize = sourcePageInfo?.gridSize ?? destinationGridSize
 
 	const [hasBeenRendered, hasBeenRenderedRef] = useHasBeenRendered()
@@ -121,9 +132,9 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 						<>
 							<CCol sm={12}>
 								<PageNumberPicker
-									pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
-									changePage={isSinglePage ? undefined : changeImportPage}
-									setPage={isSinglePage ? undefined : setImportPageNumber}
+									pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : sourcePageNumber}
+									changePage={isSinglePage ? undefined : changeSourcePage}
+									setPage={isSinglePage ? undefined : setSourcePageNumber}
 									pageOptions={snapshotPageOptions}
 								>
 									<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
@@ -135,7 +146,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 								{hasBeenRendered && sourceGridSize && (
 									<ButtonInfiniteGrid
 										ref={sourceGridRef}
-										pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
+										pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : sourcePageNumber}
 										gridSize={sourceGridSize}
 										ButtonIconFactory={ButtonImportPreview}
 										drawScale={gridZoomValue / 100}
