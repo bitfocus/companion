@@ -5,6 +5,7 @@ import jsepTemplateLiteral, { type TemplateLiteral } from '@jsep-plugin/template
 import jsepComments from '@jsep-plugin/comment'
 import { CompanionVariablesPlugin, type CompanionVariableExpression } from './Plugins/CompanionVariables.js'
 import { AssignmentPlugin, type AssignmentExpression, type UpdateExpression } from './Plugins/Assignment.js'
+import type { JsonValue } from 'type-fest'
 
 // setup plugins
 jsep.plugins.register(jsepNumbers)
@@ -27,6 +28,68 @@ export function ParseExpression(expression: string): SomeExpressionNode {
 	fixupExpression(parsed)
 
 	return parsed
+}
+
+/**
+ * Convert a JSON value to an expression literal string that round-trips cleanly.
+ * Strings are quoted, numbers/booleans are stringified, null/undefined become 'null'.
+ */
+export function valueToExpressionLiteral(value: JsonValue | undefined): string {
+	if (value === null || value === undefined) return 'null'
+	if (typeof value === 'string') return JSON.stringify(value)
+	if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+	return JSON.stringify(value)
+}
+
+/**
+ * Try to extract the raw JSON value from an expression that is a plain value definition
+ * (a literal, a negative/positive number, an array or object of plain values).
+ * Returns { value } if plain (no modal needed), or null if the expression is lossy
+ * (involves computation, variable references, etc.) and a confirmation modal should be shown.
+ */
+export function tryExtractExpressionPlainValue(node: SomeExpressionNode): { value: JsonValue } | null {
+	if (node.type === 'Literal') {
+		// jsep Literal values are string | number | boolean | null (undefined is patched in by fixupExpression)
+		return { value: node.value as JsonValue }
+	}
+
+	if (
+		node.type === 'UnaryExpression' &&
+		(node.operator === '-' || node.operator === '+') &&
+		node.argument.type === 'Literal'
+	) {
+		const argValue = (node.argument as jsep.Literal).value
+		if (typeof argValue === 'number') {
+			return { value: node.operator === '-' ? -argValue : +argValue }
+		}
+		return null
+	}
+
+	if (node.type === 'ArrayExpression') {
+		const values: JsonValue[] = []
+		for (const element of node.elements) {
+			if (!element) return null
+			const extracted = tryExtractExpressionPlainValue(element as SomeExpressionNode)
+			if (extracted === null) return null
+			values.push(extracted.value)
+		}
+		return { value: values }
+	}
+
+	if (node.type === 'ObjectExpression') {
+		const result: Record<string, JsonValue> = {}
+		for (const prop of node.properties) {
+			if (!prop.value) return null
+			const keyNode = prop.key as jsep.Literal
+			if (keyNode.type !== 'Literal' || typeof keyNode.value !== 'string') return null
+			const extracted = tryExtractExpressionPlainValue(prop.value as SomeExpressionNode)
+			if (extracted === null) return null
+			result[keyNode.value] = extracted.value
+		}
+		return { value: result }
+	}
+
+	return null
 }
 
 /**
