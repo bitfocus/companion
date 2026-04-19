@@ -134,6 +134,8 @@ function validateExpressionResult(
 	fieldDefinition: SomeCompanionInputField,
 	value: JsonValue | undefined
 ): string | undefined {
+	if (fieldDefinition.allowInvalidValues) return undefined
+
 	const { validationError } = validateInputValue(fieldDefinition, value, {
 		skipValidateExpression: true,
 	})
