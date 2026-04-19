@@ -1,7 +1,12 @@
 import z from 'zod'
 import type { ActionSetId } from './ActionModel.js'
 import type { ButtonStyleProperties } from './StyleModel.js'
-import type { ExpressionableOptionsObject, ExpressionOrValue } from './Options.js'
+import {
+	ExpressionableOptionsObjectSchema,
+	createExpressionOrValueSchema,
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+} from './Options.js'
 import type { VariableValue } from './Variables.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
 
@@ -119,3 +124,29 @@ export function stringifySocketEntityLocation(location: SomeSocketEntityLocation
 	if (typeof location === 'string') return location
 	return `${location.stepId}_${location.setId}`
 }
+
+const zodEntityModelBase = z.object({
+	id: z.string(),
+	definitionId: z.string(),
+	connectionId: z.string(),
+	headline: z.string().optional(),
+	options: ExpressionableOptionsObjectSchema,
+	disabled: z.boolean().optional(),
+	upgradeIndex: z.union([z.number(), z.undefined()]),
+})
+
+export const zodSomeEntityModel: z.ZodType<SomeEntityModel> = z.lazy(() =>
+	z.union([
+		zodEntityModelBase.extend({
+			type: z.literal(EntityModelType.Action),
+			children: z.record(z.string(), z.array(zodSomeEntityModel).optional()).optional(),
+		}),
+		zodEntityModelBase.extend({
+			type: z.literal(EntityModelType.Feedback),
+			isInverted: createExpressionOrValueSchema(z.boolean()).optional(),
+			variableName: z.string().optional(),
+			style: z.record(z.string(), z.any()).optional(),
+			children: z.record(z.string(), z.array(zodSomeEntityModel).optional()).optional(),
+		}),
+	])
+)

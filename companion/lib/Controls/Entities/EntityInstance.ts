@@ -570,9 +570,9 @@ export class ControlEntityInstance {
 	/**
 	 * Add a child entity to this entity
 	 */
-	addChild(groupId: string, entityModel: SomeEntityModel): ControlEntityInstance {
+	addChild(groupId: string, entityModel: SomeEntityModel, isCloned?: boolean): ControlEntityInstance {
 		const childGroup = this.#getOrCreateChildGroup(groupId)
-		return childGroup.addEntity(entityModel)
+		return childGroup.addEntity(entityModel, isCloned)
 	}
 
 	/**
