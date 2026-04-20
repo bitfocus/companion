@@ -1,9 +1,13 @@
-import type { SurfaceSchemaBitmapConfig, LockingGraphicsGenerator } from '@companion-surface/host'
+import type { SurfaceSchemaBitmapConfig, LockingGraphicsGenerator, SurfaceRotation } from '@companion-surface/host'
 import { Canvas } from '@napi-rs/canvas'
 import * as imageRs from '@julusian/image-rs'
 
 export class LockingGraphicsGeneratorImpl implements LockingGraphicsGenerator {
-	async generatePincodeChar(bitmapStyle: SurfaceSchemaBitmapConfig, keyCode: number | string): Promise<Uint8Array> {
+	async generatePincodeChar(
+		bitmapStyle: SurfaceSchemaBitmapConfig,
+		keyCode: number | string,
+		rotation: SurfaceRotation
+	): Promise<Uint8Array> {
 		const canvasWidth = bitmapStyle.w
 		const canvasHeight = bitmapStyle.h
 
@@ -23,10 +27,14 @@ export class LockingGraphicsGeneratorImpl implements LockingGraphicsGenerator {
 
 		const rawData = context2d.getImageData(0, 0, canvasWidth, canvasHeight).data
 
-		return this.#transformForPixelFormat(bitmapStyle, rawData)
+		return this.#transformForPixelFormat(bitmapStyle, rotation, rawData)
 	}
 
-	async generatePincodeValue(bitmapStyle: SurfaceSchemaBitmapConfig, charCount: number): Promise<Uint8Array> {
+	async generatePincodeValue(
+		bitmapStyle: SurfaceSchemaBitmapConfig,
+		charCount: number,
+		rotation: SurfaceRotation
+	): Promise<Uint8Array> {
 		const canvasWidth = bitmapStyle.w
 		const canvasHeight = bitmapStyle.h
 
@@ -76,22 +84,32 @@ export class LockingGraphicsGeneratorImpl implements LockingGraphicsGenerator {
 
 		const rawData = context2d.getImageData(0, 0, canvasWidth, canvasHeight).data
 
-		return this.#transformForPixelFormat(bitmapStyle, rawData)
+		return this.#transformForPixelFormat(bitmapStyle, rotation, rawData)
 	}
 
 	async #transformForPixelFormat(
 		bitmapStyle: SurfaceSchemaBitmapConfig,
+		rotation: SurfaceRotation,
 		rawData: Uint8ClampedArray
 	): Promise<Uint8Array> {
 		if (bitmapStyle.format === 'rgba') return new Uint8Array(rawData)
 
-		const image = imageRs.ImageTransformer.fromBuffer(new Uint8Array(rawData), bitmapStyle.w, bitmapStyle.h, 'rgba')
+		let image = imageRs.ImageTransformer.fromBuffer(new Uint8Array(rawData), bitmapStyle.w, bitmapStyle.h, 'rgba')
 
-		if (bitmapStyle.format === 'bgr' || bitmapStyle.format === 'bgra') {
-			throw new Error('BGR(A) format is not supported for pincode rendering yet')
-		}
+		const imageRsRotation = this.#translateRotation(rotation)
+		if (imageRsRotation !== null) image = image.rotate(imageRsRotation)
 
 		const computedImage = await image.toBuffer(bitmapStyle.format || 'rgb')
 		return computedImage.buffer
+	}
+
+	/**
+	 * Translate rotation to @julusian/image-rs equivalent
+	 */
+	#translateRotation(rotation: SurfaceRotation | null): imageRs.RotationMode | null {
+		if (rotation === 90) return 'CW270'
+		if (rotation === -90) return 'CW90'
+		if (rotation === 180) return 'CW180'
+		return null
 	}
 }

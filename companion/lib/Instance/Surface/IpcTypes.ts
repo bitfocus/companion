@@ -5,6 +5,7 @@ import type {
 	SurfaceDrawProps,
 	OpenDeviceResult,
 	SurfaceFirmwareUpdateInfo,
+	SurfaceRotation,
 } from '@companion-surface/host'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type { DiscoveredRemoteSurfaceInfo, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
@@ -208,6 +209,7 @@ export interface SetLockedMessage {
 	surfaceId: string
 	locked: boolean
 	characterCount: number
+	rotation: SurfaceRotation
 }
 
 export interface SetOutputVariableMessage {

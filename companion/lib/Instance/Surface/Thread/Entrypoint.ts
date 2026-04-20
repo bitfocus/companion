@@ -154,7 +154,7 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		setLocked: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 
-			await plugin.showLockedStatus(msg.surfaceId, msg.locked, msg.characterCount)
+			await plugin.showLockedStatus(msg.surfaceId, msg.locked, msg.characterCount, msg.rotation)
 		},
 		setOutputVariable: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
