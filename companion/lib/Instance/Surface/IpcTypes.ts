@@ -123,7 +123,7 @@ export interface OpenHidDeviceMessage {
 	resolvedSurfaceId: string
 }
 export interface OpenDeviceResponseMessage {
-	info: HostOpenDeviceResult | null
+	info: Omit<HostOpenDeviceResult, 'moduleId'> | null
 }
 
 export interface DisconnectMessage {
@@ -140,7 +140,7 @@ export interface ShouldOpenDeviceResponseMessage {
 	resolvedSurfaceId: string
 }
 export interface NotifyOpenedDeviceMessage {
-	info: HostOpenDeviceResult
+	info: Omit<HostOpenDeviceResult, 'moduleId'>
 }
 export interface ForgetDiscoveredSurfacesMessage {
 	/** The device paths of the surfaces to forget */
@@ -231,6 +231,8 @@ export interface NotifyConnectionsForgottenMessage {
 }
 
 export interface HostOpenDeviceResult extends Omit<OpenDeviceResult, 'configFields'> {
+	moduleId: string
+
 	configFields: CompanionSurfaceConfigField[] | null
 
 	// TODO - sanitise more?

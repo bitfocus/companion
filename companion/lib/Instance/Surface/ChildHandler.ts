@@ -400,7 +400,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		}
 	}
 
-	async #setupSurfacePanel(info: HostOpenDeviceResult): Promise<void> {
+	async #setupSurfacePanel(info: Omit<HostOpenDeviceResult, 'moduleId'>): Promise<void> {
 		try {
 			this.logger.info(`Opening surface panel: ${info.surfaceId} - ${info.description}`)
 
@@ -413,6 +413,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 			const sanitizedInfo: HostOpenDeviceResult = {
 				...info,
+				moduleId: this.moduleId,
 				configFields: sanitizePluginConfigFields(this.logger, info.configFields),
 			}
 

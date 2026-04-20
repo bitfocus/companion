@@ -10,6 +10,7 @@ import type {
 import LogController, { type Logger } from '../Log/Controller.js'
 import {
 	BrightnessConfigField,
+	LegacyRotationConfigField,
 	LockConfigFields,
 	OffsetConfigFields,
 	RotationConfigField,
@@ -44,6 +45,7 @@ interface SatelliteOutputVariableInfo {
 function generateConfigFields(
 	surfaceInfo: HostOpenDeviceResult,
 	gridSize: GridSize,
+	controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>
 ): CompanionSurfaceConfigField[] {
@@ -54,7 +56,11 @@ function generateConfigFields(
 
 	// If there are any controls, add rotation and lock config
 	if (gridSize.columns > 0 && gridSize.rows > 0) {
-		fields.push(RotationConfigField, ...LockConfigFields)
+		const useLegacyRotation =
+			surfaceInfo.moduleId === 'elgato-stream-deck' &&
+			!!controlDefinitions.values().find((controls) => !!controls.find((control) => !!control.style.bitmap))
+
+		fields.push(useLegacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
 	}
 
 	if (surfaceInfo.canChangePage) {
@@ -262,7 +268,13 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			{ columns: 0, rows: 0 }
 		)
 
-		const configFields = generateConfigFields(surfaceInfo, this.gridSize, this.#inputVariables, this.#outputVariables)
+		const configFields = generateConfigFields(
+			surfaceInfo,
+			this.gridSize,
+			this.#controlDefinitions,
+			this.#inputVariables,
+			this.#outputVariables
+		)
 
 		this.info = {
 			surfaceId: surfaceInfo.surfaceId,

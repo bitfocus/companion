@@ -2,7 +2,7 @@ import type { OpenDeviceResult } from '@companion-surface/host'
 import type { HostOpenDeviceResult } from '../IpcTypes.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 
-export function convertOpenDeviceResult(result: OpenDeviceResult): HostOpenDeviceResult {
+export function convertOpenDeviceResult(result: OpenDeviceResult): Omit<HostOpenDeviceResult, 'moduleId'> {
 	return {
 		...result,
 		configFields: result.configFields && translateSurfaceConfigFields(result.configFields),
