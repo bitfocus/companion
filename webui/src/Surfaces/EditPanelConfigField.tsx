@@ -133,7 +133,10 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					</InlineHelp>
 				)}
 			</CFormLabel>
-			<CCol sm={8}>{control}</CCol>
+			<CCol sm={8}>
+				{control}
+				{definition.description && <div className="form-text">{definition.description}</div>}
+			</CCol>
 		</>
 	)
 })
