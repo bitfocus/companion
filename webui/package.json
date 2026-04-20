@@ -1,6 +1,6 @@
 {
   "name": "@companion-app/webui",
-  "version": "4.3.0",
+  "version": "5.0.0",
   "private": true,
   "type": "module",
   "dependencies": {
