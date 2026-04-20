@@ -58,7 +58,7 @@ export const LegacyRotationConfigField: CompanionSurfaceConfigField = {
 		{ id: 180, label: '180 (Legacy)' },
 	],
 	description:
-		'Note: The legacy rotation options will be removed in Comapnion 5.0. Please prepare to update your configuration before then.',
+		'Note: The legacy rotation options will be removed in Companion 5.0. Please prepare to update your configuration before then.',
 }
 
 export const LockConfigFields: CompanionSurfaceConfigField[] = [
