@@ -7,6 +7,7 @@ import type {
 	OpenDeviceResult,
 	SurfaceDrawProps,
 	SurfaceFirmwareUpdateInfo,
+	SurfaceRotation,
 } from '@companion-surface/host'
 import type { IpcWrapper } from '../Common/IpcWrapper.js'
 
@@ -208,6 +209,7 @@ export interface SetLockedMessage {
 	surfaceId: string
 	locked: boolean
 	characterCount: number
+	rotation: SurfaceRotation
 }
 
 export interface SetOutputVariableMessage {
