@@ -76,7 +76,7 @@ export class InstanceModuleScanner {
 			} else if (manifestJson.type === 'surface') {
 				return await this.#parseSurfaceManifest(manifestJson, fullpath, isPackaged)
 			} else {
-				assertNever(manifestJson)
+				assertNever(manifestJson.type)
 				throw new Error(`Unknown module type "${manifestType}" in manifest`)
 			}
 		} catch (e) {

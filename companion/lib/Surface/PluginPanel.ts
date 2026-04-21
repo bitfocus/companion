@@ -6,7 +6,11 @@ import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/share
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
+import type {
+	SurfaceRotation,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-surface/host'
 import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
@@ -16,7 +20,7 @@ import type {
 } from '../Instance/Surface/IpcTypes.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { parseColorToNumber } from '../Resources/Util.js'
+import { parseColorToNumber, translateRotation } from '../Resources/Util.js'
 import {
 	BrightnessConfigField,
 	LockConfigFields,
