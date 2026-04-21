@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { isPromise } from 'util/types'
+import { isPromise } from 'node:util/types'
 import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 import QuickLRU from 'quick-lru'

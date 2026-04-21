@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { Server as HttpServer } from 'http'
+import { Server as HttpServer } from 'node:http'
 import type express from 'express'
 import LogController from '../Log/Controller.js'
 import { sendOverIpc } from '../Resources/Util.js'

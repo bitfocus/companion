@@ -1,4 +1,4 @@
-import type { EventEmitter } from 'events'
+import type { EventEmitter } from 'node:events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type {

@@ -1,4 +1,4 @@
-import type EventEmitter from 'events'
+import type EventEmitter from 'node:events'
 import z from 'zod'
 import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'

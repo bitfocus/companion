@@ -10,7 +10,7 @@
  *
  */
 
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'

@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import selfsigned from 'selfsigned'
 import z from 'zod'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'

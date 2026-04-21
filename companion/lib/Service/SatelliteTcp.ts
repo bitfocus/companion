@@ -1,4 +1,4 @@
-import net, { type Socket } from 'net'
+import net, { type Socket } from 'node:net'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'

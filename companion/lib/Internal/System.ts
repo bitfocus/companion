@@ -9,10 +9,10 @@
  * this program.
  */
 
-import { exec } from 'child_process'
-import { EventEmitter } from 'events'
-import os from 'os'
-import { promisify } from 'util'
+import { exec } from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import os from 'node:os'
+import { promisify } from 'node:util'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import systeminformation from 'systeminformation'

@@ -1,4 +1,4 @@
-import net, { type Socket } from 'net'
+import net, { type Socket } from 'node:net'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'

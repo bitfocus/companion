@@ -8,7 +8,7 @@
  * Individual Contributor License Agreement for companion along with
  * this program.
  */
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'

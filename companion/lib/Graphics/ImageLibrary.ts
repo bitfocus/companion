@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 import EventEmitter from 'node:events'
 import z from 'zod'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'

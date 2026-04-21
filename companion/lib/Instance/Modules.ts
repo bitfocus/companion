@@ -10,7 +10,7 @@
  */
 
 import EventEmitter from 'node:events'
-import path from 'path'
+import path from 'node:path'
 import type express from 'express'
 import jsonPatch from 'fast-json-patch'
 import z from 'zod'

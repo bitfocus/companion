@@ -9,10 +9,10 @@
  * this program.
  */
 
-import { exec } from 'child_process'
-import { EventEmitter } from 'events'
-import path from 'path'
-import { promisify } from 'util'
+import { exec } from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import path from 'node:path'
+import { promisify } from 'node:util'
 import express from 'express'
 import fs from 'fs-extra'
 import pDebounce from 'p-debounce'

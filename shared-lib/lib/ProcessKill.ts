@@ -1,4 +1,4 @@
-import { exec, spawn } from 'child_process'
+import { exec, spawn } from 'node:child_process'
 
 async function getChildPids(pid: number): Promise<number[]> {
 	return new Promise((resolve, reject) => {

@@ -9,8 +9,8 @@
  * this program.
  */
 
-import fs from 'fs'
-import path from 'path'
+import fs from 'node:fs'
+import path from 'node:path'
 import compression from 'compression'
 import cors from 'cors'
 import Express from 'express'

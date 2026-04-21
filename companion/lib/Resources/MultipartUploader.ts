@@ -1,4 +1,4 @@
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'

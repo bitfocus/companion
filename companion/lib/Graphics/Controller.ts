@@ -9,10 +9,10 @@
  * this program.
  */
 
-import { EventEmitter } from 'events'
-import fs from 'fs'
-import os from 'os'
-import path from 'path'
+import { EventEmitter } from 'node:events'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import type * as imageRs from '@julusian/image-rs'
 import { GlobalFonts } from '@napi-rs/canvas'
 import compressionMiddleware from 'compression'

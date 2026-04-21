@@ -1,4 +1,4 @@
-import dgram from 'dgram'
+import dgram from 'node:dgram'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { ServiceBase } from './Base.js'
 

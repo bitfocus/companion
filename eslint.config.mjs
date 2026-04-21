@@ -120,6 +120,13 @@ export default [
 					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest'],
 				},
 			],
+			'n/prefer-node-protocol': 'error',
+		},
+	},
+	{
+		files: ['launcher/**/*.ts', 'launcher/**/*.js', 'shared-lib/**/*.ts', 'shared-lib/**/*.js'],
+		rules: {
+			'n/prefer-node-protocol': 'error',
 		},
 	},
 
