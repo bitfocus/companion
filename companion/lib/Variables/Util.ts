@@ -35,6 +35,8 @@ import type { VariablesBlinker } from './VariablesBlinker.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
+// Like VARIABLE_REGEX but allows $ in the variable name part, to support nested variables
+const REPLACE_VARIABLE_REGEX = /\$\(([^:$)]+):([^)]+)\)/
 
 const logger = LogController.createLogger('Variables/Util')
 
@@ -200,7 +202,7 @@ export function replaceAllVariables(string: string, newLabel: string, preserveLa
 		let matchCount = 0
 		let matches: RegExpExecArray | null
 		let fromIndex = 0
-		while ((matches = VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
+		while ((matches = REPLACE_VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
 			if (matchCount++ > 100) {
 				// Crudely avoid infinite loops with an iteration limit
 				// logger.info(`Reached iteration limit for variable parsing`)

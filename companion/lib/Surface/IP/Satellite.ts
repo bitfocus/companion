@@ -28,7 +28,6 @@ import type {
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import {
 	BrightnessConfigField,
-	LegacyRotationConfigField,
 	LockConfigFields,
 	OffsetConfigFields,
 	RotationConfigField,
@@ -81,7 +80,6 @@ interface SatelliteOutputVariableInfo {
 
 function generateConfigFields(
 	deviceInfo: SatelliteDeviceInfo,
-	legacyRotation: boolean,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>
 ): CompanionSurfaceConfigField[] {
@@ -89,7 +87,7 @@ function generateConfigFields(
 	if (deviceInfo.supportsBrightness) {
 		fields.push(BrightnessConfigField)
 	}
-	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+	fields.push(RotationConfigField, ...LockConfigFields)
 
 	if (deviceInfo.canChangePage) {
 		fields.push({
@@ -228,13 +226,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
-		const anyControlHasBitmap = !!this.#controlDefinitions
-			.values()
-			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
-
 		this.info = {
 			description: deviceInfo.productName,
-			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
+			configFields: generateConfigFields(deviceInfo, this.#inputVariables, this.#outputVariables),
 			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote

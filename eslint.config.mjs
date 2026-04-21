@@ -189,6 +189,7 @@ export default [
 			react: reacteslint,
 		},
 		rules: {
+			'import/no-unresolved': 'off',
 			...hookseslint.configs.recommended.rules,
 			'react-refresh/only-export-components': [
 				'warn',

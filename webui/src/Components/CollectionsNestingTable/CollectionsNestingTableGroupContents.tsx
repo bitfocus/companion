@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React from 'react'
 import type { ConnectDropTarget } from 'react-dnd'
-import useElementclientSize from '~/Hooks/useElementInnerSize.js'
+import useElementClientSize from '~/Hooks/useElementInnerSize.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
@@ -136,7 +136,7 @@ function CollectionsNestingTableCollectionGridContents({
 	drop: ConnectDropTarget
 	nestingLevel: number
 }) {
-	const [elmRef, elmSize, elm] = useElementclientSize()
+	const [elmRef, elmSize, elm] = useElementClientSize()
 
 	// Calculate visible columns accounting for padding and gaps
 	let displayColumns = 0

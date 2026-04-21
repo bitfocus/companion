@@ -6,7 +6,7 @@ import queryString from 'query-string'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import useElementclientSize from '~/Hooks/useElementInnerSize.js'
+import useElementClientSize from '~/Hooks/useElementInnerSize.js'
 import { usePagesInfoSubscription } from '~/Hooks/usePagesInfoSubscription.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
@@ -163,7 +163,7 @@ export const TabletView = observer(function TabletView() {
 	let displayColumns = Number(parsedQuery['display_cols'])
 	if (displayColumns === 0 || isNaN(displayColumns)) displayColumns = gridSize.columnCount
 
-	const [elementSizeRef, pageSize] = useElementclientSize<HTMLDivElement>()
+	const [elementSizeRef, pageSize] = useElementClientSize<HTMLDivElement>()
 	const buttonSize = pageSize.width / displayColumns
 
 	useWakeLock()

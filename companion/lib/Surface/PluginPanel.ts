@@ -387,11 +387,25 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	setLocked(locked: boolean, characterCount: number): void {
+		let rotation: SurfaceRotation = 0
+		switch (translateRotation(this.#config.rotation)) {
+			case 'CW90':
+				rotation = 90
+				break
+			case 'CW180':
+				rotation = 180
+				break
+			case 'CW270':
+				rotation = -90
+				break
+		}
+
 		this.#ipcWrapper
 			.sendWithCb('setLocked', {
 				surfaceId: this.#surfaceInfo.surfaceId,
 				locked,
 				characterCount,
+				rotation,
 			})
 			.catch((e) => {
 				this.#logger.debug(`Set locked status failed: ${e}`)

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useEventListener, useIsomorphicLayoutEffect } from 'usehooks-ts'
 
-export default function useElementclientSize<TElement extends HTMLElement>(): [
+export default function useElementClientSize<TElement extends HTMLElement>(): [
 	(elm: TElement | null) => void,
 	{ width: number; height: number },
 	TElement | null,
