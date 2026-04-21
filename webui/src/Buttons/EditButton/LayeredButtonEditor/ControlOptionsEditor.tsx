@@ -1,4 +1,6 @@
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
@@ -66,8 +68,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 			<GenericConfirmModal ref={confirmRef} />
 			<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+					Step Progression
 					<InlineHelp help="When this button has multiple steps, control how the next step changes">
-						Step Progression
+						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
 					</InlineHelp>
 				</CFormLabel>
 				<CCol sm={8}>
@@ -80,8 +83,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 
 				{options.stepProgression === 'expression' && (
 					<>
+						Step Progression Expression <InputFeatureIcons variables local />
 						<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
-							Step Progression Expression <InputFeatureIcons variables local />
+							<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
 						</CFormLabel>
 						<CCol sm={8}>
 							<ExpressionInputField
@@ -94,7 +98,11 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 				)}
 
 				<CFormLabel htmlFor="colFormRotary" className="col-sm-4 col-form-label col-form-label-sm">
-					<InlineHelp help="Make this button compatible with rotation events">Rotary Actions</InlineHelp>
+					Rotary Actions
+					<InlineHelp help="Make this button compatible with rotation events">
+						{' '}
+						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+					</InlineHelp>
 				</CFormLabel>
 				<CCol sm={8}>
 					<CFormSwitch
@@ -108,8 +116,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 				</CCol>
 
 				<CFormLabel htmlFor="colFormProgress" className="col-sm-4 col-form-label col-form-label-sm">
+					Allow style changes
 					<InlineHelp help="Allow the external APIs and internal actions to modify the style of this button">
-						Allow style changes
+						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
 					</InlineHelp>
 				</CFormLabel>
 				<CCol sm={8}>

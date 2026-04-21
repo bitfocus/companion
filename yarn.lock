@@ -1758,7 +1758,6 @@ __metadata:
     "@fortawesome/react-fontawesome": "npm:^3.3.0"
     "@monaco-editor/react": "npm:^4.8.0-rc.3"
     "@popperjs/core": "npm:^2.11.8"
-    "@radix-ui/react-icons": "npm:^1.3.2"
     "@sentry/react": "npm:^10.48.0"
     "@sentry/vite-plugin": "npm:^5.2.0"
     "@tanstack/react-form": "npm:^1.29.0"
@@ -1792,6 +1791,7 @@ __metadata:
     jsdom: "npm:^29.0.2"
     json5: "npm:^2.2.3"
     lodash-es: "npm:^4.18.1"
+    lucide-react: "npm:^1.8.0"
     marked: "npm:^18.0.2"
     marked-base-url: "npm:^1.1.9"
     mobx: "npm:^6.15.0"
@@ -5553,15 +5553,6 @@ __metadata:
   peerDependencies:
     "@opentelemetry/api": ^1.8
   checksum: 10c0/ed505510164e3be0abf5476f178bef534e7011934e694df16256ee3fc046a64268afe3af8f04f3fd2795d0040ed43a4c81d39b2e859885338b750f6eff4c1f3b
-  languageName: node
-  linkType: hard
-
-"@radix-ui/react-icons@npm:^1.3.2":
-  version: 1.3.2
-  resolution: "@radix-ui/react-icons@npm:1.3.2"
-  peerDependencies:
-    react: ^16.x || ^17.x || ^18.x || ^19.0.0 || ^19.0.0-rc
-  checksum: 10c0/3a380c7ae47e330ebd8ab4846729a543b4a0be5ecb1e2a7a571f4394728ff7d428b01f6620128051b6b69d63138a0ab8de77af78221ec364fbc5d126acf55b4a
   languageName: node
   linkType: hard
 

@@ -1,13 +1,13 @@
 import { CButton, CButtonGroup } from '@coreui/react'
-import {
-	AlignBottomIcon,
-	AlignCenterHorizontallyIcon,
-	AlignCenterVerticallyIcon,
-	AlignLeftIcon,
-	AlignRightIcon,
-	AlignTopIcon,
-} from '@radix-ui/react-icons'
 import classnames from 'classnames'
+import {
+	AlignHorizontalJustifyCenter,
+	AlignHorizontalJustifyEnd,
+	AlignHorizontalJustifyStart,
+	AlignVerticalJustifyCenter,
+	AlignVerticalJustifyEnd,
+	AlignVerticalJustifyStart,
+} from 'lucide-react'
 import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
 import type { CompanionAlignment } from '@companion-module/base'
 
@@ -44,13 +44,13 @@ export function HorizontalAlignmentInputField({
 	return (
 		<CButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left" disabled={disabled}>
-				<AlignLeftIcon />
+				<AlignHorizontalJustifyStart size="1.3rem" />
 			</AlignmentButton>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center" disabled={disabled}>
-				<AlignCenterHorizontallyIcon />
+				<AlignHorizontalJustifyCenter size="1.3rem" />
 			</AlignmentButton>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'right'} title="Right" disabled={disabled}>
-				<AlignRightIcon />
+				<AlignHorizontalJustifyEnd size="1.3rem" />
 			</AlignmentButton>
 		</CButtonGroup>
 	)
@@ -64,13 +64,13 @@ export function VerticalAlignmentInputField({
 	return (
 		<CButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top" disabled={disabled}>
-				<AlignTopIcon />
+				<AlignVerticalJustifyStart size="1.3rem" />
 			</AlignmentButton>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center" disabled={disabled}>
-				<AlignCenterVerticallyIcon />
+				<AlignVerticalJustifyCenter size="1.3rem" />
 			</AlignmentButton>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom" disabled={disabled}>
-				<AlignBottomIcon />
+				<AlignVerticalJustifyEnd size="1.3rem" />
 			</AlignmentButton>
 		</CButtonGroup>
 	)
