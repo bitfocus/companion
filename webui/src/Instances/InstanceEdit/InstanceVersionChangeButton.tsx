@@ -304,6 +304,8 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 		true
 	)
 
+	const missingSelection = value !== null && !moduleVersionChoices.find((c) => c.value === value)
+
 	return (
 		<CFormSelect
 			name={htmlName}
@@ -311,6 +313,7 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 			onChange={(e) => onChange(e.currentTarget.value)}
 			onBlur={onBlur}
 		>
+			{missingSelection && <option value={value}>{`Unknown version: ${value}`}</option>}
 			{moduleVersionChoices.map((v) => (
 				<option key={v.value} value={v.value}>
 					{v.label}
