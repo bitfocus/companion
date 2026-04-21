@@ -1,29 +1,29 @@
-import {
-	EntityModelType,
-	type FeedbackEntityModel,
-	type FeedbackEntityStyleOverride,
-	FeedbackEntitySubType,
-} from '@companion-app/shared/Model/EntityModel.js'
-import { ButtonStylePropertiesWithBuffer } from '@companion-app/shared/Style.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CButton } from '@coreui/react'
-import { faPlus, faTrash, faPencil } from '@fortawesome/free-solid-svg-icons'
+import { faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import { useCallback, useState } from 'react'
-import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
-import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
-import { ElementPickerModal } from './ElementPickerModal.js'
-import { AddElementPickerModal } from './AddElementPickerModal.js'
-import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
-import { OptionsInputControl } from '../OptionsInputField.js'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { ExpressionFieldControl } from './ExpressionFieldControl.js'
-import type { LocalVariablesStore } from '../LocalVariablesStore.js'
-import { useComputed } from '~/Resources/util.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 import type { JsonValue } from 'type-fest'
+import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	EntityModelType,
+	FeedbackEntitySubType,
+	type FeedbackEntityModel,
+	type FeedbackEntityStyleOverride,
+} from '@companion-app/shared/Model/EntityModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { ButtonStylePropertiesWithBuffer } from '@companion-app/shared/Style.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { useComputed } from '~/Resources/util.js'
+import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
+import { OptionsInputControl } from '../OptionsInputField.js'
+import { AddElementPickerModal } from './AddElementPickerModal.js'
+import { ElementPickerModal } from './ElementPickerModal.js'
+import { ExpressionFieldControl } from './ExpressionFieldControl.js'
+import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface LayeredStylesOverridesProps {
 	feedback: FeedbackEntityModel

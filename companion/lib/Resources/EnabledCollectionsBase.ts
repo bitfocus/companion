@@ -1,8 +1,8 @@
+import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import { CollectionsBaseController } from './CollectionsBase.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import { publicProcedure } from '../UI/TRPC.js'
-import z from 'zod'
+import { CollectionsBaseController } from './CollectionsBase.js'
 
 export abstract class EnabledCollectionsBaseController<
 	TCollectionMetadata extends { enabled: boolean },

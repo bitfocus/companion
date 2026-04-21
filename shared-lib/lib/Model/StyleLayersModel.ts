@@ -3,11 +3,11 @@
 
 import type { ExpressionOrValue } from '../Model/Options.js'
 import type {
-	ButtonGraphicsElementUsage,
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	CompositeElementOptionKey,
 	HorizontalAlignment,
 	VerticalAlignment,
-	CompositeElementOptionKey,
 } from './StyleModel.js'
 
 export interface ButtonGraphicsDrawBase {

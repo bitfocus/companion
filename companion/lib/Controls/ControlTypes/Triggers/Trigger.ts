@@ -1,14 +1,21 @@
-import { ControlBase } from '../../ControlBase.js'
-import jsonPatch from 'fast-json-patch'
 import debounceFn from 'debounce-fn'
-import { TriggersEventTimer } from './Events/Timer.js'
-import { TriggersEventMisc } from './Events/Misc.js'
-import { clamp } from '../../../Resources/Util.js'
-import { TriggersEventVariables } from './Events/Variable.js'
+import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import type { JsonValue } from 'type-fest'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { clamp } from '../../../Resources/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
-import type { TriggerEvents } from '../../TriggerEvents.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { ControlActionRunner } from '../../ActionRunner.js'
+import { ControlBase } from '../../ControlBase.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import type {
 	ControlWithActions,
 	ControlWithEntities,
@@ -18,18 +25,11 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
-import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
-import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ControlDependencies } from '../../ControlDependencies.js'
-import { ControlActionRunner } from '../../ActionRunner.js'
-import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { TriggerEvents } from '../../TriggerEvents.js'
+import { TriggersEventMisc } from './Events/Misc.js'
+import { TriggersEventTimer } from './Events/Timer.js'
+import { TriggersEventVariables } from './Events/Variable.js'
 import { TriggerExecutionSource } from './TriggerExecutionSource.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { JsonValue } from 'type-fest'
 
 /**
  * Class for an interval trigger.

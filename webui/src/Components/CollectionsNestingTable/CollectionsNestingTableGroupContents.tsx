@@ -1,16 +1,16 @@
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import React from 'react'
 import { observer } from 'mobx-react-lite'
-import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
-import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
-import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
-import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
-import { useCollectionsListItemDrop } from './useItemDrop.js'
-import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
+import React from 'react'
 import type { ConnectDropTarget } from 'react-dnd'
 import useElementclientSize from '~/Hooks/useElementInnerSize.js'
+import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
+import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
+import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
+import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
+import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
+import { useCollectionsListItemDrop } from './useItemDrop.js'
 
 interface CollectionsNestingTableCollectionContentsProps<TItem extends CollectionsNestingTableItem> {
 	items: TItem[]

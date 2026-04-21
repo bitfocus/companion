@@ -1,8 +1,8 @@
 import { CModal, CModalBody, CModalHeader } from '@coreui/react'
-import { trpc } from '~/Resources/TRPC.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
+import { trpc } from '~/Resources/TRPC.js'
 
 interface UsageDataModalProps {
 	show: boolean

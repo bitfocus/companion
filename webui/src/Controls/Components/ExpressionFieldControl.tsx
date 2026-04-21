@@ -1,12 +1,12 @@
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { CButton } from '@coreui/react'
 import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
-import type { LocalVariablesStore } from '../LocalVariablesStore.js'
-import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import React, { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 
 interface ExpressionFieldControlProps {
 	value: ExpressionOrValue<any>

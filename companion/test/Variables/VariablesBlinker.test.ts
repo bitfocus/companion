@@ -1,6 +1,6 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
-import { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { VariableValueEntry } from '../../lib/Variables/Values.js'
+import { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
 
 describe('VariablesBlinker', () => {
 	beforeEach(() => {

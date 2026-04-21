@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo } from 'react'
-import type { NestingCollectionsApi, CollectionsNestingTableItem, CollectionsNestingTableCollection } from './Types.js'
+import type { CollectionsNestingTableCollection, CollectionsNestingTableItem, NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableContextType<
 	TCollection extends CollectionsNestingTableCollection,

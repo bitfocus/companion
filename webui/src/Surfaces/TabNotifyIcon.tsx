@@ -1,6 +1,6 @@
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { useMissingVersionsCount } from '~/Instances/MissingVersionsWarning'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 

@@ -1,7 +1,7 @@
-import { describe, expect, test } from 'vitest'
-import { isModuleApiVersionCompatible } from '../ModuleApiVersionCheck.js'
 import { createRequire } from 'module'
 import semver from 'semver'
+import { describe, expect, test } from 'vitest'
+import { isModuleApiVersionCompatible } from '../ModuleApiVersionCheck.js'
 
 const require = createRequire(import.meta.url)
 const moduleBasePkg = require('@companion-module/base/package.json')

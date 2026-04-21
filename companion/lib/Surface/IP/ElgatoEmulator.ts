@@ -11,12 +11,12 @@
  */
 
 import { EventEmitter } from 'events'
-import isEqual from 'fast-deep-equal'
-import LogController from '../../Log/Controller.js'
 import debounceFn from 'debounce-fn'
-import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import isEqual from 'fast-deep-equal'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import LogController from '../../Log/Controller.js'
+import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {

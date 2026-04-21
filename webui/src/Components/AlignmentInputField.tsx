@@ -1,6 +1,3 @@
-import classnames from 'classnames'
-import type { CompanionAlignment } from '@companion-module/base'
-import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
 import { CButton, CButtonGroup } from '@coreui/react'
 import {
 	AlignBottomIcon,
@@ -10,6 +7,9 @@ import {
 	AlignRightIcon,
 	AlignTopIcon,
 } from '@radix-ui/react-icons'
+import classnames from 'classnames'
+import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
+import type { CompanionAlignment } from '@companion-module/base'
 
 interface AlignmentInputFieldProps {
 	value: CompanionAlignment

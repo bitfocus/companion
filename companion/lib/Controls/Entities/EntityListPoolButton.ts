@@ -1,21 +1,21 @@
+import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	type SomeSocketEntityLocation,
 	type SomeEntityModel,
+	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
-import { validateActionSetId } from '@companion-app/shared/ControlId.js'
-import type { ControlEntityInstance } from './EntityInstance.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 
 interface CurrentStepFromExpression {

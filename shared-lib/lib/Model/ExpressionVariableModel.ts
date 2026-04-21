@@ -1,6 +1,6 @@
+import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { CollectionBase } from './Collections.js'
 import type { SomeEntityModel } from './EntityModel.js'
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 
 export type ExpressionVariableCollection = CollectionBase<null>
 

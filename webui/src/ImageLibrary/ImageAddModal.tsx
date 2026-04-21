@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
-import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle, CButton } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import { ImageNameInput } from './ImageNameInput'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { ImageNameInput } from './ImageNameInput'
 
 interface ImageAddModalProps {
 	onImageCreated?: (imageName: string) => void

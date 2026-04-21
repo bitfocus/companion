@@ -1,17 +1,17 @@
-import { CFormLabel, CCol } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import {
 	type ButtonGraphicsElementBase,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import type { DropdownChoiceId, DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
-import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	elementProps,

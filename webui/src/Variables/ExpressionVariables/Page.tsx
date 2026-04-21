@@ -1,7 +1,4 @@
-import { useCallback, useContext, useRef, useState } from 'react'
-import { CButton, CButtonGroup, CCol, CRow, CInputGroup, CFormInput } from '@coreui/react'
-import { useComputed } from '~/Resources/util'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { CButton, CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faArrowLeft,
@@ -12,26 +9,29 @@ import {
 	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
-import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { NonIdealState } from '~/Components/NonIdealState.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
-import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
-import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useRef, useState } from 'react'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { useComputed } from '~/Resources/util'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useExpressionVariablesCollectionsApi } from './ExpressionVariablesCollectionsApi'
 import {
 	ExpressionVariablesTableContextProvider,
 	useExpressionVariablesTableContext,
 } from './ExpressionVariablesTableContext'
-import { useExpressionVariablesCollectionsApi } from './ExpressionVariablesCollectionsApi'
-import CopyToClipboard from 'react-copy-to-clipboard'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 
 export const ExpressionVariablesPage = observer(function ExpressionVariablesPage() {
 	const { expressionVariablesList } = useContext(RootAppStoreContext)

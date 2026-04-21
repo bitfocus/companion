@@ -1,10 +1,10 @@
-import jsonPatch from 'fast-json-patch'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import jsonPatch from 'fast-json-patch'
+import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
-import { EventEmitter } from 'node:events'
-import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 
 export type ControlUpdateEvents = {
 	update: [change: UIControlUpdate]

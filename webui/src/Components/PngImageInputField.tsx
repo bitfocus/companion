@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react'
 import { CAlert, CButton, CButtonGroup } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useCallback, useState } from 'react'
 import { PNGInputField } from './PNGInputField.js'
 
 interface PngImageInputFieldProps {

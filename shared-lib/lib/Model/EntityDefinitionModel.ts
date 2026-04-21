@@ -1,7 +1,7 @@
-import type { EntityModelType, EntitySupportedChildGroupDefinition, FeedbackEntitySubType } from './EntityModel.js'
-import type { SomeCompanionInputField } from './Options.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { ObjectsDiff } from './Common.js'
+import type { EntityModelType, EntitySupportedChildGroupDefinition, FeedbackEntitySubType } from './EntityModel.js'
+import type { SomeCompanionInputField } from './Options.js'
 
 export interface ClientEntityDefinition {
 	entityType: EntityModelType

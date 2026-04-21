@@ -1,15 +1,15 @@
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { CFormLabel, CCol } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import React, { useCallback } from 'react'
 import { observer } from 'mobx-react-lite'
+import React, { useCallback } from 'react'
+import type { JsonValue } from 'type-fest'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { ExpressionFieldControl } from '~/Controls/Components/ExpressionFieldControl.js'
+import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
-import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
-import { ExpressionFieldControl } from '~/Controls/Components/ExpressionFieldControl.js'
-import type { JsonValue } from 'type-fest'
 
 type SetValueFn = (value: JsonValue | undefined) => void
 

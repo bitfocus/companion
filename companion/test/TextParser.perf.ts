@@ -7,7 +7,6 @@
  * This benchmarks the text rendering performance with cache disabled
  * to measure the actual computation cost.
  */
-
 import { Image } from '../lib/Graphics/Image.js'
 
 interface BenchmarkResult {

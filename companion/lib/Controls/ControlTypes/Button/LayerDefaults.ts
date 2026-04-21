@@ -1,7 +1,7 @@
+import { nanoid } from 'nanoid'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { nanoid } from 'nanoid'
 
 export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): SomeButtonGraphicsElement {
 	switch (type) {

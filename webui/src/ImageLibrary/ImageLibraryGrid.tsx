@@ -1,26 +1,26 @@
 import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
-import { faPlus, faImage, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useContext, useState, useMemo, useRef } from 'react'
-import { useComputed } from '~/Resources/util'
 import { observer } from 'mobx-react-lite'
-import { ImageThumbnail } from './ImageThumbnail'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { NonIdealState } from '~/Components/NonIdealState.js'
-import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
+import { nanoid } from 'nanoid'
+import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
-import { ImageLibraryDropzone } from './ImageLibraryDropzone'
 import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types.js'
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
-import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { useComputed } from '~/Resources/util'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
+import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
+import { ImageLibraryDropzone } from './ImageLibraryDropzone'
+import { ImageThumbnail } from './ImageThumbnail'
 import { useImageLibraryUpload } from './useImageLibraryUpload'
-import { nanoid } from 'nanoid'
 
 // Adapters for CollectionsNestingTable
 interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {

@@ -1,25 +1,25 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '../../lib/Graphics/ConvertGraphicsElements.js'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
+	ButtonGraphicsGroupDrawElement,
 	SomeButtonGraphicsDrawElement,
 	SomeButtonGraphicsElement,
-	ButtonGraphicsGroupDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
-import type { InstanceDefinitions, CompositeElementDefinition } from '../../lib/Instance/Definitions.js'
-import type { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../../lib/Graphics/ConvertGraphicsElements.js'
+import { collectContentHashes } from '../../lib/Graphics/ConvertGraphicsElements/Util.js'
 import { ElementConversionCache } from '../../lib/Graphics/ElementConversionCache.js'
+import type { CompositeElementDefinition, InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import {
 	executeExpression,
 	parseVariablesInString,
-	type VariableValueData,
 	type VariableValueCache,
+	type VariableValueData,
 } from '../../lib/Variables/Util.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
-import { collectContentHashes } from '../../lib/Graphics/ConvertGraphicsElements/Util.js'
+import type { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 
 // Shorthand for usage enum
 const USAGE = ButtonGraphicsElementUsage.Automatic

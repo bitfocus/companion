@@ -1,51 +1,51 @@
+import { createHash } from 'node:crypto'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
-	ButtonGraphicsDrawBounds,
-	ButtonGraphicsImageDrawElement,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsTextDrawElement,
-	ButtonGraphicsTextElement,
-	ButtonGraphicsCanvasDrawElement,
-	ButtonGraphicsCanvasElement,
-	SomeButtonGraphicsDrawElement,
-	SomeButtonGraphicsElement,
+	ButtonGraphicsBorder,
+	ButtonGraphicsBounds,
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsBoxElement,
-	ButtonGraphicsGroupElement,
-	ButtonGraphicsGroupDrawElement,
-	ButtonGraphicsLineElement,
-	ButtonGraphicsLineDrawElement,
-	ButtonGraphicsElementBase,
-	ButtonGraphicsBounds,
-	ButtonGraphicsCircleElement,
+	ButtonGraphicsCanvasDrawElement,
+	ButtonGraphicsCanvasElement,
 	ButtonGraphicsCircleDrawElement,
-	ButtonGraphicsDrawBorder,
-	ButtonGraphicsBorder,
+	ButtonGraphicsCircleElement,
 	ButtonGraphicsCompositeElement,
+	ButtonGraphicsDrawBorder,
+	ButtonGraphicsDrawBounds,
+	ButtonGraphicsElementBase,
+	ButtonGraphicsGroupDrawElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsTextDrawElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsDrawElement,
+	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {
 	ButtonGraphicsDecorationType,
 	type CompositeElementOptionKey,
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type {
-	InstanceDefinitions,
-	CompositeElementIdString,
 	CompositeElementDefinition,
+	CompositeElementIdString,
+	InstanceDefinitions,
 } from '../Instance/Definitions.js'
-import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
-import { computeElementContentHash } from './ConvertGraphicsElements/Util.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {
 	createParseElementsContext,
-	type ElementExpressionHelper,
-	type ParseElementsContext,
 	type DrawPixelBuffers,
+	type ElementExpressionHelper,
 	type ExpressionReferences,
+	type ParseElementsContext,
 } from './ConvertGraphicsElements/Helper.js'
-import { createHash } from 'node:crypto'
+import { computeElementContentHash } from './ConvertGraphicsElements/Util.js'
+import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,

@@ -1,6 +1,6 @@
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { CompositeElementIdString } from '../Instance/Definitions.js'
 
 /**
  * Result of converting a single graphics element for drawing

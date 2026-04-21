@@ -1,7 +1,7 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { EventInstance } from './EventModel.js'
-import type { SomeEntityModel } from './EntityModel.js'
 import type { CollectionBase } from './Collections.js'
+import type { SomeEntityModel } from './EntityModel.js'
+import type { EventInstance } from './EventModel.js'
 
 export interface TriggerModel {
 	readonly type: 'trigger'

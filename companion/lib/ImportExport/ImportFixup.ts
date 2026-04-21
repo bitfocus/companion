@@ -1,13 +1,13 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { LayeredButtonModel, ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonModelBase, LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import type { Logger } from '../Log/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
+import type { Logger } from '../Log/Controller.js'
+import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 
 export type InstanceAppliedRemappings = Record<
 	string,

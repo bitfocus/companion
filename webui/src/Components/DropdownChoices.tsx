@@ -1,6 +1,6 @@
-import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { GroupBase, OptionsOrGroups } from 'react-select'
 import type { Writable } from 'type-fest'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { useComputed } from '~/Resources/util'
 
 export interface DropdownChoiceGroup {

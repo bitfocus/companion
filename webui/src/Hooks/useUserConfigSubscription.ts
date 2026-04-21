@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import type { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/Resources/TRPC'
+import { useState } from 'react'
 import type { UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
+import { trpc } from '~/Resources/TRPC'
+import type { UserConfigStore } from '~/Stores/UserConfigStore.js'
 
 export function useUserConfigSubscription(
 	store: UserConfigStore,

@@ -1,21 +1,21 @@
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
 import { useRef } from 'react'
 import {
 	useDrag,
+	useDragLayer,
+	type ConnectDragPreview,
 	type ConnectDragSource,
 	type ConnectDropTarget,
-	type ConnectDragPreview,
-	useDragLayer,
 } from 'react-dnd'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
+import { CollectionsNestingTableGridTile } from './CollectionsNestingTableGridTile.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
-import { useCollectionsListItemDrop, type CollectionsNestingTableItemDragItem } from './useItemDrop.js'
 import { useCollectionListCollectionDrop, type CollectionsNestingTableCollectionDragItem } from './useCollectionDrop.js'
-import { CollectionsNestingTableGridTile } from './CollectionsNestingTableGridTile.js'
-import { observer } from 'mobx-react-lite'
+import { useCollectionsListItemDrop, type CollectionsNestingTableItemDragItem } from './useItemDrop.js'
 
 /* 
 	The INDIVIDUAL items in the table

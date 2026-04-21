@@ -1,7 +1,7 @@
 import { action, observable, type ObservableMap } from 'mobx'
 import type {
-	UICompositeElementDefinition,
 	CompositeElementDefinitionUpdate,
+	UICompositeElementDefinition,
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { assertNever } from '~/Resources/util'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'

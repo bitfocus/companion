@@ -1,21 +1,21 @@
 import z from 'zod'
-import { publicProcedure, router } from '../UI/TRPC.js'
-import type { SomeControl } from './IControlFragments.js'
-import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import {
 	EntityModelType,
-	type EntityOwner,
 	schemaFeedbackEntityStyleOverride,
 	zodEntityLocation,
+	type EntityOwner,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
-import LogController from '../Log/Controller.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import {
 	createExpressionOrValueSchema,
 	ExpressionOrJsonValueSchema,
 	JsonValueSchema,
 } from '@companion-app/shared/Model/Options.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import LogController from '../Log/Controller.js'
+import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import type { SomeControl } from './IControlFragments.js'
 
 const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
 	parentId: z.string(),

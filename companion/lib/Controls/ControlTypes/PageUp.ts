@@ -1,15 +1,15 @@
 import type { PageUpButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import { ControlBase } from '../ControlBase.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
 import type {
-	ControlWithoutActionSets,
 	ControlWithoutActions,
+	ControlWithoutActionSets,
 	ControlWithoutEvents,
 	ControlWithoutLayeredStyle,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 } from '../IControlFragments.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { ControlDependencies } from '../ControlDependencies.js'
 
 /**
  * Class for a pageup button control.

@@ -1,5 +1,5 @@
-import type { ActionEntityModel } from './EntityModel.js'
 import type jsonPatch from 'fast-json-patch'
+import type { ActionEntityModel } from './EntityModel.js'
 
 export interface RecordSessionInfo {
 	id: string

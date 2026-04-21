@@ -1,10 +1,10 @@
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
-import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import type {
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextElement,
 } from '../Model/StyleLayersModel.js'
+import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [

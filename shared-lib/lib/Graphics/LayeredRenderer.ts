@@ -1,19 +1,19 @@
-import { assertNever } from '../Util.js'
-import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
-import type { ImageBase, LineStyle } from './ImageBase.js'
+import type { RendererButtonStyle } from '../Model/Render.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
-	ButtonGraphicsGroupDrawElement,
-	SomeButtonGraphicsDrawElement,
 	ButtonGraphicsCanvasDrawElement,
-	ButtonGraphicsImageDrawElement,
-	ButtonGraphicsTextDrawElement,
-	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsGroupDrawElement,
+	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsTextDrawElement,
+	SomeButtonGraphicsDrawElement,
 } from '../Model/StyleLayersModel.js'
-import { DrawBounds, parseColor, rgbRev } from './Util.js'
+import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
+import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
-import type { RendererButtonStyle } from '../Model/Render.js'
+import type { ImageBase, LineStyle } from './ImageBase.js'
+import { DrawBounds, parseColor, rgbRev } from './Util.js'
 
 export class GraphicsLayeredButtonRenderer {
 	static async draw(

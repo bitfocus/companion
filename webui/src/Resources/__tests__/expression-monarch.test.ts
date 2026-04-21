@@ -1,6 +1,6 @@
-import { builtinFunctionCompletions } from '../Expression.monarch.js'
+import { describe, expect, test } from 'vitest'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { describe, test, expect } from 'vitest'
+import { builtinFunctionCompletions } from '../Expression.monarch.js'
 
 describe('Ensure all functions are documented', () => {
 	for (const funcName of Object.keys(ExpressionFunctions)) {

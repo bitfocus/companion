@@ -1,36 +1,36 @@
-import { ButtonControlBase } from './Base.js'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import type {
-	ControlWithoutActionSets,
-	ControlWithoutActions,
-	ControlWithoutEvents,
-	ControlWithEntities,
-	ControlWithoutOptions,
-	ControlWithoutPushed,
-	ControlWithLayeredStyle,
-} from '../../IControlFragments.js'
-import type {
-	PresetButtonModel,
+	ButtonStatus,
 	LayeredButtonOptions,
 	NormalButtonRuntimeProps,
-	ButtonStatus,
+	PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type {
 	ButtonGraphicsElementUsage,
 	ButtonStyleProperties,
 	DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
-import type { ControlDependencies } from '../../ControlDependencies.js'
-import type { ImageResult } from '../../../Graphics/ImageResult.js'
-import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
-import { ControlBase } from '../../ControlBase.js'
-import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
-import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
-import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
+import type { ImageResult } from '../../../Graphics/ImageResult.js'
+import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { ControlBase } from '../../ControlBase.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
+import type {
+	ControlWithEntities,
+	ControlWithLayeredStyle,
+	ControlWithoutActions,
+	ControlWithoutActionSets,
+	ControlWithoutEvents,
+	ControlWithoutOptions,
+	ControlWithoutPushed,
+} from '../../IControlFragments.js'
+import { ButtonControlBase } from './Base.js'
 
 /**
  * Class for the preset button control.

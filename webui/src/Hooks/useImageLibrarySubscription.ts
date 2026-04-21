@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import type { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
+import type { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
 
 export function useImageLibrarySubscription(store: ImageLibraryStore): boolean {
 	const [ready, setReady] = useState(false)

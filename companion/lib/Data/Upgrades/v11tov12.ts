@@ -1,7 +1,7 @@
-import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
 import { cloneDeep } from 'lodash-es'
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { Logger } from '../../Log/Controller.js'
+import type { DataStoreBase } from '../StoreBase.js'
 
 // Snapshot of the plugin config field prefix at the time this migration was introduced
 const pluginCfgPrefix = 'plugin_cfg_'

@@ -1,21 +1,12 @@
-import { ButtonControlBase } from './Base.js'
 import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
-import type {
-	ControlWithActionSets,
-	ControlWithActions,
-	ControlWithLayeredStyle,
-	ControlWithoutEvents,
-} from '../../IControlFragments.js'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import type { JsonValue } from 'type-fest'
 import type {
 	LayeredButtonModel,
 	LayeredButtonOptions,
 	NormalButtonRuntimeProps,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ControlDependencies } from '../../ControlDependencies.js'
-import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsElementBase,
@@ -24,22 +15,31 @@ import type {
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
 	type ButtonStyleProperties,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
-import { CreateElementOfType } from './LayerDefaults.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import { lazy } from '../../../Resources/Util.js'
-import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
-import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
+import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
+import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
+import { lazy } from '../../../Resources/Util.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
-import type { JsonValue } from 'type-fest'
+import type {
+	ControlWithActions,
+	ControlWithActionSets,
+	ControlWithLayeredStyle,
+	ControlWithoutEvents,
+} from '../../IControlFragments.js'
+import { ButtonControlBase } from './Base.js'
+import { CreateElementOfType } from './LayerDefaults.js'
 
 /**
  * Class for the button control with layer based rendering.

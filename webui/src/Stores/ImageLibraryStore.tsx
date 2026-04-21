@@ -1,7 +1,7 @@
 import { action, observable } from 'mobx'
 import type {
-	ImageLibraryInfo,
 	ImageLibraryCollection,
+	ImageLibraryInfo,
 	ImageLibraryUpdate,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { assertNever } from '~/Resources/util'

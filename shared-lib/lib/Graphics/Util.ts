@@ -1,5 +1,5 @@
-import type { CompanionAlignment } from '@companion-module/base'
 import { colord } from 'colord'
+import type { CompanionAlignment } from '@companion-module/base'
 
 export type HorizontalAlignment = 'left' | 'right' | 'center'
 export type VerticalAlignment = 'top' | 'bottom' | 'center'

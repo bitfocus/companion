@@ -1,23 +1,23 @@
 import crypto from 'crypto'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import LogController from '../Log/Controller.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
+import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type {
-	ImageLibraryInfo,
-	ImageLibraryUpdate,
 	ImageLibraryCollection,
 	ImageLibraryExportData,
+	ImageLibraryInfo,
+	ImageLibraryUpdate,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
-import type { GraphicsController } from './Controller.js'
-import { ImageLibraryCollections } from './ImageLibraryCollections.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import LogController from '../Log/Controller.js'
+import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import EventEmitter from 'node:events'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { GraphicsController } from './Controller.js'
+import { ImageLibraryCollections } from './ImageLibraryCollections.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 10 // 10MB limit, just in case
 

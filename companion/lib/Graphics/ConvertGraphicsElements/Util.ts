@@ -1,8 +1,8 @@
+import { createHash } from 'node:crypto'
 import type {
 	ButtonGraphicsDrawBase,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { createHash } from 'node:crypto'
 
 /**
  * Compute a SHA256 hash of an object for cache key purposes.

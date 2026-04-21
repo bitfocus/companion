@@ -1,9 +1,9 @@
-import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
-import type { SatelliteControlStylePreset } from './SatelliteSurfaceManifestSchema.js'
-import type { SatelliteMessageArgs } from './SatelliteApi.js'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
-import { parseColor } from '@companion-app/shared/Graphics/Util.js'
+import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
+import type { SatelliteMessageArgs } from './SatelliteApi.js'
+import type { SatelliteControlStylePreset } from './SatelliteSurfaceManifestSchema.js'
 
 /**
  * Build the style-related message args (BITMAP, COLOR, TEXTCOLOR, TEXT, FONT_SIZE)

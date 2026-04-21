@@ -1,14 +1,14 @@
+import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useRef } from 'react'
-import { AddElementDropdownButton, RemoveElementButton, ToggleVisibilityButton } from './Buttons.js'
-import type { LayeredStyleStore } from './StyleStore.js'
+import { useDrag, useDrop } from 'react-dnd'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
-import classNames from 'classnames'
-import { useDrop, useDrag } from 'react-dnd'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { AddElementDropdownButton, RemoveElementButton, ToggleVisibilityButton } from './Buttons.js'
+import type { LayeredStyleStore } from './StyleStore.js'
 
 export const ElementsList = observer(function ElementsList({
 	styleStore,

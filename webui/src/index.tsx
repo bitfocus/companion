@@ -1,5 +1,4 @@
 import './Resources/Sentry.js'
-
 import '@fontsource/roboto'
 import '@fontsource/fira-code'
 import './App.scss'
@@ -8,25 +7,23 @@ import alignmentImg from '~/scss/img/alignment.png'
 import checkImg from '~/scss/img/check.svg?no-inline'
 import indeterminateImg from '~/scss/img/indeterminate.svg?no-inline' // This doesn't embed if being inlined
 
+// polyfills
+import 'intersection-observer'
+import { createRouter, RouterProvider } from '@tanstack/react-router'
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import './Resources/TRPC.js' // Ensure TRPC is loaded ASAP
+
+// Import the generated route tree
+import { routeTree } from './routeTree.gen.js'
+
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties
 	Object.defineProperties = function (o, props) {
 		return o === console ? o : defineProperties(o, props)
 	}
 }
-
-// polyfills
-import 'intersection-observer'
-
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { RouterProvider, createRouter } from '@tanstack/react-router'
-
-import { makeAbsolutePath } from '~/Resources/util.js'
-import './Resources/TRPC.js' // Ensure TRPC is loaded ASAP
-
-// Import the generated route tree
-import { routeTree } from './routeTree.gen.js'
 
 // Create a new router instance
 const router = createRouter({

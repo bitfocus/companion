@@ -1,13 +1,13 @@
 // @ts-check
 
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import eslint from '@eslint/js'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 import neslint from 'eslint-plugin-n'
-import tseslint from 'typescript-eslint'
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import reacteslint from 'eslint-plugin-react'
 import hookseslint from 'eslint-plugin-react-hooks'
 import reactRefreshEslint from 'eslint-plugin-react-refresh'
-import pluginQuery from '@tanstack/eslint-plugin-query'
+import tseslint from 'typescript-eslint'
 
 export default [
 	// setup the parser first

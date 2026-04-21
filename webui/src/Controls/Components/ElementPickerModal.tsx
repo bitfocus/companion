@@ -1,11 +1,11 @@
-import type { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
-import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import type { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { ElementPicker } from './ElementPicker.js'
+import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface ElementPickerModalProps {
 	isOpen: boolean

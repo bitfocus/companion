@@ -1,10 +1,10 @@
-import { type ElementType, type ReactElement } from 'react'
-import { CDropdownMenu, CDropdownItem, CDropdownDivider } from '@coreui/react'
+import { CDropdownDivider, CDropdownItem, CDropdownMenu } from '@coreui/react'
+import { type IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import { faExternalLinkSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
-import { type IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { Link, type LinkOptions } from '@tanstack/react-router'
+import { type ElementType, type ReactElement } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 // provide a declarative menu specification:

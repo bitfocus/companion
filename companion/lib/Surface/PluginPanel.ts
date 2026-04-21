@@ -1,26 +1,12 @@
 import EventEmitter from 'node:events'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type {
-	DrawButtonItem,
-	SurfaceExecuteExpressionFn,
-	SurfacePanel,
-	SurfacePanelEvents,
-	SurfacePanelInfo,
-} from './Types.js'
-import LogController, { type Logger } from '../Log/Controller.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from './CommonConfigFields.js'
-import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
-import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { parseColorToNumber } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
 import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
@@ -28,8 +14,22 @@ import type {
 	IpcDrawProps,
 	SurfaceModuleToHostEvents,
 } from '../Instance/Surface/IpcTypes.js'
-import { parseColor } from '@companion-app/shared/Graphics/Util.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
+import LogController, { type Logger } from '../Log/Controller.js'
+import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
+import { parseColorToNumber } from '../Resources/Util.js'
+import {
+	BrightnessConfigField,
+	LockConfigFields,
+	OffsetConfigFields,
+	RotationConfigField,
+} from './CommonConfigFields.js'
+import type {
+	DrawButtonItem,
+	SurfaceExecuteExpressionFn,
+	SurfacePanel,
+	SurfacePanelEvents,
+	SurfacePanelInfo,
+} from './Types.js'
 
 interface SatelliteInputVariableInfo {
 	id: string

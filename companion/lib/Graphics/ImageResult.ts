@@ -1,6 +1,6 @@
+import type * as imageRs from '@julusian/image-rs'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
-import type * as imageRs from '@julusian/image-rs'
 
 export interface ImageResultProcessedStyle {
 	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'

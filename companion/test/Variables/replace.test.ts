@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { replaceAllVariables } from '../../lib/Variables/Util.js'
 
 describe('variable replacing', () => {

@@ -1,7 +1,7 @@
-import { useCallback } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { trpc, useMutationExt } from '../Resources/TRPC'
+import { useCallback } from 'react'
 import { InstanceDebugLog } from '../Instances/DebugLog'
+import { trpc, useMutationExt } from '../Resources/TRPC'
 
 export function ConnectionDebug(): React.JSX.Element {
 	const { connectionId } = useParams({ from: '/_standalone/connection-debug/$connectionId' })

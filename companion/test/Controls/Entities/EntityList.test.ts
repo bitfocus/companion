@@ -1,5 +1,5 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
-import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	ActionEntityModel,
 	EntityModelType,
@@ -8,13 +8,9 @@ import {
 	FeedbackEntitySubType,
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import {
-	ActionTree,
-	ActionTreeEntityDefinitions,
-	FeedbackTree,
-	FeedbackTreeEntityDefinitions,
-	getAllModelsInTree,
-} from './EntityListModels.js'
+import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
+import { EntityPoolIsInvertedManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
+import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -22,9 +18,13 @@ import {
 	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
-import { EntityPoolIsInvertedManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
+import {
+	ActionTree,
+	ActionTreeEntityDefinitions,
+	FeedbackTree,
+	FeedbackTreeEntityDefinitions,
+	getAllModelsInTree,
+} from './EntityListModels.js'
 
 function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()

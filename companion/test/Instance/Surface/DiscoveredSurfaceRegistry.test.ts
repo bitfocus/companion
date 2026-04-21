@@ -1,9 +1,9 @@
+import { describe, expect, test } from 'vitest'
 import {
 	DiscoveredSurfaceRegistry,
 	type DiscoveredSurfaceInfo,
 	type SurfaceOpener,
 } from '../../../lib/Instance/Surface/DiscoveredSurfaceRegistry.js'
-import { describe, expect, test } from 'vitest'
 
 const mockOpener: SurfaceOpener = {
 	instanceId: 'test-instance',

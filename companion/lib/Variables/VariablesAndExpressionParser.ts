@@ -1,27 +1,27 @@
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
 	type VariableValue,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
-import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { CompanionOptionValues } from '@companion-module/base'
+import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import {
 	executeExpression,
 	parseVariablesInString,
 	visitEntityOptionsForVariables,
-	type VariableValueData,
-	type VariablesCache,
 	type ParseVariablesResult,
+	type VariablesCache,
 	type VariableValueCache,
+	type VariableValueData,
 	type VisitEntityOptionValueOptions,
 } from './Util.js'
-import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { CompanionOptionValues } from '@companion-module/base'
 import type { VariablesBlinker } from './VariablesBlinker.js'
-import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 
 /**
  * A class to parse and execute expressions with variables

@@ -1,10 +1,10 @@
-import { useMemo } from 'react'
-import { MyErrorBoundary } from '~/Resources/Error.js'
-import { ButtonPreview } from '~/Components/ButtonPreview.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { observer } from 'mobx-react-lite'
-import { useButtonPressHandler, useKeyboardListener } from './PressMutations.js'
+import { useMemo } from 'react'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ButtonPreview } from '~/Components/ButtonPreview.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { GetCachedImage } from './ImageCache.js'
+import { useButtonPressHandler, useKeyboardListener } from './PressMutations.js'
 
 interface EmulatorButtonsProps {
 	emulatorId: string

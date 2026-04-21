@@ -1,5 +1,4 @@
 #!/usr/bin/env zx
-
 import { fs, path, usePowerShell } from 'zx'
 import { generateVersionString } from './lib.mts'
 

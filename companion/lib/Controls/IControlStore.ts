@@ -1,7 +1,7 @@
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { SomeControl } from './IControlFragments.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
+import type { SomeControl } from './IControlFragments.js'
 
 /**
  * Narrow interface for the controls data layer.

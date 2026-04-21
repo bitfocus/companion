@@ -1,5 +1,5 @@
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import classNames from 'classnames'
+import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 
 interface ImageThumbnailProps {

@@ -1,19 +1,19 @@
-import { describe, it, expect } from 'vitest'
-import { validateInputValue } from '../ValidateInputValue.js'
+import { describe, expect, it } from 'vitest'
 import type {
-	CompanionInputFieldStaticTextExtended,
-	CompanionInputFieldTextInputExtended,
-	CompanionInputFieldSecretExtended,
-	CompanionInputFieldNumberExtended,
+	CompanionInputFieldBonjourDeviceExtended,
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldColorExtended,
-	CompanionInputFieldDropdownExtended,
-	CompanionInputFieldMultiDropdownExtended,
 	CompanionInputFieldCustomVariableExtended,
-	CompanionInputFieldBonjourDeviceExtended,
-	InternalInputFieldTime,
+	CompanionInputFieldDropdownExtended,
 	CompanionInputFieldExpressionExtended,
+	CompanionInputFieldMultiDropdownExtended,
+	CompanionInputFieldNumberExtended,
+	CompanionInputFieldSecretExtended,
+	CompanionInputFieldStaticTextExtended,
+	CompanionInputFieldTextInputExtended,
+	InternalInputFieldTime,
 } from '../Model/Options.js'
+import { validateInputValue } from '../ValidateInputValue.js'
 
 describe('validateInputValue', () => {
 	describe('static-text', () => {

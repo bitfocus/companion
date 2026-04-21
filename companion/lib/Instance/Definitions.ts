@@ -1,55 +1,55 @@
+import { EventEmitter } from 'node:events'
+import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
-import { EventDefinitions } from '../Resources/EventDefinitions.js'
 import { diffObjects } from '@companion-app/shared/Diff.js'
+import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	ClientEntityDefinition,
+	CompositeElementDefinitionUpdate,
+	EntityDefinitionUpdate,
+	UICompositeElementDefinition,
+} from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	injectOverriddenLocalVariableValues,
-	replaceAllVariables,
-	visitEntityOptionsForVariables,
-} from '../Variables/Util.js'
+	EntityModelType,
+	FeedbackEntitySubType,
+	type ActionEntityModel,
+	type EntityModelBase,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import {
+	exprVal,
+	isExpressionOrValue,
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinitionUpdate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
-import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import LogController from '../Log/Controller.js'
-import {
-	EntityModelType,
-	type FeedbackEntityModel,
-	type ActionEntityModel,
-	type EntityModelBase,
-	type SomeEntityModel,
-	FeedbackEntitySubType,
-} from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ClientEntityDefinition,
-	EntityDefinitionUpdate,
-	CompositeElementDefinitionUpdate,
-	UICompositeElementDefinition,
-} from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { EventEmitter } from 'node:events'
-import type { InstanceConfigStore } from './ConfigStore.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { Complete } from '@companion-module/base'
+import LogController from '../Log/Controller.js'
 import {
 	ConvertBooleanFeedbackStyleToOverrides,
 	CreateAdvancedFeedbackStyleOverrides,
 	ParseLegacyStyle,
 } from '../Resources/ConvertLegacyStyleToElements.js'
+import { EventDefinitions } from '../Resources/EventDefinitions.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import {
-	exprVal,
-	isExpressionOrValue,
-	type ExpressionOrValue,
-	type ExpressionableOptionsObject,
-	type SomeCompanionInputField,
-} from '@companion-app/shared/Model/Options.js'
-import type { Complete } from '@companion-module/base'
-import jsonPatch from 'fast-json-patch'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+	injectOverriddenLocalVariableValues,
+	replaceAllVariables,
+	visitEntityOptionsForVariables,
+} from '../Variables/Util.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
 
 export interface CompositeElementDefinition {
 	id: string

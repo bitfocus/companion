@@ -1,13 +1,13 @@
-import LogController from '../Log/Controller.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
 import EventEmitter from 'node:events'
+import z from 'zod'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 export interface ElementStreamResult {
 	ok: true

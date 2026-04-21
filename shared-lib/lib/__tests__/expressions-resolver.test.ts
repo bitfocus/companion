@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest'
-import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
-import { type GetVariableValueProps, ResolveExpression as resolve } from '../Expression/ExpressionResolve.js'
 import jsep from 'jsep'
+import { describe, expect, it } from 'vitest'
+import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
+import { ResolveExpression as resolve, type GetVariableValueProps } from '../Expression/ExpressionResolve.js'
 import type { VariableValue } from '../Model/Variables.js'
 
 const defaultGetValue = (_props: GetVariableValueProps): VariableValue | undefined => {

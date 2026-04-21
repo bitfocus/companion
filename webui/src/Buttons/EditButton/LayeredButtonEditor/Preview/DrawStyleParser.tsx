@@ -1,18 +1,18 @@
-import type {
-	SomeButtonGraphicsElement,
-	SomeButtonGraphicsDrawElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { cloneDeep, isEqual } from 'lodash-es'
-import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
-import { useEffect, useState } from 'react'
-import { useObserver } from 'mobx-react-lite'
 import { toJS } from 'mobx'
-import type { LayeredStyleStore } from '../StyleStore.js'
-import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import { type RouterInput, trpcClient } from '~/Resources/TRPC.js'
+import { useObserver } from 'mobx-react-lite'
+import { useEffect, useState } from 'react'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { ElementStreamResult } from '~/../companion/lib/Preview/ElementStream.js'
+import type {
+	SomeButtonGraphicsDrawElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
+import type { ElementStreamResult } from '~/../companion/lib/Preview/ElementStream.js'
+import { trpcClient, type RouterInput } from '~/Resources/TRPC.js'
+import type { LayeredStyleStore } from '../StyleStore.js'
 
 const DRAW_DEBOUNCE = 50
 const DRAW_DEBOUNCE_MAX = 100

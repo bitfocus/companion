@@ -1,8 +1,16 @@
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type {
+	SharedUdpSocketMessageJoin,
+	SharedUdpSocketMessageLeave,
+	SharedUdpSocketMessageSend,
+} from '@companion-module/base/host-api'
 import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
-	type CompanionPresetSection,
+	type CompanionGraphicsCompositeElementDefinition,
 	type CompanionPresetDefinitions,
+	type CompanionPresetSection,
 	type CompanionRecordedAction,
 	type CompanionVariableValue,
 	type Complete,
@@ -16,19 +24,11 @@ import {
 	type OSCMetaArgument,
 	type OSCSomeArguments,
 	type SomeCompanionFeedbackInputField,
-	type CompanionGraphicsCompositeElementDefinition,
 } from '@companion-module/host'
-import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
-import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { translateEntityInputFields } from './ConfigFields.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type {
-	SharedUdpSocketMessageJoin,
-	SharedUdpSocketMessageLeave,
-	SharedUdpSocketMessageSend,
-} from '@companion-module/base/host-api'
-import { ConvertPresetDefinitions } from './Presets.js'
 import type { CompositeElementDefinition } from '../../Definitions.js'
+import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
+import { translateEntityInputFields } from './ConfigFields.js'
+import { ConvertPresetDefinitions } from './Presets.js'
 import { ConvertLayerPresetElements } from './PresetsLayered.js'
 
 /**

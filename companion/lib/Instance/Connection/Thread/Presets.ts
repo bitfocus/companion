@@ -1,6 +1,9 @@
+import { nanoid } from 'nanoid'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinition,
@@ -9,6 +12,8 @@ import type {
 	UIPresetGroupTemplate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	CompanionButtonStepActions,
 	CompanionLayeredButtonPresetDefinition,
@@ -22,14 +27,9 @@ import type {
 	Complete,
 	ModuleLogger,
 } from '@companion-module/host'
-import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
-import { ConvertLayeredPresetFeedbacksToEntities, ConvertLayerPresetElements } from './PresetsLayered.js'
 import { ConvertLegacyStyleToElements } from '../../../Resources/ConvertLegacyStyleToElements.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { nanoid } from 'nanoid'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '@companion-app/shared/Util.js'
+import { ConvertLayeredPresetFeedbacksToEntities, ConvertLayerPresetElements } from './PresetsLayered.js'
+import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],

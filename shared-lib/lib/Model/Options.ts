@@ -1,7 +1,7 @@
-import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 import type { JsonValue } from 'type-fest'
-import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
 import z from 'zod'
+import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
+import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 
 export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
 

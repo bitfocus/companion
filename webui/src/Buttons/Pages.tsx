@@ -1,15 +1,15 @@
-import { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faTrash, faSort, faShareFromSquare } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
-import type { PagesStoreModel } from '~/Stores/PagesStore.js'
+import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import type { PagesStoreModel } from '~/Stores/PagesStore.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
 
 interface PagesListProps {
 	setPageNumber: (page: number) => void

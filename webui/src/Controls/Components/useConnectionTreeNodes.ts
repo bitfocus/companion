@@ -1,8 +1,8 @@
 import { useContext } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { CollapsibleTreeNode } from '../../Components/CollapsibleTree/CollapsibleTree.js'
-import type { ConnectionCollection, ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 
 /**
  * Metadata for a collection group node in the tree.

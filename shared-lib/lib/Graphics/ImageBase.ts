@@ -17,11 +17,11 @@
 
 /// <reference lib="dom" />
 
-import type { MinimalLogger } from '../Logger.js'
-import type { DrawBounds, HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
-import { DEFAULT_FONTS, DEFAULT_FONTS_STR } from './Fonts.js'
 import type QuickLRU from 'quick-lru'
+import type { MinimalLogger } from '../Logger.js'
+import { DEFAULT_FONTS, DEFAULT_FONTS_STR } from './Fonts.js'
 import { computeTextLayout, resolveFontSizes, segmentTextToUnicodeChars, type TextLayoutResult } from './TextParser.js'
+import type { DrawBounds, HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
 
 /**
  * Cache for text layout computations

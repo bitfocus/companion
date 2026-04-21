@@ -1,18 +1,18 @@
-import isEqual from 'fast-deep-equal'
+import EventEmitter from 'node:events'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
+import isEqual from 'fast-deep-equal'
 import systeminformation from 'systeminformation'
+import z from 'zod'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type {
 	ClientDiscoveredSurfaceInfo,
 	ClientDiscoveredSurfaceInfoPlugin,
 	CompanionExternalAddresses,
 	SurfacesDiscoveryUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import EventEmitter from 'node:events'
-import LogController from '../Log/Controller.js'
 import type { DiscoveredRemoteSurfaceInfo } from '@companion-surface/host'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 /**
  * Class providing the discovery of Satellite Surface.

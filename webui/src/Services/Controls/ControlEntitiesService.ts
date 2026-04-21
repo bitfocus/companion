@@ -1,15 +1,15 @@
+import { useMemo, useRef } from 'react'
+import type { JsonValue } from 'type-fest'
 import {
 	stringifySocketEntityLocation,
-	type FeedbackEntityStyleOverride,
-	type SomeSocketEntityLocation,
 	type EntityModelType,
 	type EntityOwner,
+	type FeedbackEntityStyleOverride,
 	type SomeEntityModel,
+	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { useMemo, useRef } from 'react'
-import type { JsonValue } from 'type-fest'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 

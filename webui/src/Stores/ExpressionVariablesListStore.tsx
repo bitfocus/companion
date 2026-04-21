@@ -1,11 +1,11 @@
-import { action, observable } from 'mobx'
-import { assertNever } from '~/Resources/util'
 import { applyPatch } from 'fast-json-patch'
+import { action, observable } from 'mobx'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { assertNever } from '~/Resources/util'
 
 export class ExpressionVariablesListStore {
 	readonly expressionVariables = observable.map<string, ClientExpressionVariableData>()

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, test } from 'vitest'
-import EventEmitter from 'events'
 import type { createSocket } from 'dgram'
+import EventEmitter from 'events'
+import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { InstanceSharedUdpManager } from '../../lib/Instance/Connection/SharedUdpManager.js'
 
 const mockCreateSocket = vi.hoisted(() =>

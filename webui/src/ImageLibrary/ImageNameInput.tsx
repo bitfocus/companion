@@ -1,5 +1,5 @@
+import { CAlert, CFormLabel } from '@coreui/react'
 import React from 'react'
-import { CFormLabel, CAlert } from '@coreui/react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 

@@ -1,31 +1,31 @@
-import { ControlBase } from '../ControlBase.js'
 import debounceFn from 'debounce-fn'
-import type {
-	ControlWithoutActions,
-	ControlWithoutEvents,
-	ControlWithOptions,
-	ControlWithoutActionSets,
-	ControlWithoutPushed,
-	ControlWithEntities,
-	ControlWithoutLayeredStyle,
-} from '../IControlFragments.js'
-import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
-import type { ControlDependencies } from '../ControlDependencies.js'
-import { EntityListPoolExpressionVariable } from '../Entities/EntityListPoolExpressionVariable.js'
+import jsonPatch from 'fast-json-patch'
+import type { JsonValue } from 'type-fest'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableModel,
 	ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import jsonPatch from 'fast-json-patch'
-import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
-import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
+import { ControlBase } from '../ControlBase.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { JsonValue } from 'type-fest'
+import { EntityListPoolExpressionVariable } from '../Entities/EntityListPoolExpressionVariable.js'
+import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
+import type {
+	ControlWithEntities,
+	ControlWithOptions,
+	ControlWithoutActions,
+	ControlWithoutActionSets,
+	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
+	ControlWithoutPushed,
+} from '../IControlFragments.js'
 
 /**
  * Class for an expression variable.

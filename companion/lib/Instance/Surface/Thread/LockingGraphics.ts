@@ -1,6 +1,6 @@
-import type { SurfaceSchemaBitmapConfig, LockingGraphicsGenerator } from '@companion-surface/host'
-import { Canvas } from '@napi-rs/canvas'
 import * as imageRs from '@julusian/image-rs'
+import { Canvas } from '@napi-rs/canvas'
+import type { LockingGraphicsGenerator, SurfaceSchemaBitmapConfig } from '@companion-surface/host'
 
 export class LockingGraphicsGeneratorImpl implements LockingGraphicsGenerator {
 	async generatePincodeChar(bitmapStyle: SurfaceSchemaBitmapConfig, keyCode: number | string): Promise<Uint8Array> {

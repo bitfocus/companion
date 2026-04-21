@@ -8,12 +8,24 @@
  * Individual Contributor License Agreement for companion along with
  * this program.
  */
-import LogController from '../../Log/Controller.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
+import debounceFn from 'debounce-fn'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { GraphicsRenderer } from '../../Graphics/Renderer.js'
+import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
+import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
 import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
-import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
+import type {
+	SatelliteControlStylePreset,
+	SatelliteSurfaceLayout,
+} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import {
 	BrightnessConfigField,
 	LegacyRotationConfigField,
@@ -21,12 +33,7 @@ import {
 	OffsetConfigFields,
 	RotationConfigField,
 } from '../CommonConfigFields.js'
-import debounceFn from 'debounce-fn'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { GraphicsRenderer } from '../../Graphics/Renderer.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -34,14 +41,7 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import type {
-	SatelliteControlStylePreset,
-	SatelliteSurfaceLayout,
-} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 
 export interface SatelliteDeviceInfo {
 	connectionId: string

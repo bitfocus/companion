@@ -1,17 +1,17 @@
-import { useMemo, useState, useCallback, useContext, useRef, memo, createContext } from 'react'
 import { CFormInput, CFormTextarea } from '@coreui/react'
+import { observer } from 'mobx-react-lite'
+import { createContext, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import Select, {
-	components as SelectComponents,
 	createFilter,
+	components as SelectComponents,
 	type ControlProps,
 	type ValueContainerProps,
 } from 'react-select'
-import { MenuPortalContext } from './MenuPortalContext.js'
-import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { CustomOption } from './DropDownInputFancy.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
+import { CustomOption } from './DropDownInputFancy.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface TextInputFieldProps {
 	tooltip?: string

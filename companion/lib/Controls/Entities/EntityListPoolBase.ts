@@ -1,4 +1,7 @@
-import LogController, { type Logger } from '../../Log/Controller.js'
+import debounceFn from 'debounce-fn'
+import isEqual from 'fast-deep-equal'
+import type { JsonValue } from 'type-fest'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
 	type EntityOwner,
@@ -7,22 +10,19 @@ import {
 	type SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
-import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
-import isEqual from 'fast-deep-equal'
-import type { InstanceDefinitionsForEntity, NewFeedbackValue, NewIsInvertedValue } from './Types.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import debounceFn from 'debounce-fn'
-import type { VariablesValues } from '../../Variables/Values.js'
-import { isLabelValid } from '@companion-app/shared/Label.js'
-import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { JsonValue } from 'type-fest'
-import { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
-import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
+import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariablesValues } from '../../Variables/Values.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
+import { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
+import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
+import type { InstanceDefinitionsForEntity, NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */

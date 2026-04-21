@@ -1,35 +1,35 @@
 import {
+	CAccordion,
+	CAccordionBody,
+	CAccordionHeader,
+	CAccordionItem,
 	CButton,
 	CButtonGroup,
 	CPopover,
-	CAccordion,
-	CAccordionItem,
-	CAccordionHeader,
-	CAccordionBody,
 } from '@coreui/react'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
-import type { LayeredStyleStore } from './StyleStore.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
+	faCircle,
+	faCube,
 	faEye,
 	faImage,
 	faLayerGroup,
+	faMinus,
 	faPlus,
 	faSquare,
 	faT,
 	faTrash,
-	faMinus,
-	faCircle,
-	faCube,
 } from '@fortawesome/free-solid-svg-icons'
-import { Tuck } from '~/Components/Tuck.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
-import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useMutationExt, trpc } from '~/Resources/TRPC.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Tuck } from '~/Components/Tuck.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import type { LayeredStyleStore } from './StyleStore.js'
 
 export function RemoveElementButton({
 	controlId,

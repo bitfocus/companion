@@ -1,11 +1,11 @@
-import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
 import { getLatestVersion } from './VersionUtil.js'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export function useModuleVersionSelectOptions(
 	moduleType: ModuleInstanceType,

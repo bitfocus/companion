@@ -1,8 +1,8 @@
+import CryptoJS from 'crypto-js'
 import { useCallback } from 'react'
-import { base64EncodeUint8Array } from '~/Resources/util.js'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import CryptoJS from 'crypto-js'
+import { base64EncodeUint8Array } from '~/Resources/util.js'
 
 /**
  * Hook for uploading image files to the image library

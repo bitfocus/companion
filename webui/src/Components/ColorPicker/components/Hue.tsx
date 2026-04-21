@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
-import { calculateXyPercent } from '../helpers/change.js'
 import { useColor } from '../context/useColor.js'
+import { calculateXyPercent } from '../helpers/change.js'
 import { ClickAndDragDiv } from './ClickAndDragDiv.js'
 import cssStyles from './Hue.module.css'
 

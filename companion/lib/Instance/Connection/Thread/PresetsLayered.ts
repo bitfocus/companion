@@ -1,43 +1,43 @@
 import { nanoid } from 'nanoid'
-import type {
-	CompanionPresetLayeredFeedback,
-	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
-	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
-	ExpressionOrValue as ExpressionOrValueModule,
-	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
-	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
-	ModuleLogger,
-} from '@companion-module/host'
-import {
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
-	type CompositeElementOptionKey,
-} from '@companion-app/shared/Model/StyleModel.js'
 import {
 	EntityModelType,
 	type FeedbackEntityModel,
 	type FeedbackEntityStyleOverride,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 import {
-	type ExpressionOrValue,
 	exprVal,
 	isExpressionOrValue,
 	optionsObjectToExpressionOptions,
+	type ExpressionOrValue,
 } from '@companion-app/shared/Model/Options.js'
 import type {
-	SomeButtonGraphicsElement,
-	ButtonGraphicsCanvasElement,
-	ButtonGraphicsBoxElement,
-	ButtonGraphicsGroupElement,
-	ButtonGraphicsImageElement,
-	ButtonGraphicsTextElement,
-	ButtonGraphicsLineElement,
 	ButtonGraphicsBounds,
-	ButtonGraphicsElementBase,
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsCanvasElement,
 	ButtonGraphicsCircleElement,
 	ButtonGraphicsCompositeElement,
+	ButtonGraphicsElementBase,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	type CompositeElementOptionKey,
+} from '@companion-app/shared/Model/StyleModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type {
+	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
+	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
+	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
+	CompanionPresetLayeredFeedback,
+	ExpressionOrValue as ExpressionOrValueModule,
+	ModuleLogger,
+	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
+} from '@companion-module/host'
 
 export function ConvertLayeredPresetFeedbacksToEntities(
 	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,

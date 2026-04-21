@@ -1,4 +1,3 @@
-import { useCallback, useContext, useRef, useState } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -13,18 +12,19 @@ import {
 } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { CModalExt } from '~/Components/CModalExt.js'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { useCallback, useContext, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import { useComputed } from '~/Resources/util.js'
-import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
-import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
+import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
+import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { InstanceEditPanelService } from './InstanceEditPanelService'
 
 interface InstanceVersionChangeButtonProps<TConfig extends ClientInstanceConfigBase> {

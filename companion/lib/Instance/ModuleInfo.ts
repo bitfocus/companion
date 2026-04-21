@@ -1,9 +1,9 @@
-import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import semver from 'semver'
-import type { SomeModuleVersionInfo } from './Types.js'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 
 /**
  * Information about a module

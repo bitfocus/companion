@@ -1,9 +1,9 @@
-import type { DataDatabase } from '../Data/Database.js'
-import type { TriggerCollection, TriggerCollectionData } from '@companion-app/shared/Model/TriggerModel.js'
-import type { TriggerEvents } from './TriggerEvents.js'
-import { publicProcedure, router } from '../UI/TRPC.js'
 import z from 'zod'
+import type { TriggerCollection, TriggerCollectionData } from '@companion-app/shared/Model/TriggerModel.js'
+import type { DataDatabase } from '../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../Resources/EnabledCollectionsBase.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import type { TriggerEvents } from './TriggerEvents.js'
 
 export class TriggerCollections extends EnabledCollectionsBaseController<TriggerCollectionData> {
 	readonly #events: TriggerEvents

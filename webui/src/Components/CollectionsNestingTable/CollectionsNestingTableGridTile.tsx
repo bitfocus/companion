@@ -2,7 +2,7 @@ import { faGrip } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useRef } from 'react'
-import type { ConnectDragSource, ConnectDropTarget, ConnectDragPreview } from 'react-dnd'
+import type { ConnectDragPreview, ConnectDragSource, ConnectDropTarget } from 'react-dnd'
 
 export function CollectionsNestingTableGridTile({
 	className,

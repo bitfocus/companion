@@ -1,18 +1,17 @@
-import {
-	EntityModelType,
-	type EntitySupportedChildGroupDefinition,
-	type SomeEntityModel,
-	type EntityOwner,
-} from '@companion-app/shared/Model/EntityModel.js'
 import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
-import { PreventDefaultHandler } from '~/Resources/util.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
-import { EditableEntityList } from './EntityList.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import {
+	EntityModelType,
+	type EntityOwner,
+	type EntitySupportedChildGroupDefinition,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { EditableEntityList } from './EntityList.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel

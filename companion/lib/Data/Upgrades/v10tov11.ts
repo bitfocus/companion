@@ -1,6 +1,7 @@
-import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
 import { cloneDeep } from 'lodash-es'
+import { nanoid } from 'nanoid'
+import type { JsonValue } from 'type-fest'
+import { CreateTriggerControlId, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type {
 	ExportFullv6,
 	ExportPageModelv6,
@@ -8,11 +9,10 @@ import type {
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { CompanionOptionValues } from '@companion-module/host'
-import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { CreateTriggerControlId, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
-import { nanoid } from 'nanoid'
+import type { CompanionOptionValues } from '@companion-module/host'
+import type { Logger } from '../../Log/Controller.js'
+import type { DataStoreBase } from '../StoreBase.js'
 
 /**
  * These Entity types are a snapshot of the v10 definitions, to preserve how they were then

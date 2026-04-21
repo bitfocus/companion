@@ -1,18 +1,18 @@
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
-import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import {
 	stringifyVariableValue,
-	type VariableValues,
 	type VariableValue,
+	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
 import type {
-	InstanceDefinitions,
 	CompositeElementDefinition,
 	CompositeElementIdString,
+	InstanceDefinitions,
 } from '../../Instance/Definitions.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ElementConversionCache } from '../ElementConversionCache.js'
 
 export interface ExpressionReferences {

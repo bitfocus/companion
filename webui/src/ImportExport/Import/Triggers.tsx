@@ -1,11 +1,11 @@
 import { CButton, CButtonGroup, CCallout, CFormCheck } from '@coreui/react'
-import { useCallback, useEffect, useState, useContext } from 'react'
-import { ImportRemap } from './Page.js'
-import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileCircleExclamation, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useCallback, useContext, useEffect, useState } from 'react'
+import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImportRemap } from './Page.js'
 
 interface ImportTriggersTabProps {
 	snapshot: ClientImportObject

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { trpc } from '~/Resources/TRPC'
 import Bowser from 'bowser'
 import { useEffect, useState } from 'react'
+import { trpc } from '~/Resources/TRPC'
 
 export interface CompanionVersion {
 	versionName: string

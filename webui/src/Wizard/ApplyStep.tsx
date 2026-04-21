@@ -1,5 +1,5 @@
-import { WIZARD_VERSION_3_0 } from './Constants.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { WIZARD_VERSION_3_0 } from './Constants.js'
 
 interface ApplyStepProps {
 	oldConfig: UserConfigModel

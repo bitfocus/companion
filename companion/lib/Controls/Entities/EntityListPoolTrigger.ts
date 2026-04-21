@@ -3,11 +3,11 @@ import {
 	FeedbackEntitySubType,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import type { ControlEntityInstance } from './EntityInstance.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 
 export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {

@@ -9,6 +9,8 @@
  * this program.
  */
 
+import { EventEmitter } from 'events'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -16,8 +18,6 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import { EventEmitter } from 'events'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)

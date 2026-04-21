@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode, useMemo } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
 interface SectionVisibilityContextType {
 	visibleSections: Set<string>

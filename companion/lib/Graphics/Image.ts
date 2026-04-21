@@ -10,13 +10,13 @@
  */
 
 import { Canvas, ImageData, loadImage, type Image as CanvasImage, type SKRSContext2D } from '@napi-rs/canvas'
-import LogController from '../Log/Controller.js'
 import {
 	ImageBase,
 	ImagePoolBase,
 	type LineStyle,
 	type TextLayoutCache,
 } from '@companion-app/shared/Graphics/ImageBase.js'
+import LogController from '../Log/Controller.js'
 import { uint8ArrayToBuffer } from '../Resources/Util.js'
 
 export { LineStyle }

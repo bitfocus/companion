@@ -1,13 +1,13 @@
-import { TriggerEvents } from './TriggerEvents.js'
-import type { IControlStore } from './IControlStore.js'
-import type { SomeControl } from './IControlFragments.js'
+import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { VariablesValues } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
-import type { VariablesValues } from '../Variables/Values.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
-import type { DataDatabase } from '../Data/Database.js'
+import type { SomeControl } from './IControlFragments.js'
+import type { IControlStore } from './IControlStore.js'
+import { TriggerEvents } from './TriggerEvents.js'
 
 /**
  * The data-layer implementation of IControlStore.

@@ -9,7 +9,8 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
+import EventEmitter from 'node:events'
+import { diffObjects } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type {
 	AllVariableDefinitions,
@@ -18,10 +19,9 @@ import type {
 	VariableDefinitionUpdate,
 	VariableDefinitionUpdateInitOp,
 } from '@companion-app/shared/Model/Variables.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import EventEmitter from 'node:events'
-import { diffObjects } from '@companion-app/shared/Diff.js'
 import type { Complete } from '@companion-module/base'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 /**
  * Variable definitions as defined by the instances/connections

@@ -1,18 +1,18 @@
-import LogController from '../Log/Controller.js'
 import path from 'path'
 import fs from 'fs-extra'
-import { validateManifest, type ModuleManifest } from '@companion-module/base/manifest'
+import semver from 'semver'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import {
 	validateManifest as validateManifestOld,
 	type ModuleManifest as ModuleManifestOld,
 } from '@companion-module/base-old'
-import type { ConnectionModuleVersionInfo, SomeModuleVersionInfo, SurfaceModuleVersionInfo } from './Types.js'
-import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import semver from 'semver'
-import { assertNever } from '@companion-app/shared/Util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import { validateManifest, type ModuleManifest } from '@companion-module/base/manifest'
 import { validateSurfaceManifest, type SurfaceModuleManifest } from '@companion-surface/base'
+import LogController from '../Log/Controller.js'
+import type { ConnectionModuleVersionInfo, SomeModuleVersionInfo, SurfaceModuleVersionInfo } from './Types.js'
 
 export class InstanceModuleScanner {
 	readonly #logger = LogController.createLogger('Instance/ModuleScanner')

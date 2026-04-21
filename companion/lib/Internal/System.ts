@@ -9,12 +9,24 @@
  * this program.
  */
 
-import os from 'os'
 import { exec } from 'child_process'
+import { EventEmitter } from 'events'
+import os from 'os'
+import { promisify } from 'util'
+import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
-import LogController from '../Log/Controller.js'
 import systeminformation from 'systeminformation'
+import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
+import {
+	stringifyVariableValue,
+	type VariableDefinition,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import type { VariablesController } from '../Variables/Controller.js'
 import type {
 	ActionForInternalExecution,
 	ActionForVisitor,
@@ -24,18 +36,6 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import { promisify } from 'util'
-import { EventEmitter } from 'events'
-import type { DataUserConfig } from '../Data/UserConfig.js'
-import debounceFn from 'debounce-fn'
-import type { AppInfo } from '../Registry.js'
-import {
-	stringifyVariableValue,
-	type VariableDefinition,
-	type VariableValues,
-} from '@companion-app/shared/Model/Variables.js'
-import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 
 const execAsync = promisify(exec)
 

@@ -1,9 +1,11 @@
+import { nanoid } from 'nanoid'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import {
 	EntityModelType,
 	type FeedbackEntityStyleOverride,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { exprExpr, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	type ButtonGraphicsBoxElement,
 	type ButtonGraphicsCanvasElement,
@@ -11,7 +13,6 @@ import {
 	type ButtonGraphicsTextElement,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { exprExpr, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
@@ -20,7 +21,6 @@ import {
 	type HorizontalAlignment,
 	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleModel.js'
-import { nanoid } from 'nanoid'
 
 interface ParsedLegacyStyle {
 	text: {

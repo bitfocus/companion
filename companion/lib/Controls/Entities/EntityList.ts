@@ -1,3 +1,4 @@
+import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -5,8 +6,9 @@ import {
 	type EntitySupportedChildGroupDefinition,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { ControlEntityInstance } from './EntityInstance.js'
 import { clamp } from '../../Resources/Util.js'
+import { ControlEntityInstance } from './EntityInstance.js'
+import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -14,8 +16,6 @@ import type {
 	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from './Types.js'
-import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
-import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 
 export type ControlEntityListDefinition = Pick<
 	EntitySupportedChildGroupDefinition,

@@ -1,9 +1,9 @@
 import type {
-	ButtonGraphicsTextDrawElement,
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsDrawBase,
-	SomeButtonGraphicsDrawElement,
 	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsTextDrawElement,
+	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsDecorationType,

@@ -9,20 +9,20 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import type {
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalVisitor,
-	InternalActionDefinition,
-	ActionForVisitor,
-	InternalModuleFragmentEvents,
-	ActionForInternalExecution,
-} from './Types.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { EventEmitter } from 'events'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import LogController from '../Log/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type {
+	ActionForInternalExecution,
+	ActionForVisitor,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
 
 export class InternalCustomVariables
 	extends EventEmitter<InternalModuleFragmentEvents>

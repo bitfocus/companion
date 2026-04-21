@@ -9,36 +9,36 @@
  * this program.
  */
 
-import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
+import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
-import type {
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalVisitor,
-	ActionForVisitor,
-	InternalActionDefinition,
-	InternalFeedbackDefinition,
-	InternalModuleFragmentEvents,
-	FeedbackForInternalExecution,
-	ActionForInternalExecution,
-} from './Types.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
-import EventEmitter from 'node:events'
-import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
-import { parseColorToNumber } from '../Resources/Util.js'
+import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type {
+	CompanionAdvancedFeedbackResult,
 	CompanionFeedbackButtonStyleResult,
 	CompanionOptionValues,
-	CompanionAdvancedFeedbackResult,
 } from '@companion-module/host'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { IPageStore } from '../Page/Store.js'
+import { parseColorToNumber } from '../Resources/Util.js'
+import type {
+	ActionForInternalExecution,
+	ActionForVisitor,
+	FeedbackForInternalExecution,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
+import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController

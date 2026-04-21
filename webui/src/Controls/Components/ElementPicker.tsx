@@ -1,9 +1,9 @@
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback } from 'react'
-import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 import classNames from 'classnames'
+import React, { useCallback } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface PropertyListItemProps {
 	option: SomeCompanionInputField

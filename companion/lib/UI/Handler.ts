@@ -9,14 +9,14 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import type { AppInfo } from '../Registry.js'
 import type { Server as HttpServer } from 'http'
 import type { Server as HttpsServer } from 'https'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
-import { WebSocketServer } from 'ws'
-import { createTrpcWsContext, type AppRouter } from './TRPC.js'
 import { nanoid } from 'nanoid'
+import { WebSocketServer } from 'ws'
+import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import { createTrpcWsContext, type AppRouter } from './TRPC.js'
 
 export class UIHandler {
 	readonly #logger = LogController.createLogger('UI/Handler')

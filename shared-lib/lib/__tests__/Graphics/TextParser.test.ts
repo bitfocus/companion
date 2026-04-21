@@ -1,11 +1,11 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
+import type { CompanionImageContext2D } from '../../Graphics/ImageBase.js'
 import {
-	resolveFontSizes,
 	computeTextLayout,
+	resolveFontSizes,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
 } from '../../Graphics/TextParser.js'
-import type { CompanionImageContext2D } from '../../Graphics/ImageBase.js'
 
 // Mock context that simulates measuring text with roughly 10px per character for simplicity
 function createMockContext(charWidth: number = 10, lineHeight: number = 14): CompanionImageContext2D {

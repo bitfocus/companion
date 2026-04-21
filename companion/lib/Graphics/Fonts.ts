@@ -1,6 +1,6 @@
-import { isPackaged } from '../Resources/Util.js'
-import { fileURLToPath } from 'url'
 import path from 'path'
+import { fileURLToPath } from 'url'
+import { isPackaged } from '../Resources/Util.js'
 
 export interface FontDefinition {
 	name: string

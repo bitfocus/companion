@@ -1,6 +1,6 @@
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
 import { ServiceUdpBase, type DgramRemoteInfo } from './UdpBase.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
 
 /**
  * Class providing the Artnet api.

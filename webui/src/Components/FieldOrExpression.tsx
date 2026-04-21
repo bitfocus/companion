@@ -1,14 +1,14 @@
 import { CButton } from '@coreui/react'
 import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback } from 'react'
-import { ExpressionInputField } from './ExpressionInputField'
-import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { observer } from 'mobx-react-lite'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { ExpressionInputField } from './ExpressionInputField'
 
 interface FieldOrExpressionProps {
 	localVariablesStore: LocalVariablesStore | null
