@@ -1,8 +1,8 @@
 import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
-import { nanoid } from 'nanoid'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
@@ -74,7 +74,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				try {
 					for (const file of imageFiles) {
 						// Generate a random ID for the image
-						const imageName = nanoid()
+						const imageName = humanId({ separator: '-', capitalize: false })
 
 						// Create the image placeholder first
 						const fileName = file.name.replace(/\.[^/.]+$/, '') // Remove extension
