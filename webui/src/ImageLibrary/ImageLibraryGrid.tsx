@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import fuzzysort from 'fuzzysort'
@@ -155,6 +155,8 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 					Here you can store images to be reused in your buttons. They get exposed as variables, and can be used
 					anywhere variables usually can.
 				</p>
+
+				<CAlert color="danger">This is in progress, and is not yet fully functional</CAlert>
 
 				<div className="image-library-controls">
 					<div className="d-flex gap-2 mb-3">

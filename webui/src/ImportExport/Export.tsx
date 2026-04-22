@@ -290,7 +290,7 @@ export const ExportWizardModal = observer(
 									/>
 								</div>
 
-								{/* <div className="indent3">
+								<div className="indent3">
 									<form.Field
 										name="imageLibrary"
 										children={(field) => (
@@ -302,7 +302,7 @@ export const ExportWizardModal = observer(
 											/>
 										)}
 									/>
-								</div> */}
+								</div>
 
 								<div style={{ paddingTop: '1em' }}>
 									<CFormLabel>File format</CFormLabel>

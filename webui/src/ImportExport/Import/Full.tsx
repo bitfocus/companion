@@ -357,11 +357,11 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</form.AppField>
 					</div>
 
-					{/* <div className="ms-2">
+					<div className="ms-2">
 						<form.AppField name="imageLibrary">
 							{(field) => <field.ImportToggleField label="Image Library" disabled={!snapshot.imageLibrary} />}
 						</form.AppField>
-					</div> */}
+					</div>
 
 					{/* <div className="ms-2">
 								<form.AppField name="userconfig">
