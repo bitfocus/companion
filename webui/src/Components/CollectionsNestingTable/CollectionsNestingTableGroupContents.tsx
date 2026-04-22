@@ -151,7 +151,8 @@ function CollectionsNestingTableCollectionGridContents({
 		const gap = parseFloat(elmComputedStyle.gap)
 		const availableWidth = elmSize.width - containerPadding
 
-		displayColumns = Math.floor((availableWidth + gap) / (tileTargetMinWidth + gap))
+		const calculatedColumns = Math.floor((availableWidth + gap) / (tileTargetMinWidth + gap))
+		displayColumns = Number.isFinite(calculatedColumns) ? Math.max(1, calculatedColumns) : 0
 	}
 
 	const spacerSpan = displayColumns > 0 ? displayColumns - (itemRows.length % displayColumns) : 0
