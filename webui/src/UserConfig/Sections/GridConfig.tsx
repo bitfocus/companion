@@ -123,6 +123,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 
 		const setMinColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
+			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
 					? {
@@ -134,6 +135,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 		}, [])
 		const setMaxColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
+			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
 					? {
@@ -145,6 +147,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 		}, [])
 		const setMinRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
+			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
 					? {
@@ -156,6 +159,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 		}, [])
 		const setMaxRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			const newValue = Number(e.currentTarget.value)
+			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
 					? {
