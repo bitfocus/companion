@@ -158,6 +158,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 					<CFormInput
 						type="text"
+						aria-label="Search images"
 						placeholder="Search images..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
