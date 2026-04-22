@@ -201,6 +201,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			try {
 				const drawProps: IpcDrawProps = {
 					controlId: controlDefinition.id,
+					pageNumber: drawItem.location?.pageNumber,
 				}
 
 				const style = drawItem.image.style
