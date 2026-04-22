@@ -2,7 +2,7 @@ import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCopy, faDownload, faEdit, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useId, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
@@ -67,10 +67,13 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			})
 			.then((imageData) => {
 				if (imageData?.image) {
+					const subtype = imageInfo.mimeType.split('/')[1]?.split('+')[0] // e.g. 'svg+xml' -> 'svg'
+					const ext = subtype === 'jpeg' ? 'jpg' : subtype || 'png'
+
 					// Create download link
 					const link = document.createElement('a')
 					link.href = imageData.image
-					link.download = `${imageInfo.name}.${imageInfo.mimeType.split('/')[1] || 'png'}`
+					link.download = `${imageInfo.name}.${ext}`
 					document.body.appendChild(link)
 					link.click()
 					document.body.removeChild(link)
@@ -160,6 +163,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		return new Date(timestamp).toLocaleString()
 	}
 
+	const descriptionFieldId = useId()
+
 	if (!selectedImageName) {
 		return (
 			<div className="image-library-editor">
@@ -214,9 +219,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<CForm className="row mb-3">
-				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
-					Name
-				</CFormLabel>
+				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</CFormLabel>
 				<CCol sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
 						<span className="font-monospace">{imageInfo.name}</span>
@@ -232,11 +235,15 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</CCol>
 			</CForm>
 			<CForm className="row mb-3">
-				<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+				<CFormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Description
 				</CFormLabel>
 				<CCol sm={8}>
-					<ImageDescriptionEditor imageName={selectedImageName} currentName={imageInfo.description} />
+					<ImageDescriptionEditor
+						id={descriptionFieldId}
+						imageName={selectedImageName}
+						currentName={imageInfo.description}
+					/>
 				</CCol>
 			</CForm>
 

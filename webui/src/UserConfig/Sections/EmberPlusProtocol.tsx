@@ -68,7 +68,7 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 				<strong>Provider Restarts</strong>
 			</p>
 
-			<p>
+			<div className="my-3">
 				The Ember Plus provider will automatically restart to rebuild the ember tree under the following conditions:
 				<br />
 				<ul>
@@ -79,7 +79,7 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 					<li>Adding new custom variables</li>
 				</ul>
 				This will disconnect clients and should be avoided during production use.
-			</p>
+			</div>
 
 			<p>
 				<strong>Node Stability</strong>

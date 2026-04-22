@@ -37,6 +37,7 @@ export const ExportWizardModal = observer(
 			expressionVariables: true,
 			imageLibrary: true,
 			includeSecrets: true,
+			imageLibrary: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
 			filename: userConfig.properties?.default_export_filename ?? '',

@@ -2,6 +2,7 @@ import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } 
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
 
@@ -65,8 +66,8 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 			.catch((err) => {
 				console.error('Failed to save image name:', err)
 				// Provide more specific error messages
-				if (err.message || err) {
-					setErrorMessage(err.message || err)
+				if (err) {
+					setErrorMessage(stringifyError(err))
 				} else {
 					setErrorMessage('Failed to save image name. Check it is valid and try again.')
 				}

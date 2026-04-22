@@ -1,15 +1,13 @@
-import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
+import { CAlert, CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import fuzzysort from 'fuzzysort'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
-import type {
-	CollectionsNestingTableCollection,
-	CollectionsNestingTableItem,
-} from '~/Components/CollectionsNestingTable/Types.js'
+import type { CollectionsNestingTableItem } from '~/Components/CollectionsNestingTable/Types.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
@@ -22,16 +20,10 @@ import { ImageLibraryDropzone } from './ImageLibraryDropzone'
 import { ImageThumbnail } from './ImageThumbnail'
 import { useImageLibraryUpload } from './useImageLibraryUpload'
 
-// Adapters for CollectionsNestingTable
-interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {
-	label: string
-	sortOrder: number
-	children: ImageCollection[]
-}
-
 interface ImageItem extends CollectionsNestingTableItem {
 	// Additional image info
 	imageInfo: ImageLibraryInfo
+	fuzzy: Fuzzysort.Prepared
 }
 
 interface ImageLibraryGridProps {
@@ -114,21 +106,17 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				collectionId: image.collectionId ?? null,
 				sortOrder: image.sortOrder,
 				imageInfo: image,
+				fuzzy: fuzzysort.prepare(`${image.name} ${image.description}`),
 			})),
 		[images]
 	)
 
-	const collections: ImageCollection[] = imageLibrary.rootCollections()
-
 	const collectionsApi = useImageLibraryCollectionsApi(confirmModalRef)
-
-	// Get all collection IDs for the collapse helper
-	const allCollectionIds = useMemo(() => collections.map((collection) => collection.id), [collections])
 
 	// ItemRow component for rendering individual images
 	const ItemRow = useCallback(
 		(item: ImageItem) => {
-			if (!item.imageInfo.name.toLowerCase().includes(searchQuery.toLowerCase())) return null
+			if (searchQuery && fuzzysort.single(searchQuery, item.fuzzy) === null) return null
 
 			return (
 				<ImageThumbnail
@@ -153,6 +141,8 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 					anywhere variables usually can.
 				</p>
 
+				<CAlert color="danger">This is in progress, and is not yet fully functional</CAlert>
+
 				<div className="image-library-controls">
 					<div className="d-flex gap-2 mb-3">
 						<CButtonGroup>
@@ -168,6 +158,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 					<CFormInput
 						type="text"
+						aria-label="Search images"
 						placeholder="Search images..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
@@ -178,7 +169,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 			<ImageLibraryDropzone />
 
 			<div className="image-library-grid-content" ref={gridContentRef}>
-				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={allCollectionIds}>
+				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={imageLibrary.allCollectionIds}>
 					<CollectionsNestingTable
 						ItemRow={ItemRow}
 						itemName="image"
@@ -186,7 +177,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 						collectionsApi={collectionsApi}
 						selectedItemId={selectedImageName}
 						gridLayout={true}
-						collections={collections}
+						collections={imageLibrary.rootCollections()}
 						items={imageItems}
 						NoContent={NoContent}
 					/>

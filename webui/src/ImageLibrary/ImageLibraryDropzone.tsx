@@ -71,6 +71,8 @@ export function ImageLibraryDropzone(): React.ReactElement | null {
 		let dragCounter = 0
 
 		const handleWindowDragEnter = (e: DragEvent) => {
+			e.preventDefault()
+
 			const items = e.dataTransfer?.items
 			if (items && Array.from(items).some((item) => item.kind === 'file')) {
 				dragCounter++
@@ -78,8 +80,12 @@ export function ImageLibraryDropzone(): React.ReactElement | null {
 			}
 		}
 
-		const handleWindowDragLeave = () => {
-			dragCounter--
+		const handleWindowDragLeave = (e: DragEvent) => {
+			e.preventDefault()
+
+			const items = e.dataTransfer?.items
+			if (!items || !Array.from(items).some((item) => item.kind === 'file')) return
+			dragCounter = Math.max(0, dragCounter - 1)
 			if (dragCounter === 0) {
 				setIsDragOver(false)
 			}

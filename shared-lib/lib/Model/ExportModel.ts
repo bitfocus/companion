@@ -31,8 +31,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	surfacesRemote?: Record<string, OutboundSurfaceInfo> // Added in v4.2
 	surfaceInstances?: ExportInstancesv6 // Added in v4.2
 	surfaceInstanceCollections?: SurfaceInstanceCollection[] // Added in v4.2
-	imageLibrary?: ImageLibraryExportData[] // Added in v4.x
-	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.x
+	imageLibrary?: ImageLibraryExportData[] // Added in v4.4
+	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.4
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {
@@ -40,8 +40,8 @@ export interface ExportPageModelv6 extends ExportBase<'page'> {
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
 	oldPageNumber: number
-	imageLibrary?: ImageLibraryExportData[]
-	imageLibraryCollections?: ImageLibraryCollection[]
+	imageLibrary?: ImageLibraryExportData[] // Added in v4.4
+	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.4
 }
 
 export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
@@ -49,8 +49,8 @@ export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
 	triggerCollections: TriggerCollection[] | undefined // Added in v4.1
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
-	imageLibrary?: ImageLibraryExportData[]
-	imageLibraryCollections?: ImageLibraryCollection[]
+	imageLibrary?: ImageLibraryExportData[] // Added in v4.4
+	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.4
 }
 
 export type ExportTriggerContentv6 = Record<string, any> // TODO

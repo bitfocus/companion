@@ -2,9 +2,8 @@ import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import React from 'react'
 import type { ConnectDropTarget } from 'react-dnd'
-import useElementClientSize from '~/Hooks/useElementInnerSize.js'
+import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
@@ -152,7 +151,8 @@ function CollectionsNestingTableCollectionGridContents({
 		const gap = parseFloat(elmComputedStyle.gap)
 		const availableWidth = elmSize.width - containerPadding
 
-		displayColumns = Math.floor((availableWidth + gap) / (tileTargetMinWidth + gap))
+		const calculatedColumns = Math.floor((availableWidth + gap) / (tileTargetMinWidth + gap))
+		displayColumns = Number.isFinite(calculatedColumns) ? Math.max(1, calculatedColumns) : 0
 	}
 
 	const spacerSpan = displayColumns > 0 ? displayColumns - (itemRows.length % displayColumns) : 0

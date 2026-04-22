@@ -217,7 +217,8 @@ export class ImportExportController {
 
 			// rest is done from browser
 			return [null, clientObject]
-		}
+		},
+		z.null()
 	)
 
 	/**

@@ -21,6 +21,12 @@ import { ImageLibraryCollections } from './ImageLibraryCollections.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 10 // 10MB limit, just in case
 
+/** Returns the decoded byte length of a base64 string (strips padding). */
+function base64ByteLength(base64: string): number {
+	const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0
+	return Math.floor((base64.length * 3) / 4) - padding
+}
+
 export interface ImageLibraryData {
 	originalImage: string // base64 data URL (empty string if not uploaded yet)
 	previewImage: string // base64 data URL (empty string if not uploaded yet)
@@ -54,7 +60,10 @@ export class ImageLibrary {
 				this.#events.emit('update', [{ type: 'update', itemName: userData.imageName, info: imageInfo.info }])
 
 				return userData.imageName
-			}
+			},
+			z.object({
+				imageName: z.string(),
+			})
 		)
 
 		this.#events.setMaxListeners(0)
@@ -222,20 +231,20 @@ export class ImageLibrary {
 	 */
 	createEmptyImage(name: string, description: string): string {
 		// Validate and sanitize the name
-		const sageName = makeLabelSafe(name)
-		if (!sageName) {
+		const safeName = makeLabelSafe(name)
+		if (!safeName) {
 			throw new Error('Invalid image name')
 		}
 
 		// Check if name already exists
-		if (this.#dbTable.get(sageName)) {
-			throw new Error(`Image with name "${sageName}" already exists`)
+		if (this.#dbTable.get(safeName)) {
+			throw new Error(`Image with name "${safeName}" already exists`)
 		}
 
 		const now = Date.now()
 
 		const info: ImageLibraryInfo = {
-			name: sageName,
+			name: safeName,
 			description: description,
 			originalSize: 0,
 			previewSize: 0,
@@ -252,20 +261,20 @@ export class ImageLibrary {
 			info,
 		}
 
-		this.#dbTable.set(sageName, imageData)
+		this.#dbTable.set(safeName, imageData)
 
 		// Create variable for the new image
-		this.#updateImageVariable(sageName, imageData.originalImage)
+		this.#updateImageVariable(safeName, imageData.originalImage)
 
 		// Update variable definitions
 		this.#updateImageVariableDefinitions()
 
-		this.#logger.info(`Created empty image ${sageName} (${description})`)
+		this.#logger.info(`Created empty image ${safeName} (${description})`)
 
 		// Notify clients
-		this.#events.emit('update', [{ type: 'update', itemName: sageName, info }])
+		this.#events.emit('update', [{ type: 'update', itemName: safeName, info }])
 
-		return sageName
+		return safeName
 	}
 
 	/**
@@ -445,11 +454,16 @@ export class ImageLibrary {
 		// Get image dimensions and create preview
 		const { width, height, previewDataUrl } = await this.#graphicsController.executeCreatePreview(dataUrlString)
 
+		// Compute actual decoded byte sizes from the base64 payloads (data-URL string length
+		// is ~33 % larger than the real binary size due to base64 encoding plus the MIME prefix).
+		const originalByteSize = base64ByteLength(dataUrlMatch[2])
+		const previewByteSize = base64ByteLength(previewDataUrl.match(/^data:[^,]+,(.*)$/)?.[1] ?? '')
+
 		// Update the existing image info
-		existingData.info.originalSize = dataUrlString.length
-		existingData.info.previewSize = previewDataUrl.length
+		existingData.info.originalSize = originalByteSize
+		existingData.info.previewSize = previewByteSize
 		existingData.info.modifiedAt = Date.now()
-		existingData.info.checksum = crypto.createHash('sha-1').update(dataUrlString).digest('hex')
+		existingData.info.checksum = crypto.createHash('sha1').update(dataUrlString).digest('hex')
 		existingData.info.mimeType = dataUrlMatch[1]
 
 		// Update the image data
@@ -459,7 +473,7 @@ export class ImageLibrary {
 		// Store in database
 		this.#dbTable.set(imageName, existingData)
 
-		this.#logger.info(`Updated image ${imageName} - ${width}x${height}, ${dataUrlString.length} bytes`)
+		this.#logger.info(`Updated image ${imageName} - ${width}x${height}, ${originalByteSize} bytes`)
 
 		// Update the variable for the image
 		this.#updateImageVariable(imageName, dataUrlString)
@@ -550,27 +564,40 @@ export class ImageLibrary {
 
 		this.#collections.replaceCollections(collections)
 
+		const importedImages: Array<{ name: string; info: ImageLibraryInfo }> = []
+
 		// Import new images with full image data
 		for (const imageData of images) {
+			// Sanitize the name and resolve any duplicates that arise within the batch
+			let safeName: string
+			try {
+				safeName = this.makeImageNameUnique(imageData.info.name)
+			} catch {
+				this.#logger.warn(`Skipping image with invalid name: "${imageData.info.name}"`)
+				continue
+			}
+
+			const info: ImageLibraryInfo = { ...imageData.info, name: safeName }
 			const fullImageData: ImageLibraryData = {
 				originalImage: imageData.originalImage,
 				previewImage: imageData.previewImage,
-				info: { ...imageData.info },
+				info,
 			}
 
-			this.#dbTable.set(imageData.info.name, fullImageData)
-			this.#logger.info(`Imported image ${imageData.info.name} with image data`)
+			this.#dbTable.set(safeName, fullImageData)
+			this.#logger.info(`Imported image ${safeName} with image data`)
+			importedImages.push({ name: safeName, info })
 		}
 
 		// Update variables for imported images
 		this.#updateAllImageVariables()
 
 		// Notify clients
-		if (this.#events.listenerCount('update') > 0 && images.length > 0) {
-			const changes: ImageLibraryUpdate[] = images.map((imageData) => ({
+		if (this.#events.listenerCount('update') > 0 && importedImages.length > 0) {
+			const changes: ImageLibraryUpdate[] = importedImages.map(({ name, info }) => ({
 				type: 'update',
-				itemName: imageData.info.name,
-				info: imageData.info,
+				itemName: name,
+				info,
 			}))
 			this.#events.emit('update', changes)
 		}

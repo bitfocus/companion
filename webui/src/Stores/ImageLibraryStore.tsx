@@ -59,6 +59,21 @@ export class ImageLibraryStore implements GenericCollectionsStore<null> {
 		return this.store.size
 	}
 
+	public get allCollectionIds(): string[] {
+		const collectionIds: string[] = []
+
+		const collectCollectionIds = (collections: Iterable<ImageLibraryCollection>): void => {
+			for (const collection of collections || []) {
+				collectionIds.push(collection.id)
+				collectCollectionIds(collection.children)
+			}
+		}
+
+		collectCollectionIds(this.collections.values())
+
+		return collectionIds
+	}
+
 	public rootCollections(): ImageLibraryCollection[] {
 		return Array.from(this.collections.values()).sort((a, b) => a.sortOrder - b.sortOrder)
 	}

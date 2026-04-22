@@ -2,6 +2,7 @@ import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } 
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
 
@@ -41,13 +42,13 @@ export const ImageAddModal = observer(
 		const createMutation = useMutationExt(trpc.imageLibrary.create.mutationOptions())
 
 		const handleCreate = useCallback(() => {
-			if (!isLabelValid(localValue)) {
-				// The label is already shown as invalid, no need to tell them again
+			if (!localValue.trim()) {
+				setErrorMessage('Image name is required')
 				return
 			}
 
-			if (!localValue.trim()) {
-				setErrorMessage('Image name is required')
+			if (!isLabelValid(localValue)) {
+				// The label is already shown as invalid, no need to tell them again
 				return
 			}
 
@@ -71,8 +72,8 @@ export const ImageAddModal = observer(
 				.catch((err) => {
 					console.error('Failed to create image:', err)
 					// Provide more specific error messages
-					if (err.message || err) {
-						setErrorMessage(err.message || err)
+					if (err) {
+						setErrorMessage(stringifyError(err))
 					} else {
 						setErrorMessage('Failed to create image. Check the name is valid and try again.')
 					}
