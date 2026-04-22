@@ -7,7 +7,7 @@ import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import useElementClientSize from '~/Hooks/useElementInnerSize.js'
+import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'

@@ -172,7 +172,6 @@ function CollectionsNestingTableRowBase({
 	const { gridLayout } = useCollectionsNestingTableContext()
 
 	const ref = useRef<HTMLDivElement>(null)
-	const { gridLayout } = useCollectionsNestingTableContext()
 	preview(drop(ref))
 
 	return (
