@@ -54,7 +54,10 @@ export class ImageLibrary {
 				this.#events.emit('update', [{ type: 'update', itemName: userData.imageName, info: imageInfo.info }])
 
 				return userData.imageName
-			}
+			},
+			z.object({
+				imageName: z.string(),
+			})
 		)
 
 		this.#events.setMaxListeners(0)

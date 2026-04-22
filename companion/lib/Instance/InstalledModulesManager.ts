@@ -91,7 +91,8 @@ export class InstanceInstalledModulesManager {
 			}
 
 			return true
-		}
+		},
+		z.null()
 	)
 
 	constructor(

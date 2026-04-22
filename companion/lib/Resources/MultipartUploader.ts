@@ -25,6 +25,7 @@ export class MultipartUploader<TRes, TCompleteData> {
 		updateProgress: (percent: number) => void,
 		ctx: TrpcContext
 	) => Promise<TRes>
+	readonly #userDataSchema: z.ZodType<TCompleteData>
 
 	readonly #progressEvents = new EventEmitter<{ [id: `progress:${string}`]: [progress: number | null] }>()
 
@@ -37,11 +38,13 @@ export class MultipartUploader<TRes, TCompleteData> {
 			userData: TCompleteData,
 			updateProgress: (percent: number) => void,
 			ctx: TrpcContext
-		) => Promise<TRes>
+		) => Promise<TRes>,
+		userDataSchema: z.ZodType<TCompleteData>
 	) {
 		this.#logger = LogController.createLogger(logPrefix)
 		this.#maxUploadSize = maxUploadSize
 		this.#sessionCompleteCallback = sessionCompleteCallback
+		this.#userDataSchema = userDataSchema
 
 		this.#progressEvents.setMaxListeners(0)
 	}
@@ -120,7 +123,7 @@ export class MultipartUploader<TRes, TCompleteData> {
 					z.object({
 						sessionId: z.string(),
 						expectedChecksum: z.string().length(40), // SHA-1 checksum is 40
-						userData: z.any(), // TODO: figure out how to make this work with a generic
+						userData: this.#userDataSchema,
 					})
 				)
 				.mutation(async ({ input, ctx }) => {
