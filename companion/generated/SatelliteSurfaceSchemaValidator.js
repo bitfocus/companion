@@ -1,4 +1,3 @@
-/* eslint-disable */
 'use strict'
 export const validate = validate20
 export default validate20

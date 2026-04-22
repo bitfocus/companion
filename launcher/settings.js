@@ -1,6 +1,6 @@
 // @ts-check
+import { fileURLToPath } from 'node:url'
 import { app, BrowserWindow, dialog, shell } from 'electron'
-import { fileURLToPath } from 'url'
 
 /** @type {BrowserWindow | null} */
 let settingsWindow = null

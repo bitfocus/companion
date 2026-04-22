@@ -10,13 +10,13 @@
  *
  */
 
-import { EventEmitter } from 'events'
-import isEqual from 'fast-deep-equal'
-import LogController from '../../Log/Controller.js'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
-import { OffsetConfigFields, RotationConfigField, LockConfigFields } from '../CommonConfigFields.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import isEqual from 'fast-deep-equal'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import LogController from '../../Log/Controller.js'
+import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {
@@ -36,7 +36,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 		id: 'emulator_rows',
 		type: 'number',
 		label: 'Row count',
-		default: 4,
+		default: DefaultConfig.emulator_rows,
 		min: 1,
 		step: 1,
 		max: 100,
@@ -45,7 +45,7 @@ const configFields: CompanionSurfaceConfigField[] = [
 		id: 'emulator_columns',
 		type: 'number',
 		label: 'Column count',
-		default: 8,
+		default: DefaultConfig.emulator_columns,
 		min: 1,
 		step: 1,
 		max: 100,
@@ -56,13 +56,13 @@ const configFields: CompanionSurfaceConfigField[] = [
 		id: 'emulator_control_enable',
 		type: 'checkbox',
 		label: 'Enable support for Logitech R400/Mastercue/DSan',
-		default: true,
+		default: DefaultConfig.emulator_control_enable,
 	},
 	{
 		id: 'emulator_prompt_fullscreen',
 		type: 'checkbox',
 		label: 'Prompt to enter fullscreen',
-		default: true,
+		default: DefaultConfig.emulator_prompt_fullscreen,
 	},
 	...LockConfigFields,
 ]
@@ -169,17 +169,13 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		return this.#lastLockedState
 	}
 
-	getDefaultConfig(): EmulatorConfig {
-		return structuredClone(DefaultConfig)
-	}
-
 	/**
 	 * Process the information from the GUI and what is saved in database
 	 */
 	setConfig(config: EmulatorConfig, _force = false): void {
 		// Populate some defaults
-		if (!config.emulator_columns) config.emulator_columns = this.getDefaultConfig().emulator_columns
-		if (!config.emulator_rows) config.emulator_rows = this.getDefaultConfig().emulator_rows
+		if (!config.emulator_columns) config.emulator_columns = DefaultConfig.emulator_columns
+		if (!config.emulator_rows) config.emulator_rows = DefaultConfig.emulator_rows
 
 		// Send config to clients
 		if (this.#events.listenerCount('emulatorConfig') > 0) {

@@ -1,9 +1,9 @@
-import { ServiceBase } from './Base.js'
-import net, { type Socket } from 'net'
-import LogController from '../Log/Controller.js'
-import { SatelliteSocketWrapper, type ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
+import net, { type Socket } from 'node:net'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import LogController from '../Log/Controller.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
+import { ServiceBase } from './Base.js'
+import { SatelliteSocketWrapper, type ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 
 /**
  * Class providing the Satellite/Remote Surface api over tcp.

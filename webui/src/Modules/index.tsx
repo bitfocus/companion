@@ -1,7 +1,7 @@
 import { CCol, CRow } from '@coreui/react'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { memo, useCallback } from 'react'
 import { ModulesList, type ModuleTypeAndIdPair } from './ModulesList.js'
-import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 
 export const ModulesPage = memo(function ConnectionsPage() {
 	const matchRoute = useMatchRoute()

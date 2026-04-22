@@ -1,6 +1,6 @@
+import { useSubscription } from '@trpc/tanstack-react-query'
 import { useState } from 'react'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { trpc } from '~/Resources/TRPC'
 
 /**

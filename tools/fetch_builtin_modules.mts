@@ -1,12 +1,12 @@
-import { fetch, fs, path, usePowerShell } from 'zx'
+import crypto from 'crypto'
 import { Readable } from 'node:stream'
 import { promisify } from 'node:util'
-import crypto from 'crypto'
-import { generateVersionString } from './lib.mts'
-import { AbortError } from 'p-retry'
 import { gunzip } from 'zlib'
+import { AbortError } from 'p-retry'
 import * as tarfs from 'tar-fs'
+import { fetch, fs, path, usePowerShell } from 'zx'
 import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
+import { generateVersionString } from './lib.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
@@ -59,8 +59,11 @@ async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, a
 		headers: {
 			'User-Agent': userAgent,
 		},
-		signal: abortControl.signal,
+		signal: AbortSignal.any([abortControl.signal, AbortSignal.timeout(30000)]),
 	})
+	if (!response.ok) {
+		throw new Error(`Failed to fetch module: HTTP ${response.status} ${response.statusText}`)
+	}
 	if (!response.body) throw new Error('Failed to fetch module, got no body')
 
 	// Download into memory with a size limit
@@ -87,6 +90,7 @@ async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, a
 		throw new Error('Failed to decompress data')
 	}
 
+	await fs.remove(moduleDir).catch(() => null)
 	await fs.mkdirp(moduleDir)
 
 	await new Promise((resolve, reject) => {

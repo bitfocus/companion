@@ -1,16 +1,16 @@
+import { toJS } from 'mobx'
+import type { JsonValue } from 'type-fest'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ResolveExpression, type GetVariableValueProps } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import {
 	convertExpressionOptionsWithoutParsing,
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { assertNever, deepFreeze, useComputed } from '~/Resources/util.js'
-import { sandbox } from '~/Resources/sandbox.js'
 import type { CompanionOptionValues } from '@companion-module/base'
-import { toJS } from 'mobx'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import type { JsonValue } from 'type-fest'
+import { sandbox } from '~/Resources/sandbox.js'
+import { assertNever, deepFreeze, useComputed } from '~/Resources/util.js'
 
 export type IsVisibleFn = (
 	options: CompanionOptionValues,

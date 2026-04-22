@@ -9,26 +9,26 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import type { ActionRecorder } from '../Instance/ActionRecorder.js'
-import type { IPageStore } from '../Page/Store.js'
-import type {
-	ActionForVisitor,
-	FeedbackForVisitor,
-	FeedbackForInternalExecution,
-	InternalModuleFragment,
-	InternalVisitor,
-	InternalActionDefinition,
-	InternalFeedbackDefinition,
-	InternalModuleFragmentEvents,
-	ActionForInternalExecution,
-} from './Types.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import { EventEmitter } from 'node:events'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { EventEmitter } from 'events'
-import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { ActionRecorder } from '../Instance/ActionRecorder.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type {
+	ActionForInternalExecution,
+	ActionForVisitor,
+	FeedbackForInternalExecution,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
 
 export class InternalActionRecorder
 	extends EventEmitter<InternalModuleFragmentEvents>

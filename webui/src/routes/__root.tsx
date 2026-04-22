@@ -1,7 +1,7 @@
-import React, { Suspense } from 'react'
-import { createRootRoute, type ErrorComponentProps, Outlet } from '@tanstack/react-router'
-import { ErrorFallback } from '~/Resources/Error.js'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { createRootRoute, Outlet, type ErrorComponentProps } from '@tanstack/react-router'
+import React, { Suspense } from 'react'
+import { ErrorFallback } from '~/Resources/Error.js'
 import { queryClient } from '../Resources/TRPC.js'
 
 export const Route = createRootRoute({

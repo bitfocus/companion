@@ -1,5 +1,5 @@
-import type { VariableValue } from './Variables.js'
 import type { CollectionBase } from './Collections.js'
+import type { VariableValue } from './Variables.js'
 
 export interface CustomVariableDefinition {
 	description: string

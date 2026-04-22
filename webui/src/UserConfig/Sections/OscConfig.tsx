@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
-import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 
 export const OscConfig = observer(function OscConfig(props: UserConfigProps) {
 	return (

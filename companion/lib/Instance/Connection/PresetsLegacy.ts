@@ -1,6 +1,5 @@
-import type { Logger } from '../../Log/Controller.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type {
@@ -14,12 +13,13 @@ import type {
 	CompanionPresetAction,
 	CompanionPresetDefinition,
 } from '@companion-module/base-old'
+import type { Complete } from '@companion-module/host'
+import type { Logger } from '../../Log/Controller.js'
 import {
 	convertActionsDelay,
 	convertPresetFeedbacksToEntities,
 	ConvertPresetStyleToDrawStyle,
 } from './Thread/PresetUtils.js'
-import type { Complete } from '@companion-module/host'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],

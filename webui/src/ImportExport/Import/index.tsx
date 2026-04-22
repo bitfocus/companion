@@ -1,10 +1,10 @@
 import { CButton } from '@coreui/react'
 import { useCallback, useContext, useEffect, useState } from 'react'
-import { ImportPageWizard } from './Page.js'
-import { ImportFullWizard } from './Full.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImportFullWizard } from './Full.js'
+import { ImportPageWizard } from './Page.js'
 
 interface ImportWizardProps {
 	importInfo: [ClientImportObject, Record<string, string | undefined>]

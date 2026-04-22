@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import type { SurfaceInstancesStore } from '~/Stores/SurfaceInstancesStore'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
+import type { SurfaceInstancesStore } from '~/Stores/SurfaceInstancesStore'
 
 export function useSurfaceInstancesSubscription(store: SurfaceInstancesStore): boolean {
 	const [ready, setReady] = useState(false)

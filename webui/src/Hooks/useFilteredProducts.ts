@@ -1,9 +1,9 @@
-import { useComputed } from '~/Resources/util.js'
 import { go as fuzzySearch } from 'fuzzysort'
+import { useContext } from 'react'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { useContext } from 'react'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
 export function useAllModuleProducts(

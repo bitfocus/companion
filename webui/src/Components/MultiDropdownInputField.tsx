@@ -1,13 +1,15 @@
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
-import { useContext, useMemo, useCallback } from 'react'
-import Select, { createFilter } from 'react-select'
-import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
-import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
-import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { createContext, useCallback, useContext, useMemo } from 'react'
+import Select, { createFilter, components as SelectComponents, type MultiValueRemoveProps } from 'react-select'
+import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { useComputed } from '~/Resources/util.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
+
+const IsAtMinimumContext = createContext(false)
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -116,6 +118,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		[setValue, value, minSelection, maxSelection]
 	)
 
+	const isAtMinimum = typeof minSelection === 'number' && currentValue.length <= minSelection
 	const minChoicesForSearch2 = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
 
 	// const selectRef = useRef<any>(null)
@@ -136,7 +139,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		value: currentValue,
 		onChange: onChange,
 		filterOption: createFilter({ ignoreAccents: false }),
-		components: { MenuList: WindowedMenuList },
+		components: { MenuList: WindowedMenuList, MultiValueRemove: MinAwareMultiValueRemove },
 		onBlur: onBlur,
 	}
 
@@ -157,30 +160,49 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
 
 	return (
-		<div
-			className={classNames(
-				{
-					'select-tooltip': true,
-					'select-invalid': !!checkValid && !checkValid(currentValue.map((v) => v.value) ?? []),
-				},
-				className
-			)}
-			title={tooltip}
-		>
-			{allowCustom ? (
-				<CreatableSelect
-					{...selectProps}
-					// ref={selectRef}
-					className={`${selectProps.className} select-control-editable`}
-					isSearchable={true}
-					noOptionsMessage={noOptionsMessage}
-					createOptionPosition="first"
-					formatCreateLabel={formatCreateLabel}
-					isValidNewOption={isValidNewOption}
-				/>
-			) : (
-				<Select {...selectProps} />
-			)}
-		</div>
+		<IsAtMinimumContext.Provider value={isAtMinimum}>
+			<div
+				className={classNames(
+					{
+						'select-tooltip': true,
+						'select-invalid': !!checkValid && !checkValid(currentValue.map((v) => v.value) ?? []),
+					},
+					className
+				)}
+				title={tooltip}
+			>
+				{allowCustom ? (
+					<CreatableSelect
+						{...selectProps}
+						// ref={selectRef}
+						className={`${selectProps.className} select-control-editable`}
+						isSearchable={true}
+						noOptionsMessage={noOptionsMessage}
+						createOptionPosition="first"
+						formatCreateLabel={formatCreateLabel}
+						isValidNewOption={isValidNewOption}
+					/>
+				) : (
+					<Select {...selectProps} />
+				)}
+			</div>
+		</IsAtMinimumContext.Provider>
 	)
 }) as (props: MultiDropdownInputFieldProps) => JSX.Element
+
+function MinAwareMultiValueRemove(props: MultiValueRemoveProps<DropdownChoiceInt, true, never>) {
+	const isAtMinimum = useContext(IsAtMinimumContext)
+	if (isAtMinimum) {
+		const { innerProps, ...rest } = props
+		return (
+			<SelectComponents.MultiValueRemove
+				{...rest}
+				innerProps={{
+					...innerProps,
+					style: { ...innerProps.style, opacity: 0.3, cursor: 'not-allowed' },
+				}}
+			/>
+		)
+	}
+	return <SelectComponents.MultiValueRemove {...props} />
+}

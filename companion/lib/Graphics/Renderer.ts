@@ -9,13 +9,13 @@
  * this program.
  */
 
-import { Image, type TextLayoutCache } from './Image.js'
-import { ParseAlignment, parseColor } from '../Resources/Util.js'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ImageResult } from './ImageResult.js'
-import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import QuickLRU from 'quick-lru'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { ParseAlignment, parseColor } from '../Resources/Util.js'
+import { Image, type TextLayoutCache } from './Image.js'
+import { ImageResult } from './ImageResult.js'
 import type { RendererButtonStyle, RendererDrawStyle } from './Types.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'

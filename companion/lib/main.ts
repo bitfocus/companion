@@ -1,28 +1,30 @@
 /* eslint-disable n/no-process-exit */
 
 // Setup some fixes before loading any imports
-import './Resources/FixImports.js'
-
+// prettier-ignore
+import './Resources/FixImports.js';
 // Setup segfault handler
-import '@julusian/segfault-raub'
-
+// prettier-ignore
+import '@julusian/segfault-raub';
 // Setup logging before anything else runs
-import logger from './Log/Controller.js'
+// prettier-ignore
+import logger from './Log/Controller.js';
+// End of special setup imports
 
+import net, { isIPv6 } from 'node:net'
+import os from 'node:os'
+import path from 'node:path'
 // Now we can think about startup
 import { Command } from 'commander'
-import { Registry } from './Registry.js'
-import os from 'os'
-import path from 'path'
-import fs from 'fs-extra'
 import envPaths from 'env-paths'
+import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
-import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { type SyslogTransportOptions } from 'winston-syslog'
-import net, { isIPv6 } from 'net'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { isPackaged } from './Resources/Util.js'
+import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
+import { Registry } from './Registry.js'
 import { DISABLE_IPv6, GLOBAL_BIND_ADDRESS } from './Resources/Constants.js'
+import { isPackaged } from './Resources/Util.js'
 
 const program = new Command()
 

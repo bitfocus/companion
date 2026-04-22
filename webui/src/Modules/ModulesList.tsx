@@ -1,6 +1,4 @@
-import { useCallback, useContext, useState } from 'react'
 import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faEyeSlash,
 	faGamepad,
@@ -9,20 +7,22 @@ import {
 	faWarning,
 	type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useState } from 'react'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { useAllModuleProducts, filterProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
-import { ImportModules } from './ImportCustomModule.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
-import { RefreshModulesList } from './RefreshModulesList.js'
-import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
-import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImportModules } from './ImportCustomModule.js'
+import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { RefreshModulesList } from './RefreshModulesList.js'
 
 interface VisibleModulesState {
 	installed: boolean

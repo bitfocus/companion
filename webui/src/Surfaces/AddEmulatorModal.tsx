@@ -1,4 +1,3 @@
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -11,15 +10,16 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { CModalExt } from '~/Components/CModalExt.js'
-import { useForm } from '@tanstack/react-form'
-import { nanoid } from 'nanoid'
-import { InlineHelp } from '~/Components/InlineHelp.js'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useForm } from '@tanstack/react-form'
+import { nanoid } from 'nanoid'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt, type RouterInputs } from '~/Resources/TRPC'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 type EmulatorAddInput = RouterInputs['surfaces']['emulatorAdd']
 

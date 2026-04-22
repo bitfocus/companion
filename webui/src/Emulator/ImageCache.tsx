@@ -1,5 +1,5 @@
 import type { TRPCClientErrorLike } from '@trpc/client'
-import { type TRPCSubscriptionResult, useSubscription } from '@trpc/tanstack-react-query'
+import { useSubscription, type TRPCSubscriptionResult } from '@trpc/tanstack-react-query'
 import { observable, runInAction } from 'mobx'
 import { useMemo } from 'react'
 import { trpc } from '~/Resources/TRPC'

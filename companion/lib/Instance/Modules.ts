@@ -9,28 +9,28 @@
  * this program.
  */
 
-import path from 'path'
-import { InstanceModuleScanner } from './ModuleScanner.js'
+import EventEmitter from 'node:events'
+import path from 'node:path'
 import type express from 'express'
+import jsonPatch from 'fast-json-patch'
+import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	ClientModuleInfo,
 	ModuleInfoUpdate,
 	ModuleInfoUpdateId,
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
-import LogController from '../Log/Controller.js'
-import type { InstanceController } from './Controller.js'
-import jsonPatch from 'fast-json-patch'
-import type { ModuleStoreService } from './ModuleStore.js'
-import { router, publicProcedure, toIterable } from '../UI/TRPC.js'
-import EventEmitter from 'node:events'
-import z from 'zod'
-import { InstanceModuleInfo } from './ModuleInfo.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { SomeModuleVersionInfo } from './Types.js'
-import type { AppInfo } from '../Registry.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { InstanceController } from './Controller.js'
+import { InstanceModuleInfo } from './ModuleInfo.js'
+import { InstanceModuleScanner } from './ModuleScanner.js'
+import type { ModuleStoreService } from './ModuleStore.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 
 type InstanceModulesEvents = {
 	modulesUpdate: [change: ModuleInfoUpdate]

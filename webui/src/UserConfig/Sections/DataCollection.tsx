@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { CButton } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { useState } from 'react'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
-import { CButton } from '@coreui/react'
 import { UsageDataModal } from '../UsageDataModal.js'
 
 export const DataCollectionConfig = observer(function DataCollectionConfig(props: UserConfigProps) {

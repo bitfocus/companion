@@ -1,5 +1,5 @@
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { Buffer } from 'buffer'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 
 // Hack for csv library which needs a global 'Buffer'
 window.Buffer = Buffer

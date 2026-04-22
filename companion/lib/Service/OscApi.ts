@@ -1,12 +1,12 @@
-import { parseColorToNumber, rgb } from '../Resources/Util.js'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { RegexRouter } from './RegexRouter.js'
 import type { OscReceivedMessage } from 'osc'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ServiceApi } from './ServiceApi.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
-import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { parseColorToNumber, rgb } from '../Resources/Util.js'
+import { RegexRouter } from './RegexRouter.js'
+import type { ServiceApi } from './ServiceApi.js'
 
 const OSC_API_SURFACE_ID = 'osc'
 

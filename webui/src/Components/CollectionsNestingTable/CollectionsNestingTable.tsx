@@ -1,19 +1,19 @@
+import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { capitalize } from 'lodash-es'
+import { observer } from 'mobx-react-lite'
+import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import {
+	CollectionsNestingTableContextProvider,
+	type CollectionsNestingTableContextType,
+} from './CollectionsNestingTableContext.js'
+import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
 import {
 	CollectionItemsCollapseButtons,
 	CollectionsNestingTableCollectionsList,
 } from './CollectionsNestingTableGroupsList.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop } from './useItemDrop.js'
-import {
-	CollectionsNestingTableContextProvider,
-	type CollectionsNestingTableContextType,
-} from './CollectionsNestingTableContext.js'
-import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
-import { observer } from 'mobx-react-lite'
-import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 
 interface CollectionsNestingTableProps<
 	TCollection extends CollectionsNestingTableCollection,

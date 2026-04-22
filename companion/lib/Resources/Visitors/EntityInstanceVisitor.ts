@@ -1,6 +1,6 @@
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
-import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 
 /**
  * Visits an entity instance.

@@ -1,9 +1,9 @@
-import { useCallback } from 'react'
+import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCaretRight, faCaretDown } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
-import type { PanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
+import type { PanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 
 /**
  * A node in the collapsible tree. Nodes can have children (making them collapsible groups)

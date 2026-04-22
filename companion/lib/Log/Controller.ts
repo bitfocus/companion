@@ -1,20 +1,20 @@
 /**
  * Warning: this file needs to not reference any 'real' code in the codebase, or we end up with import cycle issues
  */
-import stripAnsi from 'strip-ansi'
-import fs from 'fs-extra'
-import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
-import Transport from 'winston-transport'
-import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
-import supportsColor from 'supports-color'
-import { LogColors } from './Colors.js'
-import { init, addBreadcrumb, getCurrentScope, rewriteFramesIntegration, httpIntegration } from '@sentry/node'
+import EventEmitter from 'node:events'
+import { addBreadcrumb, getCurrentScope, httpIntegration, init, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
+import fs from 'fs-extra'
+import stripAnsi from 'strip-ansi'
+import supportsColor from 'supports-color'
+import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
+import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
+import Transport from 'winston-transport'
 import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
 import type { AppInfo } from '../Registry.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import EventEmitter from 'node:events'
 import { isPackaged } from '../Resources/Util.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { LogColors } from './Colors.js'
 
 export interface Logger {
 	readonly source: string

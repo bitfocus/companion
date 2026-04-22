@@ -1,9 +1,9 @@
+import crypto from 'node:crypto'
+import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
-import crypto from 'crypto'
-import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
 import z from 'zod'
 import LogController, { type Logger } from '../Log/Controller.js'
-import { EventEmitter } from 'node:events'
+import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
 
 const TIMEOUT_DURATION = 5000 // time before upload session is considered inactive and killed
 

@@ -1,12 +1,12 @@
-import LogController from '../Log/Controller.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
 import type {
 	ExecuteExpressionResult,
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import EventEmitter from 'node:events'
 
 export class PreviewExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')

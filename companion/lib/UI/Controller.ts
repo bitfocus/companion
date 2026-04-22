@@ -1,9 +1,9 @@
+import type express from 'express'
 import type { AppInfo } from '../Registry.js'
 import { UIExpress } from './Express.js'
 import { UIHandler } from './Handler.js'
 import { UIServer } from './Server.js'
 import { UIUpdate } from './Update.js'
-import type express from 'express'
 
 export class UIController {
 	readonly express: UIExpress

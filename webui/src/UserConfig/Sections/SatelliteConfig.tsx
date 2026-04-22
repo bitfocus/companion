@@ -1,8 +1,8 @@
 import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import type { UserConfigProps } from '../Components/Common.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 

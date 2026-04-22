@@ -1,6 +1,6 @@
-import { type IObservableValue, observable, runInAction } from 'mobx'
-import type { Color, ColorResult, HexColor, HslColor, HsvColor, RgbColor } from '../colors'
 import { colord, type Colord } from 'colord'
+import { observable, runInAction, type IObservableValue } from 'mobx'
+import type { Color, ColorResult, HexColor, HslColor, HsvColor, RgbColor } from '../colors'
 
 export class ColorsStore {
 	readonly state: IObservableValue<ColorResult>

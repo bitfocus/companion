@@ -1,12 +1,12 @@
 import { CButton, CCol } from '@coreui/react'
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import { faArrowsAlt, faArrowsLeftRight, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsLeftRight, faArrowsAlt, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import classnames from 'classnames'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface ButtonGridActionsRef {

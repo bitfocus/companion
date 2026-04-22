@@ -1,13 +1,13 @@
-import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { useContext } from 'react'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useComputed } from '~/Resources/util.js'
-import { observer } from 'mobx-react-lite'
 import { CCol, CFormLabel } from '@coreui/react'
-import type { DropdownChoicesOrGroups } from '~/Components'
-import { groupItemsByCollection } from '~/Helpers/CollectionGrouping'
+import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { DropdownChoicesOrGroups } from '~/Components'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { groupItemsByCollection } from '~/Helpers/CollectionGrouping'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface EntityCellLeftMainProps {
 	entityConnectionId: string

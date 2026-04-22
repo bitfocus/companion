@@ -1,3 +1,4 @@
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type {
 	CompanionInputFieldBaseExtended,
 	CompanionInputFieldCheckboxExtended,
@@ -5,22 +6,21 @@ import type {
 	CompanionInputFieldNumberExtended,
 	CompanionInputFieldStaticTextExtended,
 } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 import type {
-	SomeCompanionInputField as SurfaceInputField,
+	CompanionSurfaceConfigField,
+	CompanionSurfaceInputFieldTextInput,
+} from '@companion-app/shared/Model/Surfaces.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { Complete } from '@companion-module/base'
+import type {
 	CompanionInputFieldBase,
 	CompanionInputFieldCheckbox,
 	CompanionInputFieldDropdown,
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
+	SomeCompanionInputField as SurfaceInputField,
 } from '@companion-surface/base'
-import type { Complete } from '@companion-module/base'
-import type {
-	CompanionSurfaceConfigField,
-	CompanionSurfaceInputFieldTextInput,
-} from '@companion-app/shared/Model/Surfaces.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 export function translateSurfaceConfigFields(fields: SurfaceInputField[]): CompanionSurfaceConfigField[] {
 	return fields

@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import type { PagesStore } from '~/Stores/PagesStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
+import type { PagesStore } from '~/Stores/PagesStore.js'
 
 export function usePagesInfoSubscription(
 	store: PagesStore,

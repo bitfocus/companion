@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
-import { CInputGroup, CButton, CFormInput } from '@coreui/react'
+import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import JSON5 from 'json5'
-import { VariableTypeIcon } from './VariableTypeIcon.js'
+import { useEffect, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
+import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariableInputGroupProps {
 	value: JsonValue | undefined // The external variable value

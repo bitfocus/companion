@@ -9,29 +9,29 @@
  * this program.
  */
 
-import type {
-	ActionForVisitor,
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalVisitor,
-	InternalFeedbackDefinition,
-	InternalActionDefinition,
-	ExecuteFeedbackResultWithReferences,
-	InternalModuleFragmentEvents,
-	FeedbackForInternalExecution,
-	ActionForInternalExecution,
-} from './Types.js'
+import { EventEmitter } from 'node:events'
 import { FeedbackEntitySubType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { IPageStore } from '../Page/Store.js'
+import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
-import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
-import { EventEmitter } from 'events'
 import type { IControlStore } from '../Controls/IControlStore.js'
-import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type {
+	ActionForInternalExecution,
+	ActionForVisitor,
+	ExecuteFeedbackResultWithReferences,
+	FeedbackForInternalExecution,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
+import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',

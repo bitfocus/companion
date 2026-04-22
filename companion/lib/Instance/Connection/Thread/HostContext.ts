@@ -1,8 +1,15 @@
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import type {
+	SharedUdpSocketMessageJoin,
+	SharedUdpSocketMessageLeave,
+	SharedUdpSocketMessageSend,
+} from '@companion-module/base/host-api'
 import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
-	type CompanionPresetSection,
 	type CompanionPresetDefinitions,
+	type CompanionPresetSection,
 	type CompanionRecordedAction,
 	type CompanionVariableValue,
 	type Complete,
@@ -18,14 +25,7 @@ import {
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
-import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { translateEntityInputFields } from './ConfigFields.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type {
-	SharedUdpSocketMessageJoin,
-	SharedUdpSocketMessageLeave,
-	SharedUdpSocketMessageSend,
-} from '@companion-module/base/host-api'
 import { ConvertPresetDefinitions } from './Presets.js'
 
 /**

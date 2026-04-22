@@ -1,13 +1,13 @@
 // @ts-check
 
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import eslint from '@eslint/js'
+import pluginQuery from '@tanstack/eslint-plugin-query'
 import neslint from 'eslint-plugin-n'
-import tseslint from 'typescript-eslint'
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import reacteslint from 'eslint-plugin-react'
 import hookseslint from 'eslint-plugin-react-hooks'
 import reactRefreshEslint from 'eslint-plugin-react-refresh'
-import pluginQuery from '@tanstack/eslint-plugin-query'
+import tseslint from 'typescript-eslint'
 
 export default [
 	// setup the parser first
@@ -120,6 +120,13 @@ export default [
 					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest'],
 				},
 			],
+			'n/prefer-node-protocol': 'error',
+		},
+	},
+	{
+		files: ['launcher/**/*.ts', 'launcher/**/*.js', 'shared-lib/**/*.ts', 'shared-lib/**/*.js'],
+		rules: {
+			'n/prefer-node-protocol': 'error',
 		},
 	},
 
@@ -182,6 +189,7 @@ export default [
 			react: reacteslint,
 		},
 		rules: {
+			'import/no-unresolved': 'off',
 			...hookseslint.configs.recommended.rules,
 			'react-refresh/only-export-components': [
 				'warn',

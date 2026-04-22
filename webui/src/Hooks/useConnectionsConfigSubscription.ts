@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import type { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
+import type { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
 
 export function useConnectionsConfigSubscription(store: ConnectionsStore): boolean {
 	const [ready, setReady] = useState(false)

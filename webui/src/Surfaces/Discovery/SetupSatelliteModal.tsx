@@ -1,11 +1,11 @@
-import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { LoadingBar } from '~/Resources/Loading.js'
 import { CButton, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { LoadingBar } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC'
 
 export interface SetupSatelliteModalRef {

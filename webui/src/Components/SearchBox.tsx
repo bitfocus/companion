@@ -1,4 +1,4 @@
-import { CInputGroup, CButton, CFormInput } from '@coreui/react'
+import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'

@@ -1,9 +1,9 @@
-import type { JsonValue } from 'type-fest'
-import type { SomeCompanionInputField } from './Model/Options.js'
-import { ParseExpression } from './Expression/ExpressionParse.js'
-import { assertNever } from './Util.js'
-import { stringifyVariableValue } from './Model/Variables.js'
 import isEqual from 'fast-deep-equal'
+import type { JsonValue } from 'type-fest'
+import { ParseExpression } from './Expression/ExpressionParse.js'
+import type { SomeCompanionInputField } from './Model/Options.js'
+import { stringifyVariableValue } from './Model/Variables.js'
+import { assertNever } from './Util.js'
 
 export interface ValidateInputValueOptions {
 	/** If true, skip validating expression fields */

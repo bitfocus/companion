@@ -1,13 +1,12 @@
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
 import { observer } from 'mobx-react-lite'
+import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
-import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
+import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop } from './useItemDrop.js'
-import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 
 interface CollectionsNestingTableCollectionContentsProps<TItem extends CollectionsNestingTableItem> {
 	items: TItem[]

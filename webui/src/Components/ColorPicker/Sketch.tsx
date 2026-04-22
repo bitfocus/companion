@@ -2,17 +2,17 @@
 // typos:disable-line
 // MIT Copyright (c) 2022 Reece Carolan Copyright (c) 2015 Case Sandberg
 
-import { useColor, ColorProvider, type ColorProviderProps } from './context/useColor'
-import { SketchFields } from './components/SketchFields'
-import { SketchPresetColors } from './components/SketchPresetColors.js'
-import { Saturation } from './components/Saturation'
-import { Checkboard } from './components/Checkboard'
-import { Alpha } from './components/Alpha'
-import { Hue } from './components/Hue'
-import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
-import cssStyles from './Sketch.module.css'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
+import { Alpha } from './components/Alpha'
+import { Checkboard } from './components/Checkboard'
+import { Hue } from './components/Hue'
+import { Saturation } from './components/Saturation'
+import { SketchFields } from './components/SketchFields'
+import { SketchPresetColors } from './components/SketchPresetColors.js'
+import { ColorProvider, useColor, type ColorProviderProps } from './context/useColor'
+import cssStyles from './Sketch.module.css'
 
 export interface SketchPickerProps {
 	disableAlpha?: boolean

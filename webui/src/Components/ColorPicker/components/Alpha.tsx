@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
-import { calculateXyPercent } from '../helpers/change.js'
 import { useColor } from '../context/useColor.js'
+import { calculateXyPercent } from '../helpers/change.js'
+import cssStyles from './Alpha.module.css'
 import { Checkboard } from './Checkboard.js'
 import { ClickAndDragDiv } from './ClickAndDragDiv.js'
-import cssStyles from './Alpha.module.css'
 
 export function Alpha(): React.JSX.Element {
 	const { changeRgbColor } = useColor()

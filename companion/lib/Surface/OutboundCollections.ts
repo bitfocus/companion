@@ -1,8 +1,8 @@
+import z from 'zod'
 import type { OutboundSurfaceCollection, OutboundSurfaceCollectionData } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
-import z from 'zod'
 
 export class OutboundSurfaceCollections extends EnabledCollectionsBaseController<OutboundSurfaceCollectionData> {
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void

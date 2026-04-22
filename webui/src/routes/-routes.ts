@@ -1,4 +1,4 @@
-import { rootRoute, route, physical } from '@tanstack/virtual-file-routes'
+import { physical, rootRoute, route } from '@tanstack/virtual-file-routes'
 
 export const routes = rootRoute('__root.tsx', [
 	// Use default folder routing

@@ -1,10 +1,10 @@
+import { createRequire } from 'node:module'
+import path from 'node:path'
 import fs from 'fs-extra'
-import { isPackaged } from '../Resources/Util.js'
-import path from 'path'
-import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 import type { ModuleManifestRuntime } from '@companion-module/base/manifest'
-import { createRequire } from 'module'
+import { isPackaged } from '../Resources/Util.js'
+import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
 
 /**
  * Get the path to the Node.js binary for the given runtime type.

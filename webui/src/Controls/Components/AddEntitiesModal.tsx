@@ -1,24 +1,24 @@
 import { CButton, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { createContext, forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { capitalize } from 'lodash-es'
-import { CModalExt } from '~/Components/CModalExt.js'
+import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
-import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { capitalize } from 'lodash-es'
+import { observer } from 'mobx-react-lite'
+import { createContext, forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { CModalExt } from '~/Components/CModalExt.js'
 import {
 	CollapsibleTree,
-	type CollapsibleTreeNode,
 	type CollapsibleTreeHeaderProps,
+	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
-import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
-import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Controls/Components/useConnectionTreeNodes.js'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Controls/Components/useConnectionTreeNodes.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 	node,
@@ -71,7 +71,7 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 	return (
 		<>
 			<div className="collapsible-tree-leaf-text">
-				<span className="collapsible-tree-leaf-label">{leaf.label}</span>
+				<span className="collapsible-tree-leaf-label fw-semibold">{leaf.label}</span>
 				{leaf.description && (
 					<>
 						<span className="collapsible-tree-leaf-description">{leaf.description}</span>

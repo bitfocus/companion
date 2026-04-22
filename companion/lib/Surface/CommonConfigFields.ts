@@ -43,22 +43,6 @@ export const RotationConfigField: CompanionSurfaceConfigField = {
 	],
 }
 
-export const LegacyRotationConfigField: CompanionSurfaceConfigField = {
-	id: 'rotation',
-	type: 'dropdown',
-	label: 'Surface Rotation',
-	default: 0,
-	choices: [
-		{ id: 0, label: 'Normal' },
-		{ id: 'surface-90', label: '90 CCW' },
-		{ id: 'surface90', label: '90 CW' },
-		{ id: 'surface180', label: '180' },
-		{ id: -90, label: '90 CCW (Legacy)' },
-		{ id: 90, label: '90 CW (Legacy)' },
-		{ id: 180, label: '180 (Legacy)' },
-	],
-}
-
 export const LockConfigFields: CompanionSurfaceConfigField[] = [
 	{
 		id: 'never_lock',

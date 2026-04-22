@@ -1,17 +1,17 @@
-import { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleUp, faCopy, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useRef } from 'react'
+import CopyToClipboard from 'react-copy-to-clipboard'
+import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
-import CopyToClipboard from 'react-copy-to-clipboard'
-import { makeAbsolutePath } from '~/Resources/util'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { makeAbsolutePath } from '~/Resources/util'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface KnownSurfacesTableProps {
 	selectedItemId: string | null
@@ -94,8 +94,8 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 			<GenericConfirmModal ref={confirmRef} />
 
 			<div className="scrollable-content surfaces-grid-container">
-				<div className="grid-header-cell">NO</div>
-				<div className="grid-header-cell">Info</div>
+				<div className="grid-header-cell">Nr.</div>
+				<div className="grid-header-cell">Configured Surfaces and Groups</div>
 				<div className="grid-header-cell"></div>
 				{surfacesList.map((group) => {
 					if (group.isAutoGroup && (group.surfaces || []).length === 1) {

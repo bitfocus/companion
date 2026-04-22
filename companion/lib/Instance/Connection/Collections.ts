@@ -1,10 +1,10 @@
+import z from 'zod'
 import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
-import type { InstanceConfigStore } from '../ConfigStore.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { DataDatabase } from '../../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../../UI/TRPC.js'
-import z from 'zod'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { InstanceConfigStore } from '../ConfigStore.js'
 
 export class ConnectionsCollections extends EnabledCollectionsBaseController<ConnectionCollectionData> {
 	readonly #emitUpdated: () => void

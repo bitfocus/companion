@@ -1,6 +1,6 @@
-import { describe, test, expect } from 'vitest'
-import { ParseLocationString } from '../../lib/Internal/Util.js'
+import { describe, expect, test } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ParseLocationString } from '../../lib/Internal/Util.js'
 
 const DEFAULT_PRESS_LOCATION: ControlLocation = {
 	pageNumber: 5,

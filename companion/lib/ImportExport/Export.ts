@@ -9,18 +9,18 @@
  * this program.
  */
 
-import os from 'os'
-import { getTimestamp } from '../Resources/Util.js'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import yazl from 'yazl'
-import path from 'path'
-import fs from 'fs-extra'
+import os from 'node:os'
+import path from 'node:path'
 import { stringify as csvStringify } from 'csv-stringify/sync'
-import LogController, { type Logger } from '../Log/Controller.js'
 import type express from 'express'
+import type { RequestHandler } from 'express'
+import fs from 'fs-extra'
 import type { ParsedQs } from 'qs'
-import { unflattenQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import yazl from 'yazl'
 import { ZodError } from 'zod'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type {
 	ExportFullv6,
 	ExportInstancesv6,
@@ -30,25 +30,25 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import type { AppInfo } from '../Registry.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { zodClientExportSelection, type ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
-import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
-import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type { InstanceController } from '../Instance/Controller.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { VariablesController } from '../Variables/Controller.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import { unflattenQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
+import type { AppInfo } from '../Registry.js'
+import { getTimestamp } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
-import type { RequestHandler } from 'express'
+import type { VariablesController } from '../Variables/Controller.js'
 import { FILE_VERSION } from './Constants.js'
-import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
-import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Export')

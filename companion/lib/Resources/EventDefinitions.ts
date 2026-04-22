@@ -1,5 +1,5 @@
+import os from 'node:os'
 import dayjs from 'dayjs'
-import os from 'os'
 import type { EventDefinition } from '@companion-app/shared/Model/Common.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { InternalVisitor } from '../Internal/Types.js'
@@ -31,6 +31,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				min: 1,
 				max: Number.MAX_SAFE_INTEGER,
 				default: 10,
+				clampValues: true,
 			},
 		],
 	},
@@ -45,6 +46,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				min: 1,
 				max: Number.MAX_SAFE_INTEGER,
 				default: 3,
+				clampValues: true,
 			},
 			{
 				id: 'maximum',
@@ -54,6 +56,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				min: 1,
 				max: Number.MAX_SAFE_INTEGER,
 				default: 10,
+				clampValues: true,
 			},
 		],
 	},
@@ -148,6 +151,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				min: 0,
 				max: Number.MAX_SAFE_INTEGER,
 				default: 10000,
+				clampValues: true,
 			},
 		],
 	},
@@ -161,6 +165,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				min: 0,
 				max: Number.MAX_SAFE_INTEGER,
 				default: 0,
+				clampValues: true,
 			},
 		],
 	},

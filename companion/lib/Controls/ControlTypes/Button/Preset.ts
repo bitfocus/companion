@@ -1,29 +1,29 @@
-import { ButtonControlBase } from './Base.js'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import type {
-	ControlWithoutActionSets,
-	ControlWithoutActions,
-	ControlWithStyle,
-	ControlWithoutEvents,
-	ControlWithEntities,
-	ControlWithoutOptions,
-	ControlWithoutPushed,
-} from '../../IControlFragments.js'
-import type {
-	PresetButtonModel,
+	ButtonStatus,
 	NormalButtonOptions,
 	NormalButtonRuntimeProps,
-	ButtonStatus,
+	PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { ControlDependencies } from '../../ControlDependencies.js'
-import { GetButtonBitmapSize } from '../../../Resources/Util.js'
-import { ControlButtonNormal } from './Normal.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
-import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
+import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../../ControlBase.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
+import type {
+	ControlWithEntities,
+	ControlWithoutActions,
+	ControlWithoutActionSets,
+	ControlWithoutEvents,
+	ControlWithoutOptions,
+	ControlWithoutPushed,
+	ControlWithStyle,
+} from '../../IControlFragments.js'
+import { ButtonControlBase } from './Base.js'
+import { ControlButtonNormal } from './Normal.js'
 import { parseVariablesInButtonStyle } from './Util.js'
 
 /**

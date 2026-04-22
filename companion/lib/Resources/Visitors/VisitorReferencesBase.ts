@@ -1,11 +1,11 @@
-import { visitEventOptions } from '../EventDefinitions.js'
-import { visitEntityModel } from './EntityInstanceVisitor.js'
+import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import { visitEventOptions } from '../EventDefinitions.js'
+import { visitEntityModel } from './EntityInstanceVisitor.js'
 
 export class VisitorReferencesBase<T extends InternalVisitor> {
 	protected readonly internalModule: InternalController

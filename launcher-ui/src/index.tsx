@@ -2,6 +2,9 @@
 
 import '@fontsource/roboto'
 import './Settings.css'
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { Settings } from './Settings.js'
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties
@@ -9,10 +12,6 @@ if (process.env.NODE_ENV === 'development') {
 		return o === console ? o : defineProperties(o, props)
 	}
 }
-
-import React from 'react'
-import { createRoot } from 'react-dom/client'
-import { Settings } from './Settings.js'
 
 const rootElm = document.getElementById('root')!
 const root = createRoot(rootElm)

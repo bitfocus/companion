@@ -1,11 +1,11 @@
+import { action, observable, runInAction } from 'mobx'
 import type {
-	RecordSessionListInfo,
 	RecordSessionInfo,
+	RecordSessionListInfo,
 	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import { observable, runInAction, action } from 'mobx'
-import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
 import { assertNever } from '~/Resources/util'
+import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
 
 export class ActionRecorderSessionStore {
 	#sessions = observable.map<string, RecordSessionListInfo>()

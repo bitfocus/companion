@@ -1,9 +1,9 @@
-import { memo, useRef } from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { memo, useRef } from 'react'
 import { useUserConfigProps } from './Context.js'
-import { GridSizeModal, GridConfigRows, type GridSizeModalRef } from './Sections/GridConfig.js'
 import { ButtonsConfig } from './Sections/ButtonsConfig.js'
+import { GridConfigRows, GridSizeModal, type GridSizeModalRef } from './Sections/GridConfig.js'
 
 export const SettingsButtonsPage = memo(function UserConfig() {
 	return (

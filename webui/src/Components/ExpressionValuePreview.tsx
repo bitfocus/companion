@@ -1,14 +1,14 @@
-import { useMemo, useCallback, useContext, useRef, useState, useEffect } from 'react'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/Resources/TRPC.js'
 import { CAlert, CSpinner } from '@coreui/react'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { useDebounced } from '~/Resources/util.js'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { trpc } from '~/Resources/TRPC.js'
+import { useDebounced } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
 interface ExpressionValuePreviewProps {
 	expression: string
@@ -134,6 +134,8 @@ function validateExpressionResult(
 	fieldDefinition: SomeCompanionInputField,
 	value: JsonValue | undefined
 ): string | undefined {
+	if (fieldDefinition.allowInvalidValues) return undefined
+
 	const { validationError } = validateInputValue(fieldDefinition, value, {
 		skipValidateExpression: true,
 	})

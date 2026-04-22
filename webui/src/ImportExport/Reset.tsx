@@ -1,15 +1,15 @@
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CAlert, CFormCheck } from '@coreui/react'
-import { makeAbsolutePath } from '~/Resources/util.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { CAlert, CButton, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faDownload, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { ResetType, ClientImportOrResetSelection } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
-import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import type { ClientImportOrResetSelection, ResetType } from '@companion-app/shared/Model/ImportExport.js'
 import { InlineHelp } from '~/Components/InlineHelp'
+import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export interface ResetWizardModalRef {
 	show(): void

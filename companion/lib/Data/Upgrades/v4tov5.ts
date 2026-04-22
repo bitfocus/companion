@@ -1,7 +1,7 @@
+import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
+import type { Logger } from '../../Log/Controller.js'
 import { DataLegacyCloudDatabase } from '../Legacy/CloudDatabase.js'
 import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
-import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 
 /**
  * do the database upgrades to convert from the v4 to the v5 format

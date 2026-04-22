@@ -1,6 +1,6 @@
 import { CToast, CToastBody, CToaster, CToastHeader } from '@coreui/react'
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 import { nanoid } from 'nanoid'
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
 
 export interface NotificationsManagerRef {
 	show(title: string, message: string, duration?: number | null, stickyId?: string): string

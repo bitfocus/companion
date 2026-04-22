@@ -1,7 +1,7 @@
+import { CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
+import { useCallback } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { CDropdown, CButton, CDropdownToggle, CDropdownMenu, CDropdownItem } from '@coreui/react'
-import { useCallback } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
