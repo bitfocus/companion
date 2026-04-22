@@ -208,7 +208,7 @@ export class MultipartUploader<TRes, TCompleteData> {
 			this.#inactiveTimeout = null
 		}
 
-		const computedChecksum = crypto.createHash('sha-1').update(session.data).digest('hex')
+		const computedChecksum = crypto.createHash('sha1').update(session.data).digest('hex')
 		if (computedChecksum !== expectedChecksum) throw new Error('Checksum mismatch')
 
 		return session.data

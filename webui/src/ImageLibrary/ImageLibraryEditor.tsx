@@ -67,10 +67,13 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			})
 			.then((imageData) => {
 				if (imageData?.image) {
+					const subtype = imageInfo.mimeType.split('/')[1]?.split('+')[0] // e.g. 'svg+xml' -> 'svg'
+					const ext = subtype === 'jpeg' ? 'jpg' : subtype || 'png'
+
 					// Create download link
 					const link = document.createElement('a')
 					link.href = imageData.image
-					link.download = `${imageInfo.name}.${imageInfo.mimeType.split('/')[1] || 'png'}`
+					link.download = `${imageInfo.name}.${ext}`
 					document.body.appendChild(link)
 					link.click()
 					document.body.removeChild(link)

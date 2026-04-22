@@ -222,20 +222,20 @@ export class ImageLibrary {
 	 */
 	createEmptyImage(name: string, description: string): string {
 		// Validate and sanitize the name
-		const sageName = makeLabelSafe(name)
-		if (!sageName) {
+		const safeName = makeLabelSafe(name)
+		if (!safeName) {
 			throw new Error('Invalid image name')
 		}
 
 		// Check if name already exists
-		if (this.#dbTable.get(sageName)) {
-			throw new Error(`Image with name "${sageName}" already exists`)
+		if (this.#dbTable.get(safeName)) {
+			throw new Error(`Image with name "${safeName}" already exists`)
 		}
 
 		const now = Date.now()
 
 		const info: ImageLibraryInfo = {
-			name: sageName,
+			name: safeName,
 			description: description,
 			originalSize: 0,
 			previewSize: 0,
@@ -252,20 +252,20 @@ export class ImageLibrary {
 			info,
 		}
 
-		this.#dbTable.set(sageName, imageData)
+		this.#dbTable.set(safeName, imageData)
 
 		// Create variable for the new image
-		this.#updateImageVariable(sageName, imageData.originalImage)
+		this.#updateImageVariable(safeName, imageData.originalImage)
 
 		// Update variable definitions
 		this.#updateImageVariableDefinitions()
 
-		this.#logger.info(`Created empty image ${sageName} (${description})`)
+		this.#logger.info(`Created empty image ${safeName} (${description})`)
 
 		// Notify clients
-		this.#events.emit('update', [{ type: 'update', itemName: sageName, info }])
+		this.#events.emit('update', [{ type: 'update', itemName: safeName, info }])
 
-		return sageName
+		return safeName
 	}
 
 	/**
@@ -449,7 +449,7 @@ export class ImageLibrary {
 		existingData.info.originalSize = dataUrlString.length
 		existingData.info.previewSize = previewDataUrl.length
 		existingData.info.modifiedAt = Date.now()
-		existingData.info.checksum = crypto.createHash('sha-1').update(dataUrlString).digest('hex')
+		existingData.info.checksum = crypto.createHash('sha1').update(dataUrlString).digest('hex')
 		existingData.info.mimeType = dataUrlMatch[1]
 
 		// Update the image data

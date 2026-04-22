@@ -1,6 +1,7 @@
 import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
 import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import fuzzysort from 'fuzzysort'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
@@ -32,6 +33,7 @@ interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'child
 interface ImageItem extends CollectionsNestingTableItem {
 	// Additional image info
 	imageInfo: ImageLibraryInfo
+	fuzzy: Fuzzysort.Prepared
 }
 
 interface ImageLibraryGridProps {
@@ -114,6 +116,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				collectionId: image.collectionId ?? null,
 				sortOrder: image.sortOrder,
 				imageInfo: image,
+				fuzzy: fuzzysort.prepare(`${image.name} ${image.description}`),
 			})),
 		[images]
 	)
@@ -128,7 +131,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	// ItemRow component for rendering individual images
 	const ItemRow = useCallback(
 		(item: ImageItem) => {
-			if (!item.imageInfo.name.toLowerCase().includes(searchQuery.toLowerCase())) return null
+			if (searchQuery && fuzzysort.single(searchQuery, item.fuzzy) === null) return null
 
 			return (
 				<ImageThumbnail

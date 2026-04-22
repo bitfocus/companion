@@ -1,5 +1,5 @@
 import { CAlert, CFormLabel } from '@coreui/react'
-import React from 'react'
+import React, { useId } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 
@@ -35,6 +35,8 @@ export function ImageNameInput({
 		</>
 	)
 
+	const labelInputId = useId()
+
 	return (
 		<>
 			{errorMessage && (
@@ -50,11 +52,12 @@ export function ImageNameInput({
 			)}
 
 			<div className="mb-3 row">
-				<CFormLabel htmlFor="imageNameInput" className="col-sm-3 col-form-label">
+				<CFormLabel htmlFor={labelInputId} className="col-sm-3 col-form-label">
 					Image name
 				</CFormLabel>
 				<div className="col-sm-9">
 					<TextInputField
+						// id={labelInputId}
 						value={value}
 						setValue={onChange}
 						placeholder={placeholder}
