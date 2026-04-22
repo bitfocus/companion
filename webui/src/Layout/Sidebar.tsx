@@ -16,6 +16,7 @@ import {
 	faHammer,
 	faHatWizard,
 	faHeadset,
+	faImages,
 	faInfo,
 	faNetworkWired,
 	faPeopleArrows,
@@ -397,7 +398,7 @@ export const MySidebar = memo(function MySidebar() {
 						path="/connections"
 					/>
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
-					{/* <SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" /> */}
+					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 					<SidebarMenuItemGroup
 						name="Surfaces"
 						icon={faGamepad}
