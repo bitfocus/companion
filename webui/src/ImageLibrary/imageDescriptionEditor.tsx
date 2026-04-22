@@ -4,11 +4,13 @@ import React, { useCallback } from 'react'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface ImageDescriptionEditorProps {
+	id: string
 	imageName: string
 	currentName: string
 }
 
 export const ImageDescriptionEditor = observer(function ImageDescriptionEditor({
+	id,
 	imageName,
 	currentName,
 }: ImageDescriptionEditorProps) {
@@ -24,6 +26,12 @@ export const ImageDescriptionEditor = observer(function ImageDescriptionEditor({
 	)
 
 	return (
-		<CFormInput type="text" value={currentName} onChange={handleNameChange} placeholder="Enter image description..." />
+		<CFormInput
+			type="text"
+			id={id}
+			value={currentName}
+			onChange={handleNameChange}
+			placeholder="Enter image description..."
+		/>
 	)
 })
