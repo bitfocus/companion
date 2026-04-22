@@ -308,13 +308,13 @@
 	font-size: 1.25em;
 }
 
-/* Docusaurus limits max-width to 100% but without the follow rule, the image will lose its aspect ratio if it is too wide */
+/* Docusaurus limits max-width to 100% but without the following rule, the image will lose its aspect ratio if it is too wide */
 .markdown img {
 	height: auto;
 }
 
 /* The following rule centers images on their own line. 
-    The reason for ":last-child" is to allow us to "inline" the image by placing an element after the image in the markdown text.
+   The reason for ":last-child" is to allow us to keep the image inline by placing an element after the image in the markdown document.
  */
 .markdown img:last-child {
 	display: block;
