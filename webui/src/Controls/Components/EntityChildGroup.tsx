@@ -1,4 +1,3 @@
-import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -10,7 +9,6 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { PreventDefaultHandler } from '~/Resources/util.js'
 import { EditableEntityList } from './EntityList.js'
 
 interface EntityManageChildGroupsProps {
@@ -54,8 +52,9 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
+	// don't wrap in a form here as it will cause nested forms (illegal HTML)...and it's not necessary here!
 	return (
-		<CForm onSubmit={PreventDefaultHandler}>
+		<div>
 			<EditableEntityList
 				heading={
 					groupInfo.label ? (
@@ -75,6 +74,6 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				feedbackListType={(groupInfo.type === EntityModelType.Feedback && groupInfo.feedbackListType) || null}
 				ownerId={groupId}
 			/>
-		</CForm>
+		</div>
 	)
 })

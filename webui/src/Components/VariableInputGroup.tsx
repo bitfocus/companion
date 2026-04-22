@@ -17,9 +17,10 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 
 	// Local editing state
 	const [isEditing, setIsEditing] = useState(false)
-	const [localValue, setLocalValue] = useState<string>(isStringInitial ? (value ?? '') : JSON.stringify(value))
-	const [isValueValid, setIsValid] = useState<boolean>(true)
-	const [isString, setIsString] = useState<boolean>(isStringInitial)
+	// note: localValue can't be "undefined" in order to avoid React controlled/uncontrolled errors
+	const [localValue, setLocalValue] = useState((isStringInitial ? value : JSON.stringify(value)) ?? '')
+	const [isValueValid, setIsValid] = useState(true)
+	const [isString, setIsString] = useState(isStringInitial)
 
 	// Ref for the input group to manage focus
 	const groupRef = useRef<HTMLDivElement>(null)
@@ -29,7 +30,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 		if (!isEditing) {
 			const newIsString = typeof value === 'string'
 			setIsString(newIsString)
-			setLocalValue(newIsString ? (value ?? '') : JSON.stringify(value))
+			setLocalValue((newIsString ? value : JSON.stringify(value)) ?? '')
 			setIsValid(true)
 		}
 	}, [value, isEditing])
@@ -51,7 +52,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 		if (isString) {
 			// Switching from string to JSON mode
 			setIsString(false)
-			setLocalValue(JSON.stringify(localValue))
+			setLocalValue(JSON.stringify(localValue) ?? '')
 			// No variable update
 		} else {
 			// Switching from JSON to string mode
@@ -60,7 +61,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 				setLocalValue(value ?? '')
 				// No variable update
 			} else {
-				const stringified = JSON.stringify(value)
+				const stringified = JSON.stringify(value) ?? ''
 				setIsString(true)
 				setLocalValue(stringified)
 				setCurrentValue(name, stringified) // Update variable
