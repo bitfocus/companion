@@ -449,6 +449,10 @@ const ResetApplyStep = withForm({
 						changes.push(<li key="expression-variables">All expression variables.</li>)
 					}
 
+					if (config.imageLibrary !== 'unchanged') {
+						changes.push(<li key="image-library">All images and image collections.</li>)
+					}
+
 					if (config.userconfig !== 'unchanged') {
 						changes.push(<li key="userconfig">All settings, including enabled remote control services.</li>)
 					}

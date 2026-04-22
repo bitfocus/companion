@@ -4,13 +4,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import fuzzysort from 'fuzzysort'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
-import type {
-	CollectionsNestingTableCollection,
-	CollectionsNestingTableItem,
-} from '~/Components/CollectionsNestingTable/Types.js'
+import type { CollectionsNestingTableItem } from '~/Components/CollectionsNestingTable/Types.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
@@ -22,13 +19,6 @@ import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { ImageLibraryDropzone } from './ImageLibraryDropzone'
 import { ImageThumbnail } from './ImageThumbnail'
 import { useImageLibraryUpload } from './useImageLibraryUpload'
-
-// Adapters for CollectionsNestingTable
-interface ImageCollection extends Omit<CollectionsNestingTableCollection, 'children'> {
-	label: string
-	sortOrder: number
-	children: ImageCollection[]
-}
 
 interface ImageItem extends CollectionsNestingTableItem {
 	// Additional image info
@@ -121,12 +111,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 		[images]
 	)
 
-	const collections: ImageCollection[] = imageLibrary.rootCollections()
-
 	const collectionsApi = useImageLibraryCollectionsApi(confirmModalRef)
-
-	// Get all collection IDs for the collapse helper
-	const allCollectionIds = useMemo(() => collections.map((collection) => collection.id), [collections])
 
 	// ItemRow component for rendering individual images
 	const ItemRow = useCallback(
@@ -183,7 +168,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 			<ImageLibraryDropzone />
 
 			<div className="image-library-grid-content" ref={gridContentRef}>
-				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={allCollectionIds}>
+				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={imageLibrary.allCollectionIds}>
 					<CollectionsNestingTable
 						ItemRow={ItemRow}
 						itemName="image"
@@ -191,7 +176,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 						collectionsApi={collectionsApi}
 						selectedItemId={selectedImageName}
 						gridLayout={true}
-						collections={collections}
+						collections={imageLibrary.rootCollections()}
 						items={imageItems}
 						NoContent={NoContent}
 					/>
