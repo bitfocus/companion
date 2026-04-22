@@ -90,10 +90,6 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 				setShow(false)
 				if (!newGridSize) return // this should be impossible in the callback!
 
-				if (import.meta.env.DEV) {
-					// note: newGridSize is a proxy object and doesn't print much on its own, so stringify it.
-					console.log('set gridSize', JSON.stringify(newGridSize))
-				}
 				setConfigKeyMutation.mutate({ key: 'gridSize', value: newGridSize })
 			},
 			[newGridSize, setConfigKeyMutation]
