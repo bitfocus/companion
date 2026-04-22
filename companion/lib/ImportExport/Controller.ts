@@ -170,6 +170,7 @@ export class ImportExportController {
 				surfacesInstances: importContainsKey('surfaceInstances'),
 				surfacesRemote: importContainsKey('surfacesRemote'),
 				triggers: null,
+				imageLibrary: importContainsKey('imageLibrary'),
 			}
 
 			for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
@@ -252,6 +253,7 @@ export class ImportExportController {
 			appInfo,
 			apiRouter,
 			controls,
+			graphics,
 			instance,
 			page.store,
 			surfaces,

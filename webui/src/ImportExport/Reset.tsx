@@ -27,6 +27,7 @@ const defaultFullResetConfig: ClientImportOrResetSelection = {
 	customVariables: 'reset',
 	expressionVariables: 'reset',
 	userconfig: 'reset',
+	imageLibrary: 'reset',
 }
 
 const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
@@ -352,6 +353,12 @@ const ResetOptionsStep = withForm({
 						)}
 					</form.AppField>
 				</div>
+
+				{/* <div className="indent3">
+					<form.AppField name="imageLibrary">
+						{(field) => <field.ResetToggleField label="Image Library" />}
+					</form.AppField>
+				</div> */}
 
 				<div className="indent3">
 					<form.AppField name="userconfig">{(field) => <field.ResetToggleField label="Settings" />}</form.AppField>

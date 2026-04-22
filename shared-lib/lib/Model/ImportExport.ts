@@ -52,6 +52,7 @@ export const zodClientExportSelection = z.object({
 	customVariables: zodQueryBoolean,
 	expressionVariables: zodQueryBoolean,
 	includeSecrets: zodQueryBoolean,
+	imageLibrary: zodQueryBoolean,
 	format: zodExportFormat,
 	filename: z.string().optional(),
 })
@@ -78,6 +79,7 @@ export interface ClientImportObject {
 	triggers: Record<string, { name: string }> | null
 	customVariables: boolean
 	expressionVariables: boolean
+	imageLibrary: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>

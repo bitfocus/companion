@@ -358,6 +358,12 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 					</div>
 
 					{/* <div className="ms-2">
+						<form.AppField name="imageLibrary">
+							{(field) => <field.ImportToggleField label="Image Library" disabled={!snapshot.imageLibrary} />}
+						</form.AppField>
+					</div> */}
+
+					{/* <div className="ms-2">
 								<form.AppField name="userconfig">
 									{(field) => <field.ImportToggleField label="Settings" disabled={!snapshot.userconfig} />}
 								</form.AppField>
@@ -514,10 +520,10 @@ function sanitiseSelection(
 		triggers: processValue(!!snapshot.triggers, values.triggers),
 		customVariables: processValue(snapshot.customVariables, values.customVariables),
 		expressionVariables: processValue(snapshot.expressionVariables, values.expressionVariables),
+		imageLibrary: processValue(snapshot.imageLibrary, values.imageLibrary),
 
 		// These are not user selectable, so simply vary depending on whether this is a full reset or not
 		connections: defaultBehaviour,
 		userconfig: defaultBehaviour,
-		imageLibrary: defaultBehaviour,
 	}
 }

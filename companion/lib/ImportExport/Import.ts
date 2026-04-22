@@ -298,6 +298,14 @@ export class ImportController {
 				this.#controlsController.importTrigger(controlId, fixedControlObj)
 			}
 		}
+
+		// Import image library data if present
+		if (isImporting(config.imageLibrary)) {
+			this.#graphicsController.imageLibrary.importImageLibrary(
+				data.imageLibraryCollections || [],
+				data.imageLibrary || []
+			)
+		}
 	}
 
 	#performPageImport = (

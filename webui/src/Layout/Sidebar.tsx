@@ -397,6 +397,7 @@ export const MySidebar = memo(function MySidebar() {
 						path="/connections"
 					/>
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
+					{/* <SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" /> */}
 					<SidebarMenuItemGroup
 						name="Surfaces"
 						icon={faGamepad}

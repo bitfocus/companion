@@ -36,6 +36,7 @@ export const ExportWizardModal = observer(
 			customVariables: true,
 			expressionVariables: true,
 			includeSecrets: true,
+			imageLibrary: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
 			filename: userConfig.properties?.default_export_filename ?? '',
@@ -288,6 +289,20 @@ export const ExportWizardModal = observer(
 										)}
 									/>
 								</div>
+
+								{/* <div className="indent3">
+									<form.Field
+										name="imageLibrary"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Image Library"
+											/>
+										)}
+									/>
+								</div> */}
 
 								<div style={{ paddingTop: '1em' }}>
 									<CFormLabel>File format</CFormLabel>
