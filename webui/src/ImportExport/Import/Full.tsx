@@ -147,6 +147,7 @@ const defaultFullImportConfig: ClientImportSelection = {
 	triggers: 'reset-and-import',
 	customVariables: 'reset-and-import',
 	expressionVariables: 'reset-and-import',
+	imageLibrary: 'reset-and-import',
 }
 
 const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
@@ -517,5 +518,6 @@ function sanitiseSelection(
 		// These are not user selectable, so simply vary depending on whether this is a full reset or not
 		connections: defaultBehaviour,
 		userconfig: defaultBehaviour,
+		imageLibrary: defaultBehaviour,
 	}
 }

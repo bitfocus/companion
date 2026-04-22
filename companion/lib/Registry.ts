@@ -202,7 +202,7 @@ export class Registry {
 		this.variables = new VariablesController(this.db)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
-		this.graphics = new GraphicsController(controlStore, pageStore, this.userconfig, this.variables.values)
+		this.graphics = new GraphicsController(controlStore, pageStore, this.userconfig, this.variables, this.db)
 
 		this.surfaces = new SurfaceController(this.db, {
 			controls: controlStore,

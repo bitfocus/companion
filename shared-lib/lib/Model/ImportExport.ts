@@ -20,6 +20,7 @@ export const zodClientImportOrResetSelection = z.object({
 	expressionVariables: zodImportOrResetType,
 	connections: zodResetType, // Future: This should become zodImportOrResetType, once there is a plan for how that should work
 	userconfig: zodResetType, // Future: This should become zodImportOrResetType, or more likely an object describing subsections
+	imageLibrary: zodImportOrResetType,
 })
 
 export type ClientImportOrResetSelection = z.infer<typeof zodClientImportOrResetSelection>
