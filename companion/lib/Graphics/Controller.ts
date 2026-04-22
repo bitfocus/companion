@@ -22,12 +22,15 @@ import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever, type CompanionButtonStyleProps } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
+import type { DataDatabase } from '../Data/Database.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { isPackaged } from '../Resources/Util.js'
+import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
+import { ImageLibrary } from './ImageLibrary.js'
 import type { ImageResult } from './ImageResult.js'
 import { GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
@@ -101,6 +104,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #renderLRUCache: QuickLRU<string, ImageResult>
 
 	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
+
+	/**
+	 * Image library for storing and managing images
+	 */
+	readonly imageLibrary: ImageLibrary
 
 	#pool = workerPool.pool(path.join(import.meta.dirname, isPackaged() ? './RenderThread.js' : './Thread.js'), {
 		minWorkers: 2,
@@ -201,14 +209,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		controlsStore: IControlStore,
 		pageStore: IPageStore,
 		userConfigController: DataUserConfig,
-		variableValuesController: VariablesValues
+		variablesController: VariablesController,
+		db: DataDatabase
 	) {
 		super()
 
 		this.controlsStore = controlsStore
 		this.#pageStore = pageStore
 		this.#userConfigController = userConfigController
-		this.#variableValuesController = variableValuesController
+		this.#variableValuesController = variablesController.values
 
 		// Initialize render LRU cache with dynamic size based on control count
 		const initialCacheSize = this.#computeRenderCacheSize()
@@ -394,6 +403,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
 
 		this.#logger.info('Fonts loaded')
+
+		// Initialize the image library
+		this.imageLibrary = new ImageLibrary(db, this, variablesController)
 	}
 
 	/**
@@ -641,5 +653,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		draw_style: DrawStyleModel['style'] | undefined
 	}> {
 		return this.#poolExec('drawButtonImage', [drawStyle], remainingAttempts)
+	}
+
+	/**
+	 * Create a preview image in the worker pool
+	 */
+	async executeCreatePreview(
+		originalDataUrl: string,
+		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
+	): Promise<{ width: number; height: number; previewDataUrl: string }> {
+		return this.#poolExec('createImagePreview', [originalDataUrl], remainingAttempts)
 	}
 }

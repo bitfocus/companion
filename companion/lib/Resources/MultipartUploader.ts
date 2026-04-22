@@ -7,9 +7,11 @@ import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRP
 
 const TIMEOUT_DURATION = 5000 // time before upload session is considered inactive and killed
 
-export type MultipartUploaderApi<TRes> = ReturnType<MultipartUploader<TRes>['createTrpcRouter']>
+export type MultipartUploaderApi<TRes, TCompleteData> = ReturnType<
+	MultipartUploader<TRes, TCompleteData>['createTrpcRouter']
+>
 
-export class MultipartUploader<TRes> {
+export class MultipartUploader<TRes, TCompleteData> {
 	#logger: Logger
 	#session: MultipartUploaderSession | null = null
 
@@ -19,9 +21,11 @@ export class MultipartUploader<TRes> {
 	readonly #sessionCompleteCallback: (
 		name: string,
 		data: Buffer,
+		userData: TCompleteData,
 		updateProgress: (percent: number) => void,
 		ctx: TrpcContext
 	) => Promise<TRes>
+	readonly #userDataSchema: z.ZodType<TCompleteData>
 
 	readonly #progressEvents = new EventEmitter<{ [id: `progress:${string}`]: [progress: number | null] }>()
 
@@ -31,13 +35,16 @@ export class MultipartUploader<TRes> {
 		sessionCompleteCallback: (
 			name: string,
 			data: Buffer,
+			userData: TCompleteData,
 			updateProgress: (percent: number) => void,
 			ctx: TrpcContext
-		) => Promise<TRes>
+		) => Promise<TRes>,
+		userDataSchema: z.ZodType<TCompleteData>
 	) {
 		this.#logger = LogController.createLogger(logPrefix)
 		this.#maxUploadSize = maxUploadSize
 		this.#sessionCompleteCallback = sessionCompleteCallback
+		this.#userDataSchema = userDataSchema
 
 		this.#progressEvents.setMaxListeners(0)
 	}
@@ -116,6 +123,7 @@ export class MultipartUploader<TRes> {
 					z.object({
 						sessionId: z.string(),
 						expectedChecksum: z.string().length(40), // SHA-1 checksum is 40
+						userData: this.#userDataSchema,
 					})
 				)
 				.mutation(async ({ input, ctx }) => {
@@ -132,7 +140,7 @@ export class MultipartUploader<TRes> {
 						this.#progressEvents.emit(`progress:${input.sessionId}`, 0.5 + percent / 2)
 					}
 
-					return this.#sessionCompleteCallback(input.sessionId, data, updateProgress, ctx)
+					return this.#sessionCompleteCallback(input.sessionId, data, input.userData, updateProgress, ctx)
 						.catch((e) => {
 							this.#logger.error(`Failed to complete upload`, e)
 							hasFinished = true
@@ -203,7 +211,7 @@ export class MultipartUploader<TRes> {
 			this.#inactiveTimeout = null
 		}
 
-		const computedChecksum = crypto.createHash('sha-1').update(session.data).digest('hex')
+		const computedChecksum = crypto.createHash('sha1').update(session.data).digest('hex')
 		if (computedChecksum !== expectedChecksum) throw new Error('Checksum mismatch')
 
 		return session.data

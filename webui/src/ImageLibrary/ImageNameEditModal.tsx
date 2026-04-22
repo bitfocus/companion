@@ -1,0 +1,125 @@
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useEffect, useState } from 'react'
+import { isLabelValid } from '@companion-app/shared/Label.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { ImageNameInput } from './ImageNameInput'
+
+interface ImageNameEditModalProps {
+	visible: boolean
+	onClose: () => void
+	imageName: string
+	currentName: string
+	onNameChanged?: (oldName: string, newName: string) => void
+}
+
+export const ImageNameEditModal = observer(function ImageNameEditModal({
+	visible,
+	onClose,
+	imageName,
+	currentName,
+	onNameChanged,
+}: ImageNameEditModalProps) {
+	const [localValue, setLocalValue] = useState(currentName)
+	const [isSaving, setIsSaving] = useState(false)
+	const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+	// Reset state when modal opens
+	useEffect(() => {
+		if (visible) {
+			setLocalValue(currentName)
+			setErrorMessage(null)
+		}
+	}, [visible, currentName])
+
+	const setNameMutation = useMutationExt(trpc.imageLibrary.setName.mutationOptions())
+
+	const handleSave = useCallback(() => {
+		if (!isLabelValid(localValue)) {
+			// The label is already shown as invalid, no need to tell them again
+			return
+		}
+
+		if (localValue === currentName) {
+			// No change, just close
+			onClose()
+			return
+		}
+
+		setIsSaving(true)
+		setErrorMessage(null)
+
+		setNameMutation
+			.mutateAsync({ imageName, newName: localValue })
+			.then((result) => {
+				// Server returns the sanitized name on success
+				if (typeof result === 'string') {
+					const newName = result
+					// Notify parent of the name change
+					if (onNameChanged && newName !== currentName) {
+						onNameChanged(currentName, newName)
+					}
+					onClose()
+				}
+			})
+			.catch((err) => {
+				console.error('Failed to save image name:', err)
+				// Provide more specific error messages
+				if (err) {
+					setErrorMessage(stringifyError(err))
+				} else {
+					setErrorMessage('Failed to save image name. Check it is valid and try again.')
+				}
+			})
+			.finally(() => {
+				setIsSaving(false)
+			})
+	}, [setNameMutation, imageName, currentName, localValue, onNameChanged, onClose])
+
+	const handleCancel = useCallback(() => {
+		setLocalValue(currentName)
+		setErrorMessage(null)
+		onClose()
+	}, [currentName, onClose])
+
+	const handleValueChange = useCallback((newValue: string) => {
+		setLocalValue(newValue)
+		setErrorMessage(null)
+	}, [])
+
+	const canSave = isLabelValid(localValue) && localValue !== currentName
+
+	const warningText = (
+		<>
+			<strong>Warning:</strong> Changing the image name will break any existing references to this image in button
+			configurations, actions, or other places where this name is currently used.
+		</>
+	)
+
+	return (
+		<CModal visible={visible} onClose={handleCancel} backdrop="static">
+			<CModalHeader>
+				<CModalTitle>Edit Image name</CModalTitle>
+			</CModalHeader>
+			<CModalBody>
+				<ImageNameInput
+					value={localValue}
+					onChange={handleValueChange}
+					disabled={isSaving}
+					errorMessage={errorMessage}
+					showWarning={true}
+					warningText={warningText}
+				/>
+			</CModalBody>
+			<CModalFooter>
+				<CButton color="secondary" onClick={handleCancel} disabled={isSaving}>
+					Cancel
+				</CButton>
+				<CButton color="primary" onClick={handleSave} disabled={!canSave || isSaving}>
+					{isSaving ? 'Saving...' : 'Save'}
+				</CButton>
+			</CModalFooter>
+		</CModal>
+	)
+})

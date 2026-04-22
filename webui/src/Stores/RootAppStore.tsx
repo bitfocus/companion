@@ -7,6 +7,7 @@ import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
+import type { ImageLibraryStore } from './ImageLibraryStore.js'
 import type { InstanceStatusesStore } from './InstanceStatusesStore.js'
 import type { ModuleInfoStore } from './ModuleInfoStore.js'
 import type { PagesStore } from './PagesStore.js'
@@ -44,6 +45,8 @@ export interface RootAppStore {
 	readonly triggersList: TriggersListStore
 
 	readonly userConfig: UserConfigStore
+
+	readonly imageLibrary: ImageLibraryStore
 
 	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 

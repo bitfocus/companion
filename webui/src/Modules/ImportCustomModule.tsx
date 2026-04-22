@@ -155,6 +155,7 @@ export function ImportModules(): React.JSX.Element {
 										const success = await completeBundleImportMutation.mutateAsync({
 											sessionId,
 											expectedChecksum: hashText,
+											userData: null,
 										})
 										if (!success) throw new Error(`Failed to import`)
 

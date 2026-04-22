@@ -85,10 +85,10 @@ export class ImportExportController {
 		})
 	}
 
-	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null]>(
+	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
-		async (_name, data, _updateProgress, sessionCtx) => {
+		async (_name, data, _userData, _updateProgress, sessionCtx) => {
 			// Extract ArrayBuffer from the Buffer for zero-copy transfer
 			// The buffer becomes detached/unusable in this thread after transfer
 			const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
@@ -170,6 +170,7 @@ export class ImportExportController {
 				surfacesInstances: importContainsKey('surfaceInstances'),
 				surfacesRemote: importContainsKey('surfacesRemote'),
 				triggers: null,
+				imageLibrary: importContainsKey('imageLibrary'),
 			}
 
 			for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
@@ -214,7 +215,8 @@ export class ImportExportController {
 
 			// rest is done from browser
 			return [null, clientObject]
-		}
+		},
+		z.null()
 	)
 
 	/**
@@ -251,6 +253,7 @@ export class ImportExportController {
 			appInfo,
 			apiRouter,
 			controls,
+			graphics,
 			instance,
 			page.store,
 			surfaces,
@@ -546,6 +549,11 @@ export class ImportExportController {
 
 		if (shouldReset(config.userconfig)) {
 			this.#userConfigController.reset()
+		}
+
+		if (shouldReset(config.imageLibrary)) {
+			// Reset image library
+			this.#graphicsController.imageLibrary.resetImageLibrary()
 		}
 
 		return 'ok'
