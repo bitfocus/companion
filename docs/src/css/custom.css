@@ -308,6 +308,9 @@
 	font-size: 1.25em;
 }
 
+/* The following rule centers images on their own line. 
+   The reason for ":last-child" is to allow us to keep the image inline by placing an element after the image in the markdown document.
+ */
 .markdown img:last-child {
 	display: block;
 	margin-left: auto;
@@ -318,6 +321,6 @@
 	display: block;
 	width: 100%;
 	height: auto;
-	border-radius: 80.5rempx;
+	border-radius: 0.5rem;
 	margin: 1rem 0;
 }

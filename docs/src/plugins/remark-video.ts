@@ -51,12 +51,12 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 		}
 
 		parent.children[index] = {
-			type: 'mdxJsxTextElement',
+			type: 'mdxJsxFlowElement',
 			name: 'video',
 			attributes: [
 				{ type: 'mdxJsxAttribute', name: 'controls', value: null },
 				{ type: 'mdxJsxAttribute', name: 'preload', value: 'metadata' },
-				...(node.alt ? [{ type: 'mdxJsxAttribute' as const, name: 'aria-label', value: node.alt }] : []),
+				{ type: 'mdxJsxAttribute', name: 'aria-label', value: node.alt ?? 'Video content' },
 			],
 			children: [
 				{
@@ -68,8 +68,12 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 					],
 					children: [],
 				},
+				{
+					type: 'text',
+					value: 'Your browser does not support the video tag.',
+				},
 			],
-		}
+		} as any // avoid TS errors on nesting mdxJsxTextElement inside mdxJsxFlowElement
 	})
 }
 
