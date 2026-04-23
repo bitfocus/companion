@@ -1,6 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ConfiguredSurfacesPage } from '~/Surfaces/ConfiguredSurfacesPage'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
+// for backwards compatibility
 export const Route = createFileRoute('/_app/surfaces/configured')({
-	component: ConfiguredSurfacesPage,
+	loader: () => {
+		throw redirect({ to: '/surfaces' })
+	},
 })
