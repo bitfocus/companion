@@ -1,3 +1,4 @@
+import { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -27,13 +28,13 @@ export class ElementExpressionHelper<T> {
 	readonly #usedVariables: Set<string>
 
 	readonly #element: T
-	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined
+	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
 
 	constructor(
 		parser: VariablesAndExpressionParser,
 		usedVariables: Set<string>,
 		element: T,
-		elementOverrides: ReadonlyMap<string, ExpressionOrValue<any>> | undefined
+		elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
 	) {
 		this.#parser = parser
 		this.#usedVariables = usedVariables
@@ -69,7 +70,7 @@ export class ElementExpressionHelper<T> {
 		}
 	}
 
-	#getValue(propertyName: keyof T): ExpressionOrValue<any> {
+	#getValue(propertyName: keyof T): ExpressionOrValue<JsonValue | undefined> {
 		const override = this.#elementOverrides?.get(String(propertyName))
 		return override ? override : (this.#element as any)[propertyName]
 	}
@@ -261,7 +262,7 @@ export function createParseElementsContext(
 	compositeElementStore: InstanceDefinitions,
 	parser: VariablesAndExpressionParser,
 	drawPixelBuffers: DrawPixelBuffers,
-	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>,
+	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>,
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null,
 	globalReferences: ExpressionReferences,

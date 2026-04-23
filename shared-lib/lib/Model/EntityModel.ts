@@ -1,5 +1,5 @@
 import z from 'zod'
-import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
+import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
 import type { ActionSetId } from './ActionModel.js'
 import { ExpressionOrJsonValueSchema, type ExpressionableOptionsObject, type ExpressionOrValue } from './Options.js'
 import type { VariableValue } from './Variables.js'
@@ -63,7 +63,7 @@ export interface FeedbackEntityStyleOverride {
 	elementId: string
 	elementProperty: string
 	// Note: When overriding advanced feedbacks, this should be set to `{ isExpression: false, value: 'color' }` or similar to indicate which property it is using
-	override: ExpressionOrValue<any>
+	override: ExpressionOrValue<JsonValue | undefined>
 }
 export const schemaFeedbackEntityStyleOverride: z.ZodType<FeedbackEntityStyleOverride> = z.object({
 	overrideId: z.string(),

@@ -1,3 +1,4 @@
+import { JsonValue } from 'type-fest'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -59,7 +60,7 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 				if (key === 'id' || key === 'type' || key === 'name') continue
 
 				// Check for an expressions in the property
-				const prop = element[key as keyof typeof element] as any as ExpressionOrValue<any>
+				const prop = element[key as keyof typeof element] as any as ExpressionOrValue<JsonValue | undefined>
 				if (prop && typeof prop === 'object' && (prop.isExpression || typeof prop.value === 'string')) {
 					this.visitor.visitString(prop, 'value')
 				}

@@ -971,7 +971,9 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		points.forEach((point) => {
 			this.context2d.lineTo(point[0], point[1])
 		})
-		if (close || (firstPoint[0] == points[points.length - 1][0] && firstPoint[1] == points[points.length - 1][1])) {
+
+		const lastPoint = points[points.length - 1]
+		if (close || (lastPoint && firstPoint[0] == lastPoint[0] && firstPoint[1] == lastPoint[1])) {
 			this.context2d.closePath()
 		}
 

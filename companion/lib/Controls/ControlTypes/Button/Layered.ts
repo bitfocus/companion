@@ -458,6 +458,14 @@ export class ControlButtonLayered
 		if ((indexOfElement === 0 && currentParentElementId === null) || (newIndex === 0 && parentElementId === null))
 			return false
 
+		// Cycle detection: prevent moving an element into itself or one of its own descendants
+		if (parentElementId !== null) {
+			if (parentElementId === id) return false
+			const { element } = currentElementLocation
+			if (element.type === 'group' && this.#findGroupElementById(element.children, parentElementId) !== null)
+				return false
+		}
+
 		const targetElementArray = parentElementId
 			? this.#findGroupElementById(this.#drawElements, parentElementId)?.children
 			: this.#drawElements

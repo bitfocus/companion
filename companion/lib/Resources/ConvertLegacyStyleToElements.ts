@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { JsonValue } from 'type-fest'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import {
 	EntityModelType,
@@ -99,7 +100,7 @@ export function GetLegacyStyleProperty(
 	rawStyle: Partial<ButtonStyleProperties>,
 	property: string,
 	elementProperty: string
-): ExpressionOrValue<any> | undefined {
+): ExpressionOrValue<JsonValue | undefined> | undefined {
 	switch (property) {
 		case 'text':
 			if (parsedStyle.text.text !== undefined) return parsedStyle.text.text

@@ -1,3 +1,4 @@
+import { JsonValue } from 'type-fest'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -93,7 +94,10 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
-	public getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
+	public getFeedbackStyleOverrides(): ReadonlyMap<
+		string,
+		ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
+	> {
 		return new Map()
 	}
 

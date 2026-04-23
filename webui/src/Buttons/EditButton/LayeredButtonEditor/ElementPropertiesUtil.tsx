@@ -38,7 +38,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 
 	const elementId = elementProps.id
 
-	const elementProp = elementProps[property] as ExpressionOrValue<any>
+	const elementProp = elementProps[property] as ExpressionOrValue<JsonValue | undefined>
 
 	const setExpressionOrValue = useCallback(
 		(newVal: ExpressionOrValue<JsonValue | undefined>) => {

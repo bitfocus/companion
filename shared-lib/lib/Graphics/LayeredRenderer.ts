@@ -381,6 +381,10 @@ export class GraphicsLayeredButtonRenderer {
 		return drawBounds
 	}
 
+	/**
+	 * Draw some bounds lines over the whole image, to give a visual indicator of the selected element
+	 * Note: this intentionally overshoots everything to make it very visible
+	 */
 	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {
 		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what colour is best?
 

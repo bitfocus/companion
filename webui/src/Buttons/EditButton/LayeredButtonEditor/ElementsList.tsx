@@ -224,10 +224,8 @@ const ElementListItemPlaceholder = observer(function ElementListItemPlaceholder(
 
 			const hoverParentElementId = parentElementId
 
-			// // Don't replace items with themselves
-			// if (item.parentElementId === parentElementId && (item.elementId === parentElementId || item.index === hoverIndex)) {
-			// 	return
-			// }
+			// Don't allow a group to be dropped into itself
+			if (item.elementId === parentElementId) return
 
 			// Time to actually perform the change
 			moveElement

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
@@ -52,7 +53,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	parser: VariablesAndExpressionParser,
 	drawPixelBuffers: DrawPixelBuffers,
 	elements: SomeButtonGraphicsElement[],
-	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>>,
+	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>,
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null
 ): Promise<{

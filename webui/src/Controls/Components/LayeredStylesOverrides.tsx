@@ -284,7 +284,9 @@ const PropertyValueInput = observer(function PropertyValueInput({
 				<DropdownInputField
 					choices={ButtonStylePropertiesWithBuffer}
 					value={row.override.value}
-					setValue={(value) => updateRow({ ...row, override: { ...row.override, value } as ExpressionOrValue<any> })}
+					setValue={(value) =>
+						updateRow({ ...row, override: { ...row.override, value } as ExpressionOrValue<JsonValue | undefined> })
+					}
 				/>
 			)
 		case FeedbackEntitySubType.Boolean:

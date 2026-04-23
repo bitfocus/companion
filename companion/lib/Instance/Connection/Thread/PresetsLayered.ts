@@ -35,6 +35,7 @@ import type {
 	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
 	CompanionPresetLayeredFeedback,
 	ExpressionOrValue as ExpressionOrValueModule,
+	JsonValue,
 	ModuleLogger,
 	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
 } from '@companion-module/host'
@@ -209,7 +210,7 @@ function convertLayeredPresetElement(
 				borderOnlyArc: convertModuleExpressionOrValue(element.borderOnlyArc, { value: false, isExpression: false }),
 			} satisfies ButtonGraphicsCircleElement
 		case 'composite': {
-			const options: Record<CompositeElementOptionKey, ExpressionOrValue<any>> = {}
+			const options: Record<CompositeElementOptionKey, ExpressionOrValue<JsonValue | undefined>> = {}
 			for (const [key, value] of Object.entries(element.options || {})) {
 				options[`opt:${key}`] = convertModuleExpressionOrValue(value, undefined as any) // Convert, and omit invalid values
 			}

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
+import { JsonValue } from 'type-fest'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type {
@@ -213,11 +214,11 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			for (const opt of definition.options) {
 				if (opt.type === 'static-text') continue
 
-				const defaultValue = 'default' in opt ? structuredClone(opt.default) : undefined
+				const defaultValue = 'default' in opt ? structuredClone<JsonValue | undefined>(opt.default) : undefined
 				entity.options[opt.id] = {
 					isExpression: false,
 					value: defaultValue,
-				} satisfies ExpressionOrValue<any>
+				} satisfies ExpressionOrValue<JsonValue | undefined>
 			}
 		}
 
@@ -395,10 +396,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		const model: LayeredButtonModel = {
 			...definition.model,
-			options: {
-				...definition.model.options,
-				canModifyStyleInApis: false,
-			},
 			localVariables: structuredClone(definition.model.localVariables),
 		}
 
@@ -553,7 +550,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			definition: ClientEntityDefinition,
 			options: ExpressionableOptionsObject
 		): ExpressionableOptionsObject =>
-			visitEntityOptionsForVariables<ExpressionOrValue<any> | undefined>(
+			visitEntityOptionsForVariables<ExpressionOrValue<JsonValue | undefined> | undefined>(
 				definition,
 				options,
 				(_field, optionValue, fieldType) => {

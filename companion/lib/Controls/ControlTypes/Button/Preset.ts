@@ -204,6 +204,8 @@ export class ControlButtonPreset
 
 	#applyPresetModel(storage: PresetButtonModel): void {
 		this.#drawElements = storage.style.layers || []
+		this.#elementConversionCache.clear()
+
 		this.options = Object.assign(this.options, storage.options || {})
 		this.entities.loadStorage(storage, true, true)
 		this.entities.stepExpressionUpdate(this.options)

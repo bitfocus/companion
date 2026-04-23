@@ -1,3 +1,4 @@
+import { JsonValue } from 'type-fest'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
@@ -175,11 +176,15 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return entityLists
 	}
 
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<any>>> {
-		const result = new Map<string, Map<string, ExpressionOrValue<any>>>()
+	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>> {
+		const result = new Map<string, Map<string, ExpressionOrValue<JsonValue | undefined>>>()
 
-		const pushOverride = (elementId: string, elementProperty: string, override: ExpressionOrValue<any>) => {
-			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<any>>()
+		const pushOverride = (
+			elementId: string,
+			elementProperty: string,
+			override: ExpressionOrValue<JsonValue | undefined>
+		) => {
+			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<JsonValue | undefined>>()
 
 			// Hack: merge imageBuffers so that they stack instead of replacing
 			if (elementProperty === 'base64Image') {
