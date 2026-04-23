@@ -234,6 +234,20 @@ code {
 	}
 }
 
+.markdown {
+	video {
+		width: 100%;
+		height: auto;
+		border-radius: 0.5rem;
+		margin: 1rem 0;
+	}
+
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+}
+
 .btn-secondary {
 	background-color: color.adjust($secondary, $lightness: 15%, $space: hsl);
 }
