@@ -310,6 +310,9 @@ export function validateInputValue(
 		case 'internal:variable':
 		case 'internal:trigger':
 		case 'internal:trigger_collection':
+		case 'internal:horizontal-alignment':
+		case 'internal:vertical-alignment':
+		case 'internal:png-image':
 			// Not supported
 			return { sanitisedValue: value, validationError: undefined, validationWarnings }
 

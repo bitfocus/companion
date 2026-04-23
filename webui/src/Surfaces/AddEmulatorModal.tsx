@@ -18,10 +18,10 @@ import { forwardRef, useCallback, useContext, useImperativeHandle, useState } fr
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { trpc, useMutationExt, type RouterInputs } from '~/Resources/TRPC'
+import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-type EmulatorAddInput = RouterInputs['surfaces']['emulatorAdd']
+type EmulatorAddInput = RouterInput['surfaces']['emulatorAdd']
 
 export interface AddEmulatorModalRef {
 	show(): void

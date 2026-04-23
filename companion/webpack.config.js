@@ -86,7 +86,7 @@ export default {
 			: '',
 	].filter(Boolean),
 	optimization: {
-		minimize: true,
+		minimize: devMode === 'production',
 		minimizer: [
 			new TerserPlugin({
 				terserOptions: {

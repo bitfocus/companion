@@ -85,6 +85,7 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 })
 
 export interface ButtonPreviewBaseProps {
+	className?: string
 	fixedSize?: boolean
 	canDrop?: boolean
 	dropHover?: boolean
@@ -116,7 +117,7 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 	return (
 		<div
 			ref={props.dropRef}
-			className={classnames(classes)}
+			className={classnames(classes, props.className)}
 			style={props.style}
 			onMouseDown={() => props.onClick?.(true)}
 			onMouseUp={() => props.onClick?.(false)}

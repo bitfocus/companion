@@ -8,11 +8,11 @@ import type { ColorResult } from './ColorPicker/colors.js'
 import { SketchPicker } from './ColorPicker/Sketch.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
-function splitColor(color: number | string) {
+function splitColor(color: number | string, enableAlpha: boolean) {
 	if (typeof color === 'number' || !isNaN(Number(color))) {
 		color = Number(color)
 
-		if (color > 0xffffff) {
+		if (enableAlpha) {
 			return {
 				r: (color >> 16) & 0xff,
 				g: (color >> 8) & 0xff,
@@ -47,13 +47,14 @@ function splitColor(color: number | string) {
 
 const toReturnType = <T extends 'string' | 'number'>(
 	value: ColorResult,
-	returnType: 'string' | 'number'
+	returnType: 'string' | 'number',
+	enableAlpha: boolean | undefined
 ): AsType<T> => {
 	if (returnType === 'string') {
 		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a})` as any // TODO - typings
 	} else {
 		let colorNumber = parseInt(value.hex.slice(1, 7), 16)
-		if (value.rgb.a && value.rgb.a !== 1) {
+		if (enableAlpha && value.rgb.a !== undefined && value.rgb.a !== 1) {
 			colorNumber += 0x1000000 * Math.round(255 * (1 - value.rgb.a)) // add possible transparency to number
 		}
 		return colorNumber as any // TODO - typings
@@ -96,23 +97,23 @@ export function ColorInputField<T extends 'string' | 'number'>({
 
 	const onChange = useCallback(
 		(c: ColorResult) => {
-			const newValue = toReturnType<T>(c, returnType)
+			const newValue = toReturnType<T>(c, returnType, enableAlpha)
 			setValue(newValue)
 			setCurrentColor(newValue)
 		},
-		[setValue, returnType]
+		[setValue, returnType, enableAlpha]
 	)
 
 	const onChangeComplete = useCallback(
 		(c: ColorResult) => {
-			const newValue = toReturnType<T>(c, returnType)
+			const newValue = toReturnType<T>(c, returnType, enableAlpha)
 			setValue(newValue)
 			setCurrentColor(null)
 		},
-		[setValue, returnType]
+		[setValue, returnType, enableAlpha]
 	)
 
-	const color = splitColor(currentColor ?? value ?? 0)
+	const color = splitColor(currentColor ?? value ?? 0, enableAlpha ?? false)
 
 	const styles = {
 		color: {

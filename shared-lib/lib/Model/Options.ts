@@ -70,6 +70,9 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:connection_collection'
 		| 'internal:surface_serial'
 		| 'internal:page'
+		| 'internal:horizontal-alignment'
+		| 'internal:vertical-alignment'
+		| 'internal:png-image'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -143,6 +146,27 @@ export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended 
 	includeDirection: boolean
 	default: number
 }
+export interface InternalInputFieldHorizontalAlignment extends CompanionInputFieldBaseExtended {
+	type: 'internal:horizontal-alignment'
+	/** The default value */
+	default: 'left' | 'center' | 'right'
+}
+export interface InternalInputFieldVerticalAlignment extends CompanionInputFieldBaseExtended {
+	type: 'internal:vertical-alignment'
+	/** The default value */
+	default: 'top' | 'center' | 'bottom'
+}
+export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExtended {
+	type: 'internal:png-image'
+	/** The default value */
+	default: string | null
+	/** Minimum image dimensions */
+	min?: { width: number; height: number }
+	/** Maximum image dimensions */
+	max?: { width: number; height: number }
+	/** Allow non-PNG image formats */
+	allowNonPng?: boolean
+}
 
 export type InternalInputField =
 	| InternalInputFieldTime
@@ -155,6 +179,9 @@ export type InternalInputField =
 	| InternalInputFieldConnectionCollection
 	| InternalInputFieldSurfaceSerial
 	| InternalInputFieldPage
+	| InternalInputFieldHorizontalAlignment
+	| InternalInputFieldVerticalAlignment
+	| InternalInputFieldPngImage
 
 export interface CompanionInputFieldStaticTextExtended extends CompanionInputFieldBaseExtended {
 	type: 'static-text'
@@ -166,8 +193,8 @@ export interface CompanionInputFieldColorExtended extends CompanionInputFieldBas
 	type: 'colorpicker'
 
 	default: string | number
-	enableAlpha?: boolean
-	returnType?: 'string' | 'number'
+	enableAlpha: boolean
+	returnType: 'string' | 'number'
 
 	presetColors?: CompanionColorPresetValue[]
 }

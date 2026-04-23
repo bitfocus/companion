@@ -83,7 +83,7 @@ export class SurfaceGroup {
 	 */
 	#dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>
 	/**
-	 * The core page controller
+	 * The core page store
 	 */
 	#pageStore: IPageStore
 	/**

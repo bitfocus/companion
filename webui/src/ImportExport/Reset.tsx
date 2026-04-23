@@ -450,7 +450,7 @@ const ResetApplyStep = withForm({
 					}
 
 					if (config.imageLibrary !== 'unchanged') {
-						changes.push(<li key="image-library">All images and image collections.</li>)
+						changes.push(<li key="imageLibrary">All images in the image library.</li>)
 					}
 
 					if (config.userconfig !== 'unchanged') {

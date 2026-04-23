@@ -29,8 +29,13 @@ import { InternalCustomVariableDropdown, InternalModuleField } from './InternalM
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 
+const ExpressionModeFeatures: InputFeatureIconsProps = Object.freeze({
+	variables: true,
+	local: true,
+})
+
 interface OptionsInputFieldProps {
-	connectionId: string
+	allowInternalFields: boolean
 	controlId?: string | null
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
@@ -58,7 +63,7 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 }
 
 export const OptionsInputField = observer(function OptionsInputField({
-	connectionId,
+	allowInternalFields,
 	controlId,
 	isLocatedInGrid,
 	entityType,
@@ -70,206 +75,35 @@ export const OptionsInputField = observer(function OptionsInputField({
 	localVariablesStore,
 	fieldSupportsExpression,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
-	const checkValid = useCallback((value: JsonValue | undefined) => checkInputValueIsGood(option, value), [option])
-	const setExpressionValue = useCallback(
-		(val: string) =>
-			setValue(option.id, {
-				isExpression: true,
-				value: val,
-			} satisfies ExpressionOrValue<JsonValue>),
-		[option.id, setValue]
-	)
-	const setBasicValue = useCallback(
+	const features = getInputFeatures(option)
+
+	const isExpression = option.type === 'expression'
+	let isInExpressionMode = isExpression
+
+	const setControlValue = useCallback(
 		(val: JsonValue) =>
 			setValue(option.id, {
-				isExpression: false,
-				value: val,
+				isExpression: isExpression,
+				value: val as any,
 			} satisfies ExpressionOrValue<JsonValue>),
-		[option.id, setValue]
+		[option.id, setValue, isExpression]
 	)
 
-	const basicValue: JsonValue | undefined = rawValue?.value
+	let control = (
+		<OptionsInputControl
+			allowInternalFields={allowInternalFields}
+			isLocatedInGrid={isLocatedInGrid}
+			entityType={entityType}
+			option={option}
+			value={rawValue?.value}
+			setValue={setControlValue}
+			readonly={readonly}
+			localVariablesStore={localVariablesStore}
+			features={features}
+		/>
+	)
 
-	if (!option) {
-		return <p>Bad option</p>
-	}
-
-	const isInternal = connectionId === 'internal'
-
-	let control: JSX.Element | string | undefined = undefined
-	let features: InputFeatureIconsProps | undefined = undefined
-	let isInExpressionMode = false
-
-	switch (option.type) {
-		case 'textinput': {
-			features = {
-				variables: !!option.useVariables,
-				local:
-					option.useVariables === CompanionFieldVariablesSupport.LocalVariables ||
-					option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-			}
-
-			const localVariables = features.local
-				? localVariablesStore?.getOptions(
-						entityType,
-						option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-						isLocatedInGrid
-					)
-				: undefined
-
-			control = (
-				<TextInputField
-					value={basicValue as any}
-					placeholder={option.placeholder}
-					useVariables={features.variables}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setBasicValue}
-					checkValid={checkValid}
-					multiline={option.multiline}
-				/>
-			)
-			break
-		}
-		case 'expression': {
-			features = {
-				variables: true,
-				local: true,
-			}
-
-			isInExpressionMode = true
-
-			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
-
-			control = (
-				<ExpressionInputField
-					value={basicValue as any}
-					localVariables={localVariables}
-					disabled={readonly}
-					setValue={setExpressionValue}
-				/>
-			)
-			break
-		}
-		case 'dropdown': {
-			control = (
-				<DropdownInputField
-					value={basicValue as any}
-					choices={option.choices}
-					allowCustom={option.allowCustom}
-					minChoicesForSearch={option.minChoicesForSearch}
-					regex={option.regex}
-					disabled={readonly}
-					setValue={setBasicValue}
-					checkValid={checkValid}
-				/>
-			)
-			break
-		}
-		case 'multidropdown': {
-			control = (
-				<MultiDropdownInputField
-					value={basicValue as any}
-					choices={option.choices}
-					allowCustom={option.allowCustom}
-					minSelection={option.minSelection}
-					minChoicesForSearch={option.minChoicesForSearch}
-					maxSelection={option.maxSelection}
-					sortSelection={option.sortSelection}
-					regex={option.regex}
-					disabled={readonly}
-					setValue={setBasicValue}
-					checkValid={checkValid}
-				/>
-			)
-			break
-		}
-		case 'checkbox': {
-			if (option.displayToggle) {
-				control = (
-					<CFormSwitch
-						color="success"
-						checked={!!basicValue}
-						size="xl"
-						onChange={(e) => setBasicValue(e.currentTarget.checked)}
-						disabled={readonly}
-					/>
-				)
-			} else {
-				control = <CheckboxInputField value={basicValue as any} disabled={readonly} setValue={setBasicValue} />
-			}
-			break
-		}
-		case 'colorpicker': {
-			control = (
-				<ColorInputField
-					value={basicValue as any}
-					disabled={readonly}
-					setValue={setBasicValue}
-					enableAlpha={option.enableAlpha ?? false}
-					returnType={option.returnType ?? 'number'}
-					presetColors={option.presetColors}
-				/>
-			)
-			break
-		}
-		case 'number': {
-			control = (
-				<NumberInputField
-					value={basicValue as any}
-					min={option.min}
-					max={option.max}
-					step={option.step}
-					range={option.range}
-					disabled={readonly}
-					setValue={setBasicValue}
-					checkValid={checkValid}
-					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
-					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
-				/>
-			)
-			break
-		}
-		case 'static-text': {
-			// Force the field to not offer toggling to an expression
-			fieldSupportsExpression = false
-
-			control = <StaticTextFieldText {...option} />
-			break
-		}
-		case 'custom-variable': {
-			if (entityType === EntityModelType.Action) {
-				control = (
-					<InternalCustomVariableDropdown
-						disabled={!!readonly}
-						value={basicValue}
-						setValue={setBasicValue}
-						includeNone={true}
-					/>
-				)
-			}
-			break
-		}
-		case 'bonjour-device':
-		case 'secret-text':
-			// Not supported here
-			break
-		default:
-			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
-			if (isInternal) {
-				control =
-					InternalModuleField(option, isLocatedInGrid, localVariablesStore, !!readonly, basicValue, setBasicValue) ??
-					undefined
-			}
-			// Use default below
-			break
-	}
-
-	let description = option.description
-
-	if (control === undefined) {
-		control = <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
-	} else if (fieldSupportsExpression) {
+	if (fieldSupportsExpression && option.type !== 'expression') {
 		const rawExpressionValue = rawValue || { isExpression: false, value: undefined }
 
 		control = (
@@ -287,20 +121,12 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 		// Update the features in the label when toggling the mode
 		if (rawExpressionValue?.isExpression) {
-			if (!features) features = {}
-			features.local = true
-			features.variables = true
-
 			isInExpressionMode = true
-
-			if (option.expressionDescription !== undefined) {
-				description = option.expressionDescription
-			}
 		}
 	}
 
-	// Determine if we're in expression mode and what the expression string is
-	const expressionString = isInExpressionMode ? (stringifyVariableValue(basicValue) ?? '') : null
+	const description =
+		isInExpressionMode && option.expressionDescription !== undefined ? option.expressionDescription : option.description
 
 	return (
 		<>
@@ -308,10 +134,10 @@ export const OptionsInputField = observer(function OptionsInputField({
 				htmlFor="colFormConnection"
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
-				<OptionLabel option={option} features={features} />
-				{expressionString !== null && (
+				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
+				{isInExpressionMode && (
 					<ExpressionValuePreview
-						expression={expressionString}
+						expression={stringifyVariableValue(rawValue?.value) ?? ''}
 						controlId={controlId ?? null}
 						fieldDefinition={option}
 					/>
@@ -323,6 +149,177 @@ export const OptionsInputField = observer(function OptionsInputField({
 			</CCol>
 		</>
 	)
+})
+
+interface OptionsInputControlProps {
+	allowInternalFields: boolean
+	isLocatedInGrid: boolean
+	entityType: EntityModelType | null
+	option: SomeCompanionInputField
+	value: JsonValue | undefined
+	setValue: (value: any) => void
+	readonly?: boolean
+	localVariablesStore: LocalVariablesStore | null
+	features?: InputFeatureIconsProps
+}
+
+export const OptionsInputControl = observer(function OptionsInputControl({
+	allowInternalFields,
+	isLocatedInGrid,
+	entityType,
+	option,
+	value,
+	setValue,
+	readonly,
+	localVariablesStore,
+	features,
+}: Readonly<OptionsInputControlProps>): React.JSX.Element {
+	const checkValid = useCallback((value: JsonValue | undefined) => checkInputValueIsGood(option, value), [option])
+
+	if (!option) return <p>Bad option</p>
+
+	switch (option.type) {
+		case 'textinput': {
+			const localVariables = features?.local
+				? localVariablesStore?.getOptions(
+						entityType,
+						option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+						isLocatedInGrid
+					)
+				: undefined
+
+			return (
+				<TextInputField
+					value={value as any}
+					placeholder={option.placeholder}
+					useVariables={features?.variables ?? false}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setValue}
+					checkValid={checkValid}
+					multiline={option.multiline}
+				/>
+			)
+		}
+		case 'expression': {
+			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+
+			return (
+				<ExpressionInputField
+					value={value as any}
+					localVariables={localVariables}
+					disabled={readonly}
+					setValue={setValue}
+				/>
+			)
+		}
+		case 'dropdown': {
+			return (
+				<DropdownInputField
+					value={value as any}
+					choices={option.choices}
+					allowCustom={option.allowCustom}
+					minChoicesForSearch={option.minChoicesForSearch}
+					regex={option.regex}
+					disabled={readonly}
+					setValue={setValue}
+					checkValid={checkValid}
+				/>
+			)
+		}
+		case 'multidropdown': {
+			return (
+				<MultiDropdownInputField
+					value={value as any}
+					choices={option.choices}
+					allowCustom={option.allowCustom}
+					minSelection={option.minSelection}
+					minChoicesForSearch={option.minChoicesForSearch}
+					maxSelection={option.maxSelection}
+					sortSelection={option.sortSelection}
+					regex={option.regex}
+					disabled={readonly}
+					setValue={setValue}
+					checkValid={checkValid}
+				/>
+			)
+		}
+		case 'checkbox': {
+			if (option.displayToggle) {
+				return (
+					<CFormSwitch
+						color="success"
+						checked={!!value}
+						size="xl"
+						onChange={(e) => setValue(e.currentTarget.checked)}
+						disabled={readonly}
+					/>
+				)
+			} else {
+				return <CheckboxInputField value={value as any} disabled={readonly} setValue={setValue} />
+			}
+		}
+		case 'colorpicker': {
+			return (
+				<ColorInputField
+					value={value as any}
+					disabled={readonly}
+					setValue={setValue}
+					enableAlpha={option.enableAlpha ?? false}
+					returnType={option.returnType ?? 'number'}
+					presetColors={option.presetColors}
+				/>
+			)
+		}
+		case 'number': {
+			return (
+				<NumberInputField
+					value={value as any}
+					min={option.min}
+					max={option.max}
+					step={option.step}
+					range={option.range}
+					disabled={readonly}
+					setValue={setValue}
+					checkValid={checkValid}
+					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
+					showMaxAsPositiveInfinity={option.showMaxAsPositiveInfinity}
+				/>
+			)
+		}
+		case 'static-text': {
+			return <StaticTextFieldText {...option} />
+		}
+		case 'custom-variable': {
+			if (entityType === EntityModelType.Action) {
+				return (
+					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue} includeNone={true} />
+				)
+			}
+			break
+		}
+		case 'bonjour-device':
+		case 'secret-text':
+			// Not supported here
+			break
+		default:
+			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
+			if (allowInternalFields) {
+				const internalControl = InternalModuleField(
+					option,
+					isLocatedInGrid,
+					localVariablesStore,
+					!!readonly,
+					value,
+					setValue
+				)
+				if (internalControl) return internalControl
+			}
+			// Use default below
+			break
+	}
+
+	return <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
 })
 
 export interface InputFeatureIconsProps {
@@ -346,4 +343,19 @@ export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | 
 		)
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function getInputFeatures(option: SomeCompanionInputField): InputFeatureIconsProps | undefined {
+	if (option.type === 'textinput') {
+		return {
+			variables: !!option.useVariables,
+			local:
+				option.useVariables === CompanionFieldVariablesSupport.InternalParser ||
+				option.useVariables === CompanionFieldVariablesSupport.LocalVariables,
+		}
+	} else if (option.type === 'expression') {
+		return ExpressionModeFeatures
+	}
+	return undefined
 }
