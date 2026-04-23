@@ -411,7 +411,7 @@ export class ControlButtonPreset
 	 * @returns The element if found, undefined otherwise
 	 */
 	layeredStyleGetElementById(_id: string): SomeButtonGraphicsElement | undefined {
-		// Streaming elemnets is not supported
+		// Streaming elements is not supported
 		return undefined
 	}
 
