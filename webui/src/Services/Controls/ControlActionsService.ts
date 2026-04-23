@@ -83,13 +83,6 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				// Not supported
 			},
 
-			setSelectedStyleProps: (_entityId: string, _keys: string[]) => {
-				// Not supported
-			},
-
-			setStylePropsValue: (_entityId: string, _key: string, _value: any) => {
-				// Not supported
-			},
 			replaceStyleOverride(_entityId: string, _override: FeedbackEntityStyleOverride) {
 				// Not supported
 			},
