@@ -7,15 +7,11 @@ import {
 	type UseMutationResult,
 } from '@tanstack/react-query'
 import { createTRPCClient, createWSClient, loggerLink, wsLink } from '@trpc/client'
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import { useMemo } from 'react'
 import type { AppRouter } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
 
 import { makeAbsolutePath } from './util.js'
-
-export type RouterInputs = inferRouterInputs<AppRouter>
-export type RouterOutputs = inferRouterOutputs<AppRouter>
 
 export type { AppRouter, RouterInput, RouterOutput } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
 
