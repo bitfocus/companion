@@ -113,7 +113,10 @@ export class ElementExpressionHelper<T> {
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return stringifyVariableValue(value.value) as TVal
+		if (!value.isExpression) {
+			if (value.value === null || value.value === undefined) return value.value as TVal
+			return stringifyVariableValue(value.value) as TVal
+		}
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
