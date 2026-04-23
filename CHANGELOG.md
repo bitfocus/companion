@@ -23,6 +23,11 @@
   - Date expression functions (#4021)
 - Rework various panels/lists to group connections by collections instead of as a flat list
 - Improve performance of some button drawing #3902 #3891
+- Add a context menu for managing the sidebar
+  - Free up space by removing the now-redundant sidebar help section
+  - Reduce the number of items in the Variables sidebar group
+  - Manage expand/collapse of sidebar groups (Auto-close aka. Accordion Mode)
+  - Add a new "Always-Narrow" sidebar mode
 - Various styling refinement
   - Rework button grid presentation
   - Add help icon to header bar
@@ -52,6 +57,7 @@
 - improve confusing trigger terminology "depress" (#3922)
 - ensure module manifest doesn't load root file from outside of package
 - Launch main companion process with the `--use-system-ca` flag (#4060)
+- Improve relevance of search results (#3976)
 
 ## Companion v4.2.6 - Release Notes
 

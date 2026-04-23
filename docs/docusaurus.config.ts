@@ -3,6 +3,7 @@ import type { Config } from '@docusaurus/types'
 import type * as Preset from '@docusaurus/preset-classic'
 // @ts-expect-error No types provided for this plugin
 import lunrPlugin from 'docusaurus-lunr-search'
+import remarkVideo from './src/plugins/remark-video'
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -47,6 +48,7 @@ const config: Config = {
 					routeBasePath: '/',
 					sidebarPath: './sidebars.ts',
 					editUrl: 'https://github.com/bitfocus/companion/tree/main/docs/',
+					beforeDefaultRemarkPlugins: [remarkVideo],
 				},
 				theme: {
 					customCss: './src/css/custom.css',
