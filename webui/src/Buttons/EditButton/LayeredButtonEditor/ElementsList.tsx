@@ -171,7 +171,7 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
-					{element.name ?? element.type}
+					{element.name || element.type}
 				</div>
 
 				<div className="element-buttons">

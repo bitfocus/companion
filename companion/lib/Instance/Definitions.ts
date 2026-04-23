@@ -312,12 +312,21 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			})
 		}
 
+		const oldElements = this.#compositeElementDefinitions[connectionId]
 		delete this.#compositeElementDefinitions[connectionId]
 		if (this.#events.listenerCount('compositeElements') > 0) {
 			this.#events.emit('compositeElements', {
 				type: 'forget-connection',
 				connectionId,
 			})
+		}
+
+		// Trigger invalidation of any drawn controls using these elements
+		const forgottenIds = oldElements
+			? new Set<CompositeElementIdString>(Object.keys(oldElements).map((id) => `${connectionId}:${id}` as const))
+			: null
+		if (forgottenIds && forgottenIds.size > 0) {
+			this.emit('updateCompositeElements', forgottenIds)
 		}
 	}
 
