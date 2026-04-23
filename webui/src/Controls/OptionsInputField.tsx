@@ -77,7 +77,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const features = getInputFeatures(option)
 
-	const isExpression = !!(option.type === 'expression')
+	const isExpression = option.type === 'expression'
 	let isInExpressionMode = isExpression
 
 	const setControlValue = useCallback(
