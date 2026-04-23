@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import {
 	EntityModelType,
@@ -176,7 +176,7 @@ export function GetLegacyStyleProperty(
 			if (parsedStyle.imageBuffers && parsedStyle.imageBuffers.length > 0) {
 				return {
 					isExpression: false,
-					value: parsedStyle.imageBuffers,
+					value: parsedStyle.imageBuffers as any,
 				}
 			}
 			break

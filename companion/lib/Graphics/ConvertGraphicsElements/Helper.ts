@@ -1,4 +1,4 @@
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -93,14 +93,14 @@ export class ElementExpressionHelper<T> {
 		if (value.isExpression) {
 			return stringifyVariableValue(this.getUnknown(propertyName, 'ERR')) ?? ''
 		} else {
-			return this.parseVariablesInString(value.value, 'ERR')
+			return this.parseVariablesInString(stringifyVariableValue(value.value) ?? '', 'ERR')
 		}
 	}
 
 	getNumber(propertyName: keyof T, defaultValue: number, scale = 1): number {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return value.value * scale
+		if (!value.isExpression) return Number(value.value) * scale
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'number')
 		if (!result.ok) {
@@ -113,7 +113,7 @@ export class ElementExpressionHelper<T> {
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return value.value
+		if (!value.isExpression) return stringifyVariableValue(value.value) as TVal
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
 		if (!result.ok) {
@@ -130,7 +130,7 @@ export class ElementExpressionHelper<T> {
 	getEnum<TVal extends string | number>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
 		const value = this.#getValue(propertyName)
 
-		let actualValue: TVal = value.value
+		let actualValue: TVal = value.value as TVal
 		if (value.isExpression) {
 			const result = this.executeExpressionAndTrackVariables(
 				value.value,
@@ -152,7 +152,7 @@ export class ElementExpressionHelper<T> {
 	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return value.value
+		if (!value.isExpression) return Boolean(value.value)
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'boolean')
 		if (!result.ok) {

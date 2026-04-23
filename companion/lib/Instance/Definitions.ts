@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type {

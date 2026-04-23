@@ -451,7 +451,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (Array.isArray(oldProperties)) {
 					// Prune style overrides that were not selected properties
 					feedback.styleOverrides = feedback.styleOverrides.filter((override) =>
-						oldProperties.includes(override.override.value)
+						oldProperties.includes(stringifyVariableValue(override.override.value) ?? '')
 					)
 				}
 

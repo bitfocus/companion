@@ -1,3 +1,4 @@
+import { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -1358,8 +1359,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			]
 
 			// feedbackOverrides is Map<elementId, Map<propertyName, ExpressionOrValue>>
-			const text1Overrides = new Map<string, ExpressionOrValue<unknown>>([['text', val('Overridden')]])
-			const globalReferences = new Map<string, ReadonlyMap<string, ExpressionOrValue<unknown>>>([
+			const text1Overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['text', val('Overridden')]])
+			const globalReferences = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
 				['text1', text1Overrides],
 			])
 

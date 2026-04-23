@@ -6,6 +6,7 @@ import { nanoid } from 'nanoid'
 import { useCallback, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -283,7 +284,7 @@ const PropertyValueInput = observer(function PropertyValueInput({
 			return (
 				<DropdownInputField
 					choices={ButtonStylePropertiesWithBuffer}
-					value={row.override.value}
+					value={row.override.value as DropdownChoiceId}
 					setValue={(value) =>
 						updateRow({ ...row, override: { ...row.override, value } as ExpressionOrValue<JsonValue | undefined> })
 					}

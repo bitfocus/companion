@@ -11,7 +11,7 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
@@ -519,7 +519,7 @@ export abstract class ControlEntityListPoolBase {
 						const newValue = GetLegacyStyleProperty(
 							parsedStyle,
 							newProps.style,
-							override.override.value,
+							stringifyVariableValue(override.override.value) ?? '',
 							override.elementProperty
 						)
 

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
@@ -30,7 +30,7 @@ import {
 	type CompositeElementOptionKey,
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	CompositeElementDefinition,
@@ -279,9 +279,12 @@ function parseCompositeElementChildOptions(
 					const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
 					propOverrides[overrideKey] = res.ok ? res.value : option.default
 				} else if (option.useVariables) {
-					propOverrides[overrideKey] = helper.parseVariablesInString(rawValue.value, option.default ?? '')
+					propOverrides[overrideKey] = helper.parseVariablesInString(
+						stringifyVariableValue(rawValue.value) ?? '',
+						option.default ?? ''
+					)
 				} else {
-					propOverrides[overrideKey] = String(rawValue.value)
+					propOverrides[overrideKey] = stringifyVariableValue(rawValue.value) ?? ''
 				}
 				break
 			}
@@ -291,7 +294,7 @@ function parseCompositeElementChildOptions(
 				if (!rawValue) {
 					propOverrides[overrideKey] = option.default ?? ''
 				} else {
-					const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
+					const res = helper.executeExpressionAndTrackVariables(stringifyVariableValue(rawValue.value) ?? '', undefined)
 					propOverrides[overrideKey] = res.ok ? res.value : option.default
 				}
 				break

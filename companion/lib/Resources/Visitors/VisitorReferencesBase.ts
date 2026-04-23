@@ -1,4 +1,4 @@
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'

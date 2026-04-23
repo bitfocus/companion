@@ -444,7 +444,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		try {
 			canvasImage = await this.loadBase64Image(base64Image)
 		} catch (e) {
-			console.log('Error loading image', e)
+			this.logger.error('Error loading image', e)
 			return
 		}
 
@@ -479,7 +479,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			scaledImageHeight = imageHeight * calculatedScale
 		} else if (typeof scale === 'number') {
 			if (scale === 0) {
-				console.warn('image scale is zero, abort drawing of image')
+				this.logger.warn('image scale is zero, abort drawing of image')
 				return
 			}
 			calculatedScale = scale
@@ -492,7 +492,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		}
 
 		if (scaledImageWidth < 1 || scaledImageHeight < 1) {
-			console.warn('image width or height after scaling is less then one pixel, abort drawing of image')
+			this.logger.warn('image width or height after scaling is less then one pixel, abort drawing of image')
 			return
 		}
 

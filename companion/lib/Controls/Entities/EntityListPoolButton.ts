@@ -1,4 +1,4 @@
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
@@ -10,7 +10,7 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
@@ -235,7 +235,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 						const newValue = GetLegacyStyleProperty(
 							parsedStyle,
 							style,
-							override.override.value,
+							stringifyVariableValue(override.override.value) ?? '',
 							override.elementProperty
 						)
 						if (newValue) {
