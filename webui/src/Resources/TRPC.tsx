@@ -17,6 +17,8 @@ import { makeAbsolutePath } from './util.js'
 export type RouterInputs = inferRouterInputs<AppRouter>
 export type RouterOutputs = inferRouterOutputs<AppRouter>
 
+export type { AppRouter, RouterInput, RouterOutput } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
+
 export const queryClient = new QueryClient()
 
 // Build a full url. This is needed to support older chromium, modern browsers support simply /trpc

@@ -428,6 +428,7 @@ export class ServiceTcpUdpApi {
 		const control = this.#serviceApi.getControl(controlId)
 		if (control && control.setStyleFields) {
 			const color = parseColorToNumber(match.color)
+			if (typeof color !== 'number') throw new ApiMessageError('Invalid color')
 
 			control.setStyleFields({ color: color })
 		} else {
@@ -449,6 +450,7 @@ export class ServiceTcpUdpApi {
 		const control = this.#serviceApi.getControl(controlId)
 		if (control && control.setStyleFields) {
 			const color = parseColorToNumber(match.bgcolor)
+			if (typeof color !== 'number') throw new ApiMessageError('Invalid color')
 
 			control.setStyleFields({ bgcolor: color })
 		} else {

@@ -6,7 +6,9 @@ import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
+import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Components/AlignmentInputField.js'
 import { DropdownInputField, MultiDropdownInputField, type DropdownChoicesOrGroups } from '~/Components/index.js'
+import { PngImageInputField } from '~/Components/PngImageInputField.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 import { useComputed } from '~/Resources/util.js'
 import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
@@ -93,6 +95,22 @@ export function InternalModuleField(
 			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:date':
 			return <InternalDatePicker disabled={readonly} value={value} setValue={setValue} />
+		case 'internal:horizontal-alignment':
+			return <HorizontalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
+		case 'internal:vertical-alignment':
+			return <VerticalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
+		case 'internal:png-image': {
+			return (
+				<PngImageInputField
+					value={value}
+					setValue={setValue}
+					disabled={readonly}
+					min={option.min}
+					max={option.max}
+					allowNonPng={option.allowNonPng}
+				/>
+			)
+		}
 		default:
 			// Use fallback
 			return null

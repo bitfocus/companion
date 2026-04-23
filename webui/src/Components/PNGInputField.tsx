@@ -4,6 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
 
+const allowedImageTypesPng = ['image/png']
+const allowedImageTypesExtended = [...allowedImageTypesPng, 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
+
 interface MinMaxDimension {
 	width: number
 	height: number
@@ -14,9 +17,10 @@ interface PNGInputFieldProps {
 	max: MinMaxDimension
 	onSelect: (png64Str: string, name: string) => void
 	onError: (err: string | null) => void
+	allowNonPng?: boolean
 }
 
-export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProps): React.JSX.Element {
+export function PNGInputField({ min, max, onSelect, onError, allowNonPng }: PNGInputFieldProps): React.JSX.Element {
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
@@ -64,7 +68,8 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 
 			//check whether browser fully supports all File API
 			if (apiIsSupported) {
-				if (!newFiles || !newFiles.length || newFiles[0].type !== 'image/png') {
+				const allowedImageTypes = allowNonPng ? allowedImageTypesExtended : allowedImageTypesPng
+				if (!newFiles || !newFiles.length || !allowedImageTypes.includes(newFiles[0].type)) {
 					onError('Sorry. Only proper PNG files are supported.')
 					return
 				}
@@ -99,7 +104,7 @@ export function PNGInputField({ min, max, onSelect, onError }: PNGInputFieldProp
 				onError('Companion requires a newer browser')
 			}
 		},
-		[min, max, apiIsSupported, onSelect, onError]
+		[min, max, apiIsSupported, onSelect, onError, allowNonPng]
 	)
 
 	return (
