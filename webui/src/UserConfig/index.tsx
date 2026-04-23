@@ -1,8 +1,8 @@
-import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import { CCard, CCol, CRow } from '@coreui/react'
-import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
-import { NonIdealState } from '~/Components/NonIdealState.js'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
+import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 
 export function SettingsSelectPage(): React.JSX.Element {
 	return (

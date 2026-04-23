@@ -1,6 +1,9 @@
+import { nanoid } from 'nanoid'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinition,
@@ -9,6 +12,8 @@ import type {
 	UIPresetGroupTemplate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	CompanionPresetAction,
 	CompanionPresetDefinition,
@@ -20,11 +25,6 @@ import type {
 	ModuleLogger,
 } from '@companion-module/base'
 import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { nanoid } from 'nanoid'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
-import { assertNever } from '@companion-app/shared/Util.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],

@@ -1,7 +1,4 @@
-import { useCallback, useContext, useRef, useState } from 'react'
 import { CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
-import { useComputed } from '~/Resources/util.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
 	faArrowLeft,
 	faCompressArrowsAlt,
@@ -10,14 +7,12 @@ import {
 	faList,
 	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
-import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
-import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { NonIdealState } from '~/Components/NonIdealState.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useRef, useState } from 'react'
+import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
+import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import {
 	CollectionsNestingTable,
 	UNGROUPED_PANEL_ID,
@@ -26,13 +21,18 @@ import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types'
-import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useCustomVariablesApi } from './CustomVariablesApi'
+import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
+import { CustomVariableRow } from './CustomVariablesListRow'
 import { CustomVariablesTableContextProvider } from './CustomVariablesTableContext'
 import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
-import { CustomVariableRow } from './CustomVariablesListRow'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { ContextHelpButton } from '~/Layout/PanelIcons'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection

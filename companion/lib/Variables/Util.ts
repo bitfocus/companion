@@ -9,21 +9,13 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { type GetVariableValueProps, ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import {
-	stringifyVariableValue,
-	type VariableValues,
-	type VariableValue,
-} from '@companion-app/shared/Model/Variables.js'
 import type { ReadonlyDeep } from 'type-fest'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { VariablesBlinker } from './VariablesBlinker.js'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ResolveExpression, type GetVariableValueProps } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	exprVal,
 	isExpressionOrValue,
@@ -31,10 +23,20 @@ import {
 	type ExpressionOrValue,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	stringifyVariableValue,
+	type VariableValue,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import LogController from '../Log/Controller.js'
+import type { VariablesBlinker } from './VariablesBlinker.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
 const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
+// Like VARIABLE_REGEX but allows $ in the variable name part, to support nested variables
+const REPLACE_VARIABLE_REGEX = /\$\(([^:$)]+):([^)]+)\)/
 
 const logger = LogController.createLogger('Variables/Util')
 
@@ -200,7 +202,7 @@ export function replaceAllVariables(string: string, newLabel: string, preserveLa
 		let matchCount = 0
 		let matches: RegExpExecArray | null
 		let fromIndex = 0
-		while ((matches = VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
+		while ((matches = REPLACE_VARIABLE_REGEX.exec(string.slice(fromIndex))) !== null) {
 			if (matchCount++ > 100) {
 				// Crudely avoid infinite loops with an iteration limit
 				// logger.info(`Reached iteration limit for variable parsing`)

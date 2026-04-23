@@ -10,9 +10,9 @@
  */
 
 import { Canvas, ImageData, loadImage, type Image as CanvasImage, type SKRSContext2D } from '@napi-rs/canvas'
+import type QuickLRU from 'quick-lru'
 import LogController from '../Log/Controller.js'
 import { uint8ArrayToBuffer, type HorizontalAlignment, type VerticalAlignment } from '../Resources/Util.js'
-import type QuickLRU from 'quick-lru'
 import { computeTextLayout, resolveFontSizes, segmentTextToUnicodeChars, type TextLayoutResult } from './TextParser.js'
 
 /**

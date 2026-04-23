@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, type RefObject, useContext, useMemo } from 'react'
+import { createContext, useContext, useMemo, type RefObject } from 'react'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import type { TableVisibilityHelper } from '~/Components/TableVisibility.js'
 import type { VisibleSurfaceInstancesState } from './SurfaceInstanceList.js'
-import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface SurfaceInstancesListContextType {
 	visibleInstances: TableVisibilityHelper<VisibleSurfaceInstancesState>

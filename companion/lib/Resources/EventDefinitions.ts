@@ -1,5 +1,5 @@
+import os from 'node:os'
 import dayjs from 'dayjs'
-import os from 'os'
 import type { EventDefinition } from '@companion-app/shared/Model/Common.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { InternalVisitor } from '../Internal/Types.js'

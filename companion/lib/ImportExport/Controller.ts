@@ -9,41 +9,41 @@
  * this program.
  */
 
-import { upgradeImport } from '../Data/Upgrade.js'
+import { EventEmitter } from 'node:events'
+import path from 'node:path'
 import type express from 'express'
+import workerPool from 'workerpool'
+import z from 'zod'
 import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
-import type { AppInfo } from '../Registry.js'
 import {
-	type ImportOrResetType,
 	zodClientImportOrResetSelection,
 	type ClientImportObject,
-	type ClientPageInfo,
 	type ClientImportOrResetSelection,
+	type ClientPageInfo,
+	type ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
-import type { InstanceController } from '../Instance/Controller.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { VariablesController } from '../Variables/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
-import type { PageController } from '../Page/Controller.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { InternalController } from '../Internal/Controller.js'
-import { ExportController } from './Export.js'
-import { FILE_VERSION } from './Constants.js'
-import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { zodLocation } from '../Preview/Graphics.js'
-import z from 'zod'
-import { EventEmitter } from 'node:events'
-import { BackupController } from './Backups.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { ImportController } from './Import.js'
-import { find_smallest_grid_for_page } from './Util.js'
-import workerPool from 'workerpool'
-import { isPackaged } from '../Resources/Util.js'
+import { upgradeImport } from '../Data/Upgrade.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
+import type { PageController } from '../Page/Controller.js'
+import { zodLocation } from '../Preview/Graphics.js'
+import type { AppInfo } from '../Registry.js'
+import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { isPackaged } from '../Resources/Util.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import { BackupController } from './Backups.js'
+import { FILE_VERSION } from './Constants.js'
+import { ExportController } from './Export.js'
+import { ImportController } from './Import.js'
 import type { ImportExportThreadMethods, ParseImportDataResult } from './ThreadMethods.js'
-import path from 'node:path'
+import { find_smallest_grid_for_page } from './Util.js'
 
 const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
@@ -85,10 +85,10 @@ export class ImportExportController {
 		})
 	}
 
-	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null]>(
+	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
-		async (_name, data, _updateProgress, sessionCtx) => {
+		async (_name, data, _userData, _updateProgress, sessionCtx) => {
 			// Extract ArrayBuffer from the Buffer for zero-copy transfer
 			// The buffer becomes detached/unusable in this thread after transfer
 			const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
@@ -170,6 +170,7 @@ export class ImportExportController {
 				surfacesInstances: importContainsKey('surfaceInstances'),
 				surfacesRemote: importContainsKey('surfacesRemote'),
 				triggers: null,
+				imageLibrary: importContainsKey('imageLibrary'),
 			}
 
 			for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
@@ -214,7 +215,8 @@ export class ImportExportController {
 
 			// rest is done from browser
 			return [null, clientObject]
-		}
+		},
+		z.null()
 	)
 
 	/**
@@ -251,6 +253,7 @@ export class ImportExportController {
 			appInfo,
 			apiRouter,
 			controls,
+			graphics,
 			instance,
 			page.store,
 			surfaces,
@@ -546,6 +549,11 @@ export class ImportExportController {
 
 		if (shouldReset(config.userconfig)) {
 			this.#userConfigController.reset()
+		}
+
+		if (shouldReset(config.imageLibrary)) {
+			// Reset image library
+			this.#graphicsController.imageLibrary.resetImageLibrary()
 		}
 
 		return 'ok'

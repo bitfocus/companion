@@ -1,6 +1,5 @@
-import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
 import { cloneDeep } from 'lodash-es'
+import { nanoid } from 'nanoid'
 import type {
 	ExportFullv6,
 	ExportInstancesv6,
@@ -8,14 +7,15 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import {
-	type InstanceConfig,
 	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
+	type InstanceConfig,
 } from '@companion-app/shared/Model/Instance.js'
-import { nanoid } from 'nanoid'
-import type { UserConfigGridSize, BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { BackupRulesConfig, UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { Logger } from '../../Log/Controller.js'
+import type { DataStoreBase } from '../StoreBase.js'
 
 interface LegacyOutboundSurfaceInfo {
 	id: string

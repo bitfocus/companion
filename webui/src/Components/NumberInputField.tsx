@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react'
 import { CCol, CFormInput, CFormRange, CRow } from '@coreui/react'
+import { useCallback, useState } from 'react'
 
 interface NumberInputFieldProps {
 	min?: number

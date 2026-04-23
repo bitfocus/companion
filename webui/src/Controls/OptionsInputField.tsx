@@ -1,5 +1,21 @@
 import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
+import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import type { JsonValue } from 'type-fest'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	CompanionFieldVariablesSupport,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
+import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import {
 	CheckboxInputField,
 	ColorInputField,
@@ -8,26 +24,10 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '~/Components/index.js'
-import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import {
-	CompanionFieldVariablesSupport,
-	type ExpressionOrValue,
-	type SomeCompanionInputField,
-} from '@companion-app/shared/Model/Options.js'
-import classNames from 'classnames'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { StaticTextFieldText } from './StaticTextField.js'
-import type { LocalVariablesStore } from './LocalVariablesStore.js'
-import { observer } from 'mobx-react-lite'
-import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
-import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
-import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { JsonValue } from 'type-fest'
+import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
+import type { LocalVariablesStore } from './LocalVariablesStore.js'
+import { StaticTextFieldText } from './StaticTextField.js'
 
 interface OptionsInputFieldProps {
 	connectionId: string

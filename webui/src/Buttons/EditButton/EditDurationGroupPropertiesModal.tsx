@@ -1,15 +1,15 @@
 import {
-	CModalHeader,
-	CModalBody,
-	CForm,
-	CFormLabel,
-	CCol,
-	CFormInput,
-	CFormSwitch,
-	CModalFooter,
 	CButton,
+	CCol,
+	CForm,
+	CFormInput,
+	CFormLabel,
+	CFormSwitch,
+	CModalBody,
+	CModalFooter,
+	CModalHeader,
 } from '@coreui/react'
-import { forwardRef, useState, useRef, useCallback, useImperativeHandle } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void

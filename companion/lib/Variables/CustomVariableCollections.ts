@@ -1,8 +1,8 @@
+import z from 'zod'
 import type { CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
-import z from 'zod'
 
 export class CustomVariableCollections extends CollectionsBaseController<null> {
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void

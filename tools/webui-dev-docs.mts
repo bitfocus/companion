@@ -10,10 +10,9 @@
  * Uses concurrently with --kill-others so both processes stop together (Ctrl-C or Vite's "q").
  * If Vite's "q" is not working, use Ctrl-C to stop both processes.
  */
-
-import concurrently, { type ConcurrentlyCommandInput } from 'concurrently'
 import { createConnection } from 'net'
 import { resolve } from 'path'
+import concurrently, { type ConcurrentlyCommandInput } from 'concurrently'
 import { $, argv, question, usePowerShell } from 'zx'
 import { normalizeBasePath } from './webui-dev-utils.ts'
 

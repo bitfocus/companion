@@ -2,8 +2,6 @@
 
 ## Companion v4.3.0 - Release Notes
 
-<!-- DRAFT -->
-
 ### IMPORTANT CHANGES
 
 - Support for different surfaces is now using a module system, similar to connections. This means that as new Stream Deck models are released, you can enable support by updating just the module and not the whole of Companion.

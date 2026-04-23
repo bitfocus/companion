@@ -1,9 +1,9 @@
 import z from 'zod'
-import type { ActionSetId } from './ActionModel.js'
-import type { ButtonStyleProperties } from './StyleModel.js'
-import type { ExpressionableOptionsObject, ExpressionOrValue } from './Options.js'
-import type { VariableValue } from './Variables.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/host'
+import type { ActionSetId } from './ActionModel.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from './Options.js'
+import type { ButtonStyleProperties } from './StyleModel.js'
+import type { VariableValue } from './Variables.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel

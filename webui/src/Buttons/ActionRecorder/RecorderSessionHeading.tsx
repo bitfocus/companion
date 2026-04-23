@@ -1,13 +1,13 @@
-import { useCallback, useContext, type RefObject } from 'react'
-import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
-import { CButton, CButtonGroup, CRow, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import { MultiDropdownInputField } from '~/Components/index.js'
-import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { CButton, CButtonGroup, CForm, CFormLabel, CFormSwitch, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useCallback, useContext, type RefObject } from 'react'
+import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { MultiDropdownInputField } from '~/Components/index.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface RecorderSessionHeadingProps {
 	confirmRef: RefObject<GenericConfirmModalRef>
@@ -106,9 +106,8 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 
 						<div>
 							<CFormLabel>Recording</CFormLabel>
-							<p>
-								<CFormSwitch color="success" size="xl" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
-							</p>
+							<br />
+							<CFormSwitch color="success" size="xl" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
 						</div>
 					</div>
 				</CRow>

@@ -1,7 +1,7 @@
-import { useCallback } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { trpc, useMutationExt } from '../../Resources/TRPC'
+import { useCallback } from 'react'
 import { InstanceDebugLog } from '../../Instances/DebugLog'
+import { trpc, useMutationExt } from '../../Resources/TRPC'
 
 export function SurfaceInstanceDebug(): React.JSX.Element {
 	const { instanceId } = useParams({ from: '/_standalone/surfaces/debug/$instanceId' })

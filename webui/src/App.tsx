@@ -1,25 +1,25 @@
+import { CButton, CCol, CContainer, CForm, CFormInput, CProgress, CRow } from '@coreui/react'
+import { Outlet } from '@tanstack/react-router'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
-import { CContainer, CRow, CCol, CProgress, CFormInput, CForm, CButton } from '@coreui/react'
-import { useMountEffect } from '~/Resources/util.js'
-import { MyErrorBoundary } from './Resources/Error.js'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
-import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
-import { MyHeader } from './Layout/Header.js'
-import { ContextData } from './ContextData.js'
-import { WizardModal } from './Wizard/index.js'
-import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
 import { useIdleTimer } from 'react-idle-timer'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { Outlet } from '@tanstack/react-router'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from './Resources/TRPC.js'
-import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
-import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { PuffLoader } from 'react-spinners'
+import { useMountEffect } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ContextData } from './ContextData.js'
+import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
+import { MyHeader } from './Layout/Header.js'
+import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { PRIMARY_COLOR } from './Resources/Constants.js'
+import { MyErrorBoundary } from './Resources/Error.js'
+import { MonacoLoader } from './Resources/MonacoLoader.js'
+import { trpc } from './Resources/TRPC.js'
+import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
+import { WizardModal } from './Wizard/index.js'
 
 const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
@@ -64,10 +64,10 @@ export default function App(): React.JSX.Element {
 								<div className="clearfix">
 									<h4 className="pt-3">Houston, we have a problem!</h4>
 									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
-									<p className="text-muted">
-										<li className="text-muted">Check that the application is still running</li>
-										<li className="text-muted">If you're using the Admin GUI over a network - check your connection</li>
-									</p>
+									<ul className="text-muted">
+										<li>Check that the application is still running</li>
+										<li>If you're using the Admin GUI over a network - check your connection</li>
+									</ul>
 								</div>
 							</div>
 						</div>

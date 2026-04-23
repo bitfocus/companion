@@ -1,8 +1,8 @@
-import { useContext } from 'react'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { SurfaceInstanceEditPanel } from '~/Surfaces/Instances/SurfaceInstanceEdit/SurfaceInstanceEditPanel'
-import { observer } from 'mobx-react-lite'
 
 const ModuleConfigComponent = observer(function ModuleConfigComponent() {
 	const { instanceId } = Route.useParams()

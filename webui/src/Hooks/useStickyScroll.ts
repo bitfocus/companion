@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from 'react'
 import type { Virtualizer } from '@tanstack/react-virtual'
+import { useCallback, useEffect, useRef } from 'react'
 
 interface StickyScrollState {
 	follow: boolean

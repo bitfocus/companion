@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx'
+import { action, observable } from 'mobx'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { assertNever } from '~/Resources/util.js'
 

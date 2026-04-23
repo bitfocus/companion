@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises'
-import { SemVer } from 'semver'
 import path from 'node:path'
+import { SemVer } from 'semver'
 
 const nodejsVersionsPath = path.join(import.meta.dirname, '../assets/nodejs-versions.json')
 

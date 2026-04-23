@@ -1,12 +1,12 @@
+import { CButton, CButtonGroup } from '@coreui/react'
+import { faList } from '@fortawesome/free-solid-svg-icons'
+import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import { CButton, CButtonGroup } from '@coreui/react'
-import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
-import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { NonIdealState } from '~/Components/NonIdealState.js'
-import { faList } from '@fortawesome/free-solid-svg-icons'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface TriggerPickerRowProps {
 	id: string

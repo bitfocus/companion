@@ -1,19 +1,19 @@
 import { action, observable, runInAction } from 'mobx'
+import { nanoid } from 'nanoid'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
-	ModuleInfoUpdate,
 	ClientModuleInfo,
+	ModuleInfoUpdate,
 	ModuleUpgradeToOtherVersion,
 } from '@companion-app/shared/Model/ModuleInfo.js'
-import { assertNever } from '~/Resources/util.js'
 import type {
 	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
 	ModuleStoreModuleInfoStore,
 } from '@companion-app/shared/Model/ModulesStore.js'
-import { nanoid } from 'nanoid'
 import { trpc } from '~/Resources/TRPC'
+import { assertNever } from '~/Resources/util.js'
 import { applyJsonPatchInPlace } from './ApplyDiffToMap'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 
 export type ModuleInfoId = `${ModuleInstanceType}:${string}`
 

@@ -1,6 +1,3 @@
-import { useCallback, useContext, useState } from 'react'
-import { makeAbsolutePath } from '~/Resources/util.js'
-import { MyErrorBoundary } from '~/Resources/Error.js'
 import { CAlert, CButton, CCallout, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import {
 	faCircleInfo,
@@ -14,18 +11,21 @@ import {
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { ImportPageWizard } from './Page.js'
-import { ImportTriggersTab } from './Triggers.js'
+import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
+import { useCallback, useContext, useState } from 'react'
 import type {
 	ClientImportObject,
 	ClientImportOrResetSelection,
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
-import { InlineHelp } from '~/Components/InlineHelp.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImportPageWizard } from './Page.js'
+import { ImportTriggersTab } from './Triggers.js'
 
 // These can't be imported currently
 type ClientImportSelection = Omit<ClientImportOrResetSelection, 'connections' | 'userconfig'>
@@ -147,6 +147,7 @@ const defaultFullImportConfig: ClientImportSelection = {
 	triggers: 'reset-and-import',
 	customVariables: 'reset-and-import',
 	expressionVariables: 'reset-and-import',
+	imageLibrary: 'reset-and-import',
 }
 
 const { fieldContext, useFieldContext, formContext } = createFormHookContexts()
@@ -356,6 +357,12 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</form.AppField>
 					</div>
 
+					<div className="ms-2">
+						<form.AppField name="imageLibrary">
+							{(field) => <field.ImportToggleField label="Image Library" disabled={!snapshot.imageLibrary} />}
+						</form.AppField>
+					</div>
+
 					{/* <div className="ms-2">
 								<form.AppField name="userconfig">
 									{(field) => <field.ImportToggleField label="Settings" disabled={!snapshot.userconfig} />}
@@ -513,6 +520,7 @@ function sanitiseSelection(
 		triggers: processValue(!!snapshot.triggers, values.triggers),
 		customVariables: processValue(snapshot.customVariables, values.customVariables),
 		expressionVariables: processValue(snapshot.expressionVariables, values.expressionVariables),
+		imageLibrary: processValue(snapshot.imageLibrary, values.imageLibrary),
 
 		// These are not user selectable, so simply vary depending on whether this is a full reset or not
 		connections: defaultBehaviour,

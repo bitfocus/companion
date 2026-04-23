@@ -8,7 +8,6 @@
  * - Copies images to webui public directory
  * - Generates manifest JSON for the UI
  */
-
 import fs from 'fs/promises'
 import path from 'path'
 

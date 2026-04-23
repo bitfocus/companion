@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { useState } from 'react'
 import { trpc } from '~/Resources/TRPC'
+import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
 
 export function useTriggersListSubscription(store: TriggersListStore): boolean {
 	const [ready, setReady] = useState(false)

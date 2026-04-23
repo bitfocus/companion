@@ -1,5 +1,5 @@
-import type { ClientEventDefinition } from '@companion-app/shared/Model/Common.js'
 import { action, observable } from 'mobx'
+import type { ClientEventDefinition } from '@companion-app/shared/Model/Common.js'
 
 export class EventDefinitionsStore {
 	public readonly definitions = observable.map<string, ClientEventDefinition>()

@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import type { EntityDefinitionsForTypeStore } from '~/Stores/EntityDefinitionsStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import type { trpc } from '~/Resources/TRPC'
+import { useState } from 'react'
 import type { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { trpc } from '~/Resources/TRPC'
+import type { EntityDefinitionsForTypeStore } from '~/Stores/EntityDefinitionsStore.js'
 
 export function useEntityDefinitionsSubscription(
 	store: EntityDefinitionsForTypeStore,

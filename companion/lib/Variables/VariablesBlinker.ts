@@ -1,6 +1,6 @@
 import type { GetVariableValueProps } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { VariableValueEntry } from './Values.js'
 import LogController from '../Log/Controller.js'
+import type { VariableValueEntry } from './Values.js'
 
 const CLEANUP_INTERVAL = 30_000 // 30 seconds
 const CLEANUP_EXPIRY = 10 // 10 iterations

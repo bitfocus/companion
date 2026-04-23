@@ -1,5 +1,5 @@
-import LogController from '../lib/Log/Controller.js'
 import { afterAll, beforeAll } from 'vitest'
+import LogController from '../lib/Log/Controller.js'
 
 export function SuppressLogging() {
 	let originalLogLevel: string = 'silly'

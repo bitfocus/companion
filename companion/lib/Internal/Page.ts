@@ -9,6 +9,9 @@
  * this program.
  */
 
+import { EventEmitter } from 'node:events'
+import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForVisitor,
@@ -17,9 +20,6 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import { EventEmitter } from 'events'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 
 export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')

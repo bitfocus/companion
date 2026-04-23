@@ -1,6 +1,6 @@
-import type { ObjectsDiff } from '@companion-app/shared/Model/Common.js'
-import type { ObservableMap } from 'mobx'
 import { applyPatch, type Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObservableMap } from 'mobx'
+import type { ObjectsDiff } from '@companion-app/shared/Model/Common.js'
 
 export function ApplyDiffToStore<T extends object>(map: ObservableMap<string, T>, diff: ObjectsDiff<T>): void {
 	for (const id of diff.removed) {

@@ -1,11 +1,11 @@
 import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
-import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { CompanionAlignment } from '@companion-module/base'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionAlignment } from '@companion-module/base'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 
 /**
  * Combine rgba components to a 32bit value

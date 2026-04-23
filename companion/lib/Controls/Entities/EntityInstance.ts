@@ -1,23 +1,29 @@
-import LogController, { type Logger } from '../../Log/Controller.js'
+import isEqual from 'fast-deep-equal'
+import { nanoid } from 'nanoid'
+import type { JsonValue } from 'type-fest'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
-	type FeedbackValue,
 	type EntitySupportedChildGroupDefinition,
 	type FeedbackEntityModel,
+	type FeedbackValue,
 	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import isEqual from 'fast-deep-equal'
-import { nanoid } from 'nanoid'
-import { ControlEntityList } from './EntityList.js'
-import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
+import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
+import { ControlEntityList } from './EntityList.js'
+import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -25,12 +31,6 @@ import type {
 	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from './Types.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { JsonValue } from 'type-fest'
-import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 
 export class ControlEntityInstance {
 	/**

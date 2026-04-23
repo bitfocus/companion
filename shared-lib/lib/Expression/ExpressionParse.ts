@@ -1,10 +1,10 @@
-import jsep from 'jsep'
+import jsepComments from '@jsep-plugin/comment'
 import jsepNumbers from '@jsep-plugin/numbers'
 import jsepObject, { type ObjectExpression } from '@jsep-plugin/object'
 import jsepTemplateLiteral, { type TemplateLiteral } from '@jsep-plugin/template'
-import jsepComments from '@jsep-plugin/comment'
-import { CompanionVariablesPlugin, type CompanionVariableExpression } from './Plugins/CompanionVariables.js'
+import jsep from 'jsep'
 import { AssignmentPlugin, type AssignmentExpression, type UpdateExpression } from './Plugins/Assignment.js'
+import { CompanionVariablesPlugin, type CompanionVariableExpression } from './Plugins/CompanionVariables.js'
 
 // setup plugins
 jsep.plugins.register(jsepNumbers)

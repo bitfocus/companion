@@ -1,11 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useContext } from 'react'
-import { EditExpressionVariablePanel } from '~/Variables/ExpressionVariables/EditPanel.js'
-import { useComputed } from '~/Resources/util'
-import { MyErrorBoundary } from '~/Resources/Error'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
+import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
+import { MyErrorBoundary } from '~/Resources/Error'
+import { useComputed } from '~/Resources/util'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { EditExpressionVariablePanel } from '~/Variables/ExpressionVariables/EditPanel.js'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { controlId } = Route.useParams()

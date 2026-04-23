@@ -1,9 +1,9 @@
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { CButton } from '@coreui/react'
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 

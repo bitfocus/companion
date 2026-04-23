@@ -1,13 +1,13 @@
-import { useState, useCallback, useContext, useEffect } from 'react'
-import { observer } from 'mobx-react-lite'
-import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import Editor, { type Monaco } from '@monaco-editor/react'
-import type { editor } from 'monaco-editor'
-import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch'
-import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
+import type { editor } from 'monaco-editor'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
+import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch'
+import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
 interface ExpressionInputFieldProps {
 	value: string

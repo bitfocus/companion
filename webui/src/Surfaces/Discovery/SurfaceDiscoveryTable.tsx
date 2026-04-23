@@ -1,23 +1,23 @@
+import { CButton, CButtonGroup } from '@coreui/react'
+import { faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useNavigate } from '@tanstack/react-router'
+import { toJS } from 'mobx'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useRef } from 'react'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { useCallback, useContext, useRef } from 'react'
-import { assertNever, useComputed } from '~/Resources/util.js'
-import { CButton, CButtonGroup } from '@coreui/react'
-import { faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { SetupSatelliteModal, type SetupSatelliteModalRef } from './SetupSatelliteModal.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { assertNever, useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { SetupSatelliteModal, type SetupSatelliteModalRef } from './SetupSatelliteModal.js'
 import { useSurfaceDiscoveryContext } from './SurfaceDiscoveryContext.js'
-import { useNavigate } from '@tanstack/react-router'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { toJS } from 'mobx'
 
 export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 	const { notifier } = useContext(RootAppStoreContext)

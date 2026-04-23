@@ -1,17 +1,17 @@
-import { forwardRef, useCallback, useImperativeHandle, useState, useContext } from 'react'
 import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { makeAbsolutePath } from '~/Resources/util.js'
-import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
-import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
-import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { TextInputField } from '~/Components/TextInputField.js'
-import { observer } from 'mobx-react-lite'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
+import { observer } from 'mobx-react-lite'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
 
 export interface ExportWizardModalRef {
 	show(): void
@@ -36,6 +36,7 @@ export const ExportWizardModal = observer(
 			customVariables: true,
 			expressionVariables: true,
 			includeSecrets: true,
+			imageLibrary: true,
 			// userconfig: true,
 			format: ExportFormatDefault,
 			filename: userConfig.properties?.default_export_filename ?? '',
@@ -284,6 +285,20 @@ export const ExportWizardModal = observer(
 														</InlineHelp>
 													</>
 												}
+											/>
+										)}
+									/>
+								</div>
+
+								<div className="indent3">
+									<form.Field
+										name="imageLibrary"
+										children={(field) => (
+											<CFormCheck
+												checked={field.state.value}
+												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												onBlur={field.handleBlur}
+												label="Image Library"
 											/>
 										)}
 									/>

@@ -1,20 +1,21 @@
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
 import { useRef } from 'react'
 import {
 	useDrag,
+	useDragLayer,
+	type ConnectDragPreview,
 	type ConnectDragSource,
 	type ConnectDropTarget,
-	type ConnectDragPreview,
-	useDragLayer,
 } from 'react-dnd'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
+import { CollectionsNestingTableGridTile } from './CollectionsNestingTableGridTile.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
-import { useCollectionsListItemDrop, type CollectionsNestingTableItemDragItem } from './useItemDrop.js'
 import { useCollectionListCollectionDrop, type CollectionsNestingTableCollectionDragItem } from './useCollectionDrop.js'
-import { observer } from 'mobx-react-lite'
+import { useCollectionsListItemDrop, type CollectionsNestingTableItemDragItem } from './useItemDrop.js'
 
 /* 
 	The INDIVIDUAL items in the table
@@ -32,9 +33,16 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 	index: number
 	nestingLevel: number
 }>) {
-	const { dragId, collectionsApi, selectedItemId } = useCollectionsNestingTableContext<TCollection, TItem>()
+	const { dragId, collectionsApi, selectedItemId, gridLayout } = useCollectionsNestingTableContext<TCollection, TItem>()
 
-	const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, item.collectionId, item.id, index)
+	const { drop } = useCollectionsListItemDrop(
+		collectionsApi,
+		dragId,
+		item.collectionId,
+		item.id,
+		index,
+		gridLayout ?? false
+	)
 	const [_c, drag, preview] = useDrag<CollectionsNestingTableItemDragItem, unknown, { isDragging: boolean }>({
 		type: dragId,
 		item: {
@@ -50,6 +58,21 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 		draggingItem: monitor.getItem<CollectionsNestingTableItemDragItem>(),
 	}))
 	const isDragging = draggingItem?.itemId === item.id
+
+	if (gridLayout) {
+		return (
+			<CollectionsNestingTableGridTile
+				drag={drag}
+				drop={drop}
+				preview={preview}
+				isDragging={isDragging}
+				isSelected={item.id === selectedItemId}
+				className="collections-nesting-table-tile-item"
+			>
+				{children}
+			</CollectionsNestingTableGridTile>
+		)
+	}
 
 	return (
 		<CollectionsNestingTableRowBase
@@ -83,10 +106,10 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 		nestingLevel: number
 	}>) {
 		const collData = useCollectionsNestingTableContext<TCollection, CollectionsNestingTableItem>()
-		const { dragId, collectionsApi } = collData
+		const { dragId, collectionsApi, gridLayout } = collData
 
 		// Allow dropping items onto the collection, to add them to the collection
-		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1)
+		const { drop } = useCollectionsListItemDrop(collectionsApi, dragId, collection.id, null, -1, gridLayout ?? false)
 		const { drop: collectionDrop } = useCollectionListCollectionDrop(
 			collectionsApi,
 			dragId,
@@ -146,6 +169,8 @@ function CollectionsNestingTableRowBase({
 	isSelected: boolean
 	nestingLevel: number
 }>) {
+	const { gridLayout } = useCollectionsNestingTableContext()
+
 	const ref = useRef<HTMLDivElement>(null)
 	preview(drop(ref))
 
@@ -160,7 +185,7 @@ function CollectionsNestingTableRowBase({
 		>
 			<CollectionsNestingTableNestingRow
 				className="collections-nesting-table-row-item-grid"
-				nestingLevel={nestingLevel}
+				nestingLevel={gridLayout ? 0 : nestingLevel}
 			>
 				<div ref={drag} className="row-reorder-handle">
 					<FontAwesomeIcon icon={faSort} />

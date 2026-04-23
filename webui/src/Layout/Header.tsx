@@ -1,36 +1,36 @@
-import { type ReactElement, useCallback, useContext, useMemo } from 'react'
 import {
+	CContainer,
+	CDropdown,
+	CDropdownToggle,
 	CHeader,
 	CHeaderBrand,
 	CHeaderNav,
+	CHeaderToggler,
 	CNavItem,
 	CNavLink,
-	CHeaderToggler,
-	CContainer,
-	CDropdownToggle,
-	CDropdown,
 } from '@coreui/react'
+import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
+import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import {
 	faBars,
-	faInfo,
-	faStar,
-	faExternalLinkSquare,
-	faLock,
-	faTriangleExclamation,
 	faDollarSign,
+	faExternalLinkSquare,
+	faInfo,
+	faLock,
+	faStar,
+	faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
-import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
-import { faSlack, faFacebook, faGithub } from '@fortawesome/free-brands-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { useSidebarState } from './Sidebar.js'
-import { trpc } from '../Resources/TRPC.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { useCompanionVersion } from './useCompanionVersion.js'
-import { ActionMenu, type MenuItemProps, type MenuActionItemProps } from '~/Components/ActionMenu.js'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useMemo, type ReactElement } from 'react'
+import { ActionMenu, type MenuActionItemProps, type MenuItemProps } from '~/Components/ActionMenu.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { trpc } from '../Resources/TRPC.js'
+import { useSidebarState } from './Sidebar.js'
+import { useCompanionVersion } from './useCompanionVersion.js'
 
 interface MyHeaderProps {
 	canLock: boolean

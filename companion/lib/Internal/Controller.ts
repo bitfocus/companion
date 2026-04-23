@@ -9,57 +9,57 @@
  * this program.
  */
 
+import type EventEmitter from 'node:events'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import {
+	EntityModelType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+	type FeedbackValue,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
+import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { CompanionOptionValues, Complete } from '@companion-module/base'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
+import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
+import type { ControlsController } from '../Controls/Controller.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { InstanceController } from '../Instance/Controller.js'
+import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { AppInfo } from '../Registry.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { VariableValueEntry } from '../Variables/Values.js'
+import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
+import { InternalControls } from './Controls.js'
+import { InternalCustomVariables } from './CustomVariables.js'
+import { InternalInstance } from './Instance.js'
+import { InternalPage } from './Page.js'
+import { InternalSurface } from './Surface.js'
+import { InternalSystem } from './System.js'
+import { InternalTime } from './Time.js'
+import { InternalTriggers } from './Triggers.js'
 import type {
+	ActionForInternalExecution,
 	ActionForVisitor,
+	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalModuleFragment,
 	InternalVisitor,
-	FeedbackForInternalExecution,
-	ActionForInternalExecution,
 } from './Types.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlsController } from '../Controls/Controller.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { InstanceDefinitions } from '../Instance/Definitions.js'
-import type { IPageStore } from '../Page/Store.js'
-import LogController from '../Log/Controller.js'
-import {
-	EntityModelType,
-	type FeedbackValue,
-	type ActionEntityModel,
-	type FeedbackEntityModel,
-	type SomeEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { CompanionOptionValues, Complete } from '@companion-module/base'
-import { InternalSystem } from './System.js'
-import type { VariableValueEntry } from '../Variables/Values.js'
-import type { InstanceController } from '../Instance/Controller.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import { InternalActionRecorder } from './ActionRecorder.js'
-import { InternalInstance } from './Instance.js'
-import { InternalTime } from './Time.js'
-import { InternalControls } from './Controls.js'
-import { InternalCustomVariables } from './CustomVariables.js'
-import { InternalPage } from './Page.js'
-import { InternalSurface } from './Surface.js'
-import { InternalTriggers } from './Triggers.js'
 import { InternalVariables } from './Variables.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
-import type EventEmitter from 'node:events'
-import type { AppInfo } from '../Registry.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
-import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
-import type { ActionRunner } from '../Controls/ActionRunner.js'
 
 interface FeedbackEntityState {
 	controlId: string

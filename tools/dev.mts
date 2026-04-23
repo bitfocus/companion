@@ -1,16 +1,15 @@
 #!/usr/bin/env node
-
-import chokidar from 'chokidar'
-import { $, usePowerShell, argv } from 'zx'
-import path from 'path'
-import fs from 'fs'
-import debounceFn from 'debounce-fn'
-import concurrently from 'concurrently'
-import { fetchNodejs } from './fetch_nodejs.mts'
-import { determinePlatformInfo } from './build/util.mts'
 import { ChildProcess } from 'child_process'
+import fs from 'fs'
+import path from 'path'
+import chokidar from 'chokidar'
+import concurrently from 'concurrently'
+import debounceFn from 'debounce-fn'
 import semver from 'semver'
+import { $, argv, usePowerShell } from 'zx'
+import { determinePlatformInfo } from './build/util.mts'
 import { fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
+import { fetchNodejs } from './fetch_nodejs.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell

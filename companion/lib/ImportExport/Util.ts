@@ -1,10 +1,10 @@
+import { promisify } from 'node:util'
 import zlib from 'node:zlib'
 import yaml from 'yaml'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
-import type { Logger } from '../Log/Controller.js'
-import { promisify } from 'node:util'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { Logger } from '../Log/Controller.js'
 
 const gzipAsync = promisify(zlib.gzip)
 

@@ -1,3 +1,16 @@
+import { nanoid } from 'nanoid'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+// eslint-disable-next-line n/no-missing-import
+import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
+// eslint-disable-next-line n/no-missing-import
+import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
+import type { DataUserConfig } from '../../Data/UserConfig.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { type Logger } from '../../Log/Controller.js'
+import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
+import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import {
 	isFalsey,
 	isTruthy,
@@ -5,27 +18,14 @@ import {
 	parseStringParamWithBooleanFallback,
 	type ParsedParams,
 } from '../../Resources/Util.js'
-import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import { type Logger } from '../../Log/Controller.js'
-import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
 import type { SurfaceController } from '../../Surface/Controller.js'
-import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
-// eslint-disable-next-line n/no-missing-import
-import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
-import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { ServiceApi } from '../ServiceApi.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
-import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
-import { nanoid } from 'nanoid'
-import type { DataUserConfig } from '../../Data/UserConfig.js'
-// eslint-disable-next-line n/no-missing-import
-import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
-import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
-import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
+import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
 import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
+import type { ServiceApi } from '../ServiceApi.js'
+import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
+import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
+import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
+import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility

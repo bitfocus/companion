@@ -1,5 +1,10 @@
-import { useCallback } from 'react'
 import { CFormSwitch } from '@coreui/react'
+import { useCallback } from 'react'
+import type { JsonValue } from 'type-fest'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
 import {
 	ColorInputField,
 	DropdownInputField,
@@ -7,12 +12,7 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '~/Components/index.js'
-import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
-import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { JsonValue } from 'type-fest'
 
 interface InstanceEditFieldProps {
 	setValue: (value: JsonValue | undefined) => void

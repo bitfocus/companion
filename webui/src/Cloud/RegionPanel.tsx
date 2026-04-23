@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react'
 import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
-import type { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
-import classNames from 'classnames'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import classNames from 'classnames'
+import { useCallback, useState } from 'react'
+import type { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudRegionPanelProps {

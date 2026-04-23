@@ -1,6 +1,6 @@
-import { memo } from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { memo } from 'react'
 import { useUserConfigProps } from './Context.js'
 import { CompanionConfig } from './Sections/CompanionConfig.js'
 import { DataCollectionConfig } from './Sections/DataCollection.js'

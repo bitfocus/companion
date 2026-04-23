@@ -9,9 +9,9 @@
  * this program.
  */
 
-import yaml from 'yaml'
-import zlib from 'node:zlib'
 import { promisify } from 'node:util'
+import zlib from 'node:zlib'
+import yaml from 'yaml'
 
 const gunzipAsync = promisify(zlib.gunzip)
 

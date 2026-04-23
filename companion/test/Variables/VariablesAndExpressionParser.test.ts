@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
-import type { VisitEntityOptionValueOptions, VariableValueData, VariablesCache } from '../../lib/Variables/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CompanionFieldVariablesSupport,
 	exprExpr,
 	exprVal,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { VariablesCache, VariableValueData, VisitEntityOptionValueOptions } from '../../lib/Variables/Util.js'
+import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 
 const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
 

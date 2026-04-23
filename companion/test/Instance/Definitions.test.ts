@@ -1,13 +1,14 @@
+import { initTRPC } from '@trpc/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { InstanceDefinitions } from '../../lib/Instance/Definitions.js'
-import type { InstanceConfigStore } from '../../lib/Instance/ConfigStore.js'
+import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import {
+	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
 	type InstanceConfig,
-	InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
+import { CompanionFieldVariablesSupport, exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinition,
@@ -16,10 +17,9 @@ import type {
 	UIPresetGroupSimple,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
-import type { NormalButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import { CompanionFieldVariablesSupport, exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import type { InstanceConfigStore } from '../../lib/Instance/ConfigStore.js'
+import { InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import { EventDefinitions } from '../../lib/Resources/EventDefinitions.js'
-import { initTRPC } from '@trpc/server'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 

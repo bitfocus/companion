@@ -10,28 +10,28 @@
  *
  */
 
-import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
-import { SurfaceGroup } from './Group.js'
-import { EventEmitter } from 'events'
-import type { ImageResult } from '../Graphics/ImageResult.js'
-import LogController, { type Logger } from '../Log/Controller.js'
+import { EventEmitter } from 'node:events'
+import debounceFn from 'debounce-fn'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
-	SurfaceGroupConfig,
 	GridSize,
 	SurfaceConfig,
+	SurfaceGroupConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
-import type { GraphicsController } from '../Graphics/Controller.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { SurfaceController } from './Controller.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
+import LogController, { type Logger } from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { VariablesController } from '../Variables/Controller.js'
 import { createDefaultSurfacePanelConfig } from './Config.js'
-import debounceFn from 'debounce-fn'
+import type { SurfaceController } from './Controller.js'
+import { SurfaceGroup } from './Group.js'
+import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
+import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
 
 /**
  * Get the display name of a surface

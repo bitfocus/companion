@@ -1,13 +1,13 @@
-import type { InstanceConfigStore } from '../ConfigStore.js'
-import type { DataDatabase } from '../../Data/Database.js'
-import { CollectionsBaseController } from '../../Resources/CollectionsBase.js'
-import { publicProcedure, router } from '../../UI/TRPC.js'
 import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	SurfaceInstanceCollection,
 	SurfaceInstanceCollectionData,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { DataDatabase } from '../../Data/Database.js'
+import { CollectionsBaseController } from '../../Resources/CollectionsBase.js'
+import { publicProcedure, router } from '../../UI/TRPC.js'
+import type { InstanceConfigStore } from '../ConfigStore.js'
 
 export class SurfaceInstanceCollections extends CollectionsBaseController<SurfaceInstanceCollectionData> {
 	readonly #emitUpdated: () => void

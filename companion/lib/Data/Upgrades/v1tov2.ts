@@ -1,6 +1,6 @@
+import type { Logger } from '../../Log/Controller.js'
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Resources/Constants.js'
 import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
 
 /**
  * do the database upgrades to convert from the v1 to the v2 format

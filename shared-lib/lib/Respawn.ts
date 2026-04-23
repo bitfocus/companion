@@ -21,41 +21,18 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { EventEmitter } from 'events'
 import {
-	spawn,
 	fork,
-	exec,
+	spawn,
 	type ChildProcessByStdio,
-	type SpawnOptionsWithoutStdio,
 	type ForkOptions,
 	type Serializable,
+	type SpawnOptionsWithoutStdio,
 	type StdioOptions,
-} from 'child_process'
-import type { Writable, Readable } from 'stream'
-import ps from 'ps-tree'
-
-function kill(pid: number, sig?: string): void {
-	if (process.platform === 'win32') {
-		exec('taskkill /pid ' + pid + ' /T /F')
-		return
-	}
-	ps(pid, (_, psPids) => {
-		const pids = (psPids || []).map((item) => {
-			return parseInt(item.PID, 10)
-		})
-
-		pids.push(pid)
-
-		for (const pid of pids) {
-			try {
-				process.kill(pid, sig)
-			} catch (_err) {
-				// do nothing
-			}
-		}
-	})
-}
+} from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import type { Readable, Writable } from 'node:stream'
+import { kill } from './ProcessKill.js'
 
 function defaultSleep(sleep: number | number[] | undefined) {
 	sleep = Array.isArray(sleep) ? sleep : [sleep || 1000]

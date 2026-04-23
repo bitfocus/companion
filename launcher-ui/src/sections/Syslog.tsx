@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useConfig } from '~/hooks/useConfig'
+import { useEffect, useState } from 'react'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
+import { useConfig } from '~/hooks/useConfig'
 
 export function SyslogSection(): JSX.Element {
 	const { state, updateConfig } = useConfig()

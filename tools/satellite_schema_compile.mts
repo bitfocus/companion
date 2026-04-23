@@ -1,8 +1,8 @@
-import { $, path } from 'zx'
 import fs from 'fs'
 import { Ajv2020 } from 'ajv/dist/2020.js'
 import standaloneCode from 'ajv/dist/standalone/index.js'
 import { compileFromFile } from 'json-schema-to-typescript'
+import { $, path } from 'zx'
 
 const PrettierConf = JSON.parse(fs.readFileSync(new URL('../.prettierrc', import.meta.url), 'utf8'))
 

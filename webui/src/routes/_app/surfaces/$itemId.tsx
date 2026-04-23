@@ -1,10 +1,10 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { useContext } from 'react'
-import { SurfaceEditPanel } from '~/Surfaces/EditPanel.js'
-import { useComputed } from '~/Resources/util.js'
-import { MyErrorBoundary } from '~/Resources/Error.js'
 import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
+import { MyErrorBoundary } from '~/Resources/Error'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { SurfaceEditPanel } from '~/Surfaces/EditPanel.js'
 
 /**
  * /surfaces/$itemId - editing a configured surface

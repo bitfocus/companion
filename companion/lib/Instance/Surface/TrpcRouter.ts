@@ -1,14 +1,14 @@
-import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
-import type { ClientSurfaceInstancesUpdate } from '@companion-app/shared/Model/SurfaceInstance.js'
-import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type EventEmitter from 'node:events'
 import z from 'zod'
-import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
-import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
-import type { InstanceConfigStore } from '../ConfigStore.js'
-import type { Logger } from '../../Log/Controller.js'
-import type EventEmitter from 'events'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
+import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
+import type { ClientSurfaceInstancesUpdate } from '@companion-app/shared/Model/SurfaceInstance.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { Logger } from '../../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
+import type { InstanceConfigStore } from '../ConfigStore.js'
+import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSurfacesTrpcRouter(

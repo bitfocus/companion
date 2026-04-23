@@ -1,6 +1,6 @@
+import { useQuery } from '@tanstack/react-query'
 import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { useQuery } from '@tanstack/react-query'
 import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface DocsContentProps {

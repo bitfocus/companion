@@ -1,6 +1,6 @@
-import os from 'os'
-import type { AppInfo } from '../Registry.js'
+import os from 'node:os'
 import type { operations as CompanionUpdatesApiOperations } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import type { AppInfo } from '../Registry.js'
 
 export type UpdateApiBody = CompanionUpdatesApiOperations['updates_post']['requestBody']['content']['application/json']
 

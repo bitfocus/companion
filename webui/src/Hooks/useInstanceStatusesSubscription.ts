@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import type { InstanceStatusesStore } from '~/Stores/InstanceStatusesStore.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/Resources/TRPC'
 import { runInAction } from 'mobx'
+import { useState } from 'react'
+import { trpc } from '~/Resources/TRPC'
+import type { InstanceStatusesStore } from '~/Stores/InstanceStatusesStore.js'
 
 export function useInstanceStatusesSubscription(store: InstanceStatusesStore): boolean {
 	const [ready, setReady] = useState(false)

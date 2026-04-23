@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { $, fs } from 'zx'
 import { goSilent } from './lib.mts'
 

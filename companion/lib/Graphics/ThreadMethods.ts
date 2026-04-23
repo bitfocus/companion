@@ -13,4 +13,5 @@ import { GraphicsRenderer } from './Renderer.js'
 
 export const GraphicsThreadMethods = Object.freeze({
 	drawButtonImage: GraphicsRenderer.drawButtonImageUnwrapped.bind(GraphicsRenderer),
+	createImagePreview: GraphicsRenderer.createImagePreview.bind(GraphicsRenderer),
 })

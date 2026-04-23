@@ -1,10 +1,10 @@
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { observer } from 'mobx-react-lite'
-import { useContext, useCallback } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { getModuleVersionInfo } from '../../Instances/Util.js'
+import { useCallback, useContext } from 'react'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { getModuleVersionInfo } from '../../Instances/Util.js'
 
 interface ConnectionEditPanelHeadingProps {
 	connectionInfo: ClientConnectionConfig

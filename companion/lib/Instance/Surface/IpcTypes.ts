@@ -1,14 +1,15 @@
-import type { IpcWrapper } from '../Common/IpcWrapper.js'
+import type { JsonValue } from 'type-fest'
+import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
+import type { DiscoveredRemoteSurfaceInfo, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
 import type {
 	HIDDevice,
 	LogLevel,
-	SurfaceDrawProps,
 	OpenDeviceResult,
+	SurfaceDrawProps,
 	SurfaceFirmwareUpdateInfo,
+	SurfaceRotation,
 } from '@companion-surface/host'
-import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { DiscoveredRemoteSurfaceInfo, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
-import type { JsonValue } from 'type-fest'
+import type { IpcWrapper } from '../Common/IpcWrapper.js'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 
@@ -208,6 +209,7 @@ export interface SetLockedMessage {
 	surfaceId: string
 	locked: boolean
 	characterCount: number
+	rotation: SurfaceRotation
 }
 
 export interface SetOutputVariableMessage {

@@ -1,10 +1,10 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ServiceOscApi } from '../../lib/Service/OscApi.js'
-import { rgb } from '../../lib/Resources/Util.js'
-import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
-import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { OSCMetaArgument } from '@companion-module/host'
+import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import { rgb } from '../../lib/Resources/Util.js'
+import { ServiceOscApi } from '../../lib/Service/OscApi.js'
+import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {

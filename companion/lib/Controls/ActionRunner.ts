@@ -1,10 +1,10 @@
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlEntityInstance } from './Entities/EntityInstance.js'
-import LogController from '../Log/Controller.js'
-import type { InternalController } from '../Internal/Controller.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
+import type { InternalController } from '../Internal/Controller.js'
+import LogController from '../Log/Controller.js'
+import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
 /**
  * Class to handle execution of actions.
