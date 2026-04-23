@@ -9,7 +9,7 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
-import { trpc, trpcClient, useMutationExt, type RouterInputs } from '~/Resources/TRPC.js'
+import { trpc, trpcClient, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
@@ -97,7 +97,7 @@ function useInstanceEditPanelService(
 		): Promise<string | null> => {
 			const saveLabel = panelStore.labelValue
 
-			const saveConfigProps: RouterInputs['instances']['connections']['setConfig'] = {
+			const saveConfigProps: RouterInput['instances']['connections']['setConfig'] = {
 				connectionId: instanceId,
 				label: saveLabel,
 				enabled: panelStore.enabled,

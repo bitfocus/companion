@@ -51,7 +51,7 @@ export function PngImageInputField({
 				</CButton>
 			</CButtonGroup>
 			{imageLoadError && (
-				<CAlert color="warning" dismissible>
+				<CAlert color="warning" dismissible onClose={() => setImageLoadError(null)}>
 					{imageLoadError}
 				</CAlert>
 			)}

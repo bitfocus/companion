@@ -95,7 +95,7 @@
     "@types/express-serve-static-core": "^5.1.0",
     "@companion-module/base": "2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89",
     "@companion-module/host": "1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89",
-    "node-gyp": "^12.1.0",
+    "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
   },
   "dependenciesMeta": {

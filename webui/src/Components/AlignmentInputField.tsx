@@ -97,6 +97,7 @@ function AlignmentButton({
 			color={value === buttonValue ? 'primary' : 'secondary'}
 			onClick={() => setValue(buttonValue)}
 			title={title}
+			aria-label={title}
 			disabled={disabled}
 		>
 			{children}
