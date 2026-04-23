@@ -1,22 +1,21 @@
 #!/usr/bin/env zx
-
-import { $, fs, usePowerShell } from 'zx'
-import type { components, paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import crypto from 'crypto'
+import path from 'path'
+import { Readable } from 'stream'
+import { promisify } from 'util'
+import { gunzip } from 'zlib'
 import createClient from 'openapi-fetch'
 import pQueue from 'p-queue'
 import pRetry, { AbortError } from 'p-retry'
-import path from 'path'
+import * as tarfs from 'tar-fs'
+import { $, fs, usePowerShell } from 'zx'
 import {
 	isModuleApiVersionCompatible,
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import { generateVersionString } from './lib.mjs'
-import crypto from 'crypto'
-import { gunzip } from 'zlib'
-import { promisify } from 'util'
-import { Readable } from 'stream'
-import * as tarfs from 'tar-fs'
+import type { components, paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
 import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
+import { generateVersionString } from './lib.mjs'
 
 const gunzipP = promisify(gunzip)
 

@@ -1,5 +1,5 @@
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CompanionFieldVariablesSupport,
 	type CompanionInputFieldBaseExtended,
@@ -26,10 +26,10 @@ import type {
 	CompanionInputFieldNumber,
 	CompanionInputFieldStaticText,
 	CompanionInputFieldTextInput,
+	Complete,
 	SomeCompanionActionInputField,
 	SomeCompanionConfigField,
 	SomeCompanionFeedbackInputField,
-	Complete,
 } from '@companion-module/base'
 
 export function translateConnectionConfigFields(fields: SomeCompanionConfigField[]): SomeCompanionInputField[] {

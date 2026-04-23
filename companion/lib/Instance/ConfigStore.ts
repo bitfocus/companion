@@ -1,3 +1,6 @@
+// import LogController from '../Log/Controller.js'
+import { nanoid } from 'nanoid'
+import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	ModuleInstanceType,
@@ -5,9 +8,6 @@ import {
 	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { DataDatabase } from '../Data/Database.js'
-// import LogController from '../Log/Controller.js'
-import { nanoid } from 'nanoid'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 
 export interface AddInstanceProps {

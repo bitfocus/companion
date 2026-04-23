@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { ParseExpression, FindAllReferencedVariables } from '../Expression/ExpressionParse.js'
+import { describe, expect, it } from 'vitest'
+import { FindAllReferencedVariables, ParseExpression } from '../Expression/ExpressionParse.js'
 
 function ParseExpression2(str: string) {
 	const node = ParseExpression(str)

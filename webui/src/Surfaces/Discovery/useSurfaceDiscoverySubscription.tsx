@@ -1,6 +1,6 @@
-import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useState } from 'react'
+import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { trpc } from '~/Resources/TRPC'
 
 export function useSurfaceDiscoverySubscription(): Record<string, ClientDiscoveredSurfaceInfo | undefined> {

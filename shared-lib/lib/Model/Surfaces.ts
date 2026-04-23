@@ -1,4 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { CollectionBase } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
 	CompanionInputFieldCheckboxExtended,
@@ -9,7 +10,6 @@ import type {
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
-import type { CollectionBase } from './Collections.js'
 
 export type GridSize = { columns: number; rows: number }
 export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180

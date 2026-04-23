@@ -1,7 +1,7 @@
-import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
-import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 import type { ObservableMap } from 'mobx'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
+import type { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 
 export interface CanEnableSurfaceInstanceResult {
 	ok: boolean

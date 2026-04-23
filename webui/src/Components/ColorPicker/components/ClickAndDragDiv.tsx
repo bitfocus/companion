@@ -1,6 +1,6 @@
+import classNames from 'classnames'
 import { useCallback, useEffect, useRef } from 'react'
 import cssStyles from './ClickAndDragDiv.module.css'
-import classNames from 'classnames'
 
 export interface ClickAndDragDivProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
 	onChange: (e: React.MouseEvent | React.TouchEvent | MouseEvent, container: HTMLDivElement) => void

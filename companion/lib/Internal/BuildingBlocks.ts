@@ -9,28 +9,28 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import type {
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalVisitor,
-	InternalFeedbackDefinition,
-	InternalActionDefinition,
-	ActionForVisitor,
-	InternalModuleFragmentEvents,
-	ActionForInternalExecution,
-} from './Types.js'
-import type { ActionRunner } from '../Controls/ActionRunner.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import { EventEmitter } from 'node:events'
+import { setTimeout } from 'node:timers/promises'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { EventEmitter } from 'events'
-import { setTimeout } from 'node:timers/promises'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { ActionRunner } from '../Controls/ActionRunner.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import LogController from '../Log/Controller.js'
+import type {
+	ActionForInternalExecution,
+	ActionForVisitor,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
 
 export class InternalBuildingBlocks
 	extends EventEmitter<InternalModuleFragmentEvents>

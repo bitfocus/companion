@@ -1,6 +1,6 @@
+import { observer } from 'mobx-react-lite'
 import { components as SelectComponents, type OptionProps } from 'react-select'
 import type { DropdownChoiceInt } from './DropdownChoices'
-import { observer } from 'mobx-react-lite'
 
 // Formatting for variable pulldown options:
 export const CustomOption = observer((props: OptionProps<DropdownChoiceInt>) => {

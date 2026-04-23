@@ -1,38 +1,38 @@
-import { CButton, CForm, CButtonGroup, CFormSwitch, CCol } from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CForm, CFormSwitch } from '@coreui/react'
 import {
-	faSort,
-	faTrash,
+	faClone,
 	faCompressArrowsAlt,
 	faExpandArrowsAlt,
-	faClone,
 	faPencil,
+	faSort,
+	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useContext, useMemo, useRef, useState, useEffect } from 'react'
 import classNames from 'classnames'
-import { PreventDefaultHandler } from '~/Resources/util.js'
-import { MyErrorBoundary } from '~/Resources/Error.js'
-import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
-import { OptionsInputField } from '~/Controls/OptionsInputField.js'
-import { useDrag, useDrop, useDragLayer } from 'react-dnd'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useDrag, useDragLayer, useDrop } from 'react-dnd'
 import { getEmptyImage } from 'react-dnd-html5-backend'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
+import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
+import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { AddEventDropdown } from './AddEventDropdown.js'
+import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { OptionsInputField } from '~/Controls/OptionsInputField.js'
+import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
+import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
+import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
 import {
-	useControlEventService,
 	useControlEventsEditorService,
+	useControlEventService,
 	type IEventEditorEventService,
 	type IEventEditorService,
 } from '~/Services/Controls/ControlEventsService.js'
-import { observer } from 'mobx-react-lite'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { JsonValue } from 'type-fest'
+import { AddEventDropdown } from './AddEventDropdown.js'
 
 interface TriggerEventEditorProps {
 	controlId: string

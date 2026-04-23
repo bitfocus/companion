@@ -1,27 +1,27 @@
-import { useCallback, useContext, useEffect, useState } from 'react'
-import { CForm, CFormSelect, CCol, CFormLabel, CFormSwitch } from '@coreui/react'
-import { PreventDefaultHandler } from '~/Resources/util.js'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { CCol, CForm, CFormLabel, CFormSelect, CFormSwitch } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
+import { useNavigate } from '@tanstack/react-router'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useEffect, useState } from 'react'
+import type { JsonValue } from 'type-fest'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { TextInputField } from '~/Components/TextInputField.js'
-import { EditPanelConfigField } from './EditPanelConfigField'
-import { NonIdealState } from '~/Components/NonIdealState'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { useNavigate } from '@tanstack/react-router'
 import { InlineHelp } from '~/Components/InlineHelp'
-import type { JsonValue } from 'type-fest'
+import { NonIdealState } from '~/Components/NonIdealState'
+import { TextInputField } from '~/Components/TextInputField.js'
+import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { EditPanelConfigField } from './EditPanelConfigField'
 
 type SurfaceInfo = ClientSurfaceItem & { groupId: string | null }
 

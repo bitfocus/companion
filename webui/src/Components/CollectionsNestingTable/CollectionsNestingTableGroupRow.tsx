@@ -1,11 +1,11 @@
-import { useCallback, useState } from 'react'
 import { CButton } from '@coreui/react'
-import { faCaretRight, faCaretDown, faCheckCircle, faTrash, faPencilAlt } from '@fortawesome/free-solid-svg-icons'
+import { faCaretDown, faCaretRight, faCheckCircle, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useState } from 'react'
 import { TextInputField } from '../TextInputField.js'
-import type { CollectionsNestingTableCollection, NestingCollectionsApi } from './Types.js'
 import { CollectionsNestingTableCollectionRowWrapper } from './CollectionsNestingTableRowWrappers.js'
+import type { CollectionsNestingTableCollection, NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableCollectionRowProps {
 	collection: CollectionsNestingTableCollection

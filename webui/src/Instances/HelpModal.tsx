@@ -1,14 +1,14 @@
-import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
 import { CModalBody, CModalHeader } from '@coreui/react'
-import sanitizeHtml from 'sanitize-html'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { CModalExt } from '~/Components/CModalExt.js'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import sanitizeHtml from 'sanitize-html'
 import semver from 'semver'
-import { makeAbsolutePath } from '~/Resources/util.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export interface HelpModalRef {
 	showFromUrl(moduleType: ModuleInstanceType, moduleId: string, versionDisplayName: string, url: string): void

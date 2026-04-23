@@ -8,25 +8,31 @@
  * Individual Contributor License Agreement for companion along with
  * this program.
  */
-import LogController from '../../Log/Controller.js'
+import { EventEmitter } from 'node:events'
+import debounceFn from 'debounce-fn'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { EventEmitter } from 'events'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { ImageResult } from '../../Graphics/ImageResult.js'
+import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
+import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
+import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
 import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
-import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
+import type {
+	SatelliteControlStylePreset,
+	SatelliteSurfaceLayout,
+} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import {
 	BrightnessConfigField,
-	LegacyRotationConfigField,
 	LockConfigFields,
 	OffsetConfigFields,
 	RotationConfigField,
 } from '../CommonConfigFields.js'
-import debounceFn from 'debounce-fn'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -34,14 +40,7 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import type {
-	SatelliteControlStylePreset,
-	SatelliteSurfaceLayout,
-} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 
 export interface SatelliteDeviceInfo {
 	connectionId: string
@@ -81,7 +80,6 @@ interface SatelliteOutputVariableInfo {
 
 function generateConfigFields(
 	deviceInfo: SatelliteDeviceInfo,
-	legacyRotation: boolean,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>
 ): CompanionSurfaceConfigField[] {
@@ -89,7 +87,7 @@ function generateConfigFields(
 	if (deviceInfo.supportsBrightness) {
 		fields.push(BrightnessConfigField)
 	}
-	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+	fields.push(RotationConfigField, ...LockConfigFields)
 
 	if (deviceInfo.canChangePage) {
 		fields.push({
@@ -228,13 +226,9 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
-		const anyControlHasBitmap = !!this.#controlDefinitions
-			.values()
-			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
-
 		this.info = {
 			description: deviceInfo.productName,
-			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
+			configFields: generateConfigFields(deviceInfo, this.#inputVariables, this.#outputVariables),
 			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote

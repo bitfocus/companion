@@ -1,10 +1,9 @@
-import { fetch, fs, path, $ } from 'zx'
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
-import { toPosix } from './build/util.mts'
-import { type PlatformInfo } from './build/util.mts'
+import { $, fetch, fs, path } from 'zx'
 import nodeVersionsJson from '../assets/nodejs-versions.json' with { type: 'json' }
+import { toPosix, type PlatformInfo } from './build/util.mts'
 
 const streamPipeline = promisify(pipeline)
 

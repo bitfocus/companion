@@ -2,13 +2,13 @@ import { CButton } from '@coreui/react'
 import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useContext, useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { Tuck } from '~/Components/Tuck.js'
+import { InstancesListTableRow } from '~/Instances/List/InstancesListTableRow.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { ClientConnectionConfigWithId } from './ConnectionList.js'
 import { useConnectionListContext } from './ConnectionListContext.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { InstancesListTableRow } from '~/Instances/List/InstancesListTableRow.js'
 
 interface ConnectionsTableRowProps {
 	connection: ClientConnectionConfigWithId

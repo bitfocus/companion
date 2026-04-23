@@ -1,12 +1,12 @@
-import { fetch, fs, path, usePowerShell } from 'zx'
+import crypto from 'crypto'
 import { Readable } from 'node:stream'
 import { promisify } from 'node:util'
-import crypto from 'crypto'
-import { generateVersionString } from './lib.mts'
-import { AbortError } from 'p-retry'
 import { gunzip } from 'zlib'
+import { AbortError } from 'p-retry'
 import * as tarfs from 'tar-fs'
+import { fetch, fs, path, usePowerShell } from 'zx'
 import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
+import { generateVersionString } from './lib.mts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell

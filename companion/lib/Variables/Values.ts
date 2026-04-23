@@ -9,23 +9,23 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import EventEmitter from 'events'
-import type { VariableValueData, VariablesCache } from './Util.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	stringifyVariableValue,
 	type VariableValue,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
-import { router, publicProcedure } from '../UI/TRPC.js'
-import z from 'zod'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import type { VariablesCache, VariableValueData } from './Util.js'
+import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]

@@ -1,26 +1,15 @@
 import EventEmitter from 'node:events'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type {
-	DrawButtonItem,
-	SurfaceExecuteExpressionFn,
-	SurfacePanel,
-	SurfacePanelEvents,
-	SurfacePanelInfo,
-} from './Types.js'
-import LogController, { type Logger } from '../Log/Controller.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from './CommonConfigFields.js'
-import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import type { SurfaceSchemaControlStylePreset, SurfaceSchemaLayoutDefinition } from '@companion-surface/host'
-import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { parseColor, parseColorToNumber, transformButtonImage } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type {
+	SurfaceRotation,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-surface/host'
 import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
@@ -28,7 +17,22 @@ import type {
 	IpcDrawProps,
 	SurfaceModuleToHostEvents,
 } from '../Instance/Surface/IpcTypes.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
+import LogController, { type Logger } from '../Log/Controller.js'
+import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
+import { parseColor, parseColorToNumber, transformButtonImage, translateRotation } from '../Resources/Util.js'
+import {
+	BrightnessConfigField,
+	LockConfigFields,
+	OffsetConfigFields,
+	RotationConfigField,
+} from './CommonConfigFields.js'
+import type {
+	DrawButtonItem,
+	SurfaceExecuteExpressionFn,
+	SurfacePanel,
+	SurfacePanelEvents,
+	SurfacePanelInfo,
+} from './Types.js'
 
 interface SatelliteInputVariableInfo {
 	id: string
@@ -197,6 +201,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			try {
 				const drawProps: IpcDrawProps = {
 					controlId: controlDefinition.id,
+					pageNumber: drawItem.location?.pageNumber,
 				}
 
 				const style = drawItem.image.style
@@ -388,11 +393,25 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	setLocked(locked: boolean, characterCount: number): void {
+		let rotation: SurfaceRotation = 0
+		switch (translateRotation(this.#config.rotation)) {
+			case 'CW90':
+				rotation = 90
+				break
+			case 'CW180':
+				rotation = 180
+				break
+			case 'CW270':
+				rotation = -90
+				break
+		}
+
 		this.#ipcWrapper
 			.sendWithCb('setLocked', {
 				surfaceId: this.#surfaceInfo.surfaceId,
 				locked,
 				characterCount,
+				rotation,
 			})
 			.catch((e) => {
 				this.#logger.debug(`Set locked status failed: ${e}`)

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { dsanMastercueKeymap, keyboardKeymap, logitecKeymap } from './Keymaps.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 type ButtonPressFn = (location: ControlLocation, pressed: boolean) => void
 

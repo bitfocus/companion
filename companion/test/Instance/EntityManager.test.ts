@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-	ConnectionEntityManager,
-	EntityManagerActionEntity,
-	EntityManagerAdapter,
-	EntityManagerFeedbackEntity,
-} from '../../lib/Instance/Connection/EntityManager.js'
-import {
 	EntityModelType,
 	ReplaceableActionEntityModel,
 	ReplaceableFeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionOptionValues } from '@companion-module/host'
+import {
+	ConnectionEntityManager,
+	EntityManagerActionEntity,
+	EntityManagerAdapter,
+	EntityManagerFeedbackEntity,
+} from '../../lib/Instance/Connection/EntityManager.js'
 
 // Mock dependencies
 vi.mock('nanoid', () => ({

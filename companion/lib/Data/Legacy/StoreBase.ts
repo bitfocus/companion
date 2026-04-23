@@ -1,5 +1,5 @@
+import path from 'node:path'
 import fs from 'fs-extra'
-import path from 'path'
 import LogController, { type Logger } from '../../Log/Controller.js'
 
 /**

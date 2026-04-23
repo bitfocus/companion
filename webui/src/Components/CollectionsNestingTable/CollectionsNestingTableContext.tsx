@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo } from 'react'
-import type { NestingCollectionsApi, CollectionsNestingTableItem, CollectionsNestingTableCollection } from './Types.js'
+import type { CollectionsNestingTableCollection, CollectionsNestingTableItem, NestingCollectionsApi } from './Types.js'
 
 export interface CollectionsNestingTableContextType<
 	TCollection extends CollectionsNestingTableCollection,
@@ -13,6 +13,7 @@ export interface CollectionsNestingTableContextType<
 	dragId: string
 	collectionsApi: NestingCollectionsApi
 	selectedItemId: string | null
+	gridLayout?: boolean
 }
 
 const CollectionsNestingTableContext = createContext<CollectionsNestingTableContextType<any, any> | null>(null)
@@ -43,6 +44,7 @@ export function CollectionsNestingTableContextProvider<
 	dragId,
 	collectionsApi,
 	selectedItemId,
+	gridLayout,
 	children,
 }: React.PropsWithChildren<CollectionsNestingTableContextProviderProps<TCollection, TItem>>): React.JSX.Element {
 	const value = useMemo<CollectionsNestingTableContextType<TCollection, TItem>>(() => {
@@ -54,8 +56,9 @@ export function CollectionsNestingTableContextProvider<
 			dragId,
 			collectionsApi,
 			selectedItemId,
+			gridLayout,
 		}
-	}, [ItemRow, GroupHeaderContent, showCollapseButtons, itemName, dragId, collectionsApi, selectedItemId])
+	}, [ItemRow, GroupHeaderContent, showCollapseButtons, itemName, dragId, collectionsApi, selectedItemId, gridLayout])
 
 	return <CollectionsNestingTableContext.Provider value={value}>{children}</CollectionsNestingTableContext.Provider>
 }

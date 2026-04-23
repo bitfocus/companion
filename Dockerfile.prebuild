@@ -1,6 +1,7 @@
 FROM debian:bookworm-slim
 
-ARG build_name
+ARG linux_x64_url
+ARG linux_arm64_url
 ARG TARGETPLATFORM
 
 # Install curl for the health check
@@ -15,11 +16,11 @@ RUN apt update && apt install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN case ${TARGETPLATFORM} in \
-    "linux/amd64")  ARCH=x64  ;; \
-    "linux/arm64")  ARCH=arm64  ;; \
+    "linux/amd64")  URL=${linux_x64_url}  ;; \
+    "linux/arm64")  URL=${linux_arm64_url}  ;; \
     *) echo "Unsupported platform ${TARGETPLATFORM}"; exit 9 ;; \
     esac \
-    && curl https://s4.bitfocus.io/builds/companion/companion-linux-${ARCH}-${build_name}.tar.gz --output /tmp/companion-build.tar.gz \
+    && curl ${URL} --output /tmp/companion-build.tar.gz \
     && mkdir /tmp/companion \
     && tar -xzf /tmp/companion-build.tar.gz --strip-components=1 -C /tmp/companion \
     && mv /tmp/companion/resources /app \
@@ -47,7 +48,7 @@ USER companion
 EXPOSE 8000 16622 16623 28492
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD [ "sh", "-c", "curl -fSsq http://localhost:${COMPANION_ADMIN_PORT:-8000}/" ]
+    CMD [ "sh", "-c", "curl -fSsq http://localhost:${COMPANION_ADMIN_PORT:-8000}/" ]
 
 # module-local-dev dependencies
 # Dependencies will be installed and cached once the container is started

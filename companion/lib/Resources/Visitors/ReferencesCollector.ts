@@ -1,6 +1,6 @@
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { InternalController } from '../../Internal/Controller.js'
 import { TrySplitVariableId } from '@companion-app/shared/Variables.js'
+import type { InternalController } from '../../Internal/Controller.js'
 import { VisitorReferencesBase } from './VisitorReferencesBase.js'
 
 export class VisitorReferencesCollector extends VisitorReferencesBase<VisitorReferencesCollectorVisitor> {

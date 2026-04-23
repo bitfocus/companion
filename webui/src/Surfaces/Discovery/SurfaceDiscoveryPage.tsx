@@ -1,9 +1,9 @@
-import { useCallback } from 'react'
-import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable'
-import { MyErrorBoundary } from '~/Resources/Error'
 import { useNavigate } from '@tanstack/react-router'
+import { useCallback } from 'react'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
+import { MyErrorBoundary } from '~/Resources/Error'
+import { SurfaceDiscoveryTable } from './SurfaceDiscoveryTable'
 
 export function SurfaceDiscoveryPage(): React.JSX.Element {
 	const navigate = useNavigate()

@@ -1,18 +1,15 @@
-import {
-	EntityModelType,
-	type EntitySupportedChildGroupDefinition,
-	type SomeEntityModel,
-	type EntityOwner,
-} from '@companion-app/shared/Model/EntityModel.js'
-import { CForm } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
-import { PreventDefaultHandler } from '~/Resources/util.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { observer } from 'mobx-react-lite'
-import { EditableEntityList } from './EntityList.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import {
+	EntityModelType,
+	type EntityOwner,
+	type EntitySupportedChildGroupDefinition,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
+import { EditableEntityList } from './EntityList.js'
 
 interface EntityManageChildGroupsProps {
 	entity: SomeEntityModel
@@ -55,8 +52,9 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 }: EntityManageChildGroupProps) {
 	const groupId: EntityOwner = { parentId, childGroup: groupInfo.groupId }
 
+	// don't wrap in a form here as it will cause nested forms (illegal HTML)...and it's not necessary here!
 	return (
-		<CForm onSubmit={PreventDefaultHandler}>
+		<div>
 			<EditableEntityList
 				heading={
 					groupInfo.label ? (
@@ -76,6 +74,6 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				feedbackListType={(groupInfo.type === EntityModelType.Feedback && groupInfo.feedbackListType) || null}
 				ownerId={groupId}
 			/>
-		</CForm>
+		</div>
 	)
 })

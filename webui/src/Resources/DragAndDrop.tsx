@@ -137,3 +137,42 @@ export function checkDragStateWithThresholds<TItem extends { dragState: DragStat
 	// Return the placement information
 	return placement
 }
+
+export function checkGridDragState<TItem extends { dragState: DragState | null }>(
+	item: TItem,
+	monitor: DropTargetMonitor,
+	hoverId: string,
+	threshold: number = 10
+): boolean {
+	const currentCoords = monitor.getClientOffset()
+	const previousCoords = item.dragState?.lastCoords ?? monitor.getInitialClientOffset()
+	if (!previousCoords || !currentCoords) return false
+
+	// Calculate the distance moved since last significant movement
+	const deltaX = Math.abs(currentCoords.x - previousCoords.x)
+	const deltaY = Math.abs(currentCoords.y - previousCoords.y)
+	const totalMovement = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+
+	// Only process if we've moved enough distance (prevents jitter)
+	if (totalMovement < threshold) {
+		return false
+	}
+
+	if (!item.dragState) {
+		item.dragState = {
+			draggedOver: [],
+			lastCoords: currentCoords,
+			dragDownwards: false,
+		}
+	} else {
+		item.dragState.lastCoords = currentCoords
+	}
+
+	// Don't repeat the same swap
+	if (item.dragState.draggedOver.includes(hoverId)) {
+		return false
+	}
+
+	item.dragState.draggedOver.push(hoverId)
+	return true
+}

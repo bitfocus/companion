@@ -1,5 +1,15 @@
-import LogController, { type Logger } from '../../Log/Controller.js'
+import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
+import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
+import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
+import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import type { InstanceStatus } from '../Status.js'
+import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
 import type {
 	ChangePageMessage,
 	DisconnectMessage,
@@ -20,16 +30,6 @@ import type {
 	ShouldOpenDeviceResponseMessage,
 	SurfaceModuleToHostEvents,
 } from './IpcTypes.js'
-import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
-import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import type { InstanceStatus } from '../Status.js'
-import type { SurfaceScanHandler, SurfaceController } from '../../Surface/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
-import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
-import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController

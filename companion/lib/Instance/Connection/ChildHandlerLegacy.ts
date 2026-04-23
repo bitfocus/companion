@@ -1,78 +1,17 @@
-import LogController, { type Logger } from '../../Log/Controller.js'
-import {
-	IpcWrapper as IpcWrapperEJSON,
-	type IpcEventHandlers,
-	// eslint-disable-next-line n/no-missing-import
-} from '@companion-module/base-old/dist/host-api/ipc-wrapper.js'
-import semver from 'semver'
 import type express from 'express'
-import type {
-	ActionInstance as ModuleActionInstance,
-	FeedbackInstance as ModuleFeedbackInstance,
-	HostToModuleEventsV0,
-	ModuleToHostEventsV0,
-	LogMessageMessage,
-	SetStatusMessage,
-	SetActionDefinitionsMessage,
-	SetFeedbackDefinitionsMessage,
-	UpdateFeedbackValuesMessage,
-	SetVariableValuesMessage,
-	SetVariableDefinitionsMessage,
-	SetPresetDefinitionsMessage,
-	SaveConfigMessage,
-	SendOscMessage,
-	ParseVariablesInStringMessage,
-	ParseVariablesInStringResponseMessage,
-	RecordActionMessage,
-	SetCustomVariableMessage,
-	UpgradedDataResponseMessage,
-	SharedUdpSocketMessageJoin,
-	SharedUdpSocketMessageLeave,
-	SharedUdpSocketMessageSend,
-	UpdateActionInstancesMessage,
-	UpdateFeedbackInstancesMessage,
-	// eslint-disable-next-line n/no-missing-import
-} from '@companion-module/base-old/dist/host-api/api.js'
-import type {
-	ModuleRegisterMessage,
-	ModuleToHostEventsInit,
-	// eslint-disable-next-line n/no-missing-import
-} from '@companion-module/base-old/dist/host-api/versions.js'
-import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import type {
-	OptionsObject,
-	CompanionHTTPRequest,
-	CompanionInputFieldBase,
-	CompanionOptionValues,
-	LogLevel,
-} from '@companion-module/base-old'
+import semver from 'semver'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	isValidFeedbackEntitySubType,
-	type ReplaceableActionEntityModel,
-	type ReplaceableFeedbackEntityModel,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
+	type ReplaceableActionEntityModel,
+	type ReplaceableFeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { Complete } from '@companion-module/base'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import {
-	doesModuleExpectLabelUpdates,
-	doesModuleUseSeparateUpgradeMethod,
-	doesModuleUseNewConfigLayout,
-} from './ApiVersions.js'
-import {
-	ConnectionEntityManager,
-	type EntityManagerActionEntity,
-	type EntityManagerAdapter,
-	type EntityManagerFeedbackEntity,
-} from './EntityManager.js'
-import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
-import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import {
 	convertExpressionOptionsWithoutParsing,
 	exprVal,
@@ -80,16 +19,77 @@ import {
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { Complete } from '@companion-module/base'
+import type {
+	CompanionHTTPRequest,
+	CompanionInputFieldBase,
+	CompanionOptionValues,
+	LogLevel,
+	OptionsObject,
+} from '@companion-module/base-old'
+import type {
+	HostToModuleEventsV0,
+	LogMessageMessage,
+	ActionInstance as ModuleActionInstance,
+	FeedbackInstance as ModuleFeedbackInstance,
+	ModuleToHostEventsV0,
+	ParseVariablesInStringMessage,
+	ParseVariablesInStringResponseMessage,
+	RecordActionMessage,
+	SaveConfigMessage,
+	SendOscMessage,
+	SetActionDefinitionsMessage,
+	SetCustomVariableMessage,
+	SetFeedbackDefinitionsMessage,
+	SetPresetDefinitionsMessage,
+	SetStatusMessage,
+	SetVariableDefinitionsMessage,
+	SetVariableValuesMessage,
+	SharedUdpSocketMessageJoin,
+	SharedUdpSocketMessageLeave,
+	SharedUdpSocketMessageSend,
+	UpdateActionInstancesMessage,
+	UpdateFeedbackInstancesMessage,
+	UpdateFeedbackValuesMessage,
+	UpgradedDataResponseMessage,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/api.js'
+import {
+	IpcWrapper as IpcWrapperEJSON,
+	type IpcEventHandlers,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/ipc-wrapper.js'
+import type {
+	ModuleRegisterMessage,
+	ModuleToHostEventsInit,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/versions.js'
+import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import {
+	doesModuleExpectLabelUpdates,
+	doesModuleUseNewConfigLayout,
+	doesModuleUseSeparateUpgradeMethod,
+} from './ApiVersions.js'
 import type {
 	ConnectionChildHandlerApi,
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
+import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
+import {
+	ConnectionEntityManager,
+	type EntityManagerActionEntity,
+	type EntityManagerAdapter,
+	type EntityManagerFeedbackEntity,
+} from './EntityManager.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger

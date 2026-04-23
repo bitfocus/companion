@@ -9,17 +9,17 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
-import type { AppInfo } from '../Registry.js'
-import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
-import { compileUpdatePayload } from './UpdatePayload.js'
-import { publicProcedure, router, toIterable } from './TRPC.js'
-import { EventEmitter } from 'events'
-import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import { EventEmitter } from 'node:events'
+import os from 'node:os'
 import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
-import os from 'os'
 import z from 'zod'
+import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
+import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import { publicProcedure, router, toIterable } from './TRPC.js'
+import { compileUpdatePayload } from './UpdatePayload.js'
 
 type UpdateEvents = {
 	info: [info: AppUpdateInfo]

@@ -1,28 +1,28 @@
+import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useDrag, useDragLayer, useDrop } from 'react-dnd'
+import { getEmptyImage } from 'react-dnd-html5-backend'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	stringifySocketEntityLocation,
-	type EntityOwner,
 	type EntityModelType,
+	type EntityOwner,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { observer } from 'mobx-react-lite'
-import { useContext, useState, useCallback, useRef, useEffect } from 'react'
+import { LearnButton } from '~/Components/LearnButton.js'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import { checkDragStateWithThresholds, DragPlacement } from '~/Resources/DragAndDrop.js'
 import { useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 import { EntityRowHeader } from './EntityCellControls.js'
 import { EntityManageChildGroups } from './EntityChildGroup.js'
 import { EntityCommonCells } from './EntityCommonCells.js'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useDrop, useDrag, useDragLayer } from 'react-dnd'
-import { checkDragStateWithThresholds, DragPlacement } from '~/Resources/DragAndDrop.js'
-import type { EntityListDragItem } from './EntityListDropZone.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
-import { LearnButton } from '~/Components/LearnButton.js'
-import { getEmptyImage } from 'react-dnd-html5-backend'
-import classNames from 'classnames'
+import type { EntityListDragItem } from './EntityListDropZone.js'
 
 interface EntityTableRowDragStatus {
 	isDragging: boolean

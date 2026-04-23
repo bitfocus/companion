@@ -1,15 +1,15 @@
-import { useCallback } from 'react'
 import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
-import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
+import { useCallback } from 'react'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { UserConfigProps } from '../Components/Common.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
+import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps) {
 	const createSslCertificateMutation = useMutationExt(trpc.userConfig.sslCertificateCreate.mutationOptions())
@@ -117,7 +117,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 											</td>
 											<td>
 												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
-													<p>
+													<div className="my-3">
 														<CButton onClick={renewSslCertificate} color="success" className="mb-2">
 															<FontAwesomeIcon icon={faSync} />
 															&nbsp;Renew
@@ -127,7 +127,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 															<FontAwesomeIcon icon={faTrash} />
 															&nbsp;Delete
 														</CButton>
-													</p>
+													</div>
 												) : (
 													<CButton onClick={createSslCertificate} color="success">
 														<FontAwesomeIcon icon={faSync} />

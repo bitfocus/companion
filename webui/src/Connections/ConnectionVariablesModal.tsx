@@ -1,7 +1,7 @@
+import { CCol, CModalBody, CModalHeader, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CModalBody, CModalHeader, CRow, CCol } from '@coreui/react'
-import { VariablesTable } from '~/Components/VariablesTable.js'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { VariablesTable } from '~/Components/VariablesTable.js'
 
 export interface ConnectionVariablesModalRef {
 	show(label: string): void

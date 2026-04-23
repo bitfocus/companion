@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useState } from 'react'
 import classnames from 'classnames'
+import { memo, useCallback, useEffect, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 // Single pixel of red

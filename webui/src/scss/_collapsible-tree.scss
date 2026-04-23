@@ -6,13 +6,19 @@
 	border-collapse: collapse;
 	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
 	font-size: 1.05em;
-
 	--collapsible-tree-nesting-level: 0;
+
+	.modal-content & {
+		// fix color in the Browse Actions/Feedbacks window (AddEntitiesModal) or any modal
+		// override default --cui-modal-color = rgb(37 43 54 /0.95)
+		// unfortunately, we can't simply override that variable here because it sets "color:" on .modal, so we have to override color itself.
+		color: black;
+	}
 
 	.collapsible-tree-ungrouped-header {
 		background-color: #f0f0f0;
 		padding: 6px 10px;
-		padding-left: 20px;
+		//padding-left: 20px; // don't -- since this is not expandible, align it with the carets
 
 		border-bottom: 1px solid #ddd;
 
@@ -38,7 +44,6 @@
 
 		// Connection nodes get a slightly different style to stand out from collections
 		.collapsible-tree-connection-header {
-			color: #303030;
 			display: inline-flex;
 			justify-content: space-between;
 			align-items: center;

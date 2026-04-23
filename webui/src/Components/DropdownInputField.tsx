@@ -1,13 +1,13 @@
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import classNames from 'classnames'
-import { useContext, useMemo, useCallback, useState } from 'react'
-import Select, { createFilter, components, type InputActionMeta } from 'react-select'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useMemo, useState } from 'react'
+import Select, { components, createFilter, type InputActionMeta } from 'react-select'
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
 // import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
-import { observer } from 'mobx-react-lite'
-import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
-import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string

@@ -1,9 +1,9 @@
+import { CAlert, CButton, CCol } from '@coreui/react'
+import type { TRPCClientErrorLike } from '@trpc/client'
 import { useEffect, useState } from 'react'
-import { PRIMARY_COLOR } from './Constants.js'
 import { BarLoader, PuffLoader } from 'react-spinners'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
-import type { TRPCClientErrorLike } from '@trpc/client'
-import { CCol, CAlert, CButton } from '@coreui/react'
+import { PRIMARY_COLOR } from './Constants.js'
 
 type LoadingBarProps = LoaderHeightWidthProps
 export function LoadingBar(props: LoadingBarProps): React.JSX.Element {

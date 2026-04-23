@@ -1,4 +1,3 @@
-import { useContext, useState, useCallback, forwardRef, useImperativeHandle, useEffect } from 'react'
 import {
 	CAlert,
 	CButton,
@@ -11,18 +10,19 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { PreventDefaultHandler } from '~/Resources/util.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { CModalExt } from '~/Components/CModalExt.js'
-import { useModuleVersionSelectOptions } from './useModuleVersionSelectOptions.js'
-import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
-import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import type { AddInstanceService } from './AddInstanceService.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { observer } from 'mobx-react-lite'
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import { CModalExt } from '~/Components/CModalExt.js'
+import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import type { AddInstanceService } from './AddInstanceService.js'
+import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
+import { useModuleVersionSelectOptions } from './useModuleVersionSelectOptions.js'
 
 export interface AddInstanceModalRef {
 	show(info: FuzzyProduct): void

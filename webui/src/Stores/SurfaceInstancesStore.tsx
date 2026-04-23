@@ -1,13 +1,13 @@
-import { observable, action } from 'mobx'
-import { assertNever } from '~/Resources/util.js'
-import type { GenericCollectionsStore } from './GenericCollectionsStore'
-import { updateObjectInPlace } from './ApplyDiffToMap'
+import { action, observable } from 'mobx'
 import type {
 	ClientSurfaceInstanceConfig,
 	ClientSurfaceInstancesUpdate,
 	SurfaceInstanceCollection,
 	SurfaceInstanceCollectionData,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
+import { assertNever } from '~/Resources/util.js'
+import { updateObjectInPlace } from './ApplyDiffToMap'
+import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
 export class SurfaceInstancesStore implements GenericCollectionsStore<SurfaceInstanceCollectionData> {
 	readonly instances = observable.map<string, ClientSurfaceInstanceConfig>()

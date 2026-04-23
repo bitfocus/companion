@@ -1,7 +1,7 @@
-import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
-import type { InternalController } from '../../Internal/Controller.js'
 import type { FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
+import type { InstanceDefinitions } from '../../Instance/Definitions.js'
+import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
+import type { InternalController } from '../../Internal/Controller.js'
 
 export type InstanceDefinitionsForEntity = Pick<InstanceDefinitions, 'getEntityDefinition'>
 

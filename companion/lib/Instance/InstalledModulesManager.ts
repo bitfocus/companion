@@ -1,25 +1,25 @@
-import LogController from '../Log/Controller.js'
-import path from 'path'
-import fs from 'fs-extra'
-import type { InstanceModules } from './Modules.js'
-import zlib from 'node:zlib'
-import * as ts from 'tar-stream'
-import { Readable } from 'node:stream'
-import * as tarfs from 'tar-fs'
-import type { ModuleStoreService } from './ModuleStore.js'
-import type { AppInfo } from '../Registry.js'
-import { promisify } from 'util'
-import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
-import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import type { InstanceConfigStore } from './ConfigStore.js'
 import crypto from 'node:crypto'
+import path from 'node:path'
+import { Readable } from 'node:stream'
+import { promisify } from 'node:util'
+import zlib from 'node:zlib'
+import fs from 'fs-extra'
 import semver from 'semver'
-import { publicProcedure, router } from '../UI/TRPC.js'
+import * as tarfs from 'tar-fs'
+import * as ts from 'tar-stream'
 import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { publicProcedure, router } from '../UI/TRPC.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
 import { MAX_MODULE_BUNDLE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from './Constants.js'
+import type { InstanceModules } from './Modules.js'
+import type { ModuleStoreService } from './ModuleStore.js'
 
 const gunzipP = promisify(zlib.gunzip)
 
@@ -50,7 +50,7 @@ export class InstanceInstalledModulesManager {
 	readonly #multipartUploader = new MultipartUploader(
 		'Instance/UserModulesManager',
 		MAX_MODULE_BUNDLE_TAR_SIZE,
-		async (_name, data, updateProgress) => {
+		async (_name, data, _userData, updateProgress) => {
 			const decompressedData = await gunzipP(data)
 			if (!decompressedData) {
 				this.#logger.error(`Failed to decompress module data`)
@@ -91,7 +91,8 @@ export class InstanceInstalledModulesManager {
 			}
 
 			return true
-		}
+		},
+		z.null()
 	)
 
 	constructor(
@@ -383,7 +384,7 @@ export class InstanceInstalledModulesManager {
 			this.#logger.warn(msg)
 			return msg
 		}
-		if (manifestJson.type !== moduleType) {
+		if ((manifestJson.type as ModuleInstanceType) !== moduleType) {
 			const msg = `Module type does not match requested module type. Got ${manifestJson.type}, expected ${moduleType}`
 			this.#logger.warn(msg)
 			return msg
@@ -507,7 +508,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 
 					try {
 						const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-						if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+						if (!parsedManifest.type) (parsedManifest as Partial<SomeModuleManifest>).type = 'connection' // Backwards compatibility
 
 						resolve(parsedManifest)
 					} catch (e) {
@@ -584,7 +585,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 
 						try {
 							const parsedManifest = JSON.parse(manifestStr) as SomeModuleManifest
-							if (!parsedManifest.type) parsedManifest.type = 'connection' // Backwards compatibility
+							if (!parsedManifest.type) (parsedManifest as Partial<SomeModuleManifest>).type = 'connection' // Backwards compatibility
 
 							moduleInfos.push({
 								subDir: moduleDirName,

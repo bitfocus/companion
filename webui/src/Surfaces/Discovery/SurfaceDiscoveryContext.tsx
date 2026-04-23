@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { createContext, memo, useContext, useMemo } from 'react'
+import type { ClientDiscoveredSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { useSurfaceDiscoverySubscription } from './useSurfaceDiscoverySubscription'
 
 export interface SurfaceDiscoveryContextType {

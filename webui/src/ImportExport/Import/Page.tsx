@@ -1,8 +1,14 @@
+import { CButton, CCallout, CCol, CFormSelect, CRow } from '@coreui/react'
+import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
+import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
-import { CButton, CCol, CRow, CFormSelect, CCallout } from '@coreui/react'
-import { MyErrorBoundary } from '~/Resources/Error'
+import { compareExportedInstances } from '@companion-app/shared/Import.js'
+import type { ClientImportObject, ClientImportObjectInstance } from '@companion-app/shared/Model/ImportExport.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ButtonGridHeader, PageNumberPicker, type PageNumberOption } from '~/Buttons/ButtonGridHeader.js'
-import { usePagePicker } from '~/Hooks/usePagePicker.js'
+import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
 import {
 	ButtonGridIcon,
 	ButtonGridIconBase,
@@ -10,18 +16,12 @@ import {
 	type ButtonInfiniteGridButtonProps,
 	type ButtonInfiniteGridRef,
 } from '~/Buttons/ButtonInfiniteGrid.js'
-import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
-import type { ClientImportObject, ClientImportObjectInstance } from '@companion-app/shared/Model/ImportExport.js'
-import { compareExportedInstances } from '@companion-app/shared/Import.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
-import { useQuery } from '@tanstack/react-query'
+import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
+import { usePagePicker } from '~/Hooks/usePagePicker.js'
+import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc } from '~/Resources/TRPC'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ImportPageWizardProps {
 	snapshot: ClientImportObject

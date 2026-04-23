@@ -1,20 +1,20 @@
-import { memo, useCallback, useContext } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { VariablesTable } from '~/Components/VariablesTable.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
+import { memo, useCallback, useContext } from 'react'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
-import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
-	type ConnectionLeafItem,
 	type CollectionGroupMeta,
+	type ConnectionLeafItem,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { VariablesTable } from '~/Components/VariablesTable.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const { variablesStore } = useContext(RootAppStoreContext)

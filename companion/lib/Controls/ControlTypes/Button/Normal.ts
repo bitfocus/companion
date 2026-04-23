@@ -1,24 +1,24 @@
-import { ButtonControlBase } from './Base.js'
-import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
-import type {
-	ControlWithActionSets,
-	ControlWithActions,
-	ControlWithStyle,
-	ControlWithoutEvents,
-} from '../../IControlFragments.js'
+import type { JsonValue } from 'type-fest'
 import type {
 	NormalButtonModel,
 	NormalButtonOptions,
 	NormalButtonRuntimeProps,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import type { ControlDependencies } from '../../ControlDependencies.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
+import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlActionSetAndStepsManager } from '../../Entities/ControlActionSetAndStepsManager.js'
+import type {
+	ControlWithActions,
+	ControlWithActionSets,
+	ControlWithoutEvents,
+	ControlWithStyle,
+} from '../../IControlFragments.js'
+import { ButtonControlBase } from './Base.js'
 import { parseVariablesInButtonStyle } from './Util.js'
-import type { JsonValue } from 'type-fest'
 
 /**
  * Class for the stepped button control.

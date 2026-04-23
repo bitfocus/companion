@@ -1,15 +1,14 @@
+import { CButton, CButtonGroup } from '@coreui/react'
+import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { CButtonGroup, CButton } from '@coreui/react'
-import { faChevronLeft, faChevronRight, faPlus, faClone, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
-import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import { EditActionsRelease } from './EditActionsRelease.js'
+import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
+import { EditActionsRelease } from './EditActionsRelease.js'
 
 export interface ControlActionStepTabProps {
 	service: IControlActionStepsAndSetsService
@@ -162,12 +161,11 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<br />
-			<p>
+			<div className="my-3">
 				<CButton onClick={() => service.appendSet(selectedKey)} color="primary">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</CButton>
-			</p>
+			</div>
 		</>
 	)
 }

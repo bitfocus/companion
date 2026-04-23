@@ -1,6 +1,6 @@
 import type { SurfaceConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfacePanel } from './Types.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { SurfacePanel } from './Types.js'
 
 export const PanelDefaults: SurfacePanelConfig = {
 	// defaults from the panel - TODO properly

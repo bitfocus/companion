@@ -1,7 +1,7 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import LogController, { type Logger } from '../Log/Controller.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 
 /**
  * Abstract class providing base functionality for services.

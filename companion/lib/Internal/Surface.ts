@@ -9,32 +9,32 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
-import type {
-	ActionForVisitor,
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalVisitor,
-	InternalActionDefinition,
-	InternalFeedbackDefinition,
-	InternalModuleFragmentEvents,
-	FeedbackForInternalExecution,
-	ActionForInternalExecution,
-} from './Types.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { EventEmitter } from 'events'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
 	type VariableDefinition,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionOptionValues } from '@companion-module/host'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import type {
+	ActionForInternalExecution,
+	ActionForVisitor,
+	FeedbackForInternalExecution,
+	FeedbackForVisitor,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+	InternalModuleFragment,
+	InternalModuleFragmentEvents,
+	InternalVisitor,
+} from './Types.js'
 
 const CHOICES_SURFACE_ID: SomeCompanionInputField = {
 	type: 'internal:surface_serial',
@@ -278,6 +278,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						max: 100,
 						step: 1,
 						range: true,
+						clampValues: true,
 					},
 				],
 

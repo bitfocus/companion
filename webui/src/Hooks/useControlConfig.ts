@@ -1,10 +1,10 @@
+import { useSubscription } from '@trpc/tanstack-react-query'
+import jsonPatch from 'fast-json-patch'
 import { runInAction } from 'mobx'
 import { useEffect, useState } from 'react'
-import { trpc } from '~/Resources/TRPC'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { assertNever } from '~/Resources/util'
 import type { SomeControlModel, UIControlUpdateInit } from '@companion-app/shared/Model/Controls.js'
-import jsonPatch from 'fast-json-patch'
+import { trpc } from '~/Resources/TRPC'
+import { assertNever } from '~/Resources/util'
 
 interface ControlConfig {
 	config: SomeControlModel

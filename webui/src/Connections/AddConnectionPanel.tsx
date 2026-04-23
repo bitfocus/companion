@@ -1,14 +1,14 @@
-import { useContext, useMemo } from 'react'
-import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
-import { makeAbsolutePath } from '~/Resources/util.js'
-import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
-import type { AddInstanceService } from '~/Instances/AddInstanceService'
+import { observer } from 'mobx-react-lite'
+import { useContext, useMemo } from 'react'
+import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
+import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
 
 export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 	const service = useAddConnectionService()
