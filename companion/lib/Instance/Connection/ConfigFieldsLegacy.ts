@@ -193,7 +193,7 @@ function translateColorPickerField(
 		...translateCommonFields(field),
 		type: 'colorpicker',
 		default: field.default,
-		enableAlpha: !!field.enableAlpha,
+		enableAlpha: field.enableAlpha ?? false,
 		returnType: field.returnType ?? 'number',
 		presetColors: field.presetColors,
 		width: width,

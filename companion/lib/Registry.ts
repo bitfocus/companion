@@ -111,7 +111,7 @@ export class Registry {
 	 */
 	readonly page: PageController
 	/**
-	 * The core page controller
+	 * The core preview controller
 	 */
 	readonly preview: PreviewController
 	/**

@@ -107,7 +107,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	readonly #graphics: GraphicsController
 	/**
-	 * The core page controller
+	 * The core page store
 	 */
 	readonly #pageStore: IPageStore
 	/**
