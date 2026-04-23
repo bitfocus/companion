@@ -12,17 +12,18 @@ import {
 	type FeedbackEntityModel,
 	type FeedbackEntityStyleOverride,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonStylePropertiesWithBuffer } from '@companion-app/shared/Style.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { useComputed } from '~/Resources/util.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { OptionsInputControl } from '../OptionsInputField.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
-import { ExpressionFieldControl } from './ExpressionFieldControl.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface LayeredStylesOverridesProps {
@@ -264,16 +265,9 @@ const PropertyValueInput = observer(function PropertyValueInput({
 	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
 	const selectedProperty = selectedSchema?.find((prop) => prop.id === row.elementProperty)
 
-	const setValue = useCallback(
-		(value: any) => {
-			updateRow({ ...row, override: { ...row.override, value } })
-		},
-		[row, updateRow]
-	)
-
-	const setIsExpression = useCallback(
-		(isExpression: boolean) => {
-			updateRow({ ...row, override: { ...row.override, isExpression } })
+	const setOverride = useCallback(
+		(override: ExpressionOrValue<JsonValue | undefined>) => {
+			updateRow({ ...row, override })
 		},
 		[row, updateRow]
 	)
@@ -287,30 +281,34 @@ const PropertyValueInput = observer(function PropertyValueInput({
 	switch (feedbackType) {
 		case FeedbackEntitySubType.Advanced:
 			return (
-				<DropdownInputField choices={ButtonStylePropertiesWithBuffer} value={row.override.value} setValue={setValue} />
+				<DropdownInputField
+					choices={ButtonStylePropertiesWithBuffer}
+					value={row.override.value}
+					setValue={(value) => updateRow({ ...row, override: { ...row.override, value } as ExpressionOrValue<any> })}
+				/>
 			)
 		case FeedbackEntitySubType.Boolean:
 			// For boolean feedbacks, show a dropdown with "true" and "false"
 			return (
-				<ExpressionFieldControl
+				<FieldOrExpression
 					value={row.override}
-					setValue={setValue}
-					setIsExpression={setIsExpression}
+					setValue={setOverride}
 					localVariablesStore={localVariablesStore}
+					entityType={null}
+					isLocatedInGrid={true}
+					disabled={false}
 				>
-					{(value, setValue) => (
-						<OptionsInputControl
-							allowInternalFields={true}
-							isLocatedInGrid={false}
-							entityType={EntityModelType.Feedback}
-							option={selectedProperty}
-							value={value}
-							setValue={(val: JsonValue | undefined) => setValue(val)}
-							readonly={false}
-							localVariablesStore={localVariablesStore}
-						/>
-					)}
-				</ExpressionFieldControl>
+					<OptionsInputControl
+						allowInternalFields={true}
+						isLocatedInGrid={false}
+						entityType={EntityModelType.Feedback}
+						option={selectedProperty}
+						value={row.override.value}
+						setValue={(val: JsonValue | undefined) => setOverride({ isExpression: false, value: val })}
+						readonly={false}
+						localVariablesStore={localVariablesStore}
+					/>
+				</FieldOrExpression>
 			)
 		case FeedbackEntitySubType.StyleOverride:
 		case FeedbackEntitySubType.Value:

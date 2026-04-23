@@ -462,24 +462,6 @@ table.variables-table,
 	}
 }
 
-.field-with-expression {
-	display: flex;
-	gap: 0.5rem;
-
-	.expression-field {
-		flex-grow: 1;
-	}
-
-	.expression-toggle-button {
-		justify-self: flex-end;
-
-		.btn {
-			height: 100%;
-			width: 3em;
-		}
-	}
-}
-
 .layered-style-element-picker-modal {
 	.modal-content {
 		// height: 65vh;

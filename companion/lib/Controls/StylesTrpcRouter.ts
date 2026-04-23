@@ -1,5 +1,5 @@
 import z from 'zod'
-import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import { ExpressionOrJsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -92,13 +92,13 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 				return control.layeredStyleSetElementUsage(input.elementId, input.usage)
 			}),
 
-		updateOptionValue: publicProcedure
+		updateOption: publicProcedure
 			.input(
 				z.object({
 					controlId: z.string(),
 					elementId: z.string(),
 					key: z.string(),
-					value: JsonValueSchema.optional(),
+					value: ExpressionOrJsonValueSchema,
 				})
 			)
 			.mutation(async ({ input }) => {
@@ -107,25 +107,7 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 
 				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
 
-				return control.layeredStyleUpdateOptionValue(input.elementId, input.key, input.value)
-			}),
-
-		updateOptionIsExpression: publicProcedure
-			.input(
-				z.object({
-					controlId: z.string(),
-					elementId: z.string(),
-					key: z.string(),
-					value: z.boolean(),
-				})
-			)
-			.mutation(async ({ input }) => {
-				const control = controlsMap.get(input.controlId)
-				if (!control) return false
-
-				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
-
-				return control.layeredStyleUpdateOptionIsExpression(input.elementId, input.key, input.value)
+				return control.layeredStyleUpdateOption(input.elementId, input.key, input.value)
 			}),
 	})
 }

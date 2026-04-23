@@ -476,7 +476,7 @@ export class ControlButtonLayered
 		return true
 	}
 
-	layeredStyleUpdateOptionValue(id: string, key: string, value: JsonValue | undefined): boolean {
+	layeredStyleUpdateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
 		// Ignore some fixed properties
 		if (key === 'id' || key === 'type' || key === 'name') return false
 
@@ -486,70 +486,11 @@ export class ControlButtonLayered
 
 		const { element } = currentElementLocation
 
-		// Fetch the property wrapper
-		const elementEntry = (element as any)[key] as ExpressionOrValue<JsonValue | undefined>
-		if (!elementEntry) return false
+		const entry = element as any
+		if (!entry[key]) return false
 
-		// Update the value
-		elementEntry.value = value
-
-		// Invalidate cache for this element
-		this.#elementConversionCache.queueInvalidate(id)
-
-		// Save change and redraw
-		this.commitChange(true)
-
-		// Emit element change event
-		this.deps.events.emit('layeredStyleElementChanged', this.controlId, id)
-
-		return true
-	}
-
-	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean {
-		// Ignore some fixed properties
-		if (key === 'id' || key === 'type' || key === 'name') return false
-
-		// Find the element
-		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
-		if (!currentElementLocation) return false
-
-		const { element } = currentElementLocation
-
-		// Fetch the property wrapper
-		const elementEntry = (element as any)[key] as ExpressionOrValue<JsonValue | undefined>
-		if (!elementEntry) return false
-
-		if (!elementEntry.isExpression && value) {
-			// Make sure the value is expression safe
-			if (element.type === 'text' && key === 'text') {
-				// Skip, this is very hard to fixup perfectly
-			} else if (typeof elementEntry.value === 'string') {
-				// If its a string, it will need to be wrapped in quotes
-				// This is not always good enough, but is better than nothing
-				elementEntry.value = `'${elementEntry.value}'`
-			} else if (typeof elementEntry.value === 'number' && key === 'color') {
-				// If its a color number, it is nicer to have it as a hex string
-				elementEntry.value = '0x' + elementEntry.value.toString(16)
-			} else if (typeof elementEntry.value === 'boolean') {
-				elementEntry.value = elementEntry.value ? 'true' : 'false'
-			}
-			// Future: this may want more cases
-		} else if (elementEntry.isExpression && !value) {
-			// Preserve current resolved value
-			const lastDrawStyle = this.getLastDrawStyle()
-			const lastDrawElement = lastDrawStyle?.elements.find((el) => el.id === id)
-
-			if (key === 'enabled' && !lastDrawElement) {
-				// Special case, element was presumably disabled
-				elementEntry.value = false as any
-			} else if (lastDrawElement) {
-				// The element was found, copy the value
-				elementEntry.value = lastDrawElement[key as keyof typeof lastDrawElement]
-			}
-		}
-
-		// Update the value
-		elementEntry.isExpression = value
+		// Replace the entire ExpressionOrValue with the provided value
+		entry[key] = newVal
 
 		// Invalidate cache for this element
 		this.#elementConversionCache.queueInvalidate(id)

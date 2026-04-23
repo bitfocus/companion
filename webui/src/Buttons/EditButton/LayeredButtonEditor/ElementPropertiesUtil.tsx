@@ -6,7 +6,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { ExpressionFieldControl } from '~/Controls/Components/ExpressionFieldControl.js'
+import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
@@ -34,42 +34,26 @@ export const FormPropertyField = observer(function FormPropertyField({
 }: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
 
-	const updateOptionValueMutation = useMutationExt(trpc.controls.styles.updateOptionValue.mutationOptions())
-	const updateOptionIsExpressionMutation = useMutationExt(
-		trpc.controls.styles.updateOptionIsExpression.mutationOptions()
-	)
+	const updateOptionMutation = useMutationExt(trpc.controls.styles.updateOption.mutationOptions())
 
 	const elementId = elementProps.id
 
-	const setValue = useCallback(
-		(value: any) => {
-			updateOptionValueMutation
-				.mutateAsync({ controlId, elementId, key: property, value })
-				.then((res) => {
-					console.log('Update element', res)
-				})
-				.catch((e) => {
-					console.error('Failed to Update element', e)
-				})
-		},
-		[updateOptionValueMutation, controlId, elementId, property]
-	)
-
-	const setIsExpression = useCallback(
-		(value: boolean) => {
-			updateOptionIsExpressionMutation
-				.mutateAsync({ controlId, elementId, key: property, value })
-				.then((res) => {
-					console.log('Update element', res)
-				})
-				.catch((e) => {
-					console.error('Failed to Update element', e)
-				})
-		},
-		[updateOptionIsExpressionMutation, controlId, elementId, property]
-	)
-
 	const elementProp = elementProps[property] as ExpressionOrValue<any>
+
+	const setExpressionOrValue = useCallback(
+		(newVal: ExpressionOrValue<JsonValue | undefined>) => {
+			updateOptionMutation.mutateAsync({ controlId, elementId, key: property, value: newVal }).catch((e) => {
+				console.error('Failed to Update element', e)
+			})
+		},
+		[updateOptionMutation, controlId, elementId, property]
+	)
+
+	const setInnerValue = useCallback(
+		(innerValue: JsonValue | undefined) =>
+			setExpressionOrValue({ isExpression: false, value: innerValue } as ExpressionOrValue<JsonValue | undefined>),
+		[setExpressionOrValue]
+	)
 
 	const isOverridden = isPropertyOverridden(elementId, property)
 
@@ -85,14 +69,16 @@ export const FormPropertyField = observer(function FormPropertyField({
 				) : null}
 			</CFormLabel>
 			<CCol sm={8}>
-				<ExpressionFieldControl
+				<FieldOrExpression
 					value={elementProp}
-					setValue={setValue}
-					setIsExpression={setIsExpression}
+					setValue={setExpressionOrValue}
 					localVariablesStore={localVariablesStore}
+					entityType={null}
+					isLocatedInGrid={true}
+					disabled={false}
 				>
-					{(value, setValue) => children({ value }, setValue)}
-				</ExpressionFieldControl>
+					{children({ value: elementProp.value }, setInnerValue)}
+				</FieldOrExpression>
 			</CCol>
 		</>
 	)

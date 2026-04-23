@@ -1,5 +1,6 @@
 import type { JsonObject, JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
@@ -66,19 +67,10 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * Update an option on an element from the layered style
 	 * @param id Element id to update
 	 * @param key Option key to update
-	 * @param value New value for the option
+	 * @param value New ExpressionOrValue for the option
 	 * @returns true if any changes were made
 	 */
-	layeredStyleUpdateOptionValue(id: string, key: string, value: any): boolean
-
-	/**
-	 * Update whether option on an element from the layered style is an expression
-	 * @param id Element id to update
-	 * @param key Option key to update
-	 * @param value Whether the value should be an expression
-	 * @returns true if any changes were made
-	 */
-	layeredStyleUpdateOptionIsExpression(id: string, key: string, value: boolean): boolean
+	layeredStyleUpdateOption(id: string, key: string, value: ExpressionOrValue<JsonValue | undefined>): boolean
 
 	/**
 	 * Update the style from legacy properties

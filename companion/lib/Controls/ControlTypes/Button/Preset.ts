@@ -1,3 +1,4 @@
+import type { JsonValue } from 'type-fest'
 import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ButtonStatus,
@@ -5,6 +6,7 @@ import type {
 	NormalButtonRuntimeProps,
 	PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type {
 	ButtonGraphicsElementUsage,
@@ -389,19 +391,7 @@ export class ControlButtonPreset
 	 * @param _value New value for the option
 	 * @returns true if any changes were made
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	layeredStyleUpdateOptionValue(_id: string, _key: string, _value: any): boolean {
-		throw new Error('ControlButtonPreset does not support mutations')
-	}
-
-	/**
-	 * Update whether option on an element from the layered style is an expression
-	 * @param _id Element id to update
-	 * @param _key Option key to update
-	 * @param _value Whether the value should be an expression
-	 * @returns true if any changes were made
-	 */
-	layeredStyleUpdateOptionIsExpression(_id: string, _key: string, _value: boolean): boolean {
+	layeredStyleUpdateOption(_id: string, _key: string, _value: ExpressionOrValue<JsonValue | undefined>): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
 	}
 
