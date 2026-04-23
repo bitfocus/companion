@@ -683,8 +683,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		// Report the changes
 		// Future: This could be better if it performed some diffing and only reported changed element ids
-		const changedElementIds = new Set([
-			...Object.keys(this.#compositeElementDefinitions ?? {}).map((id) => `${connectionId}:${id}` as const),
+		const changedElementIds = new Set<CompositeElementIdString>([
+			...Object.keys(compositeElements).map((id) => `${connectionId}:${id}` as const),
 			...Object.keys(lastCompositeElementDefinitions ?? {}).map((id) => `${connectionId}:${id}` as const),
 		])
 		if (changedElementIds.size > 0) this.emit('updateCompositeElements', changedElementIds)

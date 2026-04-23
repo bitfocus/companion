@@ -23,7 +23,7 @@ export class GraphicsLayeredButtonRenderer {
 		selectedElementId: string | null,
 		paddingPx: { x: number; y: number }
 	): Promise<void> {
-		const backgroundElement = drawStyle.elements[0].type === 'canvas' ? drawStyle.elements[0] : undefined
+		const backgroundElement = drawStyle.elements[0]?.type === 'canvas' ? drawStyle.elements[0] : undefined
 
 		const drawWidth = img.width - paddingPx.x * 2
 		const drawHeight = img.height - paddingPx.y * 2
@@ -206,15 +206,15 @@ export class GraphicsLayeredButtonRenderer {
 					// Draw a thick red cross
 					img.drawPath(
 						[
-							[parentBounds.x, parentBounds.y],
-							[parentBounds.maxX, parentBounds.maxY],
+							[drawBounds.x, drawBounds.y],
+							[drawBounds.maxX, drawBounds.maxY],
 						],
 						{ color: 'red', width: 5 }
 					)
 					img.drawPath(
 						[
-							[parentBounds.x, parentBounds.maxY],
-							[parentBounds.maxX, parentBounds.y],
+							[drawBounds.x, drawBounds.maxY],
+							[drawBounds.maxX, drawBounds.y],
 						],
 						{ color: 'red', width: 5 }
 					)

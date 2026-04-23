@@ -8,10 +8,10 @@ import type {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type {
+import {
 	ButtonGraphicsElementUsage,
-	ButtonStyleProperties,
-	DrawStyleLayeredButtonModel,
+	type ButtonStyleProperties,
+	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
@@ -411,11 +411,17 @@ export class ControlButtonPreset
 	 * @returns The element if found, undefined otherwise
 	 */
 	layeredStyleGetElementById(_id: string): SomeButtonGraphicsElement | undefined {
-		throw new Error('ControlButtonPreset does not support mutations')
+		// Streaming elemnets is not supported
+		return undefined
 	}
 
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
-		throw new Error('ControlButtonPreset does not support mutations')
+		return {
+			[ButtonGraphicsElementUsage.Automatic]: undefined,
+			[ButtonGraphicsElementUsage.Text]: undefined,
+			[ButtonGraphicsElementUsage.Color]: undefined,
+			[ButtonGraphicsElementUsage.Image]: undefined,
+		}
 	}
 
 	/**

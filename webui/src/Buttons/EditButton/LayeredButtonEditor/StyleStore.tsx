@@ -45,14 +45,10 @@ export class LayeredStyleStore {
 	}
 
 	public updateData = action((elements: SomeButtonGraphicsElement[]): void => {
-		console.log('update data')
-
 		this.elements.replace(elements)
 	})
 
 	public updateOverridesData = action((feedbacks: SomeEntityModel[]): void => {
-		if (feedbacks.length === 0) return
-
 		const newOverrideIds = new Set<string>()
 
 		for (const feedback of feedbacks) {

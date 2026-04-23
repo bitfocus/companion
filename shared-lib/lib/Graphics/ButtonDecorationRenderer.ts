@@ -18,7 +18,7 @@ export class ButtonDecorationRenderer {
 			width: 1,
 		})
 
-		if (drawStyle.stepCount > 1 && drawStyle.location) {
+		if (drawStyle.stepCount > 1) {
 			step = `.${drawStyle.stepCurrent}`
 		}
 

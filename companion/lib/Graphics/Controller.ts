@@ -454,7 +454,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			res.setHeader('Cache-Control', 'public, max-age=31536000')
 
 			this.#logger.debug(`Send font ${definition.name}`)
-			fs.createReadStream(definition.pathOnDisk).pipe(res)
+			const stream = fs.createReadStream(definition.pathOnDisk)
+			stream.on('error', (err) => {
+				this.#logger.warn(`Failed to stream font ${definition.name}: ${err}`)
+				if (!res.headersSent) res.status(500).end()
+				else res.destroy(err)
+			})
+			res.on('close', () => stream.destroy())
+			stream.pipe(res)
 		})
 	}
 

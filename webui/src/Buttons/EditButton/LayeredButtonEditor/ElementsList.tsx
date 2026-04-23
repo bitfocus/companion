@@ -80,7 +80,7 @@ const ElementListItem = observer(function ElementListItem({
 }) {
 	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
 
-	const ref = useRef<HTMLTableRowElement>(null)
+	const ref = useRef<HTMLDivElement>(null)
 	const [, drop] = useDrop<ElementListDragItem>({
 		accept: DRAG_ID,
 		drop(item, monitor) {
@@ -211,7 +211,7 @@ const ElementListItemPlaceholder = observer(function ElementListItemPlaceholder(
 }) {
 	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
 
-	const ref = useRef<HTMLTableRowElement>(null)
+	const ref = useRef<HTMLDivElement>(null)
 	const [, drop] = useDrop<ElementListDragItem>({
 		accept: DRAG_ID,
 		drop(item, monitor) {

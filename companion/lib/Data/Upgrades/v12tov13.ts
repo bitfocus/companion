@@ -37,7 +37,7 @@ interface NormalButtonOptions {
 }
 
 /**
- * do the database upgrades to convert from the v9 to the v10 format
+ * do the database upgrades to convert from the v12 to the v13 format
  */
 function convertDatabaseToV13(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
@@ -73,7 +73,7 @@ function convertImportToV13(obj: SomeExportv6): SomeExportv6 {
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
 			...cloneDeep(obj),
-			version: 12,
+			version: 13,
 		}
 
 		if (newObj.pages) {
@@ -93,7 +93,7 @@ function convertImportToV13(obj: SomeExportv6): SomeExportv6 {
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = {
 			...cloneDeep(obj),
-			version: 12,
+			version: 13,
 		}
 
 		for (const row of Object.values(newObj.page.controls)) {
@@ -109,7 +109,7 @@ function convertImportToV13(obj: SomeExportv6): SomeExportv6 {
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = {
 			...cloneDeep(obj),
-			version: 12,
+			version: 13,
 		}
 
 		return newObj

@@ -56,13 +56,13 @@ export abstract class ImagePoolBase<TImage extends ImageBase<any>> {
 
 	abstract createImage(textLayoutCache: TextLayoutCache | null): TImage
 
-	usingImage<T>(textLayoutCache: TextLayoutCache | null, fcn: (img: TImage) => T): T {
+	async usingImage<T>(textLayoutCache: TextLayoutCache | null, fcn: (img: TImage) => Promise<T>): Promise<T> {
 		const image = this.#pool.pop() || this.createImage(textLayoutCache)
 
 		try {
 			image.clear()
 
-			return fcn(image)
+			return await fcn(image)
 		} finally {
 			this.#pool.push(image)
 		}

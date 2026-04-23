@@ -210,7 +210,7 @@ describe('InstanceEntityManager', () => {
 	})
 
 	describe('trackEntity for feedback', () => {
-		it('should add a feedback entity and include image size', () => {
+		it('should add a feedback entity', () => {
 			const mockFeedback = {
 				id: 'feedback-1',
 				type: EntityModelType.Feedback,

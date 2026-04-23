@@ -201,7 +201,7 @@ for (const [id, fields] of Object.entries(elementSchemas)) {
 		generatedFile += `\tconnectionId: string\n`
 		generatedFile += `\telementId: string\n`
 		generatedFile += `\n\t/**\n\t* Custom elements have options defined by their composite definition\n\t */\n`
-		generatedFile += `\t[customKey: CompositeElementOptionKey]: ExpressionOrValue<any> | undefined`
+		generatedFile += `\t[customKey: CompositeElementOptionKey]: ExpressionOrValue<any> | undefined\n`
 	}
 	generatedFile += '}\n\n'
 }
@@ -216,6 +216,6 @@ for (const typeName of allElementTypes) {
 }
 
 const outputPath = new URL('../shared-lib/lib/Model/StyleLayersModel.ts', import.meta.url)
-fs.writeFile(outputPath, generatedFile, 'utf8')
+await fs.writeFile(outputPath, generatedFile, 'utf8')
 
 await $`prettier --write ${fileURLToPath(outputPath)}`

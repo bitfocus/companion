@@ -2,7 +2,7 @@
 /**
  * Performance benchmark for drawAlignedText
  *
- * Run with: yarn tsx companion/test/Graphics/TextParser.perf.ts
+ * Run with: yarn tsx companion/test/TextParser.perf.ts
  *
  * This benchmarks the text rendering performance with cache disabled
  * to measure the actual computation cost.

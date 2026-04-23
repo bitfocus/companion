@@ -448,6 +448,7 @@ export abstract class ControlEntityListPoolBase {
 			oldInfo.parent.ownerId?.childGroup === newOwnerId?.childGroup
 		) {
 			movedEntity = oldInfo.parent.moveEntity(oldInfo.index, newIndex)
+			if (!movedEntity) return false
 		} else {
 			const newEntityList = this.getEntityList(newListId)
 			if (!newEntityList) return false
@@ -506,7 +507,7 @@ export abstract class ControlEntityListPoolBase {
 
 				const parsedStyle = ParseLegacyStyle(newProps.style)
 
-				// Translate the old advance feedback property lookup into the newly produced value
+				// Translate the old advanced feedback property lookup into the newly produced value
 				for (const override of existingStyleOverrides) {
 					if (!override.override.isExpression) {
 						const newValue = GetLegacyStyleProperty(

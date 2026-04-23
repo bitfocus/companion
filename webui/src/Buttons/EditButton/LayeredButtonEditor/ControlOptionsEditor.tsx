@@ -83,9 +83,8 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 
 				{options.stepProgression === 'expression' && (
 					<>
-						Step Progression Expression <InputFeatureIcons variables local />
 						<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
-							<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+							Step Progression Expression <InputFeatureIcons variables local />
 						</CFormLabel>
 						<CCol sm={8}>
 							<ExpressionInputField

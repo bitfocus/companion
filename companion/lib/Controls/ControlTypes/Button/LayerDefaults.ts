@@ -6,7 +6,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): SomeButtonGraphicsElement {
 	switch (type) {
 		case 'canvas':
-			throw new Error('Canvas c can not be created')
+			throw new Error('Canvas elements cannot be created')
 		case 'text':
 			return {
 				id: nanoid(),
