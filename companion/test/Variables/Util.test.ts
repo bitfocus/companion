@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { visitEntityOptionsForVariables } from '../../lib/Variables/Util.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
-	type SomeCompanionInputField,
-	type ExpressionableOptionsObject,
 	CompanionFieldVariablesSupport,
 	exprVal,
+	type ExpressionableOptionsObject,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { visitEntityOptionsForVariables } from '../../lib/Variables/Util.js'
 
 function createDefinition(
 	partial: Pick<ClientEntityDefinition, 'label' | 'options'> & Partial<ClientEntityDefinition>
@@ -17,7 +17,7 @@ function createDefinition(
 		sortKey: null,
 		description: '',
 		optionsToMonitorForInvalidations: [],
-		feedbackType: undefined,
+		feedbackType: null,
 		feedbackStyle: undefined,
 		hasLifecycleFunctions: false,
 		hasLearn: false,

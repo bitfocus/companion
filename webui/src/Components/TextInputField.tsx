@@ -1,17 +1,17 @@
-import React, { useMemo, useState, useCallback, useContext, useRef } from 'react'
 import { CFormInput, CFormTextarea } from '@coreui/react'
+import { observer } from 'mobx-react-lite'
+import { createContext, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import Select, {
-	components as SelectComponents,
 	createFilter,
+	components as SelectComponents,
 	type ControlProps,
 	type ValueContainerProps,
 } from 'react-select'
-import { MenuPortalContext } from './MenuPortalContext.js'
-import { observer } from 'mobx-react-lite'
 import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { CustomOption } from './DropDownInputFancy.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
+import { CustomOption } from './DropDownInputFancy.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface TextInputFieldProps {
 	tooltip?: string
@@ -298,7 +298,7 @@ const VariablesSelect = observer(function VariablesSelect({
 	)
 })
 
-const VariablesSelectContext = React.createContext({
+const VariablesSelectContext = createContext({
 	value: '',
 	setValue: (_value: string) => {},
 	setCursorPosition: (_pos: number | null) => {},
@@ -313,7 +313,7 @@ const VariablesSelectContext = React.createContext({
 
 const EmptyComponent = () => null
 
-const CustomControl = React.memo((props: ControlProps<DropdownChoiceInt>) => {
+const CustomControl = memo((props: ControlProps<DropdownChoiceInt>) => {
 	return (
 		<SelectComponents.Control {...props} className={(props.className ?? '') + ' variables-text-input'}>
 			{props.children}
@@ -392,7 +392,7 @@ function useValueContainerCallbacks() {
 	}
 }
 
-const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+const CustomValueContainerTextInput = memo((props: ValueContainerProps<DropdownChoiceInt>) => {
 	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
 
 	return (
@@ -420,7 +420,7 @@ const CustomValueContainerTextInput = React.memo((props: ValueContainerProps<Dro
 	)
 })
 
-const CustomValueContainerTextarea = React.memo((props: ValueContainerProps<DropdownChoiceInt>) => {
+const CustomValueContainerTextarea = memo((props: ValueContainerProps<DropdownChoiceInt>) => {
 	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
 
 	return (

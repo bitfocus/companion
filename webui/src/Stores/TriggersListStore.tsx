@@ -1,13 +1,13 @@
 import { action, observable } from 'mobx'
-import { assertNever } from '~/Resources/util.js'
 import type {
 	ClientTriggerData,
 	TriggerCollection,
 	TriggerCollectionData,
 	TriggersUpdate,
 } from '@companion-app/shared/Model/TriggerModel.js'
-import type { GenericCollectionsStore } from './GenericCollectionsStore'
+import { assertNever } from '~/Resources/util.js'
 import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
+import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
 export class TriggersListStore implements GenericCollectionsStore<TriggerCollectionData> {
 	readonly triggers = observable.map<string, ClientTriggerData>()

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { useConfig } from '~/hooks/useConfig'
+import { Info } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '~/components/ui/alert'
+import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
-import { Button } from '~/components/ui/button'
-import { Alert, AlertDescription } from '~/components/ui/alert'
-import { Info } from 'lucide-react'
+import { useConfig } from '~/hooks/useConfig'
 
 export function DeveloperSection(): JSX.Element {
 	const { state, updateConfig } = useConfig()

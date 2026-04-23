@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { DataStoreBase } from '../../lib/Data/StoreBase.js'
-import LogController from '../../lib/Log/Controller.js'
-import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
-import { createTables } from '../../lib/Data/Schema/v1.js'
 import fs from 'fs-extra'
+import { describe, expect, it } from 'vitest'
+import { createTables } from '../../lib/Data/Schema/v1.js'
+import { DataStoreBase } from '../../lib/Data/StoreBase.js'
+import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
+import LogController from '../../lib/Log/Controller.js'
 import { SuppressLogging } from '../Util.js'
 import { importTable } from './util.js'
 
@@ -34,8 +34,7 @@ describe('upgrade', () => {
 	SuppressLogging()
 
 	const db = CreateDataDatabase()
-	let data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v5.json', 'utf8')
-	data = JSON.parse(data)
+	const data = JSON.parse(fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v5.json', 'utf8'))
 	v4tov5.upgradeStartup(db, LogController.createLogger('test-logger'))
 	it('main', () => {
 		expect(db.getTableView('main').all()).toEqual(data['main'])

@@ -1,5 +1,4 @@
-import React from 'react'
-import { CFormInput, CFormCheck } from '@coreui/react'
+import { CFormCheck, CFormInput } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface ServicesStepProps {

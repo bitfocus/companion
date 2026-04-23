@@ -1,6 +1,5 @@
-import React, { useContext, useState, useCallback, useRef } from 'react'
 import { CAlert, CButton, CButtonGroup, CTooltip } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import {
 	faCog,
 	faExclamationTriangle,
@@ -8,27 +7,29 @@ import {
 	faPlug,
 	faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Link } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { SearchBox } from '~/Components/SearchBox.js'
-import { AddInstanceModal, type AddInstanceModalRef } from './AddInstanceModal.js'
-import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
-import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
+import { useCallback, useContext, useRef, useState } from 'react'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
-import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
-import { Link } from '@tanstack/react-router'
+import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
+import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
+import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { AddInstanceModal, type AddInstanceModalRef } from './AddInstanceModal.js'
 import type { AddInstanceService } from './AddInstanceService.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { CloseButton } from '~/Layout/PanelIcons.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
 
 	title: string
+	helpAction: ContextHelpButtonProps['action']
 	description: (storeCount: number) => React.ReactNode
 	isSubpanel?: boolean
 }
@@ -36,6 +37,7 @@ interface AddInstancePanelProps {
 export const AddInstancePanel = observer(function AddInstancePanel({
 	service,
 	title,
+	helpAction,
 	description,
 	isSubpanel,
 }: AddInstancePanelProps) {
@@ -109,6 +111,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
+					<ContextHelpButton action={helpAction} />
 					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
 				</div>
 			</div>

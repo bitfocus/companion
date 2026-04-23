@@ -1,21 +1,22 @@
 import { CAlert, CButton, CCol, CRow } from '@coreui/react'
-import React, { useCallback, useContext, useRef, useState } from 'react'
-import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
-import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
-import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
-import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
-import { ButtonGridHeader } from './ButtonGridHeader.js'
-import { ButtonGridActions, type ButtonGridActionsRef } from './ButtonGridActions.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
-import type { GridZoomController } from './GridZoom.js'
-import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
-import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
+import React, { useCallback, useContext, useRef, useState } from 'react'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
+import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ButtonGridActions, type ButtonGridActionsRef } from './ButtonGridActions.js'
+import { ButtonGridHeader } from './ButtonGridHeader.js'
+import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
+import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
+import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
+import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
+import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -154,7 +155,10 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
 				<EditPagePropertiesModal ref={editRef} includeName />
 
-				<h4>Buttons</h4>
+				<h4 className="btn-inline">
+					Buttons
+					<ContextHelpButton action="/user-guide/config/buttons/" />
+				</h4>
 				<p style={{ marginBottom: '0.5rem' }}>
 					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
 					and what they should do when you press or click on them.
@@ -193,7 +197,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						selectedButton={selectedButton}
 						gridSize={gridSize}
 						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
-						buttonIconFactory={PrimaryButtonGridIcon}
+						ButtonIconFactory={PrimaryButtonGridIcon}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
 					/>

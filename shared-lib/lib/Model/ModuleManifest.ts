@@ -1,8 +1,8 @@
-import type { ModuleManifest, ModuleManifestRuntime } from '@companion-module/base/manifest'
 import type {
 	ModuleManifest as ModuleManifestOld,
 	ModuleManifestRuntime as ModuleManifestOldRuntime,
 } from '@companion-module/base-old'
+import type { ModuleManifest, ModuleManifestRuntime } from '@companion-module/base/manifest'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 
 export type ModuleManifestOldExt = ModuleManifestOld

@@ -1,35 +1,35 @@
 /* eslint-disable n/no-process-exit */
-import EventEmitter from 'events'
-import fs from 'fs-extra'
+import EventEmitter from 'node:events'
+import path from 'node:path'
 import express from 'express'
-import LogController, { type Logger } from './Log/Controller.js'
+import fs from 'fs-extra'
+import type { PackageJson } from 'type-fest'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloudController } from './Cloud/Controller.js'
+import { ActionRunner } from './Controls/ActionRunner.js'
+import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
-import { GraphicsController } from './Graphics/Controller.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
+import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
+import { GraphicsController } from './Graphics/Controller.js'
+import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
+import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
-import { ServiceController } from './Service/Controller.js'
-import { SurfaceController } from './Surface/Controller.js'
-import { UIController } from './UI/Controller.js'
-import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
-import { VariablesController } from './Variables/Controller.js'
-import { DataUsageStatistics } from './Data/UsageStatistics.js'
-import { ImportExportController } from './ImportExport/Controller.js'
-import { ServiceOscSender } from './Service/OscSender.js'
-import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
-import type { PackageJson } from 'type-fest'
-import { ServiceApi } from './Service/ServiceApi.js'
-import { createTrpcRouter } from './UI/TRPC.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
-import path from 'path'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { ActionRunner } from './Controls/ActionRunner.js'
+import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
+import { ServiceController } from './Service/Controller.js'
+import { ServiceOscSender } from './Service/OscSender.js'
+import { ServiceApi } from './Service/ServiceApi.js'
+import { SurfaceController } from './Surface/Controller.js'
+import { UIController } from './UI/Controller.js'
+import { createTrpcRouter } from './UI/TRPC.js'
+import { VariablesController } from './Variables/Controller.js'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -202,7 +202,7 @@ export class Registry {
 		this.variables = new VariablesController(this.db)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
-		this.graphics = new GraphicsController(controlStore, pageStore, this.userconfig, this.variables.values)
+		this.graphics = new GraphicsController(controlStore, pageStore, this.userconfig, this.variables, this.db)
 
 		this.surfaces = new SurfaceController(this.db, {
 			controls: controlStore,
@@ -277,7 +277,8 @@ export class Registry {
 			this.surfaces,
 			this.variables,
 			this.graphics,
-			controlEvents
+			controlEvents,
+			this.instance
 		)
 
 		this.services = new ServiceController(

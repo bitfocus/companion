@@ -1,16 +1,16 @@
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { ButtonPreview } from '~/Components/ButtonPreview.js'
+import { CButton, CFormInput } from '@coreui/react'
+import classNames from 'classnames'
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDrop } from 'react-dnd'
-import classNames from 'classnames'
-import useScrollPosition from '~/Hooks/useScrollPosition.js'
-import useElementInnerSize from '~/Hooks/useElementInnerSize.js'
-import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
-import { CButton, CFormInput } from '@coreui/react'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { PresetDragItem } from './Presets/PresetDragItem.js'
+import { ButtonPreview } from '~/Components/ButtonPreview.js'
+import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
+import useElementInnerSize from '~/Hooks/useElementClientSize.js'
+import useScrollPosition from '~/Hooks/useScrollPosition.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import type { PresetDragItem } from './Presets/PresetDragItem.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
@@ -34,7 +34,7 @@ interface ButtonInfiniteGridProps {
 	selectedButton?: ControlLocation | null
 	gridSize: UserConfigGridSize
 	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
-	buttonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any>
+	ButtonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any> // TODO - this type is flawed
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
 	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
@@ -49,7 +49,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			selectedButton,
 			gridSize,
 			doGrow,
-			buttonIconFactory,
+			ButtonIconFactory,
 			drawScale,
 			maxHeightToMatchCanvas,
 			setViewportMinHeight,
@@ -182,21 +182,21 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		for (let row = drawMinRow; row <= drawMaxRow; row++) {
 			for (let column = drawMinColumn; column <= drawMaxColumn; column++) {
 				visibleButtons.push(
-					React.createElement(buttonIconFactory, {
-						key: `${column}_${row}`,
-
-						fixedSize: true,
-						row,
-						column,
-						pageNumber,
-						onClick: buttonClick,
-						selected:
+					<ButtonIconFactory
+						key={`${column}_${row}`}
+						fixedSize={true}
+						row={row}
+						column={column}
+						pageNumber={pageNumber}
+						onClick={buttonClick}
+						selected={
 							selectedButton?.pageNumber === pageNumber &&
 							selectedButton?.column === column &&
-							selectedButton?.row === row,
-						left: (column - minColumn) * tileSize + growWidth,
-						top: (row - minRow) * tileSize + growHeight,
-					})
+							selectedButton?.row === row
+						}
+						left={(column - minColumn) * tileSize + growWidth}
+						top={(row - minRow) * tileSize + growHeight}
+					/>
 				)
 			}
 		}

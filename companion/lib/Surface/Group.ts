@@ -9,18 +9,18 @@
  * this program.
  */
 
-import LogController, { type Logger } from '../Log/Controller.js'
-import type { SurfaceHandler } from './Handler.js'
-import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceController } from './Controller.js'
-import type { IPageStore } from '../Page/Store.js'
-import type { DataUserConfig } from '../Data/UserConfig.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type EventEmitter from 'node:events'
-import type { UpdateEvents } from './Types.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { JsonValue } from 'type-fest'
+import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
+import LogController, { type Logger } from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
+import type { SurfaceController } from './Controller.js'
+import type { SurfaceHandler } from './Handler.js'
+import type { UpdateEvents } from './Types.js'
 
 export class SurfaceGroup {
 	/**

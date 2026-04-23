@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
 interface SectionVisibilityContextType {
 	visibleSections: Set<string>
@@ -44,7 +44,7 @@ export function SectionVisibilityProvider({ children }: SectionVisibilityProvide
 	}, [])
 
 	// Get the active section based on visible sections and their order
-	const activeSectionId = React.useMemo(() => {
+	const activeSectionId = useMemo(() => {
 		if (visibleSections.size === 0) {
 			// If no sections are visible, determine which one should be active based on scroll position
 			// For now, we'll return the first section as a fallback

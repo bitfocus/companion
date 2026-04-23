@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react'
-import { observer } from 'mobx-react-lite'
 import { useNavigate } from '@tanstack/react-router'
-import { makeAbsolutePath } from '~/Resources/util.js'
+import { observer } from 'mobx-react-lite'
+import { useMemo } from 'react'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
 import type { AddInstanceService } from '~/Instances/AddInstanceService'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface AddSurfaceInstancePanelProps {
 	isSubpanel?: boolean
@@ -20,6 +20,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 			service={service}
 			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
+			helpAction="/user-guide/surfaces/"
 			description={(storeCount) =>
 				storeCount > 0 ? (
 					<>

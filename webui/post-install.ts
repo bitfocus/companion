@@ -1,5 +1,4 @@
 #!/usr/bin/env zx
-
 import { fs } from 'zx'
 
 // Trash an old folder and/or create a new one

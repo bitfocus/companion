@@ -20,6 +20,7 @@ export const zodClientImportOrResetSelection = z.object({
 	expressionVariables: zodImportOrResetType,
 	connections: zodResetType, // Future: This should become zodImportOrResetType, once there is a plan for how that should work
 	userconfig: zodResetType, // Future: This should become zodImportOrResetType, or more likely an object describing subsections
+	imageLibrary: zodImportOrResetType,
 })
 
 export type ClientImportOrResetSelection = z.infer<typeof zodClientImportOrResetSelection>
@@ -51,6 +52,7 @@ export const zodClientExportSelection = z.object({
 	customVariables: zodQueryBoolean,
 	expressionVariables: zodQueryBoolean,
 	includeSecrets: zodQueryBoolean,
+	imageLibrary: zodQueryBoolean,
 	format: zodExportFormat,
 	filename: z.string().optional(),
 })
@@ -77,6 +79,7 @@ export interface ClientImportObject {
 	triggers: Record<string, { name: string }> | null
 	customVariables: boolean
 	expressionVariables: boolean
+	imageLibrary: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
 	pages?: Record<number, ClientPageInfo>

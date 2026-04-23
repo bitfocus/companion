@@ -1,8 +1,8 @@
+import { colord } from 'colord'
 import debounceFn from 'debounce-fn'
-import React, { type Context, createContext, useContext, useEffect, useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo, type Context } from 'react'
 import type { Color, ColorResult, HexColor, HsvColor, RgbColor } from '../colors'
 import { ColorsStore } from './store'
-import { colord } from 'colord'
 
 export type OnChangeFn<TColor> = (color: TColor, event: React.SyntheticEvent | MouseEvent) => void
 

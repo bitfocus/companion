@@ -1,8 +1,8 @@
-import { ServiceOscBase } from './OscBase.js'
-import { ServiceOscApi } from './OscApi.js'
 import type { OscReceivedMessage } from 'osc'
-import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import { ServiceOscApi } from './OscApi.js'
+import { ServiceOscBase } from './OscBase.js'
+import type { ServiceApi } from './ServiceApi.js'
 
 /**
  * Class providing OSC receive services.

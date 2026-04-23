@@ -1,7 +1,6 @@
-import React from 'react'
-import { CAlert, CFormInput, CFormCheck } from '@coreui/react'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CAlert, CFormCheck, CFormInput } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>

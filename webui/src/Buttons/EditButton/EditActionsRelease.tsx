@@ -1,18 +1,18 @@
-import type { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CButton } from '@coreui/react'
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useRef, useCallback } from 'react'
+import { useCallback, useRef } from 'react'
+import type { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import {
 	EditDurationGroupPropertiesModal,
 	type EditDurationGroupPropertiesModalRef,
 } from './EditDurationGroupPropertiesModal.js'
-import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 interface EditActionsReleaseProps {
 	controlId: string

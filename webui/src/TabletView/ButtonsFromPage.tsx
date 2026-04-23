@@ -1,10 +1,10 @@
-import React, { memo, useCallback, useMemo } from 'react'
-import { ButtonPreview } from '~/Components/ButtonPreview.js'
+import { memo, useCallback, useMemo } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
-import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { ButtonPreview } from '~/Components/ButtonPreview.js'
+import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface TabletGridSize extends UserConfigGridSize {

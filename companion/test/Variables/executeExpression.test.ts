@@ -1,6 +1,6 @@
-import { describe, test, expect } from 'vitest'
-import { executeExpression, VariableValueCache } from '../../lib/Variables/Util.js'
+import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
+import { executeExpression, VariableValueCache } from '../../lib/Variables/Util.js'
 import { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
 
 const mockOptions = {

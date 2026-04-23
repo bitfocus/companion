@@ -1,16 +1,16 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react'
-import { CCol, CFormLabel, CFormText, CButton, CAlert, CFormInput } from '@coreui/react'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useNavigate } from '@tanstack/react-router'
+import { CAlert, CButton, CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
+import { useNavigate } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
+import React, { useCallback, useContext, useMemo, useState } from 'react'
+import type { JsonValue } from 'type-fest'
+import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { CloseButton } from '~/Layout/PanelIcons'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { EditPanelConfigField } from '../EditPanelConfigField'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { JsonValue } from 'type-fest'
 
 interface SurfaceEditPanelProps {
 	remoteInfo: OutboundSurfaceInfo
@@ -18,6 +18,7 @@ interface SurfaceEditPanelProps {
 
 export const RemoteSurfaceEditPanel = observer<SurfaceEditPanelProps>(function RemoteSurfaceEditPanel({ remoteInfo }) {
 	const navigate = useNavigate()
+	const twoPanelMode = useTwoPanelMode()
 
 	const doCloseSurface = useCallback(() => {
 		void navigate({ to: '/surfaces/remote' })
@@ -27,11 +28,7 @@ export const RemoteSurfaceEditPanel = observer<SurfaceEditPanelProps>(function R
 		<>
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">Settings for {remoteInfo?.displayName}</h4>
-				<div className="header-buttons">
-					<div className="float_right" onClick={doCloseSurface} title="Close">
-						<FontAwesomeIcon icon={faTimes} size="lg" />
-					</div>
-				</div>
+				<div className="header-buttons">{!twoPanelMode && <CloseButton closeFn={doCloseSurface} />}</div>
 			</div>
 
 			<SurfaceEditPanelContent remoteInfo={remoteInfo} doClose={doCloseSurface} />

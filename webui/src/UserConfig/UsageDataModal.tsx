@@ -1,9 +1,8 @@
-import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { trpc } from '~/Resources/TRPC.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { CModal, CModalBody, CModalHeader } from '@coreui/react'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
+import { trpc } from '~/Resources/TRPC.js'
 
 interface UsageDataModalProps {
 	show: boolean
@@ -21,7 +20,7 @@ export function UsageDataModal({ show, onHide }: UsageDataModalProps): JSX.Eleme
 	const errorMessage = error ? (error instanceof Error ? error.message : 'Failed to load usage data') : null
 
 	return (
-		<CModal visible={show} onClose={onHide} size="xl">
+		<CModal visible={show} onClose={onHide} size="xl" scrollable>
 			<CModalHeader closeButton>
 				<h5>Usage Statistics Data</h5>
 			</CModalHeader>
@@ -43,27 +42,18 @@ export function UsageDataModal({ show, onHide }: UsageDataModalProps): JSX.Eleme
 					</div>
 				)}
 				{!isLoading && !error && data && (
-					<>
-						<pre
-							style={{
-								maxHeight: '60vh',
-								overflow: 'auto',
-								backgroundColor: '#f5f5f5',
-								padding: '1rem',
-								borderRadius: '4px',
-								fontSize: '0.875rem',
-							}}
-						>
-							<code>{jsonData}</code>
-						</pre>
-					</>
+					<pre
+						style={{
+							backgroundColor: '#f5f5f5',
+							padding: '1rem',
+							borderRadius: '4px',
+							fontSize: '0.875rem',
+						}}
+					>
+						<code>{jsonData}</code>
+					</pre>
 				)}
 			</CModalBody>
-			<CModalFooter>
-				<CButton color="secondary" onClick={onHide}>
-					Close
-				</CButton>
-			</CModalFooter>
 		</CModal>
 	)
 }

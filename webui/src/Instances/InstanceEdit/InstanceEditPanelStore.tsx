@@ -1,14 +1,14 @@
-import { isLabelValid } from '@companion-app/shared/Label.js'
-import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import type { CompanionOptionValues } from '@companion-module/base'
 import { action, observable, runInAction } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { nanoid } from 'nanoid'
+import type { JsonValue } from 'type-fest'
+import { isLabelValid } from '@companion-app/shared/Label.js'
+import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import type { CompanionOptionValues } from '@companion-module/base'
 import { parseIsVisibleFn } from '~/Hooks/useOptionsAndIsVisible'
 import type { InstanceEditPanelService } from './InstanceEditPanelService'
-import type { JsonValue } from 'type-fest'
 
 export interface InstanceBasicInfoChanges {
 	label?: string

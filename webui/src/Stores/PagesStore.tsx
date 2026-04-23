@@ -1,6 +1,6 @@
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { PageModelChanges, PageModel } from '@companion-app/shared/Model/PageModel.js'
 import { action, makeObservable, observable, type ObservableMap } from 'mobx'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { PageModel, PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
 
 export class PagesStoreModel {
 	readonly id: string

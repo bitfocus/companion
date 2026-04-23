@@ -1,31 +1,31 @@
-import LogController from '../Log/Controller.js'
+import EventEmitter from 'node:events'
+import createClient, { type Client } from 'openapi-fetch'
+import semver from 'semver'
+import z from 'zod'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	ModuleStoreListCacheEntry,
 	ModuleStoreListCacheStore,
 	ModuleStoreModuleInfoStore,
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
-import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
-import semver from 'semver'
 import {
 	isSomeModuleApiVersionCompatible,
 	MODULE_BASE_VERSIONS,
 	SURFACE_BASE_VERSION,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import createClient, { type Client } from 'openapi-fetch'
 import type {
-	paths as ModuleStoreOpenApiPaths,
 	components as ModuleStoreOpenApiComponents,
+	paths as ModuleStoreOpenApiPaths,
 } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'
-import EventEmitter from 'node:events'
+import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
+import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import z from 'zod'
-import { assertNever } from '@companion-app/shared/Util.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'

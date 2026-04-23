@@ -1,10 +1,10 @@
-import { DataStoreBase } from './StoreBase.js'
+import fs from 'node:fs/promises'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
-import { upgradeStartup } from './Upgrade.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import fs from 'fs/promises'
+import { DataStoreBase } from './StoreBase.js'
+import { upgradeStartup } from './Upgrade.js'
 
 export interface DataDatabaseDefaultTable {
 	page_config_version: number

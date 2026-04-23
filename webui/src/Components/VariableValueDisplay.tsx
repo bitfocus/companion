@@ -1,11 +1,11 @@
-import React, { useCallback, useRef, useState } from 'react'
+import { CAlert, CButton, CPopover } from '@coreui/react'
+import { faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useCallback, useRef, useState } from 'react'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
+import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
-import { CAlert, CButton, CPopover } from '@coreui/react'
-import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 
 interface VariableValueDisplay {
 	/** Value to show */

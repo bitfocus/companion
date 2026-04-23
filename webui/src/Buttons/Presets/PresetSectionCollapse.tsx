@@ -1,22 +1,22 @@
-import React, { useCallback } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import { useCallback } from 'react'
+import { useDrag } from 'react-dnd'
 import type {
 	UIPresetGroup,
 	UIPresetGroupSimple,
 	UIPresetGroupTemplate,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { useDrag } from 'react-dnd'
-import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
-import { trpc } from '~/Resources/TRPC'
-import type { PresetDragItem } from './PresetDragItem'
-import { assertNever, useComputed } from '~/Resources/util'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
+import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
+import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import { trpc } from '~/Resources/TRPC'
+import { assertNever, useComputed } from '~/Resources/util'
+import type { PresetDragItem } from './PresetDragItem'
 
 interface PresetSectionCollapseProps {
 	section: UIPresetSection

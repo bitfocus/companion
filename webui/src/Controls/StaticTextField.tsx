@@ -1,5 +1,4 @@
 import { parse } from 'marked'
-import React from 'react'
 import sanitizeHtml from 'sanitize-html'
 
 export function StaticTextFieldText({

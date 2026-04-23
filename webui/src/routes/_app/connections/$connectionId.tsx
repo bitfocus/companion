@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import React, { useContext } from 'react'
+import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
+import { ConnectionEditPanel } from '~/Connections/ConnectionEdit/ConnectionEditPanel'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { ConnectionEditPanel } from '~/Connections/ConnectionEdit/ConnectionEditPanel'
 
 const RouteComponent = observer(function RouteComponent() {
 	const { connectionId } = Route.useParams()

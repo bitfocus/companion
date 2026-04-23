@@ -1,11 +1,11 @@
 import dayjs from 'dayjs'
-import LogController, { type Logger } from '../../../../Log/Controller.js'
-import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
-import type { CompanionOptionValues } from '@companion-module/host'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { CompanionOptionValues } from '@companion-module/host'
+import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
+import LogController, { type Logger } from '../../../../Log/Controller.js'
+import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 
 interface IntervalEvent {
 	id: string

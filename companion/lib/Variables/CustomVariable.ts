@@ -9,10 +9,10 @@
  * this program.
  */
 
-import LogController from '../Log/Controller.js'
+import EventEmitter from 'node:events'
+import z from 'zod'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { VariablesValues, VariableValueEntry } from './Values.js'
 import type {
 	CustomVariableCollection,
 	CustomVariableDefinition,
@@ -20,14 +20,14 @@ import type {
 	CustomVariableUpdate,
 	CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
-import type { DataDatabase } from '../Data/Database.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { CustomVariableCollections } from './CustomVariableCollections.js'
-import EventEmitter from 'events'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import LogController from '../Log/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { CustomVariableCollections } from './CustomVariableCollections.js'
+import type { VariablesValues, VariableValueEntry } from './Values.js'
 
 const CUSTOM_LABEL = 'custom'
 

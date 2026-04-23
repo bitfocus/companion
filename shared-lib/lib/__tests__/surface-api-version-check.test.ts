@@ -1,7 +1,7 @@
+import { createRequire } from 'node:module'
+import semver from 'semver'
 import { describe, expect, test } from 'vitest'
 import { isSurfaceApiVersionCompatible } from '../ModuleApiVersionCheck.js'
-import { createRequire } from 'module'
-import semver from 'semver'
 
 const require = createRequire(import.meta.url)
 const surfaceBasePkg = require('@companion-surface/base/package.json')

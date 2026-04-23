@@ -1,12 +1,12 @@
 import { useNavigate } from '@tanstack/react-router'
-import React, { useCallback } from 'react'
-import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
-import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
-import { useUserConfigProps } from '~/UserConfig/Context'
-import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
-import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
+import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
+import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
+import { useUserConfigProps } from '~/UserConfig/Context'
+import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 
 // settings panel (shown when no configured surface is selected)
 //  Shows surface user-settings and the integrations table (SurfaceInstancesList)
@@ -54,8 +54,8 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 						<thead>
 							<UserConfigHeadingRow
 								label="General Surface Settings"
-								tooltip="The following settings affect all surfaces."
-								action="/user-guide/config/settings#surfaces"
+								helpMessage="The following settings affect all surfaces."
+								helpAction="/user-guide/config/settings#surfaces"
 							/>
 						</thead>
 						<tbody>
@@ -91,10 +91,9 @@ function SettingsPanelTitleBar() {
 		<div className="secondary-panel-simple-header">
 			<h4 className="panel-title">Surface Integrations and General Settings</h4>
 			<div className="header-buttons">
-				<ContextHelpButton
-					tooltip="Manage surface integrations and global surface settings here."
-					action="/user-guide/config/settings#surfaces"
-				/>
+				<ContextHelpButton action="/user-guide/surfaces">
+					Manage surface integrations and global surface settings here.
+				</ContextHelpButton>
 
 				<CloseButton closeFn={doClose} visibilityClass="d-xl-none" />
 			</div>

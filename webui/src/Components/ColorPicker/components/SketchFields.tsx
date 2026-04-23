@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react'
-import { EditableInput } from './EditableInput.js'
+import { useCallback } from 'react'
 import { useColor, type OnChangeFn } from '../context/useColor.js'
+import { EditableInput } from './EditableInput.js'
 
 export interface SketchFieldsProps {
 	disableAlpha?: boolean

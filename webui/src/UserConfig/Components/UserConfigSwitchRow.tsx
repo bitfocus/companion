@@ -1,8 +1,7 @@
-import React from 'react'
 import { CFormSwitch } from '@coreui/react'
-import { ResetButton, type UserConfigProps } from './Common.js'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { observer } from 'mobx-react-lite'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { ResetButton, type UserConfigProps } from './Common.js'
 
 interface UserConfigSwitchRowProps {
 	userConfig: UserConfigProps

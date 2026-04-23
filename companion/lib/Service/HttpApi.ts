@@ -1,11 +1,11 @@
-import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
 import Express from 'express'
-import type { UIExpress } from '../UI/Express.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import LogController from '../Log/Controller.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import LogController from '../Log/Controller.js'
+import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
+import type { UIExpress } from '../UI/Express.js'
 import type { ServiceApi } from './ServiceApi.js'
 
 const HTTP_API_SURFACE_ID = 'http'
@@ -319,6 +319,13 @@ export class ServiceHttpApi {
 
 		// surfaces
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
+
+		// connections
+		this.#apiRouter.get('/connections', this.#connectionsList)
+		this.#apiRouter.get('/connections/:id/status', this.#connectionGetStatus)
+		this.#apiRouter.post('/connections/:id/restart', this.#connectionRestart)
+		this.#apiRouter.post('/connections/:id/enable', this.#connectionEnable)
+		this.#apiRouter.post('/connections/:id/disable', this.#connectionDisable)
 
 		// Finally, default all unhandled to 404
 		this.#apiRouter.use((_req, res) => {
@@ -640,5 +647,108 @@ export class ServiceHttpApi {
 				res.send(result)
 			}
 		}
+	}
+
+	/**
+	 * List all connections with their current status
+	 */
+	#connectionsList = (_req: Express.Request, res: Express.Response): void => {
+		this.logger.debug('Got HTTP GET /api/connections')
+
+		const clientConnections = this.#serviceApi.getConnectionsList()
+		const connections = Object.entries(clientConnections).map(([id, config]) => {
+			const status = this.#serviceApi.getConnectionStatus(id)
+			return {
+				id,
+				label: config.label,
+				moduleId: config.moduleId,
+				enabled: config.enabled,
+				status: status ?? null,
+			}
+		})
+
+		res.json(connections)
+	}
+
+	/**
+	 * Get the status of a specific connection
+	 */
+	#connectionGetStatus = (req: Express.Request, res: Express.Response): void => {
+		const connectionId = req.params.id
+
+		const connectionConfig = this.#serviceApi.getConnectionsList()[connectionId]
+		if (!connectionConfig) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		this.logger.debug(`Got HTTP GET /api/connections/${connectionId}/status`)
+
+		const status = this.#serviceApi.getConnectionStatus(connectionId)
+		res.json({
+			id: connectionId,
+			label: connectionConfig.label,
+			enabled: connectionConfig.enabled,
+			status: status ?? null,
+		})
+	}
+
+	/**
+	 * Restart a connection process
+	 */
+	#connectionRestart = (req: Express.Request, res: Express.Response): void => {
+		const connectionId = req.params.id
+
+		const connectionConfig = this.#serviceApi.getConnectionsList()[connectionId]
+		if (!connectionConfig) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		this.logger.info(`Got HTTP POST /api/connections/${connectionId}/restart`)
+
+		const result = this.#serviceApi.restartConnection(connectionId)
+		if (!result) {
+			res.status(409).json({ status: 409, message: 'Connection is inactive and cannot be restarted' })
+			return
+		}
+
+		res.json({ id: connectionId, message: 'Restart triggered' })
+	}
+
+	/**
+	 * Enable a connection
+	 */
+	#connectionEnable = (req: Express.Request, res: Express.Response): void => {
+		const connectionId = req.params.id
+
+		const connectionConfig = this.#serviceApi.getConnectionsList()[connectionId]
+		if (!connectionConfig) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		this.logger.info(`Got HTTP POST /api/connections/${connectionId}/enable`)
+
+		this.#serviceApi.enableDisableConnection(connectionId, true)
+		res.json({ id: connectionId, enabled: true })
+	}
+
+	/**
+	 * Disable a connection
+	 */
+	#connectionDisable = (req: Express.Request, res: Express.Response): void => {
+		const connectionId = req.params.id
+
+		const connectionConfig = this.#serviceApi.getConnectionsList()[connectionId]
+		if (!connectionConfig) {
+			res.status(404).json({ status: 404, message: 'Connection not found' })
+			return
+		}
+
+		this.logger.info(`Got HTTP POST /api/connections/${connectionId}/disable`)
+
+		this.#serviceApi.enableDisableConnection(connectionId, false)
+		res.json({ id: connectionId, enabled: false })
 	}
 }

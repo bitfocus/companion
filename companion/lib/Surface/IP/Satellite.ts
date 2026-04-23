@@ -8,25 +8,31 @@
  * Individual Contributor License Agreement for companion along with
  * this program.
  */
-import LogController from '../../Log/Controller.js'
+import { EventEmitter } from 'node:events'
+import debounceFn from 'debounce-fn'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { EventEmitter } from 'events'
+import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { ImageResult } from '../../Graphics/ImageResult.js'
+import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
+import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
+import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
 import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
-import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
+import type {
+	SatelliteControlStylePreset,
+	SatelliteSurfaceLayout,
+} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import {
 	BrightnessConfigField,
-	LegacyRotationConfigField,
 	LockConfigFields,
 	OffsetConfigFields,
 	RotationConfigField,
 } from '../CommonConfigFields.js'
-import debounceFn from 'debounce-fn'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -34,16 +40,13 @@ import type {
 	SurfacePanelEvents,
 	SurfacePanelInfo,
 } from '../Types.js'
-import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import type {
-	SatelliteControlStylePreset,
-	SatelliteSurfaceLayout,
-} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { convertPanelIndexToXY, convertXYToIndexForPanel } from '../Util.js'
 
 export interface SatelliteDeviceInfo {
+	connectionId: string
 	deviceId: string
+	serial: string
+	serialIsUnique: boolean
 	productName: string
 	socket: SatelliteSocketWrapper
 	gridSize: GridSize
@@ -53,6 +56,10 @@ export interface SatelliteDeviceInfo {
 
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
+
+	configFields: CompanionSurfaceConfigField[] | undefined
+
+	canChangePage: string | undefined
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -73,7 +80,6 @@ interface SatelliteOutputVariableInfo {
 
 function generateConfigFields(
 	deviceInfo: SatelliteDeviceInfo,
-	legacyRotation: boolean,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>
 ): CompanionSurfaceConfigField[] {
@@ -81,7 +87,20 @@ function generateConfigFields(
 	if (deviceInfo.supportsBrightness) {
 		fields.push(BrightnessConfigField)
 	}
-	fields.push(legacyRotation ? LegacyRotationConfigField : RotationConfigField, ...LockConfigFields)
+	fields.push(RotationConfigField, ...LockConfigFields)
+
+	if (deviceInfo.canChangePage) {
+		fields.push({
+			id: 'canChangePage',
+			type: 'checkbox',
+			label: deviceInfo.canChangePage,
+			default: false,
+		})
+	}
+
+	if (deviceInfo.configFields && deviceInfo.configFields.length > 0) {
+		fields.push(...deviceInfo.configFields)
+	}
 
 	for (const variable of deviceInfo.transferVariables) {
 		if (BANNED_PROPS.has(variable.id)) continue
@@ -171,6 +190,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #writeQueue: ImageWriteQueue<string, [ResolvedControlDefinition, DrawButtonItem]>
 
 	#config: Record<string, any>
+	readonly #hasDeviceConfigFields: boolean
 
 	readonly surfaceManifestFromClient: boolean
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
@@ -188,7 +208,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	// Cache for generated lock images by dimension
 	readonly #lockImageCache = new Map<string, ImageResult>()
 
-	constructor(deviceInfo: SatelliteDeviceInfo, executeExpression: SurfaceExecuteExpressionFn) {
+	constructor(deviceInfo: SatelliteDeviceInfo, surfaceId: string, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
 
 		this.#executeExpression = executeExpression
@@ -204,16 +224,15 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 
-		const anyControlHasBitmap = !!this.#controlDefinitions
-			.values()
-			.find((controls) => !!controls.find((control) => !!control.style.bitmap))
+		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
 		this.info = {
 			description: deviceInfo.productName,
-			configFields: generateConfigFields(deviceInfo, anyControlHasBitmap, this.#inputVariables, this.#outputVariables),
-			surfaceId: deviceInfo.deviceId,
+			configFields: generateConfigFields(deviceInfo, this.#inputVariables, this.#outputVariables),
+			surfaceId: surfaceId,
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
+			canChangePage: !!deviceInfo.canChangePage,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -375,6 +394,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.emit('pincodeKey', pincodeKey)
 	}
 
+	doChangePage(forward: boolean): void {
+		if (!this.info.canChangePage || !this.#config.canChangePage) return
+		this.emit('changePage', forward)
+	}
+
 	/**
 	 * Produce a rotation event
 	 */
@@ -486,6 +510,21 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		}
 
 		this.#config = config
+
+		if (this.#hasDeviceConfigFields) {
+			this.#sendDeviceConfig()
+		}
+	}
+
+	#sendDeviceConfig(): void {
+		const configValues = createSurfaceConfigPayload(this.info.configFields, this.#config)
+		const encoded = Buffer.from(JSON.stringify(configValues)).toString('base64')
+		this.socket.sendMessage('DEVICE-CONFIG', null, this.deviceId, { CONFIG: encoded })
+	}
+
+	updateFirmwareUpdateInfo(firmwareUpdateUrl: string | null): void {
+		this.info.hasFirmwareUpdates = firmwareUpdateUrl ? { updaterDownloadUrl: firmwareUpdateUrl } : undefined
+		this.emit('firmwareUpdateInfo')
 	}
 
 	/**

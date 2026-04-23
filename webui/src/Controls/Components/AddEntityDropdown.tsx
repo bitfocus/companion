@@ -1,13 +1,13 @@
-import React, { useCallback, useContext } from 'react'
-import { useComputed } from '~/Resources/util.js'
-import Select, { type createFilter } from 'react-select'
-import { MenuPortalContext } from '~/Components/MenuPortalContext'
-import { observer } from 'mobx-react-lite'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
-import { FeedbackEntitySubType, type EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext } from 'react'
+import Select, { type createFilter } from 'react-select'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { FeedbackEntitySubType, type EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { MenuPortalContext } from '~/Components/MenuPortalContext'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const filterOptionsRecent: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
 	if (input) {

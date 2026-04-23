@@ -1,20 +1,21 @@
-import React, { useCallback, useContext } from 'react'
-import { CRow, CCol, CAlert } from '@coreui/react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { CAlert, CCol, CRow } from '@coreui/react'
+import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useNavigate } from '@tanstack/react-router'
+import { capitalize } from 'lodash-es'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext } from 'react'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
-import { RefreshModuleInfo } from './RefreshModuleInfo.js'
+import { WindowLinkOpen } from '~/Helpers/Window.js'
+import { CloseButton } from '~/Layout/PanelIcons.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
+import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faExternalLink, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { faGithub } from '@fortawesome/free-brands-svg-icons'
-import { WindowLinkOpen } from '~/Helpers/Window.js'
-import { useNavigate } from '@tanstack/react-router'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { capitalize } from 'lodash-es'
 
 interface ModuleManagePanelProps {
 	moduleType: ModuleInstanceType
@@ -86,9 +87,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 							<FontAwesomeIcon icon={faExternalLink} size="xl" />
 						</WindowLinkOpen>
 					)}
-					<div className="float_right ms-1 d-xl-none" onClick={doCloseModule} title="Close">
-						<FontAwesomeIcon icon={faTimes} size="lg" />
-					</div>
+					<CloseButton closeFn={doCloseModule} visibilityClass=" d-xl-none" />
 				</div>
 			</div>
 			<div className="secondary-panel-simple-body">

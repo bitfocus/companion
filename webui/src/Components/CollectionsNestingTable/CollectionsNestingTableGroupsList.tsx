@@ -1,12 +1,15 @@
-import React from 'react'
+import { CButton } from '@coreui/react'
+import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import { useCallback } from 'react'
+import { usePanelCollapseHelperContext, usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
+import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
+import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
+import { CollectionsNestingTableCollectionRow } from './CollectionsNestingTableGroupRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionListCollectionDrop } from './useCollectionDrop.js'
-import { CollectionsNestingTableCollectionRow } from './CollectionsNestingTableGroupRow.js'
-import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
-import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
 
 interface CollectionsNestingTableCollectionsListProps<
 	TCollection extends CollectionsNestingTableCollection,
@@ -65,7 +68,10 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 	groupedItems,
 	nestingLevel,
 }: CollectionsNestingTableCollectionSingleProps<TCollection, TItem>) {
-	const { dragId, collectionsApi, GroupHeaderContent } = useCollectionsNestingTableContext<TCollection, TItem>()
+	const { dragId, collectionsApi, GroupHeaderContent, showCollapseButtons } = useCollectionsNestingTableContext<
+		TCollection,
+		TItem
+	>()
 
 	const { canDrop, dragCollectionId, drop } = useCollectionListCollectionDrop(
 		collectionsApi,
@@ -91,6 +97,9 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 				isCollapsed={isCollapsed}
 				nestingLevel={nestingLevel}
 			>
+				{showCollapseButtons && !isCollapsed && itemsInCollection.length > 1 && (
+					<CollectionItemsCollapseButtons itemIds={itemsInCollection.map((item) => item.id)} />
+				)}
 				{!!GroupHeaderContent && <GroupHeaderContent collection={collection} />}
 			</CollectionsNestingTableCollectionRow>
 
@@ -115,6 +124,40 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 						nestingLevel={nestingLevel + 1}
 					/>
 				</>
+			)}
+		</>
+	)
+})
+
+export const CollectionItemsCollapseButtons = observer(function CollectionItemsCollapseButtons({
+	itemIds,
+}: {
+	itemIds: string[]
+}) {
+	const panelCollapseHelper = usePanelCollapseHelperContext()
+
+	const hasCollapsed = itemIds.some((id) => panelCollapseHelper.isPanelCollapsed(null, id))
+	const hasExpanded = itemIds.some((id) => !panelCollapseHelper.isPanelCollapsed(null, id))
+
+	const collapseAll = useCallback(() => {
+		panelCollapseHelper.setMultipleCollapsed(itemIds, true)
+	}, [panelCollapseHelper, itemIds])
+
+	const expandAll = useCallback(() => {
+		panelCollapseHelper.setMultipleCollapsed(itemIds, false)
+	}, [panelCollapseHelper, itemIds])
+
+	return (
+		<>
+			{hasCollapsed && (
+				<CButton size="sm" color="link" onClick={expandAll} title="Expand all items">
+					<FontAwesomeIcon icon={faExpandArrowsAlt} />
+				</CButton>
+			)}
+			{hasExpanded && (
+				<CButton size="sm" color="link" onClick={collapseAll} title="Collapse all items">
+					<FontAwesomeIcon icon={faCompressArrowsAlt} />
+				</CButton>
 			)}
 		</>
 	)

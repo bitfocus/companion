@@ -1,6 +1,12 @@
-import { CButton, CCol, CButtonGroup, CForm, CAlert, CInputGroup, CFormLabel } from '@coreui/react'
-import React, { useCallback, useMemo, useState, type MutableRefObject } from 'react'
-import { PreventDefaultHandler } from '~/Resources/util.js'
+import { CAlert, CButton, CButtonGroup, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useMemo, useState, type MutableRefObject } from 'react'
+import type { JsonValue } from 'type-fest'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import {
 	AlignmentInputField,
 	ColorInputField,
@@ -8,18 +14,12 @@ import {
 	PNGInputField,
 	TextInputField,
 } from '~/Components/index.js'
-import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Resources/Constants.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDollarSign, faFont, faTrash } from '@fortawesome/free-solid-svg-icons'
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import { InputFeatureIcons, type InputFeatureIconsProps } from './OptionsInputField.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import type { LocalVariablesStore } from './LocalVariablesStore.js'
-import { observer } from 'mobx-react-lite'
+import { FONT_SIZES, SHOW_HIDE_TOP_BAR } from '~/Resources/Constants.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
-import type { JsonValue } from 'type-fest'
+import { PreventDefaultHandler } from '~/Resources/util.js'
+import type { LocalVariablesStore } from './LocalVariablesStore.js'
+import { InputFeatureIcons, type InputFeatureIconsProps } from './OptionsInputField.js'
 
 interface ButtonStyleConfigProps {
 	controlId: string

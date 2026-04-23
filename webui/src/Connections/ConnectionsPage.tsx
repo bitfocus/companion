@@ -1,9 +1,8 @@
 import { CCol, CRow } from '@coreui/react'
-import React from 'react'
+import { Outlet, useMatchRoute } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
-import { observer } from 'mobx-react-lite'
-import { Outlet, useMatchRoute } from '@tanstack/react-router'
 
 export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.Element {
 	const matchRoute = useMatchRoute()

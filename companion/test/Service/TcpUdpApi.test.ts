@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ApiMessageError, ServiceTcpUdpApi } from '../../lib/Service/TcpUdpApi.js'
+import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { rgb } from '../../lib/Resources/Util.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
-import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import { ApiMessageError, ServiceTcpUdpApi } from '../../lib/Service/TcpUdpApi.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -521,7 +521,7 @@ describe('TcpUdpApi', () => {
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
-				mockControl.setCurrentStep = vi.fn<typeof mockControl.setCurrentStep>().mockReturnValue(true)
+				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('location 1/2/3 set-step 2')
@@ -700,7 +700,9 @@ describe('TcpUdpApi', () => {
 				})
 			})
 
-			async function runColor(input, expected) {
+			async function runColor(input: string, expected: number | false) {
+				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
+
 				const { router, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 
@@ -755,7 +757,9 @@ describe('TcpUdpApi', () => {
 				})
 			})
 
-			async function runColor(input, expected) {
+			async function runColor(input: string, expected: number | false) {
+				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
+
 				const { router, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 

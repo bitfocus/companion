@@ -1,9 +1,9 @@
-import React from 'react'
+import { observer } from 'mobx-react-lite'
 import { components as SelectComponents, type OptionProps } from 'react-select'
 import type { DropdownChoiceInt } from './DropdownChoices'
 
 // Formatting for variable pulldown options:
-export const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) => {
+export const CustomOption = observer((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
 		<SelectComponents.Option {...props} className={(props.className ?? '') + 'variable-dropdown-option'}>
@@ -14,7 +14,7 @@ export const CustomOption = React.memo((props: OptionProps<DropdownChoiceInt>) =
 })
 
 // Formatting for variable "single value" (shown when dropdown is closed) -- uses a different CSS class
-export const CustomSingleValue = React.memo((props: OptionProps<DropdownChoiceInt>) => {
+export const CustomSingleValue = observer((props: OptionProps<DropdownChoiceInt>) => {
 	const { data } = props
 	return (
 		<SelectComponents.SingleValue {...props} className={(props.className ?? '') + 'variable-dropdown-single'}>

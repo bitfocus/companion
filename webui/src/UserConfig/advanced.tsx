@@ -1,10 +1,10 @@
-import React, { memo } from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { AdminPasswordConfig } from './Sections/AdminPasswordConfig.js'
-import { HttpsConfig } from './Sections/HttpsConfig.js'
-import { ExperimentsConfig } from './Sections/ExperimentsConfig.js'
+import { memo } from 'react'
 import { useUserConfigProps } from './Context.js'
+import { AdminPasswordConfig } from './Sections/AdminPasswordConfig.js'
+import { ExperimentsConfig } from './Sections/ExperimentsConfig.js'
+import { HttpsConfig } from './Sections/HttpsConfig.js'
 
 export const SettingsAdvancedPage = memo(function UserConfig() {
 	return (

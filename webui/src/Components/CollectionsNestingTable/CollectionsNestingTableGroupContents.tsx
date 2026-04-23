@@ -1,13 +1,15 @@
 import { faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import type { ConnectDropTarget } from 'react-dnd'
+import useElementClientSize from '~/Hooks/useElementClientSize.js'
+import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
-import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
 import { CollectionsNestingTableNestingRow } from './CollectionsNestingTableNestingRow.js'
+import { CollectionsNestingTableItemRow } from './CollectionsNestingTableRowWrappers.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
 import { useCollectionsListItemDrop } from './useItemDrop.js'
-import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 
 interface CollectionsNestingTableCollectionContentsProps<TItem extends CollectionsNestingTableItem> {
 	items: TItem[]
@@ -20,9 +22,19 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 	TCollection extends CollectionsNestingTableCollection,
 	TItem extends CollectionsNestingTableItem,
 >({ items, collectionId, showNoItemsMessage, nestingLevel }: CollectionsNestingTableCollectionContentsProps<TItem>) {
-	const { dragId, collectionsApi, itemName, ItemRow } = useCollectionsNestingTableContext<TCollection, TItem>()
+	const { dragId, collectionsApi, itemName, ItemRow, gridLayout } = useCollectionsNestingTableContext<
+		TCollection,
+		TItem
+	>()
 
-	const { isDragging, drop } = useCollectionsListItemDrop(collectionsApi, dragId, collectionId, null, 0)
+	const { isDragging, drop } = useCollectionsListItemDrop(
+		collectionsApi,
+		dragId,
+		collectionId,
+		null,
+		items.length,
+		gridLayout ?? false
+	)
 
 	let visibleCount = 0
 
@@ -52,6 +64,36 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 
 	// Calculate number of hidden items
 	const hiddenCount = items.length - visibleCount
+
+	if (gridLayout) {
+		return (
+			<>
+				{itemRows.length > 0 && (
+					<CollectionsNestingTableCollectionGridContents itemRows={itemRows} drop={drop} nestingLevel={nestingLevel} />
+				)}
+
+				{isDragging && items.length === 0 && (
+					<CollectionsNestingTableDropZone drop={drop} itemName={itemName} nestingLevel={nestingLevel} />
+				)}
+
+				{hiddenCount > 0 && (
+					<div className="collections-nesting-table-grid-message">
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>
+							{hiddenCount} {itemName}s are hidden
+						</strong>
+					</div>
+				)}
+
+				{showNoItemsMessage && items.length === 0 && !isDragging && (
+					<div className="collections-nesting-table-grid-message">
+						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
+						<strong>This collection is empty</strong>
+					</div>
+				)}
+			</>
+		)
+	}
 
 	return (
 		<>
@@ -83,3 +125,59 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 		</>
 	)
 })
+
+function CollectionsNestingTableCollectionGridContents({
+	itemRows,
+	drop,
+	nestingLevel,
+}: {
+	itemRows: React.ReactNode[]
+	drop: ConnectDropTarget
+	nestingLevel: number
+}) {
+	const [elmRef, elmSize, elm] = useElementClientSize()
+
+	// Calculate visible columns accounting for padding and gaps
+	let displayColumns = 0
+	if (elmSize && elm) {
+		const elmComputedStyle = window.getComputedStyle(elm)
+
+		// assume px
+		const tileTargetMinWidth = parseFloat(
+			elmComputedStyle.getPropertyValue('--collection-nesting-table-grid-tile-min-width')
+		)
+
+		const containerPadding = parseFloat(elmComputedStyle.paddingLeft) * 2
+		const gap = parseFloat(elmComputedStyle.gap)
+		const availableWidth = elmSize.width - containerPadding
+
+		const calculatedColumns = Math.floor((availableWidth + gap) / (tileTargetMinWidth + gap))
+		displayColumns = Number.isFinite(calculatedColumns) ? Math.max(1, calculatedColumns) : 0
+	}
+
+	const spacerSpan = displayColumns > 0 ? displayColumns - (itemRows.length % displayColumns) : 0
+
+	return (
+		<div
+			className={classNames('collections-nesting-table-grid-container', {
+				'collections-nesting-table-grid-nested': nestingLevel > 0,
+			})}
+			style={{
+				// @ts-expect-error variables are not typed
+				'--collection-nesting-level': nestingLevel,
+			}}
+			ref={elmRef}
+		>
+			{itemRows}
+
+			<div
+				className="collections-nesting-table-grid-end-spacer"
+				ref={drop}
+				style={{
+					// @ts-expect-error TypeScript doesn't recognize CSS custom properties
+					'--collection-nesting-table-grid-end-spacer-span': spacerSpan,
+				}}
+			/>
+		</div>
+	)
+}

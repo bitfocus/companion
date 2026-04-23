@@ -1,8 +1,8 @@
-import React, { useContext } from 'react'
 import { CButton } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface LearnButtonProps {

@@ -1,7 +1,7 @@
 {
 	"name": "@companion-app/launcher",
 	"description": "Companion",
-	"version": "4.3.0",
+	"version": "5.0.0",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
@@ -12,13 +12,13 @@
 	},
 	"dependencies": {
 		"@companion-app/shared": "*",
-		"@sentry/electron": "^7.10.0",
+		"@sentry/electron": "^7.11.0",
 		"chokidar": "^5.0.0",
 		"debounce-fn": "^6.0.0",
 		"electron-store": "^11.0.2",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.3.4",
-		"nanoid": "^5.1.7",
+		"nanoid": "^5.1.9",
 		"plist": "^3.1.0",
 		"semver": "^7.7.4",
 		"strip-ansi": "^7.2.0",
@@ -26,7 +26,7 @@
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "41.0.4",
+		"electron": "41.2.1",
 		"electron-builder": "26.8.2",
 		"electron-reloader": "^1.2.3"
 	}

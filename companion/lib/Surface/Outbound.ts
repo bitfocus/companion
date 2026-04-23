@@ -1,22 +1,22 @@
+import { EventEmitter } from 'node:events'
+import { isEqual } from 'lodash-es'
 import { nanoid } from 'nanoid'
-import LogController from '../Log/Controller.js'
-import type { DataDatabase } from '../Data/Database.js'
+import z from 'zod'
+import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import type {
 	CompanionSurfaceConfigField,
 	OutboundSurfaceInfo,
 	OutboundSurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
+import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
+import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import { EventEmitter } from 'node:events'
-import { OutboundSurfaceCollections } from './OutboundCollections.js'
-import { isEqual } from 'lodash-es'
 import { ServiceSurfaceDiscovery } from './Discovery.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
+import { OutboundSurfaceCollections } from './OutboundCollections.js'
 
 export interface SurfaceOutboundControllerEvents {
 	clientInfo: [update: OutboundSurfacesUpdate]

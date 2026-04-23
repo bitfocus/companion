@@ -1,22 +1,23 @@
-import React, { memo, useState } from 'react'
 import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
+import { observer } from 'mobx-react-lite'
+import { memo, useState } from 'react'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { useUserConfigProps } from './Context.js'
+import { ArtnetConfig } from './Sections/ArtnetConfig.js'
+import { ArtnetProtocol } from './Sections/ArtnetProtocol.js'
 import { EmberPlusConfig } from './Sections/EmberPlusConfig.js'
+import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
+import { HttpConfig } from './Sections/HttpConfig.js'
+import { HttpProtocol } from './Sections/HttpProtocol.js'
+import { OscConfig } from './Sections/OscConfig.js'
+import { OscProtocol } from './Sections/OscProtocol.js'
+import { RosstalkConfig } from './Sections/RosstalkConfig.js'
+import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
 import { SatelliteConfig } from './Sections/SatelliteConfig.js'
 import { TcpConfig } from './Sections/TcpConfig.js'
-import { UdpConfig } from './Sections/UdpConfig.js'
-import { OscConfig } from './Sections/OscConfig.js'
-import { RosstalkConfig } from './Sections/RosstalkConfig.js'
-import { ArtnetConfig } from './Sections/ArtnetConfig.js'
-import { HttpConfig } from './Sections/HttpConfig.js'
-import { observer } from 'mobx-react-lite'
-import { MyErrorBoundary } from '~/Resources/Error.js'
-import { ArtnetProtocol } from './Sections/ArtnetProtocol.js'
-import { HttpProtocol } from './Sections/HttpProtocol.js'
-import { OscProtocol } from './Sections/OscProtocol.js'
-import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
-import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
 import { TcpUdpProtocol } from './Sections/TcpUdpProtocol.js'
-import { useUserConfigProps } from './Context.js'
+import { UdpConfig } from './Sections/UdpConfig.js'
 
 export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
@@ -26,7 +27,10 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4>Settings - Protocols</h4>
+								<h4 className="btn-inline">
+									Settings - Protocols
+									<ContextHelpButton action="/user-guide/config/settings#protocols" />
+								</h4>
 								<p>Settings apply instantaneously, don't worry about it!</p>
 							</div>
 						</div>
@@ -108,7 +112,7 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 					</CNavLink>
 				</CNavItem>
 			</CNav>
-			<CTabContent className="default-scroll">
+			<CTabContent>
 				<CTabPane role="tabpanel" aria-labelledby="tcp-udp-tab" visible={activeTab === 'tcp-udp'}>
 					<MyErrorBoundary>
 						<TcpUdpProtocol />

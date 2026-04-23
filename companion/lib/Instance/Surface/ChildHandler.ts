@@ -1,5 +1,15 @@
-import LogController, { type Logger } from '../../Log/Controller.js'
+import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
+import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
+import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
+import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import type { InstanceStatus } from '../Status.js'
+import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
 import type {
 	ChangePageMessage,
 	DisconnectMessage,
@@ -20,15 +30,6 @@ import type {
 	ShouldOpenDeviceResponseMessage,
 	SurfaceModuleToHostEvents,
 } from './IpcTypes.js'
-import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
-import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import type { InstanceStatus } from '../Status.js'
-import type { SurfaceScanHandler, SurfaceController } from '../../Surface/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
-import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
-import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 export interface SurfaceChildHandlerDependencies {
 	readonly surfaceController: SurfaceController
@@ -410,9 +411,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 				return
 			}
 
+			const sanitizedInfo: HostOpenDeviceResult = {
+				...info,
+				configFields: sanitizePluginConfigFields(this.logger, info.configFields),
+			}
+
 			// Fetch the initial config for this surface from the surfaceController
 			const surfaceConfig = this.#deps.surfaceController.getDeviceConfig(info.surfaceId)
-			const initialConfig = surfaceConfig?.config || {}
+			const initialConfig = createSurfaceConfigPayload(sanitizedInfo.configFields, surfaceConfig?.config || {})
 			this.#ipcWrapper
 				.sendWithCb('readySurface', {
 					surfaceId: info.surfaceId,
@@ -425,7 +431,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			const panel = new SurfacePluginPanel(
 				this.#ipcWrapper,
 				this.instanceId,
-				info,
+				sanitizedInfo,
 				this.#deps.surfaceController.surfaceExecuteExpression.bind(this.#deps.surfaceController)
 			)
 			this.#panels.set(info.surfaceId, panel)
@@ -439,7 +445,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 				this.#ipcWrapper
 					.sendWithCb('updateConfig', {
 						surfaceId,
-						newConfig: newConfig || {},
+						newConfig: createSurfaceConfigPayload(sanitizedInfo.configFields, newConfig || {}),
 					})
 					.catch((e) => {
 						this.logger.warn(`Failed forwarding surface config to child for ${surfaceId}: ${e}`)

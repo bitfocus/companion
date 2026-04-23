@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { CInputGroup, CButton, CFormInput } from '@coreui/react'
+import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import JSON5 from 'json5'
-import { VariableTypeIcon } from './VariableTypeIcon.js'
+import { useEffect, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
+import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariableInputGroupProps {
 	value: JsonValue | undefined // The external variable value
@@ -24,9 +24,10 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 
 	// Local editing state
 	const [isEditing, setIsEditing] = useState(false)
-	const [localValue, setLocalValue] = useState<string>(isStringInitial ? (value ?? '') : JSON.stringify(value))
-	const [isValueValid, setIsValid] = useState<boolean>(true)
-	const [isString, setIsString] = useState<boolean>(isStringInitial)
+	// note: localValue can't be "undefined" in order to avoid React controlled/uncontrolled errors
+	const [localValue, setLocalValue] = useState((isStringInitial ? value : JSON.stringify(value)) ?? '')
+	const [isValueValid, setIsValid] = useState(true)
+	const [isString, setIsString] = useState(isStringInitial)
 
 	// Ref for the input group to manage focus
 	const groupRef = useRef<HTMLDivElement>(null)
@@ -36,7 +37,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 		if (!isEditing) {
 			const newIsString = typeof value === 'string'
 			setIsString(newIsString)
-			setLocalValue(newIsString ? (value ?? '') : JSON.stringify(value))
+			setLocalValue((newIsString ? value : JSON.stringify(value)) ?? '')
 			setIsValid(true)
 		}
 	}, [value, isEditing])
@@ -58,7 +59,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 		if (isString) {
 			// Switching from string to JSON mode
 			setIsString(false)
-			setLocalValue(JSON.stringify(localValue))
+			setLocalValue(JSON.stringify(localValue) ?? '')
 			// No variable update
 		} else {
 			// Switching from JSON to string mode
@@ -67,7 +68,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 				setLocalValue(value ?? '')
 				// No variable update
 			} else {
-				const stringified = JSON.stringify(value)
+				const stringified = JSON.stringify(value) ?? ''
 				setIsString(true)
 				setLocalValue(stringified)
 				setCurrentValue(name, stringified) // Update variable

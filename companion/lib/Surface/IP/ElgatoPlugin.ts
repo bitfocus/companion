@@ -9,16 +9,16 @@
  * this program.
  */
 
-import LogController from '../../Log/Controller.js'
-import { EventEmitter } from 'events'
+import { EventEmitter } from 'node:events'
 import { oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { convertPanelIndexToXY } from '../Util.js'
-import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
-import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
-import type { IControlStore } from '../../Controls/IControlStore.js'
-import type { IPageStore } from '../../Page/Store.js'
-import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
+import LogController from '../../Log/Controller.js'
+import type { IPageStore } from '../../Page/Store.js'
+import { LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
+import type { ServiceElgatoPluginSocket } from '../../Service/ElgatoPlugin.js'
+import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
+import { convertPanelIndexToXY } from '../Util.js'
 
 export class SurfaceIPElgatoPlugin extends EventEmitter<SurfacePanelEvents> implements SurfacePanel {
 	readonly #logger = LogController.createLogger('Surface/IP/ElgatoPlugin')

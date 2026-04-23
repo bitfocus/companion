@@ -1,8 +1,7 @@
-import React from 'react'
 import { observer } from 'mobx-react-lite'
+import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
-import type { UserConfigProps } from '../Components/Common.js'
 
 export const HttpConfig = observer(function HttpConfig(props: UserConfigProps) {
 	return (

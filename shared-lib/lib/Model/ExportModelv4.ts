@@ -1,5 +1,5 @@
-import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { CustomVariablesModel } from './CustomVariableModel.js'
+import type { UserConfigGridSize } from './UserConfigModel.js'
 
 export type SomeExportv4 = ExportFullv4 | ExportPageModelv4 | ExportTriggersListv4
 

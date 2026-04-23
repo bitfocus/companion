@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import type { GroupBase, MenuListProps } from 'react-select'
 import { flattenGroupedChildren, getCurrentIndex } from './util.js'
 

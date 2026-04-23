@@ -1,15 +1,15 @@
 import { CFormLabel, CFormSwitch } from '@coreui/react'
-import React, { useCallback, useRef, type MutableRefObject } from 'react'
+import { useCallback, useRef, type MutableRefObject } from 'react'
+import type { JsonValue } from 'type-fest'
+import type { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelp } from '~/Components/InlineHelp.js'
-import type { NormalButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
-import { ControlLocalVariables } from './LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ControlLocalVariables } from './LocalVariablesStore.js'
 import { InputFeatureIcons } from './OptionsInputField.js'
-import type { JsonValue } from 'type-fest'
 
 interface ControlOptionsEditorProps {
 	controlId: string

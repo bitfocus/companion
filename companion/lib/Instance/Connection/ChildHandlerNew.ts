@@ -1,50 +1,13 @@
-import LogController, { type Logger } from '../../Log/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
-import semver from 'semver'
 import type express from 'express'
-import type {
-	LogMessageMessage,
-	SetStatusMessage,
-	SetActionDefinitionsMessage,
-	SetFeedbackDefinitionsMessage,
-	UpdateFeedbackValuesMessage,
-	SetVariableValuesMessage,
-	SetVariableDefinitionsMessage,
-	SetPresetDefinitionsMessage,
-	SaveConfigMessage,
-	SendOscMessage,
-	RecordActionMessage,
-	SetCustomVariableMessage,
-	UpdateActionInstancesMessage,
-	UpdateFeedbackInstancesMessage,
-	ModuleIpcWrapper,
-	ModuleToHostEventsNew,
-	SharedUdpSocketMessageSend,
-} from './IpcTypesNew.js'
-import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
-import { assertNever, type OSCMetaArgument, type CompanionHTTPRequest, type LogLevel } from '@companion-module/base'
+import semver from 'semver'
 import {
 	EntityModelType,
+	type ActionEntityModel,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
-	type ActionEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import {
-	ConnectionEntityManager,
-	type EntityManagerActionEntity,
-	type EntityManagerAdapter,
-	type EntityManagerFeedbackEntity,
-} from './EntityManager.js'
-import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import type {
-	ConnectionChildHandlerApi,
-	ConnectionChildHandlerDependencies,
-	RunActionExtras,
-} from './ChildHandlerApi.js'
-import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
+import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import {
 	exprVal,
 	isExpressionOrValue,
@@ -52,7 +15,44 @@ import {
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever, type CompanionHTTPRequest, type LogLevel, type OSCMetaArgument } from '@companion-module/base'
+import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
+import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import LogController, { type Logger } from '../../Log/Controller.js'
+import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import type {
+	ConnectionChildHandlerApi,
+	ConnectionChildHandlerDependencies,
+	RunActionExtras,
+} from './ChildHandlerApi.js'
+import {
+	ConnectionEntityManager,
+	type EntityManagerActionEntity,
+	type EntityManagerAdapter,
+	type EntityManagerFeedbackEntity,
+} from './EntityManager.js'
+import type {
+	LogMessageMessage,
+	ModuleIpcWrapper,
+	ModuleToHostEventsNew,
+	RecordActionMessage,
+	SaveConfigMessage,
+	SendOscMessage,
+	SetActionDefinitionsMessage,
+	SetCustomVariableMessage,
+	SetFeedbackDefinitionsMessage,
+	SetPresetDefinitionsMessage,
+	SetStatusMessage,
+	SetVariableDefinitionsMessage,
+	SetVariableValuesMessage,
+	SharedUdpSocketMessageSend,
+	UpdateActionInstancesMessage,
+	UpdateFeedbackInstancesMessage,
+	UpdateFeedbackValuesMessage,
+} from './IpcTypesNew.js'
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -372,10 +372,20 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
 			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 			if (!parseRes.ok) {
+				let location = 'Unknown'
+
+				if (extras.surfaceId && extras.surfaceId.startsWith('trigger'))
+					location = `Trigger ${extras.surfaceId.split(':')[1]}`
+
+				if (extras.controlId && extras.controlId.startsWith('bank') && extras.location)
+					location = `Button ${extras.location.pageNumber}/${extras.location.row}/${extras.location.column}`
+
 				this.logger.warn(
 					`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
 				)
-				throw new Error(`Failed to parse action options. One or more options were invalid`)
+				throw new Error(
+					`Failed to parse action options. One or more options were invalid\nAction: ${actionDefinition.label} - Location: ${location} - Errors: ${JSON.stringify(parseRes.optionErrors)}`
+				)
 			}
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
@@ -395,7 +405,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			}
 		} catch (e) {
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
-			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e)}`)
+
+			if (e instanceof Error) {
+				this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e.message)}`)
+			}
 
 			throw e
 		}

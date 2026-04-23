@@ -1,16 +1,17 @@
-import type { UserConfigGridSize } from './UserConfigModel.js'
 import type { ConnectionCollection } from './Connections.js'
-import type { InstanceConfig, InstanceVersionUpdatePolicy } from './Instance.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
-import type { TriggerCollection } from './TriggerModel.js'
 import type { ExpressionVariableCollection, ExpressionVariableModel } from './ExpressionVariableModel.js'
+import type { ImageLibraryCollection, ImageLibraryExportData } from './ImageLibraryModel.js'
+import type { InstanceConfig, InstanceVersionUpdatePolicy } from './Instance.js'
 import type { SurfaceInstanceCollection } from './SurfaceInstance.js'
 import type { OutboundSurfaceInfo } from './Surfaces.js'
+import type { TriggerCollection } from './TriggerModel.js'
+import type { UserConfigGridSize } from './UserConfigModel.js'
 
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9 | 10 | 11
+	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
 }
@@ -30,6 +31,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	surfacesRemote?: Record<string, OutboundSurfaceInfo> // Added in v4.2
 	surfaceInstances?: ExportInstancesv6 // Added in v4.2
 	surfaceInstanceCollections?: SurfaceInstanceCollection[] // Added in v4.2
+	imageLibrary?: ImageLibraryExportData[] // Added in v4.4
+	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.4
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {
@@ -37,6 +40,8 @@ export interface ExportPageModelv6 extends ExportBase<'page'> {
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
 	oldPageNumber: number
+	imageLibrary?: ImageLibraryExportData[] // Added in v4.4
+	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.4
 }
 
 export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
@@ -44,6 +49,8 @@ export interface ExportTriggersListv6 extends ExportBase<'trigger_list'> {
 	triggerCollections: TriggerCollection[] | undefined // Added in v4.1
 	instances: ExportInstancesv6
 	connectionCollections: ConnectionCollection[] | undefined // Added in v4.1
+	imageLibrary?: ImageLibraryExportData[] // Added in v4.4
+	imageLibraryCollections?: ImageLibraryCollection[] // Added in v4.4
 }
 
 export type ExportTriggerContentv6 = Record<string, any> // TODO

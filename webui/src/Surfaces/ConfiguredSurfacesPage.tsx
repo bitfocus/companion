@@ -1,17 +1,18 @@
-import { CCol, CRow, CAlert, CButtonGroup, CButton, CCallout } from '@coreui/react'
-import { faSync, faAdd, faCog } from '@fortawesome/free-solid-svg-icons'
+import { CAlert, CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
+import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useRef, useState, useCallback } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useRef, useState } from 'react'
+import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
+import { MyErrorBoundary } from '~/Resources/Error'
+import { trpc } from '~/Resources/TRPC'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
-import { MyErrorBoundary } from '~/Resources/Error'
-import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
-import { observer } from 'mobx-react-lite'
-import { trpc } from '~/Resources/TRPC'
-import { useMutation } from '@tanstack/react-query'
-import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
-import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 
 export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
 	const twoPanelMode = useTwoPanelMode()
@@ -89,10 +90,22 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
 			>
 				<div className="fixed-header">
-					<h4>Configured Surfaces</h4>
+					<h4 className="btn-inline">
+						Surfaces
+						<ContextHelpButton action="/user-guide/config/surfaces">
+							Use the table, below to configure currently-known surfaces and groups.
+							<br />
+							To configure a surface integration or global setting,
+							{twoPanelMode
+								? ' use the panel to the right.'
+								: '	click the "Show Settings" button on the right, just above the table.'}
+							<br />
+							Click this icon for more help.
+						</ContextHelpButton>
+					</h4>
 
 					<p style={{ marginBottom: '0.5rem' }}>
-						Click on any item to edit the configuration of a currently-known surface or group.
+						Click on any item below to edit the configuration of a currently-known surface or group.
 						<br />
 						If your streamdeck is missing from this list, you might need to close the Elgato Streamdeck application and
 						click the Rescan button below.

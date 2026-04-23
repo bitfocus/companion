@@ -1,9 +1,9 @@
-import React, { memo } from 'react'
 import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { memo, useRef } from 'react'
 import { useUserConfigProps } from './Context.js'
-import { GridConfig } from './Sections/GridConfig.js'
 import { ButtonsConfig } from './Sections/ButtonsConfig.js'
+import { GridConfigRows, GridSizeModal, type GridSizeModalRef } from './Sections/GridConfig.js'
 
 export const SettingsButtonsPage = memo(function UserConfig() {
 	return (
@@ -37,14 +37,19 @@ export const SettingsButtonsPage = memo(function UserConfig() {
 
 const UserConfigTable = observer(function UserConfigTable() {
 	const userConfigProps = useUserConfigProps()
+	const gridSizePopupRef = useRef<GridSizeModalRef>(null)
+
 	if (!userConfigProps) return null
 
 	return (
-		<table className="table table-responsive-sm table-settings">
-			<tbody>
-				<ButtonsConfig {...userConfigProps} />
-				<GridConfig {...userConfigProps} />
-			</tbody>
-		</table>
+		<>
+			<GridSizeModal ref={gridSizePopupRef} />
+			<table className="table table-responsive-sm table-settings">
+				<tbody>
+					<ButtonsConfig {...userConfigProps} />
+					<GridConfigRows {...userConfigProps} gridSizePopup={gridSizePopupRef} />
+				</tbody>
+			</table>
+		</>
 	)
 })

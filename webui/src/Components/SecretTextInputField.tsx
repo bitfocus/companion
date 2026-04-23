@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useCallback, useRef } from 'react'
 import { CButton, CFormInput, CInputGroup } from '@coreui/react'
-import { observer } from 'mobx-react-lite'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useMemo, useRef, useState } from 'react'
 
 interface SecretTextInputFieldProps {
 	tooltip?: string

@@ -1,12 +1,12 @@
-import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext } from 'react'
-import { useRemoteSurfacesListContext } from './RemoteSurfacesListContext.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { CButton, CFormSwitch } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext } from 'react'
+import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useRemoteSurfacesListContext } from './RemoteSurfacesListContext.js'
 
 interface RemoteSurfaceTableRowProps {
 	remoteConnection: OutboundSurfaceInfo

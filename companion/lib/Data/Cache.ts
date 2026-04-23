@@ -1,6 +1,6 @@
-import { DataStoreBase } from './StoreBase.js'
-import { DataLegacyCache } from './Legacy/Cache.js'
 import type { ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
+import { DataLegacyCache } from './Legacy/Cache.js'
+import { DataStoreBase } from './StoreBase.js'
 
 export interface DataCacheDefaultTable {
 	cloud_servers: Record<string, unknown>

@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react'
-import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
-import cssStyles from './SketchPresetColors.module.css'
 import classNames from 'classnames'
 import { colord } from 'colord'
+import { useCallback } from 'react'
+import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
 import type { OnChangeFn } from '../context/useColor.js'
+import cssStyles from './SketchPresetColors.module.css'
 
 interface SketchPresetColorsProps {
 	colors: CompanionColorPresetValue[]

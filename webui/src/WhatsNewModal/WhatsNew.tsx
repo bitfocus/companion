@@ -1,24 +1,13 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
-import {
-	CModalBody,
-	CModalHeader,
-	CModalFooter,
-	CButton,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CTabContent,
-	CTabPane,
-	CAlert,
-} from '@coreui/react'
-import { observer } from 'mobx-react-lite'
+import { CAlert, CModalBody, CModalHeader, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { useQuery } from '@tanstack/react-query'
+import { observer } from 'mobx-react-lite'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
+import semver from 'semver'
+import { useLocalStorage } from 'usehooks-ts'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '../Resources/Error.js'
 import { DocsContent } from './DocsContent.js'
-import { useLocalStorage } from 'usehooks-ts'
-import semver from 'semver'
-import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface WhatsNewPage {
 	version: string
@@ -91,7 +80,7 @@ export const WhatsNewModal = observer(
 		)
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" className="modal-whatsnew">
+			<CModalExt scrollable visible={show} onClose={doClose} onClosed={onClosed} size="lg" className="modal-whatsnew">
 				<CModalHeader closeButton>
 					<h5>What's New in Companion</h5>
 				</CModalHeader>
@@ -113,9 +102,9 @@ export const WhatsNewModal = observer(
 									</CNavItem>
 								))}
 							</CNav>
-							<CTabContent className="default-scroll">
+							<CTabContent>
 								{selectedPage && (
-									<CTabPane className="" visible>
+									<CTabPane visible>
 										<MyErrorBoundary>
 											<DocsContent file={selectedPage.file} />
 										</MyErrorBoundary>
@@ -125,11 +114,6 @@ export const WhatsNewModal = observer(
 						</>
 					)}
 				</CModalBody>
-				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
-						Close
-					</CButton>
-				</CModalFooter>
 			</CModalExt>
 		)
 	})

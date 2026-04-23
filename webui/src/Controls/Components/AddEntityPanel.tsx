@@ -1,12 +1,12 @@
 import { CButton } from '@coreui/react'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useCallback, useRef } from 'react'
-import { AddEntitiesModal, type AddEntitiesModalRef } from './AddEntitiesModal.js'
-import { MyErrorBoundary } from '~/Resources/Error.js'
+import { useCallback, useRef } from 'react'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { AddEntityDropdown } from './AddEntityDropdown.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
+import { MyErrorBoundary } from '~/Resources/Error.js'
+import { AddEntitiesModal, type AddEntitiesModalRef } from './AddEntitiesModal.js'
+import { AddEntityDropdown } from './AddEntityDropdown.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
 
 interface AddEntityPanelProps {

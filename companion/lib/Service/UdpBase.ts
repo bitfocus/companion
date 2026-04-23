@@ -1,6 +1,6 @@
+import dgram from 'node:dgram'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { ServiceBase } from './Base.js'
-import dgram from 'dgram'
 
 /**
  * Abstract class providing base functionality for UDP services.

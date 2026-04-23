@@ -64,9 +64,64 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Get Module variable value  
   Method: GET  
   Path: `/api/variable/<Connection Label>/<name>/value`
-- Rescan for USB surfaces  
-  Method: POST  
+- Rescan for USB surfaces
+  Method: POST
   Path: `/api/surfaces/rescan`
+
+### Connection Management
+
+- List all connections with their current status
+  Method: GET
+  Path: `/api/connections`
+  Response: JSON array of connection objects
+
+  ```json
+  [
+  	{
+  		"id": "abc123",
+  		"label": "My OBS",
+  		"moduleId": "obs-websocket",
+  		"enabled": true,
+  		"sortOrder": 0,
+  		"status": { "category": "good", "level": "ok", "message": "Connected" }
+  	}
+  ]
+  ```
+
+- Get the status of a specific connection
+  Method: GET
+  Path: `/api/connections/<id>/status`
+  Response (200):
+
+  ```json
+  {
+  	"id": "abc123",
+  	"label": "My OBS",
+  	"enabled": true,
+  	"status": { "category": "good", "level": "ok", "message": "Connected" }
+  }
+  ```
+
+  Error (404): `{ "status": 404, "message": "Connection not found" }`
+
+- Restart a connection process
+  Method: POST
+  Path: `/api/connections/<id>/restart`
+  Response (200): `{ "id": "abc123", "message": "Restart triggered" }`
+  Error (404): `{ "status": 404, "message": "Connection not found" }`
+  Error (409): `{ "status": 409, "message": "Connection is inactive and cannot be restarted" }`
+
+- Enable a connection
+  Method: POST
+  Path: `/api/connections/<id>/enable`
+  Response (200): `{ "id": "abc123", "enabled": true }`
+  Error (404): `{ "status": 404, "message": "Connection not found" }`
+
+- Disable a connection
+  Method: POST
+  Path: `/api/connections/<id>/disable`
+  Response (200): `{ "id": "abc123", "enabled": false }`
+  Error (404): `{ "status": 404, "message": "Connection not found" }`
 
 ## Examples
 
@@ -98,6 +153,21 @@ POST `/api/custom-variable/data/value`
 Content-Type `application/json`  
 Body: `{"name":"Douglas", "answer":42}` - Body needs to be a valid JSON.  
 The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.
+
+List all connections:
+GET `/api/connections`
+
+Get status of a specific connection:
+GET `/api/connections/abc123/status`
+
+Restart a connection:
+POST `/api/connections/abc123/restart`
+
+Enable a disabled connection:
+POST `/api/connections/abc123/enable`
+
+Disable a connection:
+POST `/api/connections/abc123/disable`
 
 ## Deprecated Commands
 

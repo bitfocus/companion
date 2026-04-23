@@ -1,8 +1,8 @@
 import { formatLocation, oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
-import { ServiceTcpBase, type TcpClientInfo } from './TcpBase.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ServiceApi } from './ServiceApi.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ServiceApi } from './ServiceApi.js'
+import { ServiceTcpBase, type TcpClientInfo } from './TcpBase.js'
 
 /**
  * Class providing the Rosstalk api.

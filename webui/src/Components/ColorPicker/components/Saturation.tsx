@@ -1,9 +1,9 @@
-import React, { useCallback } from 'react'
+import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
+import { useColor } from '../context/useColor.js'
 import { calculateXyPercent } from '../helpers/change.js'
 import { ClickAndDragDiv } from './ClickAndDragDiv.js'
-import { useColor } from '../context/useColor.js'
 import cssStyles from './Saturation.module.css'
-import { observer } from 'mobx-react-lite'
 
 export const Saturation = observer(function Saturation(): React.JSX.Element {
 	const { changeHsvColor } = useColor()

@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { replaceAllVariables } from '../../lib/Variables/Util.js'
 
 describe('variable replacing', () => {
@@ -39,6 +39,18 @@ describe('variable replacing', () => {
 		const preserveSet = new Set<string>(['options'])
 		expect(replaceAllVariables('$(options:abc) $(internal:def) $(other:xyz)', 'new-label', preserveSet)).toBe(
 			'$(options:abc) $(new-label:def) $(new-label:xyz)'
+		)
+	})
+
+	test('nested', () => {
+		expect(replaceAllVariables('$(something:title_$(local:abc))', 'new-label', new Set(['local']))).toBe(
+			'$(new-label:title_$(local:abc))'
+		)
+	})
+
+	test('nested2', () => {
+		expect(replaceAllVariables('$(something:title_$(local:abc))', 'new-label', new Set(['something']))).toBe(
+			'$(something:title_$(new-label:abc))'
 		)
 	})
 })

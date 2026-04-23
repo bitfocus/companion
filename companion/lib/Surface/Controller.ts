@@ -10,18 +10,18 @@
  *
  */
 
-import HID from 'node-hid'
-import jsonPatch from 'fast-json-patch'
-import pDebounce from 'p-debounce'
+import { createHash } from 'node:crypto'
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import jsonPatch from 'fast-json-patch'
+import HID from 'node-hid'
+import pDebounce from 'p-debounce'
+import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
-import { SurfaceHandler, getSurfaceName } from './Handler.js'
-import { SurfaceIPElgatoEmulator, EmulatorRoom } from './IP/ElgatoEmulator.js'
-import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
-import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
-import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
-import { SurfaceOutboundController } from './Outbound.js'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import z from 'zod'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
+import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -31,32 +31,32 @@ import type {
 	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
-import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
-import { EventEmitter } from 'events'
-import LogController from '../Log/Controller.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { Complete } from '@companion-module/base'
+import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
-import type { SurfacePluginPanel } from './PluginPanel.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
-import type { HIDDevice } from '@companion-surface/host'
-import type { Complete } from '@companion-module/base'
 import {
 	DiscoveredSurfaceRegistry,
 	type DiscoveredSurfaceInfo,
 	type SurfaceOpener,
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
-import { createHash } from 'node:crypto'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { JsonValue } from 'type-fest'
-import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import LogController from '../Log/Controller.js'
+import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
+import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
+import { getSurfaceName, SurfaceHandler } from './Handler.js'
+import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
+import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
+import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
+import { SurfaceOutboundController } from './Outbound.js'
+import type { SurfacePluginPanel } from './PluginPanel.js'
+import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -1382,11 +1382,23 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Add a satellite device
 	 */
 	addSatelliteDevice(deviceInfo: SatelliteDeviceInfo): SurfaceIPSatellite {
-		this.removeDevice(deviceInfo.deviceId)
+		const discoveredSurface: DiscoveredSurfaceInfo = {
+			surfaceId: deviceInfo.serial,
+			surfaceIdIsNotUnique: !deviceInfo.serialIsUnique,
+			description: deviceInfo.productName,
+		}
+		const prefixedDevicePath = `satellite:${deviceInfo.connectionId}:${deviceInfo.deviceId}` as const
+		const resolvedSurfaceId = this.#discoveredSurfaceRegistry.trackSurface(
+			discoveredSurface,
+			prefixedDevicePath,
+			undefined
+		)
 
-		const device = new SurfaceIPSatellite(deviceInfo, this.surfaceExecuteExpression.bind(this))
+		this.removeDevice(resolvedSurfaceId)
 
-		this.#createSurfaceHandler(deviceInfo.deviceId, 'satellite', device)
+		const device = new SurfaceIPSatellite(deviceInfo, resolvedSurfaceId, this.surfaceExecuteExpression.bind(this))
+
+		this.#createSurfaceHandler(device.info.surfaceId, 'satellite', device)
 
 		this.triggerUpdateDevicesList()
 

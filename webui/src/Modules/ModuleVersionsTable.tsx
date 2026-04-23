@@ -1,31 +1,31 @@
-import React, { useCallback, useContext, useState } from 'react'
 import { CButton, CButtonGroup } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+	faCircleMinus,
 	faEyeSlash,
+	faFlask,
 	faPlus,
 	faQuestionCircle,
 	faSync,
-	faCircleMinus,
 	faTrash,
 	faWarning,
-	faFlask,
 } from '@fortawesome/free-solid-svg-icons'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useState } from 'react'
+import semver from 'semver'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type {
 	ModuleStoreModuleInfoStore,
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
-import semver from 'semver'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
 
 dayjs.extend(relativeTime)
 

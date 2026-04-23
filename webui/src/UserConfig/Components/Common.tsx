@@ -1,8 +1,7 @@
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { CButton } from '@coreui/react'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 
 export interface UserConfigProps {
 	config: UserConfigModel

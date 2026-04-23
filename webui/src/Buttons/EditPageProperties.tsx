@@ -9,10 +9,10 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import React, { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
-import type { PagesStoreModel } from '~/Stores/PagesStore.js'
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 
 export interface EditPagePropertiesModalRef {
 	show(pageNumber: number, pageInfo: PagesStoreModel | undefined): void

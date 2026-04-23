@@ -1,3 +1,7 @@
+import type { EventEmitter } from 'node:events'
+import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import type {
 	CompanionSurfaceConfigField,
 	GridSize,
@@ -5,17 +9,13 @@ import type {
 	SurfaceGroupConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { EventEmitter } from 'events'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { EmulatorPageConfig, EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
 import type { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 
 export type SurfaceExecuteExpressionFn = (
@@ -31,6 +31,7 @@ export interface SurfacePanelInfo {
 	location: string | null
 	isRemote: boolean
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
+	canChangePage?: boolean
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
@@ -41,7 +42,6 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void
-	getDefaultConfig?: () => any
 	onVariablesChanged?: (allChangedVariables: ReadonlySet<string>) => void
 	quit(): void
 

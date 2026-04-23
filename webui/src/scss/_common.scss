@@ -47,6 +47,44 @@ legend {
 	}
 }
 
+// special case, mainly for context help buttons: add btn-inline to the <h4> or <h5> element to prevent buttons from floating right
+h4.btn-inline,
+h5.btn-inline {
+	display: flex;
+
+	.context-help-button,
+	.btn,
+	.btn-group {
+		display: inline-flex;
+		align-items: center;
+		padding-left: 0.75em;
+	}
+
+	.context-help-button-btn {
+		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+
+		.svg-inline--fa {
+			width: 1.5em;
+			height: 1.5em;
+		}
+	}
+}
+
+// set the size of context-help-buttons for "settings category rows" and similar circumstances (doesn't actually affect the position)
+.help-button-float,
+.settings-category-row {
+	.context-help-button-btn {
+		width: 1.5em;
+		height: 1.5em;
+		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+
+		.svg-inline--fa {
+			width: 1.5em;
+			height: 1.5em;
+		}
+	}
+}
+
 .btn-group {
 	// do not set "overflow: hidden;" globally! if needed put it in an appropriate scope. If set here it prevents dropdown menus!
 	&.margin-bottom {
@@ -168,8 +206,22 @@ code {
 }
 
 .modal {
-	max-height: 94vh;
-	margin-top: 6vh;
+	.modal-dialog {
+		// margin 0 (vertical) prevents the scrollbar on the window (override the CUI default)
+		--cui-modal-margin: 0; // just to be safe. We override the two places it appears to be used here:
+		--top-margin: 4vh;
+		height: calc(100% - var(--top-margin));
+		margin: var(--top-margin) auto 0 auto;
+
+		&.modal-dialog-scrollable {
+			min-height: 15rem; // if the window gets too small fall back to scrolling the window
+		}
+
+		.modal-content {
+			// this one controls the bottom margin correctly.
+			max-height: calc(100% - 0.5rem);
+		}
+	}
 
 	.modal-header {
 		h1,

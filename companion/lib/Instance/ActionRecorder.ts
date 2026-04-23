@@ -1,24 +1,24 @@
-import { nanoid } from 'nanoid'
+import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
-import { clamp } from '../Resources/Util.js'
-import LogController from '../Log/Controller.js'
-import { EventEmitter } from 'events'
-import type { InstanceController } from './Controller.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
+import { nanoid } from 'nanoid'
+import z from 'zod'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	RecordActionEntityModel,
 	RecordSessionInfo,
 	RecordSessionListInfo,
 	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { CompanionOptionValues } from '@companion-module/host'
 import { ExpressionOrJsonValueSchema, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { CompanionOptionValues } from '@companion-module/host'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import LogController from '../Log/Controller.js'
+import { clamp } from '../Resources/Util.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { InstanceController } from './Controller.js'
 
 export interface ActionRecorderEvents {
 	sessions_changed: [sessionIds: string[]]

@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
-import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
-import { CButton, CCol, CForm, CFormInput, CFormCheck, CRow } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { CButton, CCol, CForm, CFormCheck, CFormInput, CRow } from '@coreui/react'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 
 interface ConfigurePanelProps {
 	updateQueryUrl: (key: string, value: any) => void

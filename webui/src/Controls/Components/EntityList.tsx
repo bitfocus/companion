@@ -1,14 +1,13 @@
-import type { EntityOwner, SomeEntityModel, EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import React from 'react'
+import { observer } from 'mobx-react-lite'
+import { useDragLayer } from 'react-dnd'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { EntityModelType, EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { AddEntityPanel } from './AddEntityPanel.js'
+import { useEntityEditorContext } from './EntityEditorContext.js'
+import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
 import { EntityTableRow, EntityTableRowContent } from './EntityEditorRow.js'
 import { EntityDropPlaceholderZone, type EntityListDragItem } from './EntityListDropZone.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
-import { AddEntityPanel } from './AddEntityPanel.js'
-import { observer } from 'mobx-react-lite'
-import { useEntityEditorContext } from './EntityEditorContext.js'
-import { useDragLayer } from 'react-dnd'
 
 interface EditableEntityListProps {
 	heading: JSX.Element | string | null

@@ -1,14 +1,14 @@
-import React, { useCallback, useContext } from 'react'
 import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect, CInputGroup } from '@coreui/react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
-import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext } from 'react'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
-import { TextInputField } from '../Components/TextInputField.js'
-import { NumberInputField } from '../Components/NumberInputField.js'
-import { backupTypes } from './BackupConstants.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { NumberInputField } from '../Components/NumberInputField.js'
+import { TextInputField } from '../Components/TextInputField.js'
+import { RootAppStoreContext } from '../Stores/RootAppStore.js'
+import { backupTypes } from './BackupConstants.js'
 
 interface PreviousBackupRowProps {
 	backup: PreviousBackupInfo

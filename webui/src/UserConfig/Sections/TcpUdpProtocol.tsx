@@ -1,6 +1,6 @@
-import React, { useContext } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export const TcpUdpProtocol = observer(function TcpUdpProtocol() {
 	const { userConfig } = useContext(RootAppStoreContext)

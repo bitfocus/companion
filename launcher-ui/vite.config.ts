@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import reactPlugin from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
-import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import tailwindcss from '@tailwindcss/vite'
+import reactPlugin from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
 	publicDir: 'public',

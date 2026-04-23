@@ -1,23 +1,23 @@
-import React, { memo, useState } from 'react'
 import {
-	CFormInput,
+	CAlert,
 	CButton,
 	CCallout,
 	CCard,
 	CCardBody,
 	CCardHeader,
-	CListGroup,
-	CFormSwitch,
-	CAlert,
 	CCol,
+	CFormInput,
 	CFormLabel,
+	CFormSwitch,
+	CListGroup,
 } from '@coreui/react'
+import { useSubscription } from '@trpc/tanstack-react-query'
+import { memo, useState } from 'react'
+import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { CloudRegionPanel } from './RegionPanel.js'
 import { CloudUserPass } from './UserPass.js'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
-import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export function CloudPage(): React.JSX.Element {
 	const cloudState = useCloudState()
@@ -128,7 +128,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 			<CFormLabel>Logged in as</CFormLabel>
 			<CFormInput readOnly type="text" value={authenticatedAs} />
 			{!cloudActive && (
-				<p>
+				<div className="my-3">
 					<CButton
 						color="success"
 						onClick={() => {
@@ -138,7 +138,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 					>
 						Log out
 					</CButton>
-				</p>
+				</div>
 			)}
 		</CCol>
 	)
@@ -205,11 +205,11 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 
 			<CAlert color="success">{uuid}</CAlert>
 
-			<p>
+			<div className="my-3">
 				<CButton color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
 					Regenerate secret key
 				</CButton>
-			</p>
+			</div>
 		</CCol>
 	)
 })

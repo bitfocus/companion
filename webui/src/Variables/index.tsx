@@ -1,19 +1,20 @@
-import React, { useCallback, useContext } from 'react'
 import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
-import { VariablesTable } from '~/Components/VariablesTable.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { observer } from 'mobx-react-lite'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { observer } from 'mobx-react-lite'
+import { memo, useCallback, useContext } from 'react'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
-import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
-	type ConnectionLeafItem,
 	type CollectionGroupMeta,
+	type ConnectionLeafItem,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { VariablesTable } from '~/Components/VariablesTable.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const { variablesStore } = useContext(RootAppStoreContext)
@@ -43,7 +44,7 @@ const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: Connection
 	)
 })
 
-const VariableGroupHeader = React.memo(function VariableGroupHeader({
+const VariableGroupHeader = memo(function VariableGroupHeader({
 	node,
 }: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
 	return <span>{node.metadata.label}</span>
@@ -83,7 +84,10 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		<CRow>
 			<CCol xs={12} className="flex-column-layout">
 				<div className="fixed-header">
-					<h4>Variables</h4>
+					<h4 className="btn-inline">
+						Variables
+						<ContextHelpButton action="/user-guide/config/variables" />
+					</h4>
 					<p>
 						Variables are dynamic placeholders that can be used in text, actions, and feedbacks. They automatically
 						update with live content, making it easy to create customized and responsive displays.

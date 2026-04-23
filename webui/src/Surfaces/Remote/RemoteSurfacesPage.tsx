@@ -1,10 +1,9 @@
-import React from 'react'
 import { CCol, CRow } from '@coreui/react'
-import { MyErrorBoundary } from '~/Resources/Error.js'
-import { observer } from 'mobx-react-lite'
 import { Outlet, useMatchRoute } from '@tanstack/react-router'
-import { RemoteSurfacesList } from './RemoteSurfaces/RemoteSurfacesList.js'
+import { observer } from 'mobx-react-lite'
+import { MyErrorBoundary } from '~/Resources/Error.js'
 import { SurfaceDiscoveryContextProvider } from '../Discovery/SurfaceDiscoveryContext.js'
+import { RemoteSurfacesList } from './RemoteSurfaces/RemoteSurfacesList.js'
 
 export const RemoteSurfacesPage = observer(function RemoteSurfacesPage(): React.JSX.Element {
 	const matchRoute = useMatchRoute()

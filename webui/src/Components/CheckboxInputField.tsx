@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react'
 import { CFormCheck } from '@coreui/react'
+import { useCallback } from 'react'
 
 interface CheckboxInputFieldProps {
 	tooltip?: string

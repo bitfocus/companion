@@ -1,14 +1,14 @@
+import { action, observable } from 'mobx'
 import type {
 	ClientDevicesListItem,
-	OutboundSurfaceInfo,
-	SurfacesUpdate,
-	OutboundSurfacesUpdate,
 	ClientSurfaceItem,
 	OutboundSurfaceCollection,
+	OutboundSurfaceInfo,
+	OutboundSurfacesUpdate,
+	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { action, observable } from 'mobx'
-import { assertNever } from '~/Resources/util.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { assertNever } from '~/Resources/util.js'
 import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
 
 export class SurfacesStore {

@@ -1,6 +1,5 @@
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import React from 'react'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 

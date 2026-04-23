@@ -1,5 +1,4 @@
 import { CogIcon } from 'lucide-react'
-import React from 'react'
 import {
 	Sidebar,
 	SidebarContent,
@@ -10,8 +9,8 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from '~/components/ui/sidebar.js'
-import { SectionDefinitions } from './Sections'
 import { useSectionVisibility } from './contexts/SectionVisibilityContext'
+import { SectionDefinitions } from './Sections'
 
 export function AppSidebar(): JSX.Element {
 	const { activeSectionId } = useSectionVisibility()

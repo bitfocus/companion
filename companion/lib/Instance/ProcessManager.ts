@@ -1,32 +1,32 @@
-import LogController, { type Logger } from '../Log/Controller.js'
-import PQueue from 'p-queue'
-import { nanoid } from 'nanoid'
-import path from 'path'
-import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js'
-import type { ConnectionChildHandlerApi, ConnectionChildHandlerDependencies } from './Connection/ChildHandlerApi.js'
+import { createRequire } from 'node:module'
+import os from 'node:os'
+import path from 'node:path'
 import fs from 'fs-extra'
-import os from 'os'
-import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
-import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
-import type { InstanceModules } from './Modules.js'
-import type { InstanceConfigStore } from './ConfigStore.js'
+import { nanoid } from 'nanoid'
+import PQueue from 'p-queue'
+import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import {
 	isModuleApiVersionCompatible,
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { createRequire } from 'module'
-import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
+import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import type { SomeModuleVersionInfo } from './Types.js'
-import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
-import { isPackaged } from '../Resources/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
+import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import LogController, { type Logger } from '../Log/Controller.js'
+import { isPackaged } from '../Resources/Util.js'
+import type { InstanceConfigStore } from './ConfigStore.js'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
+import type { ConnectionChildHandlerApi, ConnectionChildHandlerDependencies } from './Connection/ChildHandlerApi.js'
+import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js'
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
 import { PreserveEnvVars } from './Environment.js'
-import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
+import type { InstanceModules } from './Modules.js'
+import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
+import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
+import type { SomeModuleVersionInfo } from './Types.js'
 
 /**
  * A backoff sleep strategy
@@ -693,7 +693,13 @@ export class InstanceProcessManager {
 		env: Record<string, string>
 	} | null> {
 		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
-		const jsFullPath = path.normalize(path.join(moduleInfo.basePath, jsPath))
+		const jsFullPath = path.resolve(path.join(moduleInfo.basePath, jsPath))
+		const relativeToBase = path.relative(moduleInfo.basePath, jsFullPath)
+		if (relativeToBase.startsWith('..') || path.isAbsolute(relativeToBase)) {
+			this.#logger.error(`Module entrypoint "${jsFullPath}" is outside module directory`)
+			return null
+		}
+
 		if (!(await fs.pathExists(jsFullPath))) {
 			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
 			return null

@@ -1,6 +1,6 @@
+import OSC, { type OscReceivedMessage } from 'osc'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { ServiceBase } from './Base.js'
-import OSC, { type OscReceivedMessage } from 'osc'
 
 /**
  * Abstract class providing base functionality for OSC services.

@@ -1,22 +1,22 @@
-import React, { useCallback, useContext } from 'react'
 import { CCallout } from '@coreui/react'
+import { faArrowRight, faLifeRing } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { faLifeRing, faArrowRight } from '@fortawesome/free-solid-svg-icons'
-import { NonIdealState } from '~/Components/NonIdealState.js'
-import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
+import { createContext, memo, useCallback, useContext } from 'react'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
-import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import {
 	useConnectionLeafTree,
-	type ConnectionLeafItem,
 	type CollectionGroupMeta,
+	type ConnectionLeafItem,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
-import { assertNever } from '@companion-app/shared/Util.js'
+import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
-const PresetsStoreContext = React.createContext<PresetDefinitionsStore | null>(null)
+const PresetsStoreContext = createContext<PresetDefinitionsStore | null>(null)
 
 const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const presetsDefinitionsStore = useContext(PresetsStoreContext)
@@ -69,7 +69,7 @@ const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeaf
 	)
 })
 
-const PresetGroupHeader = React.memo(function PresetGroupHeader({
+const PresetGroupHeader = memo(function PresetGroupHeader({
 	node,
 }: CollapsibleTreeHeaderProps<ConnectionLeafItem, CollectionGroupMeta>) {
 	return <span>{node.metadata.label}</span>

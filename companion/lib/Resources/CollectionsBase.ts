@@ -1,9 +1,9 @@
-import type { DataStoreTableView } from '../Data/StoreBase.js'
-import { nanoid } from 'nanoid'
-import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import { publicProcedure, toIterable } from '../UI/TRPC.js'
 import EventEmitter from 'node:events'
+import { nanoid } from 'nanoid'
 import z from 'zod'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import type { DataStoreTableView } from '../Data/StoreBase.js'
+import { publicProcedure, toIterable } from '../UI/TRPC.js'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {
 	readonly #dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>

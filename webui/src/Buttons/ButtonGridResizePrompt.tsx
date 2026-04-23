@@ -1,10 +1,10 @@
 import { CAlert, CButton } from '@coreui/react'
-import { observer } from 'mobx-react-lite'
-import React, { useContext } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faExpand } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { observer } from 'mobx-react-lite'
+import { useContext } from 'react'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt(): React.ReactNode {
 	const { surfaces, userConfig } = useContext(RootAppStoreContext)

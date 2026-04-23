@@ -1,8 +1,7 @@
-import React, { useCallback, useRef, type ElementType } from 'react'
 import { CButton } from '@coreui/react'
-import type { SizeProp } from '@fortawesome/fontawesome-svg-core'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useCallback, useRef, type ElementType } from 'react'
 import { InlineHelp } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
@@ -12,9 +11,8 @@ interface CloseButtonProps {
 }
 
 export interface ContextHelpButtonProps {
-	tooltip: string | React.ReactNode
+	children?: React.ReactNode
 	action?: `/user-guide/${string}` | (() => void)
-	size?: SizeProp
 }
 
 /*
@@ -30,7 +28,7 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 			aria-label="Close"
 		>
 			{/* The inline styling here is to make the icon square */}
-			<FontAwesomeIcon icon={faTimes} size="lg" style={{ marginRight: '1px' }} />
+			<FontAwesomeIcon icon={faTimes} />
 		</CButton>
 	)
 }
@@ -43,7 +41,7 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
  - size: a FontAwesome size class such as lg or 2xl. The default size is intended for panel headers.
  The button is given a class with the size appended, such as context-help-button-2xl
 */
-export function ContextHelpButton({ tooltip, action, size = '2xl' }: ContextHelpButtonProps): React.JSX.Element {
+export function ContextHelpButton({ children, action }: ContextHelpButtonProps): React.JSX.Element {
 	// First, a little trick to handle both keyboard navigation, in which the "hover help" should show up on focus,
 	// and "click" (including "enter"), which will open a new tab and should close the hover-help.
 	// Without removeFocus() the help icon will retain focus, and hover-help will still show when the user returns to this tab.
@@ -62,8 +60,8 @@ export function ContextHelpButton({ tooltip, action, size = '2xl' }: ContextHelp
 		[removeFocus]
 	)
 
-	const helpButtonProps =
-		typeof action === 'string'
+	const helpButtonProps = {
+		...(typeof action === 'string'
 			? {
 					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
 					href: makeAbsolutePath(action),
@@ -74,10 +72,12 @@ export function ContextHelpButton({ tooltip, action, size = '2xl' }: ContextHelp
 				}
 			: action !== undefined
 				? { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, action) }
-				: {}
+				: {}),
+		...(children ? {} : { title: 'Open help in a new tab', 'aria-label': 'Open help in a new tab' }),
+	}
 
-	if (typeof tooltip === 'string' && action && !/click/i.test(tooltip)) {
-		tooltip += ' Click the icon for more details.'
+	if (children && typeof children === 'string' && action && !/click/i.test(children)) {
+		children += ' Click the icon for further help.'
 	}
 
 	// note some styling here needs to be on the FontAwesomeIcon, not .context-help-button or the CButton,
@@ -86,12 +86,26 @@ export function ContextHelpButton({ tooltip, action, size = '2xl' }: ContextHelp
 	// NOTE: removed the float_right class here -- we end up fighting against its margin and it doesn't seem to do much else...
 	return (
 		<>
-			<InlineHelp help={tooltip}>
-				<CButton variant="ghost" className={`context-help-button-${size} p-0`} {...helpButtonProps}>
-					<FontAwesomeIcon icon={faQuestionCircle} size={size} aria-label="context help" />
+			<HelpWrapper usePopover={!!children} help={children}>
+				<CButton variant="ghost" className={`context-help-button-btn p-0`} {...helpButtonProps}>
+					<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
 				</CButton>
-			</InlineHelp>
-			<div ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />
+			</HelpWrapper>
+			<span ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />
 		</>
+	)
+}
+
+interface HelpWrapperProps extends React.ComponentProps<typeof InlineHelp> {
+	usePopover: boolean
+	children: React.ReactNode
+}
+function HelpWrapper({ usePopover, children, ...props }: HelpWrapperProps) {
+	return usePopover ? (
+		<InlineHelp {...props} className="context-help-button">
+			{children}
+		</InlineHelp>
+	) : (
+		<span className="context-help-button">{children}</span>
 	)
 }

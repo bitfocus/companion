@@ -1,28 +1,28 @@
-import React, { useCallback, useContext, useRef } from 'react'
 import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlug, faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-import { ConnectionVariablesModal, type ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
-import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useRef } from 'react'
+import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
-import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
-import { useConnectionCollectionsApi } from './ConnectionListApi.js'
-
-import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
-import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
-import { useComputed } from '~/Resources/util.js'
-import { ConnectionsTableRow } from './ConnectionsTableRow.js'
-import { useNavigate } from '@tanstack/react-router'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
+import { ConnectionVariablesModal, type ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
+import { useConnectionCollectionsApi } from './ConnectionListApi.js'
+import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
+import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 
 export interface VisibleConnectionsState {
 	disabled: boolean
@@ -87,7 +87,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="connections-list-header fixed-header">
-				<h4>Connections</h4>
+				<h4 className="btn-inline">
+					Connections <ContextHelpButton action="/user-guide/config/connections" />
+				</h4>
 
 				<p>
 					When you want to control devices or software with Companion, you need to add a connection to let Companion

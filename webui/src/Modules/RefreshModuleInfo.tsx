@@ -1,11 +1,11 @@
-import React, { useCallback, useContext } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { useCallback, useContext } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface RefreshModulesListProps {
 	moduleType: ModuleInstanceType

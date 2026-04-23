@@ -9,54 +9,54 @@
  * this program.
  */
 
-import { InstanceDefinitions } from './Definitions.js'
-import { InstanceProcessManager } from './ProcessManager.js'
-import { InstanceStatus } from './Status.js'
+import { exec } from 'node:child_process'
+import { EventEmitter } from 'node:events'
+import path from 'node:path'
+import { promisify } from 'node:util'
+import express from 'express'
+import fs from 'fs-extra'
+import pDebounce from 'p-debounce'
+import { UdevRuleGenerator } from 'udev-generator'
+import z from 'zod'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
-import { InstanceModules } from './Modules.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
-import type { VariablesController } from '../Variables/Controller.js'
-import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
+	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
 	type InstanceConfig,
-	InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
-import type { ModuleManifest } from '@companion-module/base/manifest'
-import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { InstanceConfigStore, type AddInstanceProps } from './ConfigStore.js'
-import { EventEmitter } from 'events'
-import LogController from '../Log/Controller.js'
-import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
-import type { ServiceOscSender } from '../Service/OscSender.js'
-import { ActionRecorder } from './ActionRecorder.js'
-import type { DataDatabase } from '../Data/Database.js'
-import express from 'express'
-import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
-import { ModuleStoreService } from './ModuleStore.js'
-import type { AppInfo } from '../Registry.js'
-import type { DataCache } from '../Data/Cache.js'
-import { ConnectionsCollections } from './Connection/Collections.js'
-import type { Complete } from '@companion-module/base'
-import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import z from 'zod'
-import { createSurfacesTrpcRouter } from './Surface/TrpcRouter.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import type { ModuleManifestOldExt } from '@companion-app/shared/Model/ModuleManifest.js'
 import type {
 	ClientSurfaceInstanceConfig,
 	ClientSurfaceInstancesUpdate,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
-import { SurfaceInstanceCollections } from './Surface/Collections.js'
-import type { SurfaceController } from '../Surface/Controller.js'
-import pDebounce from 'p-debounce'
-import { UdevRuleGenerator } from 'udev-generator'
-import fs from 'fs-extra'
-import path from 'path'
-import { exec } from 'child_process'
-import { promisify } from 'util'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { ModuleManifestOldExt } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { Complete } from '@companion-module/base'
+import type { ModuleManifest } from '@companion-module/base/manifest'
+import type { IControlStore } from '../Controls/IControlStore.js'
+import type { DataCache } from '../Data/Cache.js'
+import type { DataDatabase } from '../Data/Database.js'
+import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
+import type { ServiceOscSender } from '../Service/OscSender.js'
+import type { SurfaceController } from '../Surface/Controller.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import { ActionRecorder } from './ActionRecorder.js'
+import { InstanceConfigStore, type AddInstanceProps } from './ConfigStore.js'
+import { ConnectionsCollections } from './Connection/Collections.js'
+import { InstanceSharedUdpManager } from './Connection/SharedUdpManager.js'
+import { createConnectionsTrpcRouter } from './Connection/TrpcRouter.js'
+import { InstanceDefinitions } from './Definitions.js'
+import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
+import { InstanceModules } from './Modules.js'
+import { ModuleStoreService } from './ModuleStore.js'
+import { InstanceProcessManager } from './ProcessManager.js'
+import { InstanceStatus } from './Status.js'
+import { SurfaceInstanceCollections } from './Surface/Collections.js'
+import { createSurfacesTrpcRouter } from './Surface/TrpcRouter.js'
 
 const execAsync = promisify(exec)
 
@@ -565,6 +565,29 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Force a restart of a running connection process
+	 * @returns true if the connection was found and restart was triggered
+	 */
+	restartConnection(id: string): boolean {
+		const connectionConfig = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
+		if (!connectionConfig) return false
+
+		if (connectionConfig.enabled === false) {
+			this.#logger.warn(`Cannot restart disabled connection "${connectionConfig.label}"`)
+			return false
+		}
+
+		if (!this.#connectionCollectionsController.isCollectionEnabled(connectionConfig.collectionId)) {
+			this.#logger.warn(`Cannot restart connection "${connectionConfig.label}" in disabled collection`)
+			return false
+		}
+
+		this.#logger.info(`Restarting connection "${connectionConfig.label}"`)
+		this.#queueUpdateInstanceState(id, false, true)
+		return true
 	}
 
 	async removeConnection(connectionId: string): Promise<void> {

@@ -1,11 +1,11 @@
 import { CButton, CInputGroup } from '@coreui/react'
-import React, { useCallback, useContext, useMemo } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
-import Select from 'react-select'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useMemo } from 'react'
+import Select from 'react-select'
 import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ButtonGridHeaderProps {
 	pageNumber: number

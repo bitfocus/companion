@@ -1,6 +1,6 @@
 import OSC from 'osc'
-import { ServiceOscBase } from './OscBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import { ServiceOscBase } from './OscBase.js'
 
 /**
  * Class providing OSC send services.

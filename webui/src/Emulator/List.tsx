@@ -1,12 +1,12 @@
-import React, { useCallback } from 'react'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { CAlert, CButton, CCol, CContainer, CRow } from '@coreui/react'
-import { observer } from 'mobx-react-lite'
+import { faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { trpc } from '~/Resources/TRPC'
+import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
 import { NonIdealState } from '~/Components/NonIdealState'
-import { faGamepad } from '@fortawesome/free-solid-svg-icons'
+import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { trpc } from '~/Resources/TRPC'
 
 export const EmulatorList = observer(function EmulatorList() {
 	const navigate = useNavigate({ from: '/emulator' })

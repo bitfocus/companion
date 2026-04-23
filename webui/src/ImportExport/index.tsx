@@ -1,17 +1,18 @@
-import React, { useCallback, useContext, useRef, useState } from 'react'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { CAlert, CButton, CCallout } from '@coreui/react'
-import { ResetWizardModal, type ResetWizardModalRef } from './Reset.js'
-import { ExportWizardModal, type ExportWizardModalRef } from './Export.js'
-import { ImportWizard } from './Import/index.js'
-import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
-import { observer } from 'mobx-react-lite'
+import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useRef, useState } from 'react'
+import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ExportWizardModal, type ExportWizardModalRef } from './Export.js'
+import { ImportWizard } from './Import/index.js'
+import { ResetWizardModal, type ResetWizardModalRef } from './Reset.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_config_file'
 
@@ -93,6 +94,7 @@ export const ImportExportPage = observer(function ImportExport() {
 										const [err, config] = await completePrepareImportMutation.mutateAsync({
 											sessionId,
 											expectedChecksum: hashText,
+											userData: null,
 										})
 
 										if (err || !config) {
@@ -172,7 +174,10 @@ export const ImportExportPage = observer(function ImportExport() {
 			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
-			<h4>Import / Export Configuration</h4>
+			<h4 className="btn-inline">
+				Import / Export Configuration
+				<ContextHelpButton action="/user-guide/config/import-export" />
+			</h4>
 			<p>On this page, you can import, export, and reset all settings stored in your Companion installation.</p>
 
 			<CCallout color="success">

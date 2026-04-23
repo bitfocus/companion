@@ -9,11 +9,11 @@
  * this program.
  */
 
+import type { DataDatabase } from '../Data/Database.js'
+import { router } from '../UI/TRPC.js'
 import { VariablesCustomVariable } from './CustomVariable.js'
 import { VariablesInstanceDefinitions } from './InstanceDefinitions.js'
 import { VariablesValues } from './Values.js'
-import type { DataDatabase } from '../Data/Database.js'
-import { router } from '../UI/TRPC.js'
 
 export class VariablesController {
 	readonly custom: VariablesCustomVariable

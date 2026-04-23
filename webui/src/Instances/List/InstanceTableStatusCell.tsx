@@ -1,10 +1,9 @@
-import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { CSpinner } from '@coreui/react'
-import { faCheckCircle, faTriangleExclamation, faPowerOff } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faPowerOff, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React from 'react'
-import { InlineHelp } from '~/Components/InlineHelp.js'
 import { observer } from 'mobx-react-lite'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 
 interface InstanceTableStatusCellProps {
 	isEnabled: boolean

@@ -1,7 +1,7 @@
-import type { DataStoreBase } from '../StoreBase.js'
-import type { Logger } from '../../Log/Controller.js'
-import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { SomeExportv4 } from '@companion-app/shared/Model/ExportModelv4.js'
+import type { Logger } from '../../Log/Controller.js'
+import type { DataStoreBase } from '../StoreBase.js'
 
 /**
  * do the database upgrades to convert from the v6 to the v7 format

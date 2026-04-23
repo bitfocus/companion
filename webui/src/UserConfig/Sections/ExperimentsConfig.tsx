@@ -1,8 +1,7 @@
-import React from 'react'
 import { CAlert, CFormSwitch } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import type { UserConfigProps } from '../Components/Common.js'
+import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 
 export const ExperimentsConfig = observer(function ExperimentsConfig(_props: UserConfigProps) {
 	return (

@@ -1,19 +1,19 @@
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
-import type { TriggerCollections } from './TriggerCollections.js'
+import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
-import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
 import z from 'zod'
-import { validateTriggerControlId } from './Util.js'
-import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
-import type EventEmitter from 'events'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientTriggerData,
 	TriggersUpdate,
 	TriggersUpdateInitOp,
 } from '@companion-app/shared/Model/TriggerModel.js'
+import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
+import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
+import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import type { TriggerCollections } from './TriggerCollections.js'
+import { validateTriggerControlId } from './Util.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createTriggersTrpcRouter(

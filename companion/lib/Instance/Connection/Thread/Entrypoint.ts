@@ -1,25 +1,25 @@
 /* eslint-disable n/no-process-exit */
+import fs from 'node:fs/promises'
+import type { ModuleManifest } from '@companion-module/base/manifest'
+import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type {
-	ModuleToHostEventsNew,
-	HostToModuleEventsNew,
 	ExecuteActionResponseMessage,
 	GetConfigFieldsResponseMessage,
 	HandleHttpRequestResponseMessage,
+	HostToModuleEventsNew,
+	InitResponseMessage,
 	LearnActionResponseMessage,
 	LearnFeedbackResponseMessage,
-	InitResponseMessage,
-	UpdateFeedbackInstancesMessage,
+	ModuleToHostEventsNew,
 	UpdateActionInstancesMessage,
+	UpdateFeedbackInstancesMessage,
 	UpgradeActionsResponse,
 	UpgradeFeedbacksResponse,
 } from '../IpcTypesNew.js'
-import { registerLoggingSink, createModuleLogger, InstanceWrapper } from '@companion-module/host'
-import type { ModuleManifest } from '@companion-module/base/manifest'
-import fs from 'fs/promises'
-import { HostContext } from './HostContext.js'
 import { translateConnectionConfigFields } from './ConfigFields.js'
-import { importModuleFromPath } from '../../Common/ThreadUtil.js'
+import { HostContext } from './HostContext.js'
 
 const moduleEntrypoint = process.env.MODULE_ENTRYPOINT
 if (!moduleEntrypoint) throw new Error('Module initialise is missing MODULE_ENTRYPOINT')

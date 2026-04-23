@@ -1,9 +1,10 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { ServiceOscApi } from '../../lib/Service/OscApi.js'
-import { rgb } from '../../lib/Resources/Util.js'
-import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
+import { OSCMetaArgument } from '@companion-module/host'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import { rgb } from '../../lib/Resources/Util.js'
+import { ServiceOscApi } from '../../lib/Service/OscApi.js'
+import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -611,7 +612,7 @@ describe('OscApi', () => {
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
-				mockControl.setCurrentStep = vi.fn<typeof mockControl.setCurrentStep>().mockReturnValue(true)
+				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
@@ -632,7 +633,7 @@ describe('OscApi', () => {
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
-				mockControl.setCurrentStep = vi.fn<typeof mockControl.setCurrentStep>().mockReturnValue(true)
+				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
 				router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })
@@ -764,7 +765,9 @@ describe('OscApi', () => {
 				})
 			})
 
-			async function runColor(args, expected) {
+			async function runColor(args: OSCMetaArgument[], expected: number | false) {
+				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
+
 				const { router, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 
@@ -794,15 +797,22 @@ describe('OscApi', () => {
 			}
 
 			test('ok hex', async () => {
-				await runColor([{ value: '#abcdef' }], rgb('ab', 'cd', 'ef', 16))
+				await runColor([{ type: 's', value: '#abcdef' }], rgb('ab', 'cd', 'ef', 16))
 			})
 
 			test('ok separate', async () => {
-				await runColor([{ value: 5 }, { value: 8 }, { value: 11 }], rgb(5, 8, 11))
+				await runColor(
+					[
+						{ type: 'i', value: 5 },
+						{ type: 'i', value: 8 },
+						{ type: 'i', value: 11 },
+					],
+					rgb(5, 8, 11)
+				)
 			})
 
 			test('ok css', async () => {
-				await runColor([{ value: 'rgb(1,4,5)' }], rgb(1, 4, 5))
+				await runColor([{ type: 's', value: 'rgb(1,4,5)' }], rgb(1, 4, 5))
 			})
 		})
 
@@ -822,7 +832,9 @@ describe('OscApi', () => {
 				})
 			})
 
-			async function runColor(args, expected) {
+			async function runColor(args: OSCMetaArgument[], expected: number | false) {
+				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
+
 				const { router, serviceApi } = createService()
 				serviceApi.getControlIdAt.mockReturnValue('abc')
 
@@ -852,15 +864,22 @@ describe('OscApi', () => {
 			}
 
 			test('ok hex', async () => {
-				await runColor([{ value: '#abcdef' }], rgb('ab', 'cd', 'ef', 16))
+				await runColor([{ type: 's', value: '#abcdef' }], rgb('ab', 'cd', 'ef', 16))
 			})
 
 			test('ok separate', async () => {
-				await runColor([{ value: 5 }, { value: 8 }, { value: 11 }], rgb(5, 8, 11))
+				await runColor(
+					[
+						{ type: 'i', value: 5 },
+						{ type: 'i', value: 8 },
+						{ type: 'i', value: 11 },
+					],
+					rgb(5, 8, 11)
+				)
 			})
 
 			test('ok css', async () => {
-				await runColor([{ value: 'rgb(1,4,5)' }], rgb(1, 4, 5))
+				await runColor([{ type: 's', value: 'rgb(1,4,5)' }], rgb(1, 4, 5))
 			})
 		})
 	})
