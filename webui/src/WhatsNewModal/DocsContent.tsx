@@ -8,28 +8,23 @@ interface DocsContentProps {
 	file: string
 }
 
-const components: Components = {
-	img: (props: ComponentProps<'img'>) => {
-		// 1. Destructure and "throw away" img-only props that break <video>
-		// 2. Keep 'src' and 'alt' for logic
-		// 3. Collect everything else in 'rest'
-		const { src, alt, loading: _l, decoding: _d, fetchPriority: _f, ...rest } = props
-
+const ImgOrVideo: Components = {
+	// note: react-markdown does not currently pass other img-specific props such as width/height
+	img: ({ src, alt }: ComponentProps<'img'>) => {
 		// Check if the file extension is a video format
 		const isVideo = src?.match(/\.(mp4|webm|ogg)$/i)
 
 		if (isVideo) {
 			const vtype = isVideo[1].toLowerCase()
 			return (
-				<video controls aria-label={alt} {...(rest as ComponentProps<'video'>)}>
+				<video controls preload="metadata" aria-label={alt || 'Video content'}>
 					<source src={src} type={`video/${vtype}`} />
 					Your browser does not support the video tag.
 				</video>
 			)
+		} else {
+			return <img src={src} alt={alt} />
 		}
-
-		// Fallback to standard image rendering
-		return <img src={src} alt={alt} {...props} />
 	},
 }
 
@@ -56,7 +51,7 @@ export function DocsContent({ file }: DocsContentProps): React.JSX.Element {
 					}}
 					children={data}
 					remarkPlugins={[remarkGfm]}
-					components={components}
+					components={ImgOrVideo}
 				/>
 			)}
 		</div>
