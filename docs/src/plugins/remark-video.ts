@@ -55,6 +55,7 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 			name: 'video',
 			attributes: [
 				{ type: 'mdxJsxAttribute', name: 'controls', value: null },
+				{ type: 'mdxJsxAttribute', name: 'muted', value: null },
 				{ type: 'mdxJsxAttribute', name: 'preload', value: 'metadata' },
 				{ type: 'mdxJsxAttribute', name: 'aria-label', value: node.alt ?? 'Video content' },
 			],

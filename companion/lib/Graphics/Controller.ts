@@ -30,6 +30,7 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { isPackaged } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
+import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import type { ImageResult } from './ImageResult.js'
 import { GraphicsRenderer } from './Renderer.js'
@@ -53,15 +54,6 @@ export interface GraphicsOptions {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
 	remove_topbar: boolean
-}
-
-/**
- * Generate full path to a font file, handling both packaged and non-packaged environments
- */
-function generateFontUrl(fontFilename: string): string {
-	const fontPath = isPackaged() ? 'assets/Fonts' : '../../../assets/Fonts'
-	// we could simplify by using import.meta.dirname
-	return path.join(import.meta.dirname, fontPath, fontFilename)
 }
 
 interface GraphicsControllerEvents {
@@ -387,20 +379,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		this.#logger.info('Loading fonts')
 
-		GlobalFonts.registerFromPath(generateFontUrl('Arimo-Regular.ttf'), 'Companion-sans')
-		// typos:disable-line wdth is part of the filename
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMono-wdth-wght.ttf'), 'Companion-mono')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSymbols-wght.ttf'), 'Companion-symbols1')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSymbols2-Regular.ttf'), 'Companion-symbols2')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansMath-Regular.ttf'), 'Companion-symbols3')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoMusic-Regular.ttf'), 'Companion-symbols4')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansLinearA-Regular.ttf'), 'Companion-symbols5')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansLinearB-Regular.ttf'), 'Companion-symbols6')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansGurmukhi-Regular.ttf'), 'Companion-gurmukhi')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansSC-Regular.ttf'), 'Companion-simplified-chinese')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoSansKR-Regular.ttf'), 'Companion-korean')
-		GlobalFonts.registerFromPath(generateFontUrl('NotoColorEmoji-compat.ttf'), 'Companion-emoji')
-		GlobalFonts.registerFromPath(generateFontUrl('pf_tempesta_seven.ttf'), '5x7')
+		for (const definition of FONT_DEFINITIONS) {
+			GlobalFonts.registerFromPath(definition.pathOnDisk, definition.name)
+		}
 
 		this.#logger.info('Fonts loaded')
 

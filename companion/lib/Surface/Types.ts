@@ -86,7 +86,7 @@ export interface SurfaceHandlerDependencies {
 	 */
 	readonly graphics: GraphicsController
 	/**
-	 * The core page controller
+	 * The core page store
 	 */
 	readonly pageStore: IPageStore
 	/**

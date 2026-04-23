@@ -7,6 +7,7 @@ import {
 	exprVal,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
+import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { VariablesCache, VariableValueData, VisitEntityOptionValueOptions } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 
@@ -1494,6 +1495,122 @@ describe('VariablesAndExpressionParser', () => {
 				expect(result.parsedOptions).toEqual({})
 			}
 			expect(result.referencedVariableIds.size).toBe(0)
+		})
+	})
+
+	describe('createChildParser', () => {
+		it('child inherits raw variable values from parent', () => {
+			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
+			const child = parser.createChildParser({})
+
+			const result = child.parseVariables('$(test:var1)')
+			expect(result.text).toBe('value1')
+			expect(result.variableIds).toContain('test:var1')
+		})
+
+		it('child inherits thisValues from parent', () => {
+			const thisValues: VariablesCache = new Map([['$(custom:val)', 'from-this']])
+			const parser = new VariablesAndExpressionParser(null as any, {}, thisValues, null, null)
+			const child = parser.createChildParser({})
+
+			const result = child.parseVariables('$(custom:val)')
+			expect(result.text).toBe('from-this')
+		})
+
+		it('child inherits parent override values', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
+				'$(override:val)': 'parent-override',
+			})
+			const child = parser.createChildParser({})
+
+			const result = child.parseVariables('$(override:val)')
+			expect(result.text).toBe('parent-override')
+		})
+
+		it('child new overrides take precedence over parent overrides', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
+				'$(override:val)': 'parent-override',
+			})
+			const child = parser.createChildParser({ '$(override:val)': 'child-override' })
+
+			const result = child.parseVariables('$(override:val)')
+			expect(result.text).toBe('child-override')
+		})
+
+		it('non-overlapping parent overrides remain accessible in child', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
+				'$(override:parent-only)': 'parent-value',
+			})
+			const child = parser.createChildParser({ '$(override:child-only)': 'child-value' })
+
+			expect(child.parseVariables('$(override:parent-only)').text).toBe('parent-value')
+			expect(child.parseVariables('$(override:child-only)').text).toBe('child-value')
+		})
+
+		it('child overrides do not affect parent', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const child = parser.createChildParser({ '$(override:new)': 'child-value' })
+
+			expect(parser.parseVariables('$(override:new)').text).toBe('$NA')
+			expect(child.parseVariables('$(override:new)').text).toBe('child-value')
+		})
+
+		it('child inherits local variables from parent', () => {
+			const mockEntity = {
+				localVariableName: 'local:myvar',
+				feedbackValue: 'local-value',
+				type: EntityModelType.Feedback,
+				connectionId: 'non-internal',
+				definitionId: 'some-def',
+			} as unknown as ControlEntityInstance
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), [mockEntity], null)
+			const child = parser.createChildParser({})
+
+			const result = child.parseVariables('$(local:myvar)')
+			expect(result.text).toBe('local-value')
+		})
+
+		it('inherited local variables take precedence over override values with the same key', () => {
+			// localValues are checked before overrideVariableValues in the lookup chain
+			const mockEntity = {
+				localVariableName: 'local:myvar',
+				feedbackValue: 'local-value',
+				type: EntityModelType.Feedback,
+				connectionId: 'non-internal',
+				definitionId: 'some-def',
+			} as unknown as ControlEntityInstance
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), [mockEntity], null)
+			const child = parser.createChildParser({ '$(local:myvar)': 'override-value' })
+
+			// localValues (inherited) take priority over overrideVariableValues
+			const result = child.parseVariables('$(local:myvar)')
+			expect(result.text).toBe('local-value')
+		})
+
+		it('child executeExpression works with inherited raw variables', () => {
+			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
+			const child = parser.createChildParser({})
+
+			const result = child.executeExpression('$(test:num) + 1', undefined)
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.value).toBe(43)
+		})
+
+		it('child executeExpression uses child override values', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const child = parser.createChildParser({ '$(custom:num)': 100 })
+
+			const result = child.executeExpression('$(custom:num) * 2', undefined)
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.value).toBe(200)
+		})
+
+		it('child override shadows parent raw variable', () => {
+			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
+			const child = parser.createChildParser({ '$(test:var1)': 'shadowed' })
+
+			expect(child.parseVariables('$(test:var1)').text).toBe('shadowed')
+			expect(parser.parseVariables('$(test:var1)').text).toBe('value1')
 		})
 	})
 })

@@ -1,5 +1,6 @@
 export { ColorInputField } from './ColorInputField.js'
 export { PNGInputField } from './PNGInputField.js'
+export { PngImageInputField } from './PngImageInputField.js'
 export { AlignmentInputField } from './AlignmentInputField.js'
 export { CheckboxInputField } from './CheckboxInputField.js'
 export { DropdownInputField } from './DropdownInputField.js'

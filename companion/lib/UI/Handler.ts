@@ -68,6 +68,7 @@ export class UIHandler {
 		this.#bindToHttpServer(this.#http)
 
 		this.#wss.on('connection', (ws) => {
+			// TODO: make this the same as ctx.clientId
 			const socketId = nanoid()
 			this.#logger.debug(`trpc socket ${socketId} connected`)
 			ws.once('close', () => {

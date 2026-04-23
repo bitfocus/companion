@@ -9,7 +9,7 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
-import { trpc, trpcClient, useMutationExt, type RouterInputs } from '~/Resources/TRPC.js'
+import { trpc, trpcClient, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
 import { isCollectionEnabled } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getSurfaceInstanceCannotEnableReason } from '../SurfaceInstanceValidation.js'
@@ -70,9 +70,9 @@ function useInstanceEditPanelService(
 	const navigate = useNavigate()
 
 	const closePanel = useCallback(() => {
-		// it's always safe to return to /surfaces/configured/integrations (i.e. it will always display correctly)
+		// it's always safe to return to /surfaces/integrations (i.e. it will always display correctly)
 		// if the window is wide-enough, ConfigureSurfacesPage will remove the last part of the path.
-		void navigate({ to: '/surfaces/configured/integrations' })
+		void navigate({ to: '/surfaces/integrations' })
 	}, [navigate])
 
 	const setConfigMutation = useMutationExt(trpc.instances.surfaces.setConfig.mutationOptions())
@@ -105,7 +105,7 @@ function useInstanceEditPanelService(
 		): Promise<string | null> => {
 			const saveLabel = panelStore.labelValue
 
-			const saveConfigProps: RouterInputs['instances']['surfaces']['setConfig'] = {
+			const saveConfigProps: RouterInput['instances']['surfaces']['setConfig'] = {
 				instanceId: instanceId,
 				label: saveLabel,
 				enabled: panelStore.enabled,

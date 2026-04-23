@@ -81,10 +81,10 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 })
 
 function SettingsPanelTitleBar() {
-	const navigate = useNavigate({ from: '/surfaces/configured' })
+	const navigate = useNavigate({ from: '/surfaces' })
 	// note that the close button is hidden when the window is wide enough.
 	const doClose = useCallback(() => {
-		void navigate({ to: '/surfaces/configured' })
+		void navigate({ to: '/surfaces' })
 	}, [navigate])
 
 	return (

@@ -17,7 +17,7 @@ const ImgOrVideo: Components = {
 		if (isVideo) {
 			const vtype = isVideo[1].toLowerCase()
 			return (
-				<video controls preload="metadata" aria-label={alt || 'Video content'}>
+				<video controls muted preload="metadata" aria-label={alt || 'Video content'}>
 					<source src={src} type={`video/${vtype}`} />
 					Your browser does not support the video tag.
 				</video>

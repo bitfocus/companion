@@ -92,7 +92,7 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "node-gyp": "^12.1.0",
+    "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
   },
   "dependenciesMeta": {
