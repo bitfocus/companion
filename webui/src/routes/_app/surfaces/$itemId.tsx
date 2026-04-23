@@ -6,6 +6,9 @@ import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { SurfaceEditPanel } from '~/Surfaces/EditPanel.js'
 
+/**
+ * /surfaces/$itemId - editing a configured surface
+ */
 const RouteComponent = observer(function RouteComponent() {
 	const { surfaces } = useContext(RootAppStoreContext)
 	const { itemId } = Route.useParams()
@@ -36,19 +39,19 @@ const RouteComponent = observer(function RouteComponent() {
 
 	if (!itemInfo) {
 		// Redirect if itemId is not valid
-		// condition was: itemId && !itemInfo but if itemId is missing, we wouldn't reach this route: it would go to index.tsx
-		return <Navigate to="/surfaces/configured" replace />
+		// condition was: itemId && !itemInfo, but if itemId is missing the route index.tsx absorbs it
+		return <Navigate to="/surfaces" replace />
 	} else {
-		// note: data isn't ready SurfaceEditPanel will indicate it...
-		// but in truth we'd never get here in that cse because Companion displays a "loading" bar until data is ready.
+		// note: if data isn't ready SurfaceEditPanel will indicate it...
+		// but in truth we'd never get here in that case because Companion displays a "loading" bar until data is ready.
 		return (
 			<MyErrorBoundary>
-				<SurfaceEditPanel key={itemId} surfaceId={itemInfo?.surfaceId ?? null} groupId={itemInfo?.groupId ?? null} />
+				<SurfaceEditPanel key={itemId} surfaceId={itemInfo.surfaceId ?? null} groupId={itemInfo.groupId ?? null} />
 			</MyErrorBoundary>
 		)
 	}
 })
 
-export const Route = createFileRoute('/_app/surfaces/configured/$itemId')({
+export const Route = createFileRoute('/_app/surfaces/$itemId')({
 	component: RouteComponent,
 })

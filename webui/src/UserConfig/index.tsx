@@ -20,7 +20,7 @@ export function SettingsSelectPage(): React.JSX.Element {
 						<SettingsLinkCard
 							label="Surfaces"
 							sublabel="settings are in the Surfaces Page"
-							to="/surfaces/configured/integrations"
+							to="/surfaces/integrations"
 							icon={faGamepad}
 						/>
 						<SettingsLinkCard label="Protocols" to="/settings/protocols" icon={faNetworkWired} />
