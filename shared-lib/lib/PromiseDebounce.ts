@@ -103,6 +103,7 @@ export class PromiseDebounce<TResult = void, TArgs extends unknown[] = []> {
 				// If there is a pending execution, run that soon
 				if (this.#pendingArgs) {
 					const args = this.#pendingArgs
+					this.#pendingArgs = null
 					setTimeout(() => this.executeFn(args), 0)
 				}
 			})

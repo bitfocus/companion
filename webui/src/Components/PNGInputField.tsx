@@ -70,7 +70,11 @@ export function PNGInputField({ min, max, onSelect, onError, allowNonPng }: PNGI
 			if (apiIsSupported) {
 				const allowedImageTypes = allowNonPng ? allowedImageTypesExtended : allowedImageTypesPng
 				if (!newFiles || !newFiles.length || !allowedImageTypes.includes(newFiles[0].type)) {
-					onError('Sorry. Only proper PNG files are supported.')
+					onError(
+						allowNonPng
+							? 'Sorry. Only PNG, JPEG, GIF, WebP or SVG files are supported.'
+							: 'Sorry. Only proper PNG files are supported.'
+					)
 					return
 				}
 

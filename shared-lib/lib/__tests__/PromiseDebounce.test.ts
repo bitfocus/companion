@@ -181,6 +181,45 @@ describe('PromiseDebounce', () => {
 			expect(fn).toHaveBeenCalledTimes(2)
 			expect(fn).toHaveBeenLastCalledWith('run2')
 		})
+
+		it('uses fresh args when trigger is called during the 0ms reschedule window', async () => {
+			const { promise: firstRunPromise, resolve: resolveFirst } = Promise.withResolvers<string>()
+			const fn = vi.fn(async (...args: string[]) => {
+				if (fn.mock.calls.length === 1) return firstRunPromise
+				return args[0]
+			})
+
+			const debounced = new PromiseDebounce(fn, 100)
+
+			// Start first execution
+			debounced.trigger('run1')
+			await vi.advanceTimersByTimeAsync(100)
+			expect(fn).toHaveBeenCalledTimes(1)
+
+			// Queue 'run2' as pending while first is executing
+			debounced.trigger('run2')
+
+			// Complete first execution
+			resolveFirst('done1')
+
+			// Flush microtasks so the .finally() block runs and schedules setTimeout(0),
+			// but the setTimeout(0) callback hasn't fired yet (fake timers hold it back).
+			// 4 yields is sufficient: M1 (resume await fn), M_catch, M_finally, M_test resume.
+			await Promise.resolve()
+			await Promise.resolve()
+			await Promise.resolve()
+			await Promise.resolve()
+
+			// Trigger with fresh args during the gap — pendingArgs should be null by now
+			// (cleared by fix), so this schedules a new debounce timer instead of silently
+			// overwriting the stale capture inside the already-queued setTimeout(0).
+			debounced.trigger('run2-new')
+
+			await vi.runAllTimersAsync()
+
+			// fn should eventually run with 'run2-new', not the stale 'run2'
+			expect(fn).toHaveBeenLastCalledWith('run2-new')
+		})
 	})
 
 	describe('cancelWaiting()', () => {
