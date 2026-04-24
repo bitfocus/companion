@@ -25,13 +25,6 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 					onChange={(e) => setValue('auto_enable_discovered_surfaces', e.currentTarget.checked)}
 				/>
 			</div>
-			<div className="indent3">
-				<CFormCheck
-					label="Elgato Stream Deck Software Plugin"
-					checked={config.elgato_plugin_enable}
-					onChange={(e) => setValue('elgato_plugin_enable', e.currentTarget.checked)}
-				/>
-			</div>
 
 			<div>
 				<p>

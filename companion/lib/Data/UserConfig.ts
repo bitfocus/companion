@@ -44,7 +44,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		page_plusminus: false,
 		remove_topbar: false,
 
-		elgato_plugin_enable: false,
 		usb_hotplug: true,
 		auto_enable_discovered_surfaces: true,
 
