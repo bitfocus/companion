@@ -54,7 +54,7 @@ import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
  *        - Add CHANGE-PAGE message for surfaces to navigate pages
  * 1.10.1 - LOCKED-STATE now includes ROTATION
  */
-const API_VERSION = '1.10.1'
+export const API_VERSION = '1.10.1'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
