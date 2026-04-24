@@ -27,9 +27,9 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown // Record<number, SurfaceConfig>
 	surfaceGroups?: unknown // Record<number, SurfaceGroupConfig>
-	surfacesRemote?: Record<string, OutboundSurfaceInfo> // Added in v4.2
-	surfaceInstances?: ExportInstancesv6 // Added in v4.2
-	surfaceInstanceCollections?: SurfaceInstanceCollection[] // Added in v4.2
+	surfacesRemote?: Record<string, OutboundSurfaceInfo> // Added in v4.3
+	surfaceInstances?: ExportInstancesv6 // Added in v4.3
+	surfaceInstanceCollections?: SurfaceInstanceCollection[] // Added in v4.3
 }
 
 export interface ExportPageModelv6 extends ExportBase<'page'> {
