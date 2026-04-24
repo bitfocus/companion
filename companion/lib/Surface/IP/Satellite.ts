@@ -12,6 +12,7 @@ import LogController from '../../Log/Controller.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EventEmitter } from 'events'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
+import { translateRotation } from '../../Resources/Util.js'
 import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import { convertXYToIndexForPanel, convertPanelIndexToXY } from '../Util.js'
 import {
@@ -269,9 +270,22 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		if (this.#supportsLockedState) {
 			this.#logger.silly(`locked: ${locked} - ${characterCount}`)
 			if (this.socket !== undefined) {
+				let rotation = 0
+				switch (translateRotation(this.#config.rotation)) {
+					case 'CW90':
+						rotation = -90
+						break
+					case 'CW180':
+						rotation = 180
+						break
+					case 'CW270':
+						rotation = 90
+						break
+				}
 				this.socket.sendMessage('LOCKED-STATE', null, this.deviceId, {
 					LOCKED: locked,
 					CHARACTER_COUNT: characterCount,
+					ROTATION: rotation,
 				})
 			}
 		} else {
