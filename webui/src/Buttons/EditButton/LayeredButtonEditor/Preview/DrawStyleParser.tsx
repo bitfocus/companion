@@ -224,7 +224,7 @@ class LayeredButtonDrawStyleParser {
 
 			// Wait for control state expressions
 			const [thisPushed, thisStepCount, thisStep, thisButtonStatus, thisActionsRunning] = await Promise.all([
-				parseExpression('$(this:pushed)', 'boolean'),
+				parseExpression('$(this:active)', 'boolean'),
 				parseExpression('$(this:step_count)', 'number'),
 				parseExpression('$(this:step_count) > 1 ? $(this:step) : 0', 'number'),
 				parseExpression('$(this:button_status)', 'string'),

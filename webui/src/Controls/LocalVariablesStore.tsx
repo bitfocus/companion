@@ -107,10 +107,10 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:location',
 		label: 'This location (eg 1/2/3)',
 	},
-	// {
-	// 	value: 'this:pushed',
-	// 	label: 'Whether the button is in the pushed state',
-	// },
+	{
+		value: 'this:active',
+		label: 'Whether the button is in the pushed state',
+	},
 	{
 		value: 'this:step',
 		label: 'The current step of this button',
@@ -119,14 +119,14 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:step_count',
 		label: 'The number of step of this button',
 	},
-	// {
-	// 	value: 'this:button_status',
-	// 	label: 'The status of this button',
-	// },
-	// {
-	// 	value: 'this:actions_running',
-	// 	label: 'Whether actions are running from this button',
-	// },
+	{
+		value: 'this:button_status',
+		label: 'The status of this button',
+	},
+	{
+		value: 'this:actions_running',
+		label: 'Whether actions are running from this button',
+	},
 	{
 		value: 'this:page_name',
 		label: 'This page name',

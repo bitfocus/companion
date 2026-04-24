@@ -387,7 +387,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							if (bankIndex)
 								values[`b_text_${location.pageNumber}_${bankIndex}`] = render ? render.style?.text?.text : undefined
 
-							values[`b_pushed_${location.pageNumber}_${location.row}_${location.column}`] =
+							values[`b_active_${location.pageNumber}_${location.row}_${location.column}`] =
 								buttonStyle?.style === 'button-layered' ? buttonStyle.pushed : undefined
 
 							// Update step

@@ -186,9 +186,9 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE
 		)
 		values.set(
-			'$(this:pushed)',
+			'$(this:active)',
 			location
-				? `$(internal:b_pushed_${location.pageNumber}_${location.row}_${location.column})`
+				? `$(internal:b_active_${location.pageNumber}_${location.row}_${location.column})`
 				: VARIABLE_UNKNOWN_VALUE
 		)
 		values.set(
