@@ -244,6 +244,11 @@ export class Image {
 	): Promise<void> {
 		let png: CanvasImage | undefined
 
+		if (!data || data.length <= 30) {
+			// No image data. This is a bit cautious of a threshold, as empty buffers cause the canvas to crash
+			return
+		}
+
 		try {
 			png = await loadImage(data)
 		} catch (e) {
