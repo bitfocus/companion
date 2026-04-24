@@ -98,6 +98,8 @@ class LayeredButtonDrawStyleParser {
 					if (existing) {
 						resolvedElement = await existing.value
 					} else {
+						if (this.#disposed) return
+
 						// Start a new element stream
 						const firstRunPromise = Promise.withResolvers<ElementStreamResult>()
 						let hasReceivedFirstValue = false
@@ -134,6 +136,11 @@ class LayeredButtonDrawStyleParser {
 								},
 							}
 						)
+
+						if (this.#disposed) {
+							sub.unsubscribe()
+							return
+						}
 
 						// Track the new value, to avoid duplication
 						this.#elementValues.set(elementId, {
@@ -355,6 +362,11 @@ export class LastUsedCache<T> {
 
 	set(key: string, data: T, dispose?: () => void): void {
 		this.#usedSinceReset.add(key)
+
+		// Ensure previous is not leaked
+		const previous = this.#cache.get(key)
+		if (previous) previous.dispose?.()
+
 		this.#cache.set(key, { data, dispose })
 	}
 
@@ -363,7 +375,6 @@ export class LastUsedCache<T> {
 			if (!this.#usedSinceReset.has(key)) {
 				this.#cache.delete(key)
 				entry.dispose?.()
-				console.log('dispose', key)
 			}
 		}
 
