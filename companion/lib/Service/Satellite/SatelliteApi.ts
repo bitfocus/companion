@@ -52,8 +52,9 @@ import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './Sate
  *        - Add CONFIG_FIELDS to ADD-DEVICE for device-specific config fields
  *        - Add DEVICE-CONFIG to relay current config values back to the device
  *        - Add CHANGE-PAGE message for surfaces to navigate pages
+ * 1.10.1 - LOCKED-STATE now includes ROTATION
  */
-const API_VERSION = '1.10.0'
+const API_VERSION = '1.10.1'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
