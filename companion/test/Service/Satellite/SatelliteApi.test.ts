@@ -3,7 +3,11 @@ import { mock, mockDeep } from 'vitest-mock-extended'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
-import { SatelliteSocketWrapper, ServiceSatelliteApi } from '../../../lib/Service/Satellite/SatelliteApi.js'
+import {
+	API_VERSION,
+	SatelliteSocketWrapper,
+	ServiceSatelliteApi,
+} from '../../../lib/Service/Satellite/SatelliteApi.js'
 import type { ServiceApi } from '../../../lib/Service/ServiceApi.js'
 import type { SurfaceController } from '../../../lib/Surface/Controller.js'
 import type { SurfaceIPSatellite } from '../../../lib/Surface/IP/Satellite.js'
@@ -97,7 +101,7 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData).toHaveLength(2)
 			expect(socket.writtenData[0]).toContain('BEGIN')
 			expect(socket.writtenData[0]).toContain('CompanionVersion="test-build-123"')
-			expect(socket.writtenData[0]).toContain('ApiVersion="1.10.0"')
+			expect(socket.writtenData[0]).toContain(`ApiVersion="${API_VERSION}"`)
 			expect(socket.writtenData[1]).toContain('CAPS')
 			expect(socket.writtenData[1]).toContain('SUBSCRIPTIONS=')
 		})
