@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -9,8 +9,6 @@ import { RemoteSurfaceEditPanel } from '~/Surfaces/Remote/EditPanel'
 const RouteComponent = observer(function RouteComponent() {
 	const { surfaces } = useContext(RootAppStoreContext)
 	const { connectionId } = Route.useParams()
-
-	const navigate = Route.useNavigate()
 
 	// Determine if this is a surface or group and validate
 	const remoteInfo = useComputed(() => {
@@ -27,24 +25,18 @@ const RouteComponent = observer(function RouteComponent() {
 		return null
 	}, [connectionId, surfaces])
 
-	// Redirect if item not found
-	useComputed(() => {
-		if (connectionId && !remoteInfo) {
-			void navigate({ to: `/surfaces/remote` })
-		}
-	}, [navigate, connectionId, remoteInfo])
-
 	if (!remoteInfo) {
-		return null
+		// Redirect if item not found or not provided
+		return <Navigate to="/surfaces/remote" replace />
+	} else {
+		return (
+			<MyErrorBoundary>
+				<RemoteSurfaceEditPanel key={connectionId} remoteInfo={remoteInfo} />
+			</MyErrorBoundary>
+		)
 	}
-
-	return (
-		<MyErrorBoundary>
-			<RemoteSurfaceEditPanel key={connectionId} remoteInfo={remoteInfo} />
-		</MyErrorBoundary>
-	)
 })
 
-export const Route = createFileRoute('/_app/surfaces/remote/$connectionId')({
+export const Route = createFileRoute('/_app/surfaces_/remote/$connectionId')({
 	component: RouteComponent,
 })

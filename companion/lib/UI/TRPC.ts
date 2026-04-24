@@ -1,6 +1,6 @@
 import { on, type EventEmitter } from 'node:events'
 import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
-import { initTRPC, TRPCError } from '@trpc/server'
+import { initTRPC, TRPCError, type inferRouterInputs, type inferRouterOutputs } from '@trpc/server'
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { nanoid } from 'nanoid'
@@ -127,3 +127,6 @@ export function toIterable<TEmitter extends EventEmitter, TKey extends string & 
 ): NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]> {
 	return on(ee, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
 }
+
+export type RouterInput = inferRouterInputs<AppRouter>
+export type RouterOutput = inferRouterOutputs<AppRouter>

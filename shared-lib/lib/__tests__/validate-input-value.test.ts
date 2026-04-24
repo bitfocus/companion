@@ -793,6 +793,7 @@ describe('validateInputValue', () => {
 				label: 'Test',
 				default: 0,
 				returnType: 'number',
+				enableAlpha: false,
 			}
 
 			it('should return undefined for number values', () => {
@@ -833,12 +834,14 @@ describe('validateInputValue', () => {
 			})
 		})
 
-		describe('returnType: string (default)', () => {
+		describe('returnType: string', () => {
 			const stringDefinition: CompanionInputFieldColorExtended = {
 				id: 'test',
 				type: 'colorpicker',
 				label: 'Test',
 				default: '#000000',
+				enableAlpha: false,
+				returnType: 'string',
 			}
 
 			it('should return undefined for string values', () => {

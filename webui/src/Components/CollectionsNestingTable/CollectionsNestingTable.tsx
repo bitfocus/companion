@@ -47,6 +47,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	const { groupedItems, ungroupedItems } = getGroupedItems(items, collections)
 
 	const { isDragging } = useCollectionsListItemDrop(collectionsApi, dragId, null, null, 0, gridLayout ?? false) // Assuming null for root level collections
+
 	return (
 		<CollectionsNestingTableContextProvider
 			ItemRow={ItemRow}

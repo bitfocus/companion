@@ -130,7 +130,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								<OptionsInputField
 									isLocatedInGrid={!!location}
 									entityType={entity.type}
-									connectionId={entity.connectionId}
+									allowInternalFields={entity.connectionId === 'internal'}
 									controlId={controlId}
 									option={FeedbackInvertOption}
 									value={'isInverted' in entity ? entity.isInverted : undefined}
@@ -161,7 +161,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								key={i}
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
-								connectionId={entity.connectionId}
+								allowInternalFields={entity.connectionId === 'internal'}
 								controlId={controlId}
 								option={opt}
 								value={(entity.options || {})[opt.id]}

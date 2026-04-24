@@ -12,7 +12,7 @@
 		"strictPropertyInitialization": false,
 		"composite": true,
 
-		"target": "es2022",
+		"target": "es2024",
 		"noImplicitAny": true,
 		"sourceMap": true,
 		"declaration": true,
@@ -21,7 +21,7 @@
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["es2022"],
+		"lib": ["es2024"],
 		"types": ["node"],
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,

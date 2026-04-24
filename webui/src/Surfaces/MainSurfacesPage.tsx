@@ -14,13 +14,13 @@ import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
 
-export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage(): React.JSX.Element {
+export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.Element {
 	const twoPanelMode = useTwoPanelMode()
 
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
 
-	const routeMatch = matchRoute({ to: '/surfaces/configured/$itemId' })
+	const routeMatch = matchRoute({ to: '/surfaces/$itemId' })
 	const selectedSurfaceId = routeMatch ? routeMatch.itemId : null
 
 	const addGroupModalRef = useRef<AddSurfaceGroupModalRef>(null)
@@ -40,6 +40,7 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 			})
 			.catch((err) => {
 				console.error('Refresh USB failed', err)
+				setScanError('Rescanning USB devices failed! Please try again.')
 			})
 	}, [rescanUsbMutationAsync])
 
@@ -52,24 +53,24 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 
 	// Handle action when the user clicks the "Show Settings" button
 	const handleShowSettings = useCallback(() => {
-		void navigate({ to: '/surfaces/configured/integrations' })
+		void navigate({ to: '/surfaces/integrations' })
 	}, [navigate])
 
 	// Handle the various cases in which we want to show the secondary panel in one-panel mode
 	// 1. if one of the integration subpanels are currently visible or user clicked "Show Settings"
 	const showSettings = useShowSecondaryPanel({
-		baseRoute: '/surfaces/configured',
-		secondaryRoute: '/surfaces/configured/integrations',
+		baseRoute: '/surfaces',
+		secondaryRoute: '/surfaces/integrations',
 	})
 
 	// 2. if editing known-surfaces (aka configured surfaces)
 	const selectKnownSurface = useCallback(
 		(itemId: string | null) => {
 			if (itemId === null || selectedSurfaceId === itemId) {
-				void navigate({ to: '/surfaces/configured' })
+				void navigate({ to: '/surfaces' })
 			} else {
 				void navigate({
-					to: '/surfaces/configured/$itemId',
+					to: '/surfaces/$itemId',
 					params: {
 						itemId: itemId,
 					},
@@ -111,9 +112,11 @@ export const ConfiguredSurfacesPage = observer(function ConfiguredSurfacesPage()
 						click the Rescan button below.
 					</p>
 
-					<CAlert color="warning" role="alert" style={{ display: scanError ? '' : 'none' }}>
-						{scanError}
-					</CAlert>
+					{scanError && (
+						<CAlert color="warning" role="alert">
+							{scanError}
+						</CAlert>
+					)}
 
 					<CButtonGroup size="sm">
 						<CButton color="warning" onClick={refreshUSB}>

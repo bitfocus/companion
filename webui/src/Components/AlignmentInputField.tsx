@@ -1,17 +1,15 @@
+import { CButton, CButtonGroup } from '@coreui/react'
 import classnames from 'classnames'
+import {
+	AlignHorizontalJustifyCenter,
+	AlignHorizontalJustifyEnd,
+	AlignHorizontalJustifyStart,
+	AlignVerticalJustifyCenter,
+	AlignVerticalJustifyEnd,
+	AlignVerticalJustifyStart,
+} from 'lucide-react'
+import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
 import type { CompanionAlignment } from '@companion-module/base'
-
-const ALIGNMENT_OPTIONS: CompanionAlignment[] = [
-	'left:top',
-	'center:top',
-	'right:top',
-	'left:center',
-	'center:center',
-	'right:center',
-	'left:bottom',
-	'center:bottom',
-	'right:bottom',
-]
 
 interface AlignmentInputFieldProps {
 	value: CompanionAlignment
@@ -29,5 +27,80 @@ export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProp
 				)
 			})}
 		</div>
+	)
+}
+
+interface SplitAlignmentInputFieldProps {
+	value: string
+	setValue: (value: string) => void
+	disabled?: boolean
+}
+
+export function HorizontalAlignmentInputField({
+	value,
+	setValue,
+	disabled = false,
+}: SplitAlignmentInputFieldProps): React.JSX.Element {
+	return (
+		<CButtonGroup>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left" disabled={disabled}>
+				<AlignHorizontalJustifyStart size="1.3rem" />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center" disabled={disabled}>
+				<AlignHorizontalJustifyCenter size="1.3rem" />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'right'} title="Right" disabled={disabled}>
+				<AlignHorizontalJustifyEnd size="1.3rem" />
+			</AlignmentButton>
+		</CButtonGroup>
+	)
+}
+
+export function VerticalAlignmentInputField({
+	value,
+	setValue,
+	disabled = false,
+}: SplitAlignmentInputFieldProps): React.JSX.Element {
+	return (
+		<CButtonGroup>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top" disabled={disabled}>
+				<AlignVerticalJustifyStart size="1.3rem" />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'center'} title="Center" disabled={disabled}>
+				<AlignVerticalJustifyCenter size="1.3rem" />
+			</AlignmentButton>
+			<AlignmentButton value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom" disabled={disabled}>
+				<AlignVerticalJustifyEnd size="1.3rem" />
+			</AlignmentButton>
+		</CButtonGroup>
+	)
+}
+
+interface AlignmentButtonProps {
+	value: string
+	setValue: (value: string) => void
+	disabled: boolean
+	buttonValue: string
+	title: string
+}
+
+function AlignmentButton({
+	value,
+	setValue,
+	buttonValue,
+	title,
+	disabled,
+	children,
+}: React.PropsWithChildren<AlignmentButtonProps>) {
+	return (
+		<CButton
+			color={value === buttonValue ? 'primary' : 'secondary'}
+			onClick={() => setValue(buttonValue)}
+			title={title}
+			aria-label={title}
+			disabled={disabled}
+		>
+			{children}
+		</CButton>
 	)
 }
