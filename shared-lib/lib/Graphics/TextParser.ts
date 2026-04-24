@@ -44,22 +44,40 @@ export function segmentTextToUnicodeChars(
 	}
 }
 
+/** Minimum auto font size as a fraction of canvas height (10%) */
+export const MIN_FONT_SIZE_FRACTION = 0.1
+
 export function resolveFontSizes(w: number, h: number, fontsize: number | 'auto', charCount: number): number[] {
 	let fontheight = Number(fontsize)
 	if (isNaN(fontheight)) {
 		// narrow the sizes to check by guessing how many chars will fit at a size
 		const area = (w * h) / 5000
+
+		// Sizes expressed as fractions of canvas height
+		let baseSizes: number[]
 		if (charCount < 7 * area) {
-			return [60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7]
+			baseSizes = [0.83, 0.71, 0.61, 0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
 		} else if (charCount < 30 * area) {
-			return [31, 24, 20, 17, 15, 12, 10, 9, 8, 7]
+			baseSizes = [0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
 		} else if (charCount < 40 * area) {
-			return [24, 20, 17, 15, 12, 10, 9, 8, 7]
+			baseSizes = [0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
 		} else if (charCount < 50 * area) {
-			return [17, 15, 12, 10, 9, 8, 7]
+			baseSizes = [0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
 		} else {
-			return [15, 12, 10, 9, 8, 7]
+			baseSizes = [0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
 		}
+
+		// Multiply fraction by h to get pixel size; deduplicate while preserving order
+		const seen = new Set<number>()
+		const scaled: number[] = []
+		for (const s of baseSizes) {
+			const v = Math.max(s * h, 1)
+			if (!seen.has(v)) {
+				seen.add(v)
+				scaled.push(v)
+			}
+		}
+		return scaled
 	} else {
 		if (fontheight < 3) {
 			// block out some tiny fontsizes

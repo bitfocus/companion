@@ -38,7 +38,7 @@ export class GraphicsLayeredButtonRenderer {
 			paddingPx.x,
 			paddingPx.y,
 			drawWidth,
-			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * img.height))
+			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * drawHeight))
 		)
 		const topBarHeight = showTopBar ? topBarBounds.height : 0
 		const drawBounds = new DrawBounds(paddingPx.x, paddingPx.y + topBarHeight, drawWidth, drawHeight - topBarHeight)

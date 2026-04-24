@@ -20,7 +20,13 @@
 import type QuickLRU from 'quick-lru'
 import type { MinimalLogger } from '../Logger.js'
 import { DEFAULT_FONTS, DEFAULT_FONTS_STR } from './Fonts.js'
-import { computeTextLayout, resolveFontSizes, segmentTextToUnicodeChars, type TextLayoutResult } from './TextParser.js'
+import {
+	computeTextLayout,
+	MIN_FONT_SIZE_FRACTION,
+	resolveFontSizes,
+	segmentTextToUnicodeChars,
+	type TextLayoutResult,
+} from './TextParser.js'
 import type { DrawBounds, HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
 
 /**
@@ -702,12 +708,14 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		)
 
 		// If we hit the character limit, only the smallest font size could possibly fit
-		const checkSizes = wasTruncated ? [7] : resolveFontSizes(w, h, fontsize, displayTextChars.length)
+		const checkSizes = wasTruncated
+			? [Math.max(MIN_FONT_SIZE_FRACTION * h, 1)]
+			: resolveFontSizes(w, h, fontsize, displayTextChars.length)
 
 		// Find the best fitting size
 		let textLayout: TextLayoutResult | undefined
 		for (const size of checkSizes) {
-			const fontLineHeight = Math.floor(size * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
+			const fontLineHeight = size * 1.1 // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
 			const fontSpec = `${size}px/${fontLineHeight}px ${DEFAULT_FONTS}`
 
 			// Check cache first
@@ -754,7 +762,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				break
 			case 'center':
 				this.context2d.textAlign = 'center'
-				xAnchor = (x + w) / 2
+				xAnchor = x + w / 2
 				break
 			case 'right':
 				this.context2d.textAlign = 'right'
@@ -915,6 +923,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param valign defaults to 'top'
 	 * @returns success
 	 */
+	/*
 	drawCornerTriangle(
 		depth: number,
 		color: string,
@@ -956,6 +965,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		return this.drawFilledPath(points, color)
 	}
+		*/
 
 	/**
 	 * Draws an outline path from some points
