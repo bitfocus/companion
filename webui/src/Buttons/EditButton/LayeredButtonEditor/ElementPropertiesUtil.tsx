@@ -1,7 +1,6 @@
 import { CCol, CFormLabel } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -62,11 +61,11 @@ export const FormPropertyField = observer(function FormPropertyField({
 
 	return (
 		<>
-			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm')}>
+			<CFormLabel className={'col-sm-4 col-form-label col-form-label-sm'}>
 				{label}
 				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
 				{isOverridden ? (
-					<span title="Value is affected by a feedback">
+					<span title="Value has a linked feedback override">
 						<FontAwesomeIcon icon={faLayerGroup} />
 					</span>
 				) : null}
