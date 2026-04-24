@@ -30,7 +30,7 @@ interface AddInstancePanelProps {
 
 	title: string
 	helpAction: ContextHelpButtonProps['action']
-	description: (devicesCount: number, modulesCount: number) => React.ReactNode
+	description: (modulesCount: number) => React.ReactNode
 	isSubpanel?: boolean
 }
 
@@ -54,8 +54,10 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		available: true,
 	})
 
+	// The number of modules (see next comment)
 	const storeModulesOfTypeCount = modules.countStoreModulesOfType(service.moduleType)
 
+	// A module can support several devices: useAllModuleProducts returns the list of devices, so some modules are represented by several entries here.
 	const allProducts = useAllModuleProducts(service.moduleType)
 	const typeProducts = allProducts.filter(
 		(p) => storeModulesOfTypeCount === 0 || !!p.installedInfo || typeFilter.visibility.available
@@ -122,7 +124,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 					<div className="add-connection-intro-section mb-3">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
-								{description(allProducts.length, storeModulesOfTypeCount)}
+								{description(storeModulesOfTypeCount)}
 								<div className="intro-filter">
 									<CButtonGroup role="group" aria-label="Module visibility filter">
 										<CButton
@@ -148,7 +150,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							<CAlert color="info" className="mb-0">
 								<div className="d-flex align-items-center gap-2">
 									<FontAwesomeIcon icon={faPlug} className="text-info" />
-									{description(0, 0)}
+									{description(0)}
 								</div>
 							</CAlert>
 						)}

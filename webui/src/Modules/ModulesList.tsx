@@ -51,9 +51,20 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const [filterType, setFilterType] = useState<ModuleInstanceType | null>(null)
 	const [filter, setFilter] = useState('')
-	const filterName =
-		filterType === null ? ' ' : filterType === ModuleInstanceType.Connection ? ' Connection ' : ' Surface '
+	const filterName = (() => {
+		if (filterType === null) return ' '
+		switch (filterType) {
+			case ModuleInstanceType.Connection:
+				return ' Connection '
+			case ModuleInstanceType.Surface:
+				return ' Surface '
+			default:
+				assertNever(filterType)
+				return ' '
+		}
+	})()
 
+	//  A module can support several devices: useAllModuleProducts returns the list of devices, so some modules are represented by several entries here.
 	const allProducts = useAllModuleProducts(null, true, true).filter((p) => !filterType || filterType === p.moduleType)
 	const typeProducts = allProducts.filter((p) => {
 		let isVisible = false
@@ -142,9 +153,10 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
 				<p className="mb-2">
-					<strong>Companion supports over {allProducts.length} different devices</strong> in{' '}
-					{`${modulesCount}${filterName}`}
-					modules, and the list grows every day.
+					<strong>
+						Companion can work with over {modulesCount} different{filterName}modules
+					</strong>{' '}
+					and the list grows every day.
 				</p>
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
