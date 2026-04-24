@@ -15,10 +15,13 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 
 		const ext = isVideo[1].toLowerCase()
 
+		// Detect remote URLs such as https://site.com/myvideo.mp4 — these should not be passed through require().
+		// Note: this is primarily if we want to keeps videos stored on companion.free: we don't handle things like YouTube here (no file ext)
+		const isRemoteUrl = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(node.url)
+
 		// docusaurus requires relative paths to start with './' in HTML elements, i.e. './myvid.mp4' not 'myvid.mp4'.
 		// but standard ![]() images, allows the either way, so here we just fix it for compatibility.
-		const url =
-			node.url.startsWith('./') || node.url.startsWith('../') || node.url.startsWith('/') ? node.url : `./${node.url}`
+		const url = isRemoteUrl || /^\.{0,2}\//.test(node.url) ? node.url : `./${node.url}`
 
 		// we use the "require()" syntax here to allow relative pathnames in the generated <video><source> elements
 		const requireExpression: MdxJsxAttributeValueExpression = {
@@ -56,15 +59,16 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 			attributes: [
 				{ type: 'mdxJsxAttribute', name: 'controls', value: null },
 				{ type: 'mdxJsxAttribute', name: 'muted', value: null },
+				{ type: 'mdxJsxAttribute', name: 'playsInline', value: null }, // Without this, iOS Safari may force fullscreen playback, esp. on mobile.  (local rabbit)
 				{ type: 'mdxJsxAttribute', name: 'preload', value: 'metadata' },
-				{ type: 'mdxJsxAttribute', name: 'aria-label', value: node.alt ?? 'Video content' },
+				{ type: 'mdxJsxAttribute', name: 'aria-label', value: node.alt || 'Video content' },
 			],
 			children: [
 				{
 					type: 'mdxJsxTextElement',
 					name: 'source',
 					attributes: [
-						{ type: 'mdxJsxAttribute', name: 'src', value: requireExpression },
+						{ type: 'mdxJsxAttribute', name: 'src', value: isRemoteUrl ? url : requireExpression },
 						{ type: 'mdxJsxAttribute', name: 'type', value: `video/${ext}` },
 					],
 					children: [],
@@ -73,8 +77,8 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 					type: 'text',
 					value: 'Your browser does not support the video tag.',
 				},
-			],
-		} as any // avoid TS errors on nesting mdxJsxTextElement inside mdxJsxFlowElement
+			] as any, // avoid TS errors on nesting mdxJsxTextElement inside mdxJsxFlowElement
+		}
 	})
 }
 
