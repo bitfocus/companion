@@ -30,7 +30,7 @@ interface AddInstancePanelProps {
 
 	title: string
 	helpAction: ContextHelpButtonProps['action']
-	description: (storeCount: number) => React.ReactNode
+	description: (modulesCount: number) => React.ReactNode
 	isSubpanel?: boolean
 }
 
@@ -54,8 +54,10 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		available: true,
 	})
 
+	// The number of modules (see next comment)
 	const storeModulesOfTypeCount = modules.countStoreModulesOfType(service.moduleType)
 
+	// A module can support several devices: useAllModuleProducts returns the list of devices, so some modules are represented by several entries here.
 	const allProducts = useAllModuleProducts(service.moduleType)
 	const typeProducts = allProducts.filter(
 		(p) => storeModulesOfTypeCount === 0 || !!p.installedInfo || typeFilter.visibility.available

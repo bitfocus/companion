@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { observer } from 'mobx-react-lite'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
 import type { AddInstanceService } from '~/Instances/AddInstanceService'
@@ -21,12 +21,13 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 			isSubpanel={!!isSubpanel}
 			title="Add Surface Integration"
 			helpAction="/user-guide/surfaces/"
-			description={(storeCount) =>
-				storeCount > 0 ? (
+			description={(modulesCount) =>
+				modulesCount > 0 ? (
 					<>
 						<div className="intro-text">
 							<p className="mb-2">
-								<strong>Companion supports over {storeCount} different surfaces</strong> and the list grows every day.
+								<strong>Companion supports over {modulesCount} different surfaces</strong>, and the list grows every
+								day.
 							</p>
 						</div>
 						<div>
@@ -39,6 +40,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 								>
 									Check our guidance for getting device support
 								</a>
+								.<br /> To import an offline module, go to the <Link to="/modules">Modules page</Link>.
 							</span>
 						</div>
 					</>
