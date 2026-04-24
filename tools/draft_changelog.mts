@@ -123,15 +123,20 @@ await goSilent(async () => {
 	const branchRaw = await $`git rev-parse --abbrev-ref HEAD`
 	const branch = branchRaw.stdout.trim()
 
-	if (branch !== 'main' && !/^stable-\d+$/.test(branch)) {
-		console.error(`Error: branch "${branch}" is not "main" or "stable-<X>". Refusing to update changelog.`)
+	if (branch !== 'main' && !/^stable-[\d.]+$/.test(branch)) {
+		console.error(`Error: branch "${branch}" is not "main" or "stable-<X.Y>". Refusing to update changelog.`)
 		process.exit(1)
 	}
 
 	// --- 2. Target version comes from package.json ---
 	const packageJsonStr = await fs.readFile(PACKAGE_JSON_PATH, 'utf-8')
 	const packageJson = JSON.parse(packageJsonStr) as { version: string }
-	const targetVersion = packageJson.version
+	let targetVersion = packageJson.version
+	if (/^stable-/.test(branch)) {
+		// Strip prerelease suffix and bump patch (e.g. 4.3.0-rc.1 → 4.3.1)
+		const [major, minor, patch] = targetVersion.split('-')[0].split('.').map(Number)
+		targetVersion = `${major}.${minor}.${patch + 1}`
+	}
 
 	// --- 3. Get last tag (used only for the commit range when no draft exists) ---
 	// Use --sort=-version:refname so we get the highest semver tag across ALL branches,
