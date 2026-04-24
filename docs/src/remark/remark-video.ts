@@ -15,8 +15,8 @@ const remarkVideo: Plugin<[], Root> = () => (tree: Root) => {
 
 		const ext = isVideo[1].toLowerCase()
 
-		// Detect remote URLs such as https://site.com/myvideo.mp4 — these should not be passed through require().
-		// Note: this is primarily if we want to keeps videos stored on companion.free: we don't handle things like YouTube here (no file ext)
+		// Detect remote URLs such as https://companion.free/myvideo.mp4 — these should not be passed through require().
+		// Note: this is primarily if we want to store videos separately on companion.free: we don't handle sites like YouTube here (no file ext)
 		const isRemoteUrl = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(node.url)
 
 		// docusaurus requires relative paths to start with './' in HTML elements, i.e. './myvid.mp4' not 'myvid.mp4'.
