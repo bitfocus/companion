@@ -14,7 +14,7 @@ If you are unsure, run it on your main Computer. It is easy to export and reimpo
 
 ## Preparation
 
-Close the Elgato Stream Deck app. While it is possible to run them both, Companion runs best when it has full control over your Stream Decks. If you need to run them both, you can use the Companion plugin from [the Elgato store](https://l.companion.free/q/g80LeP8dx). You can read how to set this up on the [Elgato Plugin](../7_surfaces/elgato-plugin.md) page.
+Close the Elgato Stream Deck app. While it is possible to run them both, Companion runs best when it has full control over your Stream Decks. If you need to run them both, you can use the Companion plugin from [the Elgato store](https://l.companion.free/q/g80LeP8dx).
 
 Connect any Stream Decks or other supported Surfaces to your computer, and make sure any devices you wish to control are powered on and connected to the network. You should make sure that the networking is configured properly and your computer is able to talk to them.
 

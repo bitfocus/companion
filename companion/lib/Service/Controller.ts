@@ -8,7 +8,6 @@ import type { UIExpress } from '../UI/Express.js'
 import type { UIHandler } from '../UI/Handler.js'
 import { ServiceArtnet } from './Artnet.js'
 import { ServiceBonjourDiscovery } from './BonjourDiscovery.js'
-import { ServiceElgatoPlugin } from './ElgatoPlugin.js'
 import { ServiceEmberPlus } from './EmberPlus.js'
 import { ServiceHttpApi } from './HttpApi.js'
 import { ServiceHttps } from './Https.js'
@@ -50,7 +49,6 @@ export class ServiceController {
 	readonly satelliteApi: ServiceSatelliteApi
 	readonly satelliteTcp: ServiceSatelliteTcp
 	readonly satelliteWebsocket: ServiceSatelliteWebsocket
-	readonly elgatoPlugin: ServiceElgatoPlugin
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
 
 	constructor(
@@ -75,14 +73,12 @@ export class ServiceController {
 		this.satelliteApi = new ServiceSatelliteApi(serviceApi, surfaceController, userconfig)
 		this.satelliteTcp = new ServiceSatelliteTcp(this.satelliteApi, userconfig)
 		this.satelliteWebsocket = new ServiceSatelliteWebsocket(this.satelliteApi, userconfig)
-		this.elgatoPlugin = new ServiceElgatoPlugin(serviceApi, surfaceController, userconfig)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
 	}
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		this.tcp.onButtonDrawn(location, render)
 		this.emberplus.onButtonDrawn(location, render)
-		this.elgatoPlugin.onButtonDrawn(location, render)
 		this.satelliteApi.onButtonDrawn(location, render)
 	}
 
@@ -94,7 +90,6 @@ export class ServiceController {
 	updateUserConfig(key: string, value: boolean | number | string): void {
 		this.artnet.updateUserConfig(key, value)
 		this.bonjourDiscovery.updateUserConfig(key, value)
-		this.elgatoPlugin.updateUserConfig(key, value)
 		this.emberplus.updateUserConfig(key, value)
 		this.https.updateUserConfig(key, value)
 		this.oscListener.updateUserConfig(key, value)

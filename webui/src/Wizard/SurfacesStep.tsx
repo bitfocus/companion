@@ -25,13 +25,6 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 					setValue={(val) => setValue('auto_enable_discovered_surfaces', val)}
 				/>
 			</div>
-			<div className="ms-2 mb-1">
-				<CheckboxInputFieldWithLabel
-					label="Elgato Stream Deck Software Plugin"
-					value={!!config.elgato_plugin_enable}
-					setValue={(val) => setValue('elgato_plugin_enable', val)}
-				/>
-			</div>
 
 			<div>
 				<p>
