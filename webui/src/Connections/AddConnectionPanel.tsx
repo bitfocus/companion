@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext, useMemo } from 'react'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
@@ -18,12 +18,12 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 			service={service}
 			title="Add New Connection"
 			helpAction="/user-guide/config/connections#adding-a-connection"
-			description={(storeCount) =>
-				storeCount > 0 ? (
+			description={(moduleCount) =>
+				moduleCount > 0 ? (
 					<>
 						<div className="intro-text">
 							<p className="mb-2">
-								<strong>Companion supports over {storeCount} different devices</strong> and the list grows every day.
+								<strong>Companion supports over {moduleCount} different devices</strong>, and the list grows every day.
 							</p>
 						</div>
 						<div>
@@ -36,6 +36,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 								>
 									Check our guidance for getting device support
 								</a>
+								.<br /> To import an offline module, go to the <Link to="/modules">Modules page</Link>.
 							</span>
 						</div>
 					</>

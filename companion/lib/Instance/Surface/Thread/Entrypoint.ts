@@ -179,6 +179,7 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 	5000
 )
 process.on('message', (msg) => ipcWrapper.receivedMessage(msg as any))
+process.on('disconnect', () => process.exit())
 
 registerLoggingSink((source, level, message) => {
 	if (!process.send) {

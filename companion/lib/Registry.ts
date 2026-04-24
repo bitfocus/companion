@@ -408,6 +408,8 @@ export class Registry {
 			this.controls.triggerEvents.emit('startup')
 
 			if (process.env.COMPANION_IPC_PARENT) {
+				process.on('disconnect', () => process.exit())
+
 				process.on('message', (msg: any): void => {
 					try {
 						if (msg.messageType === 'http-rebind') {

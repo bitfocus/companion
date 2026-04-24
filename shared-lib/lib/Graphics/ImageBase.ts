@@ -439,6 +439,11 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		valign: VerticalAlignment = 'center',
 		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
 	): Promise<void> {
+		if (!base64Image || base64Image.length <= 40) {
+			// No image data. This is a bit cautious of a threshold, as empty buffers cause the canvas to crash
+			return
+		}
+
 		let canvasImage: TDrawImageType | undefined
 
 		try {
