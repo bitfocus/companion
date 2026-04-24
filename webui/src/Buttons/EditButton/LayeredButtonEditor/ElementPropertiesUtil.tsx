@@ -13,7 +13,7 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 type SetValueFn = (value: JsonValue | undefined) => void
 
 export interface InputFieldCommonProps {
-	elementProp: { value: any }
+	elementProp: { value: JsonValue | undefined }
 	setValue: SetValueFn
 }
 
