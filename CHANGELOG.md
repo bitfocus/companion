@@ -4,6 +4,7 @@
 
 ### 🐞 BUG FIXES
 
+- update release notes to include section on the sidebar
 - canvas crashing on empty png buffers #4107
 - ensure processes exit when parent terminates
 - unable to change module version when current is invalid
