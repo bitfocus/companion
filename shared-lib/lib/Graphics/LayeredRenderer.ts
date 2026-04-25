@@ -63,7 +63,7 @@ export class GraphicsLayeredButtonRenderer {
 				ButtonDecorationRenderer.drawBorderWhenPushed(img, drawStyle, drawBounds)
 				break
 			case ButtonGraphicsDecorationType.TopBar:
-				ButtonDecorationRenderer.drawStatusBar(img, drawStyle, topBarBounds)
+				ButtonDecorationRenderer.drawStatusBar(img, drawStyle, topBarBounds, false)
 				break
 			default:
 				assertNever(decoration)

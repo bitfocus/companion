@@ -13,10 +13,10 @@ import { isPromise } from 'node:util/types'
 import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 import QuickLRU from 'quick-lru'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
+import { DrawBounds } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
@@ -129,20 +129,29 @@ export class GraphicsRenderer {
 	}
 
 	static #drawBlankImage(img: Image, showTopbar: boolean, location: ControlLocation | null) {
-		// Calculate some constants for drawing without reinventing the numbers
-		const { drawScale, transformX } = GraphicsRenderer.calculateTransforms(img)
-
 		img.fillColor('black')
 
 		if (showTopbar) {
-			img.drawTextLine(
-				transformX(2),
-				3 * drawScale,
-				location ? formatLocation(location) : 'x/x',
-				'rgb(50, 50, 50)',
-				8 * drawScale
+			const topBarBounds = new DrawBounds(
+				0,
+				0,
+				img.width,
+				Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * img.height))
 			)
-			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)', width: 1 })
+
+			ButtonDecorationRenderer.drawStatusBar(
+				img,
+				{
+					pushed: false,
+					location: location ?? undefined,
+					stepCount: 1,
+					stepCurrent: 1,
+					button_status: undefined,
+					action_running: undefined,
+				},
+				topBarBounds,
+				true
+			)
 		}
 	}
 

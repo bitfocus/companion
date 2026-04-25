@@ -5,20 +5,28 @@ import type { ImageBase } from './ImageBase.js'
 import type { DrawBounds } from './Util.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
+const colorEmptyGrey = 'rgb(50, 50, 50)'
 const colorBlack = 'black'
 
 export class ButtonDecorationRenderer {
 	static readonly DEFAULT_HEIGHT = 14
 
-	static drawStatusBar(img: ImageBase<any>, drawStyle: RendererButtonStyle, topBarBounds: DrawBounds): void {
+	static drawStatusBar(
+		img: ImageBase<any>,
+		drawStyle: Omit<RendererButtonStyle, 'style' | 'show_topbar' | 'elements'>,
+		topBarBounds: DrawBounds,
+		emptyButton: boolean
+	): void {
+		const drawColor = emptyButton ? colorEmptyGrey : colorButtonYellow
+
 		let step = ''
 		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
 		img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
-			color: colorButtonYellow,
+			color: drawColor,
 			width: 1,
 		})
 
-		if (drawStyle.stepCount > 1) {
+		if (!emptyButton && drawStyle.stepCount > 1) {
 			step = `.${drawStyle.stepCurrent}`
 		}
 
@@ -28,9 +36,9 @@ export class ButtonDecorationRenderer {
 
 		if (drawStyle.location === undefined) {
 			// Preview (no location)
-			img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, colorButtonYellow, locationDrawSize)
+			img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, drawColor, locationDrawSize)
 		} else if (drawStyle.pushed) {
-			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, colorButtonYellow)
+			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, drawColor)
 			img.drawTextLine(
 				locationDrawX,
 				locationDrawY,
@@ -43,7 +51,7 @@ export class ButtonDecorationRenderer {
 				locationDrawX,
 				locationDrawY,
 				`${formatLocation(drawStyle.location)}${step}`,
-				colorButtonYellow,
+				drawColor,
 				locationDrawSize
 			)
 		}
