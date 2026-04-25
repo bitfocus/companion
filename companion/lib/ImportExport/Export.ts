@@ -399,7 +399,7 @@ export class ExportController {
 			referencedImageLibraryCollectionIds
 		)
 
-		return {
+		const result: ExportTriggersListv6 = {
 			type: 'trigger_list',
 			version: FILE_VERSION,
 			companionBuild: this.#appInfo.appBuild,
@@ -410,6 +410,8 @@ export class ExportController {
 			imageLibrary: referencedImages,
 			imageLibraryCollections: filteredImageLibraryCollections,
 		}
+
+		return result
 	}
 
 	/**

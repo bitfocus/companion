@@ -2,12 +2,12 @@
 /**
  * Performance benchmark for drawAlignedText
  *
- * Run with: yarn tsx companion/test/Graphics/TextParser.perf.ts
+ * Run with: yarn tsx companion/test/TextParser.perf.ts
  *
  * This benchmarks the text rendering performance with cache disabled
  * to measure the actual computation cost.
  */
-import { Image, TextLayoutCache } from '../../lib/Graphics/Image.js'
+import { Image } from '../lib/Graphics/Image.js'
 
 interface BenchmarkResult {
 	name: string
@@ -156,7 +156,7 @@ const testCases: BenchmarkCase[] = [
 
 function runBenchmark(testCase: BenchmarkCase, iterations: number): BenchmarkResult {
 	// Create a single image instance to reuse (no cache)
-	const image = new Image(testCase.width, testCase.height, 1, null)
+	const image = Image.create(testCase.width, testCase.height, 1, null)
 
 	const startTime = performance.now()
 

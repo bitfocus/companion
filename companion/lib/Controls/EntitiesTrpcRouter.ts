@@ -1,5 +1,10 @@
 import z from 'zod'
-import { EntityModelType, zodEntityLocation, type EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	schemaFeedbackEntityStyleOverride,
+	zodEntityLocation,
+	type EntityOwner,
+} from '@companion-app/shared/Model/EntityModel.js'
 import {
 	createExpressionOrValueSchema,
 	ExpressionOrJsonValueSchema,
@@ -45,7 +50,14 @@ export function createEntitiesTrpcRouter(
 
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
-				const newEntity = instanceDefinitions.createEntityItem(connectionId, entityType, entityDefinition)
+				const newEntity = instanceDefinitions.createEntityItem(
+					connectionId,
+					entityType,
+					entityDefinition,
+					control.supportsLayeredStyle && entityLocation === 'feedbacks'
+						? control.layeredStyleSelectedElementIds()
+						: null
+				)
 				if (!newEntity) return null
 
 				const added = control.entities.entityAdd(entityLocation, ownerId, newEntity)
@@ -240,47 +252,46 @@ export function createEntitiesTrpcRouter(
 				return control.entities.entityMoveTo(moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex)
 			}),
 
-		setStyleSelection: publicProcedure
+		replaceStyleOverride: publicProcedure
 			.input(
 				z.object({
 					controlId: z.string(),
 					entityLocation: zodEntityLocation,
 					entityId: z.string(),
-					selected: z.array(z.string()),
+					override: schemaFeedbackEntityStyleOverride,
 				})
 			)
 			.mutation(async ({ input }) => {
-				const { controlId, entityLocation, entityId, selected } = input
+				const { controlId, entityLocation, entityId, override } = input
 
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities || !control.supportsStyle)
-					throw new Error(`Control "${controlId}" does not support entities or styles`)
+				if (!control.supportsEntities || !control.supportsLayeredStyle)
+					throw new Error(`Control "${controlId}" does not support entities or layered styles`)
 
-				return control.entities.entitySetStyleSelection(entityLocation, control.baseStyle, entityId, selected)
+				return control.entities.entityReplaceStyleOverride(entityLocation, entityId, override)
 			}),
 
-		setStyleValue: publicProcedure
+		removeStyleOverride: publicProcedure
 			.input(
 				z.object({
 					controlId: z.string(),
 					entityLocation: zodEntityLocation,
 					entityId: z.string(),
-					key: z.string(),
-					value: z.any(),
+					overrideId: z.string(),
 				})
 			)
 			.mutation(async ({ input }) => {
-				const { controlId, entityLocation, entityId, key, value } = input
+				const { controlId, entityLocation, entityId, overrideId } = input
 
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities || !control.supportsStyle)
-					throw new Error(`Control "${controlId}" does not support entities or styles`)
+				if (!control.supportsEntities || !control.supportsLayeredStyle)
+					throw new Error(`Control "${controlId}" does not support entities or layered styles`)
 
-				return control.entities.entitySetStyleValue(entityLocation, entityId, key, value)
+				return control.entities.entityRemoveStyleOverride(entityLocation, entityId, overrideId)
 			}),
 
 		setVariableName: publicProcedure

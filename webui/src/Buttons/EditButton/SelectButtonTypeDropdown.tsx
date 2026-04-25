@@ -56,7 +56,7 @@ export function SelectButtonTypeDropdown({
 
 	return (
 		<CDropdown variant="btn-group">
-			<CButton color="danger" onClick={() => setButtonType('button')} title="Create regular button.">
+			<CButton color="danger" onClick={() => setButtonType('button-layered')} title="Create regular button.">
 				Create button
 			</CButton>
 			<CDropdownToggle
@@ -67,7 +67,7 @@ export function SelectButtonTypeDropdown({
 				title="Toggle Button-Type Dropdown"
 			/>
 			<CDropdownMenu>
-				<CDropdownItem onClick={() => setButtonType('button')}>Regular button</CDropdownItem>
+				<CDropdownItem onClick={() => setButtonType('button-layered')}>Regular button</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
 				<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>

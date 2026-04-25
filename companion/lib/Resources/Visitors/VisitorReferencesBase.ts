@@ -1,5 +1,8 @@
+import type { JsonValue } from 'type-fest'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { InternalController } from '../../Internal/Controller.js'
@@ -45,6 +48,25 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 
 		for (const entity of entities) {
 			entity.visitReferences(this.visitor)
+		}
+
+		return this
+	}
+
+	visitDrawElements(elements: SomeButtonGraphicsElement[]): this {
+		for (const element of elements) {
+			for (const key in element) {
+				// Ignore some special/fixed properties
+				if (key === 'id' || key === 'type' || key === 'name') continue
+
+				// Check for an expressions in the property
+				const prop = element[key as keyof typeof element] as any as ExpressionOrValue<JsonValue | undefined>
+				if (prop && typeof prop === 'object' && (prop.isExpression || typeof prop.value === 'string')) {
+					this.visitor.visitString(prop, 'value')
+				}
+			}
+
+			if (element.type === 'group') this.visitDrawElements(element.children)
 		}
 
 		return this

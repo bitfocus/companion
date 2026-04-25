@@ -1,14 +1,18 @@
-import type { CanvasRenderingContext2D } from '@napi-rs/canvas'
 import { describe, expect, test, vi } from 'vitest'
+import type { CompanionImageContext2D } from '../../Graphics/ImageBase.js'
 import {
 	computeTextLayout,
 	resolveFontSizes,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
-} from '../../lib/Graphics/TextParser.js'
+} from '../../Graphics/TextParser.js'
+
+// Round each element of a number array to 3 decimal places.
+// Keeps test expectations stable across V8 float-rounding changes.
+const r3 = (nums: number[]): number[] => nums.map((n) => Math.round(n * 1000) / 1000)
 
 // Mock context that simulates measuring text with roughly 10px per character for simplicity
-function createMockContext(charWidth: number = 10, lineHeight: number = 14): CanvasRenderingContext2D {
+function createMockContext(charWidth: number = 10, lineHeight: number = 14): CompanionImageContext2D {
 	return {
 		font: '',
 		measureText: vi.fn((text: string) => ({
@@ -16,7 +20,7 @@ function createMockContext(charWidth: number = 10, lineHeight: number = 14): Can
 			fontBoundingBoxAscent: lineHeight * 0.8,
 			fontBoundingBoxDescent: lineHeight * 0.2,
 		})),
-	} as unknown as CanvasRenderingContext2D
+	} as unknown as CompanionImageContext2D
 }
 
 describe('segmentTextToUnicodeChars', () => {
@@ -144,69 +148,78 @@ describe('resolveFontSizes', () => {
 		describe('w:72 h:72 (standard button)', () => {
 			const w = 72
 			const h = 72
-			const area = (w * h) / 5000 // ~1.04
 
 			test('very short text returns largest font sizes first', () => {
 				// charCount < 7 * area (~7 chars)
 				const result = resolveFontSizes(w, h, 'auto', 3)
-				expect(result).toEqual([60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(result)).toEqual([
+					59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
+				])
 			})
 
 			test('short text returns medium font sizes', () => {
 				// charCount < 30 * area (~31 chars)
 				const result = resolveFontSizes(w, h, 'auto', 15)
-				expect(result).toEqual([31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(result)).toEqual([30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
 			})
 
 			test('medium text returns smaller font sizes', () => {
 				// charCount < 40 * area (~42 chars)
 				const result = resolveFontSizes(w, h, 'auto', 35)
-				expect(result).toEqual([24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(result)).toEqual([23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
 			})
 
 			test('longer text returns even smaller font sizes', () => {
 				// charCount < 50 * area (~52 chars)
 				const result = resolveFontSizes(w, h, 'auto', 45)
-				expect(result).toEqual([17, 15, 12, 10, 9, 8, 7])
+				expect(r3(result)).toEqual([17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
 			})
 
 			test('very long text returns smallest font sizes', () => {
 				// charCount >= 50 * area
 				const result = resolveFontSizes(w, h, 'auto', 60)
-				expect(result).toEqual([15, 12, 10, 9, 8, 7])
+				expect(r3(result)).toEqual([15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
 			})
 
 			test('empty text returns largest font sizes', () => {
 				const result = resolveFontSizes(w, h, 'auto', 0)
-				expect(result).toEqual([60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(result)).toEqual([
+					59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
+				])
 			})
 		})
 
 		describe('w:144 h:144 (double-size button)', () => {
 			const w = 144
 			const h = 144
-			const area = (w * h) / 5000 // ~4.15
 
-			test('thresholds scale with area', () => {
+			test('thresholds scale with area, sizes scaled with h', () => {
 				// charCount < 7 * area (~29 chars)
-				expect(resolveFontSizes(w, h, 'auto', 20)).toEqual([60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(resolveFontSizes(w, h, 'auto', 20))).toEqual([
+					119.52, 102.24, 87.84, 61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
+				])
 
 				// charCount < 30 * area (~125 chars)
-				expect(resolveFontSizes(w, h, 'auto', 50)).toEqual([31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(resolveFontSizes(w, h, 'auto', 50))).toEqual([
+					61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
+				])
 			})
 		})
 
 		describe('w:360 h:360 (large display)', () => {
 			const w = 360
 			const h = 360
-			const area = (w * h) / 5000 // ~25.9
 
-			test('larger area allows more characters at larger font sizes', () => {
+			test('larger area allows more characters at larger font sizes, sizes scale with h', () => {
 				// charCount < 7 * area (~181 chars)
-				expect(resolveFontSizes(w, h, 'auto', 100)).toEqual([60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(resolveFontSizes(w, h, 'auto', 100))).toEqual([
+					298.8, 255.6, 219.6, 154.8, 118.8, 100.8, 86.4, 75.6, 61.2, 50.4, 46.8, 39.6, 36,
+				])
 
 				// Even 150 chars still gets the largest sizes
-				expect(resolveFontSizes(w, h, 'auto', 150)).toEqual([60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+				expect(r3(resolveFontSizes(w, h, 'auto', 150))).toEqual([
+					298.8, 255.6, 219.6, 154.8, 118.8, 100.8, 86.4, 75.6, 61.2, 50.4, 46.8, 39.6, 36,
+				])
 			})
 		})
 	})
@@ -225,22 +238,24 @@ describe('resolveFontSizes', () => {
 			expect(resolveFontSizes(72, 72, -5, 10)).toEqual([3])
 		})
 
-		test('clamps maximum font size to 120', () => {
-			expect(resolveFontSizes(72, 72, 150, 10)).toEqual([120])
-			expect(resolveFontSizes(72, 72, 200, 10)).toEqual([120])
-			expect(resolveFontSizes(72, 72, 120, 10)).toEqual([120])
+		test('clamps maximum font size to height', () => {
+			expect(resolveFontSizes(72, 72, 150, 10)).toEqual([72])
+			expect(resolveFontSizes(72, 123, 200, 10)).toEqual([123])
+			expect(resolveFontSizes(72, 72, 120, 10)).toEqual([72])
 		})
 
 		test('passes through edge values', () => {
 			expect(resolveFontSizes(72, 72, 3, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 119, 10)).toEqual([119])
+			expect(resolveFontSizes(72, 72, 71, 10)).toEqual([71])
 		})
 	})
 
 	describe('font size type coercion', () => {
 		test('treats NaN-producing values as auto', () => {
 			// NaN values should trigger auto behavior
-			expect(resolveFontSizes(72, 72, NaN, 3)).toEqual([60, 51, 44, 31, 24, 20, 17, 15, 12, 10, 9, 8, 7])
+			expect(r3(resolveFontSizes(72, 72, NaN, 3))).toEqual([
+				59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
+			])
 		})
 
 		test('treats string numbers as explicit sizes', () => {

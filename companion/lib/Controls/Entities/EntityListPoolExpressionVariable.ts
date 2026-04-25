@@ -1,9 +1,11 @@
+import type { JsonValue } from 'type-fest'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
@@ -14,7 +16,7 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props)
+		super(props, false)
 
 		this.#entities = this.createEntityList({
 			type: EntityModelType.Feedback,
@@ -62,10 +64,20 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
 
 		if (this.#entities.updateFeedbackValues(connectionId, newValues).length > 0) {
-			this.invalidateControl()
+			this.reportChange({
+				redraw: true,
+				noSave: true,
+			})
 		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
+	}
+
+	public getFeedbackStyleOverrides(): ReadonlyMap<
+		string,
+		ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
+	> {
+		return new Map()
 	}
 
 	/**
@@ -76,7 +88,10 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 		const changedVariableEntities = this.#localVariables.updateIsInvertedValues(newValues)
 
 		if (this.#entities.updateIsInvertedValues(newValues).length > 0) {
-			this.invalidateControl()
+			this.reportChange({
+				redraw: true,
+				noSave: true,
+			})
 		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)

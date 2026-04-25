@@ -185,12 +185,12 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			'$(this:page_name)',
 			location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE
 		)
-		// values.set(
-		// 	'$(this:pushed)',
-		// 	location
-		// 		? `$(internal:b_pushed_${location.pageNumber}_${location.row}_${location.column})`
-		// 		: VARIABLE_UNKNOWN_VALUE
-		// )
+		values.set(
+			'$(this:active)',
+			location
+				? `$(internal:b_active_${location.pageNumber}_${location.row}_${location.column})`
+				: VARIABLE_UNKNOWN_VALUE
+		)
 		values.set(
 			'$(this:step)',
 			location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE
@@ -202,18 +202,18 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				: VARIABLE_UNKNOWN_VALUE
 		)
 
-		// values.set(
-		// 	'$(this:actions_running)',
-		// 	location
-		// 		? `$(internal:b_actions_running_${location.pageNumber}_${location.row}_${location.column})`
-		// 		: VARIABLE_UNKNOWN_VALUE
-		// )
-		// values.set(
-		// 	'$(this:button_status)',
-		// 	location
-		// 		? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
-		// 		: VARIABLE_UNKNOWN_VALUE
-		// )
+		values.set(
+			'$(this:actions_running)',
+			location
+				? `$(internal:b_actions_running_${location.pageNumber}_${location.row}_${location.column})`
+				: VARIABLE_UNKNOWN_VALUE
+		)
+		values.set(
+			'$(this:button_status)',
+			location
+				? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
+				: VARIABLE_UNKNOWN_VALUE
+		)
 	}
 }
 

@@ -1,30 +1,38 @@
+import type { JsonValue } from 'type-fest'
 import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ButtonStatus,
-	NormalButtonOptions,
+	LayeredButtonOptions,
 	NormalButtonRuntimeProps,
 	PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ButtonStyleProperties, DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsElementUsage,
+	type ButtonStyleProperties,
+	type DrawStyleLayeredButtonModel,
+} from '@companion-app/shared/Model/StyleModel.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
+import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
-import { GetButtonBitmapSize } from '../../../Resources/Util.js'
+import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import type {
 	ControlWithEntities,
+	ControlWithLayeredStyle,
 	ControlWithoutActions,
 	ControlWithoutActionSets,
 	ControlWithoutEvents,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithStyle,
 } from '../../IControlFragments.js'
 import { ButtonControlBase } from './Base.js'
-import { ControlButtonNormal } from './Normal.js'
-import { parseVariablesInButtonStyle } from './Util.js'
 
 /**
  * Class for the preset button control.
@@ -41,7 +49,7 @@ import { parseVariablesInButtonStyle } from './Util.js'
 export class ControlButtonPreset
 	extends ControlBase<PresetButtonModel>
 	implements
-		ControlWithStyle,
+		ControlWithLayeredStyle,
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
@@ -54,8 +62,7 @@ export class ControlButtonPreset
 	readonly supportsActions = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
-	readonly supportsStyle = true
-	readonly supportsLayeredStyle = false
+	readonly supportsLayeredStyle = true
 	readonly supportsEntities = true
 	readonly supportsOptions = false
 	readonly supportsPushed = false
@@ -70,17 +77,23 @@ export class ControlButtonPreset
 	/**
 	 * The config of this button
 	 */
-	options!: NormalButtonOptions
+	options!: LayeredButtonOptions
 
 	/**
 	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
 	 */
 	#lastDrawVariables: ReadonlySet<string> | null = null
+	#lastDrawCompositeElements: ReadonlySet<CompositeElementIdString> | null = null
 
 	/**
 	 * The base style without feedbacks applied
 	 */
-	#baseStyle: ButtonStyleProperties = structuredClone(ControlButtonNormal.DefaultStyle)
+	#drawElements: SomeButtonGraphicsElement[] = []
+
+	/**
+	 * Cache for element conversion results (for future per-element caching optimization)
+	 */
+	readonly #elementConversionCache = new ElementConversionCache()
 
 	readonly #connectionId: string
 	readonly #presetId: string
@@ -89,10 +102,6 @@ export class ControlButtonPreset
 
 	get lastRender(): ImageResult | null {
 		return this.#lastRender
-	}
-
-	get baseStyle(): ButtonStyleProperties {
-		return this.#baseStyle
 	}
 
 	constructor(
@@ -111,8 +120,7 @@ export class ControlButtonPreset
 		this.entities = new ControlEntityListPoolButton(
 			{
 				controlId,
-				commitChange: this.commitChange.bind(this),
-				invalidateControl: this.triggerRedraw.bind(this),
+				reportChange: this.#entityListReportChange.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
@@ -127,13 +135,15 @@ export class ControlButtonPreset
 						null, // This doesn't support local variables
 						injectedVariableValues ?? null
 					)
-					.executeExpression(expression, requiredType)
+					.executeExpression(expression, requiredType),
+			false
 		)
 
 		this.options = {
 			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			stepProgression: 'auto',
+			canModifyStyleInApis: false,
 		}
 
 		if (storage.type !== 'preset:button')
@@ -149,12 +159,31 @@ export class ControlButtonPreset
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.#elementConversionCache.clear()
 		this.entities.destroy()
 
 		super.destroy()
 
 		this.deps.events.off('presetDrawn', this.#updateLastRender)
 		this.deps.instance.definitions.off('updatePresets', this.#updatePresetDefinition)
+	}
+
+	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+
+		if (options.invalidateAllElements) {
+			this.#elementConversionCache.clear()
+		} else if (options.changedElementIds) {
+			for (const elementId of options.changedElementIds) {
+				this.#elementConversionCache.queueInvalidate(elementId)
+			}
+		}
+
+		if (options.redraw || options.changedElementIds || options.invalidateAllElements) {
+			this.triggerRedraw()
+		}
 	}
 
 	#updateLastRender = (controlId: string, render: ImageResult): void => {
@@ -174,7 +203,9 @@ export class ControlButtonPreset
 	}
 
 	#applyPresetModel(storage: PresetButtonModel): void {
-		this.#baseStyle = Object.assign(this.#baseStyle, storage.style || {})
+		this.#drawElements = storage.style.layers || []
+		this.#elementConversionCache.clear()
+
 		this.options = Object.assign(this.options, storage.options || {})
 		this.entities.loadStorage(storage, true, true)
 		this.entities.stepExpressionUpdate(this.options)
@@ -193,27 +224,39 @@ export class ControlButtonPreset
 		this.sendRuntimePropsChange()
 	}
 
-	/**
-	 * Get the size of the bitmap render of this control
-	 */
-	getBitmapSize(): { width: number; height: number } | null {
-		return GetButtonBitmapSize(this.deps.userconfig, this.#baseStyle)
+	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
+	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
+		return this.#lastDrawStyle
 	}
 
 	/**
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleButtonModel {
-		const style = this.entities.getUnparsedFeedbackStyle(this.#baseStyle)
+	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
+		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
+			null,
+			this.entities.getLocalVariableEntities(),
+			null
+		)
 
-		this.#lastDrawVariables = parseVariablesInButtonStyle(this.logger, this.controlId, this.deps, this.entities, style)
+		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
 
-		return {
-			cloud: false,
-			cloud_error: false,
+		// Compute the new drawing
+		const { elements, usedVariables, usedCompositeElements } = await ConvertSomeButtonGraphicsElementForDrawing(
+			this.deps.instance.definitions,
+			parser,
+			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
+			this.#drawElements,
+			feedbackOverrides,
+			true,
+			this.#elementConversionCache
+		)
+		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
+		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
 
-			...structuredClone(style),
+		const result: DrawStyleLayeredButtonModel = {
+			elements,
 
 			stepCurrent: this.entities.getActiveStepIndex() + 1,
 			stepCount: this.entities.getStepIds().length,
@@ -222,8 +265,11 @@ export class ControlButtonPreset
 			action_running: false,
 			button_status: this.button_status,
 
-			style: 'button',
+			style: 'button-layered',
 		}
+
+		this.#lastDrawStyle = result
+		return result
 	}
 
 	/**
@@ -238,7 +284,7 @@ export class ControlButtonPreset
 		foundVariables: Set<string>
 	): void {
 		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
-			.visitButtonDrawStyle(this.#baseStyle)
+			.visitDrawElements(this.#drawElements)
 			.visitEntities(this.entities.getAllEntities(), [])
 	}
 
@@ -252,7 +298,7 @@ export class ControlButtonPreset
 
 		// Fix up references
 		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
-			.visitButtonDrawStyle(this.#baseStyle)
+			.visitDrawElements(this.#drawElements)
 			.visitEntities(allEntities, [])
 			.recheckChangedFeedbacks()
 			.hasChanges()
@@ -269,17 +315,115 @@ export class ControlButtonPreset
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 
+		// Queue invalidation for cached elements that use any of the changed variables
+		this.#elementConversionCache.queueInvalidateVariables(allChangedVariables)
+
 		this.logger.silly('variable changed in button ' + this.controlId)
 		this.triggerRedraw()
 	}
 
 	/**
-	 * Update the style fields of this control
-	 * @param diff - config diff to apply
+	 * Propagate composite element changes
+	 * @param allChangedElementIds - composite element ids with changes
+	 */
+	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
+		if (!this.#lastDrawCompositeElements) return
+		if (this.#lastDrawCompositeElements.isDisjointFrom(allChangedElementIds)) return
+
+		// Queue invalidation for any cached elements that use these composite types
+		this.#elementConversionCache.queueInvalidateCompositeType(allChangedElementIds)
+
+		this.logger.silly('composite element changed in button ' + this.controlId)
+		this.triggerRedraw()
+	}
+
+	/**
+	 * Add an element to the layered style
+	 * @param _type Element type to add
+	 * @param _index Index to insert the element at, or null to append
+	 */
+	layeredStyleAddElement(_type: string, _index: number | null): string {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Remove an element from the layered style
+	 * @param _id Element id to remove
+	 * @returns true if the element was removed
+	 */
+	layeredStyleRemoveElement(_id: string): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Move an element in the layered style
+	 * @param _id Element id to move
+	 * @param _parentElementId Parent element id to move the element to
+	 * @param _newIndex New index of the element
+	 * @returns true if the element was moved
+	 */
+	layeredStyleMoveElement(_id: string, _parentElementId: string | null, _newIndex: number): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Update the name of an element in the layered style
+	 * @param _id Element id to update
+	 * @param _name New name for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementName(_id: string, _name: string): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Update the usage of an element in the layered style
+	 * @param _id Element id to update
+	 * @param usage New usage for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementUsage(_id: string, _name: ButtonGraphicsElementUsage): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Update an option on an element from the layered style
+	 * @param _id Element id to update
+	 * @param _key Option key to update
+	 * @param _value New value for the option
 	 * @returns true if any changes were made
 	 */
-	styleSetFields(_diff: Record<string, any>): boolean {
+	layeredStyleUpdateOption(_id: string, _key: string, _value: ExpressionOrValue<JsonValue | undefined>): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Update the style from legacy properties
+	 * Future: Once the old button style is removed, this should be reworked to utilise the new style system better
+	 * @param _diff The properties to update
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateFromLegacyProperties(_diff: Partial<ButtonStyleProperties>): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
+	 * Get an element from the layered style by ID
+	 * @param _id Element ID to find
+	 * @returns The element if found, undefined otherwise
+	 */
+	layeredStyleGetElementById(_id: string): SomeButtonGraphicsElement | undefined {
+		// Streaming elements is not supported
+		return undefined
+	}
+
+	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
+		return {
+			[ButtonGraphicsElementUsage.Automatic]: undefined,
+			[ButtonGraphicsElementUsage.Text]: undefined,
+			[ButtonGraphicsElementUsage.Color]: undefined,
+			[ButtonGraphicsElementUsage.Image]: undefined,
+		}
 	}
 
 	/**
@@ -290,7 +434,9 @@ export class ControlButtonPreset
 	override toJSON(clone = true): PresetButtonModel {
 		const obj: PresetButtonModel = {
 			type: this.type,
-			style: this.#baseStyle,
+			style: {
+				layers: this.#drawElements,
+			},
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),

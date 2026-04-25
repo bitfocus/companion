@@ -9,21 +9,18 @@ import {
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
 	type EntitySupportedChildGroupDefinition,
 	type FeedbackEntityModel,
+	type FeedbackEntityStyleOverride,
 	type FeedbackValue,
 	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { assertNever } from '@companion-app/shared/Util.js'
-import type { CompanionButtonStyleProps } from '@companion-module/base'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 import { ControlEntityList } from './EntityList.js'
-import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -118,6 +115,16 @@ export class ControlEntityInstance {
 
 	get feedbackValue(): any {
 		return this.#cachedFeedbackValue
+	}
+
+	get styleOverrides(): FeedbackEntityStyleOverride[] | undefined {
+		if (this.type !== EntityModelType.Feedback) return undefined
+		return (this.#data as FeedbackEntityModel).styleOverrides
+	}
+
+	get styleOverrideAffectedElementIds(): ReadonlySet<string> | undefined {
+		if (!this.styleOverrides) return undefined
+		return new Set(this.styleOverrides.map((o) => o.elementId))
 	}
 
 	get localVariableName(): string | null {
@@ -457,90 +464,45 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Update an style property for a boolean feedback
-	 * @param key the key/name of the property
-	 * @param value the new value
-	 * @returns success
+	 * Replace a style override for a feedback entity
+	 * @param override the new style override
+	 * @returns the override if successful, null otherwise
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setStyleValue(key: string, value: any): boolean {
-		if (this.#data.type !== EntityModelType.Feedback) return false
+	replaceStyleOverride(override: FeedbackEntityStyleOverride): FeedbackEntityStyleOverride | null {
+		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const feedbackData = this.#data as FeedbackEntityModel
 
-		if (key === 'png64' && value !== null) {
-			if (!value.match(/data:.*?image\/png/)) {
-				return false
-			}
+		if (!feedbackData.styleOverrides) feedbackData.styleOverrides = []
 
-			value = value.replace(/^.*base64,/, '')
+		const index = feedbackData.styleOverrides.findIndex((o) => o.overrideId === override.overrideId)
+		if (index !== -1) {
+			feedbackData.styleOverrides[index] = override
+		} else {
+			feedbackData.styleOverrides.push(override)
 		}
 
-		const definition = this.getEntityDefinition()
-		if (
-			!definition ||
-			definition.entityType !== EntityModelType.Feedback ||
-			definition.feedbackType !== FeedbackEntitySubType.Boolean
-		)
-			return false
-
-		if (!feedbackData.style) feedbackData.style = {}
-		feedbackData.style[key as keyof ButtonStyleProperties] = value
-
-		return true
+		return override
 	}
 
 	/**
-	 * Update the selected style properties for a boolean feedback
-	 * @param selected the properties to be selected
-	 * @param baseStyle Style of the button without feedbacks applied
-	 * @returns success
-	 * @access public
+	 * Remove a style override for a feedback entity
+	 * @param id the id of the override to remove
+	 * @returns the removed override if successful, null otherwise
 	 */
-	setStyleSelection(selected: string[], baseStyle: ButtonStyleProperties): boolean {
-		if (this.#data.type !== EntityModelType.Feedback) return false
+	removeStyleOverride(id: string): FeedbackEntityStyleOverride | null {
+		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const feedbackData = this.#data as FeedbackEntityModel
 
-		const definition = this.getEntityDefinition()
-		if (
-			!definition ||
-			definition.entityType !== EntityModelType.Feedback ||
-			definition.feedbackType !== FeedbackEntitySubType.Boolean
-		)
-			return false
+		if (!feedbackData.styleOverrides) return null
 
-		const defaultStyle: Partial<CompanionButtonStyleProps> = definition.feedbackStyle || {}
-		const oldStyle: Record<string, any> = feedbackData.style || {}
-		const newStyle: Record<string, any> = {}
+		const index = feedbackData.styleOverrides.findIndex((o) => o.overrideId === id)
+		if (index === -1) return null
 
-		for (const key0 of selected) {
-			const key = key0 as keyof ButtonStyleProperties
-			if (key in oldStyle) {
-				// preserve existing value
-				newStyle[key] = oldStyle[key]
-			} else {
-				// copy button value as a default
-				newStyle[key] = defaultStyle[key] !== undefined ? defaultStyle[key] : baseStyle[key]
+		const [removed] = feedbackData.styleOverrides.splice(index, 1)
 
-				// png needs to be set to something harmless
-				if (key === 'png64' && !newStyle[key]) {
-					newStyle[key] = null
-				}
-			}
-
-			if (key === 'text') {
-				// also preserve textExpression
-				newStyle['textExpression'] =
-					oldStyle['textExpression'] ??
-					/*defaultStyle['textExpression'] !== undefined
-									? defaultStyle['textExpression']
-									: */ baseStyle['textExpression']
-			}
-		}
-		feedbackData.style = newStyle
-
-		return true
+		return removed
 	}
 
 	/**
@@ -695,7 +657,12 @@ export class ControlEntityInstance {
 			const feedbackData = this.#data as FeedbackEntityModel
 			const newPropsData = newProps as FeedbackEntityModel
 			feedbackData.isInverted = newPropsData.isInverted ?? feedbackData.isInverted
-			feedbackData.style = Object.keys(feedbackData.style || {}).length > 0 ? feedbackData.style : newPropsData.style
+
+			// Replace the style overrides only if the new one is non-empty
+			feedbackData.styleOverrides =
+				newPropsData.styleOverrides && newPropsData.styleOverrides.length > 0
+					? newPropsData.styleOverrides
+					: feedbackData.styleOverrides
 		}
 
 		if (!skipNotifyModule) {
@@ -796,47 +763,6 @@ export class ControlEntityInstance {
 		} else {
 			// An invalid value is falsey, it probably means that the feedback has no value
 			return false
-		}
-	}
-
-	/**
-	 * Apply the unparsed style for the feedbacks
-	 * Note: Does not clone the style
-	 */
-	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.disabled) return
-
-		const feedback = this.#data as FeedbackEntityModel
-		if (feedback.type !== EntityModelType.Feedback) return
-
-		const definition = this.getEntityDefinition()
-		if (!definition || definition.entityType !== EntityModelType.Feedback) return
-
-		switch (definition.feedbackType) {
-			case FeedbackEntitySubType.Boolean:
-				if (this.getBooleanFeedbackValue()) styleBuilder.applySimpleStyle(feedback.style)
-				break
-			case FeedbackEntitySubType.Advanced:
-				// Special case to handle the internal 'logic' operators, which need to be done differently
-				if (this.connectionId === 'internal' && this.definitionId === 'logic_conditionalise_advanced') {
-					if (this.getBooleanFeedbackValue()) {
-						for (const child of this.#children.get('feedbacks')?.getDirectEntities() || []) {
-							child.buildFeedbackStyle(styleBuilder)
-						}
-					}
-				} else {
-					styleBuilder.applyComplexStyle(this.#cachedFeedbackValue)
-				}
-				break
-			case FeedbackEntitySubType.Value:
-				// Not valid for building a style
-				break
-			case null:
-				// Not a valid feedback
-				break
-			default:
-				assertNever(definition.feedbackType)
-				break
 		}
 	}
 

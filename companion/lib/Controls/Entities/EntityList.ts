@@ -9,7 +9,6 @@ import {
 import { clamp } from '../../Resources/Util.js'
 import { ControlEntityInstance } from './EntityInstance.js'
 import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
-import type { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -222,12 +221,16 @@ export class ControlEntityList {
 	/**
 	 * Reorder an entity directly in in the list
 	 */
-	moveEntity(oldIndex: number, newIndex: number): void {
+	moveEntity(oldIndex: number, newIndex: number): ControlEntityInstance | undefined {
 		oldIndex = clamp(oldIndex, 0, this.#entities.length)
 		newIndex = clamp(newIndex, 0, this.#entities.length)
+		if (oldIndex === newIndex) return undefined
+
 		if (oldIndex < newIndex) newIndex -= 1
 
 		this.#entities.splice(newIndex, 0, ...this.#entities.splice(oldIndex, 1))
+
+		return this.#entities[newIndex]
 	}
 
 	/**
@@ -407,21 +410,6 @@ export class ControlEntityList {
 		}
 
 		return values
-	}
-
-	/**
-	 * Get the unparsed style for the feedbacks
-	 * Note: Does not clone the style
-	 */
-	buildFeedbackStyle(styleBuilder: FeedbackStyleBuilder): void {
-		if (this.#listDefinition.type !== EntityModelType.Feedback || !!this.#listDefinition.feedbackListType)
-			throw new Error('ControlEntityList is not style feedbacks')
-
-		// Note: We don't need to consider children of the feedbacks here, as that can only be from boolean feedbacks which are handled by the `getBooleanValue`
-
-		for (const entity of this.#entities) {
-			entity.buildFeedbackStyle(styleBuilder)
-		}
 	}
 
 	/**

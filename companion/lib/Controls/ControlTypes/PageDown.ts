@@ -6,9 +6,9 @@ import type {
 	ControlWithoutActions,
 	ControlWithoutActionSets,
 	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 } from '../IControlFragments.js'
 
 /**
@@ -30,7 +30,7 @@ export class ControlButtonPageDown
 	extends ControlBase<PageDownButtonModel>
 	implements
 		ControlWithoutActions,
-		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
 		ControlWithoutOptions,
@@ -40,7 +40,7 @@ export class ControlButtonPageDown
 
 	readonly supportsActions = false
 	readonly supportsEntities = false
-	readonly supportsStyle = false
+	readonly supportsLayeredStyle = false
 	readonly supportsEvents = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = false
@@ -73,7 +73,7 @@ export class ControlButtonPageDown
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getDrawStyle(): DrawStyleModel {
+	getLastDrawStyle(): DrawStyleModel {
 		return {
 			style: 'pagedown',
 		}
@@ -122,9 +122,6 @@ export class ControlButtonPageDown
 		}
 	}
 
-	getBitmapSize(): { width: number; height: number } | null {
-		return null
-	}
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}

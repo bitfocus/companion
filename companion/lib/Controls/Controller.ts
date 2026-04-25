@@ -15,8 +15,9 @@ import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Mode
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
-import { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
@@ -29,7 +30,7 @@ import type {
 } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
-import { ControlButtonNormal } from './ControlTypes/Button/Normal.js'
+import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
@@ -44,6 +45,7 @@ import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
 import type { SomeControl } from './IControlFragments.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
+import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
@@ -78,7 +80,7 @@ export class ControlsController {
 	/**
 	 * Active learning store
 	 */
-	readonly #activeLearningStore = new ActiveLearningStore()
+	readonly #activeLearningStore: ActiveLearningStore
 
 	readonly #triggerCollections: TriggerCollections
 
@@ -95,11 +97,13 @@ export class ControlsController {
 		db: DataDatabase,
 		store: ControlStore,
 		controlEvents: EventEmitter<ControlCommonEvents>,
+		activeLearningStore: ActiveLearningStore,
 		controlDeps: ControlExternalDependencies
 	) {
 		this.#store = store
 		this.#deps = controlDeps
 		this.#controlEvents = controlEvents
+		this.#activeLearningStore = activeLearningStore
 
 		this.#triggerCollections = new TriggerCollections(
 			db,
@@ -221,6 +225,7 @@ export class ControlsController {
 			),
 			actionSets: createActionSetsTrpcRouter(this.#store.controls),
 			steps: createStepsTrpcRouter(this.#store.controls),
+			styles: createStylesTrpcRouter(this.#store.controls),
 
 			...createControlsTrpcRouter(
 				this.#logger,
@@ -273,8 +278,8 @@ export class ControlsController {
 		const controlType = typeof controlObj === 'object' ? controlObj.type : controlObj
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if (category === 'all' || category === 'button') {
-			if (controlObj2?.type === 'button' || (controlType === 'button' && !controlObj2)) {
-				return new ControlButtonNormal(this.#createControlDependencies(), controlId, controlObj2, isImport)
+			if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
+				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
@@ -321,14 +326,14 @@ export class ControlsController {
 	}
 
 	/**
-	 * Get all of the trigger controls
+	 * Get all of the button controls
 	 */
-	getAllButtons(): Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
-		const buttons: Array<ControlButtonNormal | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
+	getAllButtons(): Array<ControlButtonLayered | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
+		const buttons: Array<ControlButtonLayered | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
 			[]
 		for (const control of this.#store.controls.values()) {
 			if (
-				control instanceof ControlButtonNormal ||
+				control instanceof ControlButtonLayered ||
 				control instanceof ControlButtonPageDown ||
 				control instanceof ControlButtonPageNumber ||
 				control instanceof ControlButtonPageUp
@@ -508,6 +513,20 @@ export class ControlsController {
 
 				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
 				control.onVariablesChanged(allChangedVariablesSet)
+			}
+		}
+	}
+
+	/**
+	 * Propagate composite element changes
+	 * @param allChangedElementIds - composite element ids with changes
+	 */
+	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
+		if (allChangedElementIds.size === 0) return
+
+		for (const control of this.#store.controls.values()) {
+			if (control.supportsLayeredStyle) {
+				control.onCompositeElementsChanged(allChangedElementIds)
 			}
 		}
 	}

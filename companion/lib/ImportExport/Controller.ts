@@ -14,6 +14,7 @@ import path from 'node:path'
 import type express from 'express'
 import workerPool from 'workerpool'
 import z from 'zod'
+import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
 	zodClientImportOrResetSelection,
@@ -27,6 +28,7 @@ import type { DataDatabase } from '../Data/Database.js'
 import { upgradeImport } from '../Data/Upgrade.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
@@ -341,7 +343,7 @@ export class ImportExportController {
 					const importObject = ctx.pendingImport?.object
 					if (!importObject) return null
 
-					let importPage
+					let importPage: ExportPageContentv6 | undefined
 					if (importObject.type === 'page') {
 						importPage = importObject.page
 					} else if (importObject.type === 'full') {
@@ -352,10 +354,22 @@ export class ImportExportController {
 					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
 					if (!controlObj) return null
 
-					const res = await this.#graphicsController.drawPreview({
-						...controlObj.style,
-						style: controlObj.type,
-					})
+					const controlObjLayered = controlObj as LayeredButtonModel
+
+					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+
+					// Compute the new drawing
+					const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(
+						this.#instancesController.definitions,
+						parser,
+						this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
+						controlObjLayered.style.layers,
+						new Map(),
+						true,
+						null
+					)
+
+					const res = await this.#graphicsController.drawPreview(elements)
 					return res?.style ? (res?.asDataUrl ?? null) : null
 				}),
 

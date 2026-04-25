@@ -1,9 +1,9 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 
 export type RendererDrawStyle = RendererButtonStyle | RendererPageUpDownStyle | RendererPageNumStyle
 
-export interface RendererButtonStyle extends DrawStyleButtonModel {
+export interface RendererButtonStyle extends DrawStyleLayeredButtonModel {
 	show_topbar: boolean
 	location: ControlLocation | undefined
 }

@@ -50,7 +50,8 @@ export function createExpressionVariableTrpcRouter(
 			const rootEntity = deps.instance.definitions.createEntityItem(
 				'internal',
 				EntityModelType.Feedback,
-				'expression_value'
+				'expression_value',
+				null
 			)
 			if (!rootEntity) throw new Error('Failed to get initial entity for expression variable')
 

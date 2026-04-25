@@ -1,25 +1,22 @@
+import type { JsonValue } from 'type-fest'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type {
-	ButtonModelBase,
-	NormalButtonOptions,
-	NormalButtonSteps,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ButtonStyleProperties, UnparsedButtonStyle } from '@companion-app/shared/Model/StyleModel.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import { FeedbackStyleBuilder } from './FeedbackStyleBuilder.js'
 import type { NewFeedbackValue, NewIsInvertedValue } from './Types.js'
 
 interface CurrentStepFromExpression {
@@ -82,14 +79,18 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			expression: string,
 			requiredType?: string,
 			injectedVariableValues?: VariableValues
-		) => ExecuteExpressionResult
+		) => ExecuteExpressionResult,
+		isLayeredButton: boolean
 	) {
-		super(props)
+		super(props, isLayeredButton)
 
 		this.#executeExpressionInControl = executeExpressionInControl
 		this.#sendRuntimePropsChange = sendRuntimePropsChange
 
-		this.#feedbacks = this.createEntityList({ type: EntityModelType.Feedback })
+		this.#feedbacks = this.createEntityList({
+			type: EntityModelType.Feedback,
+			feedbackListType: isLayeredButton ? FeedbackEntitySubType.StyleOverride : undefined,
+		})
 		this.#localVariables = this.createEntityList({
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Value,
@@ -175,14 +176,89 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return entityLists
 	}
 
-	/**
-	 * Get the unparsed style for the feedbacks
-	 * Note: Does not clone the style
-	 */
-	getUnparsedFeedbackStyle(baseStyle: ButtonStyleProperties): UnparsedButtonStyle {
-		const styleBuilder = new FeedbackStyleBuilder(baseStyle)
-		this.#feedbacks.buildFeedbackStyle(styleBuilder)
-		return styleBuilder.style
+	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>> {
+		const result = new Map<string, Map<string, ExpressionOrValue<JsonValue | undefined>>>()
+
+		const pushOverride = (
+			elementId: string,
+			elementProperty: string,
+			override: ExpressionOrValue<JsonValue | undefined>
+		) => {
+			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<JsonValue | undefined>>()
+
+			// Hack: merge imageBuffers so that they stack instead of replacing
+			if (elementProperty === 'base64Image') {
+				const existing = targetMap.get(elementProperty)
+				if (
+					existing &&
+					!existing.isExpression &&
+					!override.isExpression &&
+					Array.isArray(existing.value) &&
+					Array.isArray(override.value)
+				) {
+					override = {
+						isExpression: false,
+						value: [...existing.value, ...override.value],
+					}
+				}
+			}
+
+			targetMap.set(elementProperty, override)
+			result.set(elementId, targetMap)
+		}
+
+		for (const feedback of this.#feedbacks.getDirectEntities()) {
+			const overrides = feedback.styleOverrides
+			if (!overrides || overrides.length === 0) continue
+
+			// Get the definition, to know how to handle it
+			const entityDefinition = feedback.getEntityDefinition()
+			if (!entityDefinition) continue
+
+			switch (entityDefinition.feedbackType) {
+				case FeedbackEntitySubType.Boolean:
+					// For boolean values, we only care about the true case
+					// And the override stores the value to be applied
+					if (feedback.getBooleanFeedbackValue()) {
+						for (const override of overrides) {
+							pushOverride(override.elementId, override.elementProperty, override.override)
+						}
+					}
+					break
+				case FeedbackEntitySubType.Advanced: {
+					// For advanced feedbacks, split out the value from the feedback and inject it into the map
+					const style = feedback.feedbackValue
+					if (!style || typeof style !== 'object') break
+
+					const parsedStyle = ParseLegacyStyle(style)
+					for (const override of overrides) {
+						const newValue = GetLegacyStyleProperty(
+							parsedStyle,
+							style,
+							stringifyVariableValue(override.override.value) ?? '',
+							override.elementProperty
+						)
+						if (newValue) {
+							pushOverride(override.elementId, override.elementProperty, newValue)
+						}
+					}
+
+					break
+				}
+				case FeedbackEntitySubType.Value:
+					// Not compatible here
+					break
+				case FeedbackEntitySubType.StyleOverride:
+				case null:
+					// Not a real feedback
+					break
+				default:
+					assertNever(entityDefinition.feedbackType)
+					break
+			}
+		}
+
+		return result
 	}
 
 	getStepIds(): string[] {
@@ -205,7 +281,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			// add the default '1000' set
 			step.sets.set(1000, this.#createActionEntityList([], false, false))
 
-			this.commitChange(true)
+			this.reportChange({ redraw: true })
 
 			return true
 			// return 1000
@@ -216,7 +292,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 			step.sets.set(newIndex, this.#createActionEntityList([], false, false))
 
-			this.commitChange(false)
+			this.reportChange({ redraw: false })
 
 			return true
 			// return newIndex
@@ -244,7 +320,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		step.sets.delete(setIdNumber)
 
 		// Save the change, and perform a draw
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return true
 	}
@@ -274,7 +350,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
 		if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -299,7 +375,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			step.options.runWhileHeld.splice(runWhileHeldIndex, 1)
 		}
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -330,7 +406,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			}
 		}
 
-		if (!skipCommit) this.commitChange(true)
+		if (!skipCommit) this.reportChange({ redraw: true })
 	}
 
 	#createActionEntityList(entities: SomeEntityModel[], skipSubscribe: boolean, isCloned: boolean): ControlEntityList {
@@ -400,7 +476,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		if (this.#stepCheckExpression(true)) {
 			// Something changed, so redraw
-			this.invalidateControl()
+			this.reportChange({ redraw: true })
 		}
 	}
 
@@ -454,7 +530,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * Update the step operation mode or expression upon button options change
 	 * @param options
 	 */
-	stepExpressionUpdate(options: NormalButtonOptions): void {
+	stepExpressionUpdate(options: ButtonOptionsBase): void {
 		if (options.stepProgression === 'expression') {
 			// It may have changed, assume it has and purge the existing state
 			this.#currentStep = {
@@ -489,7 +565,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		// Ensure current step is valid
 		this.#stepCheckExpression(true)
 
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return stepId
 	}
@@ -549,7 +625,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#sendRuntimePropsChange()
 
 		// Save the change, and perform a draw
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return true
 	}
@@ -608,7 +684,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		}
 
 		// Save the change, and perform a draw
-		this.commitChange(true)
+		this.reportChange({ redraw: true })
 
 		return true
 	}
@@ -631,7 +707,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		this.#sendRuntimePropsChange()
 
-		this.invalidateControl()
+		this.reportChange({
+			redraw: true,
+			noSave: true,
+		})
 
 		return true
 	}
@@ -653,7 +732,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		// Ensure current step is valid
 		this.#stepCheckExpression(true)
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -669,7 +748,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		step.options.name = newName
 
-		this.commitChange(false)
+		this.reportChange({ redraw: false })
 
 		return true
 	}
@@ -680,7 +759,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 			if (this.#stepCheckExpression(true)) {
 				// Something changed, so redraw
-				this.invalidateControl()
+				this.reportChange({
+					redraw: true,
+					noSave: true,
+				})
 			}
 
 			return [this.#currentStep.lastStepId, null]
@@ -737,6 +819,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			options: step.options,
 		}
 	}
+
 	/**
 	 * Update the feedbacks on the button with new values
 	 * @param connectionId The instance the feedbacks are for
@@ -751,9 +834,8 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
 
-		if (this.#feedbacks.updateFeedbackValues(connectionId, newValues).length > 0) {
-			this.invalidateControl()
-		}
+		const changedFeedbackEntities = this.#feedbacks.updateFeedbackValues(connectionId, newValues)
+		this.#emitFeedbackValueChangesForEntities(changedFeedbackEntities)
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
@@ -771,11 +853,31 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 		const changedVariableEntities = this.#localVariables.updateIsInvertedValues(newValues)
 
-		if (this.#feedbacks.updateIsInvertedValues(newValues).length > 0) {
-			this.invalidateControl()
-		}
+		const changedFeedbackEntities = this.#feedbacks.updateIsInvertedValues(newValues)
+		this.#emitFeedbackValueChangesForEntities(changedFeedbackEntities)
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
+	}
+
+	#emitFeedbackValueChangesForEntities(changedFeedbackEntities: ControlEntityInstance[]): void {
+		if (changedFeedbackEntities.length === 0) return
+
+		// Collect affected element IDs from changed feedbacks that have style overrides
+		const affectedElementIds = new Set<string>()
+		for (const entity of changedFeedbackEntities) {
+			// Only consider enabled feedbacks
+			if (entity.disabled || !entity.styleOverrides) continue
+
+			for (const override of entity.styleOverrides) {
+				affectedElementIds.add(override.elementId)
+			}
+		}
+
+		this.reportChange({
+			redraw: true,
+			noSave: true,
+			changedElementIds: affectedElementIds.size > 0 ? affectedElementIds : undefined,
+		})
 	}
 }
 

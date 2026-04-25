@@ -38,7 +38,7 @@ export class ServiceTcp extends ServiceTcpBase {
 	}
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
-		const bgcolor = (typeof render.style !== 'string' ? render.style : {})?.bgcolor || 0
+		const bgcolor = render.style?.color?.color || 0
 
 		if (this.clients.size > 0) {
 			const color = decimalToRgb(bgcolor)

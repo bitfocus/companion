@@ -22,6 +22,7 @@ import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { PageStore } from './Page/Store.js'
 import { PreviewController } from './Preview/Controller.js'
+import { ActiveLearningStore } from './Resources/ActiveLearningStore.js'
 import { isPackaged, sendOverIpc, showErrorMessage } from './Resources/Util.js'
 import { ServiceController } from './Service/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
@@ -197,12 +198,20 @@ export class Registry {
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
+		const activeLearningStore = new ActiveLearningStore()
 		const pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
-		this.graphics = new GraphicsController(controlStore, pageStore, this.userconfig, this.variables, this.db)
+		this.graphics = new GraphicsController(
+			controlStore,
+			pageStore,
+			this.userconfig,
+			this.variables,
+			this.db,
+			this.#internalApiRouter
+		)
 
 		this.surfaces = new SurfaceController(this.db, {
 			controls: controlStore,
@@ -230,16 +239,23 @@ export class Registry {
 
 		const actionRunner = new ActionRunner(this.instance, this.internalModule)
 
-		this.controls = new ControlsController(this.db, controlStore, controlEvents, {
+		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
 			surfaces: this.surfaces,
 			pageStore: pageStore,
 			internalModule: this.internalModule,
 			instance: this.instance,
 			variableValues: this.variables.values,
 			userconfig: this.userconfig,
+			graphics: this.graphics,
 			actionRunner: actionRunner,
 		})
-		this.preview = new PreviewController(this.graphics, pageStore, this.controls, controlEvents)
+		this.preview = new PreviewController(
+			this.instance.definitions,
+			this.graphics,
+			pageStore,
+			this.controls,
+			controlEvents
+		)
 
 		this.internalModule.init(
 			this.#appInfo,

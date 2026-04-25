@@ -226,20 +226,18 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 	 * Draw a button
 	 */
 	draw(item: DrawButtonItem): void {
-		const { x, y } = item
-
 		const size = this.gridSize
-		if (x < 0 || y < 0 || x >= size.columns || y >= size.rows) return
+		if (item.x < 0 || item.y < 0 || item.x >= size.columns || item.y >= size.rows) return
 
-		const dataUrl = item.image.asDataUrl
+		const dataUrl = item.defaultRender.asDataUrl
 		if (!dataUrl) {
 			this.#logger.verbose('draw call had no data-url')
 			return
 		}
 
-		this.#imageCache.set(getCacheKey(x, y), dataUrl)
+		this.#imageCache.set(getCacheKey(item.x, item.y), dataUrl)
 
-		this.#trackChanged(x, y)
+		this.#trackChanged(item.x, item.y)
 		this.#emitChanged()
 	}
 

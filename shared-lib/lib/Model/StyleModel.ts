@@ -1,10 +1,11 @@
 import type { CompanionAlignment, CompanionTextSize } from '@companion-module/base'
+import type { SomeButtonGraphicsDrawElement } from './StyleLayersModel.js'
 
 export type DrawStyleModel =
 	| {
 			style: 'pageup' | 'pagedown' | 'pagenum'
 	  }
-	| DrawStyleButtonModel
+	| DrawStyleLayeredButtonModel
 
 export interface DrawStyleButtonStateProps {
 	pushed: boolean
@@ -12,16 +13,14 @@ export interface DrawStyleButtonStateProps {
 	stepCurrent: number
 	stepCount: number
 
-	cloud: boolean | undefined
-	cloud_error: boolean | undefined
 	button_status: 'error' | 'warning' | 'good' | undefined
 	action_running: boolean | undefined
 }
 
-export interface DrawStyleButtonModel extends ButtonStyleProperties, DrawStyleButtonStateProps {
-	style: 'button'
+export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
+	style: 'button-layered'
 
-	imageBuffers: DrawImageBuffer[]
+	elements: SomeButtonGraphicsDrawElement[]
 }
 
 export interface DrawImageBuffer {
@@ -34,15 +33,11 @@ export interface DrawImageBuffer {
 	pixelFormat: 'RGB' | 'RGBA' | 'ARGB' | undefined
 }
 
-export interface UnparsedButtonStyle extends ButtonStyleProperties {
-	imageBuffers: DrawImageBuffer[]
-}
-
 export interface ButtonStyleProperties {
 	text: string
 	textExpression: boolean | undefined
 
-	size: CompanionTextSize | number | 'small' | 'large'
+	size: CompanionTextSize
 	alignment: CompanionAlignment
 	pngalignment: CompanionAlignment
 
@@ -52,3 +47,23 @@ export interface ButtonStyleProperties {
 
 	png64: string | null
 }
+
+export enum ButtonGraphicsDecorationType {
+	FollowDefault = 'default',
+	TopBar = 'topbar',
+	// BottomBar = 'bottombar', // Future
+	Border = 'border',
+	None = 'none',
+}
+
+export enum ButtonGraphicsElementUsage {
+	Automatic = 'auto',
+	Text = 'text',
+	Color = 'color',
+	Image = 'image',
+}
+
+export type HorizontalAlignment = 'left' | 'center' | 'right'
+export type VerticalAlignment = 'top' | 'center' | 'bottom'
+
+export type CompositeElementOptionKey = `opt:${string}`

@@ -4,7 +4,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { ModuleVariableDefinitions, VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -194,8 +194,9 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 			setCurrentStep: control.supportsActionSets ? (step) => control.actionSets.stepMakeCurrent(step) : undefined,
 
-			getDrawStyle: control.supportsStyle ? () => control.getDrawStyle() : undefined,
-			setStyleFields: control.supportsStyle ? (diff) => control.styleSetFields(diff) : undefined,
+			setStyleFields: control.supportsLayeredStyle
+				? (diff) => control.layeredStyleUpdateFromLegacyProperties(diff)
+				: undefined,
 		}
 	}
 
@@ -227,6 +228,10 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 	getCachedRenderOrGeneratePlaceholder(location: ControlLocation): ImageResult {
 		return this.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
+	}
+
+	getCachedRender(location: ControlLocation): ImageResult | undefined {
+		return this.#graphicsController.getCachedRender(location)
 	}
 
 	actionRecorderDiscardActions(): void {
@@ -276,6 +281,5 @@ export interface ServiceApiControl {
 
 	setCurrentStep: ((step: number) => boolean) | undefined
 
-	getDrawStyle: (() => DrawStyleModel | null) | undefined
-	setStyleFields: ((diff: Record<string, any>) => void) | undefined
+	setStyleFields: ((diff: Partial<ButtonStyleProperties>) => void) | undefined
 }

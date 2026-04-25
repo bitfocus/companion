@@ -9,15 +9,18 @@
  * this program.
  */
 
-import { EventEmitter } from 'node:events'
+import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { ButtonStyleProperties } from '@companion-app/shared/Style.js'
-import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
+import type {
+	CompanionAdvancedFeedbackResult,
+	CompanionFeedbackButtonStyleResult,
+	CompanionOptionValues,
+} from '@companion-module/host'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -36,12 +39,6 @@ import type {
 	InternalVisitor,
 } from './Types.js'
 import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
-
-const ButtonStylePropertiesExt = [
-	...ButtonStyleProperties,
-	{ id: 'show_topbar', label: 'Topbar' },
-	{ id: 'imageBuffers', label: 'Image buffers' },
-]
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
@@ -385,23 +382,13 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			bank_style: {
 				feedbackType: FeedbackEntitySubType.Advanced,
-				label: 'Button: Use another buttons style',
-				description: 'Imitate the style of another button',
+				label: 'Button: Use another buttons style (Deprecated)',
+				description:
+					'Imitate the legacy style of another button. This is not capable of preserving the full element stack.',
 				showButtonPreview: true,
 				feedbackStyle: undefined,
 				showInvert: false,
-				options: [
-					CHOICES_LOCATION,
-					{
-						id: 'properties',
-						label: 'Properties',
-						type: 'multidropdown',
-						minSelection: 1,
-						choices: ButtonStylePropertiesExt,
-						default: ButtonStylePropertiesExt.map((p) => p.id),
-						disableAutoExpression: true,
-					},
-				],
+				options: [CHOICES_LOCATION],
 				optionsSupportExpressions: true,
 			},
 			bank_pushed: {
@@ -453,6 +440,28 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
+		let changed = false
+
+		if (feedback.definitionId === 'bank_style' && feedback.styleOverrides) {
+			const oldProperties: string[] = feedback.options.properties?.value as any[]
+			if (oldProperties) {
+				delete feedback.options.properties
+
+				if (Array.isArray(oldProperties)) {
+					// Prune style overrides that were not selected properties
+					feedback.styleOverrides = feedback.styleOverrides.filter((override) =>
+						oldProperties.includes(stringifyVariableValue(override.override.value) ?? '')
+					)
+				}
+
+				changed = true
+			}
+		}
+
+		if (changed) return feedback
+	}
+
 	executeFeedback(feedback: FeedbackForInternalExecution): CompanionFeedbackButtonStyleResult | boolean | void {
 		if (feedback.definitionId === 'bank_style') {
 			const { theLocation } = this.#fetchLocationAndControlId(feedback.options, feedback)
@@ -475,21 +484,20 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
 
 			const render = this.#graphicsController.getCachedRender(theLocation)
-			if (render?.style && typeof render.style === 'object') {
-				if (!feedback.options.properties || !Array.isArray(feedback.options.properties)) {
-					// TODO populate these properties instead
-					return structuredClone(render.style as any)
-				} else {
-					const newStyle: Record<string, any> = {}
-
-					for (const prop of feedback.options.properties) {
-						// @ts-expect-error mismatch in prop type
-						newStyle[prop] = render.style[prop]
-					}
-
-					// Return cloned resolved style
-					return structuredClone(newStyle)
+			if (render?.style) {
+				const legacyStyle: CompanionAdvancedFeedbackResult = {
+					text: render.style.text?.text || '',
+					color: render.style.text?.color ?? 0xffffff,
+					bgcolor: render.style.color?.color ?? 0x000000,
+					size: render.style.text?.size || 'auto',
+					png64: render.style.png64?.dataUrl,
+					alignment: render.style.text ? `${render.style.text.halign}:${render.style.text.valign}` : undefined,
+					pngalignment: render.style.png64 ? `${render.style.png64.halign}:${render.style.png64.valign}` : undefined,
+					show_topbar: (render.style.state?.showTopBar as any) ?? false,
+					// TODO: can this match the imageBuffers?
 				}
+
+				return structuredClone(legacyStyle)
 			} else {
 				return {}
 			}
@@ -579,9 +587,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (!theControlId) return true
 
 			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsStyle) {
+			if (control && control.supportsLayeredStyle) {
 				const color = parseColorToNumber(action.options.color as any) || 0
-				control.styleSetFields({ bgcolor: color })
+				control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
 			}
 			return true
 		} else if (action.definitionId === 'textcolor') {
@@ -589,9 +597,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (!theControlId) return true
 
 			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsStyle) {
+			if (control && control.supportsLayeredStyle) {
 				const color = parseColorToNumber(action.options.color as any) || 0
-				control.styleSetFields({ color: color })
+				control.layeredStyleUpdateFromLegacyProperties({ color: color })
 			}
 			return true
 		} else if (action.definitionId === 'button_text') {
@@ -599,8 +607,8 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			if (!theControlId) return true
 
 			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsStyle) {
-				control.styleSetFields({ text: action.options.label })
+			if (control && control.supportsLayeredStyle) {
+				control.layeredStyleUpdateFromLegacyProperties({ text: stringifyVariableValue(action.options.label) ?? '' })
 			}
 
 			return true

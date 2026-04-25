@@ -35,11 +35,6 @@ interface EntityWrapper {
 	lastReferencedVariableIds?: ReadonlySet<string>
 }
 
-export interface EntityManagerImageSize {
-	width: number
-	height: number
-}
-
 export interface EntityManagerActionEntity {
 	controlId: string
 	entity: ActionEntityModel
@@ -49,8 +44,6 @@ export interface EntityManagerFeedbackEntity {
 	controlId: string
 	entity: FeedbackEntityModel
 	parsedOptions: CompanionOptionValues
-
-	imageSize: EntityManagerImageSize | undefined
 }
 
 export interface EntityManagerAdapter {
@@ -122,7 +115,6 @@ export class ConnectionEntityManager {
 						upgradeFeedbacks.push({
 							controlId: wrapper.controlId,
 							entity: entityModel,
-							imageSize: undefined, // Unused
 						})
 						break
 					default:
@@ -149,8 +141,6 @@ export class ConnectionEntityManager {
 					upgradeFeedbacks = []
 				}
 			}
-
-			const controlImageSizeCache = new Map<string, EntityManagerImageSize | undefined>()
 
 			// First, look over all the entiites and figure out what needs to be done to each
 			for (const [entityId, wrapper] of this.#entities) {
@@ -213,15 +203,6 @@ export class ConnectionEntityManager {
 									)
 									break
 								case EntityModelType.Feedback: {
-									let imageSize: EntityManagerImageSize | undefined
-									if (controlImageSizeCache.has(wrapper.controlId)) {
-										imageSize = controlImageSizeCache.get(wrapper.controlId)
-									} else {
-										const control = this.controlsStore.getControl(wrapper.controlId)
-										imageSize = control?.getBitmapSize() ?? undefined
-										controlImageSizeCache.set(wrapper.controlId, imageSize)
-									}
-
 									updateFeedbacksPayload.set(
 										entityId,
 										updateOptions
@@ -229,7 +210,6 @@ export class ConnectionEntityManager {
 													controlId: wrapper.controlId,
 													entity: entityModel,
 													parsedOptions: updateOptions,
-													imageSize,
 												}
 											: null
 									)

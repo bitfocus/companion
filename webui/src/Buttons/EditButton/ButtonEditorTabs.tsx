@@ -7,6 +7,7 @@ import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
@@ -41,6 +42,7 @@ export function ButtonEditorTabs({
 	children,
 }: ButtonEditorTabsProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
+	const [tabBarRef, tabBarSize] = useElementClientSize<HTMLDivElement>()
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])
 
@@ -48,13 +50,8 @@ export function ButtonEditorTabs({
 		const tabKeys: string[] = [...stepKeys.map((s) => `step:${s}`)]
 
 		if (extraTabs) {
-			for (const tab of extraTabs) {
-				if (tab.position === 'start') {
-					tabKeys.unshift(tab.id)
-				} else {
-					tabKeys.push(tab.id)
-				}
-			}
+			tabKeys.unshift(...extraTabs.filter((t) => t.position === 'start').map((t) => t.id))
+			tabKeys.push(...extraTabs.filter((t) => t.position === 'end').map((t) => t.id))
 		}
 
 		return tabKeys
@@ -77,7 +74,7 @@ export function ButtonEditorTabs({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			<div className={'row-heading'}>
+			<div ref={tabBarRef} className={'row-heading'}>
 				<CNav variant="tabs">
 					{extraTabs?.map(
 						(tab) =>
@@ -131,7 +128,7 @@ export function ButtonEditorTabs({
 				</CNav>
 			</div>
 
-			<div className="edit-sticky-body">
+			<div className="edit-sticky-body" style={{ '--tab-bar-height': `${tabBarSize.height}px` } as React.CSSProperties}>
 				{children && children(selectedStep)}
 
 				{selectedKey && selectedStepProps && (

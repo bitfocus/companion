@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { mock } from 'vitest-mock-extended'
 import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	ActionEntityModel,
@@ -12,7 +11,6 @@ import {
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { EntityPoolIsInvertedManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
 import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
-import { FeedbackStyleBuilder } from '../../../lib/Controls/Entities/FeedbackStyleBuilder.js'
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -1427,83 +1425,6 @@ describe('getChildBooleanFeedbackValues', () => {
 		}
 
 		expect(list.getChildBooleanFeedbackValues()).toHaveLength(0)
-	})
-
-	test('basic feedback values', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
-		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
-		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abcd' }))
-
-		const fb = list.findById('02')
-		fb!.setStyleValue('bgcolor', 123)
-
-		const len = list.getDirectEntities().length
-
-		const values = list.getChildBooleanFeedbackValues()
-		expect(values).toHaveLength(len)
-
-		expect(values).toEqual([false, true, false])
-	})
-})
-
-describe('buildFeedbackStyle', () => {
-	const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
-	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
-
-	test('invalid for action list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Action })
-
-		const styleBuilder = mock<FeedbackStyleBuilder>()
-
-		expect(() => list.buildFeedbackStyle(styleBuilder)).toThrow('ControlEntityList is not style feedbacks')
-	})
-
-	test('invalid for boolean feedbacks list', () => {
-		const { list } = createList('test01', null, {
-			type: EntityModelType.Feedback,
-			feedbackListType: FeedbackEntitySubType.Boolean,
-		})
-
-		const styleBuilder = mock<FeedbackStyleBuilder>()
-
-		expect(() => list.buildFeedbackStyle(styleBuilder)).toThrow('ControlEntityList is not style feedbacks')
-	})
-
-	test('disabled', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
-		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
-
-		// Disable all feedbacks
-		for (const entity of list.getAllEntities()) {
-			entity.setEnabled(false)
-		}
-
-		const styleBuilder = mock<FeedbackStyleBuilder>()
-		list.buildFeedbackStyle(styleBuilder)
-
-		expect(styleBuilder.applyComplexStyle).toHaveBeenCalledTimes(0)
-		expect(styleBuilder.applySimpleStyle).toHaveBeenCalledTimes(0)
-	})
-
-	test('basic feedback values', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
-		// seed some values for boolean feedabcks
-		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
-		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abcd' }))
-
-		const fb = list.findById('02')
-		fb!.setStyleValue('bgcolor', 123)
-
-		const styleBuilder = mock<FeedbackStyleBuilder>()
-		list.buildFeedbackStyle(styleBuilder)
-
-		expect(styleBuilder.applyComplexStyle).toHaveBeenCalledTimes(1)
-		expect(styleBuilder.applySimpleStyle).toHaveBeenCalledTimes(1)
-
-		expect(styleBuilder.applyComplexStyle).toHaveBeenCalledWith('abcd')
-		expect(styleBuilder.applySimpleStyle).toHaveBeenCalledWith({ bgcolor: 123 })
 	})
 })
 

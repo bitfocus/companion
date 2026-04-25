@@ -3,6 +3,7 @@ import type { JsonValue } from 'type-fest'
 import type {
 	EntityModelType,
 	EntityOwner,
+	FeedbackEntityStyleOverride,
 	SomeEntityModel,
 	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -82,11 +83,10 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				// Not supported
 			},
 
-			setSelectedStyleProps: (_entityId: string, _keys: string[]) => {
+			replaceStyleOverride(_entityId: string, _override: FeedbackEntityStyleOverride) {
 				// Not supported
 			},
-
-			setStylePropsValue: (_entityId: string, _key: string, _value: any) => {
+			removeStyleOverride(_entityId: string, _overrideId: string) {
 				// Not supported
 			},
 		}),

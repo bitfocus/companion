@@ -1,14 +1,14 @@
 import type jsonPatch from 'fast-json-patch'
-import type { CompanionButtonStyleProps } from '@companion-module/base'
-import type { NormalButtonModel } from './ButtonModel.js'
+import type { LayeredButtonModel } from './ButtonModel.js'
+import type { SomeEntityModel } from './EntityModel.js'
 import type { VariableValue, VariableValues } from './Variables.js'
 
 export interface PresetDefinition {
 	id: string
 	name: string
 	type: 'button'
-	model: NormalButtonModel
-	previewStyle: Partial<CompanionButtonStyleProps> | undefined
+	model: LayeredButtonModel
+	presetExtraFeedbacks: SomeEntityModel[]
 	keywords: string[] | undefined
 }
 

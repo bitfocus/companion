@@ -20,6 +20,7 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type CompanionHTTPRequest, type LogLevel, type OSCMetaArgument } from '@companion-module/base'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
@@ -42,6 +43,7 @@ import type {
 	SaveConfigMessage,
 	SendOscMessage,
 	SetActionDefinitionsMessage,
+	SetCompositeElementDefinitionsMessage,
 	SetCustomVariableMessage,
 	SetFeedbackDefinitionsMessage,
 	SetPresetDefinitionsMessage,
@@ -53,6 +55,8 @@ import type {
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
 } from './IpcTypesNew.js'
+
+const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -112,6 +116,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			setFeedbackDefinitions: this.#handleSetFeedbackDefinitions.bind(this),
 			setVariableDefinitions: this.#handleSetVariableDefinitions.bind(this),
 			setPresetDefinitions: this.#handleSetPresetDefinitions.bind(this),
+			setCompositeElementDefinitions: this.#handleSetCompositeElementDefinitions.bind(this),
 			setVariableValues: this.#handleSetVariableValues.bind(this),
 			updateFeedbackValues: this.#handleUpdateFeedbackValues.bind(this),
 			saveConfig: this.#handleSaveConfig.bind(this),
@@ -136,7 +141,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		)
 
 		this.#entityManager = new ConnectionEntityManager(
-			new ConnectionNewEntityManagerAdapter(this.#ipcWrapper),
+			new ConnectionNewEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 			this.#deps.controls,
 			this.connectionId
 		)
@@ -321,7 +326,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								feedbackId: entity.definitionId,
 								options: parseRes.parsedOptions,
 
-								image: control?.getBitmapSize() ?? undefined,
+								image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 							},
 						},
 						undefined,
@@ -604,6 +609,18 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		}
 	}
 
+	async #handleSetCompositeElementDefinitions(msg: SetCompositeElementDefinitionsMessage): Promise<void> {
+		try {
+			this.#sendToModuleLog('debug', `Updating composite element definitions (${msg.definitions.length} elements)`)
+
+			this.#deps.instanceDefinitions.setCompositeElementDefinitions(this.connectionId, msg.definitions)
+		} catch (e: any) {
+			this.logger.error(`setCompositeElementDefinitions: ${e}`)
+
+			throw new Error(`Failed to set Composite Graphics Element Definitions: ${e}`)
+		}
+	}
+
 	/**
 	 * Handle saving an updated config and/or secrets object from the child process
 	 */
@@ -720,9 +737,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 	readonly #ipcWrapper: ModuleIpcWrapper
+	readonly #controlsStore: IControlStore
 
-	constructor(ipcWrapper: ModuleIpcWrapper) {
+	constructor(ipcWrapper: ModuleIpcWrapper, controlsStore: IControlStore) {
 		this.#ipcWrapper = ipcWrapper
+		this.#controlsStore = controlsStore
 	}
 
 	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
@@ -749,13 +768,15 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 
 		for (const [id, value] of feedbacks) {
 			if (value && !value.entity.disabled) {
+				const control = this.#controlsStore.getControl(value.controlId)
+
 				updateMessage.feedbacks[id] = {
 					id: value.entity.id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions,
 
-					image: value.imageSize,
+					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 				}
 			} else {
 				updateMessage.feedbacks[id] = null

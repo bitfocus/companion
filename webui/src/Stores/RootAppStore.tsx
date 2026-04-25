@@ -3,6 +3,7 @@ import { createContext } from 'react'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
+import type { CompositeElementDefinitionsStore } from './CompositeElementDefinitionsStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
@@ -36,6 +37,7 @@ export interface RootAppStore {
 
 	readonly entityDefinitions: EntityDefinitionsStore
 	readonly eventDefinitions: EventDefinitionsStore
+	readonly compositeElementDefinitions: CompositeElementDefinitionsStore
 
 	readonly pages: PagesStore
 	readonly surfaces: SurfacesStore

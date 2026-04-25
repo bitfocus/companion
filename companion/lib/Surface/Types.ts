@@ -55,7 +55,9 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 export interface DrawButtonItem {
 	x: number
 	y: number
-	image: ImageResult
+
+	defaultRender: ImageResult
+
 	/** The absolute page/row/column location of the button being drawn, if known */
 	location: ControlLocation | null
 }

@@ -1,63 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`InstanceDefinitions > convertPresetToPreviewControlModel > creates preview model with previewStyle override 1`] = `
-{
-  "feedbacks": [
-    {
-      "connectionId": "internal",
-      "definitionId": "check_expression",
-      "id": "mock-id-1",
-      "isInverted": {
-        "isExpression": false,
-        "value": false,
-      },
-      "options": {
-        "expression": {
-          "isExpression": true,
-          "value": "true",
-        },
-      },
-      "style": {
-        "bgcolor": 1122867,
-        "color": 11189196,
-      },
-      "type": "feedback",
-      "upgradeIndex": undefined,
-    },
-  ],
-  "localVariables": [],
-  "options": {
-    "rotaryActions": false,
-    "stepProgression": "auto",
-  },
-  "steps": {
-    "step1": {
-      "action_sets": {
-        "down": [],
-        "rotate_left": undefined,
-        "rotate_right": undefined,
-        "up": [],
-      },
-      "options": {
-        "runWhileHeld": [],
-      },
-    },
-  },
-  "style": {
-    "alignment": "center:center",
-    "bgcolor": 1122867,
-    "color": 11189196,
-    "png64": null,
-    "pngalignment": "center:center",
-    "show_topbar": "default",
-    "size": "auto",
-    "text": "Hello $(conn1:label)",
-    "textExpression": false,
-  },
-  "type": "preset:button",
-}
-`;
-
 exports[`InstanceDefinitions > createEntityItem > creates a feedback with correct structure 1`] = `
 {
   "connectionId": "conn1",
@@ -73,7 +15,7 @@ exports[`InstanceDefinitions > createEntityItem > creates a feedback with correc
       "value": 10,
     },
   },
-  "style": {},
+  "styleOverrides": [],
   "type": "feedback",
   "upgradeIndex": 5,
 }
@@ -115,6 +57,7 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
   "feedbacks": [],
   "localVariables": [],
   "options": {
+    "canModifyStyleInApis": false,
     "rotaryActions": false,
     "stepProgression": "auto",
   },
@@ -132,46 +75,77 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
     },
   },
   "style": {
-    "alignment": "center:center",
-    "bgcolor": 0,
-    "color": 16777215,
-    "png64": null,
-    "pngalignment": "center:center",
-    "show_topbar": "default",
-    "size": "auto",
-    "text": "Status $(conn1:status)",
-    "textExpression": false,
+    "layers": [
+      {
+        "color": {
+          "isExpression": false,
+          "value": 16777215,
+        },
+        "enabled": {
+          "isExpression": false,
+          "value": true,
+        },
+        "fontsize": {
+          "isExpression": false,
+          "value": "auto",
+        },
+        "halign": {
+          "isExpression": false,
+          "value": "center",
+        },
+        "height": {
+          "isExpression": false,
+          "value": 72,
+        },
+        "id": "text-1",
+        "name": "text-1",
+        "opacity": {
+          "isExpression": false,
+          "value": 1,
+        },
+        "outlineColor": {
+          "isExpression": false,
+          "value": 0,
+        },
+        "rotation": {
+          "isExpression": false,
+          "value": 0,
+        },
+        "text": {
+          "isExpression": false,
+          "value": "Status $(conn1:status)",
+        },
+        "type": "text",
+        "usage": "text",
+        "valign": {
+          "isExpression": false,
+          "value": "center",
+        },
+        "width": {
+          "isExpression": false,
+          "value": 72,
+        },
+        "x": {
+          "isExpression": false,
+          "value": 0,
+        },
+        "y": {
+          "isExpression": false,
+          "value": 0,
+        },
+      },
+    ],
   },
-  "type": "button",
+  "type": "button-layered",
 }
 `;
 
 exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set → convert → preview → update label → forget 2`] = `
 {
-  "feedbacks": [
-    {
-      "connectionId": "internal",
-      "definitionId": "check_expression",
-      "id": "mock-id-1",
-      "isInverted": {
-        "isExpression": false,
-        "value": false,
-      },
-      "options": {
-        "expression": {
-          "isExpression": true,
-          "value": "true",
-        },
-      },
-      "style": {
-        "bgcolor": 3355443,
-      },
-      "type": "feedback",
-      "upgradeIndex": undefined,
-    },
-  ],
+  "feedbacks": [],
   "localVariables": [],
   "options": {
+    "canModifyStyleInApis": false,
     "rotaryActions": false,
     "stepProgression": "auto",
   },
@@ -189,15 +163,66 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
     },
   },
   "style": {
-    "alignment": "center:center",
-    "bgcolor": 3355443,
-    "color": 16777215,
-    "png64": null,
-    "pngalignment": "center:center",
-    "show_topbar": "default",
-    "size": "auto",
-    "text": "Status $(conn1:status)",
-    "textExpression": false,
+    "layers": [
+      {
+        "color": {
+          "isExpression": false,
+          "value": 16777215,
+        },
+        "enabled": {
+          "isExpression": false,
+          "value": true,
+        },
+        "fontsize": {
+          "isExpression": false,
+          "value": "auto",
+        },
+        "halign": {
+          "isExpression": false,
+          "value": "center",
+        },
+        "height": {
+          "isExpression": false,
+          "value": 72,
+        },
+        "id": "text-1",
+        "name": "text-1",
+        "opacity": {
+          "isExpression": false,
+          "value": 1,
+        },
+        "outlineColor": {
+          "isExpression": false,
+          "value": 0,
+        },
+        "rotation": {
+          "isExpression": false,
+          "value": 0,
+        },
+        "text": {
+          "isExpression": false,
+          "value": "Status $(conn1:status)",
+        },
+        "type": "text",
+        "usage": "text",
+        "valign": {
+          "isExpression": false,
+          "value": "center",
+        },
+        "width": {
+          "isExpression": false,
+          "value": 72,
+        },
+        "x": {
+          "isExpression": false,
+          "value": 0,
+        },
+        "y": {
+          "isExpression": false,
+          "value": 0,
+        },
+      },
+    ],
   },
   "type": "preset:button",
 }
@@ -234,9 +259,7 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > set definitions → cr
       "value": 1,
     },
   },
-  "style": {
-    "bgcolor": 65280,
-  },
+  "styleOverrides": [],
   "type": "feedback",
   "upgradeIndex": 5,
 }

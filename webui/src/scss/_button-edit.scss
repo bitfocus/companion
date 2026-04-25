@@ -1,13 +1,22 @@
 @use 'variables' as *;
+@use '@coreui/coreui/scss/coreui';
 
 .edit-button-panel {
-	margin-right: -0.5rem;
+	height: 100%;
+
+	display: flex;
+	flex-direction: column;
+
 	h4 {
 		margin-top: 1rem;
 	}
 
 	svg {
 		font-size: 1rem;
+	}
+
+	.button-zero-display-height {
+		margin-bottom: -100%;
 	}
 }
 
@@ -248,4 +257,286 @@ table.variables-table,
 	gap: 3px;
 	padding: 5px;
 	background-color: #222;
+}
+
+.button-layer-style-editor {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: minmax(30vh, 300px) 1fr;
+
+	.button-layer-top {
+		grid-column: 1 / span 2;
+		position: sticky;
+		top: var(--tab-bar-height, 0);
+		background-color: #fff;
+		z-index: 1;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		grid-template-rows: 1fr auto;
+
+		&::after {
+			content: '';
+			position: absolute;
+			bottom: -1rem;
+			left: 0;
+			right: 0;
+			height: 1rem;
+			background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+			pointer-events: none;
+			z-index: 10;
+		}
+
+		hr {
+			grid-column: 1 / span 2;
+			margin: 0.25rem 0 0.5rem;
+		}
+	}
+
+	.button-layer-simple {
+		grid-column: 2;
+		grid-row: 2;
+		align-self: end;
+		justify-self: end;
+		padding-right: 2em;
+	}
+
+	.button-layer-preview {
+		display: flex;
+		flex-direction: column;
+		grid-row: 1 / span 2;
+		margin-bottom: 0.75rem;
+
+		.button-layer-canvas {
+			max-width: 100%;
+			max-height: 100%;
+		}
+	}
+
+	.button-layer-elementlist {
+		overflow-y: auto;
+
+		.button-layer-elementlist-table {
+			overflow-y: scroll;
+			max-height: 100%;
+			height: 100%;
+
+			.heading {
+				position: sticky;
+				top: 0;
+				background-color: #fff;
+			}
+		}
+
+		.button-layer-elementlist-table-row {
+			display: grid;
+			grid-template-columns: auto 1fr auto auto;
+
+			border-bottom: 1px solid rgb(221, 221, 221);
+
+			align-items: center;
+			column-gap: 0.2rem;
+
+			--elementlist-depth: 0;
+			margin-left: calc(var(--elementlist-depth) * 1.75em);
+
+			.td-reorder,
+			.td-reorder-placeholder {
+				text-align: center;
+
+				// as narrow as possible
+				width: 1.75em;
+			}
+
+			.td-reorder {
+				cursor: ns-resize;
+				background-color: #f7f7f7;
+
+				height: 100%;
+				align-content: center;
+
+				svg {
+					color: #333;
+				}
+			}
+
+			&.heading {
+				font-weight: bold;
+				padding-right: 0.2rem;
+			}
+
+			&.dragging {
+				opacity: 0.5;
+			}
+
+			&.last-row {
+				border-bottom: none;
+			}
+			&.selected-row {
+				background-color: #eeeeee;
+			}
+
+			.element-name {
+				cursor: pointer;
+
+				padding: 0.1rem 0;
+
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+
+			.element-buttons {
+				text-align: right;
+				white-space: nowrap;
+				padding: 0 0.25rem;
+
+				.btn {
+					--cui-btn-padding-x: 0.15rem;
+				}
+			}
+		}
+	}
+
+	.button-layer-options {
+		grid-column: 1 / span 2;
+
+		padding-top: 1rem;
+	}
+}
+
+.add-layered-element-popover {
+	max-width: 300px;
+	width: 300px;
+
+	.btn {
+		width: 100%;
+
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.btn-group-vertical {
+		width: 100%;
+	}
+
+	.accordion {
+		--cui-accordion-bg: transparent;
+		--cui-accordion-border-width: 0;
+
+		.accordion-item {
+			background-color: transparent;
+		}
+
+		.accordion-header {
+			margin-bottom: 0;
+		}
+
+		.accordion-button {
+			padding: 0.375rem 0.75rem;
+			background-color: var(--cui-secondary);
+			color: var(--cui-secondary-color);
+			font-weight: 600;
+			border: none;
+			border-radius: 0;
+			box-shadow: none;
+
+			&:not(.collapsed) {
+				background-color: var(--cui-secondary);
+				color: var(--cui-secondary-color);
+				box-shadow: none;
+			}
+
+			&:focus {
+				box-shadow: none;
+			}
+
+			&::after {
+				margin-left: auto;
+			}
+		}
+
+		.accordion-body {
+			padding: 0;
+		}
+	}
+}
+
+.layered-style-element-picker-modal {
+	.modal-content {
+		// height: 65vh;
+		overflow: hidden;
+		max-height: 55vh;
+	}
+
+	.modal-body {
+		overflow-y: hidden;
+		max-height: 100%;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1rem;
+		/* allow percentage-height children to resolve when used inside flex/grid parents */
+		min-height: 0;
+
+		@include coreui.media-breakpoint-down(md) {
+			overflow-y: auto;
+			display: block;
+		}
+	}
+
+	.element-modal-col {
+		overflow-y: hidden;
+		/* layout container so header + list split the column and the list can flex/scroll */
+		display: flex;
+		flex-direction: column;
+		/* allow children with percentage heights or flex to shrink properly */
+		min-height: 0;
+
+		@include coreui.media-breakpoint-down(md) {
+			&:not(:first-child) {
+				margin-top: 0.5rem;
+			}
+		}
+	}
+
+	.element-picker-list {
+		overflow-y: auto;
+		/* take remaining space inside .element-modal-col and be able to shrink */
+		flex: 1 1 auto;
+		min-height: 0;
+		background-color: #f8f9fa;
+	}
+
+	.element-picker-item {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		padding: 0.25rem 0.5rem;
+		border-bottom: 1px solid #e9ecef;
+		align-items: center;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		--elementlist-depth: 0;
+		margin-left: calc(var(--elementlist-depth) * 1rem);
+
+		border-left: 3px solid transparent;
+
+		&.selected {
+			background-color: #e3f2fd;
+			border-left-color: #1976d2;
+		}
+
+		.element-name {
+			font-weight: 500;
+		}
+
+		.element-icon {
+			color: #1976d2;
+		}
+	}
+}
+
+.layered-overrides-table > tbody > tr {
+	border-color: #ccc;
 }

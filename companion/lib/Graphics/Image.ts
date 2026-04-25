@@ -10,691 +10,117 @@
  */
 
 import { Canvas, ImageData, loadImage, type Image as CanvasImage, type SKRSContext2D } from '@napi-rs/canvas'
-import type QuickLRU from 'quick-lru'
+import {
+	ImageBase,
+	ImagePoolBase,
+	type LineStyle,
+	type TextLayoutCache,
+} from '@companion-app/shared/Graphics/ImageBase.js'
 import LogController from '../Log/Controller.js'
-import { uint8ArrayToBuffer, type HorizontalAlignment, type VerticalAlignment } from '../Resources/Util.js'
-import { computeTextLayout, resolveFontSizes, segmentTextToUnicodeChars, type TextLayoutResult } from './TextParser.js'
+import { uint8ArrayToBuffer } from '../Resources/Util.js'
 
-/**
- * Cache for text layout computations
- */
-export type TextLayoutCache = QuickLRU<string, TextLayoutResult>
+export { LineStyle }
 
-const DEFAULT_FONTS = [
-	'Companion-sans',
-	'Companion-symbols1',
-	'Companion-symbols2',
-	'Companion-symbols3',
-	'Companion-symbols4',
-	'Companion-symbols5',
-	'Companion-symbols6',
-	'Companion-gurmukhi',
-	'Companion-simplified-chinese',
-	'Companion-korean',
-	'Companion-emoji',
-].join(', ')
+class ImagePool extends ImagePoolBase<Image> {
+	readonly #width: number
+	readonly #height: number
+	readonly #oversampling: number
 
-type LineOrientation = 'inside' | 'center' | 'outside'
+	constructor(width: number, height: number, oversampling: number) {
+		super()
+
+		this.#width = width
+		this.#height = height
+		this.#oversampling = oversampling
+	}
+
+	createImage(textLayoutCache: TextLayoutCache | null): Image {
+		const realwidth = this.#width * this.#oversampling
+		const realheight = this.#height * this.#oversampling
+
+		const canvas = new Canvas(realwidth, realheight)
+		const context2d = canvas.getContext('2d')
+		context2d.scale(this.#oversampling, this.#oversampling)
+		// @ts-expect-error Unknown property but we may need it?
+		context2d.textWrap = false
+
+		return new Image(this, canvas, context2d, this.#width, this.#height, realwidth, realheight, textLayoutCache)
+	}
+}
 
 /**
  * Class for generating an image and rendering some content to it
  */
-export class Image {
-	readonly #logger = LogController.createLogger('Graphics/Image')
-
-	readonly canvas: Canvas
-	readonly context2d: SKRSContext2D
-
-	readonly width: number
-	readonly height: number
+export class Image extends ImageBase<CanvasImage | Canvas> {
+	readonly #canvas: Canvas
+	readonly #context2d: SKRSContext2D
 
 	readonly realwidth: number
 	readonly realheight: number
 
-	readonly #textLayoutCache: TextLayoutCache | null
-
-	/**
-	 * Create an image
-	 * @param width the width of the image in integer
-	 * @param height the height of the image in integer
-	 * @param oversampling a factor of how much more pixels the image should have in width and height
-	 * @param textLayoutCache optional cache for text layout computations
-	 */
-	constructor(width: number, height: number, oversampling: number, textLayoutCache: TextLayoutCache | null) {
-		/* Defaults for custom images from modules */
-		if (width === undefined) {
-			width = 72
-		}
-		if (height === undefined) {
-			height = 58
-		}
-
-		if (oversampling === undefined) {
-			oversampling = 1
-		}
-
-		this.width = width
-		this.height = height
-
-		this.realwidth = width * oversampling
-		this.realheight = height * oversampling
-
-		this.canvas = new Canvas(this.realwidth, this.realheight)
-		this.context2d = this.canvas.getContext('2d')
-		this.context2d.scale(oversampling, oversampling)
-
-		this.#textLayoutCache = textLayoutCache
+	get canvasImage(): Canvas {
+		return this.#canvas
 	}
 
-	/**
-	 * fills the whole image with a color
-	 * @param color CSS color string
-	 * @returns success
-	 */
-	fillColor(color: string): boolean {
-		return this.box(0, 0, this.realwidth, this.realheight, color)
-	}
-
-	/**
-	 * draws a line between two given points
-	 * @param x1
-	 * @param y1
-	 * @param x2
-	 * @param y2
-	 * @param color CSS color string
-	 * @param lineWidth
-	 */
-	line(x1: number, y1: number, x2: number, y2: number, color: string, lineWidth = 1): boolean {
-		this.context2d.lineWidth = lineWidth
-		this.context2d.strokeStyle = color
-		this.context2d.beginPath()
-		this.context2d.moveTo(x1, y1)
-		this.context2d.lineTo(x2, y2)
-		this.context2d.closePath()
-		this.context2d.stroke()
-
-		return true
-	}
-
-	/**
-	 * draws a horizontal line at given height from top
-	 * @param y
-	 * @param color CSS color string
-	 * @returns success
-	 */
-	horizontalLine(y: number, color: string): boolean {
-		return this.line(0, y, this.width, y, color)
-	}
-
-	/**
-	 * draws a vertical line at given distance from left
-	 * @param x
-	 * @param color CSS color string
-	 * @returns success
-	 */
-	verticalLine(x: number, color: string): boolean {
-		return this.line(x, 0, x, this.height, color)
-	}
-
-	/**
-	 * draws a box with optional fill color and optional outline
-	 * @param x1
-	 * @param y1
-	 * @param x2
-	 * @param y2
-	 * @param color CSS string fill color, unfilled if undefined
-	 * @param strokeColor CSS string line color, no line if undefined
-	 * @param lineWidth line width defaults to 1
-	 * @param lineOrientation defaults to 'inside'
-	 * @returns something has been drawn
-	 */
-	box(
-		x1: number,
-		y1: number,
-		x2: number,
-		y2: number,
-		color?: string,
-		strokeColor?: string,
-		lineWidth = 1,
-		lineOrientation: LineOrientation = 'inside'
-	): boolean {
-		if (x2 == x1 || y2 == y1) return false
-		let didDraw = false
-		if (color) {
-			this.context2d.fillStyle = color
-			this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
-			didDraw = true
-		}
-		if (strokeColor) {
-			didDraw = didDraw || this.boxLine(x1, y1, x2, y2, strokeColor, lineWidth, lineOrientation)
-		}
-
-		return didDraw
-	}
-
-	/**
-	 * Draws an outline rectangle
-	 * @param x1 position of left edge
-	 * @param y1 position of top edge
-	 * @param x2 position of right edge
-	 * @param y2 position of bottom edge
-	 * @param color color string
-	 * @param lineWidth line width
-	 * @param  lineOrientation direction of lines in regard to the edges
-	 * @returns returns true if a visible rectangle has been drawn
-	 */
-	boxLine(
-		x1: number,
-		y1: number,
-		x2: number,
-		y2: number,
-		color: string,
-		lineWidth = 1,
-		lineOrientation: LineOrientation = 'inside'
-	): boolean {
-		if (lineWidth <= 0) return false
-		const halfline = lineWidth / 2
-		switch (lineOrientation) {
-			case 'inside':
-				x1 += halfline
-				y1 += halfline
-				x2 -= halfline
-				y2 -= halfline
-				break
-			case 'outside':
-				x1 -= halfline
-				y1 -= halfline
-				x2 += halfline
-				y2 += halfline
-				break
-		}
-
-		this.context2d.lineWidth = lineWidth
-		this.context2d.strokeStyle = color
-		this.context2d.strokeRect(x1, y1, x2 - x1, y2 - y1)
-
-		if (lineWidth > 0) {
-			return true
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Draws an image to the canvas from PGN data
-	 * the image can be fitted and cropped to the canvas in many variations
-	 * @param data base64 encoded buffer with the raw PGN data
-	 * @param xStart left position where to place the image
-	 * @param yStart top position where to place the image
-	 * @param width width of the bounding box where to place the image
-	 * @param height height of the bounding box where to place the image
-	 * @param halign horizontal alignment of the image in the bounding box (defaults to center)
-	 * @param valign vertical alignment of the image in the bounding box (defaults to center)
-	 * @param scale the size factor of the image. Number scales by specified amount, fill scales to fill the bounding box neglecting aspect ratio, crop scales to fill the bounding box and crop if necessary, fit scales to fit the bounding box with the longer side
-	 */
-	async drawFromPngData(
-		data: Buffer,
-		xStart = 0,
-		yStart = 0,
-		width = 72,
-		height = 72,
-		halign: HorizontalAlignment = 'center',
-		valign: VerticalAlignment = 'center',
-		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
-	): Promise<void> {
-		let png: CanvasImage | undefined
-
-		if (!data || data.length <= 30) {
-			// No image data. This is a bit cautious of a threshold, as empty buffers cause the canvas to crash
-			return
-		}
-
-		try {
-			png = await loadImage(data)
-		} catch (e) {
-			console.log('Error loading image', e)
-			return
-		}
-
-		const imageWidth = png.width
-		const imageHeight = png.height
-
-		let calculatedScale = 1
-		let scaledImageWidth = imageWidth
-		let scaledImageHeight = imageHeight
-
-		if (scale === 'fit_or_shrink') {
-			if (imageWidth <= width && imageHeight <= height) {
-				// If image is smaller than the button, don't scale it
-				scale = 1
-			} else {
-				// Otherwise shrink to fit
-				scale = 'fit'
-			}
-		}
-
-		if (scale === 'fit') {
-			const scaleMin = Math.min(width / imageWidth, height / imageHeight)
-			const scaleMax = Math.max(width / imageWidth, height / imageHeight)
-			calculatedScale = scaleMax < scaleMin ? scaleMax : scaleMin
-			scaledImageWidth = imageWidth * calculatedScale
-			scaledImageHeight = imageHeight * calculatedScale
-		} else if (scale === 'crop') {
-			const scaleMin = Math.min(width / imageWidth - 1, height / imageHeight - 1)
-			const scaleMax = Math.max(width / imageWidth - 1, height / imageHeight - 1)
-			calculatedScale = (scaleMax <= 1 ? scaleMax : scaleMin) + 1
-			scaledImageWidth = imageWidth * calculatedScale
-			scaledImageHeight = imageHeight * calculatedScale
-		} else if (typeof scale === 'number') {
-			if (scale === 0) {
-				console.warn('image scale is zero, abort drawing of image')
-				return
-			}
-			calculatedScale = scale
-			scaledImageWidth = imageWidth * calculatedScale
-			scaledImageHeight = imageHeight * calculatedScale
-		} else {
-			// if there is none of the aspect ration retaining scales, do the 'fill'-type
-			scaledImageWidth = width
-			scaledImageHeight = height
-		}
-
-		if (scaledImageWidth < 1 || scaledImageHeight < 1) {
-			console.warn('image width or height after scaling is less then one pixel, abort drawing of image')
-			return
-		}
-
-		// set default transformation values at 'fill'-type
-		const source = { x: 0, y: 0, w: imageWidth, h: imageHeight }
-		const destination = { x: xStart, y: yStart, w: width, h: height }
-
-		if (scaledImageWidth > width) {
-			//image is broader than drawing pane
-			source.w = width / calculatedScale
-			switch (halign) {
-				case 'center':
-					source.x = (imageWidth - source.w) / 2
-					break
-				case 'right':
-					source.x = imageWidth - source.w
-					break
-			}
-		} else if (scaledImageWidth < width) {
-			// image is narrower than drawing pane
-			destination.w = scaledImageWidth
-			switch (halign) {
-				case 'center':
-					destination.x += (width - scaledImageWidth) / 2
-					break
-				case 'right':
-					destination.x += width - scaledImageWidth
-					break
-			}
-		}
-
-		if (scaledImageHeight > height) {
-			// image is taller than drawing pane
-			source.h = height / calculatedScale
-			switch (valign) {
-				case 'center':
-					source.y = (imageHeight - source.h) / 2
-					break
-				case 'bottom':
-					source.y = imageHeight - source.h
-					break
-			}
-		} else if (scaledImageHeight < height) {
-			// image is smaller than drawing pane
-			destination.h = scaledImageHeight
-			switch (valign) {
-				case 'center':
-					destination.y += (height - scaledImageHeight) / 2
-					break
-				case 'bottom':
-					destination.y += height - scaledImageHeight
-					break
-			}
-		}
-
-		this.context2d.drawImage(
-			png,
-			source.x,
-			source.y,
-			source.w,
-			source.h,
-			destination.x,
-			destination.y,
-			destination.w,
-			destination.h
-		)
-	}
-
-	#sanitiseText(text: string | undefined): string {
-		if (text === undefined) return ''
-
-		// If there is a null character in the string, cut it off
-		const nullIndex = text.indexOf('\0')
-		if (nullIndex == -1) return text
-		return text.substring(0, nullIndex)
-	}
-
-	/**
-	 * draws a single line of left aligned text
-	 * the line length is not wrapped or limited and may extend beyond the canvas
-	 * @param x left position where to start the line
-	 * @param y top position where to start the line
-	 * @param text
-	 * @param color CSS color string
-	 * @param fontsize Em height
-	 * @param dummy Don't actually draw anything just return the text width
-	 * @returns width of the line
-	 */
-	drawTextLine(x: number, y: number, text: string, color: string, fontsize: number, dummy = false): number {
-		text = this.#sanitiseText(text)
-
-		if (text === undefined || text.length == 0) return 0
-
-		if (isNaN(fontsize)) return 0
-		if (fontsize < 3) return 0
-
-		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS}`
-
-		const metrics = this.context2d.measureText(text)
-
-		if (!dummy) {
-			this.context2d.textAlign = 'left'
-			this.context2d.fillStyle = color
-			this.context2d.fillText(text, x, y + Math.round(metrics.fontBoundingBoxAscent))
-		}
-
-		return metrics.width
-	}
-
-	/**
-	 * draws a single line of aligned text, doesn't care for line breaks or length
-	 * @param x horizontal value of the alignment point
-	 * @param y vertical value of the alignment point
-	 * @param text
-	 * @param color CSS color string
-	 * @param fontsize Em height
-	 * @param halignment defaults to 'center'
-	 * @param valignment defaults to 'center'
-	 * @returns the width of the line
-	 */
-	drawTextLineAligned(
-		x: number,
-		y: number,
-		text: string,
-		color: string,
-		fontsize: number,
-		halignment: HorizontalAlignment = 'center',
-		valignment: VerticalAlignment = 'center',
-		weight: 'normal' | 'bold' = 'normal'
-	): number {
-		text = this.#sanitiseText(text)
-
-		if (text === undefined || text.length == 0) return 0
-		if (halignment != 'left' && halignment != 'center' && halignment != 'right') halignment = 'left'
-		if (weight != 'normal' && weight != 'bold') weight = 'normal'
-
-		this.context2d.font = `${weight} ${fontsize}px ${DEFAULT_FONTS}`
-		this.context2d.fillStyle = color
-		this.context2d.textAlign = halignment
-
-		const metrics = this.context2d.measureText(text)
-
-		let vOffset = 0
-		switch (valignment) {
-			case 'top':
-				vOffset = metrics.fontBoundingBoxAscent
-				break
-
-			case 'center':
-				vOffset = metrics.fontBoundingBoxAscent / 2
-				break
-
-			case 'bottom':
-				vOffset = metrics.fontBoundingBoxDescent * -1
-				break
-		}
-
-		this.context2d.fillText(text, x, y + vOffset)
-
-		return metrics.width
-	}
-
-	/**
-	 * Draws aligned text in an boxed area.
-	 * @param x bounding box top left horizontal value
-	 * @param y bounding box top left vertical value
-	 * @param w bounding box width
-	 * @param h bounding box height
-	 * @param text the text to draw
-	 * @param color CSS color string
-	 * @param fontsize height of font, either pixels or 'auto'
-	 * @param halign horizontal alignment left, center, right
-	 * @param valign vertical alignment top, center, bottom
-	 */
-	drawAlignedText(
-		x: number,
-		y: number,
-		w: number,
-		h: number,
-		text: string,
-		color: string,
-		fontsize: number | 'auto' = 'auto',
-		halign: HorizontalAlignment = 'center',
-		valign: VerticalAlignment = 'center'
-	): void {
-		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
-		if (!displayTextStr) return
-
-		displayTextStr = displayTextStr.replaceAll('\r\n', '\n') // we only want \n as a linebreak
-		displayTextStr = displayTextStr.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
-		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
-		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
-
-		// Estimate character limit based on minimum font size (7px) with 1px char width and 2px height
-		// This gives a conservative upper bound on how many characters could possibly fit
-		const maxPossibleChars = Math.floor((w * h) / (1 * 2))
-
-		const { displayTextChars, displayTextCharsStr, wasTruncated } = segmentTextToUnicodeChars(
-			displayTextStr,
-			maxPossibleChars
-		)
-
-		// If we hit the character limit, only the smallest font size could possibly fit
-		const checkSizes = wasTruncated ? [7] : resolveFontSizes(w, h, fontsize, displayTextChars.length)
-
-		// Find the best fitting size
-		let textLayout: TextLayoutResult | undefined
-		for (const size of checkSizes) {
-			const fontLineHeight = Math.floor(size * 1.1) // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
-			const fontSpec = `${size}px/${fontLineHeight}px ${DEFAULT_FONTS}`
-
-			// Check cache first
-			const cacheKey = `${fontSpec}:${w}:${h}:${displayTextCharsStr}`
-			textLayout = this.#textLayoutCache?.get(cacheKey)
-			if (!textLayout) {
-				textLayout = computeTextLayout(this.context2d, w, h, displayTextChars, fontSpec)
-
-				// Store in cache
-				this.#textLayoutCache?.set(cacheKey, textLayout)
-			}
-
-			if (textLayout.fits) break
-		}
-
-		// Perform the draw
-		this.#drawTextLayout(x, y, w, h, textLayout!, color, halign, valign)
-	}
-
-	/**
-	 * Draw text using a computed layout
-	 */
-	#drawTextLayout(
-		x: number,
-		y: number,
-		w: number,
-		h: number,
-		layout: TextLayoutResult,
-		color: string,
-		halign: HorizontalAlignment,
-		valign: VerticalAlignment
-	): void {
-		if (layout.lines.length < 1) return
-
-		// Set font for rendering
-		this.context2d.font = layout.fontDefinition
-
-		let xAnchor = x
-		switch (halign) {
-			case 'left':
-				this.context2d.textAlign = 'left'
-				xAnchor = x
-				break
-			case 'center':
-				this.context2d.textAlign = 'center'
-				xAnchor = (x + w) / 2
-				break
-			case 'right':
-				this.context2d.textAlign = 'right'
-				xAnchor = x + w
-				break
-		}
-
-		const linesTotalHeight = layout.lines.length * layout.measuredLineHeight
-		let yAnchor = 0
-		switch (valign) {
-			case 'top':
-				yAnchor = layout.measuredAscent
-				break
-			case 'center':
-				yAnchor = Math.round((h - linesTotalHeight) / 2 + layout.measuredAscent)
-				break
-			case 'bottom':
-				yAnchor = h - linesTotalHeight + layout.measuredAscent
-				break
-		}
-		yAnchor += y
-
-		this.context2d.fillStyle = color
-
-		for (const line of layout.lines) {
-			this.context2d.fillText(line.text, xAnchor, yAnchor)
-
-			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
-			// this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
-			// this.horizontalLine(yAnchor + line.descent, 'rgb(0, 255, 0)')
-			// this.horizontalLine(yAnchor - correctedAscent, 'rgb(0,0,255)')
-			// this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
-			//console.log('Fontsize', fontsize, 'Lineheight', lineheight, 'asc', correctedAscent, 'des', correctedDescent, 'a+d', correctedAscent+correctedDescent);
-
-			yAnchor += layout.measuredLineHeight
-		}
-	}
-
-	/**
-	 * drawPixeBuffer
-	 *
-	 * Buffer can be either a buffer, or base64 encoded string.
-	 * Type can be set to either 'buffer' or 'base64' according to your input data.
-	 * Width and height is information about your buffer, not scaling.
-	 *
-	 * The buffer data is expected to be RGB or ARGB data, 1 byte per color,
-	 * horizontally. Top left is first three bytes.
-	 *
-	 * @param x left position of insert point
-	 * @param y top position of insert point
-	 * @param width integer information of the width of the buffer
-	 * @param height integer information of the height of the buffer
-	 * @param bufferRaw
-	 * @param format pixel format of the buffer, if known
-	 * @param scale scaling factor
-	 */
-	drawPixelBuffer(
-		x: number,
-		y: number,
+	constructor(
+		pool: ImagePool,
+		canvas: Canvas,
+		context2d: SKRSContext2D,
 		width: number,
 		height: number,
-		bufferRaw: Buffer | Uint8Array | string,
-		format?: 'RGB' | 'RGBA' | 'ARGB',
-		scale?: number
+		realwidth: number,
+		realheight: number,
+		textLayoutCache: TextLayoutCache | null
+	) {
+		super(LogController.createLogger('Graphics/Image'), pool, context2d, width, height, textLayoutCache)
+
+		this.#canvas = canvas
+		this.#context2d = context2d
+
+		this.realwidth = realwidth
+		this.realheight = realheight
+	}
+
+	static create(width: number, height: number, oversampling: number, textLayoutCache: TextLayoutCache | null): Image {
+		if (oversampling === undefined) oversampling = 1
+
+		const pool = new ImagePool(width, height, oversampling)
+		return pool.createImage(textLayoutCache)
+	}
+
+	protected drawImage(
+		image: CanvasImage | Canvas,
+		sx: number,
+		sy: number,
+		sw: number,
+		sh: number,
+		dx: number,
+		dy: number,
+		dw: number,
+		dh: number
 	): void {
-		let buffer: Buffer
-		if (typeof bufferRaw == 'object') {
-			if (bufferRaw instanceof Buffer) {
-				buffer = bufferRaw
-			} else if (bufferRaw instanceof Uint8Array) {
-				buffer = uint8ArrayToBuffer(bufferRaw)
-			} else {
-				this.#logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
-				return
-			}
-		} else if (typeof bufferRaw == 'string') {
-			buffer = Buffer.from(bufferRaw, 'base64')
+		this.#context2d.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
+	}
+
+	protected async loadBase64Image(base64Image: string): Promise<CanvasImage> {
+		const trimmedImage = base64Image.trim()
+		if (trimmedImage.startsWith('data:image')) {
+			return loadImage(trimmedImage)
+		} else if (isBase64(trimmedImage)) {
+			// Ideally we could avoid this check for a valid base64 image, but that can result in the canvas segfaulting
+			return loadImage(Buffer.from(trimmedImage, 'base64'))
 		} else {
-			this.#logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
-			return
+			throw new Error('Invalid base64 image format')
 		}
+	}
 
-		const rgbByteCount = width * height * 3
-		const rgbaByteCount = width * height * 4
-
-		if (format == 'RGB' && buffer.length !== rgbByteCount) {
-			this.#logger.error(
-				`Pixelbuffer of format ${format} with ${buffer.length} bytes is not expected ${rgbByteCount} bytes`
-			)
-			return
-		} else if ((format == 'RGBA' || format == 'ARGB') && buffer.length !== rgbaByteCount) {
-			this.#logger.error(
-				`Pixelbuffer of format ${format} with ${buffer.length} bytes is not expected ${rgbaByteCount} bytes`
-			)
-			return
-		} else if (!format && buffer.length < rgbByteCount) {
-			this.#logger.error(`Pixelbuffer of ${buffer.length} bytes is not expected ${rgbByteCount} bytes`)
-			return
-		}
-
-		if (buffer.length == rgbaByteCount && format === 'RGBA') {
-			// Buffer is packed ok
-		} else if (buffer.length == rgbaByteCount && (!format || format === 'ARGB')) {
-			// ARGB: swap order from ARGB to RGBA
-			for (let i = 0; i < buffer.length; i += 4) {
-				const a = buffer[i]
-
-				buffer[i] = buffer[i + 1]
-				buffer[i + 1] = buffer[i + 2]
-				buffer[i + 2] = buffer[i + 3]
-				buffer[i + 3] = a
-			}
-		} else if (buffer.length == rgbByteCount) {
-			// RGB: add alpha channel
-			const rgb = Uint8Array.from(buffer)
-
-			buffer = Buffer.alloc(width * height * 4)
-			for (let i = 0; i < rgb.length / 3; i += 1) {
-				buffer[i * 4] = rgb[i * 3] // Red
-				buffer[i * 4 + 1] = rgb[i * 3 + 1] // Green
-				buffer[i * 4 + 2] = rgb[i * 3 + 2] // Blue
-				buffer[i * 4 + 3] = 255 // Alpha
-			}
-		} else {
-			this.#logger.error(
-				`Pixelbuffer for a ${width}x${height} image should be either ${rgbByteCount} or ${
-					rgbaByteCount
-				} bytes big. Not ${buffer.length} (${format})`
-			)
-			return
-		}
-
-		// create HTML compatible imageData object
+	protected loadPixelBuffer(data: Uint8Array, width: number, height: number): CanvasImage | Canvas | null {
 		let imageData: ImageData
 		try {
-			imageData = new ImageData(new Uint8ClampedArray(buffer), width, height)
+			imageData = new ImageData(new Uint8ClampedArray(data), width, height)
 		} catch (error: any) {
-			this.#logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
-			return
+			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
+			return null
 		}
 
 		// createImageBitmap() works async, so this intermediate canvas is a synchronous workaround
@@ -702,117 +128,7 @@ export class Image {
 		const imageContext2d = imageCanvas.getContext('2d')
 		imageContext2d.putImageData(imageData, 0, 0)
 
-		if (!scale) scale = 1
-
-		this.context2d.drawImage(imageCanvas, 0, 0, width, height, x, y, width * scale, height * scale)
-	}
-
-	/**
-	 * Draws a border around the button
-	 * @param depth width of the border
-	 * @param color CSS color of the border
-	 * @returns true if there is a visible border
-	 */
-	drawBorder(depth = 1, color = 'red'): boolean {
-		if (depth <= 0) return false
-		return this.boxLine(0, 0, this.width, this.height, color, depth, 'inside')
-	}
-
-	/**
-	 * Draws a triangle in a corner
-	 * @param depth
-	 * @param color CSS color string
-	 * @param halign defaults to 'left'
-	 * @param valign defaults to 'top'
-	 * @returns success
-	 */
-	drawCornerTriangle(
-		depth: number,
-		color: string,
-		halign: HorizontalAlignment = 'left',
-		valign: VerticalAlignment = 'top'
-	): boolean {
-		if (depth == 0) return false
-		let points
-
-		if (halign == 'left' && valign == 'top') {
-			points = [
-				[0, 0],
-				[depth, 0],
-				[0, depth],
-			]
-		}
-		if (halign == 'right' && valign == 'top') {
-			points = [
-				[this.width, 0],
-				[this.width - depth, 0],
-				[this.width, depth],
-			]
-		}
-		if (halign == 'right' && valign == 'bottom') {
-			points = [
-				[this.width, this.height],
-				[this.width - depth, this.height],
-				[this.width, this.height - depth],
-			]
-		}
-		if (halign == 'left' && valign == 'bottom') {
-			points = [
-				[0, this.height],
-				[depth, this.height],
-				[0, this.height - depth],
-			]
-		}
-		if (!points) return false
-
-		return this.drawFilledPath(points, color)
-	}
-
-	/**
-	 * Draws an outline path from some points
-	 * @param pathPoints an array of x and y points
-	 * @param color CSS color
-	 * @param lineWidth defaults to 1
-	 * @param close if true close the path from last point to first point, if last and first point are identical path will be autoclosed
-	 * @returns success
-	 */
-	drawPath(pathPoints: number[][], color: string, lineWidth = 1, close = false): boolean {
-		if (lineWidth <= 0) return false
-		if (!Array.isArray(pathPoints) || pathPoints.length == 0) return false
-		this.context2d.beginPath()
-		const [firstPoint, ...points] = pathPoints
-		this.context2d.moveTo(firstPoint[0], firstPoint[1])
-		points.forEach((point) => {
-			this.context2d.lineTo(point[0], point[1])
-		})
-		if (close || (firstPoint[0] == points[points.length - 1][0] && firstPoint[1] == points[points.length - 1][1])) {
-			this.context2d.closePath()
-		}
-
-		this.context2d.strokeStyle = color
-		this.context2d.lineWidth = lineWidth
-		this.context2d.stroke()
-		return true
-	}
-
-	/**
-	 * Draws a filled path from some points
-	 * @param pathPoints an array of x and y points
-	 * @param color CSS color
-	 * @returns success
-	 */
-	drawFilledPath(pathPoints: number[][], color: string): boolean {
-		if (!Array.isArray(pathPoints) || pathPoints.length == 0) return false
-		this.context2d.beginPath()
-		const [firstPoint, ...points] = pathPoints
-		this.context2d.moveTo(firstPoint[0], firstPoint[1])
-		points.forEach((point) => {
-			this.context2d.lineTo(point[0], point[1])
-		})
-
-		this.context2d.fillStyle = color
-		this.context2d.fill()
-		return true
+		return imageCanvas
 	}
 
 	/**
@@ -821,7 +137,7 @@ export class Image {
 	 * @returns RGBA buffer of the pixels
 	 */
 	buffer(): Buffer {
-		const buffer = uint8ArrayToBuffer(this.context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
+		const buffer = uint8ArrayToBuffer(this.#context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
 		return buffer
 	}
 
@@ -836,6 +152,11 @@ export class Image {
 	 * returns the image as a data-url
 	 */
 	toDataURLSync(): string {
-		return this.canvas.toDataURL('image/png')
+		return this.#canvas.toDataURL('image/png')
 	}
+}
+function isBase64(trimmedImage: string): boolean {
+	// Basic check: valid base64 string (no data URL prefix, only base64 chars, length multiple of 4)
+	const base64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/
+	return trimmedImage.length > 0 && base64Regex.test(trimmedImage)
 }

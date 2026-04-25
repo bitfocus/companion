@@ -2,16 +2,20 @@ import type EventEmitter from 'node:events'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
 import { router } from '../UI/TRPC.js'
+import { PreviewElementStream } from './ElementStream.js'
 import { PreviewExpressionStream } from './ExpressionStream.js'
 import { PreviewGraphics } from './Graphics.js'
 
 export class PreviewController {
 	readonly #graphics: PreviewGraphics
 	readonly #expressionStream: PreviewExpressionStream
+	readonly #elementStream: PreviewElementStream
 
 	constructor(
+		instanceDefinitions: InstanceDefinitions,
 		graphicsController: GraphicsController,
 		pageStore: IPageStore,
 		controlsController: ControlsController,
@@ -19,12 +23,19 @@ export class PreviewController {
 	) {
 		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController, controlEvents)
 		this.#expressionStream = new PreviewExpressionStream(controlsController)
+		this.#elementStream = new PreviewElementStream(
+			instanceDefinitions,
+			graphicsController,
+			controlsController,
+			controlEvents
+		)
 	}
 
 	createTrpcRouter() {
 		return router({
 			graphics: this.#graphics.createTrpcRouter(),
 			expressionStream: this.#expressionStream.createTrpcRouter(),
+			elementStream: this.#elementStream.createTrpcRouter(),
 		})
 	}
 
@@ -35,5 +46,10 @@ export class PreviewController {
 	onVariablesChanged(allChangedSet: ReadonlySet<string>, fromControlId: string | null): void {
 		this.#graphics.onVariablesChanged(allChangedSet, fromControlId)
 		this.#expressionStream.onVariablesChanged(allChangedSet, fromControlId)
+		this.#elementStream.onVariablesChanged(allChangedSet, fromControlId)
+	}
+
+	onConnectionCompositeElementsChanged(elementIds: ReadonlySet<CompositeElementIdString>): void {
+		this.#elementStream.onConnectionCompositeElementsChanged(elementIds)
 	}
 }

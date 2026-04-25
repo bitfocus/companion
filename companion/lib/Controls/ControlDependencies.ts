@@ -8,6 +8,7 @@ import type {
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
@@ -24,6 +25,7 @@ export interface ControlExternalDependencies {
 	readonly instance: InstanceController
 	readonly variableValues: VariablesValues
 	readonly userconfig: DataUserConfig
+	readonly graphics: GraphicsController
 
 	readonly actionRunner: ActionRunner
 }
@@ -41,6 +43,7 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
+	layeredStyleElementChanged: [controlId: string, elementId: string]
 
 	presetDrawn: [controlId: string, render: ImageResult]
 

@@ -31,7 +31,7 @@ import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { OptionsInputField } from '../OptionsInputField.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
-import { FeedbackManageStyles, FeedbackStyles } from './FeedbackStylesCells.js'
+import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -174,21 +174,16 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						</MyErrorBoundary>
 					))}
 
-					{!!entity && entity.type === EntityModelType.Feedback && feedbackListType === null && (
-						<>
-							<FeedbackManageStyles
-								feedbackSpec={entityDefinition}
+					{!!entity &&
+						entity.type === EntityModelType.Feedback &&
+						feedbackListType === FeedbackEntitySubType.StyleOverride && (
+							<LayeredStylesOverrides
 								feedback={entity}
-								setSelectedStyleProps={service.setSelectedStyleProps}
-							/>
-							<FeedbackStyles
-								feedbackSpec={entityDefinition}
-								feedback={entity}
-								setStylePropsValue={service.setStylePropsValue}
+								feedbackType={entityDefinition?.feedbackType}
+								service={service}
 								localVariablesStore={localVariablesStore}
 							/>
-						</>
-					)}
+						)}
 				</CForm>
 			</div>
 		</>

@@ -249,7 +249,12 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 						}
 						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder(location)
 
-						rawEntries.push({ x, y, image, location })
+						rawEntries.push({
+							x,
+							y,
+							defaultRender: image,
+							location,
+						})
 					}
 				}
 
@@ -272,10 +277,9 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			)
 
 			return {
+				...entry,
 				x: transformedX,
 				y: transformedY,
-				image: entry.image,
-				location: entry.location,
 			}
 		})
 	}
@@ -335,7 +339,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				{
 					x: location.column - xOffset,
 					y: location.row - yOffset,
-					image: render,
+					defaultRender: render,
 					location,
 				},
 			]

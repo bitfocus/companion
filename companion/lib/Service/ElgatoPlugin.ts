@@ -8,7 +8,6 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { transformButtonImage } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { ServiceBase } from './Base.js'
 import type { ServiceApi } from './ServiceApi.js'
@@ -384,10 +383,10 @@ export class ServiceElgatoPluginSocket extends EventEmitter {
 		this.socket = socket
 		this.remoteAddress = remoteAddress
 
-		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, render) => {
+		this.#write_queue = new ImageWriteQueue(this.#logger, async (_id, partial, drawItem) => {
 			const targetSize = 72 // Compatibility
 			try {
-				const newbuffer = await transformButtonImage(render, null, targetSize, targetSize, 'rgb')
+				const newbuffer = await drawItem.drawNative(targetSize, targetSize, null, 'rgb')
 
 				this.apicommand('fillImage', { ...partial, data: newbuffer })
 			} catch (e) {

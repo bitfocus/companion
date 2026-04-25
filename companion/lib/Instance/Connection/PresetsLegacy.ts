@@ -15,6 +15,7 @@ import type {
 } from '@companion-module/base-old'
 import type { Complete } from '@companion-module/host'
 import type { Logger } from '../../Log/Controller.js'
+import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
 import {
 	convertActionsDelay,
 	convertPresetFeedbacksToEntities,
@@ -142,22 +143,33 @@ function ConvertPresetDefinition(
 	try {
 		if (rawPreset.type !== 'button') return null
 
+		const parsedStyle = ConvertLegacyStyleToElements(
+			ConvertPresetStyleToDrawStyle(rawPreset.style),
+			convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+			rawPreset.previewStyle
+		)
+
 		const presetDefinition: PresetDefinition = {
 			id: presetId,
 			name: rawPreset.name,
 			type: rawPreset.type,
-			previewStyle: rawPreset.previewStyle,
 			model: {
-				type: 'button',
+				type: 'button-layered',
 				options: {
 					rotaryActions: rawPreset.options?.rotaryActions ?? false,
 					stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+					canModifyStyleInApis: false,
 				},
-				style: ConvertPresetStyleToDrawStyle(rawPreset.style),
-				feedbacks: convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+
+				feedbacks: parsedStyle.feedbacks,
+				style: {
+					layers: parsedStyle.layers,
+				},
+
 				steps: {},
 				localVariables: [],
 			},
+			presetExtraFeedbacks: parsedStyle.previewStyleFeedbacks,
 			keywords: undefined,
 		}
 

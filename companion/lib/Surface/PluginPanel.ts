@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -19,7 +20,7 @@ import type {
 } from '../Instance/Surface/IpcTypes.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { parseColor, parseColorToNumber, transformButtonImage, translateRotation } from '../Resources/Util.js'
+import { parseColorToNumber, translateRotation } from '../Resources/Util.js'
 import {
 	BrightnessConfigField,
 	LockConfigFields,
@@ -204,27 +205,25 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					pageNumber: drawItem.location?.pageNumber,
 				}
 
-				const style = drawItem.image.style
+				const style = drawItem.defaultRender.style
 
 				if (controlDefinition.style.bitmap) {
-					const buffer = await transformButtonImage(
-						drawItem.image,
-						this.#config.rotation,
+					const buffer = await drawItem.defaultRender.drawNative(
 						controlDefinition.style.bitmap.w,
 						controlDefinition.style.bitmap.h,
+						this.#config.rotation,
 						controlDefinition.style.bitmap.format || 'rgb'
 					)
 
 					if (buffer === undefined || buffer.length == 0) {
 						this.#logger.warn('buffer has invalid size')
 					} else {
-						drawProps.image = buffer.toString('base64')
+						drawProps.image = Buffer.from(buffer).toString('base64') // TODO - avoid buffer wrap
 					}
 				}
 
 				if (controlDefinition.style.colors) {
-					let bgcolor =
-						typeof style !== 'string' && style ? parseColor(style.bgcolor).replaceAll(' ', '') : 'rgb(0,0,0)'
+					let bgcolor = parseColor(drawItem.defaultRender.bgcolor).replaceAll(' ', '')
 					// let fgcolor = typeof style !== 'string' && style ? parseColor(style.color).replaceAll(' ', '') : 'rgb(0,0,0)'
 
 					if (controlDefinition.style.colors !== 'rgb') {
@@ -237,7 +236,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				}
 
 				if (controlDefinition.style.text) {
-					drawProps.text = (typeof style !== 'string' && style?.text) || ''
+					drawProps.text = style?.text?.text || ''
 				}
 				// if (controlDefinition.style.textStyle) {
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'

@@ -1,10 +1,11 @@
 import Express from 'express'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
-import { ParseAlignment, parseColorToNumber, rgb } from '../Resources/Util.js'
+import { parseColorToNumber, rgb } from '../Resources/Util.js'
 import type { UIExpress } from '../UI/Express.js'
 import type { ServiceApi } from './ServiceApi.js'
 

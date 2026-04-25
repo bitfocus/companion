@@ -70,6 +70,7 @@ import type {
 } from '@companion-module/base-old/dist/host-api/versions.js'
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import {
@@ -90,6 +91,8 @@ import {
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
+
+const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -179,7 +182,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
 			? new ConnectionEntityManager(
-					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper),
+					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 					this.#deps.controls,
 					this.connectionId
 				)
@@ -296,7 +299,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			const controlEntities = control.entities.getAllEntities()
 			if (!controlEntities || controlEntities.length === 0) continue
 
-			const imageSize = control.getBitmapSize()
 			for (const entity of controlEntities) {
 				if (entity.connectionId !== this.connectionId) continue
 				if (entity.type !== EntityModelType.Feedback) continue
@@ -313,7 +315,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,
 
-					image: imageSize ?? undefined,
+					image: control.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 				}
 			}
 		}
@@ -425,7 +427,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 					isInverted: typeof feedback.isInverted?.value === 'boolean' ? feedback.isInverted.value : false, // This is fine, there should be no expressions here
 
-					image: control?.getBitmapSize() ?? undefined,
+					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 
 					upgradeIndex: feedback.upgradeIndex ?? null,
 					disabled: !!feedback.disabled,
@@ -487,7 +489,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 								isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
 
-								image: control?.getBitmapSize() ?? undefined,
+								image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -1092,9 +1094,11 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #controlsStore: IControlStore
 
-	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>) {
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>, controlsStore: IControlStore) {
 		this.#ipcWrapper = ipcWrapper
+		this.#controlsStore = controlsStore
 	}
 
 	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
@@ -1124,13 +1128,15 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 
 		for (const [id, value] of feedbacks) {
 			if (value) {
+				const control = this.#controlsStore.getControl(value.controlId)
+
 				updateMessage.feedbacks[id] = {
 					id: value.entity.id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions as OptionsObject,
 
-					image: value.imageSize,
+					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
 
 					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
 

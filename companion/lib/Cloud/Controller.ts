@@ -316,18 +316,11 @@ export class CloudController {
 			if (!control) {
 				continue
 			}
-			if (control.type !== 'button') {
-				continue
-			}
-			const drawStyle = control.getDrawStyle()
-			if (!drawStyle || drawStyle.style !== 'button') {
+			if (control.type !== 'button-layered') {
 				continue
 			}
 
-			// Don't expose a cloud control
-			if (drawStyle.cloud) {
-				continue
-			}
+			const render = this.#graphics.getCachedRender(location)
 
 			const bankIndex = xyToOldBankIndex(location.column, location.row)
 
@@ -337,11 +330,8 @@ export class CloudController {
 				page: location.pageNumber, // backwards compatibility, remove in release
 				p: this.protocolVersion,
 				data: {
-					...drawStyle,
-					pushed: control.supportsPushed && control.pushed,
-					actions_running: drawStyle.action_running,
-					bank_status: control.supportsStyle && control.button_status,
-					style: 'button',
+					// Provide the default render as the best we can do
+					png64: render?.asDataUrl,
 				},
 			})
 		}
@@ -744,20 +734,21 @@ export class CloudController {
 	 */
 	#updateBank(location: ControlLocation, render: ImageResult): void {
 		const bank = xyToOldBankIndex(location.column, location.row)
-		if (typeof render.style === 'object' && !render.style.cloud && bank) {
-			const updateId = v4()
-			for (let region in this.#regionInstances) {
-				if (!!this.#regionInstances[region]?.socketTransmit) {
-					this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
-						updateId,
-						type: 'single',
-						location,
-						p: this.protocolVersion,
-						page: location.pageNumber, // backwards compatibility, remove in release
-						bank, // backwards compatibility, remove in release
-						data: render.style,
-					})
-				}
+		const updateId = v4()
+		for (let region in this.#regionInstances) {
+			if (!!this.#regionInstances[region]?.socketTransmit) {
+				this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
+					updateId,
+					type: 'single',
+					location,
+					p: this.protocolVersion,
+					page: location.pageNumber, // backwards compatibility, remove in release
+					bank, // backwards compatibility, remove in release
+					data: {
+						// Provide the default render as the best we can do
+						png64: render.asDataUrl,
+					},
+				})
 			}
 		}
 	}

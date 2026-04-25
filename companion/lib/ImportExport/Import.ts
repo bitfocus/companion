@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	ExportFullv6,
@@ -26,8 +27,8 @@ import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdate
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import {
-	fixupControl,
 	fixupExpressionVariableControl,
+	fixupLayeredButtonControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
 } from './ImportFixup.js'
@@ -355,8 +356,17 @@ export class ImportController {
 			for (const [column, control] of Object.entries(rowObj)) {
 				if (control) {
 					// Import the control
-					const fixedControlObj = fixupControl(this.#logger, structuredClone(control), referencesUpdater, instanceIdMap)
-					if (!fixedControlObj) continue
+					let fixedControlObj: SomeButtonModel
+					if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
+						fixedControlObj = {
+							type: control.type,
+						}
+					} else if (control.type === 'button-layered') {
+						fixedControlObj = fixupLayeredButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
+					} else {
+						this.#logger.warn(`Unknown control type: ${control.type}`)
+						continue
+					}
 
 					const location: ControlLocation = {
 						pageNumber: Number(topage),

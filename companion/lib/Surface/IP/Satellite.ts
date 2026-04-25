@@ -16,8 +16,8 @@ import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/share
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { ImageResult } from '../../Graphics/ImageResult.js'
-import { GraphicsRenderer, LOCK_ICON_STYLE } from '../../Graphics/Renderer.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { translateRotation } from '../../Resources/Util.js'
@@ -207,7 +207,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly socket: SatelliteSocketWrapper
 
 	// Cache for generated lock images by dimension
-	readonly #lockImageCache = new Map<string, ImageResult>()
+	#lockImage: ImageResult | null = null
 
 	constructor(deviceInfo: SatelliteDeviceInfo, surfaceId: string, executeExpression: SurfaceExecuteExpressionFn) {
 		super()
@@ -295,7 +295,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					this.#writeQueue.queue(definition.id, definition, {
 						x: definition.column,
 						y: definition.row,
-						image: this.#getLockImage(definition.style),
+						defaultRender: this.#getLockImage(),
 						location: null,
 					})
 				}
@@ -306,22 +306,10 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	/**
 	 * Get or generate a lock icon image for a given size
 	 */
-	#getLockImage(stylePreset: SatelliteControlStylePreset): ImageResult {
-		const cacheKey =
-			stylePreset.bitmap && stylePreset.bitmap.w > 0 && stylePreset.bitmap.h > 0
-				? `${stylePreset.bitmap.w}x${stylePreset.bitmap.h}`
-				: null
+	#getLockImage(): ImageResult {
+		if (!this.#lockImage) this.#lockImage = GraphicsRenderer.drawLockIcon()
 
-		if (!stylePreset.bitmap || !cacheKey) {
-			return new ImageResult(Buffer.alloc(0), 0, 0, '', LOCK_ICON_STYLE)
-		}
-
-		const cached = this.#lockImageCache.get(cacheKey)
-		if (cached) return cached
-
-		const result = GraphicsRenderer.drawLockIcon(stylePreset.bitmap.w, stylePreset.bitmap.h)
-		this.#lockImageCache.set(cacheKey, result)
-		return result
+		return this.#lockImage
 	}
 
 	quit(): void {}
@@ -344,12 +332,16 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			params['CONTROLID'] = controlDefinition.id
 		}
 
-		const styleArgs = await buildSatelliteStyleArgs(drawItem.image, controlDefinition.style, this.#config.rotation)
-		Object.assign(params, styleArgs)
-
 		if (drawItem.location) {
 			params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
 		}
+
+		const styleArgs = await buildSatelliteStyleArgs(
+			drawItem.defaultRender,
+			controlDefinition.style,
+			this.#config.rotation
+		)
+		Object.assign(params, styleArgs)
 
 		if (!this.socket) return
 

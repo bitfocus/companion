@@ -14,6 +14,7 @@ import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesC
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
+import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { EntityListPoolExpressionVariable } from '../Entities/EntityListPoolExpressionVariable.js'
 import type { ExpressionVariableNameMap } from '../ExpressionVariableNameMap.js'
 import type {
@@ -22,8 +23,8 @@ import type {
 	ControlWithoutActions,
 	ControlWithoutActionSets,
 	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 } from '../IControlFragments.js'
 
 /**
@@ -44,7 +45,7 @@ export class ControlExpressionVariable
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithEntities,
-		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
 		ControlWithoutPushed
@@ -54,7 +55,6 @@ export class ControlExpressionVariable
 	readonly supportsActions = false
 	readonly supportsEvents = false
 	readonly supportsEntities = true
-	readonly supportsStyle = false
 	readonly supportsLayeredStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
@@ -103,8 +103,7 @@ export class ControlExpressionVariable
 
 		this.entities = new EntityListPoolExpressionVariable({
 			controlId,
-			commitChange: this.commitChange.bind(this),
-			invalidateControl: this.triggerRedraw.bind(this),
+			reportChange: this.#entityListReportChange.bind(this),
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
@@ -130,6 +129,18 @@ export class ControlExpressionVariable
 
 			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()
+		}
+	}
+
+	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+
+		// Elements are not relevant for expression variables
+
+		if (options.redraw) {
+			this.triggerRedraw()
 		}
 	}
 
@@ -341,9 +352,6 @@ export class ControlExpressionVariable
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
-	}
-	getBitmapSize(): { width: number; height: number } | null {
-		return null
 	}
 	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
 		// Nothing to do

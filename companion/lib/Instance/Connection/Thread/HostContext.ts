@@ -8,6 +8,7 @@ import type {
 import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
+	type CompanionGraphicsCompositeElementDefinition,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 	type CompanionRecordedAction,
@@ -24,9 +25,11 @@ import {
 	type OSCSomeArguments,
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
+import type { CompositeElementDefinition } from '../../Definitions.js'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
 import { translateEntityInputFields } from './ConfigFields.js'
 import { ConvertPresetDefinitions } from './Presets.js'
+import { ConvertLayerPresetElements } from './PresetsLayered.js'
 
 /**
  * The context of methods and properties provided to the surfaces, which they can use to report events or make requests.
@@ -127,6 +130,32 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', {
 			presets: presets,
 			uiPresets: uiPresets,
+		})
+	}
+	/** The composite graphics elements provided by the connection have changed */
+	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinition[]): void {
+		const convertedElements: CompositeElementDefinition[] = []
+
+		for (const rawElement of compositeElements) {
+			convertedElements.push({
+				id: rawElement.id,
+				name: rawElement.name,
+				description: rawElement.description,
+				options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback),
+				elements: ConvertLayerPresetElements(
+					this.#logger,
+					this.#connectionId,
+					undefined,
+					rawElement.elements || [],
+					true // Force new unique IDs for elements within composite definitions
+				).slice(
+					1 // Crop off the canvas element
+				),
+			} satisfies Complete<CompositeElementDefinition>)
+		}
+
+		this.#ipcWrapper.sendWithNoCb('setCompositeElementDefinitions', {
+			definitions: convertedElements,
 		})
 	}
 	/** The connection has some new values for variables */

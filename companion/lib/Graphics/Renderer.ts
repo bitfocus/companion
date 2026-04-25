@@ -9,367 +9,324 @@
  * this program.
  */
 
+import { isPromise } from 'node:util/types'
+import type * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 import QuickLRU from 'quick-lru'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
+import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
+import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { DrawStyleButtonModel, DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import { ParseAlignment, parseColor } from '../Resources/Util.js'
-import { Image, type TextLayoutCache } from './Image.js'
-import { ImageResult } from './ImageResult.js'
-import type { RendererButtonStyle, RendererDrawStyle } from './Types.js'
+import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
+import { Image } from './Image.js'
+import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
+import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
+import type { RendererDrawStyle } from './Types.js'
 
 const colorButtonYellow = 'rgb(255, 198, 0)'
 const colorWhite = 'white'
-const colorBlack = 'black'
 const colorDarkGrey = 'rgba(15, 15, 15, 1)'
 
 /**
  * Shared style for lock icon display
  */
-export const LOCK_ICON_STYLE: DrawStyleButtonModel = {
-	text: '🔒',
-	textExpression: false,
-	size: 'auto',
-	alignment: 'center:center',
-	pngalignment: 'center:center',
-	color: 0xc8c8c8, // rgb(200, 200, 200) as number
-	bgcolor: 0x000000, // rgb(0, 0, 0) as number
-	show_topbar: false,
-	png64: null,
-	style: 'button',
-	imageBuffers: [],
-	pushed: false,
-	stepCurrent: 0,
-	stepCount: 1,
-	cloud: undefined,
-	cloud_error: undefined,
-	button_status: undefined,
-	action_running: undefined,
+const LOCK_ICON_STYLE: ImageResultProcessedStyle = {
+	type: 'button',
+	color: {
+		color: 0x000000,
+	},
+	text: {
+		text: '🔒',
+		color: 0xc8c8c8,
+		size: 'auto',
+		halign: 'center',
+		valign: 'center',
+	},
 }
 
-const internalIcons = {
-	// 15x8 argb
-	cloud:
-		'AAAAAAAAAAAAAAAAAAAAAAAAAAAD////D////4L////7//////////D+/v51+/v7A////wAAAAAAAAAAAAAAAAAAA' +
-		'AAAAAAAAAAAAAAAAABN////kf///////////v7+//z8/P/5+fn/9vb2RfDw8AAAAAAAAAAAAAAAAAAAAAB7///////////////0/////' +
-		'P7+/v/9/f3/+vr6//b29v/y8vL/7e3tf+np6QAAAAAAAAAAAv///xz///+k/////////////////f39//r6+v/39/f/8/Pz/+7u7v/p6' +
-		'en/5OTkquDg4DDV1dUC////N////6v////s/v7+//39/f/7+/v/+Pj4//T09P/v7+//6urq/+Xl5f/g4OD/3Nzc8dfX18DS0tJKz8/Pt' +
-		'P/////+/v7/+/v7//n5+f/09PT/8PDw/+vr6//m5ub/4eHh/9zc3P/Y2Nj/1NTU/9HR0f/Ozs7HzMzM2Pv7+//5+fn/9fX1//Hx8f/s7' +
-		'Oz/5+fn/+Li4v/d3d3/2dnZ/9TU1P/R0dH/z8/P/83Nzf/MzMzGy8vLVvb29u7y8vL/7e3t/+jo6P/j4+P/3t7e/9nZ2f/V1dX/0dHR/' +
-		'87Ozv/Nzc3/zMzM/8zMzOHMzMwwysrK',
-	// 15x8 argb
-	cloudError:
-		'AAAAAAAAAAAAAAAAAAAAABj/AACj/wIC7P8BAfX/Cwv+/0xM///m5vD+/v51+/v7A////wAAAAAAAAAAAAAAAAAAA' +
-		'AAAAAAAGf8AAMz/AACk/z09kf///////////n5+//8ZGf/54eH/9vb2RfDw8AAAAAAAAAAAAAAAAAAAAAB7//////9bW///g4P0/////' +
-		'P7+/v/90tL//i0t//4UFP/6XFz/7e3tf+np6QAAAAAAAAAAAv///xz///+k//////8XF////////f39//ygoP//CAj/+mVl/+/n5//9F' +
-		'RX/5OTkquDg4DDV1dUC////N////6v////s/v7+//8XF//77+///FlZ//4QEP/0pKT/6urq/+Xl5f/8FBT/3Nzc8dfX18DS0tJKz8/Pt' +
-		'P/////+/v7/+/v7//1OTv/+ERH//DY2/+3Q0P/m5ub/4eHh/+5qav/vWlr/1NTU/9HR0f/Ozs7HzMzM2Pv7+//5+fn/9fX1//PNzf/9G' +
-		'Rn/83Z2/+Li4v/d3d3/7G9v//cqKv/Uw8P/z8/P/83Nzf/MzMzGy8vLVvb29u7y8vL/7e3t/+jo6P/mzc3/81NT//wREf/8ERH/8T4+/' +
-		'9O7u//Nzc3/zMzM/8zMzOHMzMwwysrK',
-}
-
-// let lastDraw = 0
+const emptySet: ReadonlySet<string> = new Set()
 
 export class GraphicsRenderer {
+	static #IMAGE_CACHE = new Map<string, Image[]>()
+
 	/** Static cache for text layout computations, shared across all Image instances */
 	static #textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 5000 })
+
+	private static calculateTransforms(resolution: { width: number; height: number }) {
+		// Calculate some constants for drawing without reinventing the numbers
+		const drawScale = Math.min(resolution.width, resolution.height) / 72
+		const xOffset = (resolution.width - 72 * drawScale) / 2
+		const yOffset = (resolution.height - 72 * drawScale) / 2
+		const transformX = (x: number): number => xOffset + x * drawScale
+		const transformY = (y: number): number => yOffset + y * drawScale
+
+		return {
+			drawScale,
+			transformX,
+			transformY,
+		}
+	}
+
+	/**
+	 * Get a cached Image instance.
+	 * Note: This assumes that the image is modified sync
+	 */
+	static #getCachedImage<T>(width: number, height: number, oversampling: number, fcn: (image: Image) => T): T {
+		const key = `${width}x${height}x${oversampling}`
+
+		let pool = GraphicsRenderer.#IMAGE_CACHE.get(key)
+		if (!pool) {
+			pool = []
+			GraphicsRenderer.#IMAGE_CACHE.set(key, pool)
+		}
+
+		const img = pool.pop() || Image.create(width, height, oversampling, GraphicsRenderer.#textLayoutCache)
+		img.clear()
+
+		const res = fcn(img)
+		if (isPromise(res)) {
+			res
+				.finally(() => {
+					pool.push(img)
+				})
+				.catch(() => null)
+			return res
+		} else {
+			pool.push(img)
+			return res
+		}
+	}
 
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(showTopbar: boolean, location: ControlLocation | null): ImageResult {
+	static drawBlank(
+		resolution: { width: number; height: number },
+		showTopbar: boolean,
+		location: ControlLocation | null
+	): ImageResult {
 		// let now = performance.now()
 		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
 		// lastDraw = now
 		// console.time('drawBlankImage')
-		const img = new Image(72, 72, 2, GraphicsRenderer.#textLayoutCache)
+
+		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
+			// console.timeEnd('drawBlankImage')
+			GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
+
+			return new ImageResult(img.toDataURLSync(), null, async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
+					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
+
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			})
+		})
+	}
+
+	static #drawBlankImage(img: Image, showTopbar: boolean, location: ControlLocation | null) {
+		// Calculate some constants for drawing without reinventing the numbers
+		const { drawScale, transformX } = GraphicsRenderer.calculateTransforms(img)
 
 		img.fillColor('black')
 
 		if (showTopbar) {
-			img.drawTextLine(2, 3, location ? formatLocation(location) : 'x/x', 'rgb(50, 50, 50)', 8)
-			img.horizontalLine(13.5, 'rgb(30, 30, 30)')
+			img.drawTextLine(
+				transformX(2),
+				3 * drawScale,
+				location ? formatLocation(location) : 'x/x',
+				'rgb(50, 50, 50)',
+				8 * drawScale
+			)
+			img.horizontalLine(13.5 * drawScale, { color: 'rgb(30, 30, 30)', width: 1 })
 		}
-		// console.timeEnd('drawBlankImage')
-		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), undefined)
-	}
-
-	static wrapDrawButtonImage(
-		buffer: Buffer,
-		width: number,
-		height: number,
-		dataUrl: string,
-		draw_style: DrawStyleModel['style'] | undefined,
-		drawStyle: DrawStyleModel
-	): ImageResult {
-		const draw_style2 = draw_style === 'button' ? (drawStyle.style === 'button' ? drawStyle : undefined) : draw_style
-
-		return new ImageResult(buffer, width, height, dataUrl, draw_style2)
 	}
 
 	/**
-	 * Draw the image for a btuton
+	 * Draw the image for a button
+	 */
+	static async drawButtonBareImageUnwrapped(
+		drawStyle: RendererDrawStyle,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Uint8Array> {
+		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
+
+		const { buffer, width, height } = await GraphicsRenderer.#getCachedImage(
+			dimensions[0],
+			dimensions[1],
+			resolution.oversampling,
+			async (img) => {
+				await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle, {
+					width: dimensions[0],
+					height: dimensions[1],
+				})
+
+				return {
+					buffer: img.buffer(),
+					width: img.realwidth,
+					height: img.realheight,
+				}
+			}
+		)
+
+		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
+	}
+
+	/**
+	 * Draw the image for a button
 	 */
 	static async drawButtonImageUnwrapped(drawStyle: RendererDrawStyle): Promise<{
-		buffer: Buffer
-		width: number
-		height: number
 		dataUrl: string
-		draw_style: DrawStyleModel['style'] | undefined
+		processedStyle: ImageResultProcessedStyle
 	}> {
+		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
+			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle, {
+				width: 72,
+				height: 72,
+			})
+
+			return {
+				dataUrl: img.toDataURLSync(),
+				processedStyle,
+			}
+		})
+	}
+
+	static async #drawButtonImageInternal(
+		img: Image,
+		drawStyle: RendererDrawStyle,
+		resolution: { width: number; height: number }
+	): Promise<ImageResultProcessedStyle> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
-		const img = new Image(72, 72, 4, GraphicsRenderer.#textLayoutCache)
 
-		let draw_style: DrawStyleModel['style'] | undefined = undefined
+		let processedStyle: ImageResultProcessedStyle
+
+		// Calculate some constants for drawing without reinventing the numbers
+		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
 
 		// special button types
 		if (drawStyle.style == 'pageup') {
-			draw_style = 'pageup'
+			processedStyle = { type: 'pageup' }
 
 			img.fillColor(colorDarkGrey)
 
 			if (drawStyle.plusminus) {
-				img.drawTextLine(31, 20, drawStyle.direction_flipped ? '–' : '+', colorWhite, 18)
+				img.drawTextLine(
+					transformX(31),
+					transformY(20),
+					drawStyle.direction_flipped ? '–' : '+',
+					colorWhite,
+					18 * drawScale
+				)
 			} else {
 				img.drawPath(
 					[
-						[46, 30],
-						[36, 20],
-						[26, 30],
+						[transformX(46), transformY(30)],
+						[transformX(36), transformY(20)],
+						[transformX(26), transformY(30)],
 					],
-					colorWhite,
-					2
+					{ color: colorWhite, width: 2 }
 				) // Arrow up path
 			}
 
-			img.drawTextLineAligned(36, 39, 'UP', colorButtonYellow, 10, 'center', 'top')
+			img.drawTextLineAligned(transformX(36), transformY(39), 'UP', colorButtonYellow, 10 * drawScale, 'center', 'top')
 		} else if (drawStyle.style == 'pagedown') {
-			draw_style = 'pagedown'
+			processedStyle = { type: 'pagedown' }
 
 			img.fillColor(colorDarkGrey)
 
 			if (drawStyle.plusminus) {
-				img.drawTextLine(31, 36, drawStyle.direction_flipped ? '+' : '–', colorWhite, 18)
+				img.drawTextLine(
+					transformX(31),
+					transformY(36),
+					drawStyle.direction_flipped ? '+' : '–',
+					colorWhite,
+					18 * drawScale
+				)
 			} else {
 				img.drawPath(
 					[
-						[46, 40],
-						[36, 50],
-						[26, 40],
+						[transformX(46), transformY(40)],
+						[transformX(36), transformY(50)],
+						[transformX(26), transformY(40)],
 					],
-					colorWhite,
-					2
+					{ color: colorWhite, width: 2 }
 				) // Arrow down path
 			}
 
-			img.drawTextLineAligned(36, 23, 'DOWN', colorButtonYellow, 10, 'center', 'top')
+			img.drawTextLineAligned(
+				transformX(36),
+				transformY(23),
+				'DOWN',
+				colorButtonYellow,
+				10 * drawScale,
+				'center',
+				'top'
+			)
 		} else if (drawStyle.style == 'pagenum') {
-			draw_style = 'pagenum'
+			processedStyle = { type: 'pagenum' }
 
 			img.fillColor(colorDarkGrey)
 
 			if (drawStyle.pageNumber <= 0) {
 				// Preview (no location)
-				img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
-				img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
+				img.drawTextLineAligned(
+					transformX(36),
+					transformY(18),
+					'PAGE',
+					colorButtonYellow,
+					10 * drawScale,
+					'center',
+					'top'
+				)
+				img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
 			} else if (!drawStyle.pageName || drawStyle.pageName.toLowerCase() == 'page') {
-				img.drawTextLine(23, 18, 'PAGE', colorButtonYellow, 10)
-				img.drawTextLineAligned(36, 32, '' + drawStyle.pageNumber, colorWhite, 18, 'center', 'top')
+				img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
+				img.drawTextLineAligned(
+					transformX(36),
+					transformY(32),
+					'' + drawStyle.pageNumber,
+					colorWhite,
+					18 * drawScale,
+					'center',
+					'top'
+				)
 			} else {
-				img.drawAlignedText(0, 0, 72, 72, drawStyle.pageName, colorWhite, 18, 'center', 'center')
+				img.drawAlignedText(
+					0,
+					0,
+					img.width,
+					img.height,
+					drawStyle.pageName,
+					colorWhite,
+					18 * drawScale,
+					'center',
+					'center'
+				)
 			}
-		} else if (drawStyle.style === 'button') {
-			draw_style = 'button'
+		} else if (drawStyle.style === 'button-layered') {
+			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
-			await GraphicsRenderer.#drawButtonMain(img, drawStyle)
+			await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {
+				x: 0,
+				y: 0,
+			})
+		} else {
+			processedStyle = {
+				type: 'button', // Default to button style
+			}
 		}
 
 		// console.timeEnd('drawButtonImage')
-		return {
-			buffer: img.buffer(),
-			width: img.realwidth,
-			height: img.realheight,
-			dataUrl: img.toDataURLSync(),
-			draw_style,
-		}
-	}
 
-	/**
-	 * Draw the main button
-	 */
-	static async #drawButtonMain(img: Image, drawStyle: RendererButtonStyle): Promise<void> {
-		// handle upgrade from pre alignment-support configuration
-		if (drawStyle.alignment === undefined) {
-			drawStyle.alignment = 'center:center'
-		}
-		if (drawStyle.pngalignment === undefined) {
-			drawStyle.pngalignment = 'center:center'
-		}
-
-		// Draw background color first
-		if (!drawStyle.show_topbar) {
-			img.box(0, 0, 72, 72, parseColor(drawStyle.bgcolor))
-		} else {
-			img.box(0, 14, 72, 72, parseColor(drawStyle.bgcolor))
-		}
-
-		// Draw background PNG if exists
-		if (drawStyle.png64 !== undefined && drawStyle.png64 !== null) {
-			try {
-				const png64 = drawStyle.png64.startsWith('data:image/png;base64,') ? drawStyle.png64.slice(22) : drawStyle.png64
-				const data = Buffer.from(png64, 'base64')
-				const [halign, valign] = ParseAlignment(drawStyle.pngalignment)
-
-				if (!drawStyle.show_topbar) {
-					await img.drawFromPngData(data, 0, 0, 72, 72, halign, valign, 'fit_or_shrink')
-				} else {
-					await img.drawFromPngData(data, 0, 14, 72, 58, halign, valign, 'fit_or_shrink')
-				}
-			} catch (e) {
-				console.error('error drawing image:', e)
-				img.box(0, 14, 71, 57, 'black')
-				if (!drawStyle.show_topbar) {
-					img.drawAlignedText(2, 2, 68, 68, 'PNG ERROR', 'red', 10, 'center', 'center')
-				} else {
-					img.drawAlignedText(2, 18, 68, 52, 'PNG ERROR', 'red', 10, 'center', 'center')
-				}
-
-				GraphicsRenderer.#drawTopbar(img, drawStyle)
-				return
-			}
-		}
-
-		// Draw images from feedbacks
-		try {
-			for (const image of drawStyle.imageBuffers || []) {
-				if (image.buffer) {
-					const yOffset = drawStyle.show_topbar ? 14 : 0
-
-					const x = image.x ?? 0
-					const y = yOffset + (image.y ?? 0)
-					const width = image.width || 72
-					const height = image.height || 72 - yOffset
-
-					img.drawPixelBuffer(x, y, width, height, image.buffer, image.pixelFormat, image.drawScale)
-				}
-			}
-		} catch (_e) {
-			img.fillColor('black')
-			if (!drawStyle.show_topbar) {
-				img.drawAlignedText(2, 2, 68, 68, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
-			} else {
-				img.drawAlignedText(2, 18, 68, 52, 'IMAGE\\nDRAW\\nERROR', 'red', 10, 'center', 'center')
-			}
-
-			GraphicsRenderer.#drawTopbar(img, drawStyle)
-			return
-		}
-
-		// Draw button text
-		const [halign, valign] = ParseAlignment(drawStyle.alignment)
-
-		let fontSize: 'auto' | number = 'auto'
-		if (drawStyle.size == 'small') {
-			fontSize = 7 // compatibility with v1 database
-		} else if (drawStyle.size == 'large') {
-			fontSize = 14 // compatibility with v1 database
-		} else {
-			fontSize = Number(drawStyle.size) || 'auto'
-		}
-
-		if (!drawStyle.show_topbar) {
-			img.drawAlignedText(2, 1, 68, 70, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
-		} else {
-			img.drawAlignedText(2, 15, 68, 57, drawStyle.text, parseColor(drawStyle.color), fontSize, halign, valign)
-		}
-
-		// At last draw Topbar on top
-		GraphicsRenderer.#drawTopbar(img, drawStyle)
-	}
-
-	/**
-	 * Draw the topbar onto an image for a button
-	 */
-	static #drawTopbar(img: Image, drawStyle: RendererButtonStyle) {
-		if (!drawStyle.show_topbar) {
-			if (drawStyle.pushed) {
-				img.drawBorder(3, colorButtonYellow)
-			}
-		} else {
-			let step = ''
-			img.box(0, 0, 72, 13.5, colorBlack)
-			img.horizontalLine(13.5, colorButtonYellow)
-
-			if (drawStyle.stepCount > 1 && drawStyle.location) {
-				step = `.${drawStyle.stepCurrent}`
-			}
-
-			if (drawStyle.location === undefined) {
-				// Preview (no location)
-				img.drawTextLine(4, 2, `x.x${step}`, colorButtonYellow, 9)
-			} else if (drawStyle.pushed) {
-				img.box(0, 0, 72, 14, colorButtonYellow)
-				img.drawTextLine(4, 2, `${formatLocation(drawStyle.location)}${step}`, colorBlack, 9)
-			} else {
-				img.drawTextLine(4, 2, `${formatLocation(drawStyle.location)}${step}`, colorButtonYellow, 9)
-			}
-		}
-
-		// Draw status icons from right to left
-		let rightMax = 72
-
-		// first the cloud icon if present
-		if (drawStyle.cloud_error && drawStyle.show_topbar) {
-			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloudError)
-			rightMax -= 17
-		} else if (drawStyle.cloud && drawStyle.show_topbar) {
-			img.drawPixelBuffer(rightMax - 17, 3, 15, 8, internalIcons.cloud)
-			rightMax -= 17
-		}
-
-		// next error or warning icon
-		if (drawStyle.location) {
-			let statusColor: string | undefined
-			switch (drawStyle.button_status) {
-				case 'error':
-					statusColor = 'red'
-					break
-				case 'warning':
-					statusColor = 'rgb(255, 127, 0)'
-					break
-			}
-
-			if (statusColor) {
-				img.drawFilledPath(
-					[
-						[rightMax - 11, 11],
-						[rightMax - 2, 11],
-						[rightMax - 6.5, 2],
-					],
-					statusColor
-				)
-				img.drawTextLineAligned(rightMax - 6.5, 11, '!', colorBlack, 7, 'center', 'bottom', 'bold')
-				rightMax -= 11
-			}
-
-			// last running icon
-			if (drawStyle.action_running) {
-				//img.drawTextLine(55, 3, '►', 'rgb(0, 255, 0)', 8) // not as nice
-				let iconcolor = 'rgb(0, 255, 0)'
-				if (drawStyle.pushed) iconcolor = colorBlack
-				img.drawFilledPath(
-					[
-						[rightMax - 8, 3],
-						[rightMax - 2, 7],
-						[rightMax - 8, 11],
-					],
-					iconcolor
-				)
-				rightMax -= 8
-			}
-		}
+		return processedStyle
 	}
 
 	/**
@@ -429,20 +386,70 @@ export class GraphicsRenderer {
 		}
 	}
 
+	static async #RotateAndConvertImage(
+		img: Image,
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Buffer> {
+		// Future: once we support rotation within Image, we can avoid this final transform
+
+		return transformButtonImage(img.buffer(), img.realwidth, img.realheight, rotation, width, height, format)
+	}
+
 	/**
 	 * Draw a lock icon for a given size
 	 * @param width Width of the image
 	 * @param height Height of the image
 	 */
-	static drawLockIcon(width: number, height: number): ImageResult {
-		const img = new Image(width, height, 2, GraphicsRenderer.#textLayoutCache)
+	static drawLockIcon(): ImageResult {
+		return new ImageResult('', LOCK_ICON_STYLE, async (width, height, rotation, format) => {
+			const dimensions = rotateResolution(width, height, rotation)
+			return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
+				// Fill with black background
+				img.fillColor('rgb(0, 0, 0)')
 
-		// Fill with black background
-		img.fillColor('rgb(0, 0, 0)')
+				// Draw a centered padlock unicode character in light grey
+				img.drawAlignedText(
+					0,
+					0,
+					width,
+					height,
+					'🔒',
+					'rgb(200, 200, 200)',
+					Math.floor(height * 0.6),
+					'center',
+					'center'
+				)
 
-		// Draw a centered padlock unicode character in light grey
-		img.drawAlignedText(0, 0, width, height, '🔒', 'rgb(200, 200, 200)', Math.floor(height * 0.6), 'center', 'center')
+				return this.#RotateAndConvertImage(img, width, height, rotation, format)
+			})
+		})
+	}
 
-		return new ImageResult(img.buffer(), img.realwidth, img.realheight, img.toDataURLSync(), LOCK_ICON_STYLE)
+	/**
+	 * Flatten an array of imagebuffers into a single base64 image
+	 */
+	static async drawImageBuffers(showTopBar: boolean, imageBuffers: DrawImageBuffer[]): Promise<string> {
+		return GraphicsRenderer.#getCachedImage(
+			72,
+			showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72,
+			4,
+			async (img) => {
+				for (const imageBuffer of imageBuffers) {
+					if (imageBuffer.buffer) {
+						const x = imageBuffer.x ?? 0
+						const y = imageBuffer.y ?? 0
+						const width = imageBuffer.width || 72
+						const height = imageBuffer.height || 72
+
+						img.drawPixelBuffer(x, y, width, height, imageBuffer.buffer, imageBuffer.pixelFormat, imageBuffer.drawScale)
+					}
+				}
+
+				return img.toDataURLSync()
+			}
+		)
 	}
 }

@@ -32,7 +32,6 @@ describe('InstanceEntityManager', () => {
 			entityReplace: vi.fn(),
 		},
 		supportsEntities: true,
-		getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 	}
 
 	const mockVariablesParser = {
@@ -211,7 +210,7 @@ describe('InstanceEntityManager', () => {
 	})
 
 	describe('trackEntity for feedback', () => {
-		it('should add a feedback entity and include image size', () => {
+		it('should add a feedback entity', () => {
 			const mockFeedback = {
 				id: 'feedback-1',
 				type: EntityModelType.Feedback,
@@ -236,9 +235,6 @@ describe('InstanceEntityManager', () => {
 			// Verify the entity is being processed
 			vi.runAllTimers()
 
-			expect(mockControlsController.getControl).toHaveBeenCalledWith('control-1')
-			expect(mockControl.getBitmapSize).toHaveBeenCalled()
-
 			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
 				new Map<string, EntityManagerFeedbackEntity | null>([
@@ -254,7 +250,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -352,7 +347,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -419,7 +413,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 					['feedback-2', null],
@@ -435,7 +428,6 @@ describe('InstanceEntityManager', () => {
 								options: {},
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -700,7 +692,6 @@ describe('InstanceEntityManager', () => {
 								options: { field1: '$(var:test)' },
 							} as any,
 							parsedOptions: { field1: '$(var:test)' },
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -1165,23 +1156,8 @@ describe('InstanceEntityManager', () => {
 			const entityCount = 50
 			const mockEntities: any[] = []
 
-			// Create multiple mock controls with proper getBitmapSize implementation
 			for (let i = 0; i < entityCount; i++) {
-				const controlId = `control-${i}`
 				const isAction = i % 2 === 0
-
-				// For feedback entities, ensure there's a proper control with getBitmapSize
-				if (!isAction) {
-					mockControlsController.getControl.mockImplementation((id) => {
-						if (id === controlId) {
-							return {
-								...mockControl,
-								getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
-							}
-						}
-						return mockControl
-					})
-				}
 
 				const mockEntity = {
 					id: `entity-${i}`,
@@ -1253,7 +1229,6 @@ describe('InstanceEntityManager', () => {
 					upgradeIndex: 5,
 				},
 				parsedOptions: { index: 'value-0' },
-				imageSize: { width: 72, height: 58 },
 			} satisfies EntityManagerFeedbackEntity)
 		})
 	})
@@ -1844,7 +1819,6 @@ describe('InstanceEntityManager', () => {
 								upgradeIndex: 5,
 							} as any,
 							parsedOptions: {},
-							imageSize: { width: 72, height: 58 },
 						} satisfies EntityManagerFeedbackEntity,
 					],
 				])
@@ -1939,7 +1913,7 @@ describe('InstanceEntityManager', () => {
 			// Setup control mocks for each entity
 			mockControlsController.getControl.mockImplementation(() => ({
 				...mockControl,
-				getBitmapSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
+				getBitmapFeedbackSize: vi.fn().mockReturnValue({ width: 72, height: 58 }),
 			}))
 
 			// Setup IPC wrapper to return upgrade results
@@ -2003,7 +1977,6 @@ describe('InstanceEntityManager', () => {
 							options: {},
 							upgradeIndex: 3,
 						},
-						imageSize: undefined,
 					},
 				] satisfies Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
 				5

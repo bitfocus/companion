@@ -1,6 +1,6 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { NormalButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ButtonModelBase, LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -102,24 +102,33 @@ export function fixupExpressionVariableControl(
 	return result
 }
 
-export function fixupControl(
+export function fixupLayeredButtonControl(
 	logger: Logger,
 	control: ExportControlv6,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
-): SomeButtonModel | null {
-	// Future: this does not feel durable
-
-	if (control.type === 'pagenum' || control.type === 'pageup' || control.type === 'pagedown') {
-		return {
-			type: control.type,
-		}
-	}
-
-	const result: NormalButtonModel = {
-		type: 'button',
+): LayeredButtonModel {
+	const result: LayeredButtonModel = {
+		type: 'button-layered',
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
+		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
+	}
+
+	referencesUpdater.visitDrawElements(result.style.layers)
+
+	return result
+}
+
+function fixupButtonControlBase(
+	logger: Logger,
+	control: ExportControlv6,
+	referencesUpdater: VisitorReferencesUpdater,
+	instanceIdMap: InstanceAppliedRemappings
+): ButtonModelBase {
+	// Future: this does not feel durable
+
+	const result: ButtonModelBase = {
 		feedbacks: [],
 		steps: {},
 		localVariables: [],
@@ -162,7 +171,7 @@ export function fixupControl(
 		}
 	}
 
-	referencesUpdater.visitEntities([], allEntities).visitButtonDrawStyle(result.style)
+	referencesUpdater.visitEntities([], allEntities)
 
 	return result
 }

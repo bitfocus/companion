@@ -1,6 +1,7 @@
 import { observable } from 'mobx'
 import { useMemo, useRef } from 'react'
 import { NotificationsManager, type NotificationsManagerRef } from '~/Components/Notifications.js'
+import { CompositeElementDefinitionsStore } from '~/Stores/CompositeElementDefinitionsStore.js'
 import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
 import { EntityDefinitionsStore } from '~/Stores/EntityDefinitionsStore.js'
 import { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore.js'
@@ -15,6 +16,7 @@ import { VariablesStore } from '~/Stores/VariablesStore.js'
 import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { useActiveLearnRequests } from './Hooks/useActiveLearnRequests.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
+import { useCompositeElementDefinitionsSubscription } from './Hooks/useCompositeElementDefinitionsSubscription.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
@@ -81,6 +83,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			entityDefinitions: new EntityDefinitionsStore(),
 			eventDefinitions: new EventDefinitionsStore(),
+			compositeElementDefinitions: new CompositeElementDefinitionsStore(),
 
 			pages: new PagesStore(),
 			surfaces: new SurfacesStore(),
@@ -161,6 +164,9 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		undefined
 	)
 	const entityDefinitionsReady = useEventDefinitions(rootStore.eventDefinitions)
+	const compositeElementDefinitionsReady = useCompositeElementDefinitionsSubscription(
+		rootStore.compositeElementDefinitions
+	)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
 
 	const steps: boolean[] = [
@@ -187,6 +193,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		triggersListReady,
 		triggerGroupsReady,
 		entityDefinitionsReady,
+		compositeElementDefinitionsReady,
 		activeLearnRequestsReady,
 		imageLibraryReady,
 		imageLibraryCollectionsReady,

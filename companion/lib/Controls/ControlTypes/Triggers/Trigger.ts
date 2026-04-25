@@ -5,6 +5,7 @@ import type { JsonValue } from 'type-fest'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { clamp } from '../../../Resources/Util.js'
@@ -13,6 +14,7 @@ import { VisitorReferencesUpdater } from '../../../Resources/Visitors/References
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolTrigger } from '../../Entities/EntityListPoolTrigger.js'
 import type {
 	ControlWithActions,
@@ -20,8 +22,8 @@ import type {
 	ControlWithEvents,
 	ControlWithOptions,
 	ControlWithoutActionSets,
+	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
-	ControlWithoutStyle,
 } from '../../IControlFragments.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import { TriggersEventMisc } from './Events/Misc.js'
@@ -50,7 +52,7 @@ export class ControlTrigger
 		ControlWithActions,
 		ControlWithEvents,
 		ControlWithEntities,
-		ControlWithoutStyle,
+		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
 		ControlWithoutPushed
@@ -61,6 +63,7 @@ export class ControlTrigger
 	readonly supportsEvents = true
 	readonly supportsEntities = true
 	readonly supportsStyle = false
+	readonly supportsLayeredStyle = false
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
@@ -154,8 +157,7 @@ export class ControlTrigger
 
 		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
-			commitChange: this.commitChange.bind(this),
-			invalidateControl: this.triggerRedraw.bind(this),
+			reportChange: this.#entityListReportChange.bind(this),
 			instanceDefinitions: deps.instance.definitions,
 			internalModule: deps.internalModule,
 			processManager: deps.instance.processManager,
@@ -193,6 +195,18 @@ export class ControlTrigger
 		setImmediate(() => {
 			this.#setupEvents()
 		})
+	}
+
+	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+
+		// Elements are not relevant for triggers
+
+		if (options.redraw) {
+			this.triggerRedraw()
+		}
 	}
 
 	abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null): void {
@@ -774,14 +788,15 @@ export class ControlTrigger
 		return false
 	}
 
+	getLastDrawStyle(): DrawStyleModel | null {
+		return null
+	}
+
 	/**
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
 		// Nothing to do
-	}
-	getBitmapSize(): { width: number; height: number } | null {
-		return null
 	}
 	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
 		// Nothing to do

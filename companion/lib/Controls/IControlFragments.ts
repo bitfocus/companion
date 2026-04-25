@@ -1,13 +1,15 @@
 import type { JsonObject, JsonValue } from 'type-fest'
-import type { ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import type { ControlBase } from './ControlBase.js'
 import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
-	(ControlWithStyle | ControlWithoutStyle) &
+	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
 	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
@@ -15,23 +17,86 @@ export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithOptions | ControlWithoutOptions) &
 	(ControlWithPushed | ControlWithoutPushed)
 
-export interface ControlWithStyle extends ControlBase<any> {
-	readonly supportsStyle: true
-
-	readonly baseStyle: ButtonStyleProperties
-
-	readonly button_status: ButtonStatus
-
-	/**
-	 * Update the style fields of this control
-	 * @param diff - config diff to apply
-	 * @returns true if any changes were made
-	 */
-	styleSetFields(diff: Record<string, any>): boolean
+export interface ControlWithoutLayeredStyle extends ControlBase<any> {
+	readonly supportsLayeredStyle: false
 }
 
-export interface ControlWithoutStyle extends ControlBase<any> {
-	readonly supportsStyle: false
+export interface ControlWithLayeredStyle extends ControlBase<any> {
+	readonly supportsLayeredStyle: true
+
+	/**
+	 * Add an element to the layered style
+	 * @param type Element type to add
+	 * @param index Index to insert the element at, or null to append
+	 */
+	layeredStyleAddElement(type: string, index: number | null): string
+
+	/**
+	 * Remove an element from the layered style
+	 * @param id Element id to remove
+	 * @returns true if the element was removed
+	 */
+	layeredStyleRemoveElement(id: string): boolean
+
+	/**
+	 * Move an element in the layered style
+	 * @param id Element id to move
+	 * @param parentElementId Parent element id to move the element to
+	 * @param newIndex New index of the element
+	 * @returns true if the element was moved
+	 */
+	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean
+
+	/**
+	 * Update the name of an element in the layered style
+	 * @param id Element id to update
+	 * @param name New name for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementName(id: string, name: string): boolean
+
+	/**
+	 * Update the usage of an element in the layered style
+	 * @param id Element id to update
+	 * @param usage New usage for the element
+	 * @returns true if the element was updated
+	 */
+	layeredStyleSetElementUsage(id: string, name: ButtonGraphicsElementUsage): boolean
+
+	/**
+	 * Update an option on an element from the layered style
+	 * @param id Element id to update
+	 * @param key Option key to update
+	 * @param value New ExpressionOrValue for the option
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateOption(id: string, key: string, value: ExpressionOrValue<JsonValue | undefined>): boolean
+
+	/**
+	 * Update the style from legacy properties
+	 * Future: Once the old button style is removed, this should be reworked to utilise the new style system better
+	 * @param diff The properties to update
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean
+
+	/**
+	 * Propagate composite element changes
+	 * @param allChangedElementIds - composite element ids with changes
+	 */
+	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void
+
+	/**
+	 * Get an element from the layered style by ID
+	 * @param id Element ID to find
+	 * @returns The element if found, undefined otherwise
+	 */
+	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined
+
+	/**
+	 * Get the selected element IDs for each usage in the layered style
+	 */
+	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined }
 }
 
 export interface ControlWithEntities extends ControlBase<any> {

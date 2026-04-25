@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
 	PresetDefinition,
@@ -15,15 +15,20 @@ import type {
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
+	CompanionButtonStepActions,
+	CompanionLayeredButtonPresetDefinition,
 	CompanionPresetAction,
 	CompanionPresetDefinition,
 	CompanionPresetDefinitions,
 	CompanionPresetGroup,
 	CompanionPresetReference,
 	CompanionPresetSection,
+	CompanionSimplePresetLocalVariable,
 	Complete,
 	ModuleLogger,
-} from '@companion-module/base'
+} from '@companion-module/host'
+import { ConvertLegacyStyleToElements } from '../../../Resources/ConvertLegacyStyleToElements.js'
+import { ConvertLayeredPresetFeedbacksToEntities, ConvertLayerPresetElements } from './PresetsLayered.js'
 import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
@@ -277,119 +282,202 @@ function ConvertPresetDefinition(
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
 	presetId: string,
-	rawPreset: CompanionPresetDefinition
+	rawPreset: CompanionLayeredButtonPresetDefinition | CompanionPresetDefinition
 ): PresetDefinition | null {
 	try {
-		if (rawPreset.type === 'simple') {
-			const presetDefinition: PresetDefinition = {
-				id: presetId,
-				name: rawPreset.name,
-				type: 'button',
-				previewStyle: rawPreset.previewStyle,
-				model: {
+		const presetType = rawPreset.type
+		const presetName = rawPreset.name
+
+		switch (rawPreset.type) {
+			case 'simple': {
+				const parsedStyle = ConvertLegacyStyleToElements(
+					ConvertPresetStyleToDrawStyle(rawPreset.style),
+					convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+					rawPreset.previewStyle
+				)
+
+				const { steps, hasRotaryActions } = ConvertStepsForPreset(
+					logger,
+					connectionId,
+					connectionUpgradeIndex,
+					rawPreset.steps
+				)
+
+				const presetDefinition: PresetDefinition = {
+					id: presetId,
+					name: rawPreset.name,
 					type: 'button',
-					options: {
-						rotaryActions: false, // Populated later, if relevant actions are defined
-						stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
-					},
-					style: ConvertPresetStyleToDrawStyle(rawPreset.style),
-					feedbacks: convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
-					steps: {},
-					localVariables: [],
-				},
-				keywords: structuredClone(rawPreset.keywords),
-			}
-
-			if (rawPreset.steps) {
-				for (let i = 0; i < rawPreset.steps.length; i++) {
-					const newStep: NormalButtonSteps[0] = {
-						action_sets: {
-							down: [],
-							up: [],
-							rotate_left: undefined,
-							rotate_right: undefined,
+					model: {
+						type: 'button-layered',
+						options: {
+							rotaryActions: hasRotaryActions,
+							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							canModifyStyleInApis: false,
 						},
-						options: structuredClone(DefaultStepOptions),
-					}
-					presetDefinition.model.steps[i] = newStep
 
-					const rawStep = rawPreset.steps[i]
-					if (!rawStep) continue
+						feedbacks: parsedStyle.feedbacks,
+						style: {
+							layers: parsedStyle.layers,
+						},
 
-					if (rawStep.name) newStep.options.name = rawStep.name
-
-					for (const [setId, set] of Object.entries(rawStep)) {
-						if (setId === 'name') continue
-
-						const setIdSafe = validateActionSetId(setId as any)
-						if (setIdSafe === undefined) {
-							logger.warn(`Invalid set id: ${setId}`)
-							continue
-						}
-
-						if (setIdSafe === 'rotate_left' || setIdSafe === 'rotate_right') {
-							// If there are rotary actions, then enable the option
-							presetDefinition.model.options.rotaryActions = true
-						}
-
-						const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
-						if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
-
-						if (setActions) {
-							newStep.action_sets[setIdSafe] = convertActionsDelay(
-								setActions,
-								connectionId,
-								true, // Always relative now
-								connectionUpgradeIndex
-							)
-						}
-					}
+						steps,
+						localVariables: ConvertLocalVariablesForPreset(logger, rawPreset.localVariables),
+					},
+					presetExtraFeedbacks: parsedStyle.previewStyleFeedbacks,
+					keywords: structuredClone(rawPreset.keywords),
 				}
-			}
 
-			// Ensure that there is at least one step
-			if (Object.keys(presetDefinition.model.steps).length === 0) {
-				presetDefinition.model.steps[0] = {
-					action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
-					options: structuredClone(DefaultStepOptions),
+				return presetDefinition
+			}
+			case 'layered': {
+				const { steps, hasRotaryActions } = ConvertStepsForPreset(
+					logger,
+					connectionId,
+					connectionUpgradeIndex,
+					rawPreset.steps
+				)
+
+				const presetDefinition: PresetDefinition = {
+					id: presetId,
+					name: rawPreset.name,
+					type: 'button',
+					model: {
+						type: 'button-layered',
+						options: {
+							rotaryActions: hasRotaryActions,
+							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							canModifyStyleInApis: false,
+						},
+
+						style: {
+							layers: ConvertLayerPresetElements(logger, connectionId, rawPreset.canvas, rawPreset.elements),
+						},
+						feedbacks: ConvertLayeredPresetFeedbacksToEntities(
+							rawPreset.feedbacks,
+							connectionId,
+							connectionUpgradeIndex
+						),
+
+						steps,
+						localVariables: ConvertLocalVariablesForPreset(logger, rawPreset.localVariables),
+					},
+					presetExtraFeedbacks: [], // No preview style for layered presets
+					keywords: structuredClone(rawPreset.keywords),
 				}
+
+				return presetDefinition
 			}
-
-			// Copy across local variables
-			if (rawPreset.localVariables) {
-				for (const localVariable of rawPreset.localVariables) {
-					switch (localVariable.variableType) {
-						case 'simple':
-							presetDefinition.model.localVariables.push({
-								id: nanoid(),
-								type: EntityModelType.Feedback,
-								definitionId: 'user_value',
-								connectionId: 'internal',
-								upgradeIndex: undefined,
-
-								variableName: localVariable.variableName,
-								headline: localVariable.headline,
-
-								options: {
-									persist_value: exprVal(false),
-									startup_value: exprVal(localVariable.startupValue),
-								},
-							})
-							break
-						default:
-							assertNever(localVariable.variableType)
-							logger.warn(`Unknown local variable type: ${localVariable.variableType}`)
-							break
-					}
-				}
-			}
-
-			return presetDefinition
-		} else {
-			return null
+			default:
+				assertNever(rawPreset)
+				logger.warn(`Received invalid preset "${presetName}"(${presetId}) with unsupported type "${presetType}"`)
+				return null
 		}
 	} catch (e) {
 		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${e}`)
 		return null
 	}
+}
+
+function ConvertStepsForPreset(
+	logger: ModuleLogger,
+	connectionId: string,
+	connectionUpgradeIndex: number | undefined,
+	rawSteps: CompanionButtonStepActions[] | undefined
+): { steps: NormalButtonSteps; hasRotaryActions: boolean } {
+	const steps: NormalButtonSteps = {}
+	let hasRotaryActions = false
+
+	if (rawSteps) {
+		for (let i = 0; i < rawSteps.length; i++) {
+			const newStep: NormalButtonSteps[0] = {
+				action_sets: {
+					down: [],
+					up: [],
+					rotate_left: undefined,
+					rotate_right: undefined,
+				},
+				options: structuredClone(DefaultStepOptions),
+			}
+			steps[i] = newStep
+
+			const rawStep = rawSteps[i]
+			if (!rawStep) continue
+
+			if (rawStep.name) newStep.options.name = rawStep.name
+
+			for (const [setId, set] of Object.entries(rawStep)) {
+				if (setId === 'name') continue
+
+				const setIdSafe = validateActionSetId(setId as any)
+				if (setIdSafe === undefined) {
+					logger.warn(`Invalid set id: ${setId}`)
+					continue
+				}
+
+				if (setIdSafe === 'rotate_left' || setIdSafe === 'rotate_right') {
+					// If there are rotary actions, then enable the option
+					hasRotaryActions = true
+				}
+
+				const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
+				if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
+
+				if (setActions) {
+					newStep.action_sets[setIdSafe] = convertActionsDelay(
+						setActions,
+						connectionId,
+						true, // Always relative now
+						connectionUpgradeIndex
+					)
+				}
+			}
+		}
+	}
+
+	// Ensure that there is at least one step
+	if (Object.keys(steps).length === 0) {
+		steps[0] = {
+			action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
+			options: structuredClone(DefaultStepOptions),
+		}
+	}
+
+	return { steps, hasRotaryActions }
+}
+
+function ConvertLocalVariablesForPreset(
+	logger: ModuleLogger,
+	rawLocalVariables: CompanionSimplePresetLocalVariable[] | undefined
+): SomeEntityModel[] {
+	if (!rawLocalVariables) return []
+
+	const result: SomeEntityModel[] = []
+
+	for (const localVariable of rawLocalVariables) {
+		switch (localVariable.variableType) {
+			case 'simple':
+				result.push({
+					id: nanoid(),
+					type: EntityModelType.Feedback,
+					definitionId: 'user_value',
+					connectionId: 'internal',
+					upgradeIndex: undefined,
+
+					variableName: localVariable.variableName,
+					headline: localVariable.headline,
+
+					options: {
+						persist_value: exprVal(false),
+						startup_value: exprVal(localVariable.startupValue),
+					},
+				})
+				break
+			default:
+				assertNever(localVariable.variableType)
+				logger.warn(`Unknown local variable type: ${localVariable.variableType}`)
+				break
+		}
+	}
+
+	return result
 }

@@ -7,6 +7,7 @@ import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/Styl
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
 import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
 
@@ -65,7 +66,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	protected readonly actionRunner: ControlActionRunner
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, isLayered: boolean) {
 		super(deps, controlId, debugNamespace)
 
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
@@ -73,8 +74,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		this.entities = new ControlEntityListPoolButton(
 			{
 				controlId,
-				commitChange: this.commitChange.bind(this),
-				invalidateControl: this.triggerRedraw.bind(this),
+				reportChange: this.entityListReportChange.bind(this),
 				instanceDefinitions: deps.instance.definitions,
 				internalModule: deps.internalModule,
 				processManager: deps.instance.processManager,
@@ -89,9 +89,16 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 						this.entities.getLocalVariableEntities(),
 						injectedVariableValues ?? null
 					)
-					.executeExpression(expression, requiredType)
+					.executeExpression(expression, requiredType),
+			isLayered
 		)
 	}
+
+	/**
+	 * Report that the entity list has changed
+	 * @param options - change options
+	 */
+	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
 	/**
 	 * Abort pending delayed actions for a control
@@ -190,9 +197,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 	protected getDrawStyleButtonStateProps(): DrawStyleButtonStateProps {
 		const result: DrawStyleButtonStateProps = {
-			cloud: false,
-			cloud_error: false,
-
 			stepCurrent: this.entities.getActiveStepIndex() + 1,
 			stepCount: this.entities.getStepIds().length,
 

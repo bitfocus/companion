@@ -20,6 +20,7 @@ import type {
 } from '@companion-module/host'
 import type { VariableValueEntry } from '../../Variables/Values.js'
 import type { IpcWrapper } from '../Common/IpcWrapper.js'
+import type { CompositeElementDefinition } from '../Definitions.js'
 
 export type ModuleIpcWrapper = IpcWrapper<HostToModuleEventsNew, ModuleToHostEventsNew>
 export type ModuleChildIpcWrapper = IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>
@@ -39,6 +40,8 @@ export interface ModuleToHostEventsNew {
 	setVariableDefinitions: (msg: SetVariableDefinitionsMessage) => never
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions: (msg: SetPresetDefinitionsMessage) => never
+	/* The composite element definitions provided by the connection have changed */
+	setCompositeElementDefinitions: (msg: SetCompositeElementDefinitionsMessage) => never
 	/** The connection has some new values for variables */
 	setVariableValues: (msg: SetVariableValuesMessage) => never
 	/** The connection has some new values for feedbacks it is running */
@@ -172,6 +175,10 @@ export interface SetVariableDefinitionsMessage {
 export interface SetPresetDefinitionsMessage {
 	presets: Record<string, PresetDefinition>
 	uiPresets: Record<string, UIPresetSection>
+}
+
+export interface SetCompositeElementDefinitionsMessage {
+	definitions: CompositeElementDefinition[]
 }
 
 export interface SetVariableValuesMessage {

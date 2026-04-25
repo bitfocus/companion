@@ -1,6 +1,7 @@
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
-import { parseColor, parseColorToNumber, transformButtonImage } from '../../Resources/Util.js'
+import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
 import type { SatelliteMessageArgs } from './SatelliteApi.js'
 import type { SatelliteControlStylePreset } from './SatelliteSurfaceManifestSchema.js'
 
@@ -18,26 +19,24 @@ export async function buildSatelliteStyleArgs(
 	const params: SatelliteMessageArgs = {}
 	const drawStyle = image.style
 
-	params['PRESSED'] = typeof drawStyle !== 'string' && !!drawStyle?.pushed
+	params['PRESSED'] = typeof drawStyle !== 'string' && !!drawStyle?.state?.pushed
 
-	if (drawStyle === 'pageup') params['TYPE'] = 'PAGEUP'
-	else if (drawStyle === 'pagedown') params['TYPE'] = 'PAGEDOWN'
-	else if (drawStyle === 'pagenum') params['TYPE'] = 'PAGENUM'
+	if (drawStyle?.type === 'pageup') params['TYPE'] = 'PAGEUP'
+	else if (drawStyle?.type === 'pagedown') params['TYPE'] = 'PAGEDOWN'
+	else if (drawStyle?.type === 'pagenum') params['TYPE'] = 'PAGENUM'
 	else params['TYPE'] = 'BUTTON'
 
 	if (style.bitmap) {
-		const buffer = await transformButtonImage(image, rotation, style.bitmap.w, style.bitmap.h, 'rgb')
+		const buffer = await image.drawNative(style.bitmap.w, style.bitmap.h, rotation, 'rgb')
 
 		if (buffer !== undefined && buffer.length > 0) {
-			params['BITMAP'] = buffer.toString('base64')
+			params['BITMAP'] = uint8ArrayToBuffer(buffer).toString('base64')
 		}
 	}
 
 	if (style.colors) {
-		let bgcolor =
-			typeof drawStyle !== 'string' && drawStyle ? parseColor(drawStyle.bgcolor).replaceAll(' ', '') : 'rgb(0,0,0)'
-		let fgcolor =
-			typeof drawStyle !== 'string' && drawStyle ? parseColor(drawStyle.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+		let bgcolor = drawStyle?.color ? parseColor(drawStyle.color.color).replaceAll(' ', '') : 'rgb(0,0,0)'
+		let fgcolor = drawStyle?.text ? parseColor(drawStyle.text.color).replaceAll(' ', '') : 'rgb(0,0,0)'
 
 		if (style.colors !== 'rgb') {
 			bgcolor = '#' + parseColorToNumber(bgcolor).toString(16).padStart(6, '0')
@@ -49,11 +48,11 @@ export async function buildSatelliteStyleArgs(
 	}
 
 	if (style.text) {
-		const text = (typeof drawStyle !== 'string' && drawStyle?.text) || ''
+		const text = drawStyle?.text?.text || ''
 		params['TEXT'] = Buffer.from(text).toString('base64')
 	}
 	if (style.textStyle) {
-		params['FONT_SIZE'] = typeof drawStyle !== 'string' && drawStyle ? drawStyle.size : 'auto'
+		params['FONT_SIZE'] = drawStyle?.text?.size ?? 'auto'
 	}
 
 	return params

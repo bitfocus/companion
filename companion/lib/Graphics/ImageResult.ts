@@ -1,6 +1,34 @@
-import type { DrawStyleButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type * as imageRs from '@julusian/image-rs'
+import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
-export type ImageResultStyle = DrawStyleButtonModel | 'pagenum' | 'pageup' | 'pagedown'
+export interface ImageResultProcessedStyle {
+	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
+	color?: { color: number }
+	text?: {
+		text: string
+		color: number
+		size: number | 'auto'
+		halign: HorizontalAlignment
+		valign: VerticalAlignment
+	}
+	png64?: {
+		dataUrl: string
+		halign: HorizontalAlignment
+		valign: VerticalAlignment
+	}
+	state?: {
+		pushed: boolean
+		showTopBar: boolean | 'default'
+	}
+}
+
+export type ImageResultNativeDrawFn = (
+	width: number,
+	height: number,
+	rotation: SurfaceRotation | null,
+	format: imageRs.PixelFormat
+) => Promise<Uint8Array>
 
 export class ImageResult {
 	/**
@@ -9,36 +37,22 @@ export class ImageResult {
 	readonly #dataUrl: string
 
 	/**
-	 * Image pixel buffer
-	 */
-	readonly buffer: Buffer
-
-	/**
-	 * Image pixel buffer width
-	 */
-	readonly bufferWidth: number
-
-	/**
-	 * Image pixel buffer height
-	 */
-	readonly bufferHeight: number
-
-	/**
 	 * Image draw style
 	 */
-	readonly style: ImageResultStyle | undefined
+	readonly style: ImageResultProcessedStyle | null
+
+	readonly #drawNativeCache = new Map<string, Promise<Uint8Array>>()
+	readonly #drawNative: ImageResultNativeDrawFn
 
 	/**
 	 * Last updated time
 	 */
 	readonly updated: number
 
-	constructor(buffer: Buffer, width: number, height: number, dataUrl: string, style: ImageResultStyle | undefined) {
-		this.buffer = buffer
-		this.bufferWidth = width
-		this.bufferHeight = height
+	constructor(dataUrl: string, style: ImageResultProcessedStyle | null, drawNative: ImageResultNativeDrawFn) {
 		this.#dataUrl = dataUrl
 		this.style = style
+		this.#drawNative = drawNative
 
 		this.updated = Date.now()
 	}
@@ -51,10 +65,26 @@ export class ImageResult {
 	}
 
 	get bgcolor(): number {
-		if (typeof this.style === 'object') {
-			return this.style.bgcolor ?? 0
-		} else {
-			return 0
-		}
+		return this.style?.color?.color ?? 0
+	}
+
+	/**
+	 * Generate a native sized image buffer for this button render.
+	 * Typically this will redraw from the source data, but it may scale and letterbox the image
+	 * This caches the result for the same width, height, rotation and format.
+	 */
+	async drawNative(
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.PixelFormat
+	): Promise<Uint8Array> {
+		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
+		const cached = this.#drawNativeCache.get(cacheKey)
+		if (cached) return cached
+
+		const newBuffer = this.#drawNative(width, height, rotation, format)
+		this.#drawNativeCache.set(cacheKey, newBuffer)
+		return newBuffer
 	}
 }
