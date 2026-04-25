@@ -14,17 +14,17 @@
     "@fortawesome/free-brands-svg-icons": "^7.2.0",
     "@fortawesome/free-regular-svg-icons": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
-    "@fortawesome/react-fontawesome": "^3.3.0",
+    "@fortawesome/react-fontawesome": "^3.3.1",
     "@monaco-editor/react": "^4.8.0-rc.3",
     "@popperjs/core": "^2.11.8",
-    "@sentry/react": "^10.48.0",
+    "@sentry/react": "^10.49.0",
     "@sentry/vite-plugin": "^5.2.0",
-    "@tanstack/react-form": "^1.29.0",
-    "@tanstack/react-query": "^5.99.0",
-    "@tanstack/react-query-devtools": "^5.99.0",
-    "@tanstack/react-router": "^1.168.22",
+    "@tanstack/react-form": "^1.29.1",
+    "@tanstack/react-query": "^5.99.2",
+    "@tanstack/react-query-devtools": "^5.99.2",
+    "@tanstack/react-router": "^1.168.23",
     "@tanstack/react-router-devtools": "^1.166.13",
-    "@tanstack/react-virtual": "^3.13.23",
+    "@tanstack/react-virtual": "^3.13.24",
     "@tanstack/router-plugin": "^1.167.22",
     "@tanstack/virtual-file-routes": "^1.161.7",
     "@trpc/client": "^11.16.0",
@@ -79,8 +79,8 @@
     "sanitize-html": "^2.17.3",
     "sass-embedded": "^1.99.0",
     "terser": "^5.46.1",
-    "type-fest": "^5.5.0",
-    "typescript": "~6.0.2",
+    "type-fest": "^5.6.0",
+    "typescript": "~6.0.3",
     "use-deep-compare": "^1.3.0",
     "usehooks-ts": "^3.1.1",
     "vite": "^7.3.2",
@@ -98,6 +98,6 @@
   "devDependencies": {
     "jsdom": "^29.0.2",
     "monaco-editor": "^0.55.1",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.5"
   }
 }

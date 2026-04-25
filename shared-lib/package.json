@@ -25,12 +25,12 @@
     "jsonpath-plus": "^10.4.0",
     "quick-lru": "^7.3.0",
     "semver": "^7.7.4",
-    "type-fest": "^5.5.0",
+    "type-fest": "^5.6.0",
     "unicode-segmenter": "^0.15.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/semver": "^7.7.1",
-    "typescript": "~6.0.2"
+    "typescript": "~6.0.3"
   }
 }
