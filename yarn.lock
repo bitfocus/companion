@@ -1869,7 +1869,6 @@ __metadata:
     typescript-eslint: "npm:^8.59.0"
     vitest: "npm:^4.1.5"
     vitest-mock-extended: "npm:^4.0.0"
-    yaml: "npm:^2.8.3"
     zx: "npm:^8.8.5"
   dependenciesMeta:
     "@sentry/cli":
