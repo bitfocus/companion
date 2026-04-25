@@ -21,7 +21,6 @@ import {
 	type HostVariableValue,
 	type InstanceStatus,
 	type ModuleHostContext,
-	type OSCMetaArgument,
 	type OSCSomeArguments,
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
@@ -202,9 +201,9 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 		if (args !== undefined && args !== null) {
 			// Simplify as an array
-			if (!Array.isArray(args)) args = [args as OSCMetaArgument]
+			const argsArr = !Array.isArray(args) ? [args] : args
 
-			for (const arg of args) {
+			for (const arg of argsArr) {
 				if (typeof arg === 'string') {
 					encodedArgs.push({ type: 's', value: arg })
 				} else if (typeof arg === 'number') {

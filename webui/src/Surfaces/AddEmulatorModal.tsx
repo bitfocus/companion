@@ -180,7 +180,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											min={1}
 											style={{ width: '100%', color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
-											onChange={(e) => field.handleChange((e.target as HTMLInputElement).valueAsNumber)}
+											onChange={(e) => field.handleChange(e.target.valueAsNumber)}
 											onBlur={field.handleBlur}
 										/>
 										{field.state.meta.errors.length > 0 && (
@@ -213,7 +213,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											min={1}
 											style={{ width: '100%', color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
-											onChange={(e) => field.handleChange((e.target as HTMLInputElement).valueAsNumber)}
+											onChange={(e) => field.handleChange(e.target.valueAsNumber)}
 											onBlur={field.handleBlur}
 										/>
 										{field.state.meta.errors.length > 0 && (

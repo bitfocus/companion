@@ -129,7 +129,7 @@ class LayeredButtonDrawStyleParser {
 								elementId,
 							},
 							{
-								onData: (result) => updateValue(result as ElementStreamResult), // TODO - fix this type
+								onData: (result) => updateValue(result),
 								onError: (error) => {
 									console.error('Subscription to element errored:', error)
 									// TODO: handle error case

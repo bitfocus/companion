@@ -21,15 +21,13 @@ export function useSurfaceDiscoverySubscription(): Record<string, ClientDiscover
 						case 'init': {
 							const newSurfaces: typeof surfaces = {}
 							for (const svc of data.infos) {
-								// TODO - how to avoid this cast?
-								newSurfaces[svc.id] = svc as ClientDiscoveredSurfaceInfo
+								newSurfaces[svc.id] = svc
 							}
 							return newSurfaces
 						}
 						case 'update': {
 							const newSurfaces = { ...surfaces }
-							// TODO - how to avoid this cast?
-							newSurfaces[data.info.id] = data.info as ClientDiscoveredSurfaceInfo
+							newSurfaces[data.info.id] = data.info
 							return newSurfaces
 						}
 						case 'remove': {

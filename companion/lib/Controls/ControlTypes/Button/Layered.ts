@@ -693,6 +693,7 @@ export class ControlButtonLayered
 				const match = ControlButtonLayered.SelectFirstLayerWithUsage<TElement>(element.children, usage, layerType)
 				if (match) return match
 			} else if (element.type === layerType && element.usage === usage) {
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				return element as unknown as TElement
 			}
 		}
@@ -709,6 +710,7 @@ export class ControlButtonLayered
 				const match = ControlButtonLayered.SelectFirstLayerOfType<TElement>(element.children, layerType)
 				if (match) return match
 			} else if (element.type === layerType && element.usage === ButtonGraphicsElementUsage.Automatic) {
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				return element as unknown as TElement
 			}
 		}

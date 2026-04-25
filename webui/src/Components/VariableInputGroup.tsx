@@ -42,7 +42,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 
 	const handleBlur = (e: React.FocusEvent<HTMLDivElement>) => {
 		// Only end editing if focus moves outside the group
-		if (groupRef.current && !groupRef.current.contains(e.relatedTarget as Node)) {
+		if (groupRef.current && !groupRef.current.contains(e.relatedTarget)) {
 			setIsEditing(false)
 		}
 	}

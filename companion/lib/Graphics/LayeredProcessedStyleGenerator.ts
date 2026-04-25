@@ -100,6 +100,7 @@ export class GraphicsLayeredProcessedStyleGenerator {
 				)
 				if (match) return match
 			} else if (element.type === layerType && element.usage === usage) {
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				return element as unknown as TElement
 			}
 		}
@@ -119,6 +120,7 @@ export class GraphicsLayeredProcessedStyleGenerator {
 				)
 				if (match) return match
 			} else if (element.type === layerType && element.usage === ButtonGraphicsElementUsage.Automatic) {
+				// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
 				return element as unknown as TElement
 			}
 		}

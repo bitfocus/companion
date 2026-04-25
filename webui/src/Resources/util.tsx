@@ -85,7 +85,7 @@ export const PreventDefaultHandler = (e: React.FormEvent): void => {
 }
 
 export function useComputed<TRes>(cb: () => TRes, deps: DependencyList): TRes {
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// eslint-disable-next-line react-hooks/use-memo
 	const wrappedCb = useCallback(computedFn(cb), deps)
 	return wrappedCb()
 }

@@ -195,8 +195,8 @@ export class ImportController {
 		}
 
 		if (isImporting(config.surfaces.known)) {
-			const surfaces = data.surfaces || ({} as Record<number, SurfaceConfig>)
-			const surfaceGroups = data.surfaceGroups || ({} as Record<number, SurfaceGroupConfig>)
+			const surfaces: Record<number, SurfaceConfig> = (data.surfaces || {}) as any
+			const surfaceGroups: Record<number, SurfaceGroupConfig> = (data.surfaceGroups || {}) as any
 			const getPageId = (val: number) =>
 				this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
 			const fixPageId = (groupConfig: SurfaceGroupConfig) => {

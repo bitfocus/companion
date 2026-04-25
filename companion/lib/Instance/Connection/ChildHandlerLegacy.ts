@@ -24,13 +24,7 @@ import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'
-import type {
-	CompanionHTTPRequest,
-	CompanionInputFieldBase,
-	CompanionOptionValues,
-	LogLevel,
-	OptionsObject,
-} from '@companion-module/base-old'
+import type { CompanionHTTPRequest, CompanionInputFieldBase, LogLevel, OptionsObject } from '@companion-module/base-old'
 import type {
 	HostToModuleEventsV0,
 	LogMessageMessage,
@@ -1003,7 +997,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								type: EntityModelType.Feedback,
 								id: feedback.id,
 								definitionId: feedback.feedbackId,
-								options: optionsObjectToExpressionOptions(feedback.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
+								options: optionsObjectToExpressionOptions(feedback.options, false), // This will replace any user expressions, if they were able to define any
 								style: feedback.style,
 								isInverted: exprVal(feedback.isInverted),
 								upgradeIndex: feedback.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
@@ -1026,7 +1020,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 								type: EntityModelType.Action,
 								id: action.id,
 								definitionId: action.actionId,
-								options: optionsObjectToExpressionOptions(action.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
+								options: optionsObjectToExpressionOptions(action.options, false), // This will replace any user expressions, if they were able to define any
 								upgradeIndex: action.upgradeIndex ?? this.#currentUpgradeIndex ?? undefined,
 							},
 							true
@@ -1173,7 +1167,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 							id: action.id,
 							type: EntityModelType.Action,
 							definitionId: action.actionId,
-							options: optionsObjectToExpressionOptions(action.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
+							options: optionsObjectToExpressionOptions(action.options, false), // This will replace any user expressions, if they were able to define any
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableActionEntityModel
 				)
@@ -1204,7 +1198,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 							id: feedback.id,
 							type: EntityModelType.Feedback,
 							definitionId: feedback.feedbackId,
-							options: optionsObjectToExpressionOptions(feedback.options as CompanionOptionValues, false), // This will replace any user expressions, if they were able to define any
+							options: optionsObjectToExpressionOptions(feedback.options, false), // This will replace any user expressions, if they were able to define any
 							style: feedback.style,
 							isInverted: exprVal(feedback.isInverted),
 							upgradeIndex: currentUpgradeIndex,

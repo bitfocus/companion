@@ -97,13 +97,7 @@ const FieldElementUsageInput = observer(function FieldElementUsageInput({
 	)
 
 	// TODO: Should the choices be dynamic based on the element type?
-	return (
-		<DropdownInputField
-			setValue={setUsage}
-			value={elementProps.usage as DropdownChoiceId}
-			choices={elementUsageChoices}
-		/>
-	)
+	return <DropdownInputField setValue={setUsage} value={elementProps.usage} choices={elementUsageChoices} />
 })
 
 const elementUsageChoices: DropdownChoice[] = [

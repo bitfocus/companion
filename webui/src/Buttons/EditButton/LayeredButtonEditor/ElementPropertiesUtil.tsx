@@ -52,8 +52,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 	)
 
 	const setInnerValue = useCallback(
-		(innerValue: JsonValue | undefined) =>
-			setExpressionOrValue({ isExpression: false, value: innerValue } as ExpressionOrValue<JsonValue | undefined>),
+		(innerValue: JsonValue | undefined) => setExpressionOrValue({ isExpression: false, value: innerValue }),
 		[setExpressionOrValue]
 	)
 

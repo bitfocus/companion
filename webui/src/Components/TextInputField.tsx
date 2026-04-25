@@ -236,7 +236,7 @@ const VariablesSelect = observer(function VariablesSelect({
 		[storeValue]
 	)
 
-	const selectContext = useMemo(
+	const selectContext = useMemo<VariablesSelectContextType>(
 		() => ({
 			value: showValue,
 			setValue: storeValue,
@@ -290,17 +290,30 @@ const VariablesSelect = observer(function VariablesSelect({
 	)
 })
 
-const VariablesSelectContext = createContext({
+interface VariablesSelectContextType {
+	value: string
+	setValue: (value: string) => void
+	setCursorPosition: (pos: number | null) => void
+	extraStyle: React.CSSProperties
+	forceHideSuggestions: (hidden: boolean) => void
+	focusStoreValue: () => void
+	blurClearValue: () => void
+	title?: string
+	placeholder?: string
+	inputRef: React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>
+}
+
+const VariablesSelectContext = createContext<VariablesSelectContextType>({
 	value: '',
 	setValue: (_value: string) => {},
 	setCursorPosition: (_pos: number | null) => {},
-	extraStyle: {} as React.CSSProperties,
+	extraStyle: {},
 	forceHideSuggestions: (_hidden: boolean) => {},
 	focusStoreValue: () => {},
 	blurClearValue: () => {},
 	title: undefined as string | undefined,
 	placeholder: undefined as string | undefined,
-	inputRef: { current: null } as React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>,
+	inputRef: { current: null },
 })
 
 const EmptyComponent = () => null

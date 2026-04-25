@@ -50,7 +50,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 
 	const { options, flatOptions } = useDropdownChoicesForSelect(choices)
 
-	if (value === undefined) value = [] as any
+	if (value === undefined) value = []
 
 	const currentValue = useComputed(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]

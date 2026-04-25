@@ -11,6 +11,7 @@ import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
@@ -512,7 +513,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 
 						resolve(parsedManifest)
 					} catch (e) {
-						reject(e as Error)
+						reject(e instanceof Error ? e : new Error(stringifyError(e)))
 					}
 
 					extract.destroy()

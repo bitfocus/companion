@@ -158,7 +158,7 @@ export function ColorInputField<T extends 'string' | 'number'>({
 								onChange={onChange}
 								onChangeComplete={onChangeComplete}
 								disableAlpha={enableAlpha ? false : true}
-								presetColors={Array.isArray(presetColors) ? (presetColors as any) : PICKER_COLORS}
+								presetColors={Array.isArray(presetColors) ? presetColors : PICKER_COLORS}
 							/>
 						</div>,
 						menuPortal || document.body
