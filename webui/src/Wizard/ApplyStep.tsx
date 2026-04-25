@@ -32,16 +32,6 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		)
 	}
 
-	if (oldConfig.setup_wizard === 0 || oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable) {
-		changes.push(
-			newConfig.elgato_plugin_enable ? (
-				<li>Support for the Companion plugin in the Stream Deck software will be enabled.</li>
-			) : (
-				<li>Support for the Companion plugin in the Stream Deck software will be disabled.</li>
-			)
-		)
-	}
-
 	if (
 		oldConfig.setup_wizard === 0 ||
 		newConfig?.gridSize.minColumn !== oldConfig.gridSize.minColumn ||

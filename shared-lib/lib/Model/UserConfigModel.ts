@@ -6,7 +6,6 @@ export type UserConfigModel = {
 	page_plusminus: boolean
 	remove_topbar: boolean
 
-	elgato_plugin_enable: boolean
 	usb_hotplug: boolean
 	auto_enable_discovered_surfaces: boolean
 
