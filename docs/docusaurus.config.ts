@@ -3,7 +3,7 @@ import type { Config } from '@docusaurus/types'
 import type * as Preset from '@docusaurus/preset-classic'
 // @ts-expect-error No types provided for this plugin
 import lunrPlugin from 'docusaurus-lunr-search'
-import remarkVideo from './src/plugins/remark-video'
+import remarkVideo from './src/remark/remark-video'
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
