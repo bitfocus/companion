@@ -23,7 +23,9 @@ export class HostContext implements SurfaceHostContext {
 	readonly lockingGraphics = new LockingGraphicsGeneratorImpl()
 	readonly cardsGenerator = new CardGenerator()
 
-	readonly capabilities: HostCapabilities = {}
+	readonly capabilities: HostCapabilities = {
+		supportsNonSquareButtons: true,
+	}
 
 	readonly surfaceEvents: HostSurfaceEvents
 
