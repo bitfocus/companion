@@ -18,6 +18,7 @@
 - multidropdown should indicate when no more elements can be removed
 - handle variable replacement for nested variables in presets
 - include rotation in satellite LOCKED-STATE message
+- dont repeat manufacturer for modules with many products #4121
 
 ## Companion v4.3.0 - Release Notes
 
