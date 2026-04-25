@@ -12,6 +12,7 @@ import { MenuPortalContext } from './MenuPortalContext.js'
 const IsAtMinimumContext = createContext(false)
 
 interface MultiDropdownInputFieldProps {
+	inputId?: string
 	htmlName?: string
 	className?: string
 	choices: DropdownChoicesOrGroups
@@ -30,6 +31,7 @@ interface MultiDropdownInputFieldProps {
 }
 
 export const MultiDropdownInputField = observer(function MultiDropdownInputField({
+	inputId,
 	htmlName,
 	className,
 	choices,
@@ -125,6 +127,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
 		name: htmlName,
+		inputId: inputId,
 		isDisabled: disabled,
 		classNamePrefix: 'select-control',
 		className: 'select-control',

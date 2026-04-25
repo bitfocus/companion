@@ -58,19 +58,35 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				</p>
 			</CCol>
 
-			<CFormLabel htmlFor="colFormRows" className="col-sm-4 col-form-label col-form-label-sm">
+			<CFormLabel htmlFor="gridStepRows" className="col-sm-4 col-form-label col-form-label-sm">
 				Rows
 			</CFormLabel>
 			<CCol sm={5}>
-				<CFormInput name="colFormRows" type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
+				<CFormInput
+					id="gridStepRows"
+					name="colFormRows"
+					type="number"
+					value={totalRows}
+					min={1}
+					step={1}
+					onChange={setMaxRow}
+				/>
 			</CCol>
 			<CCol sm={3}></CCol>
 
-			<CFormLabel htmlFor="colFormCols" className="col-sm-4 col-form-label col-form-label-sm">
+			<CFormLabel htmlFor="gridStepCols" className="col-sm-4 col-form-label col-form-label-sm">
 				Columns
 			</CFormLabel>
 			<CCol sm={5}>
-				<CFormInput name="colFormRows" type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
+				<CFormInput
+					id="gridStepCols"
+					name="colFormCols"
+					type="number"
+					value={totalColumns}
+					min={1}
+					step={1}
+					onChange={setMaxColumn}
+				/>
 			</CCol>
 			<CCol sm={3}></CCol>
 

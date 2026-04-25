@@ -87,6 +87,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 						</CFormLabel>
 						<CCol sm={8}>
 							<CFormInput
+								id="colFormPressDuration"
 								name="colFormPressDuration"
 								type="number"
 								value={newDurationValue || ''}
@@ -102,6 +103,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 						</CFormLabel>
 						<CCol sm={8}>
 							<CFormSwitch
+								id="colFormExecuteWhileHeld"
 								name="colFormExecuteWhileHeld"
 								size="xl"
 								checked={!!newWhileHeldValue}

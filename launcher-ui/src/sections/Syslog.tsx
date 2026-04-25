@@ -70,7 +70,7 @@ export function SyslogSection(): JSX.Element {
 						<div className="flex items-center col-span-3 ">
 							<input
 								type="checkbox"
-								id="enable_syslog"
+								id="enable-syslog"
 								checked={enableSyslog}
 								onChange={(e) => handleEnableSyslog(e.target.checked)}
 								className="rounded"
@@ -78,11 +78,11 @@ export function SyslogSection(): JSX.Element {
 						</div>
 					</div>
 					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="syslog-host">Syslog Server</Label>
+						<Label htmlFor="syslog-server">Syslog Server</Label>
 						<div className="col-span-3">
 							<div className="flex">
 								<Input
-									id="syslog_host"
+									id="syslog-server"
 									type="text"
 									value={syslogHost}
 									onChange={(e) => handleSyslogHostChange(e.target.value)}
@@ -98,7 +98,7 @@ export function SyslogSection(): JSX.Element {
 						<div className="col-span-3">
 							<div className="flex">
 								<Input
-									id="syslog_port"
+									id="syslog-port"
 									type="number"
 									value={syslogPort}
 									onChange={(e) => handleSyslogPortChange(e.target.value)}
@@ -114,7 +114,7 @@ export function SyslogSection(): JSX.Element {
 						<div className="flex items-center col-span-3 ">
 							<input
 								type="checkbox"
-								id="syslog_use_tcp"
+								id="syslog-tcp"
 								checked={syslogTcp}
 								onChange={(e) => handleSyslogTcpChange(e.target.checked)}
 								className="rounded"
@@ -122,11 +122,11 @@ export function SyslogSection(): JSX.Element {
 						</div>
 					</div>
 					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="syslog-local-host">Local Hostname</Label>
+						<Label htmlFor="syslog-local-hostname">Local Hostname</Label>
 						<div className="col-span-3">
 							<div className="flex">
 								<Input
-									id="syslog_local_hostname"
+									id="syslog-local-hostname"
 									type="text"
 									value={syslogLocalHost}
 									onChange={(e) => handleSyslogLocalHostChange(e.target.value)}

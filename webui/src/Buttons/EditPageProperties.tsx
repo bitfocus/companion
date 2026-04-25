@@ -88,12 +88,13 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					<CForm onSubmit={doAction}>
 						{includeName && (
 							<CRow className="mb-3">
-								<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+								<CFormLabel htmlFor="colFormEditPageName" className="col-sm-3 col-form-label col-form-label-sm">
 									Name
 								</CFormLabel>
 								<CCol sm={9}>
 									<CFormInput
 										ref={inputRef}
+										id="colFormEditPageName"
 										name="colFormName"
 										type="text"
 										value={pageName || ''}

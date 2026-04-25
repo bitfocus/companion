@@ -3,7 +3,7 @@ import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortaw
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useId } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { InlineHelp } from '~/Components/InlineHelp'
@@ -37,6 +37,10 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(null, info.id)
 
 	const value = customVariableValues.get(info.id)
+
+	const descripId = useId()
+	const valueId = useId()
+	const startupId = useId()
 
 	return (
 		<div className="editor-grid">
@@ -90,29 +94,36 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 							/>
 						</div>
 						<CRow>
-							<CFormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
+							<CFormLabel htmlFor={descripId} className="col-sm-3 align-right">
 								Description:
 							</CFormLabel>
 							<CCol sm={9}>
 								<TextInputField
+									id={descripId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
 									style={{ marginBottom: '0.5rem' }}
 								/>
 							</CCol>
 
-							<CFormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
+							<CFormLabel htmlFor={valueId} className="col-sm-3 align-right">
 								Current value:
 							</CFormLabel>
 							<CCol sm={9}>
-								<VariableInputGroup value={value} name={info.id} setCurrentValue={customVariablesApi.setCurrentValue} />
+								<VariableInputGroup
+									id={valueId}
+									value={value}
+									name={info.id}
+									setCurrentValue={customVariablesApi.setCurrentValue}
+								/>
 							</CCol>
 
-							<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
+							<CFormLabel htmlFor={startupId} className="col-sm-3 align-right">
 								Startup value:
 							</CFormLabel>
 							<CCol sm={9}>
 								<VariableInputGroup
+									id={startupId}
 									disabled={!!info.persistCurrentValue}
 									value={info.defaultValue}
 									name={info.id}

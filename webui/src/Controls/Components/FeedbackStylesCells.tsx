@@ -1,5 +1,5 @@
 import { CAlert, CCol, CFormLabel } from '@coreui/react'
-import { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useId, useMemo, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -20,6 +20,8 @@ export function FeedbackManageStyles({
 	feedback,
 	setSelectedStyleProps,
 }: FeedbackManageStylesProps): React.JSX.Element | null {
+	const inputId = useId()
+
 	if (feedbackSpec?.feedbackType === FeedbackEntitySubType.Boolean) {
 		const choicesSet = new Set(ButtonStyleProperties.map((c) => c.id))
 		const currentValue = Object.keys(feedback.style || {}).filter((id) => choicesSet.has(id))
@@ -27,12 +29,13 @@ export function FeedbackManageStyles({
 		return (
 			<>
 				<hr />
-				<CFormLabel htmlFor="colFormStyleProperties" className="col-sm-4 col-form-label col-form-label-sm">
+				<CFormLabel htmlFor={inputId} className="col-sm-4 col-form-label col-form-label-sm">
 					Change style properties
 				</CFormLabel>
 				<CCol sm={8}>
 					<MyErrorBoundary>
 						<MultiDropdownInputField
+							inputId={inputId}
 							htmlName="colFormStyleProperties"
 							choices={ButtonStyleProperties}
 							setValue={setSelectedStyleProps as (keys: DropdownChoiceId[]) => void}

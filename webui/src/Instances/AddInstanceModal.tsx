@@ -156,18 +156,22 @@ export const AddInstanceModal = observer(
 								</p>
 							)}
 							<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
-								<CFormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
+								<CFormLabel htmlFor="colFormAddInstanceLabel" className="col-sm-4 col-form-label col-form-label-sm">
 									Label&nbsp;
 								</CFormLabel>
 								<CCol sm={8}>
 									<CFormInput
+										id="colFormAddInstanceLabel"
 										name="colFormLabel"
 										value={instanceLabel}
 										onChange={(e) => setInstanceLabel(e.currentTarget.value)}
 									/>
 								</CCol>
 
-								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
+								<CFormLabel
+									htmlFor="colFormAddInstanceVersion"
+									className="col-sm-4 col-form-label col-form-label-sm pe-0"
+								>
 									<div className="flex">
 										<span className="grow">Module Version&nbsp;</span>
 										{moduleInfo && selectedVersionInfo && (
@@ -182,6 +186,7 @@ export const AddInstanceModal = observer(
 								</CFormLabel>
 								<CCol sm={8}>
 									<CFormSelect
+										id="colFormAddInstanceVersion"
 										name="colFormVersion"
 										value={selectedVersion as string}
 										onChange={(e) => setSelectedVersion(e.currentTarget.value)}
