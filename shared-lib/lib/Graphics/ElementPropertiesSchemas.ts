@@ -118,7 +118,6 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		type: 'textinput',
 		id: 'text',
 		label: 'Button text string',
-		tooltip: "The text you see on the button you're working with. You can use variables, but not expressions.",
 		default: '',
 		useVariables: CompanionFieldVariablesSupport.InternalParser,
 	},
@@ -126,6 +125,8 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'fontsize',
 		label: 'Text Size',
+		tooltip:
+			'The size of the text, in percentage of the canvas height. You can use custom values or select one of the presets.',
 		choices: [
 			{ id: 'auto', label: 'Auto' },
 			{ id: '10', label: '10%' },

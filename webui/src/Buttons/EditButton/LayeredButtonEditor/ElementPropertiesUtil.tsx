@@ -1,11 +1,12 @@
 import { CCol, CFormLabel } from '@coreui/react'
-import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { InlineHelp } from '~/Components/InlineHelp.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
@@ -21,6 +22,7 @@ interface FormPropertyFieldProps {
 	elementProps: Record<string, any>
 	property: string
 	label: string
+	tooltip: string | undefined
 	features?: InputFeatureIconsProps
 	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn) => React.ReactNode
 }
@@ -28,6 +30,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 	elementProps,
 	property,
 	label,
+	tooltip,
 	features,
 	children,
 }: FormPropertyFieldProps) {
@@ -63,6 +66,11 @@ export const FormPropertyField = observer(function FormPropertyField({
 			<CFormLabel className={'col-sm-4 col-form-label col-form-label-sm'}>
 				{label}
 				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
+				{tooltip && (
+					<InlineHelp help={tooltip}>
+						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
+					</InlineHelp>
+				)}
 				{isOverridden ? (
 					<span title="Value has a linked feedback override">
 						<FontAwesomeIcon icon={faLayerGroup} />
