@@ -1,12 +1,10 @@
 import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -134,9 +132,10 @@ export const ExportWizardModal = observer(
 														label={
 															<>
 																Include secrets
-																<InlineHelp help="Some connections have secret values that can be omitted from the export. Not all modules are compatible with this">
-																	<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-																</InlineHelp>
+																<InlineHelpIcon className="ms-1">
+																	Some connections have secret values that can be omitted from the export. Not all
+																	modules are compatible with this.
+																</InlineHelpIcon>
 															</>
 														}
 													/>
@@ -238,9 +237,9 @@ export const ExportWizardModal = observer(
 												label={
 													<>
 														Known Surfaces
-														<InlineHelp help="The list of known surfaces, and their settings">
-															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-														</InlineHelp>
+														<InlineHelpIcon className="ms-1">
+															The list of known surfaces, and their settings
+														</InlineHelpIcon>
 													</>
 												}
 											/>
@@ -259,9 +258,7 @@ export const ExportWizardModal = observer(
 												label={
 													<>
 														Surface Integrations
-														<InlineHelp help="The configured surface integrations">
-															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-														</InlineHelp>
+														<InlineHelpIcon className="ms-1">The configured surface integrations</InlineHelpIcon>
 													</>
 												}
 											/>
@@ -280,9 +277,9 @@ export const ExportWizardModal = observer(
 												label={
 													<>
 														Remote Surfaces
-														<InlineHelp help="Connections for surfaces that are connected remotely">
-															<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-														</InlineHelp>
+														<InlineHelpIcon className="ms-1">
+															Connections for surfaces that are connected remotely
+														</InlineHelpIcon>
 													</>
 												}
 											/>

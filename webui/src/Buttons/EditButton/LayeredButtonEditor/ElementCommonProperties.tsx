@@ -1,6 +1,4 @@
 import { CCol, CFormLabel } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
@@ -10,7 +8,7 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
@@ -35,19 +33,13 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				<>
 					<CFormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
 						External Usage
-						<InlineHelp
-							help={
-								<>
-									Some surfaces do not have full rgb displays and require specific elements for providing feedback in
-									alternate ways.
-									<br />
-									You can override the automatic selection of elements for these purposes by selecting the appropriate
-									usage for this element
-								</>
-							}
-						>
-							<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-						</InlineHelp>
+						<InlineHelpIcon className="ms-1">
+							Some surfaces do not have full rgb displays and require specific elements for providing feedback in
+							alternate ways.
+							<br />
+							You can override the automatic selection of elements for these purposes by selecting the appropriate usage
+							for this element
+						</InlineHelpIcon>
 					</CFormLabel>
 					<CCol sm={8}>
 						<FieldElementUsageInput elementProps={elementProps} />

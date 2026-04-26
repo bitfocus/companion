@@ -1,5 +1,5 @@
 import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
-import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -14,7 +14,7 @@ import {
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/index.js'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
 import { AddEntityPanel } from '~/Controls/Components/AddEntityPanel.js'
@@ -130,9 +130,9 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 					Name
-					<InlineHelp help="The name for the variable. It will get wrapped with $(expression:X) for you">
-						<FontAwesomeIcon icon={faQuestionCircle} />
-					</InlineHelp>
+					<InlineHelpIcon className="ms-1">
+						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
+					</InlineHelpIcon>
 				</CFormLabel>
 				<CCol xs={8}>
 					<TextInputField setValue={setName} value={options.variableName} checkValid={isLabelValid} />
@@ -282,9 +282,13 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 
 					<EditableEntityList
 						heading={
-							<InlineHelp help="You can use local variables inside of this expression variable to create some dynamic values based on feedbacks">
+							<>
 								Local Variables
-							</InlineHelp>
+								<InlineHelpIcon className="ms-1">
+									You can use local variables inside of this expression variable to create some dynamic values based on
+									feedbacks
+								</InlineHelpIcon>
+							</>
 						}
 						subheading={
 							<CAlert color="info" className="mb-2">

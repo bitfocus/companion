@@ -1,5 +1,5 @@
 import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
-import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -24,7 +24,7 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '~/Components/index.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -53,11 +53,7 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 		<>
 			{option.label}
 			<InputFeatureIcons {...features} />
-			{option.tooltip && (
-				<InlineHelp help={option.tooltip}>
-					<FontAwesomeIcon icon={faQuestionCircle} />
-				</InlineHelp>
-			)}
+			{option.tooltip && <InlineHelpIcon className="ms-1">{option.tooltip}</InlineHelpIcon>}
 		</>
 	)
 }
@@ -331,15 +327,15 @@ export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | 
 	const featureIcons: JSX.Element[] = []
 	if (props.variables)
 		featureIcons.push(
-			<InlineHelp key="variables" help="Supports global variables">
+			<InlineHelpCustom key="variables" help="Supports global variables">
 				<FontAwesomeIcon icon={faDollarSign} />
-			</InlineHelp>
+			</InlineHelpCustom>
 		)
 	if (props.local)
 		featureIcons.push(
-			<InlineHelp key="local" help="Supports local variables">
+			<InlineHelpCustom key="local" help="Supports local variables">
 				<FontAwesomeIcon icon={faGlobe} />
-			</InlineHelp>
+			</InlineHelpCustom>
 		)
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null

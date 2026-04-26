@@ -1,7 +1,7 @@
 import { faPlug, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { InlineHelpCustom } from '~/Components/InlineHelp'
 
 interface ModuleVersionUsageIconProps {
 	matchingConnections: number
@@ -15,11 +15,11 @@ export const ModuleVersionUsageIcon = observer(function ModuleVersionUsageIcon({
 	if (matchingConnections === 0) return null // TODO - needs a placeholder for positioning
 
 	return (
-		<InlineHelp help={`${matchingConnections} connections are using this version`}>
+		<InlineHelpCustom help={`${matchingConnections} connections are using this version`}>
 			<FontAwesomeIcon
 				icon={isInstalled ? faPlug : faWarning}
 				aria-label={`${matchingConnections} connections are using this version`}
 			/>
-		</InlineHelp>
+		</InlineHelpCustom>
 	)
 })

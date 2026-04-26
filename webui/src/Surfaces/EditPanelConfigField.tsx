@@ -1,6 +1,4 @@
 import { CCol, CFormLabel, CFormSwitch } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -10,7 +8,7 @@ import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.
 import { DropdownInputField, NumberInputField, TextInputField } from '~/Components'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 
@@ -127,11 +125,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				{definition.label}
 				<InputFeatureIcons {...features} />
-				{definition.tooltip && (
-					<InlineHelp help={definition.tooltip}>
-						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-					</InlineHelp>
-				)}
+				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</CFormLabel>
 			<CCol sm={8}>
 				{control}

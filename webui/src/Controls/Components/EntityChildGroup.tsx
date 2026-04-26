@@ -1,5 +1,3 @@
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -8,7 +6,7 @@ import {
 	type EntitySupportedChildGroupDefinition,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { EditableEntityList } from './EntityList.js'
 
 interface EntityManageChildGroupsProps {
@@ -59,12 +57,8 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 				heading={
 					groupInfo.label ? (
 						<>
-							{groupInfo.label}&nbsp;
-							{groupInfo.hint ? (
-								<InlineHelp help={groupInfo.hint}>
-									<FontAwesomeIcon icon={faQuestionCircle} />
-								</InlineHelp>
-							) : null}
+							{groupInfo.label}
+							{groupInfo.hint ? <InlineHelpIcon className="ms-1">{groupInfo.hint}</InlineHelpIcon> : null}
 						</>
 					) : null
 				}

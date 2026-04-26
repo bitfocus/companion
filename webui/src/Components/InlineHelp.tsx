@@ -1,7 +1,9 @@
 import { CPopover } from '@coreui/react'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
 
-export const InlineHelp = ({
+export const InlineHelpCustom = ({
 	help,
 	children,
 	className,
@@ -22,5 +24,19 @@ export const InlineHelp = ({
 				<span className={classnames('inline-help-outer', className)}>{children}</span>
 			</CPopover>
 		</>
+	)
+}
+
+export const InlineHelpIcon = ({
+	children,
+	className,
+}: {
+	children: React.ReactNode
+	className?: string
+}): JSX.Element => {
+	return (
+		<InlineHelpCustom help={children} className={className}>
+			<FontAwesomeIcon icon={faQuestionCircle} />
+		</InlineHelpCustom>
 	)
 }

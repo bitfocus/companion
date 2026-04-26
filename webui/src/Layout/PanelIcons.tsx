@@ -2,7 +2,7 @@ import { CButton } from '@coreui/react'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, type ElementType } from 'react'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { InlineHelpCustom } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
 interface CloseButtonProps {
@@ -96,15 +96,15 @@ export function ContextHelpButton({ children, action }: ContextHelpButtonProps):
 	)
 }
 
-interface HelpWrapperProps extends React.ComponentProps<typeof InlineHelp> {
+interface HelpWrapperProps extends React.ComponentProps<typeof InlineHelpOld> {
 	usePopover: boolean
 	children: React.ReactNode
 }
 function HelpWrapper({ usePopover, children, ...props }: HelpWrapperProps) {
 	return usePopover ? (
-		<InlineHelp {...props} className="context-help-button">
+		<InlineHelpCustom {...props} className="context-help-button">
 			{children}
-		</InlineHelp>
+		</InlineHelpCustom>
 	) : (
 		<span className="context-help-button">{children}</span>
 	)
