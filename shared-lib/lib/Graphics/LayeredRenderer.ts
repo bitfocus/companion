@@ -238,9 +238,10 @@ export class GraphicsLayeredButtonRenderer {
 		// Draw button text
 		let fontSize: 'auto' | number = Number(element.fontsize) || 'auto'
 
-		// Force some padding around the text
-		const marginX = 2
-		const marginY = 1
+		// Force some padding around the text, scaled proportionally
+		const marginScale = 0.015
+		const marginX = 2 * marginScale
+		const marginY = 1 * marginScale
 
 		if (typeof fontSize === 'number') {
 			// Scale font to be a percentage relative to the height of the usable button space

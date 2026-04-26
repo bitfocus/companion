@@ -777,7 +777,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				yAnchor = layout.measuredAscent
 				break
 			case 'center':
-				yAnchor = Math.round((h - linesTotalHeight) / 2 + layout.measuredAscent)
+				yAnchor = (h - linesTotalHeight) / 2 + layout.measuredAscent
 				break
 			case 'bottom':
 				yAnchor = h - linesTotalHeight + layout.measuredAscent
