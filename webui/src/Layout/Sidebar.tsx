@@ -353,7 +353,7 @@ export const MySidebar = memo(function MySidebar() {
 			MenuSeparator,
 			{
 				id: 'prefer-system-menu',
-				label: 'Prefer System Context-Menu',
+				label: 'Prefer System Menu',
 				icon: preferSystemMenu ? faCheck : undefined,
 				do: () => setPreferSystemMenu((value) => !value),
 				tooltip:
