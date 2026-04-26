@@ -689,6 +689,10 @@ function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: Re
 				// unfoldable && !unfoldToggler: User clicked a _nav-link_ while in folding mode → collapse
 				// !unfoldable && unfoldToggler: User clicked the _toggler_ to enable folding → collapse now
 				setTimeout(() => setNarrow(true), 0) // we need to defer this action or navigation can fail due to an apparent race with re-rendering the sidebar.
+			} else if (unfoldable && unfoldToggler) {
+				// user clicked the toggler to get out of unfolding mode, unfold immediately
+				// without this condition, if the user "folded" the sidebar and then immediately clicked again, the sidebar would remain narrow until the user moved off of it.
+				setNarrow(false)
 			}
 		},
 		[setNarrow, mobileMode, unfoldable]
