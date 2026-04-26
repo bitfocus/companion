@@ -247,6 +247,8 @@ export const MySidebar = memo(function MySidebar() {
 	const [ibuttonsGroupVis, setIbuttonsGroupVis] = useLocalStorage('ibuttons_group_vis', false)
 	const [supportGroupVis, setSupportGroupVis] = useLocalStorage('support_group_vis', false)
 
+	const [preferSystemMenu, setPreferSystemMenu] = useLocalStorage('sidebar_prefer_system_menu', false)
+
 	const toggleUnfoldable = useCallback(() => {
 		setUnfoldable((val) => {
 			if (!val) setTempNarrow(true) // if new value is true, make sidebar narrow so it folds now
@@ -348,25 +350,35 @@ export const MySidebar = memo(function MySidebar() {
 				do: toggleNarrowMode,
 				tooltip: 'When active, the sidebar remains narrow.',
 			},
+			MenuSeparator,
+			{
+				id: 'prefer-system-menu',
+				label: 'Prefer System Context-Menu',
+				icon: preferSystemMenu ? faCheck : undefined,
+				do: () => setPreferSystemMenu((value) => !value),
+				tooltip:
+					'If set, right-click brings up the system menu and ctrl-right-click brings up this menu. Default is the opposite.',
+			},
 		],
 		[
 			accordionMode,
+			hideModuleVars,
+			hideHelp,
 			mobileMode,
 			narrowMode,
 			unfoldable,
 			toggleUnfoldable,
 			toggleNarrowMode,
-			hideModuleVars,
-			hideHelp,
+			preferSystemMenu,
 			expandAllGroups,
 			setAccordionMode,
 			setHideModuleVars,
 			setHideHelp,
+			setPreferSystemMenu,
 		]
 	)
-
-	// we need the following primarily to provide the onContextMenu callback, which resides in the parent, not the component.
-	const contextState = useContextMenuState(contextMenuItems)
+	//useContextMenuState provides the onContextMenu callback, which resides in the parent, not the component.
+	const contextState = useContextMenuState(contextMenuItems, preferSystemMenu)
 	const DontSetOrUnset: React.Dispatch<React.SetStateAction<boolean>> = () => {}
 
 	return (
