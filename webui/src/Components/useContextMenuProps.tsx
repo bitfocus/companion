@@ -21,6 +21,9 @@ export interface ContextMenuProps {
 	It also manages positioning and visibility, and must be passed to the ContextMenu component.
 
 	* menuItems: the menu description
+	* preferSystemMenu: default, false: right-click brings up the context-menu; holding down a modifier key on click brings up the system menu
+	* 							if true, the behavior is reversed. (modifier = ctl, cmd, alt, shift, or meta)
+
 	Note that menuItems is supplied as a pass-through purely to simplify the client syntax:
 
 	const contextMenuItems = useMemo(() => [ ...menu items... ])
@@ -29,7 +32,7 @@ export interface ContextMenuProps {
 		<ContextMenu { ...contextMenuProps}/>
 	</div>
 */
-export function useContextMenuState(menuItems: MenuItemProps[]): ContextMenuProps {
+export function useContextMenuState(menuItems: MenuItemProps[], preferSystemMenu = false): ContextMenuProps {
 	const [visible, setVisible] = useState(false)
 	const [position, setPosition] = useState({ x: 200, y: 200 })
 	const menuRef = useRef<HTMLDivElement>(null) // to get the ContextMenu's ref for event handling here
@@ -83,17 +86,20 @@ export function useContextMenuState(menuItems: MenuItemProps[]): ContextMenuProp
 		(e) => {
 			// allow modifiers to suppress the context menu so we can inspect things in the browser
 			// Also, doing it this way avoids worrying about mac command key vs. windows' windows key, etc.
-			if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
-				setVisible(false) // in case menu was open at the time
-			} else {
+			// Finally, we let the user choose what an unadorned click does
+			const showOnClick = preferSystemMenu === (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey)
+
+			if (showOnClick) {
 				e.preventDefault()
 				e.stopPropagation()
 
 				setPosition({ x: e.clientX, y: e.clientY })
 				setVisible(true)
+			} else {
+				setVisible(false) // in case menu was open at the time
 			}
 		},
-		[setPosition, setVisible]
+		[preferSystemMenu]
 	)
 
 	return { visible, position, onContextMenu, menuItems, menuRef }
