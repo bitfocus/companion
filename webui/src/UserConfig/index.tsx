@@ -50,7 +50,7 @@ function SettingsLinkCard<const TFrom extends string = string, const TTo extends
 }: SettingsLinkCardProps<TFrom, TTo>) {
 	return (
 		<CCol sm={center ? { span: 6, offset: 3 } : 6} className="mb-4">
-			<Link to={to} className="text-decoration-none">
+			<Link to={to} className="text-decoration-none grid h-100">
 				<CCard>
 					<NonIdealState icon={icon} style={{ padding: '5vh 1rem' }}>
 						<h3>{label}</h3>
