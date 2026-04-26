@@ -20,6 +20,7 @@ for (const [versionName, currentVersion] of Object.entries(existingVersions)) {
 	let latestVersion = new SemVer(currentVersion)
 	for (const apiRelease of apiReleases) {
 		const apiSemver = new SemVer(apiRelease.version)
+		if (apiSemver.prerelease.length > 0) continue
 		if (apiSemver.major === latestVersion.major && apiSemver.compare(latestVersion) > 0) {
 			latestVersion = apiSemver
 		}
