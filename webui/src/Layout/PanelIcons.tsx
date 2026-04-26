@@ -96,7 +96,7 @@ export function ContextHelpButton({ children, action }: ContextHelpButtonProps):
 	)
 }
 
-interface HelpWrapperProps extends React.ComponentProps<typeof InlineHelpOld> {
+interface HelpWrapperProps extends React.ComponentProps<typeof InlineHelpCustom> {
 	usePopover: boolean
 	children: React.ReactNode
 }
