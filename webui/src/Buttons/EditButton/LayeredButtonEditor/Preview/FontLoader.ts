@@ -1,5 +1,5 @@
 import { DEFAULT_FONTS } from '@companion-app/shared/Graphics/Fonts.js'
-import { assertNever } from '~/Resources/util'
+import { assertNever, makeAbsolutePath } from '~/Resources/util'
 
 type ListenerFn = () => void
 
@@ -42,7 +42,8 @@ class PreviewCanvasFontLoader {
 
 		Promise.allSettled(
 			DEFAULT_FONTS.map(async (name) => {
-				const fontface = new FontFace(name, `url(/int/graphics/font/${name})`)
+				const fontPath = makeAbsolutePath(`/int/graphics/font/${name}`)
+				const fontface = new FontFace(name, `url(${fontPath})`)
 				await fontface.load().catch((e) => {
 					console.error('Failed to load font', name, e)
 				})
