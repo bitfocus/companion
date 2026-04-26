@@ -448,18 +448,14 @@ function getLatestModuleVersionInfo(
 function transformApiModuleToCache(
 	data: ModuleStoreOpenApiComponents['schemas']['CompanionModuleInfo']
 ): Complete<ModuleStoreListCacheEntry> {
+	const prefix = data.manufacturer ? `${data.manufacturer}: ` : ''
+
 	// Match what the on disk scanner generates
 	return {
 		id: data.id,
-		name:
-			data.products.length === 0
-				? (data.manufacturer ?? data.name)
-				: data.manufacturer + ': ' + data.products.join('; '),
+		name: data.products.length === 0 ? data.manufacturer || data.name : prefix + data.products.join('; '),
 		shortname: data.shortname,
-		products:
-			data.products.length === 0
-				? [data.manufacturer ?? data.name]
-				: data.products.map((p) => `${data.manufacturer}: ${p}`),
+		products: data.products.length === 0 ? [data.manufacturer ?? data.name] : data.products.map((p) => `${prefix}${p}`),
 		keywords: data.keywords,
 
 		storeUrl: data.storeUrl,
