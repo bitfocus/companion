@@ -81,54 +81,53 @@ export class ButtonDecorationRenderer {
 		// next error or warning icon
 		const iconSize = Math.floor(topBarBounds.height * 0.65)
 		const iconPadding = Math.floor(topBarBounds.height * 0.175)
-		if (drawStyle.location) {
-			let statusColor: string | undefined
-			switch (drawStyle.button_status) {
-				case 'error':
-					statusColor = 'red'
-					break
-				case 'warning':
-					statusColor = 'rgb(255, 127, 0)'
-					break
-			}
 
-			if (statusColor) {
-				img.drawFilledPath(
-					[
-						[rightMax - (iconSize + iconPadding), topBarBounds.y + iconSize + iconPadding],
-						[rightMax - iconPadding, topBarBounds.y + iconSize + iconPadding],
-						[rightMax - (iconSize / 2 + iconPadding), topBarBounds.y + iconPadding],
-					],
-					statusColor
-				)
-				img.drawTextLineAligned(
-					rightMax - (iconSize / 2 + iconPadding),
-					topBarBounds.y + iconSize + iconPadding,
-					'!',
-					colorBlack,
-					Math.floor(iconSize * 0.7),
-					'center',
-					'bottom',
-					'bold'
-				)
-				rightMax -= iconSize + iconPadding
-			}
+		let statusColor: string | undefined
+		switch (drawStyle.button_status) {
+			case 'error':
+				statusColor = 'red'
+				break
+			case 'warning':
+				statusColor = 'rgb(255, 127, 0)'
+				break
+		}
 
-			// last running icon
-			if (drawStyle.action_running) {
-				//img.drawTextLine(55, 3, '►', 'rgb(0, 255, 0)', 8) // not as nice
-				let iconcolor = 'rgb(0, 255, 0)'
-				if (drawStyle.pushed) iconcolor = colorBlack
-				img.drawFilledPath(
-					[
-						[rightMax - iconSize, topBarBounds.y + iconPadding],
-						[rightMax - iconPadding, topBarBounds.y + iconPadding + iconSize / 2],
-						[rightMax - iconSize, topBarBounds.y + iconPadding + iconSize],
-					],
-					iconcolor
-				)
-				rightMax -= iconSize
-			}
+		if (statusColor) {
+			img.drawFilledPath(
+				[
+					[rightMax - (iconSize + iconPadding), topBarBounds.y + iconSize + iconPadding],
+					[rightMax - iconPadding, topBarBounds.y + iconSize + iconPadding],
+					[rightMax - (iconSize / 2 + iconPadding), topBarBounds.y + iconPadding],
+				],
+				statusColor
+			)
+			img.drawTextLineAligned(
+				rightMax - (iconSize / 2 + iconPadding),
+				topBarBounds.y + iconSize + iconPadding,
+				'!',
+				colorBlack,
+				Math.floor(iconSize * 0.7),
+				'center',
+				'bottom',
+				'bold'
+			)
+			rightMax -= iconSize + iconPadding
+		}
+
+		// last running icon
+		if (drawStyle.action_running) {
+			//img.drawTextLine(55, 3, '►', 'rgb(0, 255, 0)', 8) // not as nice
+			let iconcolor = 'rgb(0, 255, 0)'
+			if (drawStyle.pushed) iconcolor = colorBlack
+			img.drawFilledPath(
+				[
+					[rightMax - iconSize, topBarBounds.y + iconPadding],
+					[rightMax - iconPadding, topBarBounds.y + iconPadding + iconSize / 2],
+					[rightMax - iconSize, topBarBounds.y + iconPadding + iconSize],
+				],
+				iconcolor
+			)
+			rightMax -= iconSize
 		}
 	}
 }
