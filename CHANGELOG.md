@@ -1,5 +1,25 @@
 # Bitfocus Companion
 
+## Companion v4.3.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- update release notes to include section on the sidebar
+- canvas crashing on empty png buffers #4107
+- ensure processes exit when parent terminates
+- unable to change module version when current is invalid
+- missing pageNumber for surface plugins #4057
+- update elgato-stream-deck
+- low contrast in browse-entities table (#4106)
+- rotate buttons on locked surfaces #4105
+- show description for surface option fields
+- restore legacy rotation for stream decks #4105
+- field with `allowInvalidValues: true` should not show error on value preview
+- multidropdown should indicate when no more elements can be removed
+- handle variable replacement for nested variables in presets
+- include rotation in satellite LOCKED-STATE message
+- dont repeat manufacturer for modules with many products #4121
+
 ## Companion v4.3.0 - Release Notes
 
 ### IMPORTANT CHANGES
