@@ -6,6 +6,7 @@ import type { ExpressionOrValue } from '../Model/Options.js'
 import type {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	CompositeElementOptionKey,
 	HorizontalAlignment,
 	VerticalAlignment,
@@ -66,7 +67,7 @@ export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDraw
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
 	decoration: ButtonGraphicsDecorationType // replaces show_topbar
-	showStatusIcons: 'default' | 'all' | 'none'
+	showStatusIcons: ButtonGraphicsShowStatusIcons
 }
 
 export interface ButtonGraphicsCanvasElement extends Omit<ButtonGraphicsElementBase, 'enabled' | 'opacity'> {
