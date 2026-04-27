@@ -762,7 +762,7 @@ function convertOldSplitOptionToExpression(
 	} else {
 		options[keys.result] = {
 			isExpression: false,
-			value: options[keys.simple] || '',
+			value: options[keys.simple] ?? '',
 		} satisfies ExpressionOrValue<JsonValue>
 	}
 

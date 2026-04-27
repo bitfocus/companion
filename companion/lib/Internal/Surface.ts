@@ -11,7 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
-import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
@@ -423,6 +423,19 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 				optionsSupportExpressions: true,
 			},
+		}
+	}
+
+	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+		if (
+			action.definitionId === 'set_page' &&
+			action.options.page &&
+			!action.options.page.isExpression &&
+			action.options.page.value === ''
+		) {
+			// Fixup bad upgrade from v4.2, where empty string was used for "this page" instead of "0"
+			action.options.page.value = '0'
+			return action
 		}
 	}
 
