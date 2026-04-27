@@ -4,6 +4,7 @@ import { useCallback, useContext, useMemo, useState } from 'react'
 import Select, { components, createFilter, type InputActionMeta } from 'react-select'
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
 // import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
@@ -54,7 +55,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const { options, flatOptions } = useDropdownChoicesForSelect(choices)
 
 	const currentValue = useMemo(() => {
-		const entry = flatOptions.find((o) => o.value == value) // Intentionally loose for compatibility
+		const entry = flatOptions.find((o) => stringifyVariableValue(o.value) === stringifyVariableValue(value)) // Intentionally loose for compatibility
 		if (entry) {
 			return entry
 		} else if (allowCustom) {
