@@ -71,7 +71,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		// Draw top status icons
-		if (drawStyle.icons) {
+		if (drawStyle.show_status_icons) {
 			ButtonDecorationRenderer.drawIcons(img, drawStyle, topBarBounds)
 		}
 
