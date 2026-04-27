@@ -52,7 +52,6 @@ export default {
 	externals: {
 		// Native libs that are needed
 		usb: 'usb',
-		bufferutil: 'commonjs2 bufferutil', // This needs to remain commonjs2, so that it remains as an optional `require()`
 		'@napi-rs/canvas': '@napi-rs/canvas',
 	},
 	experiments: {

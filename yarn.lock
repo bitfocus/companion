@@ -10017,13 +10017,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bufferutil@npm:^4.1.0":
+"bufferutil@npm:@julusian/bufferutil@^4.1.0":
   version: 4.1.0
-  resolution: "bufferutil@npm:4.1.0"
+  resolution: "@julusian/bufferutil@npm:4.1.0"
   dependencies:
     node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.3.0"
-  checksum: 10c0/12d63bbc80a3b6525bc62a28387fca0a5aed09e41b74375c500e60721b6a1ab2960b82e48f1773eddea2b14e490f129214b8b57bd6e1a5078b6235857d658508
+    pkg-prebuilds: "npm:^1.0.0"
+  checksum: 10c0/d83ee14035418e8e92e2f385414b705d66681a0cf1158fff8101826c9cc852c05397a0f4f9b6220962642dc152aee69efb9047a9094fe3fdb224344cc812495a
   languageName: node
   linkType: hard
 
@@ -10771,7 +10771,7 @@ __metadata:
     "@types/ws": "npm:^8.18.1"
     "@types/yazl": "npm:^3.3.1"
     better-sqlite3: "npm:12.8.0"
-    bufferutil: "npm:^4.1.0"
+    bufferutil: "npm:@julusian/bufferutil@^4.1.0"
     colord: "npm:^2.9.3"
     commander: "npm:^14.0.3"
     compression: "npm:^1.8.1"
@@ -18422,17 +18422,6 @@ __metadata:
   version: 1.4.0
   resolution: "node-forge@npm:1.4.0"
   checksum: 10c0/67330a5f1f95257a4c8a93b7d555abe87b5f15e350123aa396c97a21a8ca94f9c6549008eb2c73668a91e0d7e3a905785acbd8f8bd0751c29401292011f8f8e1
-  languageName: node
-  linkType: hard
-
-"node-gyp-build@github:julusian/node-gyp-build#cross-install-support":
-  version: 4.8.1
-  resolution: "node-gyp-build@https://github.com/julusian/node-gyp-build.git#commit=52ef582b6e6394bff838d8e8b6c9d79995f2d706"
-  bin:
-    node-gyp-build: ./bin.js
-    node-gyp-build-optional: ./optional.js
-    node-gyp-build-test: ./build-test.js
-  checksum: 10c0/94a657094760f15871308f9c7b72cb78955423ccc690cfa9c377f2e7fee30d69a52d72ac0b031d037e19f53f51e1a82eb591d78f69b05b44f7ba54da9d811fc9
   languageName: node
   linkType: hard
 
