@@ -22,6 +22,7 @@ import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
@@ -42,7 +43,6 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
 import { GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
-import type { RendererButtonStyle, RendererDrawStyle } from './Types.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
 const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
