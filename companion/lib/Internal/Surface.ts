@@ -27,7 +27,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { type ActionEntityModel, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { EventEmitter } from 'events'
 import {
 	stringifyVariableValue,
@@ -423,6 +423,19 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 				optionsSupportExpressions: true,
 			},
+		}
+	}
+
+	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+		if (
+			action.definitionId === 'set_page' &&
+			action.options.page &&
+			!action.options.page.isExpression &&
+			action.options.page.value === ''
+		) {
+			// Fixup bad upgrade from v4.2, where empty string was used for "this page" instead of "0"
+			action.options.page.value = '0'
+			return action
 		}
 	}
 
