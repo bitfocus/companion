@@ -64,6 +64,9 @@ export function getNodeJsPermissionArguments(
 			`--allow-fs-read=${isPackaged() ? import.meta.dirname : path.join(import.meta.dirname, '../../..')}` // Allow read access to companion code, because of some esm loader issues
 		)
 
+		// If using node25+, we must allow network access when using permissions model
+		if (manifest.runtime.type !== 'node22') args.push('--allow-net')
+
 		if (!isPackaged()) {
 			// Always allow read access to module host package, needed when running a dev version
 			const require = createRequire(import.meta.url)
