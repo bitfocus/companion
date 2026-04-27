@@ -8,6 +8,7 @@ import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
 import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -54,7 +55,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const { options, flatOptions } = useDropdownChoicesForSelect(choices)
 
 	const currentValue = useMemo(() => {
-		const entry = flatOptions.find((o) => o.value == value) // Intentionally loose for compatibility
+		const entry = flatOptions.find((o) => stringifyVariableValue(o.value) === stringifyVariableValue(value)) // Intentionally loose for compatibility
 		if (entry) {
 			return entry
 		} else if (allowCustom) {
