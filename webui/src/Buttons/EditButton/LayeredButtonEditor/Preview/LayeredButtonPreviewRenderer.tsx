@@ -1,16 +1,18 @@
 import { CFormLabel } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
+import type { ResolveButtonStylePropertiesConfig } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
-import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import FontLoader from './FontLoader.js'
@@ -29,7 +31,16 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 	location,
 	styleStore,
 }: LayeredButtonPreviewRendererProps) {
-	const drawStyle = useLayeredButtonDrawStyleParser(controlId, styleStore)
+	const { userConfig } = useContext(RootAppStoreContext)
+
+	const drawConfig = useComputed<ResolveButtonStylePropertiesConfig>(
+		() => ({
+			remove_topbar: userConfig.properties?.remove_topbar ?? false,
+		}),
+		[userConfig]
+	)
+
+	const drawStyle = useLayeredButtonDrawStyleParser(controlId, location, drawConfig, styleStore)
 
 	const [aspectRatio, setAspectRatio] = useLocalStorage('layered-button-preview-aspect-ratio', '1:1')
 
@@ -88,7 +99,7 @@ interface LayeredButtonCanvasProps {
 	width: number
 	height: number
 	location: ControlLocation
-	drawStyle: DrawStyleLayeredButtonModel | null
+	drawStyle: RendererButtonStyle | null
 	hiddenElements: ReadonlySet<string>
 	selectedElementId: string | null
 	className?: string
@@ -117,11 +128,7 @@ function LayeredButtonCanvas({
 		drawContext.current.setSelectedElementId(selectedElementId)
 
 		// Pass the new draw style to the context
-		drawContext.current.draw({
-			...drawStyle,
-			location: location,
-			show_topbar: true,
-		})
+		drawContext.current.draw(drawStyle)
 	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
 
 	// Ensure the fonts are loaded
