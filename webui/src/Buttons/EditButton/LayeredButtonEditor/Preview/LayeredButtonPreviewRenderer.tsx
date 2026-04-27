@@ -81,6 +81,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
 	{ id: '1:1', label: 'Square (1:1)' },
 	{ id: '9:7', label: 'Stream Deck Studio (9:7)' },
+	{ id: '2:1', label: 'Stream Deck Plus & Plus XL (2:1)' },
 ]
 
 interface LayeredButtonCanvasProps {
