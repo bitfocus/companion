@@ -18,6 +18,7 @@ import type {
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
@@ -74,6 +75,7 @@ export class ControlButtonLayered
 			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'canvas',
 			decoration: { value: ButtonGraphicsDecorationType.FollowDefault, isExpression: false },
+			showStatusIcons: { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false },
 		},
 		{
 			id: 'box0',
