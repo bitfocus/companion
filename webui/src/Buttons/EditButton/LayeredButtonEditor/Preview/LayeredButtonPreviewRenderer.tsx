@@ -36,6 +36,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 	const drawConfig = useComputed<ResolveButtonStylePropertiesConfig>(
 		() => ({
 			remove_topbar: userConfig.properties?.remove_topbar ?? false,
+			buttons_status_icons: userConfig.properties?.buttons_status_icons ?? 'show',
 		}),
 		[userConfig]
 	)
