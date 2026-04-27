@@ -204,12 +204,11 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		id: 'fillMode',
 		label: 'Fill Mode',
 		choices: [
-			{ id: 'fit_or_shrink', label: 'Fit or Shrink' },
 			{ id: 'fit', label: 'Fit' },
 			{ id: 'fill', label: 'Fill' },
 			{ id: 'crop', label: 'Crop' },
 		],
-		default: 'fit_or_shrink',
+		default: 'fit',
 	},
 
 	// Future ideas:

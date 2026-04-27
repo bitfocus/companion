@@ -456,7 +456,7 @@ async function convertImageElementForDrawing(
 		base64Image,
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
+		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit'], 'fit'),
 		contentHash: '', // Will be computed below
 	}
 

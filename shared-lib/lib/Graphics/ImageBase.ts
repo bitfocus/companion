@@ -483,9 +483,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			scaledImageWidth = imageWidth * calculatedScale
 			scaledImageHeight = imageHeight * calculatedScale
 		} else if (scale === 'crop') {
-			const scaleMin = Math.min(width / imageWidth - 1, height / imageHeight - 1)
-			const scaleMax = Math.max(width / imageWidth - 1, height / imageHeight - 1)
-			calculatedScale = (scaleMax <= 1 ? scaleMax : scaleMin) + 1
+			calculatedScale = Math.max(width / imageWidth, height / imageHeight)
 			scaledImageWidth = imageWidth * calculatedScale
 			scaledImageHeight = imageHeight * calculatedScale
 		} else if (typeof scale === 'number') {

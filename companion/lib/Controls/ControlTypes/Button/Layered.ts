@@ -177,15 +177,11 @@ export class ControlButtonLayered
 						// Ignore
 					}
 				}
-				// switch (element.type) {
-				// 	case 'image':
-				// 		element.fillMode = element.fillMode || { value: 'fit_or_shrink', isExpression: false }
-				// 		element.enabled = element.enabled || { value: true, isExpression: false }
-				// 		break
-				// 	case 'text':
-				// 		element.enabled = element.enabled || { value: true, isExpression: false }
-				// 		break
-				// }
+				if (element.type === 'image') {
+					if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
+						element.fillMode.value = 'fit'
+					}
+				}
 			}
 
 			// Ensure control is stored before setup

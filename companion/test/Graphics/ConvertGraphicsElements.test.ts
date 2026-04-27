@@ -2189,7 +2189,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('converts all fillMode options', async () => {
-			const fillModes = ['crop', 'fill', 'fit', 'fit_or_shrink'] as const
+			const fillModes = ['crop', 'fill', 'fit'] as const
 
 			for (const fillMode of fillModes) {
 				const elements: SomeButtonGraphicsElement[] = [
