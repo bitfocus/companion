@@ -260,9 +260,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				options: [
 					{
 						...CHOICES_LOCATION,
-						description: 'In the format 1/0/0. this-run or this-all-runs is also accepted as special modes',
+						description:
+							'In the format 1/0/0. Some special values (this-run or this-all-runs) are also accepted for alternate behaviours',
 						expressionDescription:
-							"In the format '1/0/0'. 'this-run' or 'this-all-runs' is also accepted as special modes",
+							"In the format '1/0/0'. Some special values ('this-run' or 'this-all-runs') are also accepted for alternate behaviours",
 					},
 					{
 						type: 'checkbox',
