@@ -1900,25 +1900,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89":
-  version: 2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89
-  resolution: "@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89"
+"@companion-module/base@npm:2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0":
+  version: 2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0
+  resolution: "@companion-module/base@npm:2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/ec62a8c7993d3e0efd390e018a5ad9ca79e48fc1b7e7e3500e55566df7789041a3578e1700c774d079304f796b3fc089e5e02f8ff67ecc0d61550f860abebf8c
+  checksum: 10c0/b30c92b715c7d941d3e00baca5561e4e6d928d92a2aed58a6bf9ced1a6063edaf4446792280236e9aff5947cb4271e0eb5a89bfebfd8e1b61c881782dab43a15
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89":
-  version: 1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89
-  resolution: "@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89"
+"@companion-module/host@npm:1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0":
+  version: 1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0
+  resolution: "@companion-module/host@npm:1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0"
   dependencies:
-    "@companion-module/base": "npm:~2.0.3"
+    "@companion-module/base": "npm:~2.0.4"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/4a574b56f9ff64f454438b8874265eccc86a9db3f95772bc7e83574931ba6904b9420f3351a2f94a90030c74be7330149569661f50deb0b01749045c3633e0d8
+  checksum: 10c0/074e1a91eb338a9cf8c773ba1135e0f6b040263e32a647f159d3fd7394ca8edc5f98ff442c4dd8fd82b380cad2c0210295655bd9b971edabc9728bea62d530f0
   languageName: node
   linkType: hard
 
