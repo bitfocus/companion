@@ -71,7 +71,9 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		// Draw top status icons
-		ButtonDecorationRenderer.drawIcons(img, drawStyle, topBarBounds)
+		if (drawStyle.icons) {
+			ButtonDecorationRenderer.drawIcons(img, drawStyle, topBarBounds)
+		}
 
 		// Draw a border around the selected element, do this last so it's on top
 		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)

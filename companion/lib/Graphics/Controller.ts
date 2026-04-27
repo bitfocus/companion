@@ -24,8 +24,13 @@ import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlI
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsShowStatusIcons,
+	type DrawImageBuffer,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -67,6 +72,7 @@ interface GraphicsOptions {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
 	remove_topbar: boolean
+	status_icons: UserConfigModel['buttons_status_icons']
 }
 
 interface RenderArgumentsButton {
@@ -230,6 +236,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			page_direction_flipped: this.#userConfigController.getKey('page_direction_flipped'),
 			page_plusminus: this.#userConfigController.getKey('page_plusminus'),
 			remove_topbar: this.#userConfigController.getKey('remove_topbar'),
+			status_icons: this.#userConfigController.getKey('buttons_status_icons'),
 		}
 
 		this.#renderQueue = new ImageWriteQueue(
@@ -255,7 +262,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							if (!render) {
 								const renderStyle: RendererDrawStyle = {
 									...buttonStyle,
-									show_topbar: this.#resolveShowTopBar(buttonStyle.elements),
+									...this.#resolveButtonDrawConfig(buttonStyle.elements),
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
@@ -306,13 +313,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 						switch (buttonStyle.style) {
 							case 'button-layered': {
-								const showTopBar = this.#resolveShowTopBar(buttonStyle.elements)
+								const showButtonConfig = this.#resolveButtonDrawConfig(buttonStyle.elements)
 
 								renderStyle = {
 									...buttonStyle,
 
-									show_topbar: showTopBar,
-									location: showTopBar ? location : undefined, // Only needed if the topbar is shown
+									...showButtonConfig,
+									location: showButtonConfig.show_topbar ? location : undefined, // Only needed if the topbar is shown
 								}
 
 								const cacheKeyObj: Record<string, any> = {
@@ -492,21 +499,29 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 	}
 
-	#resolveShowTopBar(elements: SomeButtonGraphicsDrawElement[]): boolean {
+	#resolveButtonDrawConfig(elements: SomeButtonGraphicsDrawElement[]): {
+		show_topbar: boolean
+		show_status_icons: boolean
+	} {
 		const canvasElement = elements.find((el) => el.type === 'canvas')
 
-		const globalShowTopBar =
-			!this.#drawOptions.remove_topbar && canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
+		const globalShowTopBar = !this.#drawOptions.remove_topbar
+		const globalShowStatusIcons = this.#drawOptions.status_icons === 'show'
 
-		// Should never happen, but sanity check
-		if (!canvasElement) {
-			return globalShowTopBar
+		const show_topbar =
+			!canvasElement || canvasElement.decoration === ButtonGraphicsDecorationType.FollowDefault
+				? globalShowTopBar
+				: canvasElement.decoration === ButtonGraphicsDecorationType.TopBar
+
+		const show_status_icons =
+			!canvasElement || canvasElement.showStatusIcons === ButtonGraphicsShowStatusIcons.FollowDefault
+				? globalShowStatusIcons
+				: canvasElement.showStatusIcons === ButtonGraphicsShowStatusIcons.ShowAll
+
+		return {
+			show_topbar,
+			show_status_icons,
 		}
-
-		return (
-			canvasElement.decoration === ButtonGraphicsDecorationType.TopBar ||
-			(canvasElement.decoration === ButtonGraphicsDecorationType.FollowDefault && globalShowTopBar)
-		)
 	}
 
 	/**
@@ -556,7 +571,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			stepCurrent: 1,
 			stepCount: 1,
 
-			show_topbar: this.#resolveShowTopBar(elements),
+			...this.#resolveButtonDrawConfig(elements),
 
 			location: undefined,
 		}
