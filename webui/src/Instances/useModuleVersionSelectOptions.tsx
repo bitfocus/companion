@@ -1,7 +1,7 @@
 import semver from 'semver'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
@@ -15,7 +15,7 @@ export function useModuleVersionSelectOptions(
 ): {
 	loaded: boolean
 	hasIncompatibleNewerVersion: boolean
-	choices: DropdownChoiceInt[]
+	choices: DropdownChoice[]
 } {
 	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const upgradeToVersions = useModuleUpgradeToVersions(moduleType, moduleId)
@@ -29,7 +29,7 @@ export function useModuleVersionSelectOptions(
 		!!latestIncompatibleStableVersion && latestIncompatibleStableVersion.id !== latestStableVersion?.id
 
 	return useComputed(() => {
-		const choices: DropdownChoiceInt[] = []
+		const choices: DropdownChoice[] = []
 
 		const listedVersions = new Set<string>()
 		if (installedInfo) {
@@ -41,7 +41,7 @@ export function useModuleVersionSelectOptions(
 					label += ' (Latest stable)'
 				}
 
-				choices.push({ value: version.versionId, label })
+				choices.push({ id: version.versionId, label })
 				listedVersions.add(version.versionId)
 			}
 		}
@@ -52,7 +52,7 @@ export function useModuleVersionSelectOptions(
 			(!installedInfo?.stableVersion ||
 				semver.compare(latestStableVersion.id, installedInfo.stableVersion.versionId, { loose: true }) > 0)
 		) {
-			choices.push({ value: latestStableVersion.id, label: `v${latestStableVersion.id} (Install latest stable)` })
+			choices.push({ id: latestStableVersion.id, label: `v${latestStableVersion.id} (Install latest stable)` })
 		}
 
 		if (
@@ -63,27 +63,27 @@ export function useModuleVersionSelectOptions(
 				semver.compare(latestBetaVersion.id, installedInfo.betaVersion.versionId, { loose: true }) > 0)
 		) {
 			choices.push({
-				value: latestBetaVersion.id,
+				id: latestBetaVersion.id,
 				label: `v${latestBetaVersion.id} (Install latest beta)`,
 			})
 		}
 
-		choices.sort((a, b) => semver.compare(String(b.value), String(a.value), { loose: true }))
+		choices.sort((a, b) => semver.compare(String(b.id), String(a.id), { loose: true }))
 
-		if (installedInfo?.devVersion) choices.unshift({ value: 'dev', label: 'Dev version' })
-		if (installedInfo?.builtinVersion) choices.unshift({ value: 'builtin', label: 'Builtin version' })
+		if (installedInfo?.devVersion) choices.unshift({ id: 'dev', label: 'Dev version' })
+		if (installedInfo?.builtinVersion) choices.unshift({ id: 'builtin', label: 'Builtin version' })
 
-		const replacementChoices: DropdownChoiceInt[] = []
+		const replacementChoices: DropdownChoice[] = []
 		// Push the potential replacements first
 		for (const upgradeTo of upgradeToVersions) {
 			if (upgradeTo.versionId) {
 				replacementChoices.push({
-					value: `${upgradeTo.moduleId}@${upgradeTo.versionId}`,
+					id: `${upgradeTo.moduleId}@${upgradeTo.versionId}`,
 					label: `${upgradeTo.displayName} (v${upgradeTo.versionId})`,
 				})
 			} else {
 				replacementChoices.push({
-					value: `${upgradeTo.moduleId}@`,
+					id: `${upgradeTo.moduleId}@`,
 					label: `${upgradeTo.displayName} (Latest stable)`,
 				})
 			}

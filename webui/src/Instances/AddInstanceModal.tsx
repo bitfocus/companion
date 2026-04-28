@@ -5,7 +5,6 @@ import {
 	CForm,
 	CFormInput,
 	CFormLabel,
-	CFormSelect,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -17,6 +16,7 @@ import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, us
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -111,12 +111,12 @@ export const AddInstanceModal = observer(
 				const valueStr = value
 
 				// Check if value is still valid
-				if (versionChoices.find((v) => v.value === valueStr)) return value
+				if (versionChoices.find((v) => v.id === valueStr)) return value
 
 				// It is not, so choose the first option
 				if (defaultVersionId) return defaultVersionId
 				if (versionChoices.length === 0) return null
-				return String(versionChoices[0].value)
+				return String(versionChoices[0].id)
 			})
 		}, [versionChoices, defaultVersionId])
 
@@ -181,22 +181,13 @@ export const AddInstanceModal = observer(
 									</div>
 								</CFormLabel>
 								<CCol sm={8}>
-									<CFormSelect
-										name="colFormVersion"
+									<SimpleDropdownInputField
+										id="colFormVersion"
 										value={selectedVersion as string}
-										onChange={(e) => setSelectedVersion(e.currentTarget.value)}
-									>
-										{versionChoices.map((v) => (
-											<option key={v.value} value={v.value}>
-												{v.label}
-											</option>
-										))}
-										{!versionChoices.length && (
-											<option value={null as any}>
-												{choicesLoaded ? 'No compatible versions found' : 'Loading...'}
-											</option>
-										)}
-									</CFormSelect>
+										setValue={(value) => setSelectedVersion(value as string)}
+										noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
+										choices={versionChoices}
+									/>
 								</CCol>
 								<CCol sm={{ span: 8, offset: 4 }} className="mt-0">
 									<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>

@@ -5,7 +5,6 @@ import {
 	CCollapse,
 	CForm,
 	CFormLabel,
-	CFormSelect,
 	CModalBody,
 	CModalFooter,
 	CModalHeader,
@@ -19,6 +18,7 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
@@ -289,7 +289,6 @@ interface SelectedVersionDropdownProps {
 const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 	moduleType,
 	moduleId,
-	htmlName,
 	value,
 	onChange,
 	onBlur,
@@ -304,24 +303,15 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 		true
 	)
 
-	const missingSelection = value !== null && !moduleVersionChoices.find((c) => c.value === value)
-
 	return (
-		<CFormSelect
-			name={htmlName}
+		<SimpleDropdownInputField
+			// id="colFormVersion"
 			value={value as string}
-			onChange={(e) => onChange(e.currentTarget.value)}
+			setValue={(value) => onChange(value as string)}
 			onBlur={onBlur}
-		>
-			{missingSelection && <option value={value}>{`Unknown version: ${value}`}</option>}
-			{moduleVersionChoices.map((v) => (
-				<option key={v.value} value={v.value}>
-					{v.label}
-				</option>
-			))}
-			{!moduleVersionChoices.length && (
-				<option value={null as any}>{choicesLoaded ? 'No compatible versions found' : 'Loading...'}</option>
-			)}
-		</CFormSelect>
+			noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
+			badOptionPrefix="Unknown version"
+			choices={moduleVersionChoices}
+		/>
 	)
 })

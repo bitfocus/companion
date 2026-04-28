@@ -7,7 +7,7 @@ import {
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -102,7 +102,7 @@ const FieldElementUsageInput = observer(function FieldElementUsageInput({
 	)
 
 	// TODO: Should the choices be dynamic based on the element type?
-	return <DropdownInputField setValue={setUsage} value={elementProps.usage} choices={elementUsageChoices} />
+	return <SimpleDropdownInputField setValue={setUsage} value={elementProps.usage} choices={elementUsageChoices} />
 })
 
 const elementUsageChoices: DropdownChoice[] = [

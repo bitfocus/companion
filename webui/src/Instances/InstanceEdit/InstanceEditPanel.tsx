@@ -1,13 +1,15 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
@@ -255,6 +257,12 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	)
 })
 
+const UpdatePolicyOptions: DropdownChoice[] = [
+	{ id: 'manual', label: 'Disabled' },
+	{ id: 'stable', label: 'Stable' },
+	{ id: 'beta', label: 'Stable and Beta' },
+]
+
 const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField<
 	TConfig extends ClientInstanceConfigBase,
 >({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
@@ -267,15 +275,12 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 				</InlineHelpIcon>
 			</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CFormSelect
-					name="colFormUpdatePolicy"
+				<SimpleDropdownInputField
+					id="colFormUpdatePolicy"
 					value={panelStore.updatePolicy}
-					onChange={(e) => panelStore.setUpdatePolicy(e.currentTarget.value as InstanceVersionUpdatePolicy)}
-				>
-					<option value="manual">Disabled</option>
-					<option value="stable">Stable</option>
-					<option value="beta">Stable and Beta</option>
-				</CFormSelect>
+					setValue={(value) => panelStore.setUpdatePolicy(value as InstanceVersionUpdatePolicy)}
+					choices={UpdatePolicyOptions}
+				/>
 			</CCol>
 		</>
 	)

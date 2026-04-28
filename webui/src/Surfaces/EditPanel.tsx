@@ -1,16 +1,18 @@
-import { CCol, CForm, CFormLabel, CFormSelect } from '@coreui/react'
+import { CCol, CForm, CFormLabel } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -19,7 +21,7 @@ import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { PreventDefaultHandler } from '~/Resources/util.js'
+import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { EditPanelConfigField } from './EditPanelConfigField'
 
@@ -301,6 +303,20 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 		[setNameMutation]
 	)
 
+	const surfaceGroupChoices = useComputed(() => {
+		const choices: DropdownChoice[] = [
+			{ id: 'null', label: 'Standalone (Default)' },
+			...surfaces.store
+				.values()
+				.filter((group): group is ClientDevicesListItem => !!group && !group.isAutoGroup)
+				.map((group) => ({
+					id: group.id,
+					label: group.displayName,
+				})),
+		]
+		return choices
+	}, [surfaces])
+
 	// Show loading or error state
 	const dataReady = (!surfaceId || !!surfaceConfig.config) && (!groupId || groupConfig.config !== null)
 	if (!dataReady || surfaceConfig.error || groupConfig.error) {
@@ -344,21 +360,12 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</InlineHelpIcon>
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormSelect
-								name="colFormGroupId"
+							<SimpleDropdownInputField
+								id="colFormGroupId"
 								value={surfaceInfo.groupId || 'null'}
-								onChange={(e) => setSurfaceGroupId(e.currentTarget.value)}
-							>
-								<option value="null">Standalone (Default)</option>
-
-								{Array.from(surfaces.store.values())
-									.filter((group): group is ClientDevicesListItem => !!group && !group.isAutoGroup)
-									.map((group) => (
-										<option key={group.id} value={group.id}>
-											{group.displayName}
-										</option>
-									))}
-							</CFormSelect>
+								setValue={(value) => setSurfaceGroupId(value as string)}
+								choices={surfaceGroupChoices}
+							/>
 						</CCol>
 					</>
 				)}
