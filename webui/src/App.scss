@@ -34,6 +34,8 @@
 @use 'scss/expression';
 @use 'scss/image-library';
 
+@use 'scss/components/number-range';
+
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 
 body {
