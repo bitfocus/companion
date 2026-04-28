@@ -1,16 +1,7 @@
-import {
-	CButton,
-	CCol,
-	CForm,
-	CFormInput,
-	CFormLabel,
-	CFormSwitch,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void
 
@@ -71,10 +62,6 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 			setNewDurationValue(Number(e.target.value))
 		}, [])
 
-		const onWhileHeldChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			setNewWhileHeldValue(!!e.target.checked)
-		}, [])
-
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
@@ -101,11 +88,10 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							Execute while held
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormSwitch
-								name="colFormExecuteWhileHeld"
-								size="xl"
-								checked={!!newWhileHeldValue}
-								onChange={onWhileHeldChange}
+							<SwitchInputField
+								id="colFormExecuteWhileHeld"
+								value={!!newWhileHeldValue}
+								setValue={setNewWhileHeldValue}
 							/>
 						</CCol>
 					</CForm>

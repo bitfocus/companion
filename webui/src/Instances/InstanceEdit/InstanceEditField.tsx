@@ -1,4 +1,3 @@
-import { CFormSwitch } from '@coreui/react'
 import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -12,6 +11,7 @@ import {
 	NumberInputField,
 	TextInputField,
 } from '~/Components/index.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface InstanceEditFieldProps {
@@ -64,14 +64,7 @@ export function InstanceEditField({
 		case 'checkbox':
 			return (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<CFormSwitch
-						color="success"
-						checked={value as any}
-						size="xl"
-						onChange={() => {
-							setValue(!value)
-						}}
-					/>
+					<SwitchInputField value={!!value} setValue={setValue} tooltip={definition.tooltip} />
 				</div>
 			)
 		case 'dropdown':

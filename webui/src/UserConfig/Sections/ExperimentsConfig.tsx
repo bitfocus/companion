@@ -1,5 +1,6 @@
-import { CAlert, CFormSwitch } from '@coreui/react'
+import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 
@@ -17,32 +18,30 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 			<tr>
 				<td>Use TouchBackend for Drag and Drop</td>
 				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={window.localStorage.getItem('test_touch_backend') === '1'}
-						size="xl"
-						onChange={(e) => {
-							window.localStorage.setItem('test_touch_backend', e.currentTarget.checked ? '1' : '0')
-							window.location.reload()
-						}}
-					/>
+					<div className="float-right">
+						<SwitchInputField
+							value={window.localStorage.getItem('test_touch_backend') === '1'}
+							setValue={(val) => {
+								window.localStorage.setItem('test_touch_backend', val ? '1' : '0')
+								window.location.reload()
+							}}
+						/>
+					</div>
 				</td>
 				<td>&nbsp;</td>
 			</tr>
 			<tr>
 				<td>Companion Cloud Tab (Deprecated)</td>
 				<td>
-					<CFormSwitch
-						className="float-right"
-						color="success"
-						checked={window.localStorage.getItem('show_companion_cloud') === '1'}
-						size="xl"
-						onChange={(e) => {
-							window.localStorage.setItem('show_companion_cloud', e.currentTarget.checked ? '1' : '0')
-							window.location.reload()
-						}}
-					/>
+					<div className="float-right">
+						<SwitchInputField
+							value={window.localStorage.getItem('show_companion_cloud') === '1'}
+							setValue={(val) => {
+								window.localStorage.setItem('show_companion_cloud', val ? '1' : '0')
+								window.location.reload()
+							}}
+						/>
+					</div>
 				</td>
 				<td>&nbsp;</td>
 			</tr>
