@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
+import { CCol, CForm, CFormLabel } from '@coreui/react'
 import { useCallback, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
@@ -7,6 +7,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { InputFeatureIcons } from '~/Controls/OptionsInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -99,14 +100,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					<InlineHelpIcon className="ms-1">Make this button compatible with rotation events</InlineHelpIcon>
 				</CFormLabel>
 				<CCol sm={8}>
-					<CFormSwitch
-						size="xl"
-						color="success"
-						checked={options.rotaryActions}
-						onChange={() => {
-							setRotaryActions(!options.rotaryActions)
-						}}
-					/>
+					<SwitchInputField value={options.rotaryActions} setValue={setRotaryActions} />
 				</CCol>
 
 				<CFormLabel htmlFor="colFormProgress" className="col-sm-4 col-form-label col-form-label-sm">
@@ -116,14 +110,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					</InlineHelpIcon>
 				</CFormLabel>
 				<CCol sm={8}>
-					<CFormSwitch
-						size="xl"
-						color="success"
-						checked={options.canModifyStyleInApis}
-						onChange={() => {
-							setCanModifyStyleInApis(!options.canModifyStyleInApis)
-						}}
-					/>
+					<SwitchInputField value={options.canModifyStyleInApis} setValue={setCanModifyStyleInApis} />
 				</CCol>
 			</CForm>
 		</>

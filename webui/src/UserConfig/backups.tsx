@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CFormSwitch, CRow } from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -8,6 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -150,12 +151,15 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 	const updateRuleFieldMutation = useMutationExt(trpc.importExport.backupRules.updateRuleField.mutationOptions())
 	const deleteRuleMutation = useMutationExt(trpc.importExport.backupRules.deleteRule.mutationOptions())
 
-	const doEnableDisable = useCallback(() => {
-		// Toggle the enabled state using the dedicated endpoint
-		updateRuleFieldMutation.mutateAsync({ ruleId: rule.id, field: 'enabled', value: !rule.enabled }).catch((err) => {
-			console.error('Error updating backup rule enabled state:', err)
-		})
-	}, [updateRuleFieldMutation, rule.id, rule.enabled])
+	const doEnableDisable = useCallback(
+		(enabled: boolean) => {
+			// Toggle the enabled state using the dedicated endpoint
+			updateRuleFieldMutation.mutateAsync({ ruleId: rule.id, field: 'enabled', value: enabled }).catch((err) => {
+				console.error('Error updating backup rule enabled state:', err)
+			})
+		},
+		[updateRuleFieldMutation, rule.id]
+	)
 
 	const doDelete = useCallback(() => {
 		confirmRef.current?.show(
@@ -235,14 +239,11 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 				{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<CButtonGroup>
-					<CFormSwitch
-						className="connection-enabled-switch ms-2"
-						color="success"
-						checked={rule.enabled}
-						onChange={doEnableDisable}
-						title={rule.enabled ? 'Disable rule' : 'Enable rule'}
-						size="xl"
+				<CButtonGroup className="ms-2">
+					<SwitchInputField
+						value={rule.enabled}
+						setValue={doEnableDisable}
+						tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
 					/>
 
 					<CButton color="gray" onClick={doDelete} title="Delete">

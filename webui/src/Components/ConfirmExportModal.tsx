@@ -1,14 +1,4 @@
-import {
-	CButton,
-	CCol,
-	CForm,
-	CFormLabel,
-	CFormSwitch,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { windowLinkOpen } from '~/Helpers/Window.js'
@@ -16,6 +6,7 @@ import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFo
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InlineHelpIcon } from './InlineHelp.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
+import { SwitchInputField } from './SwitchInputField.js'
 import { TextInputField } from './TextInputField.js'
 
 export interface ConfirmExportModalRef {
@@ -117,11 +108,7 @@ export const ConfirmExportModal = observer(
 								</InlineHelpIcon>
 							</CFormLabel>
 							<CCol sm={8} className="d-flex align-items-center">
-								<CFormSwitch
-									id="export_include_secrets"
-									checked={includeSecrets}
-									onChange={(e) => setIncludeSecrets(e.currentTarget.checked)}
-								/>
+								<SwitchInputField id="export_include_secrets" value={includeSecrets} setValue={setIncludeSecrets} />
 							</CCol>
 						</CForm>
 					</CModalBody>

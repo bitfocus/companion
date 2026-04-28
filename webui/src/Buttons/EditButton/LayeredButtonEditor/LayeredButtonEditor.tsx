@@ -1,4 +1,3 @@
-import { CFormSwitch } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useRef, useState } from 'react'
@@ -6,6 +5,7 @@ import { useLocalStorage } from 'usehooks-ts'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -169,12 +169,13 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 					<ElementsList styleStore={styleStore} controlId={controlId} />
 				</div>
 				<div className="button-layer-simple">
-					<CFormSwitch
+					<SwitchInputFieldWithLabel
 						className="text-muted"
 						label="Simple"
-						checked={simpleMode}
-						onChange={(e) => setSimpleMode(e.target.checked)}
-						title={simpleMode ? 'Showing a reduced set of properties' : 'Showing the full set of properties'}
+						value={simpleMode}
+						setValue={setSimpleMode}
+						tooltip={simpleMode ? 'Showing a reduced set of properties' : 'Showing the full set of properties'}
+						small
 					/>
 				</div>
 				<hr />

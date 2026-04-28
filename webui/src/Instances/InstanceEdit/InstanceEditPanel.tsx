@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect, CFormSwitch } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
@@ -10,6 +10,7 @@ import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { InstanceEditField } from '~/Instances/InstanceEdit/InstanceEditField.js'
@@ -237,13 +238,13 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CFormSwitch
-					checked={isEnabled}
-					onChange={(e) => panelStore.setEnabled(e.target.checked)}
-					size="xl"
+				<SwitchInputField
+					value={isEnabled}
+					setValue={panelStore.setEnabled}
 					disabled={!canToggle}
-					title={cannotEnableReason || undefined}
+					tooltip={cannotEnableReason || undefined}
 				/>
+
 				{cannotEnableReason && !isEnabled && (
 					<div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
 						{cannotEnableReason}

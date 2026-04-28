@@ -1,9 +1,10 @@
-import { CButton, CFormSwitch } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useRemoteSurfacesListContext } from './RemoteSurfacesListContext.js'
@@ -70,15 +71,12 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 				</span>
 			</div>
 
-			<div className="flex align-items-center">
-				<CFormSwitch
-					className="ms-2"
+			<div className="flex align-items-center ps-2">
+				<SwitchInputField
 					// disabled={!moduleInfo || !moduleVersion}
-					color="success"
-					checked={isEnabled}
-					onChange={doToggleEnabled}
-					size="xl"
-					title={isEnabled ? `Disable surface connection` : `Enable surface connection`}
+					value={isEnabled}
+					setValue={doToggleEnabled}
+					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
 				<CButton onClick={doDelete} title="Delete" className="p-1">

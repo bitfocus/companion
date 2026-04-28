@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel, CFormSelect, CFormSwitch } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CFormSelect } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -13,6 +13,7 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
@@ -99,9 +100,9 @@ function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceE
 	const setEnabledMutation = useMutationExt(trpc.surfaces.surfaceSetEnabled.mutationOptions())
 
 	const handleToggle = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
+		(value: boolean) => {
 			if (!canChangeEnabled) return
-			setEnabledMutation.mutateAsync({ surfaceId, enabled: e.currentTarget.checked }).catch((err) => {
+			setEnabledMutation.mutateAsync({ surfaceId, enabled: value }).catch((err) => {
 				console.error('Failed to set surface enabled', err)
 			})
 		},
@@ -115,15 +116,9 @@ function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceE
 				<InlineHelpIcon className="ms-1">When disabled, Companion will not open this surface.</InlineHelpIcon>
 			</CFormLabel>
 			<CCol sm={8}>
-				<CFormSwitch
-					id="colFormEnabled"
-					name="colFormEnabled"
-					className="mx-2"
-					size="xl"
-					checked={enabled}
-					onChange={handleToggle}
-					disabled={!canChangeEnabled}
-				/>
+				<div className="mx-2">
+					<SwitchInputField id="colFormEnabled" value={enabled} setValue={handleToggle} disabled={!canChangeEnabled} />
+				</div>
 				<div className="form-text">Only surfaces connected locally can be disabled here</div>
 			</CCol>
 		</>
@@ -385,13 +380,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							Use Last Page At Startup
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormSwitch
-								name="colFormUseLastPage"
-								className="mx-2"
-								size="xl"
-								checked={!!groupConfig.config.use_last_page}
-								onChange={(e) => setGroupConfigValue('use_last_page', !!e.currentTarget.checked)}
-							/>
+							<div className="mx-2">
+								<SwitchInputField
+									id="colFormUseLastPage"
+									value={!!groupConfig.config.use_last_page}
+									setValue={(value) => setGroupConfigValue('use_last_page', !!value)}
+								/>
+							</div>
 						</CCol>
 
 						<CFormLabel htmlFor="colFormStartupPage" className="col-sm-4 col-form-label col-form-label-sm">
@@ -428,13 +423,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							Restrict pages accessible to this {surfaceId === null ? 'group' : 'surface'}
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormSwitch
-								name="colFormRestrictPages"
-								className="mx-2"
-								size="xl"
-								checked={!!groupConfig.config.restrict_pages}
-								onChange={(e) => setGroupConfigValue('restrict_pages', !!e.currentTarget.checked)}
-							/>
+							<div className="mx-2">
+								<SwitchInputField
+									id="colFormRestrictPages"
+									value={!!groupConfig.config.restrict_pages}
+									setValue={(value) => setGroupConfigValue('restrict_pages', !!value)}
+								/>
+							</div>
 						</CCol>
 
 						{!!groupConfig.config.restrict_pages && (

@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CFormInput, CFormSwitch, CInputGroup, CRow } from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faClone,
@@ -24,6 +24,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
@@ -215,9 +216,7 @@ function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollecti
 	const setEnabledMutation = useMutationExt(trpc.controls.triggers.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const enabled = e.target.checked
-
+		(enabled: boolean) => {
 			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e) => {
 				console.error('Failed to reorder collection', stringifyError(e))
 			})
@@ -226,14 +225,13 @@ function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollecti
 	)
 
 	return (
-		<CFormSwitch
-			className="ms-1"
-			color="success"
-			checked={collection.metaData.enabled}
-			onChange={setEnabled}
-			title={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
-			size="xl"
-		/>
+		<div className="ms-1">
+			<SwitchInputField
+				value={collection.metaData.enabled}
+				setValue={setEnabled}
+				tooltip={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
+			/>
+		</div>
 	)
 }
 
@@ -249,17 +247,20 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
-	const doEnableDisable = useCallback(() => {
-		setOptionsFieldMutation
-			.mutateAsync({
-				controlId: CreateTriggerControlId(item.id),
-				key: 'enabled',
-				value: !item.enabled,
-			})
-			.catch((e) => {
-				console.error('failed to toggle trigger state', e)
-			})
-	}, [setOptionsFieldMutation, item.id, item.enabled])
+	const doEnableDisable = useCallback(
+		(enabled: boolean) => {
+			setOptionsFieldMutation
+				.mutateAsync({
+					controlId: CreateTriggerControlId(item.id),
+					key: 'enabled',
+					value: enabled,
+				})
+				.catch((e) => {
+					console.error('failed to toggle trigger state', e)
+				})
+		},
+		[setOptionsFieldMutation, item.id]
+	)
 
 	const doDelete = useCallback(() => {
 		tableContext.deleteModalRef.current?.show(
@@ -307,17 +308,14 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
 			<div className="action-buttons w-auto">
-				<CButtonGroup>
-					<CFormSwitch
-						className="ms-1"
-						color="success"
-						checked={item.enabled}
-						onChange={doEnableDisable}
-						title={
+				<CButtonGroup className="ms-1">
+					<SwitchInputField
+						value={item.enabled}
+						setValue={doEnableDisable}
+						tooltip={
 							(item.enabled ? 'Disable trigger' : 'Enable trigger') +
 							(collectionDisabled ? ' when collection is enabled.' : '')
 						}
-						size="xl"
 					/>
 
 					<CButton
