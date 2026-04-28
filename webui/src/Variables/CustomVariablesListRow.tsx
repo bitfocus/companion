@@ -99,7 +99,6 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								<CheckboxInputField
 									value={info.persistCurrentValue}
 									setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
-									inline={true}
 								/>
 							</div>
 						</div>

@@ -1,6 +1,6 @@
-import { CFormCheck } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface SurfacesStepProps {
 	config: Partial<UserConfigModel>
@@ -11,25 +11,25 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Watch for newly connected USB devices"
-					checked={config.usb_hotplug}
-					onChange={(e) => setValue('usb_hotplug', e.currentTarget.checked)}
+					value={!!config.usb_hotplug}
+					setValue={(val) => setValue('usb_hotplug', val)}
 				/>
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Auto-enable newly discovered surfaces"
-					checked={config.auto_enable_discovered_surfaces}
-					onChange={(e) => setValue('auto_enable_discovered_surfaces', e.currentTarget.checked)}
+					value={!!config.auto_enable_discovered_surfaces}
+					setValue={(val) => setValue('auto_enable_discovered_surfaces', val)}
 				/>
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Elgato Stream Deck Software Plugin"
-					checked={config.elgato_plugin_enable}
-					onChange={(e) => setValue('elgato_plugin_enable', e.currentTarget.checked)}
+					value={!!config.elgato_plugin_enable}
+					setValue={(val) => setValue('elgato_plugin_enable', val)}
 				/>
 			</div>
 

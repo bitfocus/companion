@@ -1,6 +1,7 @@
-import { CAlert, CFormCheck, CFormInput } from '@coreui/react'
+import { CAlert, CFormInput } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>
@@ -16,11 +17,11 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 				stumbling upon the settings and changing things. It will not keep out someone determined to bypass it.
 			</p>
 			<CAlert color="danger">This does not make an installation more secure!</CAlert>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-3 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"
-					checked={config.admin_lockout}
-					onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
+					value={!!config.admin_lockout}
+					setValue={(val) => setValue('admin_lockout', val)}
 				/>
 				{config.admin_lockout && (
 					<div className="indent2, group">
