@@ -1,5 +1,7 @@
+import { NumberField } from '@base-ui/react/number-field'
 import { Slider } from '@base-ui/react/slider'
-import { CFormInput } from '@coreui/react'
+import classNames from 'classnames'
+import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
 interface NumberInputFieldProps {
@@ -31,27 +33,11 @@ export function NumberInputField({
 	showMinAsNegativeInfinity,
 	showMaxAsPositiveInfinity,
 }: NumberInputFieldProps): React.JSX.Element {
-	const [tmpValue, setTmpValue] = useState<string | number | null>(null)
-	const [focused, setFocused] = useState(false)
-
-	const onChange = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const raw = e.currentTarget.value
-			const parsedValue = parseFloat(raw)
-			if (isNaN(parsedValue)) {
-				// keep the temporary string while editing but don't send NaN upstream
-				setTmpValue(raw)
-			} else {
-				setTmpValue(parsedValue)
-				setValue(parsedValue)
-			}
-		},
-		[setValue]
-	)
+	const [tmpValue, setTmpValue] = useState<number | string | null>(null)
 
 	const onChangeValue = useCallback(
-		(value: number) => {
-			if (!isNaN(value)) {
+		(value: number | null) => {
+			if (value !== null && !isNaN(value)) {
 				setTmpValue(value)
 				setValue(value)
 			}
@@ -78,40 +64,37 @@ export function NumberInputField({
 		showOverlayValue = '∞'
 	}
 
+	const valueIsInvalid = !!checkValid && !checkValid(Number(tmpValue ?? value))
+
 	const input = (
-		<div style={{ position: 'relative' }}>
-			<CFormInput
-				type="number"
-				disabled={disabled}
-				value={tmpValue ?? value ?? 0}
-				min={min}
-				max={max}
-				step={step ?? 'any'}
-				style={{
-					color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined,
-					// hide the underlying number when we show the -∞ or ∞ overlay and the field is not focused
-					...(showOverlayValue && !focused ? { color: 'transparent', textShadow: '0 0 0 transparent' } : {}),
-				}}
-				title={tooltip}
-				onChange={onChange}
-				onFocus={() => {
-					setFocused(true)
-					setTmpValue(value ?? '')
-				}}
-				onBlur={() => {
-					setFocused(false)
-					setTmpValue(null)
-				}}
-			/>
-			{!!showOverlayValue && !focused ? (
-				<span
-					className="number-input-inf-overlay"
-					style={{ color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined }}
-				>
-					{showOverlayValue}
-				</span>
-			) : null}
-		</div>
+		<NumberField.Root
+			//id={id}
+			disabled={disabled}
+			value={Number(tmpValue ?? value ?? 0)}
+			onValueChange={onChangeValue}
+			min={min}
+			max={max}
+			step={step ?? 'any'}
+			title={tooltip}
+			className="number-field"
+		>
+			<NumberField.Group className="number-field-group">
+				<NumberField.Input className={classNames('number-field-input', { 'invalid-value': valueIsInvalid })} />
+
+				<NumberField.Increment className="number-field-increment">
+					<PlusIcon />
+				</NumberField.Increment>
+				<NumberField.Decrement className="number-field-decrement">
+					<MinusIcon />
+				</NumberField.Decrement>
+
+				{!!showOverlayValue && (
+					<span className={classNames('number-field-inf-overlay', { 'invalid-value': valueIsInvalid })}>
+						{showOverlayValue}
+					</span>
+				)}
+			</NumberField.Group>
+		</NumberField.Root>
 	)
 
 	if (range) {
