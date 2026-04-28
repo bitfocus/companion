@@ -63,7 +63,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				)}
 			</div>
 			<div className="cell-controls">
-				<CButtonGroup>
+				<CButtonGroup className="me-1">
 					{canSetHeadline && !headlineExpanded && !isPanelCollapsed && (
 						<CButton size="sm" onClick={setHeadlineExpanded} title="Set headline">
 							<FontAwesomeIcon icon={faPencil} />

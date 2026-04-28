@@ -1,5 +1,6 @@
-import { CFormLabel, CFormSwitch } from '@coreui/react'
-import { useCallback } from 'react'
+import { Switch } from '@base-ui/react/switch'
+import { CFormLabel } from '@coreui/react'
+import classNames from 'classnames'
 
 interface SwitchInputFieldProps {
 	id?: string
@@ -8,7 +9,7 @@ interface SwitchInputFieldProps {
 	setValue: (value: boolean) => void
 	disabled?: boolean
 	small?: boolean
-	inline?: boolean
+	// dimmed?: boolean
 }
 
 export function SwitchInputField({
@@ -18,30 +19,26 @@ export function SwitchInputField({
 	setValue,
 	disabled,
 	small,
-	inline,
+	// dimmed,
 }: SwitchInputFieldProps): React.JSX.Element {
-	const onChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setValue(!!e.currentTarget.checked)
-		},
-		[setValue]
-	)
-
 	return (
-		<CFormSwitch
+		<Switch.Root
 			id={id}
-			color="success"
+			className={classNames('switch-input', {
+				'switch-input-small': small,
+				// 'switch-input-dimmed': dimmed,
+			})}
 			checked={value}
-			size={small ? undefined : 'xl'}
+			onCheckedChange={setValue}
 			disabled={disabled}
 			title={tooltip}
-			onChange={onChange}
-			className={inline ? 'form-switch-inline' : undefined}
-		/>
+		>
+			<Switch.Thumb className="switch-thumb" />
+		</Switch.Root>
 	)
 }
 
-export interface SwitchInputFieldWithLabelProps extends Omit<SwitchInputFieldProps, 'inline'> {
+export interface SwitchInputFieldWithLabelProps extends SwitchInputFieldProps {
 	className?: string
 	label: string | React.ReactNode
 }
@@ -53,7 +50,7 @@ export function SwitchInputFieldWithLabel({
 }: SwitchInputFieldWithLabelProps): React.JSX.Element {
 	return (
 		<div className={`switch-input-with-label ${className}`}>
-			<SwitchInputField {...props} inline />
+			<SwitchInputField {...props} />
 			<CFormLabel title={props.tooltip}>{label}</CFormLabel>
 		</div>
 	)
