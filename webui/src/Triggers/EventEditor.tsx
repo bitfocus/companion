@@ -373,7 +373,7 @@ const EventEditor = observer(function EventEditor({
 				</div>
 
 				<div className="cell-controls">
-					<CButtonGroup>
+					<CButtonGroup className="me-1">
 						{canSetHeadline && !headlineExpanded && (
 							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
 								<FontAwesomeIcon icon={faPencil} />
