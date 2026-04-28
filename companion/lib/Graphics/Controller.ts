@@ -582,7 +582,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			}, 1000)
 		} else if (key === 'buttons_status_icons') {
 			this.#drawOptions.buttons_status_icons = String(value) as any
-			this.invalidatePageControls()
 			this.triggerRegenerateAll()
 		}
 	}
