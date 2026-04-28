@@ -1,4 +1,5 @@
-import { CCol, CFormInput, CFormRange, CRow } from '@coreui/react'
+import { Slider } from '@base-ui/react/slider'
+import { CFormInput } from '@coreui/react'
 import { useCallback, useState } from 'react'
 
 interface NumberInputFieldProps {
@@ -43,6 +44,16 @@ export function NumberInputField({
 			} else {
 				setTmpValue(parsedValue)
 				setValue(parsedValue)
+			}
+		},
+		[setValue]
+	)
+
+	const onChangeValue = useCallback(
+		(value: number) => {
+			if (!isNaN(value)) {
+				setTmpValue(value)
+				setValue(value)
 			}
 		},
 		[setValue]
@@ -105,22 +116,30 @@ export function NumberInputField({
 
 	if (range) {
 		return (
-			<CRow>
-				<CCol sm={12}>{input}</CCol>
-				<CCol sm={12}>
-					<CFormRange
+			<div className="d-grid grid-col">
+				<div>{input}</div>
+				<div>
+					<Slider.Root
 						disabled={disabled}
-						value={tmpValue ?? value ?? 0}
+						value={Number(tmpValue ?? value ?? 0)}
 						min={min}
 						max={max}
 						step={step}
 						title={tooltip}
-						onChange={onChange}
+						onValueChange={onChangeValue}
 						onFocus={() => setTmpValue(value ?? '')}
-						onBlur={() => setTmpValue(null)}
-					/>
-				</CCol>
-			</CRow>
+						onValueCommitted={() => setTmpValue(null)}
+						thumbAlignment="edge"
+					>
+						<Slider.Control className="number-range">
+							<Slider.Track className="number-range-track">
+								<Slider.Indicator className="number-range-indicator" />
+								<Slider.Thumb aria-label="Value" className="number-range-thumb" />
+							</Slider.Track>
+						</Slider.Control>
+					</Slider.Root>
+				</div>
+			</div>
 		)
 	} else {
 		return input
