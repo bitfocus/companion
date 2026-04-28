@@ -24,7 +24,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 					setValue={(val) => setValue('admin_lockout', val)}
 				/>
 				{config.admin_lockout && (
-					<div className="indent2, group">
+					<div className="ms-3 mb-2">
 						<div className="col-left">Password</div>
 						<div className="col-right">
 							<CFormInput
