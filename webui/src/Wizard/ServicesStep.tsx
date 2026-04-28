@@ -23,7 +23,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					setValue={(val) => setValue('tcp_enabled', val)}
 				/>
 				{config.tcp_enabled && (
-					<div className="indent2, group">
+					<div className="ms-3 mb-2">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
 							<CFormInput
@@ -42,7 +42,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					setValue={(val) => setValue('udp_enabled', val)}
 				/>
 				{config.udp_enabled && (
-					<div className="indent2, group">
+					<div className="ms-3 mb-2">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
 							<CFormInput
@@ -61,7 +61,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					setValue={(val) => setValue('osc_enabled', val)}
 				/>
 				{config.osc_enabled && (
-					<div className="indent2, group">
+					<div className="ms-3 mb-2">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
 							<CFormInput
@@ -94,7 +94,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					setValue={(val) => setValue('artnet_enabled', val)}
 				/>
 				{config.artnet_enabled && (
-					<div className="indent2, group">
+					<div className="ms-3 mb-2">
 						<div className="col-left">Universe (first is 0)</div>
 						<div className="col-right">
 							<CFormInput
