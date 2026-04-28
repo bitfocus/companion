@@ -1,8 +1,9 @@
-import { CButton, CButtonGroup, CCallout, CFormCheck } from '@coreui/react'
+import { CButton, CButtonGroup, CCallout } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportRemap } from './Page.js'
@@ -40,18 +41,14 @@ export function ImportTriggersTab({
 
 	useEffect(() => selectAllTriggers(), [selectAllTriggers])
 
-	const toggleTrigger = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		const id = e.target.getAttribute('data-id')
-		const checked = e.target.checked
-		if (id) {
-			setSelectedTriggers((oldTriggers) => {
-				if (checked) {
-					return [...oldTriggers, id]
-				} else {
-					return oldTriggers.filter((v) => v !== id)
-				}
-			})
-		}
+	const toggleTrigger = useCallback((id: string, checked: boolean) => {
+		setSelectedTriggers((oldTriggers) => {
+			if (checked) {
+				return [...oldTriggers, id]
+			} else {
+				return oldTriggers.filter((v) => v !== id)
+			}
+		})
 	}, [])
 
 	const importTriggersMutation = useMutationExt(trpc.importExport.importTriggers.mutationOptions())
@@ -100,7 +97,10 @@ export function ImportTriggersTab({
 						<tr key={id}>
 							<td className="compact text-center">
 								<div className="form-check form-check-inline mr-1 mt-1">
-									<CFormCheck data-id={id} checked={selectedTriggers.includes(id)} onChange={toggleTrigger} />
+									<CheckboxInputField
+										value={selectedTriggers.includes(id)}
+										setValue={(value) => toggleTrigger(id, value)}
+									/>
 								</div>
 							</td>
 							<td>{info.name}</td>

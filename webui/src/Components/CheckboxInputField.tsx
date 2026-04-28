@@ -49,7 +49,7 @@ export function CheckboxInputFieldWithLabel({
 	return (
 		<div className={`checkbox-input-with-label ${className}`}>
 			<CheckboxInputField {...props} />
-			<CFormLabel title={props.tooltip} className="ms-1">
+			<CFormLabel title={props.tooltip} className="m-0 ms-1">
 				{label}
 			</CFormLabel>
 		</div>

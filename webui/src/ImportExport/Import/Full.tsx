@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCallout, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { CAlert, CButton, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import {
 	faCircleInfo,
 	faClock,
@@ -18,6 +18,7 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -442,11 +443,11 @@ function ImportToggleField({ label, disabled, className }: ImportToggleFieldProp
 	const field = useFieldContext<ImportOrResetType>()
 
 	return (
-		<CFormCheck
+		<CheckboxInputFieldWithLabel
 			className={className}
 			disabled={disabled}
-			checked={field.state.value !== 'unchanged'}
-			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset-and-import' : 'unchanged')}
+			value={field.state.value !== 'unchanged' && !disabled}
+			setValue={(val) => field.handleChange(val ? 'reset-and-import' : 'unchanged')}
 			onBlur={field.handleBlur}
 			label={label}
 		/>
@@ -465,11 +466,11 @@ function ImportToggleGroup({ label, disabled, defaultChecked, defaultUnchecked }
 	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
 
 	return (
-		<CFormCheck
+		<CheckboxInputFieldWithLabel
 			disabled={disabled}
 			indeterminate={isAChildChecked && isAChildUnchecked}
-			checked={isAChildChecked}
-			onChange={(e) => field.handleChange(e.currentTarget.checked ? defaultChecked : defaultUnchecked)}
+			value={isAChildChecked && !disabled}
+			setValue={(val) => field.handleChange(val ? defaultChecked : defaultUnchecked)}
 			onBlur={field.handleBlur}
 			label={label}
 		/>

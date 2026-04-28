@@ -1,5 +1,6 @@
-import { CFormCheck, CFormInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface ServicesStepProps {
 	config: Partial<UserConfigModel>
@@ -15,11 +16,11 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				Since these expose Companion to control via your network, it is only recommended to enable the services you
 				need.
 			</p>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="TCP Raw Socket"
-					checked={config.tcp_enabled}
-					onChange={(e) => setValue('tcp_enabled', e.currentTarget.checked)}
+					value={!!config.tcp_enabled}
+					setValue={(val) => setValue('tcp_enabled', val)}
 				/>
 				{config.tcp_enabled && (
 					<div className="indent2, group">
@@ -34,11 +35,11 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					</div>
 				)}
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="UDP Raw Socket"
-					checked={config.udp_enabled}
-					onChange={(e) => setValue('udp_enabled', e.currentTarget.checked)}
+					value={!!config.udp_enabled}
+					setValue={(val) => setValue('udp_enabled', val)}
 				/>
 				{config.udp_enabled && (
 					<div className="indent2, group">
@@ -53,11 +54,11 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					</div>
 				)}
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Open Sound Control (OSC)"
-					checked={config.osc_enabled}
-					onChange={(e) => setValue('osc_enabled', e.currentTarget.checked)}
+					value={!!config.osc_enabled}
+					setValue={(val) => setValue('osc_enabled', val)}
 				/>
 				{config.osc_enabled && (
 					<div className="indent2, group">
@@ -72,25 +73,25 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					</div>
 				)}
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="RossTalk"
-					checked={config.rosstalk_enabled}
-					onChange={(e) => setValue('rosstalk_enabled', e.currentTarget.checked)}
+					value={!!config.rosstalk_enabled}
+					setValue={(val) => setValue('rosstalk_enabled', val)}
 				/>
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Ember+"
-					checked={config.emberplus_enabled}
-					onChange={(e) => setValue('emberplus_enabled', e.currentTarget.checked)}
+					value={!!config.emberplus_enabled}
+					setValue={(val) => setValue('emberplus_enabled', val)}
 				/>
 			</div>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-2 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Artnet"
-					checked={config.artnet_enabled}
-					onChange={(e) => setValue('artnet_enabled', e.currentTarget.checked)}
+					value={!!config.artnet_enabled}
+					setValue={(val) => setValue('artnet_enabled', val)}
 				/>
 				{config.artnet_enabled && (
 					<div className="indent2, group">
