@@ -69,3 +69,53 @@ $variable-padding: 1px 3px 0px;
 	border-radius: 4px;
 	filter: blur($blur);
 }
+
+// =========================================================
+// Form input shared mixins (reusable across input types)
+// =========================================================
+
+@mixin form-input-base {
+	padding: 0.375rem 0.75rem;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--cui-body-color);
+	appearance: none;
+	background-color: #fff;
+	background-clip: padding-box;
+	border: var(--cui-border-width) solid var(--cui-border-color);
+	border-radius: var(--cui-border-radius);
+	transition:
+		border-color 0.15s ease-in-out,
+		box-shadow 0.15s ease-in-out;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	&.invalid-value {
+		color: red;
+	}
+}
+
+@mixin form-input-focus {
+	color: var(--cui-body-color);
+	background-color: #fff;
+	border-color: #ea818a;
+	outline: 0;
+	box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
+
+	&.invalid-value {
+		color: red;
+	}
+}
+
+@mixin form-input-placeholder {
+	color: var(--cui-input-placeholder-color, var(--cui-secondary-color));
+	opacity: 1;
+}
+
+@mixin form-input-disabled {
+	background-color: var(--cui-secondary-bg);
+	opacity: 1;
+}
