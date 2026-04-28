@@ -86,11 +86,22 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 									If enabled, variable value will be saved and restored when Companion restarts.
 								</InlineHelpIcon>
 							</CFormLabel>
-							<CheckboxInputField
-								value={info.persistCurrentValue}
-								setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
-								inline={true}
-							/>
+							<div
+								style={{
+									display: 'inline-flex',
+									alignItems: 'center',
+									verticalAlign: 'middle',
+									marginLeft: '1em',
+									paddingBottom: '.5em',
+									paddingTop: '.3em',
+								}}
+							>
+								<CheckboxInputField
+									value={info.persistCurrentValue}
+									setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
+									inline={true}
+								/>
+							</div>
 						</div>
 						<CRow>
 							<CFormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
