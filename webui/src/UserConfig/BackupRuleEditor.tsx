@@ -1,9 +1,10 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect, CInputGroup } from '@coreui/react'
+import { CAlert, CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -140,16 +141,11 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Type</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CFormSelect
+				<SimpleDropdownInputField
 					value={rule.backupType}
-					onChange={(e) => updateField('backupType', e.target.value as BackupRulesConfig['backupType'])}
-				>
-					{backupTypes.map((type) => (
-						<option key={type.value} value={type.value}>
-							{type.label}
-						</option>
-					))}
-				</CFormSelect>
+					setValue={(value) => updateField('backupType', value as BackupRulesConfig['backupType'])}
+					choices={backupTypes}
+				/>
 			</CCol>
 			{rule.backupType === 'db' && (
 				<CCol sm={12}>

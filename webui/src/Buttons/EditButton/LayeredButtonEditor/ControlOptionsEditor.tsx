@@ -3,7 +3,7 @@ import { useCallback, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { DropdownChoice } from '@companion-module/base'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
@@ -73,7 +73,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					</InlineHelpIcon>
 				</CFormLabel>
 				<CCol sm={8}>
-					<DropdownInputField
+					<SimpleDropdownInputField
 						choices={STEP_PROGRESSION_CHOICES}
 						setValue={setStepProgressionValue}
 						value={options.stepProgression}

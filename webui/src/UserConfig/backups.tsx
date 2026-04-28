@@ -211,9 +211,7 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
 	const isSelected = routeMatch && routeMatch.ruleId === rule.id
 
-	const backupTypeLabel =
-		backupTypes.find((type: { label: string; value: string }) => type.value === rule.backupType)?.label ||
-		rule.backupType
+	const backupTypeLabel = backupTypes.find((type) => type.id === rule.backupType)?.label || rule.backupType
 
 	return (
 		<tr
