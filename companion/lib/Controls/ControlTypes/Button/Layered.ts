@@ -179,10 +179,16 @@ export class ControlButtonLayered
 						// Ignore
 					}
 				}
-				if (element.type === 'image') {
-					if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
-						element.fillMode.value = 'fit'
-					}
+				switch (element.type) {
+					case 'canvas':
+						if (!element.showStatusIcons)
+							element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
+						break
+					case 'image':
+						if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
+							element.fillMode.value = 'fit'
+						}
+						break
 				}
 			}
 
