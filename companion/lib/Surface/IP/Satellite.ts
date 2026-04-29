@@ -20,7 +20,6 @@ import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { translateRotation } from '../../Resources/Util.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
 import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import type {
@@ -265,14 +264,17 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			this.#logger.silly(`locked: ${locked} - ${characterCount}`)
 			if (this.socket !== undefined) {
 				let rotation = 0
-				switch (translateRotation(this.#config.rotation)) {
-					case 'CW90':
+				switch (this.#config.rotation) {
+					case 'surface-90':
+					case -90:
 						rotation = -90
 						break
-					case 'CW180':
+					case 'surface180':
+					case 180:
 						rotation = 180
 						break
-					case 'CW270':
+					case 'surface90':
+					case 90:
 						rotation = 90
 						break
 				}
