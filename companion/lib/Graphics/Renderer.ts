@@ -329,45 +329,43 @@ export class GraphicsRenderer {
 		}
 
 		// next error or warning icon
-		if (drawStyle.location) {
-			let statusColor: string | undefined
-			switch (drawStyle.button_status) {
-				case 'error':
-					statusColor = 'red'
-					break
-				case 'warning':
-					statusColor = 'rgb(255, 127, 0)'
-					break
-			}
+		let statusColor: string | undefined
+		switch (drawStyle.button_status) {
+			case 'error':
+				statusColor = 'red'
+				break
+			case 'warning':
+				statusColor = 'rgb(255, 127, 0)'
+				break
+		}
 
-			if (statusColor) {
-				img.drawFilledPath(
-					[
-						[rightMax - 11, 11],
-						[rightMax - 2, 11],
-						[rightMax - 6.5, 2],
-					],
-					statusColor
-				)
-				img.drawTextLineAligned(rightMax - 6.5, 11, '!', colorBlack, 7, 'center', 'bottom', 'bold')
-				rightMax -= 11
-			}
+		if (statusColor) {
+			img.drawFilledPath(
+				[
+					[rightMax - 11, 11],
+					[rightMax - 2, 11],
+					[rightMax - 6.5, 2],
+				],
+				statusColor
+			)
+			img.drawTextLineAligned(rightMax - 6.5, 11, '!', colorBlack, 7, 'center', 'bottom', 'bold')
+			rightMax -= 11
+		}
 
-			// last running icon
-			if (drawStyle.action_running) {
-				//img.drawTextLine(55, 3, '►', 'rgb(0, 255, 0)', 8) // not as nice
-				let iconcolor = 'rgb(0, 255, 0)'
-				if (drawStyle.pushed) iconcolor = colorBlack
-				img.drawFilledPath(
-					[
-						[rightMax - 8, 3],
-						[rightMax - 2, 7],
-						[rightMax - 8, 11],
-					],
-					iconcolor
-				)
-				rightMax -= 8
-			}
+		// last running icon
+		if (drawStyle.action_running) {
+			//img.drawTextLine(55, 3, '►', 'rgb(0, 255, 0)', 8) // not as nice
+			let iconcolor = 'rgb(0, 255, 0)'
+			if (drawStyle.pushed) iconcolor = colorBlack
+			img.drawFilledPath(
+				[
+					[rightMax - 8, 3],
+					[rightMax - 2, 7],
+					[rightMax - 8, 11],
+				],
+				iconcolor
+			)
+			rightMax -= 8
 		}
 	}
 
