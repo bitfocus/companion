@@ -107,6 +107,7 @@ export class LockingGraphicsGeneratorImpl implements LockingGraphicsGenerator {
 	 * Translate rotation to @julusian/image-rs equivalent
 	 */
 	#translateRotation(rotation: SurfaceRotation | null): imageRs.RotationMode | null {
+		// Note: Rotation is flipped, to match the physical rotation of the device
 		if (rotation === 90) return 'CW270'
 		if (rotation === -90) return 'CW90'
 		if (rotation === 180) return 'CW180'

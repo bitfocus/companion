@@ -23,7 +23,7 @@ import type {
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-surface/host'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { parseColor, parseColorToNumber, transformButtonImage, translateRotation } from '../Resources/Util.js'
+import { parseColor, parseColorToNumber, transformButtonImage } from '../Resources/Util.js'
 import debounceFn from 'debounce-fn'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
@@ -406,15 +406,18 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 	setLocked(locked: boolean, characterCount: number): void {
 		let rotation: SurfaceRotation = 0
-		switch (translateRotation(this.#config.rotation)) {
-			case 'CW90':
-				rotation = 90
+		switch (this.#config.rotation) {
+			case 'surface-90':
+			case -90:
+				rotation = -90
 				break
-			case 'CW180':
+			case 'surface180':
+			case 180:
 				rotation = 180
 				break
-			case 'CW270':
-				rotation = -90
+			case 'surface90':
+			case 90:
+				rotation = 90
 				break
 		}
 
