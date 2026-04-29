@@ -365,6 +365,7 @@ export const canvasElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'showStatusIcons',
 		label: 'Show status icons',
+		tooltip: 'Whether to show status icons in the top right corner of the button',
 		choices: [
 			{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
 			{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
