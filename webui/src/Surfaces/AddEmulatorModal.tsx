@@ -14,6 +14,7 @@ import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
+import { NumberInputField } from '~/Components'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
@@ -173,13 +174,12 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 								<>
 									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Rows</CFormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
-										<CFormInput
-											type="number"
+										<NumberInputField
 											min={1}
-											style={{ width: '100%', color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
-											onChange={(e) => field.handleChange(e.target.valueAsNumber)}
+											setValue={field.handleChange}
 											onBlur={field.handleBlur}
+											checkValid={field.state.meta.errors.length === 0}
 										/>
 										{field.state.meta.errors.length > 0 && (
 											<CAlert color="warning" className="mt-2">
@@ -206,13 +206,12 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 								<>
 									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Columns</CFormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
-										<CFormInput
-											type="number"
+										<NumberInputField
 											min={1}
-											style={{ width: '100%', color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
-											onChange={(e) => field.handleChange(e.target.valueAsNumber)}
+											setValue={field.handleChange}
 											onBlur={field.handleBlur}
+											checkValid={field.state.meta.errors.length === 0}
 										/>
 										{field.state.meta.errors.length > 0 && (
 											<CAlert color="warning" className="mt-2">

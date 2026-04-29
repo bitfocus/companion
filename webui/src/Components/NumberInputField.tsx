@@ -5,15 +5,17 @@ import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
 interface NumberInputFieldProps {
+	id?: string
 	min?: number
 	max?: number
 	step?: number
 	tooltip?: string
 	range?: boolean
-	value: number
+	value: number | undefined
 	setValue: (value: number) => void
+	onBlur?: (e: React.FocusEvent<HTMLElement>) => void
 	disabled?: boolean
-	checkValid?: (value: number) => boolean
+	checkValid?: boolean | ((value: number) => boolean)
 	// When true, show the min value as a visual -∞ when value <= min
 	showMinAsNegativeInfinity?: boolean
 	// When true, show the max value as a visual ∞ when value >= max
@@ -21,6 +23,7 @@ interface NumberInputFieldProps {
 }
 
 export function NumberInputField({
+	id,
 	min,
 	max,
 	step,
@@ -28,6 +31,7 @@ export function NumberInputField({
 	range,
 	value,
 	setValue,
+	onBlur,
 	disabled,
 	checkValid,
 	showMinAsNegativeInfinity,
@@ -64,14 +68,16 @@ export function NumberInputField({
 		showOverlayValue = '∞'
 	}
 
-	const valueIsInvalid = !!checkValid && !checkValid(Number(tmpValue ?? value))
+	const valueIsInvalid =
+		typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(Number(tmpValue ?? value))
 
 	const input = (
 		<NumberField.Root
-			//id={id}
+			id={id}
 			disabled={disabled}
 			value={Number(tmpValue ?? value ?? 0)}
 			onValueChange={onChangeValue}
+			onBlur={onBlur}
 			min={min}
 			max={max}
 			step={step ?? 'any'}
