@@ -61,7 +61,6 @@ export type UserConfigModel = {
 	admin_password: string
 
 	gridSize: UserConfigGridSize
-	gridSizeInlineGrow: boolean
 	gridSizePromptGrow: boolean
 
 	installName: string

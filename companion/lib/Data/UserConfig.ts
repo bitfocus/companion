@@ -104,7 +104,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			minRow: 0,
 			maxRow: 3,
 		},
-		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
 		gridSizePromptGrow: true,
 
 		installName: '',

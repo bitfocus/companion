@@ -7,7 +7,6 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridActions, type ButtonGridActionsRef } from './ButtonGridActions.js'
@@ -98,54 +97,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const gridSize = userConfig.properties?.gridSize
 
-	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
-
-	const doGrow = useCallback(
-		(direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => {
-			if (amount <= 0 || !gridSize) return
-
-			switch (direction) {
-				case 'left':
-					setConfigKeyMutation.mutate({
-						key: 'gridSize',
-						value: {
-							...gridSize,
-							minColumn: gridSize.minColumn - (amount || 2),
-						},
-					})
-					break
-				case 'right':
-					setConfigKeyMutation.mutate({
-						key: 'gridSize',
-						value: {
-							...gridSize,
-							maxColumn: gridSize.maxColumn + (amount || 2),
-						},
-					})
-					break
-				case 'top':
-					setConfigKeyMutation.mutate({
-						key: 'gridSize',
-						value: {
-							...gridSize,
-							minRow: gridSize.minRow - (amount || 2),
-						},
-					})
-					break
-				case 'bottom':
-					setConfigKeyMutation.mutate({
-						key: 'gridSize',
-						value: {
-							...gridSize,
-							maxRow: gridSize.maxRow + (amount || 2),
-						},
-					})
-					break
-			}
-		},
-		[setConfigKeyMutation, gridSize]
-	)
-
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
@@ -196,7 +147,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						buttonClick={buttonClick}
 						selectedButton={selectedButton}
 						gridSize={gridSize}
-						doGrow={userConfig.properties?.gridSizeInlineGrow ? doGrow : undefined}
 						ButtonIconFactory={PrimaryButtonGridIcon}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
