@@ -21,10 +21,14 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import {
+	resolveButtonStyleProperties,
+	type ResolveButtonStylePropertiesConfig,
+} from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-module/base'
@@ -63,10 +67,9 @@ interface GraphicsControllerEvents {
 	resubscribeFeedbacks: []
 }
 
-interface GraphicsOptions {
+interface GraphicsOptions extends ResolveButtonStylePropertiesConfig {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
-	remove_topbar: boolean
 }
 
 interface RenderArgumentsButton {
@@ -230,6 +233,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			page_direction_flipped: this.#userConfigController.getKey('page_direction_flipped'),
 			page_plusminus: this.#userConfigController.getKey('page_plusminus'),
 			remove_topbar: this.#userConfigController.getKey('remove_topbar'),
+			buttons_status_icons: this.#userConfigController.getKey('buttons_status_icons'),
 		}
 
 		this.#renderQueue = new ImageWriteQueue(
@@ -255,7 +259,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							if (!render) {
 								const renderStyle: RendererDrawStyle = {
 									...buttonStyle,
-									show_topbar: this.#resolveShowTopBar(buttonStyle.elements),
+									...resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements),
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
@@ -306,13 +310,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 						switch (buttonStyle.style) {
 							case 'button-layered': {
-								const showTopBar = this.#resolveShowTopBar(buttonStyle.elements)
+								const showButtonConfig = resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements)
 
 								renderStyle = {
 									...buttonStyle,
 
-									show_topbar: showTopBar,
-									location: showTopBar ? location : undefined, // Only needed if the topbar is shown
+									...showButtonConfig,
+									location: showButtonConfig.show_topbar ? location : undefined, // Only needed if the topbar is shown
 								}
 
 								const cacheKeyObj: Record<string, any> = {
@@ -492,23 +496,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 	}
 
-	#resolveShowTopBar(elements: SomeButtonGraphicsDrawElement[]): boolean {
-		const canvasElement = elements.find((el) => el.type === 'canvas')
-
-		const globalShowTopBar =
-			!this.#drawOptions.remove_topbar && canvasElement?.decoration === ButtonGraphicsDecorationType.FollowDefault
-
-		// Should never happen, but sanity check
-		if (!canvasElement) {
-			return globalShowTopBar
-		}
-
-		return (
-			canvasElement.decoration === ButtonGraphicsDecorationType.TopBar ||
-			(canvasElement.decoration === ButtonGraphicsDecorationType.FollowDefault && globalShowTopBar)
-		)
-	}
-
 	/**
 	 * Store a new render
 	 */
@@ -556,7 +543,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			stepCurrent: 1,
 			stepCount: 1,
 
-			show_topbar: this.#resolveShowTopBar(elements),
+			...resolveButtonStyleProperties(this.#drawOptions, elements),
 
 			location: undefined,
 		}
@@ -591,8 +578,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			// Delay redrawing to give connections a chance to adjust
 			setTimeout(() => {
 				this.emit('resubscribeFeedbacks')
-				this.regenerateAll(false)
+				this.triggerRegenerateAll()
 			}, 1000)
+		} else if (key === 'buttons_status_icons') {
+			this.#drawOptions.buttons_status_icons = String(value) as any
+			this.triggerRegenerateAll()
 		}
 	}
 
@@ -620,16 +610,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#drawAndCacheButton(location)
 	}
 
+	triggerRegenerateAll = debounceFn(() => this.#regenerateAll(), { wait: 100, maxWait: 500 })
+
 	/**
 	 * Regenerate every button image
-	 * @param skipInvalidation whether to skip reporting invalidations of each button
 	 */
-	regenerateAll(skipInvalidation = false): void {
+	#regenerateAll(): void {
 		const pageCount = this.#pageStore.getPageCount()
 		for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
 			const populatedLocations = this.#pageStore.getAllPopulatedLocationsOnPage(pageNumber)
 			for (const location of populatedLocations) {
-				this.#drawAndCacheButton(location, skipInvalidation)
+				this.#drawAndCacheButton(location)
 			}
 		}
 	}

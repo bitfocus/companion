@@ -5,6 +5,7 @@ export type UserConfigModel = {
 	page_direction_flipped: boolean
 	page_plusminus: boolean
 	remove_topbar: boolean
+	buttons_status_icons: 'show' | 'none'
 
 	elgato_plugin_enable: boolean
 	usb_hotplug: boolean

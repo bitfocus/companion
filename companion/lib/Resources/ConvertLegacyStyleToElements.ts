@@ -17,6 +17,7 @@ import {
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
 	type DrawImageBuffer,
 	type HorizontalAlignment,
@@ -203,6 +204,7 @@ export function ConvertLegacyStyleToElements(
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'canvas',
 		decoration: { value: ButtonGraphicsDecorationType.FollowDefault, isExpression: false },
+		showStatusIcons: { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false },
 	}
 	const backgroundElement: ButtonGraphicsBoxElement = {
 		id: 'box0',

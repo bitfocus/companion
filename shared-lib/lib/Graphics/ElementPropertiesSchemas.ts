@@ -4,7 +4,7 @@ import type {
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextElement,
 } from '../Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '../Model/StyleModel.js'
 
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
@@ -360,6 +360,18 @@ export const canvasElementSchema: SomeCompanionInputField[] = [
 			{ id: ButtonGraphicsDecorationType.None, label: 'None' },
 		],
 		default: ButtonGraphicsDecorationType.FollowDefault,
+	},
+	{
+		type: 'dropdown',
+		id: 'showStatusIcons',
+		label: 'Show status icons',
+		tooltip: 'Whether to show status icons in the top right corner of the button',
+		choices: [
+			{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
+			{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
+			{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },
+		],
+		default: ButtonGraphicsShowStatusIcons.FollowDefault,
 	},
 ]
 

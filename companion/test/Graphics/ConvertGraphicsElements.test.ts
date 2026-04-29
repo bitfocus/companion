@@ -7,7 +7,11 @@ import type {
 	SomeButtonGraphicsDrawElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../lib/Graphics/ConvertGraphicsElements.js'
@@ -302,6 +306,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					type: 'canvas',
 					usage: USAGE,
 					decoration: val(ButtonGraphicsDecorationType.FollowDefault),
+					showStatusIcons: val(ButtonGraphicsShowStatusIcons.FollowDefault),
 				},
 			]
 

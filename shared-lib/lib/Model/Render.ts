@@ -5,6 +5,7 @@ export type RendererDrawStyle = RendererButtonStyle | RendererPageUpDownStyle | 
 
 export interface RendererButtonStyle extends DrawStyleLayeredButtonModel {
 	show_topbar: boolean
+	show_status_icons: boolean
 	location: ControlLocation | undefined
 }
 

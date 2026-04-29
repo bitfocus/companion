@@ -26,6 +26,7 @@ import type {
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	type CompositeElementOptionKey,
 } from '@companion-app/shared/Model/StyleModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -92,6 +93,7 @@ export function ConvertLayerPresetElements(
 			value: ButtonGraphicsDecorationType.FollowDefault,
 			isExpression: false,
 		}),
+		showStatusIcons: { isExpression: false, value: ButtonGraphicsShowStatusIcons.FollowDefault }, // Future: expose
 	}
 
 	return [
