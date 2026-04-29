@@ -1,6 +1,7 @@
 import { CAlert, CFormInput } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { NumberInputField } from '~/Components'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface PasswordStepProps {
@@ -34,19 +35,19 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 							/>
 						</div>
 						<br />
-						<div className="col-left">
-							Session Timeout
-							<br />
-							(minutes, 0 for none)
-						</div>
+						<div className="col-left">Session Timeout</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.admin_timeout}
 								min={0}
 								step={1}
-								onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
+								setValue={(val) => setValue('admin_timeout', val)}
 							/>
+						</div>
+						<br />
+						<div className="col-left">&nbsp;</div>
+						<div className="col-right">
+							<span className="text-muted">(minutes, 0 for none)</span>
 						</div>
 					</div>
 				)}

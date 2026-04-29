@@ -1,5 +1,5 @@
-import { CFormInput } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { NumberInputField } from '~/Components'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface ServicesStepProps {
@@ -26,10 +26,9 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					<div className="ms-3 mb-2">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.tcp_listen_port}
-								onChange={(e) => setValue('tcp_listen_port', e.currentTarget.value)}
+								setValue={(value) => setValue('tcp_listen_port', value)}
 							/>
 						</div>
 					</div>
@@ -45,10 +44,9 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					<div className="ms-3 mb-2">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.udp_listen_port}
-								onChange={(e) => setValue('udp_listen_port', e.currentTarget.value)}
+								setValue={(value) => setValue('udp_listen_port', value)}
 							/>
 						</div>
 					</div>
@@ -64,10 +62,9 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					<div className="ms-3 mb-2">
 						<div className="col-left">Listen Port</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.osc_listen_port}
-								onChange={(e) => setValue('osc_listen_port', e.currentTarget.value)}
+								setValue={(value) => setValue('osc_listen_port', value)}
 							/>
 						</div>
 					</div>
@@ -97,19 +94,21 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					<div className="ms-3 mb-2">
 						<div className="col-left">Universe (first is 0)</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.artnet_universe}
-								onChange={(e) => setValue('artnet_universe', e.currentTarget.value)}
+								setValue={(value) => setValue('artnet_universe', value)}
+								min={0}
+								max={20055}
 							/>
 						</div>
 						<br />
 						<div className="col-left">Channel</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.artnet_channel}
-								onChange={(e) => setValue('artnet_channel', e.currentTarget.value)}
+								setValue={(value) => setValue('artnet_channel', value)}
+								min={1}
+								max={509}
 							/>
 						</div>
 					</div>

@@ -1,5 +1,6 @@
-import { CButton, CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { NumberInputField } from '~/Components'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 
@@ -58,10 +59,6 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 			[]
 		)
 
-		const onDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			setNewDurationValue(Number(e.target.value))
-		}, [])
-
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
@@ -73,14 +70,13 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							Press duration
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormInput
-								name="colFormPressDuration"
-								type="number"
-								value={newDurationValue || ''}
+							<NumberInputField
+								id="colFormPressDuration"
+								value={newDurationValue ?? undefined}
 								min={1}
 								step={1}
-								style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
-								onChange={onDurationChange}
+								checkValid={newDurationValue !== null && newDurationValue > 0}
+								setValue={setNewDurationValue}
 							/>
 						</CCol>
 
