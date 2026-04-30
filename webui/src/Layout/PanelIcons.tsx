@@ -36,10 +36,8 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 /*
  ContextHelpButton - a generic inline-help icon, 
  particularly handy for panels and other headers such as in Connections and Surfaces.
- - tooltip: what to show on hover or focus. Can be plain-text or a React fragment.
- - action: Caller can supply a link to the user guide or a custom function (or leave it out).
- - size: a FontAwesome size class such as lg or 2xl. The default size is intended for panel headers.
- The button is given a class with the size appended, such as context-help-button-2xl
+ - children: what to show on hover or focus. Can be plain-text or a React fragment.
+ - action: optional, either a link to the user guide or a custom function (to open a modal dialog, for example).
 */
 export function ContextHelpButton({ children, action }: ContextHelpButtonProps): React.JSX.Element {
 	// First, a little trick to handle both keyboard navigation, in which the "hover help" should show up on focus,
