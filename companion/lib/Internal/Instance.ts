@@ -195,6 +195,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				description:
 					'Change button color on Connection Status\nDisabled color is not used when "All" connections is selected',
 				feedbackStyle: undefined,
+				feedbackAffectedProperties: ['color', 'bgcolor'],
 				showInvert: false,
 				options: [
 					{

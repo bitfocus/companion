@@ -13,6 +13,29 @@ import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndEx
 
 const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
 
+function createDefinition(
+	partial: Pick<ClientEntityDefinition, 'options'> & Partial<ClientEntityDefinition>
+): ClientEntityDefinition {
+	return {
+		entityType: EntityModelType.Action,
+		label: 'Test',
+		sortKey: null,
+		description: undefined,
+		optionsToMonitorForInvalidations: null,
+		feedbackType: null,
+		feedbackStyle: undefined,
+		hasLifecycleFunctions: true,
+		hasLearn: false,
+		learnTimeout: undefined,
+		showInvert: false,
+		feedbackAffectedProperties: undefined,
+		optionsSupportExpressions: false,
+		showButtonPreview: false,
+		supportsChildGroups: [],
+		...partial,
+	}
+}
+
 describe('VariablesAndExpressionParser', () => {
 	// Sample variable data for testing
 	const defaultVariables: VariableValueData = {
@@ -120,26 +143,12 @@ describe('VariablesAndExpressionParser', () => {
 	describe('parseEntityOptions', () => {
 		it('should parse options with variables in textinput fields', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
 					{ id: 'field2', type: 'dropdown', label: 'Field 2', choices: [], default: 'opt1' },
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: '$(test:var1)' },
 				field2: { isExpression: false, value: 'option1' },
@@ -159,23 +168,9 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should pass through non-variable fields unchanged', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0 }],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: 42 },
 			}
@@ -191,26 +186,12 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle missing option values', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
 					{ id: 'field2', type: 'dropdown', label: 'Field 2', choices: [], default: 'opt1' },
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			// field1 missing
 			const options: ExpressionableOptionsObject = {
 				field2: { isExpression: false, value: 'option1' },
@@ -228,27 +209,14 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should not include variables in referencedVariableIds for options in optionsToMonitorForSubscribe', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal },
 					{ id: 'field2', type: 'textinput', label: 'Field 2', useVariables: useVariablesMinimal },
 					{ id: 'field3', type: 'dropdown', label: 'Field 3', choices: [], default: 'opt1' },
 				],
 				optionsToMonitorForInvalidations: ['field2'], // Only monitor field2
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: '$(test:var1)' },
 				field2: { isExpression: false, value: '$(test:var2)' },
@@ -275,25 +243,11 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle textinput without useVariables', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{ id: 'field1', type: 'textinput', label: 'Field 1' }, // No useVariables
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: '$(test:var1)' }, // Contains variable syntax but shouldn't be parsed
 			}
@@ -310,23 +264,10 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should return ok: true when a number field value is clamped to min', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true, // required so number fields go through validateInputValue
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: -10 }, // below min, should be clamped to 0
 			}
@@ -341,23 +282,10 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should return ok: true when a number field value is clamped to max', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true, // required so number fields go through validateInputValue
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: 200 }, // above max, should be clamped to 100
 			}
@@ -372,26 +300,13 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should return ok: true when one of multiple fields has a clamped number', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{ id: 'text1', type: 'textinput', label: 'Text', useVariables: useVariablesMinimal },
 					{ id: 'num1', type: 'number', label: 'Number', min: 10, max: 50, default: 10, clampValues: true },
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true, // required so number fields go through validateInputValue
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				text1: { isExpression: false, value: '$(test:var1)' },
 				num1: { isExpression: false, value: 999 }, // above max, should be clamped to 50
@@ -408,23 +323,10 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should not clamp number field when optionsSupportExpressions is false (passthrough path)', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false, // legacy path: number fields are passed through without validation
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+				// optionsSupportExpressions: false (default) - legacy path: number fields are passed through without validation
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: 200 }, // above max, but clamping is intentionally skipped
 			}
@@ -443,11 +345,7 @@ describe('VariablesAndExpressionParser', () => {
 	describe('parseEntityOptions with expressions', () => {
 		it('should parse expression fields when optionsSupportExpressions is true', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -455,17 +353,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: '1 + $(test:num)' },
 			}
@@ -481,11 +370,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should parse variable fields differently from expression fields', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'exprField',
@@ -499,17 +384,8 @@ describe('VariablesAndExpressionParser', () => {
 						useVariables: useVariablesMinimal,
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				exprField: { isExpression: false, value: '$(test:num) * 2' },
 				varField: { isExpression: false, value: 'Hello $(test:var1)' },
@@ -528,11 +404,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should execute expression when isExpression is true in option value', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -540,17 +412,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: '100 / 4' },
 			}
@@ -565,11 +428,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle expressions with string results', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -577,17 +436,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: 'concat($(test:var1), "-suffix")' },
 			}
@@ -603,11 +453,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle expressions with boolean results', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -615,17 +461,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: '$(test:num) > 40' },
 			}
@@ -641,11 +478,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle multiple expression fields with different result types', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'mathField',
@@ -663,17 +496,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Bool Field',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				mathField: { isExpression: true, value: '$(test:num) + 8' },
 				stringField: { isExpression: true, value: 'concat($(test:var1), "-suffix")' },
@@ -694,11 +518,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should track variables from expressions in monitored fields', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'monitoredExpr',
@@ -712,16 +532,8 @@ describe('VariablesAndExpressionParser', () => {
 					},
 				],
 				optionsToMonitorForInvalidations: ['monitoredExpr'],
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				monitoredExpr: { isExpression: true, value: 'concat($(test:var1), " monitored")' },
 				unmonitoredExpr: { isExpression: true, value: 'concat($(test:var2), " unmonitored")' },
@@ -741,11 +553,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle expression that returns undefined/null', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -753,17 +561,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: 'undefined' },
 			}
@@ -778,11 +577,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle expression with missing variables', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -790,17 +585,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: 'concat($(unknown:var), " test")' },
 			}
@@ -817,11 +603,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle mixed expression and non-expression options', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'exprField',
@@ -840,17 +622,8 @@ describe('VariablesAndExpressionParser', () => {
 						useVariables: useVariablesMinimal,
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				exprField: { isExpression: true, value: '$(test:num) * 3' },
 				plainField: { isExpression: false, value: '$(test:var1) literal' },
@@ -871,11 +644,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle complex expressions with multiple variables', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -883,17 +652,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: {
 					isExpression: true,
@@ -914,11 +674,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should not evaluate expression when optionsSupportExpressions is false', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -926,17 +682,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false, // Module doesn't support expressions
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+				// optionsSupportExpressions: false (default) - module doesn't support expressions
+			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: '1 + 1' },
 			}
@@ -952,11 +699,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle non-expression value in expression field', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{
 						id: 'field1',
@@ -964,17 +707,8 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
 				optionsSupportExpressions: true,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				// isExpression is false, but field definition supports expressions
 				field1: { isExpression: false, value: '1 + 1' },
@@ -1343,23 +1077,9 @@ describe('VariablesAndExpressionParser', () => {
 	describe('edge cases', () => {
 		it('should handle non-string values in options converted to string', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal }],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			// Pass a number where a string is expected
 			const options: ExpressionableOptionsObject = { field1: { isExpression: false, value: 123 } }
 
@@ -1389,28 +1109,14 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle multiple fields with some having variables', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [
 					{ id: 'text1', type: 'textinput', label: 'Text 1', useVariables: useVariablesMinimal },
 					{ id: 'num1', type: 'number', label: 'Number 1', min: 0, max: 100, default: 0 },
 					{ id: 'text2', type: 'textinput', label: 'Text 2', useVariables: useVariablesMinimal },
 					{ id: 'check1', type: 'checkbox', label: 'Checkbox 1', default: false },
 				],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				text1: { isExpression: false, value: '$(test:var1)' },
 				num1: { isExpression: false, value: 50 },
@@ -1436,23 +1142,9 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle empty options object', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'textinput', label: 'Field 1', useVariables: useVariablesMinimal }],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {}
 
 			const result = parser.parseEntityOptions(entityDefinition, options)
@@ -1466,23 +1158,9 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('should handle empty entity definition options', () => {
 			const parser = createParser()
-			const entityDefinition: ClientEntityDefinition = {
-				entityType: EntityModelType.Action,
-				label: 'Test',
-				sortKey: null,
-				description: undefined,
+			const entityDefinition = createDefinition({
 				options: [],
-				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
-				hasLifecycleFunctions: true,
-				hasLearn: false,
-				learnTimeout: undefined,
-				showInvert: false,
-				optionsSupportExpressions: false,
-				showButtonPreview: false,
-				supportsChildGroups: [],
-			}
+			})
 			const options: ExpressionableOptionsObject = {
 				anyField: { isExpression: false, value: 'value' },
 			}

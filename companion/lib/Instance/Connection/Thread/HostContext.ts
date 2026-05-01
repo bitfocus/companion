@@ -72,6 +72,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+				feedbackAffectedProperties: undefined,
 
 				optionsSupportExpressions: true,
 			} satisfies Complete<ClientEntityDefinition>
@@ -95,6 +96,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				optionsToMonitorForInvalidations: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
+				feedbackAffectedProperties: rawFeedback.affectedProperties,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,

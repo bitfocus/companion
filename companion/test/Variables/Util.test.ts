@@ -26,6 +26,7 @@ function createDefinition(
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],
+		feedbackAffectedProperties: undefined,
 		...partial,
 	}
 }
