@@ -92,8 +92,8 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0",
-    "@companion-module/host": "1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0",
+    "@companion-module/base": "2.1.0-0-nightly-main-20260501-215220-309fb87",
+    "@companion-module/host": "1.0.3-nightly-main-20260501-214239-60000e7",
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
   },

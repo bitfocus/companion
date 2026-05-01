@@ -1900,25 +1900,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0":
-  version: 2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0
-  resolution: "@companion-module/base@npm:2.0.4-nightly-feat-graphics-overhaul-20260427-194855-38143f0"
+"@companion-module/base@npm:2.1.0-0-nightly-main-20260501-215220-309fb87":
+  version: 2.1.0-0-nightly-main-20260501-215220-309fb87
+  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260501-215220-309fb87"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/b30c92b715c7d941d3e00baca5561e4e6d928d92a2aed58a6bf9ced1a6063edaf4446792280236e9aff5947cb4271e0eb5a89bfebfd8e1b61c881782dab43a15
+  checksum: 10c0/77f736adc15e4e3f35364b89a3734dd45ac3f2955b0f65d36c9ae5542a8a9f09d8e5a1240cdbc9b4a4bb261bf4b10aa86e9c6e5cf3520a0625c2caab53f897e5
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0":
-  version: 1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0
-  resolution: "@companion-module/host@npm:1.0.3-nightly-feat-graphics-overhaul-20260427-195018-38143f0"
+"@companion-module/host@npm:1.0.3-nightly-main-20260501-214239-60000e7":
+  version: 1.0.3-nightly-main-20260501-214239-60000e7
+  resolution: "@companion-module/host@npm:1.0.3-nightly-main-20260501-214239-60000e7"
   dependencies:
-    "@companion-module/base": "npm:~2.0.4"
+    "@companion-module/base": "npm:~2.1.0-0"
     debounce-fn: "npm:^6.0.0"
-    p-queue: "npm:^9.1.0"
+    p-queue: "npm:^9.2.0"
+    semver: "npm:^7.7.4"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/074e1a91eb338a9cf8c773ba1135e0f6b040263e32a647f159d3fd7394ca8edc5f98ff442c4dd8fd82b380cad2c0210295655bd9b971edabc9728bea62d530f0
+    zod: "npm:^4.3.6"
+  checksum: 10c0/37a19995ecca811f07923dece7fb8d9890ac3e802004ffdf28b76e3aeed5209ac8fbaaed85acfcacf9da5a7a202169aed0297df6158e6e767f97b8e9587c79ad
   languageName: node
   linkType: hard
 
@@ -13120,10 +13122,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "eventemitter3@npm:5.0.1"
-  checksum: 10c0/4ba5c00c506e6c786b4d6262cfbce90ddc14c10d4667e5c83ae993c9de88aa856033994dd2b35b83e8dc1170e224e66a319fa80adc4c32adcd2379bbc75da814
+"eventemitter3@npm:^5.0.1, eventemitter3@npm:^5.0.4":
+  version: 5.0.4
+  resolution: "eventemitter3@npm:5.0.4"
+  checksum: 10c0/575b8cac8d709e1473da46f8f15ef311b57ff7609445a7c71af5cd42598583eee6f098fa7a593e30f27e94b8865642baa0689e8fa97c016f742abdb3b1bf6d9a
   languageName: node
   linkType: hard
 
@@ -18910,13 +18912,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^9.1.0, p-queue@npm:^9.1.2":
-  version: 9.1.2
-  resolution: "p-queue@npm:9.1.2"
+"p-queue@npm:^9.1.2, p-queue@npm:^9.2.0":
+  version: 9.2.0
+  resolution: "p-queue@npm:9.2.0"
   dependencies:
-    eventemitter3: "npm:^5.0.1"
+    eventemitter3: "npm:^5.0.4"
     p-timeout: "npm:^7.0.0"
-  checksum: 10c0/beaccf7ea6536ed5c5687bce92040db14516d8ae0fd69d1f82b44d7e1bfff33a5b03d0145cf580840a7182d487384e05ab6135a0a2c5ea44afaceceaef05535a
+  checksum: 10c0/817af11d7b76e9e7414cb5326d6a9224ef85996bb72315af3a17e87a5b7bc740eba3cbfa8f9a4c6e241acbaf0b7894cf5065a9e58c4947dddd7917fb70b2eebc
   languageName: node
   linkType: hard
 
@@ -22186,14 +22188,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.2.4":
-  version: 1.5.0
-  resolution: "sax@npm:1.5.0"
-  checksum: 10c0/bc3b60a7bfecd40b18256596e96b32df2488339ae1e00a77f842b568f0831228a16c3bd357ec500241ec0b9dc7a475a1286427795c4a8c50bb8e8878f3435dd8
-  languageName: node
-  linkType: hard
-
-"sax@npm:^1.5.0":
+"sax@npm:^1.2.4, sax@npm:^1.5.0":
   version: 1.6.0
   resolution: "sax@npm:1.6.0"
   checksum: 10c0/e5593f4a91eb25761a688c4d96902e4e95a0dd6017bc65146b6f21236e3d715cf893333b76bc758923c9574c2fb5a7a76c3a81e96ea15432f2624f906c027c1e

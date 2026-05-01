@@ -123,15 +123,15 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 				response: await instance.httpRequest(msg.request),
 			}
 		},
-		learnAction: async (msg): Promise<LearnActionResponseMessage> => {
+		learnAction: async (msg, signal): Promise<LearnActionResponseMessage> => {
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
-			return instance.learnAction(msg.action)
+			return instance.learnActionWithSignal(msg.action, signal)
 		},
-		learnFeedback: async (msg): Promise<LearnFeedbackResponseMessage> => {
+		learnFeedback: async (msg, signal): Promise<LearnFeedbackResponseMessage> => {
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
-			return instance.learnFeedback(msg.feedback)
+			return instance.learnFeedbackWithSignal(msg.feedback, signal)
 		},
 
 		startStopRecordActions: async (msg): Promise<void> => {
@@ -204,7 +204,8 @@ ipcWrapper
 			msg.connectionId,
 			new HostContext(ipcWrapper, msg.connectionId, moduleUpgradeScripts.length - 1),
 			moduleConstructor,
-			moduleUpgradeScripts
+			moduleUpgradeScripts,
+			msg.moduleApiVersion
 		)
 	})
 	.catch((err) => {
