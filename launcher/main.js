@@ -43,7 +43,8 @@ if (process.platform === 'darwin') {
 			app.quit()
 		}
 
-		const futureMinimumVersion = '12.0'
+		// Note: when updating this, the message inside window.html needs updating to match
+		const futureMinimumVersion = '13.5'
 		const futureSupportedVersions = new semver.Range(`>=${futureMinimumVersion}`)
 
 		if (productVersion && !futureSupportedVersions.test(productVersion)) {
