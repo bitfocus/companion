@@ -43,6 +43,12 @@ if (devModulesPath) {
 	}
 }
 
+// Set the ui port from env if not already set in argv
+const rawAdminPort = process.env.COMPANION_APP_PORT
+if (rawAdminPort && !argv['admin-port']) {
+	process.argv.push('--admin-port', String(rawAdminPort))
+}
+
 const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
 if (inspectIndex !== -1) {
 	const inspectArg = process.argv[inspectIndex]
