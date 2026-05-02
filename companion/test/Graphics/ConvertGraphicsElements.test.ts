@@ -3,7 +3,13 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
+	ButtonGraphicsBoxDrawElement,
+	ButtonGraphicsBoxElement,
 	ButtonGraphicsGroupDrawElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsImageElement,
+	ButtonGraphicsTextDrawElement,
+	ButtonGraphicsTextElement,
 	SomeButtonGraphicsDrawElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -36,6 +42,140 @@ function val<T>(value: T): ExpressionOrValue<T> {
 
 function expr<T>(value: string): ExpressionOrValue<T> {
 	return { isExpression: true, value } as ExpressionOrValue<T>
+}
+
+// Element factories — provide sensible defaults so each test only specifies what matters.
+
+function makeTextDrawEl(overrides: Partial<ButtonGraphicsTextDrawElement> = {}): ButtonGraphicsTextDrawElement {
+	return {
+		id: 'elem',
+		type: 'text',
+		usage: USAGE,
+		enabled: true,
+		opacity: 1,
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 100,
+		rotation: 0,
+		text: 'Hello',
+		fontsize: 'auto',
+		font: 'companion-sans',
+		color: 0xffffff,
+		halign: 'center',
+		valign: 'center',
+		outlineColor: 0,
+		contentHash: 'hash',
+		...overrides,
+	}
+}
+
+function makeBoxDrawEl(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): ButtonGraphicsBoxDrawElement {
+	return {
+		id: 'elem',
+		type: 'box',
+		usage: USAGE,
+		enabled: true,
+		opacity: 1,
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 100,
+		rotation: 0,
+		color: 0,
+		borderWidth: 0,
+		borderColor: 0,
+		borderPosition: 'inside',
+		contentHash: 'hash',
+		...overrides,
+	}
+}
+
+function makeTextEl(overrides: Partial<ButtonGraphicsTextElement> = {}): ButtonGraphicsTextElement {
+	return {
+		id: 'text1',
+		name: '',
+		type: 'text',
+		usage: USAGE,
+		enabled: val(true),
+		opacity: val(100),
+		x: val(0),
+		y: val(0),
+		width: val(100),
+		height: val(100),
+		rotation: val(0),
+		text: val('Test'),
+		fontsize: val('auto'),
+		font: val('companion-sans'),
+		color: val(0xffffff),
+		halign: val('center'),
+		valign: val('center'),
+		outlineColor: val(0),
+		...overrides,
+	}
+}
+
+function makeBoxEl(overrides: Partial<ButtonGraphicsBoxElement> = {}): ButtonGraphicsBoxElement {
+	return {
+		id: 'box1',
+		name: '',
+		type: 'box',
+		usage: USAGE,
+		enabled: val(true),
+		opacity: val(100),
+		x: val(0),
+		y: val(0),
+		width: val(100),
+		height: val(100),
+		rotation: val(0),
+		color: val(0),
+		borderWidth: val(0),
+		borderColor: val(0),
+		borderPosition: val('inside'),
+		...overrides,
+	}
+}
+
+function makeImageEl(overrides: Partial<ButtonGraphicsImageElement> = {}): ButtonGraphicsImageElement {
+	return {
+		id: 'image1',
+		name: '',
+		type: 'image',
+		usage: USAGE,
+		enabled: val(true),
+		opacity: val(100),
+		x: val(0),
+		y: val(0),
+		width: val(72),
+		height: val(72),
+		rotation: val(0),
+		base64Image: val(null),
+		halign: val('center'),
+		valign: val('center'),
+		fillMode: val('fit'),
+		...overrides,
+	}
+}
+
+function makeGroupEl(
+	children: SomeButtonGraphicsElement[],
+	overrides: Partial<ButtonGraphicsGroupElement> = {}
+): ButtonGraphicsGroupElement {
+	return {
+		id: 'group1',
+		name: '',
+		type: 'group',
+		usage: USAGE,
+		enabled: val(true),
+		opacity: val(100),
+		x: val(0),
+		y: val(0),
+		width: val(100),
+		height: val(100),
+		rotation: val(0),
+		...overrides,
+		children,
+	}
 }
 
 /**
@@ -102,28 +242,7 @@ describe('collectContentHashes', () => {
 	})
 
 	test('collects hash from single element', () => {
-		const elements: SomeButtonGraphicsDrawElement[] = [
-			{
-				id: 'elem1',
-				type: 'text',
-				usage: USAGE,
-				enabled: true,
-				opacity: 1,
-				x: 0,
-				y: 0,
-				width: 100,
-				height: 100,
-				rotation: 0,
-				text: 'Hello',
-				fontsize: 'auto',
-				font: 'companion-sans',
-				color: 0xffffff,
-				halign: 'center',
-				valign: 'center',
-				outlineColor: 0,
-				contentHash: 'hash123',
-			},
-		]
+		const elements: SomeButtonGraphicsDrawElement[] = [makeTextDrawEl({ id: 'elem1', contentHash: 'hash123' })]
 
 		const result = collectContentHashes(elements)
 		expect(result).toEqual(['hash123'])
@@ -131,43 +250,8 @@ describe('collectContentHashes', () => {
 
 	test('collects hashes from multiple elements', () => {
 		const elements: SomeButtonGraphicsDrawElement[] = [
-			{
-				id: 'elem1',
-				type: 'text',
-				usage: USAGE,
-				enabled: true,
-				opacity: 1,
-				x: 0,
-				y: 0,
-				width: 100,
-				height: 100,
-				rotation: 0,
-				text: 'Hello',
-				fontsize: 'auto',
-				font: 'companion-sans',
-				color: 0xffffff,
-				halign: 'center',
-				valign: 'center',
-				outlineColor: 0,
-				contentHash: 'hash1',
-			},
-			{
-				id: 'elem2',
-				type: 'box',
-				usage: USAGE,
-				enabled: true,
-				opacity: 1,
-				x: 10,
-				y: 10,
-				width: 50,
-				height: 50,
-				rotation: 0,
-				color: 0xff0000,
-				borderWidth: 0,
-				borderColor: 0,
-				borderPosition: 'inside',
-				contentHash: 'hash2',
-			},
+			makeTextDrawEl({ id: 'elem1', contentHash: 'hash1' }),
+			makeBoxDrawEl({ id: 'elem2', x: 10, y: 10, width: 50, height: 50, color: 0xff0000, contentHash: 'hash2' }),
 		]
 
 		const result = collectContentHashes(elements)
@@ -188,28 +272,7 @@ describe('collectContentHashes', () => {
 				height: 100,
 				rotation: 0,
 				contentHash: 'groupHash',
-				children: [
-					{
-						id: 'child1',
-						type: 'text',
-						usage: USAGE,
-						enabled: true,
-						opacity: 1,
-						x: 0,
-						y: 0,
-						width: 50,
-						height: 50,
-						rotation: 0,
-						text: 'Child',
-						fontsize: 'auto',
-						font: 'companion-sans',
-						color: 0xffffff,
-						halign: 'center',
-						valign: 'center',
-						outlineColor: 0,
-						contentHash: 'childHash',
-					},
-				],
+				children: [makeTextDrawEl({ id: 'child1', width: 50, height: 50, contentHash: 'childHash' })],
 			},
 		]
 
@@ -244,25 +307,7 @@ describe('collectContentHashes', () => {
 						height: 50,
 						rotation: 0,
 						contentHash: 'innerHash',
-						children: [
-							{
-								id: 'leaf',
-								type: 'box',
-								usage: USAGE,
-								enabled: true,
-								opacity: 1,
-								x: 0,
-								y: 0,
-								width: 25,
-								height: 25,
-								rotation: 0,
-								color: 0,
-								borderWidth: 0,
-								borderColor: 0,
-								borderPosition: 'inside',
-								contentHash: 'leafHash',
-							},
-						],
+						children: [makeBoxDrawEl({ id: 'leaf', width: 25, height: 25, contentHash: 'leafHash' })],
 					},
 				],
 			},
@@ -335,28 +380,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('text element conversion', () => {
 		test('converts basic text element', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Hello World'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello World') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -380,28 +404,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('filters disabled text element when onlyEnabled is true', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(false),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Hello'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello'), enabled: val(false) })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -417,28 +420,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('keeps disabled element when onlyEnabled is false', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(false),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Hello'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello'), enabled: val(false) })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -455,28 +437,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('parses variables in text', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Value: $(test:myvar)'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Value: $(test:myvar)') })]
 
 			const mockParser = createMockParser({ test: { myvar: 'HELLO' } })
 
@@ -498,46 +459,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('respects font property', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text-sans',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Sans'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-				{
-					id: 'text-mono',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Mono'),
-					fontsize: val('auto'),
-					font: val('companion-mono'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
+				makeTextEl({ id: 'text-sans', text: val('Sans') }),
+				makeTextEl({ id: 'text-mono', text: val('Mono'), font: val('companion-mono') }),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -559,23 +482,15 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 	describe('box element conversion', () => {
 		test('converts box element', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'box1',
-					name: '',
-					type: 'box',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
+				makeBoxEl({
 					x: val(10),
 					y: val(20),
 					width: val(50),
 					height: val(60),
-					rotation: val(0),
 					color: val(0xff0000),
 					borderWidth: val(2),
 					borderColor: val(0x00ff00),
-					borderPosition: val('inside'),
-				},
+				}),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -605,25 +520,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('image element conversion', () => {
 		test('converts image element', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'image1',
-					name: '',
-					type: 'image',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(72),
-					height: val(72),
-					rotation: val(0),
-					base64Image: val('data:image/png;base64,abc123'),
-					halign: val('center'),
-					valign: val('center'),
-					fillMode: val('fit'),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeImageEl({ base64Image: val('data:image/png;base64,abc123') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -739,41 +636,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 	describe('group element conversion', () => {
 		test('converts group element with children', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'group1',
-					name: '',
-					type: 'group',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					children: [
-						{
-							id: 'child1',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(50),
-							height: val(50),
-							rotation: val(0),
-							text: val('Child'),
-							fontsize: val('auto'),
-							font: val('companion-sans'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-					],
-				},
+				makeGroupEl([makeTextEl({ id: 'child1', width: val(50), height: val(50), text: val('Child') })]),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -799,61 +662,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('filters disabled children in group when onlyEnabled is true', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'group1',
-					name: '',
-					type: 'group',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					children: [
-						{
-							id: 'child1',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(false),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(50),
-							height: val(50),
-							rotation: val(0),
-							text: val('Disabled'),
-							fontsize: val('auto'),
-							font: val('companion-sans'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-						{
-							id: 'child2',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(50),
-							height: val(50),
-							rotation: val(0),
-							text: val('Enabled'),
-							fontsize: val('auto'),
-							font: val('companion-sans'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-					],
-				},
+				makeGroupEl([
+					makeTextEl({ id: 'child1', width: val(50), height: val(50), text: val('Disabled'), enabled: val(false) }),
+					makeTextEl({ id: 'child2', width: val(50), height: val(50), text: val('Enabled') }),
+				]),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -874,28 +686,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('expression evaluation', () => {
 		test('evaluates expressions in element properties', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: expr<number>('10 + 5'),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ x: expr<number>('10 + 5') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -916,28 +707,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('variable tracking', () => {
 		test('tracks referenced variables', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('$(test:var1) and $(test:var2)'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('$(test:var1) and $(test:var2)') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -955,26 +725,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('tracks referenced variables in expression', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: expr<number>('$(test:var3)'),
-					rotation: val(0),
-					text: val('abc'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
+				makeTextEl({ text: val('abc'), height: expr<number>('$(test:var3)') }),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -995,28 +746,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		test('uses cache when available', async () => {
 			const cache = new ElementConversionCache()
 
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Cached text'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Cached text') })]
 
 			// First conversion
 			await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1055,28 +785,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		test('invalidates cache when variables change', async () => {
 			const cache = new ElementConversionCache()
 
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('$(test:myvar)'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('$(test:myvar)') })]
 
 			// First conversion
 			const result1 = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1113,46 +822,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const cache = new ElementConversionCache()
 
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-				{
-					id: 'text2',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test2'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
+				makeTextEl({ text: val('Test') }),
+				makeTextEl({ id: 'text2', text: val('Test2') }),
 			]
 
 			// First conversion with both elements
@@ -1189,41 +860,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const cache = new ElementConversionCache()
 
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'group1',
-					name: '',
-					type: 'group',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					children: [
-						{
-							id: 'child1',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(50),
-							height: val(50),
-							rotation: val(0),
-							text: val('Child text'),
-							fontsize: val('auto'),
-							font: val('companion-sans'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-					],
-				},
+				makeGroupEl([makeTextEl({ id: 'child1', width: val(50), height: val(50), text: val('Child text') })]),
 			]
 
 			// First conversion with enabled group - populates cache for group and child
@@ -1299,26 +936,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const cache = new ElementConversionCache()
 
 			const compositeElements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'inner-text',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Composite inner'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
+				makeTextEl({ id: 'inner-text', text: val('Composite inner') }),
 			]
 
 			const mockDefinitions = createMockInstanceDefinitions({
@@ -1420,28 +1038,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('feedback overrides', () => {
 		test('applies feedback overrides to element', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Original'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Original') })]
 
 			// feedbackOverrides is Map<elementId, Map<propertyName, ExpressionOrValue>>
 			const text1Overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['text', val('Overridden')]])
@@ -1465,28 +1062,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('content hash stability', () => {
 		test('produces same content hash for same input', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Stable text'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Stable text') })]
 
 			const result1 = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -1512,51 +1088,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('produces different content hash for different input', async () => {
-			const elements1: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Text A'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements1: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Text A') })]
 
-			const elements2: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Text B'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements2: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Text B') })]
 
 			const result1 = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -1589,28 +1123,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				name: 'Test Composite',
 				description: '',
 				options: [],
-				elements: [
-					{
-						id: 'child1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Inside Composite'),
-						fontsize: val('auto'),
-						font: val('companion-sans'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				],
+				elements: [makeTextEl({ id: 'child1', text: val('Inside Composite') })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -1705,41 +1218,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 	describe('id prefixing', () => {
 		test('children within groups share same prefix', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'group1',
-					name: '',
-					type: 'group',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					children: [
-						{
-							id: 'child1',
-							name: '',
-							type: 'text',
-							usage: USAGE,
-							enabled: val(true),
-							opacity: val(100),
-							x: val(0),
-							y: val(0),
-							width: val(50),
-							height: val(50),
-							rotation: val(0),
-							text: val('Child'),
-							fontsize: val('auto'),
-							font: val('companion-sans'),
-							color: val(0xffffff),
-							halign: val('center'),
-							valign: val('center'),
-							outlineColor: val(0),
-						},
-					],
-				},
+				makeGroupEl([makeTextEl({ id: 'child1', width: val(50), height: val(50), text: val('Child') })]),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1764,28 +1243,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				name: 'Test Composite',
 				description: '',
 				options: [],
-				elements: [
-					{
-						id: 'inner1',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('Inside Composite'),
-						fontsize: val('auto'),
-						font: val('companion-sans'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				],
+				elements: [makeTextEl({ id: 'inner1', text: val('Inside Composite') })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -1832,28 +1290,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('expression error handling', () => {
 		test('handles failed expression with default value', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: expr<number>('invalid_syntax(('),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ x: expr<number>('invalid_syntax((') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -1871,28 +1308,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('handles missing variable reference gracefully', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Value: $(nonexistent:var)'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
-					halign: val('center'),
-					valign: val('center'),
-					outlineColor: val(0),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Value: $(nonexistent:var)') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -1925,28 +1341,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
-				elements: [
-					{
-						id: 'label',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('$(options:labelText)'),
-						fontsize: val('auto'),
-						font: val('companion-sans'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				],
+				elements: [makeTextEl({ id: 'label', text: val('$(options:labelText)') })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -2000,28 +1395,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						default: 'Default Label',
 					},
 				],
-				elements: [
-					{
-						id: 'label',
-						name: '',
-						type: 'text',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						text: val('$(options:labelText)'),
-						fontsize: val('auto'),
-						font: val('companion-sans'),
-						color: val(0xffffff),
-						halign: val('center'),
-						valign: val('center'),
-						outlineColor: val(0),
-					},
-				],
+				elements: [makeTextEl({ id: 'label', text: val('$(options:labelText)') })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -2070,25 +1444,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				name: 'Simple',
 				description: '',
 				options: [],
-				elements: [
-					{
-						id: 'child',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				],
+				elements: [makeBoxEl({ id: 'child', color: val(0xff0000) })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -2131,26 +1487,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 	describe('alignment expression aliases', () => {
 		test('converts "s" prefix to left/top (start alias)', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
+				makeTextEl({
 					halign: { isExpression: true, value: '"start"' } as ExpressionOrValue<HorizontalAlignment>,
 					valign: { isExpression: true, value: '"start"' } as ExpressionOrValue<VerticalAlignment>,
-					outlineColor: val(0),
-				},
+				}),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -2171,26 +1511,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('converts "e" prefix to right/bottom (end alias)', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
+				makeTextEl({
 					halign: { isExpression: true, value: '"end"' } as ExpressionOrValue<HorizontalAlignment>,
 					valign: { isExpression: true, value: '"end"' } as ExpressionOrValue<VerticalAlignment>,
-					outlineColor: val(0),
-				},
+				}),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -2211,26 +1535,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('defaults to center for invalid alignment expression', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'text1',
-					name: '',
-					type: 'text',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					rotation: val(0),
-					text: val('Test'),
-					fontsize: val('auto'),
-					font: val('companion-sans'),
-					color: val(0xffffff),
+				makeTextEl({
 					halign: { isExpression: true, value: '"xyz"' } as ExpressionOrValue<HorizontalAlignment>,
 					valign: { isExpression: true, value: '"abc"' } as ExpressionOrValue<VerticalAlignment>,
-					outlineColor: val(0),
-				},
+				}),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -2252,25 +1560,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 	describe('image element edge cases', () => {
 		test('handles null base64Image', async () => {
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'image1',
-					name: '',
-					type: 'image',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(72),
-					height: val(72),
-					rotation: val(0),
-					base64Image: val(null),
-					halign: val('center'),
-					valign: val('center'),
-					fillMode: val('fit'),
-				},
-			]
+			const elements: SomeButtonGraphicsElement[] = [makeImageEl()]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
@@ -2291,23 +1581,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 			for (const fillMode of fillModes) {
 				const elements: SomeButtonGraphicsElement[] = [
-					{
-						id: 'image1',
-						name: '',
-						type: 'image',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(72),
-						height: val(72),
-						rotation: val(0),
-						base64Image: val('data:image/png;base64,abc'),
-						halign: val('center'),
-						valign: val('center'),
-						fillMode: val(fillMode),
-					},
+					makeImageEl({ base64Image: val('data:image/png;base64,abc'), fillMode: val(fillMode) }),
 				]
 
 				const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -2339,25 +1613,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						default: false,
 					},
 				],
-				elements: [
-					{
-						id: 'box',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				],
+				elements: [makeBoxEl({ id: 'box', color: val(0xff0000) })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -2413,25 +1669,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						max: 100,
 					},
 				],
-				elements: [
-					{
-						id: 'box',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				],
+				elements: [makeBoxEl({ id: 'box', color: val(0xff0000) })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -2489,25 +1727,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						],
 					},
 				],
-				elements: [
-					{
-						id: 'box',
-						name: '',
-						type: 'box',
-						usage: USAGE,
-						enabled: val(true),
-						opacity: val(100),
-						x: val(0),
-						y: val(0),
-						width: val(100),
-						height: val(100),
-						rotation: val(0),
-						color: val(0xff0000),
-						borderWidth: val(0),
-						borderColor: val(0),
-						borderPosition: val('inside'),
-					},
-				],
+				elements: [makeBoxEl({ id: 'box', color: val(0xff0000) })],
 			}
 
 			const instanceDefs = createMockInstanceDefinitions({
@@ -2551,23 +1771,15 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 	describe('enum fallback handling', () => {
 		test('falls back to default for invalid enum value', async () => {
 			const elements: SomeButtonGraphicsElement[] = [
-				{
+				makeBoxEl({
 					id: 'box1',
-					name: '',
-					type: 'box',
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
 					width: val(50),
 					height: val(50),
-					rotation: val(0),
 					color: val(0xff0000),
 					borderWidth: val(2),
 					borderColor: val(0x00ff00),
 					borderPosition: expr<'inside' | 'center' | 'outside'>('"invalid"'),
-				},
+				}),
 			]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
