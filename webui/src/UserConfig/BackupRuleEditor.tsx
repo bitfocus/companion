@@ -155,7 +155,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				<CCol sm={12}>
 					<CAlert color="warning" className="mt-2">
 						Raw backups are a direct copy of the database file. They cannot be restored through the web interface, but
-						contain more data than the default exports.
+						contain more data than the default exports. HTTP/HTTPS URLs are not supported for raw database backups.
 					</CAlert>
 				</CCol>
 			)}
@@ -166,7 +166,8 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			</CCol>
 			<CCol className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
 				<small className="form-text text-muted">
-					Directory path where backups will be saved. Leave empty for default location.
+					Directory path where backups will be saved. You can also enter an http:// or https:// URL to POST export
+					backups to a server. Leave empty for default location.
 				</small>
 			</CCol>
 
