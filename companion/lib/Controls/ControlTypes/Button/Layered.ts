@@ -111,6 +111,7 @@ export class ControlButtonLayered
 			halign: { value: 'center', isExpression: false },
 			valign: { value: 'center', isExpression: false },
 			fontsize: { value: 'auto', isExpression: false },
+			font: { value: 'companion-sans', isExpression: false },
 			outlineColor: { value: 0xff000000, isExpression: false },
 		},
 	]

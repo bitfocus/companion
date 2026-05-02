@@ -19,7 +19,8 @@
 
 import type QuickLRU from 'quick-lru'
 import type { MinimalLogger } from '../Logger.js'
-import { DEFAULT_FONTS, DEFAULT_FONTS_STR } from './Fonts.js'
+import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js'
+import { resolveFontName } from './Fonts.js'
 import {
 	computeTextLayout,
 	MIN_FONT_SIZE_FRACTION,
@@ -598,7 +599,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		if (isNaN(fontsize)) return 0
 		if (fontsize < 3) return 0
 
-		this.context2d.font = `${fontsize}px ${DEFAULT_FONTS_STR}`
+		this.context2d.font = `${fontsize}px ${resolveFontName('companion-sans')}`
 
 		const metrics = this.context2d.measureText(text)
 
@@ -638,7 +639,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		if (halignment != 'left' && halignment != 'center' && halignment != 'right') halignment = 'left'
 		if (weight != 'normal' && weight != 'bold') weight = 'normal'
 
-		this.context2d.font = `${weight} ${fontsize}px ${DEFAULT_FONTS_STR}`
+		this.context2d.font = `${weight} ${fontsize}px ${resolveFontName('companion-sans')}`
 		this.context2d.fillStyle = color
 		this.context2d.textAlign = halignment
 
@@ -675,6 +676,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param fontsize height of font, either pixels or 'auto'
 	 * @param halign horizontal alignment left, center, right
 	 * @param valign vertical alignment top, center, bottom
+	 * @param outlineStyle optional outline style, if not provided there will be no outline
+	 * @param font optional font family, if not provided the default font will be used
 	 */
 	drawAlignedText(
 		x: number,
@@ -686,7 +689,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		fontsize: number | 'auto' = 'auto',
 		halign: HorizontalAlignment = 'center',
 		valign: VerticalAlignment = 'center',
-		outlineStyle?: LineStyle
+		outlineStyle?: LineStyle,
+		font?: ButtonGraphicsTextDrawElement['font']
 	): void {
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
 		if (!displayTextStr) return
@@ -714,7 +718,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let textLayout: TextLayoutResult | undefined
 		for (const size of checkSizes) {
 			const fontLineHeight = size * 1.1 // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
-			const fontSpec = `${size}px/${fontLineHeight}px ${DEFAULT_FONTS}`
+			const fontNameStr = resolveFontName(font)
+			const fontSpec = `${size}px/${fontLineHeight}px ${fontNameStr}`
 
 			// Check cache first
 			const cacheKey = `${fontSpec}:${w}:${h}:${displayTextCharsStr}`

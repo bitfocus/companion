@@ -82,6 +82,7 @@ export interface ButtonGraphicsTextDrawElement
 	type: 'text'
 	text: string
 	fontsize: string
+	font: 'companion-sans' | 'companion-mono'
 	color: number
 	outlineColor: number
 	halign: HorizontalAlignment
@@ -93,6 +94,7 @@ export interface ButtonGraphicsTextElement
 	type: 'text'
 	text: ExpressionOrValue<string>
 	fontsize: ExpressionOrValue<string>
+	font: ExpressionOrValue<'companion-sans' | 'companion-mono'>
 	color: ExpressionOrValue<number>
 	outlineColor: ExpressionOrValue<number>
 	halign: ExpressionOrValue<HorizontalAlignment>

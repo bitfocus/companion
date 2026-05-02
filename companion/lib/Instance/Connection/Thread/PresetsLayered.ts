@@ -167,6 +167,7 @@ function convertLayeredPresetElement(
 					value: 'auto',
 					isExpression: false,
 				}),
+				font: { value: 'companion-sans', isExpression: false }, // Future: expose to presets
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
 				valign: convertModuleExpressionOrValue(element.valign, { value: 'center', isExpression: false }),

@@ -268,7 +268,8 @@ export class GraphicsLayeredButtonRenderer {
 								width: 2, // Fixed width for now, maybe should be dynamic
 								color: parseColor(element.outlineColor),
 							}
-						: undefined
+						: undefined,
+					element.font
 				)
 			})
 		})
