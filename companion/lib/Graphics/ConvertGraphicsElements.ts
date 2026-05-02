@@ -491,6 +491,7 @@ function convertTextElementForDrawing(
 		rotation: helper.getNumber('rotation', 0),
 		text: helper.getDrawText('text') + '',
 		fontsize: helper.getUnknown('fontsize', 'auto') as string,
+		font: helper.getEnum('font', ['companion-sans', 'companion-mono'], 'companion-sans'),
 		color: helper.getNumber('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),

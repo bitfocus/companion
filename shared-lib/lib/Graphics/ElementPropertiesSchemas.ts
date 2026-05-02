@@ -141,6 +141,17 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		regex: '^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)?$',
 	},
 	{
+		type: 'dropdown',
+		id: 'font',
+		label: 'Font',
+		choices: [
+			{ id: 'companion-sans', label: 'Default' },
+			{ id: 'companion-mono', label: 'Monospace' },
+		],
+		default: 'companion-sans',
+		disableAutoExpression: true, // I think this will just be confusing to know what values to provide..
+	},
+	{
 		type: 'colorpicker',
 		id: 'color',
 		label: 'Color',

@@ -19,7 +19,7 @@
 
 import type QuickLRU from 'quick-lru'
 import type { MinimalLogger } from '../Logger.js'
-import { DEFAULT_FONTS, DEFAULT_FONTS_STR } from './Fonts.js'
+import { DEFAULT_FONTS_STR } from './Fonts.js'
 import {
 	computeTextLayout,
 	MIN_FONT_SIZE_FRACTION,
@@ -714,7 +714,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let textLayout: TextLayoutResult | undefined
 		for (const size of checkSizes) {
 			const fontLineHeight = size * 1.1 // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
-			const fontSpec = `${size}px/${fontLineHeight}px ${DEFAULT_FONTS}`
+			const fontSpec = `${size}px/${fontLineHeight}px ${DEFAULT_FONTS_STR}`
 
 			// Check cache first
 			const cacheKey = `${fontSpec}:${w}:${h}:${displayTextCharsStr}`
