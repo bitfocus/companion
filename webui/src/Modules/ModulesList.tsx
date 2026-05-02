@@ -12,7 +12,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
@@ -318,9 +318,9 @@ const ModulesListRow = observer(function ModulesListRow({
 			</td>
 			<td onClick={doEdit} className="hand">
 				{!!moduleInfo.storeInfo?.deprecationReason && (
-					<InlineHelp help="Deprecated">
+					<InlineHelpCustom help="Deprecated">
 						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
-					</InlineHelp>
+					</InlineHelpCustom>
 				)}
 				{moduleInfo.name}
 			</td>

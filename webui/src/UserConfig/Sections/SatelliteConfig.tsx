@@ -1,6 +1,5 @@
 import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { InlineHelp } from '~/Components/InlineHelp.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
@@ -11,14 +10,12 @@ export const SatelliteConfig = observer(function SatelliteConfig(props: UserConf
 		<>
 			<UserConfigHeadingRow label="Satellite" />
 
-			<UserConfigStaticTextRow
-				label={<InlineHelp help="You can't change this value.">Satellite TCP Listen Port</InlineHelp>}
-				text={16622}
-			/>
+			<UserConfigStaticTextRow label="Satellite TCP Listen Port" text={16622} textHelp="You can't change this value." />
 
 			<UserConfigStaticTextRow
-				label={<InlineHelp help="You can't change this value.">Satellite Websocket Listen Port</InlineHelp>}
+				label="Satellite Websocket Listen Port"
 				text={16623}
+				textHelp="You can't change this value."
 			/>
 
 			<UserConfigSwitchRow

@@ -1,6 +1,5 @@
 import { CCol, CForm, CFormLabel, CFormSelect, CFormSwitch } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -12,7 +11,7 @@ import type {
 	SurfaceGroupConfig,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
@@ -112,10 +111,8 @@ function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceE
 	return (
 		<>
 			<CFormLabel htmlFor="colFormEnabled" className="col-sm-4 col-form-label col-form-label-sm">
-				Enabled&nbsp;
-				<InlineHelp help="When disabled, Companion will not open this surface.">
-					<FontAwesomeIcon icon={faQuestionCircle} />
-				</InlineHelp>
+				Enabled
+				<InlineHelpIcon className="ms-1">When disabled, Companion will not open this surface.</InlineHelpIcon>
 			</CFormLabel>
 			<CCol sm={8}>
 				<CFormSwitch
@@ -346,10 +343,10 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 
 						<CFormLabel htmlFor="colFormGroupId" className="col-sm-4 col-form-label col-form-label-sm">
-							Surface Group&nbsp;
-							<InlineHelp help="When in a group, surfaces will follow the page number of that group">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</InlineHelp>
+							Surface Group
+							<InlineHelpIcon className="ms-1">
+								When in a group, surfaces will follow the page number of that group
+							</InlineHelpIcon>
 						</CFormLabel>
 						<CCol sm={8}>
 							<CFormSelect

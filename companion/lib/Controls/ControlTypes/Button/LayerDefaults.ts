@@ -43,7 +43,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				base64Image: { value: null, isExpression: false },
 				halign: { value: 'center', isExpression: false },
 				valign: { value: 'center', isExpression: false },
-				fillMode: { value: 'fit_or_shrink', isExpression: false },
+				fillMode: { value: 'fit', isExpression: false },
 			}
 		case 'box':
 			return {

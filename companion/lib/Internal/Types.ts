@@ -111,7 +111,12 @@ export interface ExecuteFeedbackResultWithReferences {
 export type InternalActionDefinition = SetOptional<
 	Omit<
 		ClientEntityDefinition,
-		'entityType' | 'showInvert' | 'feedbackType' | 'feedbackStyle' | 'hasLifecycleFunctions'
+		| 'entityType'
+		| 'showInvert'
+		| 'feedbackType'
+		| 'feedbackStyle'
+		| 'hasLifecycleFunctions'
+		| 'feedbackAffectedProperties'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -123,5 +128,5 @@ export type InternalActionDefinition = SetOptional<
 
 export type InternalFeedbackDefinition = SetOptional<
 	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions' | 'optionsToMonitorForInvalidations'>,
-	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups'
+	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

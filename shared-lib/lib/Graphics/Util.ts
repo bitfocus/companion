@@ -1,5 +1,8 @@
 import { colord } from 'colord'
 import type { CompanionAlignment } from '@companion-module/base'
+import type { SomeButtonGraphicsDrawElement } from '../Model/StyleLayersModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '../Model/StyleModel.js'
+import type { UserConfigModel } from '../Model/UserConfigModel.js'
 
 export type HorizontalAlignment = 'left' | 'right' | 'center'
 export type VerticalAlignment = 'top' | 'bottom' | 'center'
@@ -100,4 +103,34 @@ export const parseColor = (color: number | string, skipValidation = false): stri
 		}
 	}
 	return 'rgba(0, 0, 0, 0)'
+}
+
+export type ResolveButtonStylePropertiesConfig = Pick<UserConfigModel, 'remove_topbar' | 'buttons_status_icons'>
+
+export function resolveButtonStyleProperties(
+	drawConfig: ResolveButtonStylePropertiesConfig,
+	elements: SomeButtonGraphicsDrawElement[]
+): {
+	show_topbar: boolean
+	show_status_icons: boolean
+} {
+	const canvasElement = elements.find((el) => el.type === 'canvas')
+
+	const globalShowTopBar = !drawConfig.remove_topbar
+	const globalShowStatusIcons = drawConfig.buttons_status_icons === 'show'
+
+	const show_topbar =
+		!canvasElement || canvasElement.decoration === ButtonGraphicsDecorationType.FollowDefault
+			? globalShowTopBar
+			: canvasElement.decoration === ButtonGraphicsDecorationType.TopBar
+
+	const show_status_icons =
+		!canvasElement || canvasElement.showStatusIcons === ButtonGraphicsShowStatusIcons.FollowDefault
+			? globalShowStatusIcons
+			: canvasElement.showStatusIcons === ButtonGraphicsShowStatusIcons.ShowAll
+
+	return {
+		show_topbar,
+		show_status_icons,
+	}
 }

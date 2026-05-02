@@ -12,7 +12,7 @@ import { Link } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
@@ -256,7 +256,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 			)}
 			&nbsp;
 			{moduleInfo.installedInfo?.stableVersion?.isLegacy && (
-				<InlineHelp help="This module has not been updated for Companion 3.0, and may not work fully.">
+				<InlineHelpCustom help="This module has not been updated for Companion 3.0, and may not work fully.">
 					<FontAwesomeIcon
 						icon={faExclamationTriangle}
 						color="#ff6600"
@@ -264,7 +264,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 						aria-label="This module has not been updated for Companion 3.0, and may not work fully."
 					/>
 					&nbsp;
-				</InlineHelp>
+				</InlineHelpCustom>
 			)}
 			<div className="grow" style={{ alignContent: 'center' }}>
 				{moduleInfo.name}

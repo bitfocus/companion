@@ -4,7 +4,7 @@ import type {
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextElement,
 } from '../Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '../Model/StyleModel.js'
 
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
@@ -118,7 +118,6 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		type: 'textinput',
 		id: 'text',
 		label: 'Button text string',
-		tooltip: "The text you see on the button you're working with. You can use variables, but not expressions.",
 		default: '',
 		useVariables: CompanionFieldVariablesSupport.InternalParser,
 	},
@@ -126,6 +125,8 @@ export const textElementSchema: SomeCompanionInputField[] = [
 		type: 'dropdown',
 		id: 'fontsize',
 		label: 'Text Size',
+		tooltip:
+			'The size of the text, in percentage of the canvas height. You can use custom values or select one of the presets.',
 		choices: [
 			{ id: 'auto', label: 'Auto' },
 			{ id: '10', label: '10%' },
@@ -203,12 +204,11 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 		id: 'fillMode',
 		label: 'Fill Mode',
 		choices: [
-			{ id: 'fit_or_shrink', label: 'Fit or Shrink' },
 			{ id: 'fit', label: 'Fit' },
 			{ id: 'fill', label: 'Fill' },
 			{ id: 'crop', label: 'Crop' },
 		],
-		default: 'fit_or_shrink',
+		default: 'fit',
 	},
 
 	// Future ideas:
@@ -360,6 +360,18 @@ export const canvasElementSchema: SomeCompanionInputField[] = [
 			{ id: ButtonGraphicsDecorationType.None, label: 'None' },
 		],
 		default: ButtonGraphicsDecorationType.FollowDefault,
+	},
+	{
+		type: 'dropdown',
+		id: 'showStatusIcons',
+		label: 'Show status icons',
+		tooltip: 'Whether to show status icons in the top right corner of the button',
+		choices: [
+			{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
+			{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
+			{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },
+		],
+		default: ButtonGraphicsShowStatusIcons.FollowDefault,
 	},
 ]
 

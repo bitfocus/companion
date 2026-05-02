@@ -1,6 +1,4 @@
 import { CCol, CForm, CFormLabel, CFormSwitch } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
@@ -8,7 +6,7 @@ import type { DropdownChoice } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { InputFeatureIcons } from '~/Controls/OptionsInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -69,9 +67,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 			<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 					Step Progression
-					<InlineHelp help="When this button has multiple steps, control how the next step changes">
-						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-					</InlineHelp>
+					<InlineHelpIcon className="ms-1">
+						When this button has multiple steps, control how the next step changes
+					</InlineHelpIcon>
 				</CFormLabel>
 				<CCol sm={8}>
 					<DropdownInputField
@@ -98,10 +96,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 
 				<CFormLabel htmlFor="colFormRotary" className="col-sm-4 col-form-label col-form-label-sm">
 					Rotary Actions
-					<InlineHelp help="Make this button compatible with rotation events">
-						{' '}
-						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-					</InlineHelp>
+					<InlineHelpIcon className="ms-1">Make this button compatible with rotation events</InlineHelpIcon>
 				</CFormLabel>
 				<CCol sm={8}>
 					<CFormSwitch
@@ -116,9 +111,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 
 				<CFormLabel htmlFor="colFormProgress" className="col-sm-4 col-form-label col-form-label-sm">
 					Allow style changes
-					<InlineHelp help="Allow the external APIs and internal actions to modify the style of this button">
-						<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-					</InlineHelp>
+					<InlineHelpIcon className="ms-1">
+						Allow the external APIs and internal actions to modify the style of this button
+					</InlineHelpIcon>
 				</CFormLabel>
 				<CCol sm={8}>
 					<CFormSwitch

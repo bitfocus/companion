@@ -467,7 +467,7 @@ function ConvertLocalVariablesForPreset(
 					headline: localVariable.headline,
 
 					options: {
-						persist_value: exprVal(false),
+						persist_value: exprVal(true), // Set to persisted, to minimise user confusion over the split values
 						startup_value: exprVal(localVariable.startupValue),
 					},
 				})

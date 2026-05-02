@@ -33,10 +33,18 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 	const tarPath = path.join(cacheDir, tarFilename)
 	if (!(await fs.pathExists(tarPath))) {
 		const tarUrl = `https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`
+		console.log(`Downloading Node.js ${nodeVersion} for ${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}...`)
 
 		const response = await fetch(tarUrl)
-		if (!response.ok || !response.body) throw new Error(`unexpected response ${response.statusText}`)
-		await streamPipeline(response.body, createWriteStream(tarPath))
+		if (!response.ok || !response.body) throw new Error(`Failed to download ${tarUrl}: ${response.statusText}`)
+		const tmpTarPath = `${tarPath}.tmp`
+		try {
+			await streamPipeline(response.body, createWriteStream(tmpTarPath))
+			await fs.move(tmpTarPath, tarPath, { overwrite: true })
+		} catch (e) {
+			await fs.remove(tmpTarPath).catch(() => {})
+			throw e
+		}
 	}
 
 	// Extract nodejs and discard 'junk'

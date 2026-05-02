@@ -64,8 +64,9 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 		learnTimeout: undefined,
 		showInvert: false,
 		optionsSupportExpressions: false,
-		showButtonPreview: false,
 		supportsChildGroups: [],
+		showButtonPreview: false,
+		feedbackAffectedProperties: undefined,
 		...overrides,
 	}
 }

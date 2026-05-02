@@ -17,6 +17,7 @@ import {
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
 	type DrawImageBuffer,
 	type HorizontalAlignment,
@@ -203,6 +204,7 @@ export function ConvertLegacyStyleToElements(
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'canvas',
 		decoration: { value: ButtonGraphicsDecorationType.FollowDefault, isExpression: false },
+		showStatusIcons: { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false },
 	}
 	const backgroundElement: ButtonGraphicsBoxElement = {
 		id: 'box0',
@@ -236,7 +238,7 @@ export function ConvertLegacyStyleToElements(
 		base64Image: { value: null, isExpression: false },
 		halign: { value: 'center', isExpression: false },
 		valign: { value: 'center', isExpression: false },
-		fillMode: { value: 'fit_or_shrink', isExpression: false },
+		fillMode: { value: 'fit', isExpression: false },
 	}
 	const textElement: ButtonGraphicsTextElement = {
 		id: 'text0',
@@ -272,7 +274,7 @@ export function ConvertLegacyStyleToElements(
 		base64Image: { value: null, isExpression: false },
 		halign: { value: 'center', isExpression: false },
 		valign: { value: 'center', isExpression: false },
-		fillMode: { value: 'fit_or_shrink', isExpression: false },
+		fillMode: { value: 'fit', isExpression: false },
 	}
 
 	// Apply the old style properties to the new elements
@@ -327,7 +329,7 @@ export function ConvertLegacyStyleToElements(
 
 			// Should be advanced, translate all properties
 
-			overrides = CreateAdvancedFeedbackStyleOverrides(selectedElementIds, bufferElement.id)
+			overrides = CreateAdvancedFeedbackStyleOverrides(selectedElementIds, bufferElement.id, undefined)
 		}
 
 		return {
@@ -474,7 +476,8 @@ export function CreateAdvancedFeedbackStyleOverrides(
 	selectedElementIds: {
 		[usage in ButtonGraphicsElementUsage]: string | undefined
 	},
-	bufferElementId: string | undefined
+	bufferElementId: string | undefined,
+	affectedProperties: string[] | undefined
 ): FeedbackEntityStyleOverride[] {
 	const overrides: FeedbackEntityStyleOverride[] = []
 
@@ -483,64 +486,77 @@ export function CreateAdvancedFeedbackStyleOverrides(
 	const backgroundElementId = selectedElementIds[ButtonGraphicsElementUsage.Color]
 
 	if (textElementId) {
-		overrides.push(
-			{
+		if (!affectedProperties || affectedProperties.includes('text')) {
+			overrides.push({
 				overrideId: nanoid(),
 				elementId: textElementId,
 				elementProperty: 'text',
 				override: { isExpression: false, value: 'text' },
-			},
-			{
+			})
+		}
+		if (!affectedProperties || affectedProperties.includes('size')) {
+			overrides.push({
 				overrideId: nanoid(),
 				elementId: textElementId,
 				elementProperty: 'fontsize',
 				override: { isExpression: false, value: 'size' },
-			},
-			{
-				overrideId: nanoid(),
-				elementId: textElementId,
-				elementProperty: 'halign',
-				override: { isExpression: false, value: 'alignment' },
-			},
-			{
-				overrideId: nanoid(),
-				elementId: textElementId,
-				elementProperty: 'valign',
-				override: { isExpression: false, value: 'alignment' },
-			},
-			{
+			})
+		}
+		if (!affectedProperties || affectedProperties.includes('alignment')) {
+			overrides.push(
+				{
+					overrideId: nanoid(),
+					elementId: textElementId,
+					elementProperty: 'halign',
+					override: { isExpression: false, value: 'alignment' },
+				},
+				{
+					overrideId: nanoid(),
+					elementId: textElementId,
+					elementProperty: 'valign',
+					override: { isExpression: false, value: 'alignment' },
+				}
+			)
+		}
+		if (!affectedProperties || affectedProperties.includes('color')) {
+			overrides.push({
 				overrideId: nanoid(),
 				elementId: textElementId,
 				elementProperty: 'color',
 				override: { isExpression: false, value: 'color' },
-			}
-		)
+			})
+		}
 	}
 
 	if (imageElementId) {
-		overrides.push(
-			{
-				overrideId: nanoid(),
-				elementId: imageElementId,
-				elementProperty: 'halign',
-				override: { isExpression: false, value: 'pngalignment' },
-			},
-			{
-				overrideId: nanoid(),
-				elementId: imageElementId,
-				elementProperty: 'valign',
-				override: { isExpression: false, value: 'pngalignment' },
-			},
-			{
+		if (!affectedProperties || affectedProperties.includes('pngalignment')) {
+			overrides.push(
+				{
+					overrideId: nanoid(),
+					elementId: imageElementId,
+					elementProperty: 'halign',
+					override: { isExpression: false, value: 'pngalignment' },
+				},
+				{
+					overrideId: nanoid(),
+					elementId: imageElementId,
+					elementProperty: 'valign',
+					override: { isExpression: false, value: 'pngalignment' },
+				}
+			)
+		}
+
+		if (!affectedProperties || affectedProperties.includes('png64')) {
+			overrides.push({
 				overrideId: nanoid(),
 				elementId: imageElementId,
 				elementProperty: 'base64Image',
 				override: { isExpression: false, value: 'png64' },
-			}
-		)
+			})
+		}
 	}
 
-	if (backgroundElementId) {
+	if (backgroundElementId && (!affectedProperties || affectedProperties.includes('bgcolor'))) {
 		overrides.push({
 			overrideId: nanoid(),
 			elementId: backgroundElementId,
@@ -549,7 +565,7 @@ export function CreateAdvancedFeedbackStyleOverrides(
 		})
 	}
 
-	if (bufferElementId) {
+	if (bufferElementId && (!affectedProperties || affectedProperties.includes('imageBuffer'))) {
 		overrides.push({
 			overrideId: nanoid(),
 			elementId: bufferElementId,

@@ -8,7 +8,7 @@ import type {
 import {
 	createModuleLogger,
 	type CompanionAdvancedFeedbackResult,
-	type CompanionGraphicsCompositeElementDefinition,
+	type CompanionGraphicsCompositeElementDefinitions,
 	type CompanionPresetDefinitions,
 	type CompanionPresetSection,
 	type CompanionRecordedAction,
@@ -72,6 +72,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				feedbackType: null,
 				feedbackStyle: undefined,
+				feedbackAffectedProperties: undefined,
 
 				optionsSupportExpressions: true,
 			} satisfies Complete<ClientEntityDefinition>
@@ -95,6 +96,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				optionsToMonitorForInvalidations: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
+				feedbackAffectedProperties: rawFeedback.affectedProperties,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
@@ -132,12 +134,13 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 		})
 	}
 	/** The composite graphics elements provided by the connection have changed */
-	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinition[]): void {
+	setCompositeElementDefinitions(compositeElements: CompanionGraphicsCompositeElementDefinitions): void {
 		const convertedElements: CompositeElementDefinition[] = []
 
-		for (const rawElement of compositeElements) {
+		for (const [id, rawElement] of Object.entries(compositeElements)) {
+			if (!rawElement) continue
 			convertedElements.push({
-				id: rawElement.id,
+				id,
 				name: rawElement.name,
 				description: rawElement.description,
 				options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback),

@@ -247,7 +247,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					} else if (definition.feedbackType === FeedbackEntitySubType.Advanced) {
 						feedback.styleOverrides = CreateAdvancedFeedbackStyleOverrides(
 							layeredStyleSelectedElementIds,
-							layeredStyleSelectedElementIds[ButtonGraphicsElementUsage.Image]
+							layeredStyleSelectedElementIds[ButtonGraphicsElementUsage.Image],
+							definition.feedbackAffectedProperties
 						)
 					}
 				}

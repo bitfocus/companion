@@ -174,7 +174,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						label="Simple"
 						checked={simpleMode}
 						onChange={(e) => setSimpleMode(e.target.checked)}
-						title={simpleMode ? 'Show reduced set of properties' : 'Show full set of properties'}
+						title={simpleMode ? 'Showing a reduced set of properties' : 'Showing the full set of properties'}
 					/>
 				</div>
 				<hr />

@@ -2,6 +2,7 @@ import { CButton, CNav, CNavItem, CNavLink } from '@coreui/react'
 import { faClone, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocalStorage } from 'usehooks-ts'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -57,12 +58,13 @@ export function ButtonEditorTabs({
 		return tabKeys
 	}, [stepKeys, extraTabs])
 
-	const [selectedStep, setSelectedStep] = useState(tabKeys[0] ?? '')
+	const defaultStep = stepKeys[0] ? `step:${stepKeys[0]}` : (tabKeys[0] ?? '')
+	const [selectedStep, setSelectedStep] = useLocalStorage('buttonEditor.activeTab', defaultStep)
 	useEffect(() => {
 		if (!tabKeys.includes(selectedStep)) {
-			setSelectedStep(tabKeys[0])
+			setSelectedStep(stepKeys[0] ? `step:${stepKeys[0]}` : (tabKeys[0] ?? ''))
 		}
-	}, [tabKeys, selectedStep])
+	}, [tabKeys, selectedStep, stepKeys, setSelectedStep])
 
 	const service = useControlActionStepsAndSetsService(controlId, confirmRef, setSelectedStep)
 

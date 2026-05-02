@@ -597,6 +597,7 @@ export class InternalController {
 						showInvert: false,
 						feedbackType: null,
 						feedbackStyle: undefined,
+						feedbackAffectedProperties: undefined,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -627,6 +628,7 @@ export class InternalController {
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
+						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 

@@ -116,7 +116,13 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	const features = getInputFeatures(field)
 
 	return (
-		<FormPropertyField elementProps={elementProps} property={field.id} label={field.label} features={features}>
+		<FormPropertyField
+			elementProps={elementProps}
+			property={field.id}
+			label={field.label}
+			tooltip={field.tooltip}
+			features={features}
+		>
 			{(elementProp, setValueFromForm) => (
 				<OptionsInputControl
 					allowInternalFields={true}

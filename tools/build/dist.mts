@@ -1,15 +1,14 @@
 #!/usr/bin/env zx
-
-import { generateMiniVersionString, generateVersionString } from '../lib.mts'
-import yazl from 'yazl'
-import { $, fs, usePowerShell, argv } from 'zx'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import type { PackageJson } from 'type-fest'
 import yaml from 'yaml'
-import { determinePlatformInfo } from './util.mts'
+import yazl from 'yazl'
+import { $, argv, fs, usePowerShell } from 'zx'
 // @ts-expect-error Untyped webpack config
 import webpackConfig from '../../companion/webpack.config.js'
-import type { PackageJson } from 'type-fest'
+import { generateMiniVersionString, generateVersionString } from '../lib.mts'
+import { determinePlatformInfo } from './util.mts'
 
 $.verbose = true
 
@@ -80,11 +79,6 @@ for (const name of neededDependencies) {
 	dependencies[name] = pkgJson.version
 }
 
-if (platformInfo.runtimePlatform === 'linux' && platformInfo.runtimeArch !== 'x64') {
-	// These have no prebuilds available
-	delete dependencies['bufferutil']
-}
-
 const packageResolutions: PackageJson.Dependency = {
 	// Force the same custom `node-gyp-build` version to allow better cross compiling
 	'node-gyp-build': companionPkgJson.resolutions?.['node-gyp-build'],
@@ -135,7 +129,7 @@ const copyPrebuildsFromDependencies = [
 	'node-hid',
 	'@julusian/image-rs',
 	'@julusian/segfault-raub',
-	//
+	'bufferutil', // Technically @julusian/bufferutil
 ]
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')

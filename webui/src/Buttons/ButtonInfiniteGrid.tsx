@@ -1,4 +1,3 @@
-import { CButton, CFormInput } from '@coreui/react'
 import classNames from 'classnames'
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useDrop } from 'react-dnd'
@@ -33,7 +32,6 @@ interface ButtonInfiniteGridProps {
 	buttonClick?: (location: ControlLocation, pressed: boolean) => void
 	selectedButton?: ControlLocation | null
 	gridSize: UserConfigGridSize
-	doGrow?: (direction: 'left' | 'right' | 'top' | 'bottom', amount: number) => void
 	ButtonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any> // TODO - this type is flawed
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
@@ -48,7 +46,6 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			buttonClick,
 			selectedButton,
 			gridSize,
-			doGrow,
 			ButtonIconFactory,
 			drawScale,
 			maxHeightToMatchCanvas,
@@ -63,8 +60,6 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const tileInnerSize = 72 * (drawScale ?? 1)
 		const tilePadding = Math.min(6, tileInnerSize * 0.05)
 		const tileSize = tileInnerSize + tilePadding * 2
-		const growWidth = doGrow ? 90 : 0
-		const growHeight = doGrow ? 60 : 0
 		const SCROLLBAR_PADDING = 15
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
@@ -77,9 +72,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 
 		useEffect(() => {
 			if (setViewportMinHeight) {
-				setViewportMinHeight(2 * tileSize + growHeight + SCROLLBAR_PADDING)
+				setViewportMinHeight(2 * tileSize + SCROLLBAR_PADDING)
 			}
-		}, [growHeight, setViewportMinHeight, tileSize])
+		}, [setViewportMinHeight, tileSize])
 
 		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
 		useEffect(() => {
@@ -108,10 +103,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const [scrollerRef, setScrollerRef] = useState<HTMLDivElement | null>(null)
 		const resetScrollPosition = useCallback(() => {
 			if (scrollerRef) {
-				scrollerRef.scrollTop = -minRow * tileSize + growHeight
-				scrollerRef.scrollLeft = -minColumn * tileSize + growWidth
+				scrollerRef.scrollTop = -minRow * tileSize
+				scrollerRef.scrollLeft = -minColumn * tileSize
 			}
-		}, [scrollerRef, minColumn, minRow, tileSize, growWidth, growHeight])
+		}, [scrollerRef, minColumn, minRow, tileSize])
 
 		// Make the scroll position sticky when zooming
 		const tmpScrollerPosition = useRef<{ left: number; top: number }>()
@@ -194,53 +189,15 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 							selectedButton?.column === column &&
 							selectedButton?.row === row
 						}
-						left={(column - minColumn) * tileSize + growWidth}
-						top={(row - minRow) * tileSize + growHeight}
+						left={(column - minColumn) * tileSize}
+						top={(row - minRow) * tileSize}
 					/>
 				)
 			}
 		}
 
-		const growTopRef = useRef<HTMLInputElement>(null)
-		const growBottomRef = useRef<HTMLInputElement>(null)
-		const growLeftRef = useRef<HTMLInputElement>(null)
-		const growRightRef = useRef<HTMLInputElement>(null)
-
-		const doGrowLeft = useCallback(() => {
-			if (!doGrow || !growLeftRef.current) return
-
-			const amount = Number(growLeftRef.current.value)
-			if (isNaN(amount)) return
-
-			doGrow('left', amount)
-		}, [doGrow])
-		const doGrowRight = useCallback(() => {
-			if (!doGrow || !growRightRef.current) return
-
-			const amount = Number(growRightRef.current.value)
-			if (isNaN(amount)) return
-
-			doGrow('right', amount)
-		}, [doGrow])
-		const doGrowTop = useCallback(() => {
-			if (!doGrow || !growTopRef.current) return
-
-			const amount = Number(growTopRef.current.value)
-			if (isNaN(amount)) return
-
-			doGrow('top', amount)
-		}, [doGrow])
-		const doGrowBottom = useCallback(() => {
-			if (!doGrow || !growBottomRef.current) return
-
-			const amount = Number(growBottomRef.current.value)
-			if (isNaN(amount)) return
-
-			doGrow('bottom', amount)
-		}, [doGrow])
-
-		const canvasWidth = countColumns * tileSize + growWidth * 2
-		const canvasHeight = countRows * tileSize + growHeight * 2
+		const canvasWidth = countColumns * tileSize
+		const canvasHeight = countRows * tileSize
 
 		const gridCanvasStyle = useMemo(
 			() => ({
@@ -268,39 +225,6 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				style={gridWrapperStyle}
 			>
 				<div className="button-grid-canvas" style={gridCanvasStyle}>
-					{doGrow && (
-						<>
-							<div className="expand left">
-								<div className="sticky-center">
-									<CButton onClick={doGrowLeft}>Add</CButton>
-									<CFormInput ref={growLeftRef} type="number" min={1} defaultValue={2} />
-									&nbsp;&nbsp;columns
-								</div>
-							</div>
-							<div className="expand right">
-								<div className="sticky-center">
-									<CButton onClick={doGrowRight}>Add</CButton>
-									<CFormInput ref={growRightRef} type="number" min={1} defaultValue={2} />
-									&nbsp;&nbsp;columns
-								</div>
-							</div>
-							<div className="expand top">
-								<div className="sticky-center">
-									<CButton onClick={doGrowTop}>Add</CButton>
-									<CFormInput ref={growTopRef} type="number" min={1} defaultValue={2} />
-									&nbsp;&nbsp;rows
-								</div>
-							</div>
-							<div className="expand bottom">
-								<div className="sticky-center">
-									<CButton onClick={doGrowBottom}>Add</CButton>
-									<CFormInput ref={growBottomRef} type="number" min={1} defaultValue={2} />
-									&nbsp;&nbsp;rows
-								</div>
-							</div>
-						</>
-					)}
-
 					{visibleButtons}
 				</div>
 			</div>

@@ -26,6 +26,7 @@ import type {
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	type CompositeElementOptionKey,
 } from '@companion-app/shared/Model/StyleModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -92,6 +93,7 @@ export function ConvertLayerPresetElements(
 			value: ButtonGraphicsDecorationType.FollowDefault,
 			isExpression: false,
 		}),
+		showStatusIcons: { isExpression: false, value: ButtonGraphicsShowStatusIcons.FollowDefault }, // Future: expose
 	}
 
 	return [
@@ -150,7 +152,7 @@ function convertLayeredPresetElement(
 				base64Image: convertModuleExpressionOrValue(element.base64Image, { value: null, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
 				valign: convertModuleExpressionOrValue(element.valign, { value: 'center', isExpression: false }),
-				fillMode: convertModuleExpressionOrValue(element.fillMode, { value: 'fit_or_shrink', isExpression: false }),
+				fillMode: convertModuleExpressionOrValue(element.fillMode, { value: 'fit', isExpression: false }),
 			} satisfies ButtonGraphicsImageElement
 		case 'text':
 			return {

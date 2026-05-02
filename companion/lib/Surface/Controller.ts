@@ -222,7 +222,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const runHotplug = this.#handlerDependencies.userconfig.getKey('usb_hotplug')
 		if (runHotplug) {
 			try {
-				usb.on('attach', this.triggerRefreshDevicesEvent)
+				usb.addEventListener('connect', this.triggerRefreshDevicesEvent)
 			} catch (e) {
 				this.#logger.error(`Failed to enable usb hotplug: ${e}`)
 			}
@@ -249,11 +249,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				if (!value && this.#runningUsbHotplug) {
 					// Stop watching
-					usb.off('attach', this.triggerRefreshDevicesEvent)
+					usb.removeEventListener('connect', this.triggerRefreshDevicesEvent)
 					this.#runningUsbHotplug = false
 				} else if (value && !this.#runningUsbHotplug) {
 					// Start watching
-					usb.on('attach', this.triggerRefreshDevicesEvent)
+					usb.addEventListener('connect', this.triggerRefreshDevicesEvent)
 					this.#runningUsbHotplug = true
 				}
 			} catch (e) {

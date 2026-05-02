@@ -1,6 +1,5 @@
 import { CAlert, CButton, CCol, CForm, CFormLabel, CFormSelect, CFormSwitch } from '@coreui/react'
-import { faCheck, faCircleExclamation, faGear, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
 import { observable } from 'mobx'
@@ -9,7 +8,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
@@ -166,11 +165,7 @@ function InstanceFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField 
 	return (
 		<>
 			{fieldInfo.label}
-			{fieldInfo.tooltip && (
-				<InlineHelp help={fieldInfo.tooltip}>
-					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-				</InlineHelp>
-			)}
+			{fieldInfo.tooltip && <InlineHelpIcon className="ms-1">{fieldInfo.tooltip}</InlineHelpIcon>}
 		</>
 	)
 }
@@ -266,11 +261,9 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 		<>
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
-				<InlineHelp
-					help={`How to check whether there are updates available for this ${panelStore.service.moduleTypeDisplayName}`}
-				>
-					<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-				</InlineHelp>
+				<InlineHelpIcon className="ms-1">
+					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
+				</InlineHelpIcon>
 			</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CFormSelect

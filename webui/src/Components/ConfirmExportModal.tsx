@@ -9,14 +9,12 @@ import {
 	CModalFooter,
 	CModalHeader,
 } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { InlineHelp } from './InlineHelp.js'
+import { InlineHelpIcon } from './InlineHelp.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { TextInputField } from './TextInputField.js'
 
@@ -113,9 +111,10 @@ export const ConfirmExportModal = observer(
 							</CCol>
 							<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 								Include secrets
-								<InlineHelp help="Some connections have secret values that can be omitted from the export. Not all modules are compatible with this">
-									<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-								</InlineHelp>
+								<InlineHelpIcon className="ms-1">
+									Some connections have secret values that can be omitted from the export. Not all modules are
+									compatible with this
+								</InlineHelpIcon>
 							</CFormLabel>
 							<CCol sm={8} className="d-flex align-items-center">
 								<CFormSwitch

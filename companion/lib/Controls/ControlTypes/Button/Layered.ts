@@ -18,6 +18,7 @@ import type {
 import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
@@ -74,6 +75,7 @@ export class ControlButtonLayered
 			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'canvas',
 			decoration: { value: ButtonGraphicsDecorationType.FollowDefault, isExpression: false },
+			showStatusIcons: { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false },
 		},
 		{
 			id: 'box0',
@@ -177,15 +179,17 @@ export class ControlButtonLayered
 						// Ignore
 					}
 				}
-				// switch (element.type) {
-				// 	case 'image':
-				// 		element.fillMode = element.fillMode || { value: 'fit_or_shrink', isExpression: false }
-				// 		element.enabled = element.enabled || { value: true, isExpression: false }
-				// 		break
-				// 	case 'text':
-				// 		element.enabled = element.enabled || { value: true, isExpression: false }
-				// 		break
-				// }
+				switch (element.type) {
+					case 'canvas':
+						if (!element.showStatusIcons)
+							element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
+						break
+					case 'image':
+						if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
+							element.fillMode.value = 'fit'
+						}
+						break
+				}
 			}
 
 			// Ensure control is stored before setup

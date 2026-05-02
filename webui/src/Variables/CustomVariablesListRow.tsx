@@ -6,7 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
-import { InlineHelp } from '~/Components/InlineHelp'
+import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputField } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -80,9 +80,12 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				<>
 					<CForm onSubmit={PreventDefaultHandler} className="cell-fields">
 						<div>
-							<InlineHelp help="If enabled, variable value will be saved and restored when Companion restarts.">
-								<CFormLabel>Persist value</CFormLabel>
-							</InlineHelp>
+							<CFormLabel>
+								Persist value
+								<InlineHelpIcon className="ms-1">
+									If enabled, variable value will be saved and restored when Companion restarts.
+								</InlineHelpIcon>
+							</CFormLabel>
 							<CheckboxInputField
 								value={info.persistCurrentValue}
 								setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}

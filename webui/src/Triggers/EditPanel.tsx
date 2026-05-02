@@ -1,13 +1,11 @@
 import { CAlert, CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/index.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -70,10 +68,10 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<TriggerEventEditor
 					heading={
 						<>
-							Events &nbsp;
-							<InlineHelp help="The trigger will be executed when any of the events happens">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</InlineHelp>
+							Events
+							<InlineHelpIcon className="ms-2">
+								This trigger will be executed when any of the events happens
+							</InlineHelpIcon>
 						</>
 					}
 					controlId={controlId}
@@ -86,10 +84,8 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<ControlEntitiesEditor
 					heading={
 						<>
-							Conditions &nbsp;
-							<InlineHelp help="Only execute when all of these conditions are true">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</InlineHelp>
+							Conditions
+							<InlineHelpIcon className="ms-2">Only execute when all of these conditions are true</InlineHelpIcon>
 						</>
 					}
 					controlId={controlId}
@@ -108,10 +104,8 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<ControlEntitiesEditor
 					heading={
 						<>
-							Actions &nbsp;
-							<InlineHelp help="What should happen when executed">
-								<FontAwesomeIcon icon={faQuestionCircle} />
-							</InlineHelp>
+							Actions
+							<InlineHelpIcon className="ms-2">What should happen when executed</InlineHelpIcon>
 						</>
 					}
 					controlId={controlId}

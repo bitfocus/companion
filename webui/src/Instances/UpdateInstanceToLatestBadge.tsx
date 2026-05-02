@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import semver from 'semver'
 import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { getLatestVersion } from './VersionUtil.js'
@@ -66,9 +66,8 @@ const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLates
 	if (!message) return null
 
 	return (
-		<InlineHelp help={message}>
-			&nbsp;
+		<InlineHelpCustom help={message} className="ms-1">
 			<FontAwesomeIcon icon={faCircleUp} aria-label={message} />
-		</InlineHelp>
+		</InlineHelpCustom>
 	)
 })

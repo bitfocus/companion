@@ -6,7 +6,6 @@ import {
 	faFileImport,
 	faGlobe,
 	faPlug,
-	faQuestionCircle,
 	faTh,
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
@@ -19,7 +18,7 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -311,9 +310,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 									label={
 										<>
 											Known Surfaces
-											<InlineHelp help="The list of known surfaces, and their settings">
-												<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-											</InlineHelp>
+											<InlineHelpIcon className="ms-1">The list of known surfaces, and their settings</InlineHelpIcon>
 										</>
 									}
 								/>
@@ -329,9 +326,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 									label={
 										<>
 											Surface Integrations
-											<InlineHelp help="The configured surface integrations">
-												<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-											</InlineHelp>
+											<InlineHelpIcon className="ms-1">The configured surface integrations</InlineHelpIcon>
 										</>
 									}
 								/>
@@ -347,9 +342,9 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 									label={
 										<>
 											Remote Surfaces
-											<InlineHelp help="Connections for surfaces that are connected remotely">
-												<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-											</InlineHelp>
+											<InlineHelpIcon className="ms-1">
+												Connections for surfaces that are connected remotely
+											</InlineHelpIcon>
 										</>
 									}
 								/>

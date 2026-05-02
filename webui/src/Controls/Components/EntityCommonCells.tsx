@@ -15,7 +15,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
@@ -89,9 +89,9 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							<MyErrorBoundary>
 								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
 									Variable name
-									<InlineHelp help={`The name to give this value as a ${localVariablePrefix} variable`}>
-										<FontAwesomeIcon icon={faQuestionCircle} />
-									</InlineHelp>
+									<InlineHelpIcon className="ms-1">
+										The name to give this value as a {localVariablePrefix} variable
+									</InlineHelpIcon>
 									<CopyToClipboard text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`} onCopy={onCopied}>
 										<CButton size="sm" title="Copy variable name" className="ps-0">
 											<FontAwesomeIcon icon={faCopy} color="#d50215" />

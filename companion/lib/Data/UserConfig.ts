@@ -43,6 +43,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		page_direction_flipped: false,
 		page_plusminus: false,
 		remove_topbar: false,
+		buttons_status_icons: 'show',
 
 		elgato_plugin_enable: false,
 		usb_hotplug: true,
@@ -103,7 +104,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			minRow: 0,
 			maxRow: 3,
 		},
-		gridSizeInlineGrow: false, // TODO: temporary until the styling of growing is better
 		gridSizePromptGrow: true,
 
 		installName: '',

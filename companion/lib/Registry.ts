@@ -392,7 +392,7 @@ export class Registry {
 
 			this.variables.custom.init()
 			this.internalModule.firstUpdate()
-			this.graphics.regenerateAll(false)
+			this.graphics.triggerRegenerateAll()
 
 			// We are ready to start the instances/connections
 			await this.instance.initInstances(this.db.getIsFirstRun(), extraModulePath)

@@ -1900,25 +1900,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89":
-  version: 2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89
-  resolution: "@companion-module/base@npm:2.0.3-nightly-feat-graphics-overhaul-20260418-142200-e6e6c89"
+"@companion-module/base@npm:2.1.0-0-nightly-main-20260501-215220-309fb87":
+  version: 2.1.0-0-nightly-main-20260501-215220-309fb87
+  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260501-215220-309fb87"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/ec62a8c7993d3e0efd390e018a5ad9ca79e48fc1b7e7e3500e55566df7789041a3578e1700c774d079304f796b3fc089e5e02f8ff67ecc0d61550f860abebf8c
+  checksum: 10c0/77f736adc15e4e3f35364b89a3734dd45ac3f2955b0f65d36c9ae5542a8a9f09d8e5a1240cdbc9b4a4bb261bf4b10aa86e9c6e5cf3520a0625c2caab53f897e5
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89":
-  version: 1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89
-  resolution: "@companion-module/host@npm:1.0.2-nightly-feat-graphics-overhaul-20260418-141844-e6e6c89"
+"@companion-module/host@npm:1.0.3-nightly-main-20260501-214239-60000e7":
+  version: 1.0.3-nightly-main-20260501-214239-60000e7
+  resolution: "@companion-module/host@npm:1.0.3-nightly-main-20260501-214239-60000e7"
   dependencies:
-    "@companion-module/base": "npm:~2.0.3"
+    "@companion-module/base": "npm:~2.1.0-0"
     debounce-fn: "npm:^6.0.0"
-    p-queue: "npm:^9.1.0"
+    p-queue: "npm:^9.2.0"
+    semver: "npm:^7.7.4"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/4a574b56f9ff64f454438b8874265eccc86a9db3f95772bc7e83574931ba6904b9420f3351a2f94a90030c74be7330149569661f50deb0b01749045c3633e0d8
+    zod: "npm:^4.3.6"
+  checksum: 10c0/37a19995ecca811f07923dece7fb8d9890ac3e802004ffdf28b76e3aeed5209ac8fbaaed85acfcacf9da5a7a202169aed0297df6158e6e767f97b8e9587c79ad
   languageName: node
   linkType: hard
 
@@ -3405,28 +3407,21 @@ __metadata:
   linkType: hard
 
 "@electron/rebuild@npm:^4.0.3":
-  version: 4.0.3
-  resolution: "@electron/rebuild@npm:4.0.3"
+  version: 4.0.4
+  resolution: "@electron/rebuild@npm:4.0.4"
   dependencies:
     "@malept/cross-spawn-promise": "npm:^2.0.0"
     debug: "npm:^4.1.1"
-    detect-libc: "npm:^2.0.1"
-    got: "npm:^11.7.0"
-    graceful-fs: "npm:^4.2.11"
     node-abi: "npm:^4.2.0"
     node-api-version: "npm:^0.2.1"
-    node-gyp: "npm:^11.2.0"
-    ora: "npm:^5.1.0"
+    node-gyp: "npm:^12.2.0"
     read-binary-file-arch: "npm:^1.0.6"
-    semver: "npm:^7.3.5"
-    tar: "npm:^7.5.6"
-    yargs: "npm:^17.0.1"
   dependenciesMeta:
     electron:
       built: true
   bin:
     electron-rebuild: lib/cli.js
-  checksum: 10c0/43bdbf85cde13874a2185c161d1943c3c4f12323f25cc3534890b1b0ec451b5bb940aa80e2c42476fe0d8c854d2e62b0e56f0d98c482c03b0715305bf9688171
+  checksum: 10c0/f6ff567b0c6ec038c4805b2feaaf00826200a59d27cc271172940c9735aec97e734fddd0ca4f45e882350cf87694fe85219ba8181fc09ec643f4dedcf15f673d
   languageName: node
   linkType: hard
 
@@ -4703,6 +4698,76 @@ __metadata:
   version: 1.8.0
   resolution: "@noble/hashes@npm:1.8.0"
   checksum: 10c0/06a0b52c81a6fa7f04d67762e08b2c476a00285858150caeaaff4037356dd5e119f45b2a530f638b77a5eeca013168ec1b655db41bae3236cb2e9d511484fc77
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-darwin-arm64@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-darwin-arm64@npm:3.0.0-alpha.5"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-darwin-x64@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-darwin-x64@npm:3.0.0-alpha.5"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-linux-arm-gnueabihf@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-linux-arm-gnueabihf@npm:3.0.0-alpha.5"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-linux-arm64-gnu@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-linux-arm64-gnu@npm:3.0.0-alpha.5"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-linux-arm64-musl@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-linux-arm64-musl@npm:3.0.0-alpha.5"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-linux-x64-gnu@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-linux-x64-gnu@npm:3.0.0-alpha.5"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-linux-x64-musl@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-linux-x64-musl@npm:3.0.0-alpha.5"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-win32-arm64-msvc@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-win32-arm64-msvc@npm:3.0.0-alpha.5"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-win32-ia32-msvc@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-win32-ia32-msvc@npm:3.0.0-alpha.5"
+  conditions: os=win32 & cpu=ia32
+  languageName: node
+  linkType: hard
+
+"@node-usb/usb-win32-x64-msvc@npm:3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "@node-usb/usb-win32-x64-msvc@npm:3.0.0-alpha.5"
+  conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
@@ -8192,10 +8257,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/w3c-web-usb@npm:^1.0.6":
-  version: 1.0.10
-  resolution: "@types/w3c-web-usb@npm:1.0.10"
-  checksum: 10c0/3df5733a334c5fd22ef3fa1e97a70c029542591058d11905d1304c26bab8705d975168818b5b7ec21fef5591cdea776dbdb31d4c04aa433e7fe7d61dd7ebdecf
+"@types/w3c-web-usb@npm:^1.0.13":
+  version: 1.0.14
+  resolution: "@types/w3c-web-usb@npm:1.0.14"
+  checksum: 10c0/34b460f6b78309a86c61cbbb72aa0d632901088c03b55675dbf1eb17bd1cc49faa2b9156ecefa243169a5716d4df93688e58246a38a880c4b5b583d19d86ceb1
   languageName: node
   linkType: hard
 
@@ -9723,7 +9788,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bl@npm:^4.0.3, bl@npm:^4.1.0":
+"bl@npm:^4.0.3":
   version: 4.1.0
   resolution: "bl@npm:4.1.0"
   dependencies:
@@ -9947,13 +10012,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bufferutil@npm:^4.1.0":
+"bufferutil@npm:@julusian/bufferutil@^4.1.0":
   version: 4.1.0
-  resolution: "bufferutil@npm:4.1.0"
+  resolution: "@julusian/bufferutil@npm:4.1.0"
   dependencies:
     node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.3.0"
-  checksum: 10c0/12d63bbc80a3b6525bc62a28387fca0a5aed09e41b74375c500e60721b6a1ab2960b82e48f1773eddea2b14e490f129214b8b57bd6e1a5078b6235857d658508
+    pkg-prebuilds: "npm:^1.0.0"
+  checksum: 10c0/d83ee14035418e8e92e2f385414b705d66681a0cf1158fff8101826c9cc852c05397a0f4f9b6220962642dc152aee69efb9047a9094fe3fdb224344cc812495a
   languageName: node
   linkType: hard
 
@@ -10374,15 +10439,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cli-cursor@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "cli-cursor@npm:3.1.0"
-  dependencies:
-    restore-cursor: "npm:^3.1.0"
-  checksum: 10c0/92a2f98ff9037d09be3dfe1f0d749664797fb674bf388375a2207a1203b69d41847abf16434203e0089212479e47a358b13a0222ab9fccfe8e2644a7ccebd111
-  languageName: node
-  linkType: hard
-
 "cli-cursor@npm:^5.0.0":
   version: 5.0.0
   resolution: "cli-cursor@npm:5.0.0"
@@ -10392,7 +10448,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cli-spinners@npm:^2.5.0, cli-spinners@npm:^2.9.2":
+"cli-spinners@npm:^2.9.2":
   version: 2.9.2
   resolution: "cli-spinners@npm:2.9.2"
   checksum: 10c0/907a1c227ddf0d7a101e7ab8b300affc742ead4b4ebe920a5bf1bc6d45dce2958fcd195eb28fa25275062fe6fa9b109b93b63bc8033396ed3bcb50297008b3a3
@@ -10467,13 +10523,6 @@ __metadata:
   dependencies:
     mimic-response: "npm:^1.0.0"
   checksum: 10c0/06a2b611824efb128810708baee3bd169ec9a1bf5976a5258cd7eb3f7db25f00166c6eee5961f075c7e38e194f373d4fdf86b8166ad5b9c7e82bbd2e333a6087
-  languageName: node
-  linkType: hard
-
-"clone@npm:^1.0.2":
-  version: 1.0.4
-  resolution: "clone@npm:1.0.4"
-  checksum: 10c0/2176952b3649293473999a95d7bebfc9dc96410f6cbd3d2595cf12fd401f63a4bf41a7adbfd3ab2ff09ed60cb9870c58c6acdd18b87767366fabfc163700f13b
   languageName: node
   linkType: hard
 
@@ -10701,7 +10750,7 @@ __metadata:
     "@types/ws": "npm:^8.18.1"
     "@types/yazl": "npm:^3.3.1"
     better-sqlite3: "npm:12.8.0"
-    bufferutil: "npm:^4.1.0"
+    bufferutil: "npm:@julusian/bufferutil@^4.1.0"
     colord: "npm:^2.9.3"
     commander: "npm:^14.0.3"
     compression: "npm:^1.8.1"
@@ -10739,7 +10788,7 @@ __metadata:
     type-fest: "npm:^5.6.0"
     typescript: "npm:~6.0.3"
     udev-generator: "npm:^1.0.2"
-    usb: "npm:^2.17.0"
+    usb: "npm:^3.0.0-alpha.5"
     uuid: "npm:^14.0.0"
     webpack: "npm:5.104.1"
     webpack-cli: "npm:^7.0.2"
@@ -11626,15 +11675,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"defaults@npm:^1.0.3":
-  version: 1.0.4
-  resolution: "defaults@npm:1.0.4"
-  dependencies:
-    clone: "npm:^1.0.2"
-  checksum: 10c0/9cfbe498f5c8ed733775db62dfd585780387d93c17477949e1670bfcfb9346e0281ce8c4bf9f4ac1fc0f9b851113bd6dc9e41182ea1644ccd97de639fa13c35a
-  languageName: node
-  linkType: hard
-
 "defer-to-connect@npm:^2.0.0, defer-to-connect@npm:^2.0.1":
   version: 2.0.1
   resolution: "defer-to-connect@npm:2.0.1"
@@ -11729,7 +11769,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"detect-libc@npm:^2.0.0, detect-libc@npm:^2.0.1, detect-libc@npm:^2.0.3":
+"detect-libc@npm:^2.0.0, detect-libc@npm:^2.0.3":
   version: 2.0.4
   resolution: "detect-libc@npm:2.0.4"
   checksum: 10c0/c15541f836eba4b1f521e4eecc28eefefdbc10a94d3b8cb4c507689f332cc111babb95deda66f2de050b22122113189986d5190be97d51b5a2b23b938415e67c
@@ -13082,10 +13122,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:^5.0.1":
-  version: 5.0.1
-  resolution: "eventemitter3@npm:5.0.1"
-  checksum: 10c0/4ba5c00c506e6c786b4d6262cfbce90ddc14c10d4667e5c83ae993c9de88aa856033994dd2b35b83e8dc1170e224e66a319fa80adc4c32adcd2379bbc75da814
+"eventemitter3@npm:^5.0.1, eventemitter3@npm:^5.0.4":
+  version: 5.0.4
+  resolution: "eventemitter3@npm:5.0.4"
+  checksum: 10c0/575b8cac8d709e1473da46f8f15ef311b57ff7609445a7c71af5cd42598583eee6f098fa7a593e30f27e94b8865642baa0689e8fa97c016f742abdb3b1bf6d9a
   languageName: node
   linkType: hard
 
@@ -14209,7 +14249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"got@npm:^11.7.0, got@npm:^11.8.5":
+"got@npm:^11.8.5":
   version: 11.8.6
   resolution: "got@npm:11.8.6"
   dependencies:
@@ -15537,13 +15577,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-interactive@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "is-interactive@npm:1.0.0"
-  checksum: 10c0/dd47904dbf286cd20aa58c5192161be1a67138485b9836d5a70433b21a45442e9611b8498b8ab1f839fc962c7620667a50535fdfb4a6bc7989b8858645c06b4d
-  languageName: node
-  linkType: hard
-
 "is-interactive@npm:^2.0.0":
   version: 2.0.0
   resolution: "is-interactive@npm:2.0.0"
@@ -15779,13 +15812,6 @@ __metadata:
   version: 1.0.0
   resolution: "is-typedarray@npm:1.0.0"
   checksum: 10c0/4c096275ba041a17a13cca33ac21c16bc4fd2d7d7eb94525e7cd2c2f2c1a3ab956e37622290642501ff4310601e413b675cf399ad6db49855527d2163b3eeeec
-  languageName: node
-  linkType: hard
-
-"is-unicode-supported@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "is-unicode-supported@npm:0.1.0"
-  checksum: 10c0/00cbe3455c3756be68d2542c416cab888aebd5012781d6819749fefb15162ff23e38501fe681b3d751c73e8ff561ac09a5293eba6f58fdf0178462ce6dcb3453
   languageName: node
   linkType: hard
 
@@ -16693,16 +16719,6 @@ __metadata:
   version: 4.18.1
   resolution: "lodash@npm:4.18.1"
   checksum: 10c0/757228fc68805c59789e82185135cf85f05d0b2d3d54631d680ca79ec21944ec8314d4533639a14b8bcfbd97a517e78960933041a5af17ecb693ec6eecb99a27
-  languageName: node
-  linkType: hard
-
-"log-symbols@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "log-symbols@npm:4.1.0"
-  dependencies:
-    chalk: "npm:^4.1.0"
-    is-unicode-supported: "npm:^0.1.0"
-  checksum: 10c0/67f445a9ffa76db1989d0fa98586e5bc2fd5247260dafb8ad93d9f0ccd5896d53fb830b0e54dade5ad838b9de2006c826831a3c528913093af20dff8bd24aca6
   languageName: node
   linkType: hard
 
@@ -18288,15 +18304,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.0.0":
-  version: 8.3.0
-  resolution: "node-addon-api@npm:8.3.0"
-  dependencies:
-    node-gyp: "npm:latest"
-  checksum: 10c0/0ed4206cb68921b33fc637c6f7ffcb91fcde85aea88ea60fadb7b0537bf177226a5600584eac9db2aff93600041d42796fb20576b3299b9be6ff7539592b2180
-  languageName: node
-  linkType: hard
-
 "node-api-version@npm:^0.2.1":
   version: 0.2.1
   resolution: "node-api-version@npm:0.2.1"
@@ -18361,17 +18368,6 @@ __metadata:
   version: 1.4.0
   resolution: "node-forge@npm:1.4.0"
   checksum: 10c0/67330a5f1f95257a4c8a93b7d555abe87b5f15e350123aa396c97a21a8ca94f9c6549008eb2c73668a91e0d7e3a905785acbd8f8bd0751c29401292011f8f8e1
-  languageName: node
-  linkType: hard
-
-"node-gyp-build@github:julusian/node-gyp-build#cross-install-support":
-  version: 4.8.1
-  resolution: "node-gyp-build@https://github.com/julusian/node-gyp-build.git#commit=52ef582b6e6394bff838d8e8b6c9d79995f2d706"
-  bin:
-    node-gyp-build: ./bin.js
-    node-gyp-build-optional: ./optional.js
-    node-gyp-build-test: ./build-test.js
-  checksum: 10c0/94a657094760f15871308f9c7b72cb78955423ccc690cfa9c377f2e7fee30d69a52d72ac0b031d037e19f53f51e1a82eb591d78f69b05b44f7ba54da9d811fc9
   languageName: node
   linkType: hard
 
@@ -18652,7 +18648,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"onetime@npm:^5.1.0, onetime@npm:^5.1.2":
+"onetime@npm:^5.1.2":
   version: 5.1.2
   resolution: "onetime@npm:5.1.2"
   dependencies:
@@ -18761,23 +18757,6 @@ __metadata:
     type-check: "npm:^0.4.0"
     word-wrap: "npm:^1.2.5"
   checksum: 10c0/4afb687a059ee65b61df74dfe87d8d6815cd6883cb8b3d5883a910df72d0f5d029821f37025e4bccf4048873dbdb09acc6d303d27b8f76b1a80dd5a7d5334675
-  languageName: node
-  linkType: hard
-
-"ora@npm:^5.1.0":
-  version: 5.4.1
-  resolution: "ora@npm:5.4.1"
-  dependencies:
-    bl: "npm:^4.1.0"
-    chalk: "npm:^4.1.0"
-    cli-cursor: "npm:^3.1.0"
-    cli-spinners: "npm:^2.5.0"
-    is-interactive: "npm:^1.0.0"
-    is-unicode-supported: "npm:^0.1.0"
-    log-symbols: "npm:^4.1.0"
-    strip-ansi: "npm:^6.0.0"
-    wcwidth: "npm:^1.0.1"
-  checksum: 10c0/10ff14aace236d0e2f044193362b22edce4784add08b779eccc8f8ef97195cae1248db8ec1ec5f5ff076f91acbe573f5f42a98c19b78dba8c54eefff983cae85
   languageName: node
   linkType: hard
 
@@ -18933,13 +18912,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-queue@npm:^9.1.0, p-queue@npm:^9.1.2":
-  version: 9.1.2
-  resolution: "p-queue@npm:9.1.2"
+"p-queue@npm:^9.1.2, p-queue@npm:^9.2.0":
+  version: 9.2.0
+  resolution: "p-queue@npm:9.2.0"
   dependencies:
-    eventemitter3: "npm:^5.0.1"
+    eventemitter3: "npm:^5.0.4"
     p-timeout: "npm:^7.0.0"
-  checksum: 10c0/beaccf7ea6536ed5c5687bce92040db14516d8ae0fd69d1f82b44d7e1bfff33a5b03d0145cf580840a7182d487384e05ab6135a0a2c5ea44afaceceaef05535a
+  checksum: 10c0/817af11d7b76e9e7414cb5326d6a9224ef85996bb72315af3a17e87a5b7bc740eba3cbfa8f9a4c6e241acbaf0b7894cf5065a9e58c4947dddd7917fb70b2eebc
   languageName: node
   linkType: hard
 
@@ -21637,16 +21616,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"restore-cursor@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "restore-cursor@npm:3.1.0"
-  dependencies:
-    onetime: "npm:^5.1.0"
-    signal-exit: "npm:^3.0.2"
-  checksum: 10c0/8051a371d6aa67ff21625fa94e2357bd81ffdc96267f3fb0fc4aaf4534028343836548ef34c240ffa8c25b280ca35eb36be00b3cb2133fa4f51896d7e73c6b4f
-  languageName: node
-  linkType: hard
-
 "restore-cursor@npm:^5.0.0":
   version: 5.1.0
   resolution: "restore-cursor@npm:5.1.0"
@@ -22219,14 +22188,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:^1.2.4":
-  version: 1.5.0
-  resolution: "sax@npm:1.5.0"
-  checksum: 10c0/bc3b60a7bfecd40b18256596e96b32df2488339ae1e00a77f842b568f0831228a16c3bd357ec500241ec0b9dc7a475a1286427795c4a8c50bb8e8878f3435dd8
-  languageName: node
-  linkType: hard
-
-"sax@npm:^1.5.0":
+"sax@npm:^1.2.4, sax@npm:^1.5.0":
   version: 1.6.0
   resolution: "sax@npm:1.6.0"
   checksum: 10c0/e5593f4a91eb25761a688c4d96902e4e95a0dd6017bc65146b6f21236e3d715cf893333b76bc758923c9574c2fb5a7a76c3a81e96ea15432f2624f906c027c1e
@@ -23702,7 +23664,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^7.5.4, tar@npm:^7.5.6, tar@npm:^7.5.7":
+"tar@npm:^7.5.4, tar@npm:^7.5.7":
   version: 7.5.13
   resolution: "tar@npm:7.5.13"
   dependencies:
@@ -24703,15 +24665,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"usb@npm:^2.17.0":
-  version: 2.17.0
-  resolution: "usb@npm:2.17.0"
+"usb@npm:^3.0.0-alpha.5":
+  version: 3.0.0-alpha.5
+  resolution: "usb@npm:3.0.0-alpha.5"
   dependencies:
-    "@types/w3c-web-usb": "npm:^1.0.6"
-    node-addon-api: "npm:^8.0.0"
-    node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.5.0"
-  checksum: 10c0/369723f8587ee140fbab507a9576acd0d5306f106332230533ae8fceb7feba70b6cf3ab7a6e6d16bbda12ee1c3dbe435c5c4a37b7c1be4c8c09d08e91ac88540
+    "@node-usb/usb-darwin-arm64": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-darwin-x64": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-linux-arm-gnueabihf": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-linux-arm64-gnu": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-linux-arm64-musl": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-linux-x64-gnu": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-linux-x64-musl": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-win32-arm64-msvc": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-win32-ia32-msvc": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-win32-x64-msvc": "npm:3.0.0-alpha.5"
+    "@types/w3c-web-usb": "npm:^1.0.13"
+  dependenciesMeta:
+    "@node-usb/usb-darwin-arm64":
+      optional: true
+    "@node-usb/usb-darwin-x64":
+      optional: true
+    "@node-usb/usb-linux-arm-gnueabihf":
+      optional: true
+    "@node-usb/usb-linux-arm64-gnu":
+      optional: true
+    "@node-usb/usb-linux-arm64-musl":
+      optional: true
+    "@node-usb/usb-linux-x64-gnu":
+      optional: true
+    "@node-usb/usb-linux-x64-musl":
+      optional: true
+    "@node-usb/usb-win32-arm64-msvc":
+      optional: true
+    "@node-usb/usb-win32-ia32-msvc":
+      optional: true
+    "@node-usb/usb-win32-x64-msvc":
+      optional: true
+  checksum: 10c0/51bcae9f096686931e932acb5d64ff89dd5ef983dbd9ba492e08f268765c971534f6db70178b7c2d5305ba3400a7d7f4de5496e8c0f73b6f6806e815161e99fc
   languageName: node
   linkType: hard
 
@@ -25158,15 +25148,6 @@ __metadata:
   dependencies:
     minimalistic-assert: "npm:^1.0.0"
   checksum: 10c0/56edcc5ef2b3d30913ba8f1f5cccc364d180670b24d5f3f8849c1e6fb514e5c7e3a87548ae61227a82859eba6269c11393ae24ce12a2ea1ecb9b465718ddced7
-  languageName: node
-  linkType: hard
-
-"wcwidth@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "wcwidth@npm:1.0.1"
-  dependencies:
-    defaults: "npm:^1.0.3"
-  checksum: 10c0/5b61ca583a95e2dd85d7078400190efd452e05751a64accb8c06ce4db65d7e0b0cde9917d705e826a2e05cc2548f61efde115ffa374c3e436d04be45c889e5b4
   languageName: node
   linkType: hard
 
@@ -25969,7 +25950,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yargs@npm:17.7.2, yargs@npm:^17.0.1, yargs@npm:^17.6.2, yargs@npm:^17.7.2":
+"yargs@npm:17.7.2, yargs@npm:^17.6.2, yargs@npm:^17.7.2":
   version: 17.7.2
   resolution: "yargs@npm:17.7.2"
   dependencies:

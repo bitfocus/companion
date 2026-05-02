@@ -45,8 +45,6 @@ export const GridConfigRows = observer(function GridConfigRows(props: GridConfig
 				text={`${props.config.gridSize.minColumn} to ${props.config.gridSize.maxColumn}`}
 			/>
 
-			<UserConfigSwitchRow userConfig={props} label="Allow expanding in grid view" field="gridSizeInlineGrow" />
-
 			<UserConfigSwitchRow
 				userConfig={props}
 				label="Prompt to expand grid when attaching new surface"

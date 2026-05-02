@@ -10,14 +10,12 @@ import {
 	CModalHeader,
 	CRow,
 } from '@coreui/react'
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -98,9 +96,9 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 								<>
 									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 										Name
-										<InlineHelp help="Display name for the group. This can be changed later">
-											<FontAwesomeIcon icon={faQuestionCircle} className="ms-2" />
-										</InlineHelp>
+										<InlineHelpIcon className="ms-1">
+											Display name for the group. This can be changed later
+										</InlineHelpIcon>
 									</CFormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
@@ -131,9 +129,9 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 								<>
 									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 										Id
-										<InlineHelp help="Id for the group, this is used for internal references. This cannot be changed once set.">
-											<FontAwesomeIcon icon={faQuestionCircle} className="ms-2" />
-										</InlineHelp>
+										<InlineHelpIcon className="ms-1">
+											Id for the group, this is used for internal references. This cannot be changed once set.
+										</InlineHelpIcon>
 									</CFormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput

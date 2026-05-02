@@ -27,6 +27,7 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsShowStatusIcons,
 	type CompositeElementOptionKey,
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
@@ -215,6 +216,11 @@ function convertCanvasElementForDrawing(
 			'decoration',
 			Object.values(ButtonGraphicsDecorationType),
 			ButtonGraphicsDecorationType.FollowDefault
+		),
+		showStatusIcons: helper.getEnum(
+			'showStatusIcons',
+			Object.values(ButtonGraphicsShowStatusIcons),
+			ButtonGraphicsShowStatusIcons.FollowDefault
 		),
 		contentHash: '', // Will be computed below
 	}
@@ -456,7 +462,7 @@ async function convertImageElementForDrawing(
 		base64Image,
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit', 'fit_or_shrink'], 'fit_or_shrink'),
+		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit'], 'fit'),
 		contentHash: '', // Will be computed below
 	}
 

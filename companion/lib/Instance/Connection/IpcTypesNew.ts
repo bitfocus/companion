@@ -122,6 +122,7 @@ export interface RegisterMessage {
 }
 export interface RegisterResponseMessage {
 	connectionId: string
+	moduleApiVersion: string
 }
 
 export interface InitMessage {

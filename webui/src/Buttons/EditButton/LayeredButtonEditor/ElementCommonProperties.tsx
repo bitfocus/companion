@@ -8,7 +8,7 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { InlineHelp } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
@@ -32,9 +32,14 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
 				<>
 					<CFormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
-						<InlineHelp help="Some surfaces do not have full rgb displays and require specific elements for providing feedback in alternate ways. You can override the automatic selection of elements for these purposes by selecting the appropriate usage for this element.">
-							External Usage
-						</InlineHelp>
+						External Usage
+						<InlineHelpIcon className="ms-1">
+							Some surfaces do not have full rgb displays and require specific elements for providing feedback in
+							alternate ways.
+							<br />
+							You can override the automatic selection of elements for these purposes by selecting the appropriate usage
+							for this element
+						</InlineHelpIcon>
 					</CFormLabel>
 					<CCol sm={8}>
 						<FieldElementUsageInput elementProps={elementProps} />

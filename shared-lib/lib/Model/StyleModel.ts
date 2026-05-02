@@ -56,6 +56,12 @@ export enum ButtonGraphicsDecorationType {
 	None = 'none',
 }
 
+export enum ButtonGraphicsShowStatusIcons {
+	FollowDefault = 'default',
+	ShowAll = 'all',
+	None = 'none',
+}
+
 export enum ButtonGraphicsElementUsage {
 	Automatic = 'auto',
 	Text = 'text',

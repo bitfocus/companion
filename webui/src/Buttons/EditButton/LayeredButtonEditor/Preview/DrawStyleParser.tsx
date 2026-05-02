@@ -3,11 +3,16 @@ import { toJS } from 'mobx'
 import { useObserver } from 'mobx-react-lite'
 import { useEffect, useState } from 'react'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import {
+	resolveButtonStyleProperties,
+	type ResolveButtonStylePropertiesConfig,
+} from '@companion-app/shared/Graphics/Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import type {
 	SomeButtonGraphicsDrawElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { ElementStreamResult } from '~/../companion/lib/Preview/ElementStream.js'
@@ -30,7 +35,9 @@ interface CachedExpressionValue {
 
 class LayeredButtonDrawStyleParser {
 	readonly #controlId: string
-	readonly #changed: (style: DrawStyleLayeredButtonModel) => void
+	readonly #location: ControlLocation | undefined
+	readonly #drawConfig: ResolveButtonStylePropertiesConfig
+	readonly #changed: (style: RendererButtonStyle) => void
 
 	readonly #elementValues = new Map<string, CachedElementValue>()
 	readonly #expressionValues = new Map<string, CachedExpressionValue>()
@@ -38,8 +45,15 @@ class LayeredButtonDrawStyleParser {
 
 	#disposed = false
 
-	constructor(controlId: string, changed: (style: DrawStyleLayeredButtonModel) => void) {
+	constructor(
+		controlId: string,
+		location: ControlLocation | undefined,
+		drawConfig: ResolveButtonStylePropertiesConfig,
+		changed: (style: RendererButtonStyle) => void
+	) {
 		this.#controlId = controlId
+		this.#location = location
+		this.#drawConfig = drawConfig
 		this.#changed = changed
 	}
 
@@ -295,6 +309,9 @@ class LayeredButtonDrawStyleParser {
 					? (stringifyVariableValue(thisButtonStatus.value) as 'error' | 'warning' | 'good')
 					: undefined,
 				action_running: thisActionsRunning.ok ? Boolean(thisActionsRunning.value) : undefined,
+
+				...resolveButtonStyleProperties(this.#drawConfig, elements),
+				location: this.#location,
 			})
 		},
 		DRAW_DEBOUNCE,
@@ -311,9 +328,11 @@ class LayeredButtonDrawStyleParser {
  */
 export function useLayeredButtonDrawStyleParser(
 	controlId: string,
+	location: ControlLocation | undefined,
+	drawConfig: ResolveButtonStylePropertiesConfig,
 	styleStore: LayeredStyleStore
-): DrawStyleLayeredButtonModel | null {
-	const [drawStyle, setDrawStyle] = useState<DrawStyleLayeredButtonModel | null>(null)
+): RendererButtonStyle | null {
+	const [drawStyle, setDrawStyle] = useState<RendererButtonStyle | null>(null)
 	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
 
 	// Reset the draw style when the store changes
@@ -321,7 +340,7 @@ export function useLayeredButtonDrawStyleParser(
 
 	// This is weird, but we need the cleanup function, so can't use useMemo
 	useEffect(() => {
-		const parser = new LayeredButtonDrawStyleParser(controlId, setDrawStyle)
+		const parser = new LayeredButtonDrawStyleParser(controlId, location, drawConfig, setDrawStyle)
 		parser.updateStyle(toJS(styleStore.elements))
 
 		setParser(parser)
@@ -330,7 +349,7 @@ export function useLayeredButtonDrawStyleParser(
 			setParser(null)
 			parser.dispose()
 		}
-	}, [controlId, styleStore, setDrawStyle])
+	}, [controlId, location, styleStore, drawConfig, setDrawStyle])
 
 	// Trigger the update whenever the style changes
 	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))

@@ -53,8 +53,9 @@ import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './Sate
  *        - Add DEVICE-CONFIG to relay current config values back to the device
  *        - Add CHANGE-PAGE message for surfaces to navigate pages
  * 1.10.1 - LOCKED-STATE now includes ROTATION
+ * 1.11.0 - Add NONSQUARE to CAPS to indicate support for non-square buttons
  */
-export const API_VERSION = '1.10.1'
+export const API_VERSION = '1.11.0'
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
@@ -420,6 +421,7 @@ export class ServiceSatelliteApi {
 
 		socket.sendMessage('CAPS', null, null, {
 			SUBSCRIPTIONS: !!this.#userconfig.getKey('satellite_subscriptions_enabled'),
+			NONSQUARE: true,
 		})
 
 		let receivebuffer = ''

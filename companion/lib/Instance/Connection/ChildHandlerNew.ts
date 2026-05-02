@@ -108,6 +108,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 				return {
 					connectionId: this.connectionId,
+					moduleApiVersion: apiVersion0,
 				}
 			},
 			'log-message': this.#handleLogMessage.bind(this),

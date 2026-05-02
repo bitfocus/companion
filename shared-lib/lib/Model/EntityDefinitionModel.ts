@@ -22,6 +22,11 @@ export interface ClientEntityDefinition {
 	showInvert: boolean
 
 	/**
+	 * When an advanced feedback, the properties that should have overrides assigned
+	 */
+	feedbackAffectedProperties: string[] | undefined
+
+	/**
 	 * Whether this entity definition uses the auto-parser for options
 	 */
 	optionsSupportExpressions: boolean
