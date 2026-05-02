@@ -374,7 +374,6 @@ export const MySidebar = memo(function MySidebar() {
 				unfoldable={unfoldable}
 				narrow={tempNarrow || narrowMode}
 				setNarrow={narrowMode ? DontSetOrUnset : setTempNarrow}
-				onContextMenu={contextState.onContextMenu}
 			>
 				<ContextMenu {...contextState} />
 				<CSidebarHeader className="brand">
@@ -504,7 +503,7 @@ export const MySidebar = memo(function MySidebar() {
 				)}
 				{!narrowMode && (
 					<CSidebarHeader className="border-top d-flex sidebar-header-toggler">
-						<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} />
+						<UnfoldTogglerAndVersion toggleUnfoldable={toggleUnfoldable} onContextMenu={contextState.onContextMenu} />
 					</CSidebarHeader>
 				)}
 			</CSidebar>
@@ -599,15 +598,21 @@ const SidebarMenuItemSubGroup = observer(function SidebarMenuItemSubGroup(props:
 
 const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({
 	toggleUnfoldable,
+	onContextMenu,
 }: {
 	toggleUnfoldable: () => void
+	onContextMenu?: MouseEventHandler<HTMLDivElement>
 }) {
 	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
 	const { mobileMode } = useSidebarState()
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')} onClick={toggleUnfoldable}>
+			<span
+				className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
+				onClick={toggleUnfoldable}
+				onContextMenu={onContextMenu}
+			>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
 
@@ -633,9 +638,8 @@ interface CSidebarProps {
 	unfoldable?: boolean
 	narrow: boolean
 	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
-	onContextMenu?: MouseEventHandler<HTMLDivElement>
 }
-function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
+function CSidebar({ children, unfoldable, narrow, setNarrow }: React.PropsWithChildren<CSidebarProps>) {
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
@@ -744,7 +748,6 @@ function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: Re
 					// hide: visibleDesktop === false && !showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
-				onContextMenu={onContextMenu}
 				onMouseLeave={handleMouseLeave}
 			>
 				{children}
