@@ -1,9 +1,10 @@
-import { CButton, CForm, CFormCheck, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -101,33 +102,33 @@ export const ExportWizardModal = observer(
 							<div>
 								<h5>Export Options</h5>
 								<p>Please select the components you'd like to export:</p>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="connections"
 										children={(field) => (
-											<CFormCheck
+											<CheckboxInputFieldWithLabel
 												id="wizard_connections"
-												checked={field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												value={field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label="Connections"
 											/>
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="includeSecrets"
 										children={(field) => (
 											<form.Subscribe
 												selector={(state) => [state.values.connections]}
 												children={([connections]) => (
-													<CFormCheck
+													<CheckboxInputFieldWithLabel
 														id="wizard_include_secrets"
 														className="ms-4"
-														checked={field.state.value}
+														value={field.state.value}
+														setValue={field.handleChange}
 														disabled={!connections}
-														onChange={(e) => field.handleChange(e.currentTarget.checked)}
 														onBlur={field.handleBlur}
 														label={
 															<>
@@ -144,59 +145,59 @@ export const ExportWizardModal = observer(
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="buttons"
 										children={(field) => (
-											<CFormCheck
-												checked={field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+											<CheckboxInputFieldWithLabel
+												value={field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label="Buttons"
 											/>
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="triggers"
 										children={(field) => (
-											<CFormCheck
-												checked={field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+											<CheckboxInputFieldWithLabel
+												value={field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label="Triggers"
 											/>
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="customVariables"
 										children={(field) => (
-											<CFormCheck
-												checked={field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+											<CheckboxInputFieldWithLabel
+												value={field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label="Custom Variables"
 											/>
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="expressionVariables"
 										children={(field) => (
-											<CFormCheck
-												checked={field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+											<CheckboxInputFieldWithLabel
+												value={field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label="Expression Variables"
 											/>
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="surfaces"
 										children={(field) => {
@@ -204,12 +205,12 @@ export const ExportWizardModal = observer(
 											const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => !v)
 
 											return (
-												<CFormCheck
+												<CheckboxInputFieldWithLabel
 													indeterminate={isAChildChecked && isAChildUnchecked}
-													checked={isAChildChecked}
-													onChange={(e) =>
+													value={isAChildChecked}
+													setValue={(value) =>
 														field.handleChange(
-															e.currentTarget.checked
+															value
 																? {
 																		known: true,
 																		instances: true,
@@ -225,14 +226,14 @@ export const ExportWizardModal = observer(
 										}}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="surfaces.known"
 										children={(field) => (
-											<CFormCheck
+											<CheckboxInputFieldWithLabel
 												className="ms-4"
-												checked={!!field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												value={!!field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label={
 													<>
@@ -246,14 +247,14 @@ export const ExportWizardModal = observer(
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="surfaces.instances"
 										children={(field) => (
-											<CFormCheck
+											<CheckboxInputFieldWithLabel
 												className="ms-4"
-												checked={!!field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												value={!!field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label={
 													<>
@@ -265,14 +266,14 @@ export const ExportWizardModal = observer(
 										)}
 									/>
 								</div>
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="surfaces.remote"
 										children={(field) => (
-											<CFormCheck
+											<CheckboxInputFieldWithLabel
 												className="ms-4"
-												checked={!!field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+												value={!!field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label={
 													<>
@@ -287,13 +288,13 @@ export const ExportWizardModal = observer(
 									/>
 								</div>
 
-								<div className="indent3">
+								<div className="ms-2 mb-1">
 									<form.Field
 										name="imageLibrary"
 										children={(field) => (
-											<CFormCheck
-												checked={field.state.value}
-												onChange={(e) => field.handleChange(e.currentTarget.checked)}
+											<CheckboxInputFieldWithLabel
+												value={field.state.value}
+												setValue={field.handleChange}
 												onBlur={field.handleBlur}
 												label="Image Library"
 											/>

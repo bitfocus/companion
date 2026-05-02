@@ -34,6 +34,12 @@
 @use 'scss/expression';
 @use 'scss/image-library';
 
+@use 'scss/components/checkbox-field';
+@use 'scss/components/dropdown-field';
+@use 'scss/components/number-field';
+@use 'scss/components/number-range';
+@use 'scss/components/switch-field';
+
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 
 body {
@@ -178,18 +184,6 @@ body {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-}
-
-.number-input-inf-overlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	padding-left: 0.75rem;
-	pointer-events: none;
 }
 
 .variable-value-expanded {

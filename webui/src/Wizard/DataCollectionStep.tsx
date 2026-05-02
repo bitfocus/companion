@@ -1,5 +1,5 @@
-import { CFormCheck } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface DataCollectionStepProps {
 	config: Partial<UserConfigModel>
@@ -18,11 +18,11 @@ export function DataCollectionStep({ config, setValue }: DataCollectionStepProps
 				The collected data includes information about your Companion installation (version, platform, enabled modules)
 				but does NOT include any personal information, configuration details, or button content.
 			</p>
-			<div className="indent3">
-				<CFormCheck
+			<div className="ms-3">
+				<CheckboxInputFieldWithLabel
 					label="Send anonymous usage statistics"
-					checked={config.detailed_data_collection}
-					onChange={(e) => setValue('detailed_data_collection', e.currentTarget.checked)}
+					value={!!config.detailed_data_collection}
+					setValue={(val) => setValue('detailed_data_collection', val)}
 				/>
 			</div>
 			<p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>

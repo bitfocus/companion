@@ -1,16 +1,21 @@
-import { CCol, CFormInput, CFormRange, CRow } from '@coreui/react'
+import { NumberField } from '@base-ui/react/number-field'
+import { Slider } from '@base-ui/react/slider'
+import classNames from 'classnames'
+import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
 interface NumberInputFieldProps {
+	id?: string
 	min?: number
 	max?: number
 	step?: number
 	tooltip?: string
 	range?: boolean
-	value: number
+	value: number | undefined
 	setValue: (value: number) => void
+	onBlur?: (e: React.FocusEvent<HTMLElement>) => void
 	disabled?: boolean
-	checkValid?: (value: number) => boolean
+	checkValid?: boolean | ((value: number) => boolean)
 	// When true, show the min value as a visual -∞ when value <= min
 	showMinAsNegativeInfinity?: boolean
 	// When true, show the max value as a visual ∞ when value >= max
@@ -18,6 +23,7 @@ interface NumberInputFieldProps {
 }
 
 export function NumberInputField({
+	id,
 	min,
 	max,
 	step,
@@ -25,24 +31,19 @@ export function NumberInputField({
 	range,
 	value,
 	setValue,
+	onBlur,
 	disabled,
 	checkValid,
 	showMinAsNegativeInfinity,
 	showMaxAsPositiveInfinity,
 }: NumberInputFieldProps): React.JSX.Element {
-	const [tmpValue, setTmpValue] = useState<string | number | null>(null)
-	const [focused, setFocused] = useState(false)
+	const [tmpValue, setTmpValue] = useState<number | string | null>(null)
 
-	const onChange = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const raw = e.currentTarget.value
-			const parsedValue = parseFloat(raw)
-			if (isNaN(parsedValue)) {
-				// keep the temporary string while editing but don't send NaN upstream
-				setTmpValue(raw)
-			} else {
-				setTmpValue(parsedValue)
-				setValue(parsedValue)
+	const onChangeValue = useCallback(
+		(value: number | null) => {
+			if (value !== null && !isNaN(value)) {
+				setTmpValue(value)
+				setValue(value)
 			}
 		},
 		[setValue]
@@ -67,60 +68,67 @@ export function NumberInputField({
 		showOverlayValue = '∞'
 	}
 
+	const valueIsInvalid =
+		typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(Number(tmpValue ?? value))
+
 	const input = (
-		<div style={{ position: 'relative' }}>
-			<CFormInput
-				type="number"
-				disabled={disabled}
-				value={tmpValue ?? value ?? 0}
-				min={min}
-				max={max}
-				step={step ?? 'any'}
-				style={{
-					color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined,
-					// hide the underlying number when we show the -∞ or ∞ overlay and the field is not focused
-					...(showOverlayValue && !focused ? { color: 'transparent', textShadow: '0 0 0 transparent' } : {}),
-				}}
-				title={tooltip}
-				onChange={onChange}
-				onFocus={() => {
-					setFocused(true)
-					setTmpValue(value ?? '')
-				}}
-				onBlur={() => {
-					setFocused(false)
-					setTmpValue(null)
-				}}
-			/>
-			{!!showOverlayValue && !focused ? (
-				<span
-					className="number-input-inf-overlay"
-					style={{ color: !!checkValid && !checkValid(Number(tmpValue ?? value)) ? 'red' : undefined }}
-				>
-					{showOverlayValue}
-				</span>
-			) : null}
-		</div>
+		<NumberField.Root
+			id={id}
+			disabled={disabled}
+			value={Number(tmpValue ?? value ?? 0)}
+			onValueChange={onChangeValue}
+			onBlur={onBlur}
+			min={min}
+			max={max}
+			step={step ?? 'any'}
+			title={tooltip}
+			className="number-field"
+		>
+			<NumberField.Group className="number-field-group">
+				<NumberField.Input className={classNames('number-field-input', { 'invalid-value': valueIsInvalid })} />
+
+				<NumberField.Increment className="number-field-increment">
+					<PlusIcon />
+				</NumberField.Increment>
+				<NumberField.Decrement className="number-field-decrement">
+					<MinusIcon />
+				</NumberField.Decrement>
+
+				{!!showOverlayValue && (
+					<span className={classNames('number-field-inf-overlay', { 'invalid-value': valueIsInvalid })}>
+						{showOverlayValue}
+					</span>
+				)}
+			</NumberField.Group>
+		</NumberField.Root>
 	)
 
 	if (range) {
 		return (
-			<CRow>
-				<CCol sm={12}>{input}</CCol>
-				<CCol sm={12}>
-					<CFormRange
+			<div className="d-grid grid-col">
+				<div>{input}</div>
+				<div>
+					<Slider.Root
 						disabled={disabled}
-						value={tmpValue ?? value ?? 0}
+						value={Number(tmpValue ?? value ?? 0)}
 						min={min}
 						max={max}
 						step={step}
 						title={tooltip}
-						onChange={onChange}
+						onValueChange={onChangeValue}
 						onFocus={() => setTmpValue(value ?? '')}
-						onBlur={() => setTmpValue(null)}
-					/>
-				</CCol>
-			</CRow>
+						onValueCommitted={() => setTmpValue(null)}
+						thumbAlignment="edge"
+					>
+						<Slider.Control className="number-range">
+							<Slider.Track className="number-range-track">
+								<Slider.Indicator className="number-range-indicator" />
+								<Slider.Thumb aria-label="Value" className="number-range-thumb" />
+							</Slider.Track>
+						</Slider.Control>
+					</Slider.Root>
+				</div>
+			</div>
 		)
 	} else {
 		return input

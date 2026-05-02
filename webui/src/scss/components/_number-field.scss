@@ -1,0 +1,98 @@
+@use '../variables' as *;
+
+.number-field {
+	.number-field-group {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		grid-template-rows: 1fr 1fr;
+		width: 100%;
+	}
+
+	.number-field-decrement,
+	.number-field-increment {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 0.5rem;
+		color: var(--cui-body-color);
+		background-color: var(--cui-tertiary-bg);
+		border: var(--cui-border-width) solid var(--cui-border-color);
+		border-left: 0;
+		cursor: pointer;
+		transition: background-color 0.15s ease-in-out;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+
+		&:hover:not([data-disabled]) {
+			background-color: var(--cui-secondary-bg);
+		}
+
+		&[data-disabled] {
+			// opacity: 0.35;
+			// color: dar
+			pointer-events: none;
+		}
+
+		svg {
+			width: 1em;
+			height: 1em;
+		}
+	}
+
+	.number-field-decrement {
+		grid-column: 2;
+		grid-row: 2;
+		border-top: 0;
+		border-radius: 0 0 var(--cui-border-radius) 0;
+	}
+
+	.number-field-increment {
+		grid-column: 2;
+		grid-row: 1;
+		border-radius: 0 var(--cui-border-radius) 0 0;
+	}
+
+	.number-field-input {
+		@include form-input-base;
+
+		grid-column: 1;
+		grid-row: 1 / 3;
+		display: block;
+		min-width: 0;
+		border-right: 0;
+		border-radius: var(--cui-border-radius) 0 0 var(--cui-border-radius);
+
+		&:focus-visible {
+			@include form-input-focus;
+			position: relative;
+			z-index: 3;
+		}
+
+		&::placeholder {
+			@include form-input-placeholder;
+		}
+
+		&:disabled {
+			@include form-input-disabled;
+		}
+	}
+
+	.number-field-inf-overlay {
+		grid-column: 1;
+		grid-row: 1 / 3;
+		display: flex;
+		align-items: center;
+		padding-left: 0.75rem;
+		pointer-events: none;
+
+		&.invalid-value {
+			color: red;
+		}
+	}
+
+	&:has(.number-field-inf-overlay) .number-field-input:not(:focus-visible) {
+		color: transparent;
+	}
+}

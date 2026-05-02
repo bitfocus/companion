@@ -1,9 +1,10 @@
-import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { faClone, faCompressArrowsAlt, faExpandArrowsAlt, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputField } from '~/Components/TextInputField.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 
@@ -36,11 +37,6 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	readonly,
 	localVariablePrefix,
 }: EntityCellControlProps) {
-	const innerSetEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => service.setEnabled?.(e.target.checked),
-		[service]
-	)
-
 	const doCollapse = useCallback(() => setPanelCollapsed(true), [setPanelCollapsed])
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
@@ -67,7 +63,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				)}
 			</div>
 			<div className="cell-controls">
-				<CButtonGroup>
+				<CButtonGroup className="me-1">
 					{canSetHeadline && !headlineExpanded && !isPanelCollapsed && (
 						<CButton size="sm" onClick={setHeadlineExpanded} title="Set headline">
 							<FontAwesomeIcon icon={faPencil} />
@@ -96,11 +92,11 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					{!!service.setEnabled && (
 						<>
 							&nbsp;
-							<CFormSwitch
-								color="success"
-								checked={!entity.disabled}
-								title={entity.disabled ? `Enable ${entityTypeLabel}` : `Disable ${entityTypeLabel}`}
-								onChange={innerSetEnabled}
+							<SwitchInputField
+								value={!entity.disabled}
+								tooltip={entity.disabled ? `Enable ${entityTypeLabel}` : `Disable ${entityTypeLabel}`}
+								setValue={service.setEnabled}
+								small
 							/>
 						</>
 					)}

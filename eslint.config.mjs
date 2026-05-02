@@ -216,6 +216,19 @@ export default [
 				},
 			],
 
+			'no-restricted-imports': [
+				'error',
+				{
+					paths: [
+						{
+							name: '@coreui/react',
+							importNames: ['CFormSelect', 'CFormCheck', 'CFormSwitch'],
+							message: 'Use our internal components instead.',
+						},
+					],
+				},
+			],
+
 			// HACK: temporary rules to suppress errors until we can fix them properly
 			'react-hooks/refs': 'off',
 			'react-hooks/set-state-in-effect': 'off',

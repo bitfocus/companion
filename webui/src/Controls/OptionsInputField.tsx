@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
+import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -25,6 +25,7 @@ import {
 	TextInputField,
 } from '~/Components/index.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -242,15 +243,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		}
 		case 'checkbox': {
 			if (option.displayToggle) {
-				return (
-					<CFormSwitch
-						color="success"
-						checked={!!value}
-						size="xl"
-						onChange={(e) => setValue(e.currentTarget.checked)}
-						disabled={readonly}
-					/>
-				)
+				return <SwitchInputField value={!!value} setValue={setValue} tooltip={option.tooltip} disabled={readonly} />
 			} else {
 				return <CheckboxInputField value={value as any} disabled={readonly} setValue={setValue} />
 			}

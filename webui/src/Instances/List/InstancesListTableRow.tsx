@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CFormSwitch, CPopover } from '@coreui/react'
+import { CButton, CButtonGroup, CPopover } from '@coreui/react'
 import {
 	faBug,
 	faEllipsisV,
@@ -13,6 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -113,12 +114,10 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			</div>
 			<div className="flex">
 				<div className="ms-2" title={toggleEnabledTitle}>
-					<CFormSwitch
+					<SwitchInputField
+						value={isEnabled}
+						setValue={doToggleEnabled}
 						disabled={!moduleInfo || !moduleVersion || !canToggleEnabled}
-						color="success"
-						checked={isEnabled}
-						onChange={doToggleEnabled}
-						size="xl"
 					/>
 				</div>
 				<CPopover

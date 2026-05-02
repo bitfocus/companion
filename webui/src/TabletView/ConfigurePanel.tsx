@@ -1,8 +1,9 @@
-import { CButton, CCol, CForm, CFormCheck, CFormInput, CRow } from '@coreui/react'
+import { CButton, CCol, CForm, CFormInput, CRow } from '@coreui/react'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 
 interface ConfigurePanelProps {
@@ -79,24 +80,24 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 							/>
 						</CCol>
 						<CCol sm={6} xs={12}>
-							<CFormCheck
+							<CheckboxInputFieldWithLabel
+								className="my-1"
 								label="Hide configure button"
-								type="checkbox"
-								checked={!!query['noconfigure']}
-								onChange={(e) => updateQueryUrl('noconfigure', !!e.currentTarget.checked)}
+								value={!!query['noconfigure']}
+								setValue={(val) => updateQueryUrl('noconfigure', val)}
 							/>
-							<CFormCheck
+							<CheckboxInputFieldWithLabel
+								className="my-1"
 								label="Hide fullscreen button"
-								type="checkbox"
-								checked={!!query['nofullscreen']}
-								onChange={(e) => updateQueryUrl('nofullscreen', !!e.currentTarget.checked)}
+								value={!!query['nofullscreen']}
+								setValue={(val) => updateQueryUrl('nofullscreen', val)}
 							/>
 
-							<CFormCheck
+							<CheckboxInputFieldWithLabel
+								className="my-1"
 								label="Show page headings"
-								type="checkbox"
-								checked={!!query['showpages']}
-								onChange={(e) => updateQueryUrl('showpages', !!e.currentTarget.checked)}
+								value={!!query['showpages']}
+								setValue={(val) => updateQueryUrl('showpages', val)}
 							/>
 							<CFormInput
 								label="Display Columns (0 for dynamic)"
