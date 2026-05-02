@@ -1,4 +1,6 @@
-export const DEFAULT_FONTS = [
+import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js'
+
+const DEFAULT_FONTS = [
 	'Companion-sans',
 	'Companion-symbols1',
 	'Companion-symbols2',
@@ -11,5 +13,17 @@ export const DEFAULT_FONTS = [
 	'Companion-korean',
 	'Companion-emoji',
 ]
+const DEFAULT_FONTS_STR = DEFAULT_FONTS.join(',')
 
-export const DEFAULT_FONTS_STR = DEFAULT_FONTS.join(',')
+export const ALL_FONTS: ReadonlySet<string> = new Set([...DEFAULT_FONTS, 'Companion-mono'])
+
+const FONT_STRINGS: ReadonlyMap<ButtonGraphicsTextDrawElement['font'], string> = new Map([
+	['companion-sans', DEFAULT_FONTS_STR],
+	['companion-mono', 'Companion-mono'],
+])
+
+export function resolveFontName(fontName: ButtonGraphicsTextDrawElement['font'] | undefined): string {
+	if (!fontName) return DEFAULT_FONTS_STR
+
+	return FONT_STRINGS.get(fontName) ?? DEFAULT_FONTS_STR
+}
