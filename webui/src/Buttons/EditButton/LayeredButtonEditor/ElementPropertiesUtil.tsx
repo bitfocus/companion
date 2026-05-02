@@ -23,7 +23,8 @@ interface FormPropertyFieldProps {
 	property: string
 	label: string
 	tooltip: string | undefined
-	features?: InputFeatureIconsProps
+	features: InputFeatureIconsProps | undefined
+	disableAutoExpression: boolean | undefined
 	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField({
@@ -32,6 +33,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 	label,
 	tooltip,
 	features,
+	disableAutoExpression,
 	children,
 }: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
@@ -74,16 +76,20 @@ export const FormPropertyField = observer(function FormPropertyField({
 				) : null}
 			</CFormLabel>
 			<CCol sm={8}>
-				<FieldOrExpression
-					value={elementProp}
-					setValue={setExpressionOrValue}
-					localVariablesStore={localVariablesStore}
-					entityType={null}
-					isLocatedInGrid={true}
-					disabled={false}
-				>
-					{children({ value: elementProp.value }, setInnerValue)}
-				</FieldOrExpression>
+				{disableAutoExpression ? (
+					children({ value: elementProp.value }, setInnerValue)
+				) : (
+					<FieldOrExpression
+						value={elementProp}
+						setValue={setExpressionOrValue}
+						localVariablesStore={localVariablesStore}
+						entityType={null}
+						isLocatedInGrid={true}
+						disabled={false}
+					>
+						{children({ value: elementProp.value }, setInnerValue)}
+					</FieldOrExpression>
+				)}
 			</CCol>
 		</>
 	)

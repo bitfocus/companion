@@ -122,6 +122,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			label={field.label}
 			tooltip={field.tooltip}
 			features={features}
+			disableAutoExpression={field.disableAutoExpression}
 		>
 			{(elementProp, setValueFromForm) => (
 				<OptionsInputControl
