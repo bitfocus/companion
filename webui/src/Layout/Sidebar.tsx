@@ -608,7 +608,11 @@ const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')} onClick={toggleUnfoldable} onContextMenu={onContextMenu}>
+			<span
+				className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
+				onClick={toggleUnfoldable}
+				onContextMenu={onContextMenu}
+			>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
 
