@@ -11,8 +11,9 @@ import {
 	type ReactNode,
 	type MouseEventHandler,
 	type ReactElement,
+	forwardRef,
 } from 'react'
-import { CSidebarNav, CNavItem, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop, CPopover } from '@coreui/react'
+import { CSidebarNav, CNavLink, CSidebarBrand, CSidebarHeader, CBackdrop, CPopover } from '@coreui/react'
 import {
 	type IconDefinition,
 	faFileImport,
@@ -62,6 +63,7 @@ import { ContextMenu } from '~/Components/ContextMenu'
 import { useContextMenuState, MenuSeparator } from '~/Components/useContextMenuProps'
 import { type MenuItemProps } from '~/Components/ActionMenu'
 import { useMobileMode } from '~/Hooks/useLayoutMode'
+import type { CNavItemProps } from '@coreui/react/dist/esm/components/nav/CNavItem'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -374,6 +376,7 @@ export const MySidebar = memo(function MySidebar() {
 				unfoldable={unfoldable}
 				narrow={tempNarrow || narrowMode}
 				setNarrow={narrowMode ? DontSetOrUnset : setTempNarrow}
+				onContextMenu={contextState.onContextMenu}
 			>
 				<ContextMenu {...contextState} />
 				<CSidebarHeader className="brand">
@@ -608,14 +611,20 @@ const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({
 
 	return (
 		<div className="nav-link sidebar-header-toggler2">
-			<span
-				className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
-				onClick={toggleUnfoldable}
-				onContextMenu={onContextMenu}
-				title="Right click for more sidebar options"
-			>
-				<span className="nav-icon sidebar-toggler"></span>
-			</span>
+			{mobileMode ? (
+				<span className={'nav-icon-wrapper d-flex block-collapse'} onMouseUp={onContextMenu}>
+					<FontAwesomeIcon className="nav-icon opacity-50" icon={faCog} />
+				</span>
+			) : (
+				<span
+					className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
+					onClick={toggleUnfoldable}
+					onContextMenu={onContextMenu}
+					title="Right click for more sidebar options"
+				>
+					<span className="nav-icon sidebar-toggler"></span>
+				</span>
+			)}
 
 			<span className="flex-fill text-truncate">
 				<span className="version">{versionName || 'Unknown'}</span>
@@ -639,8 +648,9 @@ interface CSidebarProps {
 	unfoldable?: boolean
 	narrow: boolean
 	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
+	onContextMenu: MouseEventHandler<HTMLDivElement>
 }
-function CSidebar({ children, unfoldable, narrow, setNarrow }: React.PropsWithChildren<CSidebarProps>) {
+function CSidebar({ children, unfoldable, narrow, setNarrow, onContextMenu }: React.PropsWithChildren<CSidebarProps>) {
 	const sidebarRef = useRef<HTMLDivElement>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
@@ -672,6 +682,8 @@ function CSidebar({ children, unfoldable, narrow, setNarrow }: React.PropsWithCh
 			// note: middle-click currently opens the nav-link target in a new tab, so it makes sense to close the sidebar in that case.
 			// Only context-menu should leave the sidebar alone, since it is acting on the current sidebar, hence "event.button === 2".
 			if (!(target instanceof Element) || event.button === 2) return // leave context menu alone (note button# is OS-independent)
+
+			if (target.closest('.block-collapse')) return // ignore clicks on certain elements
 
 			// If the user clicked on the text of a sidebar "button", it's not a nav-link so we need to
 			// search up the DOM for a nav-link to capture all possibilities.
@@ -750,6 +762,7 @@ function CSidebar({ children, unfoldable, narrow, setNarrow }: React.PropsWithCh
 				})}
 				ref={sidebarRef}
 				onMouseLeave={handleMouseLeave}
+				onContextMenu={onContextMenu}
 			>
 				{children}
 			</div>
@@ -865,7 +878,7 @@ function CNavGroup({
 	// also note: the <div> around the toggler Link/span creates the split-button effect by placing the ::after caret
 	// relative to the outer <div> rather than relative to the Link/span element.
 	return (
-		<li className={classNames('nav-group', { show: visible }, className)} {...rest}>
+		<li className={classNames('nav-group', { show: visible }, className)} onContextMenu={blockPropagation} {...rest}>
 			<NarrowModePopover title={title}>
 				<div className="nav-link nav-group-toggle" onClick={handleTogglerOnClick}>
 					{to ? (
@@ -910,3 +923,21 @@ function CNavGroup({
 		</li>
 	)
 }
+
+const blockPropagation = (e: React.MouseEvent) => {
+	e.stopPropagation()
+}
+
+const CNavItem = forwardRef<HTMLLIElement, CNavItemProps>(({ children, className, ...rest }, ref) => {
+	return (
+		<li className={classNames('nav-item', className)} ref={ref} onContextMenu={blockPropagation}>
+			{rest.href || rest.to ? (
+				<CNavLink className={className} {...rest}>
+					{children}
+				</CNavLink>
+			) : (
+				children
+			)}
+		</li>
+	)
+})
