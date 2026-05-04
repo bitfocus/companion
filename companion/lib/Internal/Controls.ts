@@ -260,9 +260,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					{
 						...CHOICES_LOCATION,
 						description:
-							'In the format 1/0/0. Some special values (this-run or this-all-runs) are also accepted for alternate behaviours',
+							'In the format 1/0/0. You can also use this-run to abort just the current run of actions, or this-all-runs to abort all runs on the current button',
 						expressionDescription:
-							"In the format '1/0/0'. Some special values ('this-run' or 'this-all-runs') are also accepted for alternate behaviours",
+							"In the format '1/0/0'. You can also use 'this-run' to abort just the current run of actions, or 'this-all-runs' to abort all runs on the current button",
 					},
 					{
 						type: 'checkbox',
