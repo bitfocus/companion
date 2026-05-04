@@ -1,5 +1,23 @@
 # Bitfocus Companion
 
+## Companion v4.3.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- surface locked rotation #4105
+- button status icons not showing when topbar hidden #4134
+- reword abort action special options #4140
+- Limit scope of sidebar context menu (#4151)
+- expand sidebar when clicking on toggler (#4136)
+- importing config not fixing up some ids #4156
+- local-variables in presets should enable persist-value
+- warn about upcoming minimum macos
+- rework 'loose' dropdown option matching
+- upgrading 'set_page' action page number lost 'this page' value
+- reword abort action special options
+- inconsistent height of settings cards
+- inconsistent surface module naming in add list
+
 ## Companion v4.3.1 - Release Notes
 
 ### 🐞 BUG FIXES
