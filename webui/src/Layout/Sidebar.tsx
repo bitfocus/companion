@@ -612,6 +612,7 @@ const UnfoldTogglerAndVersion = observer(function UnfoldTogglerAndVersion({
 				className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
 				onClick={toggleUnfoldable}
 				onContextMenu={onContextMenu}
+				title="Right click for more sidebar options"
 			>
 				<span className="nav-icon sidebar-toggler"></span>
 			</span>
