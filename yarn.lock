@@ -4701,72 +4701,72 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@node-usb/usb-darwin-arm64@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-darwin-arm64@npm:3.0.0-alpha.5"
+"@node-usb/usb-darwin-arm64@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-darwin-arm64@npm:3.0.0-alpha.6"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@node-usb/usb-darwin-x64@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-darwin-x64@npm:3.0.0-alpha.5"
+"@node-usb/usb-darwin-x64@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-darwin-x64@npm:3.0.0-alpha.6"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@node-usb/usb-linux-arm-gnueabihf@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-linux-arm-gnueabihf@npm:3.0.0-alpha.5"
+"@node-usb/usb-linux-arm-gnueabihf@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-linux-arm-gnueabihf@npm:3.0.0-alpha.6"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@node-usb/usb-linux-arm64-gnu@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-linux-arm64-gnu@npm:3.0.0-alpha.5"
+"@node-usb/usb-linux-arm64-gnu@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-linux-arm64-gnu@npm:3.0.0-alpha.6"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@node-usb/usb-linux-arm64-musl@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-linux-arm64-musl@npm:3.0.0-alpha.5"
+"@node-usb/usb-linux-arm64-musl@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-linux-arm64-musl@npm:3.0.0-alpha.6"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@node-usb/usb-linux-x64-gnu@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-linux-x64-gnu@npm:3.0.0-alpha.5"
+"@node-usb/usb-linux-x64-gnu@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-linux-x64-gnu@npm:3.0.0-alpha.6"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@node-usb/usb-linux-x64-musl@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-linux-x64-musl@npm:3.0.0-alpha.5"
+"@node-usb/usb-linux-x64-musl@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-linux-x64-musl@npm:3.0.0-alpha.6"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@node-usb/usb-win32-arm64-msvc@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-win32-arm64-msvc@npm:3.0.0-alpha.5"
+"@node-usb/usb-win32-arm64-msvc@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-win32-arm64-msvc@npm:3.0.0-alpha.6"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@node-usb/usb-win32-ia32-msvc@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-win32-ia32-msvc@npm:3.0.0-alpha.5"
+"@node-usb/usb-win32-ia32-msvc@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-win32-ia32-msvc@npm:3.0.0-alpha.6"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@node-usb/usb-win32-x64-msvc@npm:3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "@node-usb/usb-win32-x64-msvc@npm:3.0.0-alpha.5"
+"@node-usb/usb-win32-x64-msvc@npm:3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "@node-usb/usb-win32-x64-msvc@npm:3.0.0-alpha.6"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -10788,7 +10788,7 @@ __metadata:
     type-fest: "npm:^5.6.0"
     typescript: "npm:~6.0.3"
     udev-generator: "npm:^1.0.2"
-    usb: "npm:^3.0.0-alpha.5"
+    usb: "npm:^3.0.0-alpha.6"
     uuid: "npm:^14.0.0"
     webpack: "npm:5.104.1"
     webpack-cli: "npm:^7.0.2"
@@ -24665,20 +24665,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"usb@npm:^3.0.0-alpha.5":
-  version: 3.0.0-alpha.5
-  resolution: "usb@npm:3.0.0-alpha.5"
+"usb@npm:^3.0.0-alpha.6":
+  version: 3.0.0-alpha.6
+  resolution: "usb@npm:3.0.0-alpha.6"
   dependencies:
-    "@node-usb/usb-darwin-arm64": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-darwin-x64": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-linux-arm-gnueabihf": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-linux-arm64-gnu": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-linux-arm64-musl": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-linux-x64-gnu": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-linux-x64-musl": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-win32-arm64-msvc": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-win32-ia32-msvc": "npm:3.0.0-alpha.5"
-    "@node-usb/usb-win32-x64-msvc": "npm:3.0.0-alpha.5"
+    "@node-usb/usb-darwin-arm64": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-darwin-x64": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-linux-arm-gnueabihf": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-linux-arm64-gnu": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-linux-arm64-musl": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-linux-x64-gnu": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-linux-x64-musl": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-win32-arm64-msvc": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-win32-ia32-msvc": "npm:3.0.0-alpha.6"
+    "@node-usb/usb-win32-x64-msvc": "npm:3.0.0-alpha.6"
     "@types/w3c-web-usb": "npm:^1.0.13"
   dependenciesMeta:
     "@node-usb/usb-darwin-arm64":
@@ -24701,7 +24701,7 @@ __metadata:
       optional: true
     "@node-usb/usb-win32-x64-msvc":
       optional: true
-  checksum: 10c0/51bcae9f096686931e932acb5d64ff89dd5ef983dbd9ba492e08f268765c971534f6db70178b7c2d5305ba3400a7d7f4de5496e8c0f73b6f6806e815161e99fc
+  checksum: 10c0/f959685638e650eb69cf93a3a8591cc22036e5e3a9764052f68d60a7766e3a10477a03f39e35f8e766ca507841218aa298f566c288b0d5de758c438a1b218eb8
   languageName: node
   linkType: hard
 
