@@ -48,7 +48,9 @@ export function useContextMenuState(menuItems: MenuItemProps[]): ContextMenuProp
 			setVisible(false)
 		}
 
-		const handleInsideClick = (e?: Event) => {
+		const handleInsideClick = (e: MouseEvent) => {
+			if (e.button === 2) return // Ignore right click, to avoid the trigger click closing itself
+
 			if (e && menuRef.current && menuRef.current.contains(e.target as Node)) {
 				// allow propagation just to be safe so actions will trigger regardless of calling order.
 				setVisible(false)
