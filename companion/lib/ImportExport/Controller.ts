@@ -129,7 +129,7 @@ export class ImportExportController {
 
 			const rawObject = result.data
 
-			let importObject = upgradeImport(rawObject)
+			let importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
 
 			// fix any db instances missing the upgradeIndex property
 			if (importObject.instances) {

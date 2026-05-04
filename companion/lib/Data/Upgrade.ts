@@ -1,4 +1,5 @@
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
 import { showFatalError } from '../Resources/Util.js'
 import type { DataDatabase } from './Database.js'
@@ -71,13 +72,13 @@ export function upgradeStartup(db: DataDatabase): void {
  * Upgrade an exported page or full configuration to the latest format
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function upgradeImport(obj: any): SomeExportv6 {
+export function upgradeImport(obj: any, userConfig: UserConfigModel): SomeExportv6 {
 	const currentVersion = obj.version || 1
 
 	for (let i = currentVersion; i < targetVersion; i++) {
 		// Run if a script is defined
 		if (allUpgrades[i - 1].upgradeImport !== undefined) {
-			obj = allUpgrades[i - 1].upgradeImport(obj, logger)
+			obj = allUpgrades[i - 1].upgradeImport(obj, logger, userConfig)
 		}
 	}
 

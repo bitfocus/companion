@@ -12,6 +12,7 @@ import type {
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { Complete } from '@companion-module/base'
 import type { Logger } from '../../Log/Controller.js'
 import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
@@ -42,18 +43,21 @@ interface NormalButtonOptions {
 function convertDatabaseToV13(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
+	const userconfig = db.defaultTableView.getOrDefault('userconfig', {}) as Partial<UserConfigModel>
+	const defaultNoTopBar = !!userconfig.remove_topbar
+
 	const controls = db.getTableView('controls')
 
 	for (const [controlId, control] of Object.entries(controls.all())) {
 		if (control.type === 'button') {
 			// Fixup control
-			controls.set(controlId, convertControlToLayered(control))
+			controls.set(controlId, convertControlToLayered(control, defaultNoTopBar))
 		}
 	}
 }
 
-function convertControlToLayered(control: NormalButtonModel): LayeredButtonModel {
-	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null)
+function convertControlToLayered(control: NormalButtonModel, defaultNoTopBar: boolean): LayeredButtonModel {
+	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null, defaultNoTopBar)
 	return {
 		type: 'button-layered',
 		options: {
@@ -69,7 +73,9 @@ function convertControlToLayered(control: NormalButtonModel): LayeredButtonModel
 	}
 }
 
-function convertImportToV13(obj: SomeExportv6): SomeExportv6 {
+function convertImportToV13(obj: SomeExportv6, _logger: Logger, userConfig: UserConfigModel): SomeExportv6 {
+	const defaultNoTopBar = !!userConfig.remove_topbar
+
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
 			...cloneDeep(obj),
@@ -82,7 +88,7 @@ function convertImportToV13(obj: SomeExportv6): SomeExportv6 {
 					for (const [key, control] of Object.entries(row)) {
 						if (control.type === 'button') {
 							// Fixup control
-							row[key as any] = convertControlToLayered(control as NormalButtonModel)
+							row[key as any] = convertControlToLayered(control as NormalButtonModel, defaultNoTopBar)
 						}
 					}
 				}
@@ -100,7 +106,7 @@ function convertImportToV13(obj: SomeExportv6): SomeExportv6 {
 			for (const [key, control] of Object.entries(row)) {
 				if (control.type === 'button') {
 					// Fixup control
-					row[key as any] = convertControlToLayered(control as NormalButtonModel)
+					row[key as any] = convertControlToLayered(control as NormalButtonModel, defaultNoTopBar)
 				}
 			}
 		}

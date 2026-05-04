@@ -338,6 +338,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	}
 
 	/**
+	 * Get a copy of the entire user config object
+	 */
+	getAll(): UserConfigModel {
+		return structuredClone(this.#data)
+	}
+
+	/**
 	 * Get a specific use config setting
 	 * @param key
 	 * @param [clone = false] - <code>true</code> if a clone is needed instead of a link

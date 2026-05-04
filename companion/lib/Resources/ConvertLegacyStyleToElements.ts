@@ -46,17 +46,24 @@ interface ParsedLegacyStyle {
 	}
 }
 
-// const TEXT_SIZE_SCALE = 1 / 0.6 // TODO - when no topbar
+const TEXT_SIZE_SCALE_NO_TOPBAR = 1 / 0.6 // When no topbar
 const TEXT_SIZE_SCALE = 2.1 // When with topbar
 
-export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>): ParsedLegacyStyle {
+export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultNoTopBar?: boolean): ParsedLegacyStyle {
 	let textSize: 'auto' | number | undefined = undefined
 	if (style.size !== undefined) {
 		if (style.size === 'auto') textSize = 'auto'
 		else {
 			const n = Number(style.size)
-			// Ensure is a number, and round to 1dp
-			if (!isNaN(n)) textSize = Number((n * TEXT_SIZE_SCALE).toFixed(1))
+			if (!isNaN(n)) {
+				// We can't be 100% accurate on whether to account for the top-bar or not, but during imports we want to try to match how it was just drawing
+				const showTopBar =
+					defaultNoTopBar !== undefined && typeof style.show_topbar === 'boolean' ? style.show_topbar : !defaultNoTopBar
+				const scale = showTopBar ? TEXT_SIZE_SCALE : TEXT_SIZE_SCALE_NO_TOPBAR
+
+				// Ensure is a number, and round to 1dp
+				textSize = Number((n * scale).toFixed(1))
+			}
 		}
 	}
 
@@ -192,7 +199,8 @@ export function GetLegacyStyleProperty(
 export function ConvertLegacyStyleToElements(
 	style: ButtonStyleProperties,
 	feedbacks: SomeEntityModel[],
-	previewStyle: Partial<ButtonStyleProperties> | null | undefined
+	previewStyle: Partial<ButtonStyleProperties> | null | undefined,
+	defaultNoTopBar = false
 ): {
 	layers: SomeButtonGraphicsElement[]
 	feedbacks: SomeEntityModel[]
@@ -279,7 +287,7 @@ export function ConvertLegacyStyleToElements(
 	}
 
 	// Apply the old style properties to the new elements
-	const parsedStyle = ParseLegacyStyle(style)
+	const parsedStyle = ParseLegacyStyle(style, defaultNoTopBar)
 
 	if (parsedStyle.text.text !== undefined) textElement.text = parsedStyle.text.text
 	if (parsedStyle.text.size !== undefined) textElement.fontsize.value = String(parsedStyle.text.size)
@@ -313,7 +321,7 @@ export function ConvertLegacyStyleToElements(
 		if ('style' in fb && fb.style && (Object.keys(fb.style).length > 0 || fb.connectionId !== 'internal')) {
 			// Must be boolean, translate the props as such
 
-			const parsedStyle = ParseLegacyStyle(fb.style)
+			const parsedStyle = ParseLegacyStyle(fb.style, defaultNoTopBar)
 
 			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds)
 
@@ -345,7 +353,7 @@ export function ConvertLegacyStyleToElements(
 
 	const previewStyleFeedbacks: SomeEntityModel[] = []
 	if (previewStyle) {
-		const parsedStyle = ParseLegacyStyle(previewStyle)
+		const parsedStyle = ParseLegacyStyle(previewStyle, defaultNoTopBar)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds)
 
 		if (overrides.length > 0) {
