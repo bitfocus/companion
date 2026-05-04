@@ -378,6 +378,7 @@ form.row > * {
 
 .sidebar {
 	will-change: contents;
+	user-select: none;
 
 	.sidebar-brand {
 		font-size: 1.3em;
