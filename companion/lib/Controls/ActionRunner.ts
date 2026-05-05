@@ -42,14 +42,15 @@ export class ActionRunner {
 			await this.#internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
-			if (instance) {
-				const entityModel = action.asEntityModel(false)
-				if (entityModel.type !== EntityModelType.Action)
-					throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
-				await instance.actionRun(entityModel, extras)
-			} else {
+			if (!instance) {
 				this.#logger.silly('trying to run action on a missing instance.', action)
+				return
 			}
+
+			const entityModel = action.asEntityModel(false)
+			if (entityModel.type !== EntityModelType.Action)
+				throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
+			await instance.actionRun(entityModel, extras)
 		}
 	}
 
