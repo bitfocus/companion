@@ -21,6 +21,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -113,36 +114,38 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'trigger_enabled': {
 				const triggerId = stringifyVariableValue(action.options.trigger_id)
-				if (!triggerId) return true
+				if (!triggerId) break
 
 				const control = this.#controlsController.getControl(triggerId)
-				if (!control || control.type !== 'trigger' || !control.supportsOptions) return false
+				if (!control || control.type !== 'trigger' || !control.supportsOptions) return null
 
 				let newState = action.options.enable == 'true'
 				if (action.options.enable == 'toggle') newState = !control.options.enabled
 
 				control.optionsSetField('enabled', newState)
 
-				return true
+				break
 			}
 			case 'trigger_collection_enabled': {
 				const collectionId = stringifyVariableValue(action.options.collection_id)
-				if (!collectionId) return true
+				if (!collectionId) break
 
 				let newState: boolean | 'toggle' = action.options.enable == 'true'
 				if (action.options.enable == 'toggle') newState = 'toggle'
 
 				this.#controlsController.setTriggerCollectionEnabled(collectionId, newState)
 
-				return true
+				break
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {

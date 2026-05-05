@@ -23,6 +23,7 @@ import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
 	InternalVisitor,
@@ -95,38 +96,40 @@ export class InternalCustomVariables
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'custom_variable_set_value': {
 				const variableName = stringifyVariableValue(action.options.name)
-				if (!variableName) return true
-
-				if (this.#variableController.custom.hasCustomVariable(variableName)) {
-					this.#variableController.custom.setValue(variableName, action.options.value)
-				} else if (action.options.create) {
-					this.#variableController.custom.createVariable(variableName, action.options.value)
-				} else {
-					this.#logger.warn(`Custom variable "${variableName}" not found`)
+				if (variableName) {
+					if (this.#variableController.custom.hasCustomVariable(variableName)) {
+						this.#variableController.custom.setValue(variableName, action.options.value)
+					} else if (action.options.create) {
+						this.#variableController.custom.createVariable(variableName, action.options.value)
+					} else {
+						this.#logger.warn(`Custom variable "${variableName}" not found`)
+					}
 				}
-				return true
+				break
 			}
 			case 'custom_variable_reset_to_default': {
 				const variableName = stringifyVariableValue(action.options.name)
-				if (!variableName) return true
-
-				this.#variableController.custom.resetValueToDefault(variableName)
-				return true
+				if (variableName) {
+					this.#variableController.custom.resetValueToDefault(variableName)
+				}
+				break
 			}
 			case 'custom_variable_sync_to_default': {
 				const variableName = stringifyVariableValue(action.options.name)
-				if (!variableName) return true
-
-				this.#variableController.custom.syncValueToDefault(variableName)
-				return true
+				if (variableName) {
+					this.#variableController.custom.syncValueToDefault(variableName)
+				}
+				break
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

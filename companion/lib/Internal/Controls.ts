@@ -34,6 +34,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -550,78 +551,77 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#pushStateSubscriptions.delete(feedback.id)
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'button_pressrelease': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
+				if (theControlId) {
+					const forcePress = !!action.options.force
 
-				const forcePress = !!action.options.force
-
-				this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
-				this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
-				return true
+					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
+					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
+				}
+				break
 			}
 			case 'button_press': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
-				return true
+				if (theControlId) {
+					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
+				}
+				break
 			}
 			case 'button_release': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
-				return true
+				if (theControlId) {
+					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
+				}
+				break
 			}
 			case 'button_rotate_left': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				this.#controlsStore.rotateControl(theControlId, false, extras.surfaceId)
-				return true
+				if (theControlId) {
+					this.#controlsStore.rotateControl(theControlId, false, extras.surfaceId)
+				}
+				break
 			}
 			case 'button_rotate_right': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				this.#controlsStore.rotateControl(theControlId, true, extras.surfaceId)
-				return true
+				if (theControlId) {
+					this.#controlsStore.rotateControl(theControlId, true, extras.surfaceId)
+				}
+				break
 			}
 			case 'bgcolor': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				const control = this.#controlsStore.getControl(theControlId)
-				if (control && control.supportsLayeredStyle) {
-					const color = parseColorToNumber(action.options.color as any) || 0
-					control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsLayeredStyle) {
+						const color = parseColorToNumber(action.options.color as any) || 0
+						control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
+					}
 				}
-				return true
+				break
 			}
 			case 'textcolor': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				const control = this.#controlsStore.getControl(theControlId)
-				if (control && control.supportsLayeredStyle) {
-					const color = parseColorToNumber(action.options.color as any) || 0
-					control.layeredStyleUpdateFromLegacyProperties({ color: color })
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsLayeredStyle) {
+						const color = parseColorToNumber(action.options.color as any) || 0
+						control.layeredStyleUpdateFromLegacyProperties({ color: color })
+					}
 				}
-				return true
+				break
 			}
 			case 'button_text': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				const control = this.#controlsStore.getControl(theControlId)
-				if (control && control.supportsLayeredStyle) {
-					control.layeredStyleUpdateFromLegacyProperties({ text: stringifyVariableValue(action.options.label) ?? '' })
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsLayeredStyle) {
+						control.layeredStyleUpdateFromLegacyProperties({ text: stringifyVariableValue(action.options.label) ?? '' })
+					}
 				}
-
-				return true
+				break
 			}
 			case 'panic_bank': {
 				// Special case handling for special modes
@@ -632,47 +632,45 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						control.abortDelayedActionsSingle(Boolean(action.options.unlatch), extras.abortDelayed)
 					}
 
-					return true
+					break
 				} else if (rawControlId === 'this-all-runs') {
 					const control = this.#controlsStore.getControl(extras.controlId)
 					if (control && control.supportsActions) {
 						control.abortDelayedActions(Boolean(action.options.unlatch), null)
 					}
 
-					return true
+					break
 				}
 
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
-
-				const control = this.#controlsStore.getControl(theControlId)
-				if (control && control.supportsActions) {
-					control.abortDelayedActions(
-						Boolean(action.options.unlatch),
-						theControlId === extras.controlId ? extras.abortDelayed : null
-					)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsActions) {
+						control.abortDelayedActions(
+							Boolean(action.options.unlatch),
+							theControlId === extras.controlId ? extras.abortDelayed : null
+						)
+					}
 				}
-
-				return true
+				break
 			}
 			case 'panic_page': {
 				let thePage: number | null = Number(action.options.page)
 
 				if (thePage === 0) thePage = extras.location?.pageNumber ?? null
 
-				if (thePage === null || isNaN(thePage)) return true
+				if (thePage !== null && !isNaN(thePage)) {
+					const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
+					for (const controlId of controlIdsOnPage) {
+						if (action.options.ignoreSelf && controlId === extras.controlId) continue
 
-				const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
-				for (const controlId of controlIdsOnPage) {
-					if (action.options.ignoreSelf && controlId === extras.controlId) continue
-
-					const control = this.#controlsStore.getControl(controlId)
-					if (control && control.supportsActions) {
-						control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
+						const control = this.#controlsStore.getControl(controlId)
+						if (control && control.supportsActions) {
+							control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
+						}
 					}
 				}
-
-				return true
+				break
 			}
 			case 'panic_trigger': {
 				const rawControlId = stringifyVariableValue(action.options.trigger_id)
@@ -692,37 +690,39 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					}
 				}
 
-				return true
+				break
 			}
 			case 'panic': {
 				this.#controlsStore.abortAllDelayedActions(action.options.ignoreCurrent ? extras.abortDelayed : null)
-				return true
+				break
 			}
 			case 'bank_current_step': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
 
-				const control = this.#controlsStore.getControl(theControlId)
-
-				if (control && control.supportsActionSets) {
-					control.actionSets.stepMakeCurrent(Number(action.options.step))
+					if (control && control.supportsActionSets) {
+						control.actionSets.stepMakeCurrent(Number(action.options.step))
+					}
 				}
-				return true
+				break
 			}
 			case 'bank_current_step_delta': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (!theControlId) return true
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
 
-				const control = this.#controlsStore.getControl(theControlId)
-
-				if (control && control.supportsActionSets) {
-					control.actionSets.stepAdvanceDelta(Number(action.options.amount))
+					if (control && control.supportsActionSets) {
+						control.actionSets.stepAdvanceDelta(Number(action.options.amount))
+					}
 				}
-				return true
+				break
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

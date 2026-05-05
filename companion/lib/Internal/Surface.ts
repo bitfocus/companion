@@ -30,6 +30,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -439,24 +440,24 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'set_brightness': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
-
-				this.#surfaceController.setDeviceBrightness(surfaceId, Number(action.options.brightness), true)
-				return true
+				if (surfaceId) {
+					this.#surfaceController.setDeviceBrightness(surfaceId, Number(action.options.brightness), true)
+				}
+				break
 			}
 			case 'set_page': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
-
-				const thePage = this.#fetchPage(action.options, extras, surfaceId)
-				if (thePage === undefined) return true
-
-				this.#changeSurfacePage(surfaceId, thePage)
-				return true
+				if (surfaceId) {
+					const thePage = this.#fetchPage(action.options, extras, surfaceId)
+					if (thePage !== undefined) {
+						this.#changeSurfacePage(surfaceId, thePage)
+					}
+				}
+				break
 			}
 			case 'set_page_byindex': {
 				const surfaceIndexNumber = Number(action.options.surfaceIndex)
@@ -464,39 +465,39 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 					this.#logger.warn(
 						`Trying to set controller #${stringifyVariableValue(action.options.surfaceIndex)} but it isn't a valid index.`
 					)
-					return true
+					break
 				}
 
 				const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
 				if (surfaceId === undefined || surfaceId === '') {
 					this.#logger.warn(`Trying to set controller #${surfaceIndexNumber} but it isn't available.`)
-					return true
+					break
 				}
 
 				const thePage = this.#fetchPage(action.options, extras, surfaceId)
-				if (thePage === undefined) return true
-
-				this.#changeSurfacePage(surfaceId, thePage)
-				return true
+				if (thePage !== undefined) {
+					this.#changeSurfacePage(surfaceId, thePage)
+				}
+				break
 			}
 			case 'inc_page': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
-
-				this.#changeSurfacePage(surfaceId, '+1')
-				return true
+				if (surfaceId) {
+					this.#changeSurfacePage(surfaceId, '+1')
+				}
+				break
 			}
 			case 'dec_page': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
-
-				this.#changeSurfacePage(surfaceId, '-1')
-				return true
+				if (surfaceId) {
+					this.#changeSurfacePage(surfaceId, '-1')
+				}
+				break
 			}
 			case 'lockout_device': {
 				if (this.#surfaceController.isPinLockEnabled()) {
 					const surfaceId = this.#fetchSurfaceId(action.options, extras)
-					if (!surfaceId) return true
+					if (!surfaceId) break
 
 					if (extras.controlId && extras.surfaceId == surfaceId) {
 						const control = this.#controlsStore.getControl(extras.controlId)
@@ -510,17 +511,17 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, true, true)
 					})
 				}
-				return true
+				break
 			}
 			case 'unlockout_device': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
+				if (surfaceId) {
+					setImmediate(() => {
+						this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, false, true)
+					})
+				}
 
-				setImmediate(() => {
-					this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, false, true)
-				})
-
-				return true
+				break
 			}
 			case 'lockout_all': {
 				if (this.#surfaceController.isPinLockEnabled()) {
@@ -536,53 +537,55 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						this.#surfaceController.setAllLocked(true)
 					})
 				}
-				return true
+				break
 			}
 			case 'unlockout_all': {
 				setImmediate(() => {
 					this.#surfaceController.setAllLocked(false)
 				})
-				return true
+				break
 			}
 			case 'rescan': {
 				this.#surfaceController.triggerRefreshDevices().catch(() => {
 					// TODO
 				})
-				return true
+				break
 			}
 			case 'surface_set_position': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
+				if (!surfaceId) break
 
 				const xOffset = Number(action.options.x_offset)
 				const yOffset = Number(action.options.y_offset)
 
 				if (isNaN(xOffset) || isNaN(yOffset)) {
 					this.#logger.warn(`Invalid position offsets: x=${xOffset}, y=${yOffset}`)
-					return true
+					break
 				}
 
 				this.#surfaceController.setDevicePosition(surfaceId, xOffset, yOffset, true)
-				return true
+				break
 			}
 			case 'surface_adjust_position': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
-				if (!surfaceId) return true
+				if (!surfaceId) break
 
 				const xAdjustment = Number(action.options.x_adjustment)
 				const yAdjustment = Number(action.options.y_adjustment)
 
 				if (isNaN(xAdjustment) || isNaN(yAdjustment)) {
 					this.#logger.warn(`Invalid position adjustments: x=${xAdjustment}, y=${yAdjustment}`)
-					return true
+					break
 				}
 
 				this.#surfaceController.adjustDevicePosition(surfaceId, xAdjustment, yAdjustment, true)
-				return true
+				break
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	/**

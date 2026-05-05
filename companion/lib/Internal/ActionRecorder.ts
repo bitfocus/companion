@@ -24,6 +24,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -174,7 +175,7 @@ export class InternalActionRecorder
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'action_recorder_set_recording': {
 				const session = this.#actionRecorder.getSession()
@@ -189,7 +190,7 @@ export class InternalActionRecorder
 
 					this.#actionRecorder.setRecording(newState)
 				}
-				return true
+				break
 			}
 			case 'action_recorder_set_connections': {
 				const session = this.#actionRecorder.getSession()
@@ -232,7 +233,7 @@ export class InternalActionRecorder
 					this.#actionRecorder.setSelectedConnectionIds(Array.from(result))
 				}
 
-				return true
+				break
 			}
 			case 'action_recorder_save_to_button': {
 				let stepId = stringifyVariableValue(action.options.step)
@@ -256,7 +257,7 @@ export class InternalActionRecorder
 						controlId = this.#pageStore.getControlIdAtOldBankIndex(page, bank)
 					}
 
-					if (!controlId) return true
+					if (!controlId) break
 
 					// If stepId is a number, it must be a step button. account for the 0 index
 					if (!isNaN(Number(stepId))) stepId = `${Number(stepId) - 1}`
@@ -272,14 +273,16 @@ export class InternalActionRecorder
 					}
 				}
 
-				return true
+				break
 			}
 			case 'action_recorder_discard_actions':
 				this.#actionRecorder.discardActions()
-				return true
+				break
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
