@@ -26,6 +26,7 @@ import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -249,30 +250,29 @@ export class InternalBuildingBlocks
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): Promise<boolean> | boolean {
+	executeAction(
+		action: ActionForInternalExecution,
+		extras: RunActionExtras
+	): Promise<InternalActionResult> | InternalActionResult {
 		switch (action.definitionId) {
 			case 'wait': {
-				if (extras.abortDelayed.aborted) return true
+				if (extras.abortDelayed.aborted) break
 
 				const delay = Number(action.options.time)
-
-				if (!isNaN(delay) && delay > 0) {
-					// Perform the wait
-					return setTimeout(delay, true, { signal: extras.abortDelayed }).catch(() => {
-						this.#logger.debug(
-							`Aborted wait on ${extras.location ? formatLocation(extras.location) : extras.controlId}`
-						)
-
-						// Discard error
-						return true
-					})
-				} else {
+				if (isNaN(delay) || delay <= 0) {
 					// No wait, return immediately
-					return true
+					break
 				}
+
+				return setTimeout(delay, { result: undefined }, { signal: extras.abortDelayed }).catch(() => {
+					this.#logger.debug(`Aborted wait on ${extras.location ? formatLocation(extras.location) : extras.controlId}`)
+
+					// Discard error
+					return { result: undefined }
+				})
 			}
 			case 'action_group': {
-				if (extras.abortDelayed.aborted) return true
+				if (extras.abortDelayed.aborted) break
 
 				let executeSequential = false
 				switch (action.options.execution_mode) {
@@ -301,10 +301,10 @@ export class InternalBuildingBlocks
 					.catch((e) => {
 						this.#logger.error(`Failed to run actions: ${e.message}`)
 					})
-					.then(() => true)
+					.then(() => ({ result: undefined }))
 			}
 			case 'logic_if': {
-				if (extras.abortDelayed.aborted) return true
+				if (extras.abortDelayed.aborted) break
 
 				const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
 
@@ -317,10 +317,10 @@ export class InternalBuildingBlocks
 					.catch((e) => {
 						this.#logger.error(`Failed to run actions: ${e.message}`)
 					})
-					.then(() => true)
+					.then(() => ({ result: undefined }))
 			}
 			case 'logic_while': {
-				if (extras.abortDelayed.aborted) return true
+				if (extras.abortDelayed.aborted) break
 
 				return Promise.resolve().then(async () => {
 					while (!extras.abortDelayed.aborted) {
@@ -339,12 +339,14 @@ export class InternalBuildingBlocks
 						// Yield to event loop to prevent tight loop
 						await setTimeout(1)
 					}
-					return true
+					return { result: undefined }
 				})
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

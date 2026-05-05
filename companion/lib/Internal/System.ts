@@ -32,6 +32,7 @@ import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
 	InternalVisitor,
@@ -334,7 +335,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		return actions
 	}
 
-	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<boolean> {
+	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<InternalActionResult> {
 		switch (action.definitionId) {
 			case 'exec': {
 				if (action.options.path) {
@@ -345,7 +346,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 
 					if (!command || command.trim() === '') {
 						this.#logger.warn('No command specified')
-						return true
+						break
 					}
 
 					try {
@@ -367,25 +368,26 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						this.#logger.silly(error)
 					}
 				}
-				return true
+				break
 			}
 			case 'custom_log': {
 				const message = stringifyVariableValue(action.options.message)
 				this.#customMessageLogger.info(message ?? '')
-
-				return true
+				break
 			}
 			case 'app_restart': {
 				this.#requestExit(true, true)
-				return true
+				break
 			}
 			case 'app_exit': {
 				this.#requestExit(true, false)
-				return true
+				break
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

@@ -25,6 +25,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -278,38 +279,40 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'local_variable_set_value': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-				if (!localVariable) return true
+				if (!localVariable) break
 
 				this.#localVariables.setLocalVariable(localVariable, action.options.value)
 
-				return true
+				break
 			}
 			case 'local_variable_reset_to_default': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-				if (!localVariable) return true
+				if (!localVariable) break
 
 				this.#localVariables.resetLocalVariable(localVariable)
 
-				return true
+				break
 			}
 			case 'local_variable_sync_to_default': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-				if (!localVariable) return true
+				if (!localVariable) break
 
 				this.#localVariables.writeLocalVariableStartupValue(localVariable)
 
-				return true
+				break
 			}
 			default:
-				return false
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	/**
