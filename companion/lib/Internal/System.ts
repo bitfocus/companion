@@ -335,51 +335,56 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	}
 
 	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<boolean> {
-		if (action.definitionId === 'exec') {
-			if (action.options.path) {
-				const command = stringifyVariableValue(action.options.path)
-				const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined
-				const cwd = cwdRaw?.trim() !== '' ? cwdRaw : undefined
-				this.#logger.silly(`Running command: '${command}' in '${cwd ?? process.cwd()}'`)
+		switch (action.definitionId) {
+			case 'exec': {
+				if (action.options.path) {
+					const command = stringifyVariableValue(action.options.path)
+					const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined
+					const cwd = cwdRaw?.trim() !== '' ? cwdRaw : undefined
+					this.#logger.silly(`Running command: '${command}' in '${cwd ?? process.cwd()}'`)
 
-				if (!command || command.trim() === '') {
-					this.#logger.warn('No command specified')
-					return true
-				}
-
-				try {
-					const { stdout } = await execAsync(command, {
-						cwd: cwd,
-						timeout: Number(action.options.timeout) || 5000,
-					})
-
-					// Trim EOL character(s) appended by the OS
-					let stdoutStr = stdout.toString()
-					if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
-
-					const targetVarName = stringifyVariableValue(action.options.targetVariable)
-					if (targetVarName) {
-						this.#variableController.custom.setValue(targetVarName, stdoutStr)
+					if (!command || command.trim() === '') {
+						this.#logger.warn('No command specified')
+						return true
 					}
-				} catch (error) {
-					this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
-					this.#logger.silly(error)
-				}
-			}
-			return true
-		} else if (action.definitionId === 'custom_log') {
-			const message = stringifyVariableValue(action.options.message)
-			this.#customMessageLogger.info(message ?? '')
 
-			return true
-		} else if (action.definitionId === 'app_restart') {
-			this.#requestExit(true, true)
-			return true
-		} else if (action.definitionId === 'app_exit') {
-			this.#requestExit(true, false)
-			return true
-		} else {
-			return false
+					try {
+						const { stdout } = await execAsync(command, {
+							cwd: cwd,
+							timeout: Number(action.options.timeout) || 5000,
+						})
+
+						// Trim EOL character(s) appended by the OS
+						let stdoutStr = stdout.toString()
+						if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
+
+						const targetVarName = stringifyVariableValue(action.options.targetVariable)
+						if (targetVarName) {
+							this.#variableController.custom.setValue(targetVarName, stdoutStr)
+						}
+					} catch (error) {
+						this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
+						this.#logger.silly(error)
+					}
+				}
+				return true
+			}
+			case 'custom_log': {
+				const message = stringifyVariableValue(action.options.message)
+				this.#customMessageLogger.info(message ?? '')
+
+				return true
+			}
+			case 'app_restart': {
+				this.#requestExit(true, true)
+				return true
+			}
+			case 'app_exit': {
+				this.#requestExit(true, false)
+				return true
+			}
+			default:
+				return false
 		}
 	}
 
