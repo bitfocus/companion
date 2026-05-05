@@ -440,135 +440,148 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	}
 
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
-		if (action.definitionId === 'set_brightness') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
-
-			this.#surfaceController.setDeviceBrightness(surfaceId, Number(action.options.brightness), true)
-			return true
-		} else if (action.definitionId === 'set_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
-
-			const thePage = this.#fetchPage(action.options, extras, surfaceId)
-			if (thePage === undefined) return true
-
-			this.#changeSurfacePage(surfaceId, thePage)
-			return true
-		} else if (action.definitionId === 'set_page_byindex') {
-			const surfaceIndexNumber = Number(action.options.surfaceIndex)
-			if (isNaN(surfaceIndexNumber) || surfaceIndexNumber < 0) {
-				this.#logger.warn(
-					`Trying to set controller #${stringifyVariableValue(action.options.surfaceIndex)} but it isn't a valid index.`
-				)
-				return true
-			}
-
-			const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
-			if (surfaceId === undefined || surfaceId === '') {
-				this.#logger.warn(`Trying to set controller #${surfaceIndexNumber} but it isn't available.`)
-				return true
-			}
-
-			const thePage = this.#fetchPage(action.options, extras, surfaceId)
-			if (thePage === undefined) return true
-
-			this.#changeSurfacePage(surfaceId, thePage)
-			return true
-		} else if (action.definitionId === 'inc_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
-
-			this.#changeSurfacePage(surfaceId, '+1')
-			return true
-		} else if (action.definitionId === 'dec_page') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
-
-			this.#changeSurfacePage(surfaceId, '-1')
-			return true
-		} else if (action.definitionId === 'lockout_device') {
-			if (this.#surfaceController.isPinLockEnabled()) {
+		switch (action.definitionId) {
+			case 'set_brightness': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
 				if (!surfaceId) return true
 
-				if (extras.controlId && extras.surfaceId == surfaceId) {
-					const control = this.#controlsStore.getControl(extras.controlId)
-					if (control && control.supportsPushed) {
-						// Make sure the button doesn't show as pressed
-						control.setPushed(false, extras.surfaceId)
-					}
-				}
-
-				setImmediate(() => {
-					this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, true, true)
-				})
-			}
-			return true
-		} else if (action.definitionId === 'unlockout_device') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
-
-			setImmediate(() => {
-				this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, false, true)
-			})
-
-			return true
-		} else if (action.definitionId === 'lockout_all') {
-			if (this.#surfaceController.isPinLockEnabled()) {
-				if (extras.controlId) {
-					const control = this.#controlsStore.getControl(extras.controlId)
-					if (control && control.supportsPushed) {
-						// Make sure the button doesn't show as pressed
-						control.setPushed(false, extras.surfaceId)
-					}
-				}
-
-				setImmediate(() => {
-					this.#surfaceController.setAllLocked(true)
-				})
-			}
-			return true
-		} else if (action.definitionId === 'unlockout_all') {
-			setImmediate(() => {
-				this.#surfaceController.setAllLocked(false)
-			})
-			return true
-		} else if (action.definitionId === 'rescan') {
-			this.#surfaceController.triggerRefreshDevices().catch(() => {
-				// TODO
-			})
-			return true
-		} else if (action.definitionId === 'surface_set_position') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
-
-			const xOffset = Number(action.options.x_offset)
-			const yOffset = Number(action.options.y_offset)
-
-			if (isNaN(xOffset) || isNaN(yOffset)) {
-				this.#logger.warn(`Invalid position offsets: x=${xOffset}, y=${yOffset}`)
+				this.#surfaceController.setDeviceBrightness(surfaceId, Number(action.options.brightness), true)
 				return true
 			}
+			case 'set_page': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (!surfaceId) return true
 
-			this.#surfaceController.setDevicePosition(surfaceId, xOffset, yOffset, true)
-			return true
-		} else if (action.definitionId === 'surface_adjust_position') {
-			const surfaceId = this.#fetchSurfaceId(action.options, extras)
-			if (!surfaceId) return true
+				const thePage = this.#fetchPage(action.options, extras, surfaceId)
+				if (thePage === undefined) return true
 
-			const xAdjustment = Number(action.options.x_adjustment)
-			const yAdjustment = Number(action.options.y_adjustment)
-
-			if (isNaN(xAdjustment) || isNaN(yAdjustment)) {
-				this.#logger.warn(`Invalid position adjustments: x=${xAdjustment}, y=${yAdjustment}`)
+				this.#changeSurfacePage(surfaceId, thePage)
 				return true
 			}
+			case 'set_page_byindex': {
+				const surfaceIndexNumber = Number(action.options.surfaceIndex)
+				if (isNaN(surfaceIndexNumber) || surfaceIndexNumber < 0) {
+					this.#logger.warn(
+						`Trying to set controller #${stringifyVariableValue(action.options.surfaceIndex)} but it isn't a valid index.`
+					)
+					return true
+				}
 
-			this.#surfaceController.adjustDevicePosition(surfaceId, xAdjustment, yAdjustment, true)
-			return true
-		} else {
-			return false
+				const surfaceId = this.#surfaceController.getDeviceIdFromIndex(surfaceIndexNumber)
+				if (surfaceId === undefined || surfaceId === '') {
+					this.#logger.warn(`Trying to set controller #${surfaceIndexNumber} but it isn't available.`)
+					return true
+				}
+
+				const thePage = this.#fetchPage(action.options, extras, surfaceId)
+				if (thePage === undefined) return true
+
+				this.#changeSurfacePage(surfaceId, thePage)
+				return true
+			}
+			case 'inc_page': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (!surfaceId) return true
+
+				this.#changeSurfacePage(surfaceId, '+1')
+				return true
+			}
+			case 'dec_page': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (!surfaceId) return true
+
+				this.#changeSurfacePage(surfaceId, '-1')
+				return true
+			}
+			case 'lockout_device': {
+				if (this.#surfaceController.isPinLockEnabled()) {
+					const surfaceId = this.#fetchSurfaceId(action.options, extras)
+					if (!surfaceId) return true
+
+					if (extras.controlId && extras.surfaceId == surfaceId) {
+						const control = this.#controlsStore.getControl(extras.controlId)
+						if (control && control.supportsPushed) {
+							// Make sure the button doesn't show as pressed
+							control.setPushed(false, extras.surfaceId)
+						}
+					}
+
+					setImmediate(() => {
+						this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, true, true)
+					})
+				}
+				return true
+			}
+			case 'unlockout_device': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (!surfaceId) return true
+
+				setImmediate(() => {
+					this.#surfaceController.setSurfaceOrGroupLocked(surfaceId, false, true)
+				})
+
+				return true
+			}
+			case 'lockout_all': {
+				if (this.#surfaceController.isPinLockEnabled()) {
+					if (extras.controlId) {
+						const control = this.#controlsStore.getControl(extras.controlId)
+						if (control && control.supportsPushed) {
+							// Make sure the button doesn't show as pressed
+							control.setPushed(false, extras.surfaceId)
+						}
+					}
+
+					setImmediate(() => {
+						this.#surfaceController.setAllLocked(true)
+					})
+				}
+				return true
+			}
+			case 'unlockout_all': {
+				setImmediate(() => {
+					this.#surfaceController.setAllLocked(false)
+				})
+				return true
+			}
+			case 'rescan': {
+				this.#surfaceController.triggerRefreshDevices().catch(() => {
+					// TODO
+				})
+				return true
+			}
+			case 'surface_set_position': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (!surfaceId) return true
+
+				const xOffset = Number(action.options.x_offset)
+				const yOffset = Number(action.options.y_offset)
+
+				if (isNaN(xOffset) || isNaN(yOffset)) {
+					this.#logger.warn(`Invalid position offsets: x=${xOffset}, y=${yOffset}`)
+					return true
+				}
+
+				this.#surfaceController.setDevicePosition(surfaceId, xOffset, yOffset, true)
+				return true
+			}
+			case 'surface_adjust_position': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (!surfaceId) return true
+
+				const xAdjustment = Number(action.options.x_adjustment)
+				const yAdjustment = Number(action.options.y_adjustment)
+
+				if (isNaN(xAdjustment) || isNaN(yAdjustment)) {
+					this.#logger.warn(`Invalid position adjustments: x=${xAdjustment}, y=${yAdjustment}`)
+					return true
+				}
+
+				this.#surfaceController.adjustDevicePosition(surfaceId, xAdjustment, yAdjustment, true)
+				return true
+			}
+			default:
+				return false
 		}
 	}
 

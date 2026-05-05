@@ -96,32 +96,36 @@ export class InternalCustomVariables
 	}
 
 	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
-		if (action.definitionId === 'custom_variable_set_value') {
-			const variableName = stringifyVariableValue(action.options.name)
-			if (!variableName) return true
+		switch (action.definitionId) {
+			case 'custom_variable_set_value': {
+				const variableName = stringifyVariableValue(action.options.name)
+				if (!variableName) return true
 
-			if (this.#variableController.custom.hasCustomVariable(variableName)) {
-				this.#variableController.custom.setValue(variableName, action.options.value)
-			} else if (action.options.create) {
-				this.#variableController.custom.createVariable(variableName, action.options.value)
-			} else {
-				this.#logger.warn(`Custom variable "${variableName}" not found`)
+				if (this.#variableController.custom.hasCustomVariable(variableName)) {
+					this.#variableController.custom.setValue(variableName, action.options.value)
+				} else if (action.options.create) {
+					this.#variableController.custom.createVariable(variableName, action.options.value)
+				} else {
+					this.#logger.warn(`Custom variable "${variableName}" not found`)
+				}
+				return true
 			}
-			return true
-		} else if (action.definitionId === 'custom_variable_reset_to_default') {
-			const variableName = stringifyVariableValue(action.options.name)
-			if (!variableName) return true
+			case 'custom_variable_reset_to_default': {
+				const variableName = stringifyVariableValue(action.options.name)
+				if (!variableName) return true
 
-			this.#variableController.custom.resetValueToDefault(variableName)
-			return true
-		} else if (action.definitionId === 'custom_variable_sync_to_default') {
-			const variableName = stringifyVariableValue(action.options.name)
-			if (!variableName) return true
+				this.#variableController.custom.resetValueToDefault(variableName)
+				return true
+			}
+			case 'custom_variable_sync_to_default': {
+				const variableName = stringifyVariableValue(action.options.name)
+				if (!variableName) return true
 
-			this.#variableController.custom.syncValueToDefault(variableName)
-			return true
-		} else {
-			return false
+				this.#variableController.custom.syncValueToDefault(variableName)
+				return true
+			}
+			default:
+				return false
 		}
 	}
 

@@ -339,30 +339,33 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 	}
 
 	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
-		if (action.definitionId === 'instance_control') {
-			const instanceId = stringifyVariableValue(action.options.instance_id)
-			if (!instanceId) return true
+		switch (action.definitionId) {
+			case 'instance_control': {
+				const instanceId = stringifyVariableValue(action.options.instance_id)
+				if (!instanceId) return true
 
-			let newState = action.options.enable == 'true'
-			if (action.options.enable == 'toggle') {
-				const curState = this.#instanceController.getInstanceStatus(instanceId)
+				let newState = action.options.enable == 'true'
+				if (action.options.enable == 'toggle') {
+					const curState = this.#instanceController.getInstanceStatus(instanceId)
 
-				newState = !curState?.category
+					newState = !curState?.category
+				}
+
+				this.#instanceController.enableDisableConnection(instanceId, newState)
+				return true
 			}
+			case 'connection_collection_enabled': {
+				const collectionId = stringifyVariableValue(action.options.collection_id)
+				if (!collectionId) return true
 
-			this.#instanceController.enableDisableConnection(instanceId, newState)
-			return true
-		} else if (action.definitionId === 'connection_collection_enabled') {
-			const collectionId = stringifyVariableValue(action.options.collection_id)
-			if (!collectionId) return true
+				let newState: boolean | 'toggle' = action.options.enable == 'true'
+				if (action.options.enable == 'toggle') newState = 'toggle'
 
-			let newState: boolean | 'toggle' = action.options.enable == 'true'
-			if (action.options.enable == 'toggle') newState = 'toggle'
-
-			this.#instanceController.connectionCollections.setCollectionEnabled(collectionId, newState)
-			return true
-		} else {
-			return false
+				this.#instanceController.connectionCollections.setCollectionEnabled(collectionId, newState)
+				return true
+			}
+			default:
+				return false
 		}
 	}
 

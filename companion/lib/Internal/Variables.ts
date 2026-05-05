@@ -279,32 +279,37 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	}
 
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
-		if (action.definitionId === 'local_variable_set_value') {
-			const { location, name } = action.options
-			const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-			if (!localVariable) return true
+		switch (action.definitionId) {
+			case 'local_variable_set_value': {
+				const { location, name } = action.options
+				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
+				if (!localVariable) return true
 
-			this.#localVariables.setLocalVariable(localVariable, action.options.value)
+				this.#localVariables.setLocalVariable(localVariable, action.options.value)
 
-			return true
-		} else if (action.definitionId === 'local_variable_reset_to_default') {
-			const { location, name } = action.options
-			const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-			if (!localVariable) return true
+				return true
+			}
+			case 'local_variable_reset_to_default': {
+				const { location, name } = action.options
+				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
+				if (!localVariable) return true
 
-			this.#localVariables.resetLocalVariable(localVariable)
+				this.#localVariables.resetLocalVariable(localVariable)
 
-			return true
-		} else if (action.definitionId === 'local_variable_sync_to_default') {
-			const { location, name } = action.options
-			const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-			if (!localVariable) return true
+				return true
+			}
+			case 'local_variable_sync_to_default': {
+				const { location, name } = action.options
+				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
+				if (!localVariable) return true
 
-			this.#localVariables.writeLocalVariableStartupValue(localVariable)
+				this.#localVariables.writeLocalVariableStartupValue(localVariable)
 
-			return true
+				return true
+			}
+			default:
+				return false
 		}
-		return false
 	}
 
 	/**
