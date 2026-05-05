@@ -26,8 +26,8 @@
     "quick-lru": "^7.3.0",
     "semver": "^7.7.4",
     "type-fest": "^5.6.0",
-    "unicode-segmenter": "^0.15.0",
-    "zod": "^4.3.6"
+    "unicode-segmenter": "^0.16.0",
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@types/semver": "^7.7.1",
