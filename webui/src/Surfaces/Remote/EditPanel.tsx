@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
+import { CButton, CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -6,6 +6,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import { StaticAlert } from '~/Components/Alert'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -102,7 +103,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 				<div className="row g-sm-2">
 					{saveError && (
 						<CCol className="fieldtype-textinput" sm={12}>
-							<CAlert color="danger">{saveError}</CAlert>
+							<StaticAlert color="danger">{saveError}</StaticAlert>
 						</CCol>
 					)}
 
@@ -126,9 +127,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 										onBlur={field.handleBlur}
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<CAlert color="warning" className="mt-2">
+										<StaticAlert color="warning" className="mt-2">
 											{field.state.meta.errors}
-										</CAlert>
+										</StaticAlert>
 									)}
 								</CCol>
 							</>
@@ -157,9 +158,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 											/>
 											{field.state.meta.errors.length > 0 && (
 												<CCol sm={{ offset: 4, span: 8 }}>
-													<CAlert color="warning" className="mt-2">
+													<StaticAlert color="warning" className="mt-2">
 														{field.state.meta.errors}
-													</CAlert>
+													</StaticAlert>
 												</CCol>
 											)}
 										</>

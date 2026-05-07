@@ -1,10 +1,11 @@
-import { CAlert, CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import type { ClientImportOrResetSelection, ResetType } from '@companion-app/shared/Model/ImportExport.js'
+import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
@@ -242,10 +243,10 @@ const ResetOptionsStep = withForm({
 						selector={(state: any) => [state.values.connections, state.values.buttons, state.values.triggers]}
 						children={([connections, buttons, triggers]: any[]) =>
 							connections !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<CAlert color="warning">
+								<StaticAlert color="warning">
 									Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the
 									connections even if 'Buttons' and/or 'Triggers' are not also reset.
-								</CAlert>
+								</StaticAlert>
 							) : null
 						}
 					/>
@@ -266,10 +267,10 @@ const ResetOptionsStep = withForm({
 						selector={(state: any) => [state.values.customVariables, state.values.buttons, state.values.triggers]}
 						children={([customVariables, buttons, triggers]: any[]) =>
 							customVariables !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<CAlert color="warning">
+								<StaticAlert color="warning">
 									Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them
 									can create an unstable environment.
-								</CAlert>
+								</StaticAlert>
 							) : null
 						}
 					/>
@@ -464,7 +465,7 @@ const ResetApplyStep = withForm({
 							<p>The following data will be reset:</p>
 							<ul>{changes}</ul>
 							{changes.length > 0 ? (
-								<CAlert color="danger">Proceeding will permanently clear the above data.</CAlert>
+								<StaticAlert color="danger">Proceeding will permanently clear the above data.</StaticAlert>
 							) : null}
 						</div>
 					)

@@ -1,5 +1,5 @@
-import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { StaticAlert } from '~/Components/Alert.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -11,7 +11,7 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 
 			<tr>
 				<td colSpan={3}>
-					<CAlert color="danger">Do not touch these settings unless you know what you are doing!</CAlert>
+					<StaticAlert color="danger">Do not touch these settings unless you know what you are doing!</StaticAlert>
 				</td>
 			</tr>
 

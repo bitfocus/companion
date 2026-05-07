@@ -1,9 +1,10 @@
-import { CAlert, CModalBody, CModalHeader, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { CModalBody, CModalHeader, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import semver from 'semver'
 import { useLocalStorage } from 'usehooks-ts'
+import { StaticAlert } from '~/Components/Alert.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '../Resources/Error.js'
@@ -87,9 +88,9 @@ export const WhatsNewModal = observer(
 				<CModalBody>
 					{isPending && <div className="p-3">Loading...</div>}
 					{error && (
-						<CAlert color="danger">
+						<StaticAlert color="danger">
 							Failed to load What's New content: {error instanceof Error ? error.message : 'Unknown error'}
-						</CAlert>
+						</StaticAlert>
 					)}
 					{pages && pages.length > 0 && (
 						<>

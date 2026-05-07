@@ -1,8 +1,9 @@
-import { CAlert, CListGroupItem } from '@coreui/react'
+import { CListGroupItem } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { useCallback, useState } from 'react'
 import type { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
+import { StaticAlert } from '~/Components/Alert'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -45,7 +46,7 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 				{regionState.name} {regionState.pingResults > -1 ? `(${regionState.pingResults}ms)` : ''}
 			</p>
 
-			{regionState.enabled && regionState.error && <CAlert color="danger">{regionState.error}</CAlert>}
+			{regionState.enabled && regionState.error && <StaticAlert color="danger">{regionState.error}</StaticAlert>}
 		</CListGroupItem>
 	)
 }

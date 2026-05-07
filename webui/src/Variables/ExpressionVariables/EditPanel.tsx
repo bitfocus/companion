@@ -1,4 +1,4 @@
-import { CAlert, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CForm, CFormLabel } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -12,6 +12,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { StaticAlert } from '~/Components/Alert'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/index.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
@@ -86,9 +87,9 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 							)}
 						</>
 					) : (
-						<CAlert color="danger">
+						<StaticAlert color="danger">
 							Invalid control type: {controlConfig.config.type}. Expected 'expression-variable'.
-						</CAlert>
+						</StaticAlert>
 					)}
 				</div>
 			) : (
@@ -291,10 +292,10 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 							</>
 						}
 						subheading={
-							<CAlert color="info" className="mb-2">
+							<StaticAlert color="info" className="mb-2">
 								Local variables are not supported by all modules or fields. Fields which support local variables can be
 								identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
-							</CAlert>
+							</StaticAlert>
 						}
 						entities={localVariables}
 						ownerId={null}
@@ -329,7 +330,7 @@ function ExpressionVariableCurrentValue({ name }: { name: string }) {
 	}
 
 	if (!sub.data.ok) {
-		return <CAlert color="danger">Error: {sub.data.error}</CAlert>
+		return <StaticAlert color="danger">Error: {sub.data.error}</StaticAlert>
 	}
 
 	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />

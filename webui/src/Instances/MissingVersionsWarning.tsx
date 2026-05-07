@@ -1,9 +1,10 @@
-import { CAlert, CButton } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { StaticAlert } from '~/Components/Alert'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
@@ -65,13 +66,13 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning({
 	if (missingCount === 0) return null
 
 	return (
-		<CAlert color="info">
+		<StaticAlert color="info">
 			Some modules do not have versions specified, or are not installed.
 			<br />
 			<CButton color="info" className="mt-2" onClick={doInstallAllMissing}>
 				<FontAwesomeIcon icon={faDownload} />
 				&nbsp;Download &amp; Install missing versions
 			</CButton>
-		</CAlert>
+		</StaticAlert>
 	)
 })

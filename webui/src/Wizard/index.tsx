@@ -1,7 +1,8 @@
-import { CAlert, CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { toJS } from 'mobx'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -161,7 +162,7 @@ export function WizardModal(): React.JSX.Element {
 					</h2>
 				</CModalHeader>
 				<CModalBody>
-					{error ? <CAlert color="danger">{error}</CAlert> : ''}
+					{error ? <StaticAlert color="danger">{error}</StaticAlert> : ''}
 					{currentStep === 1 && newConfig && !error ? <BeginStep allowGrid={allowGridStep} /> : ''}
 					{currentStep === 2 && newConfig && !error ? <SurfacesStep config={newConfig} setValue={setValue} /> : ''}
 					{currentStep === 3 && allowGridStep === 1 && newConfig && !error ? (

@@ -1,5 +1,5 @@
-import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { StaticAlert } from '~/Components/Alert.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
@@ -13,11 +13,11 @@ export const AdminPasswordConfig = observer(function AdminPasswordConfig(props: 
 
 			<tr>
 				<td colSpan={3}>
-					<CAlert color="danger">
+					<StaticAlert color="danger">
 						This does not make an installation secure!
 						<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will
 						not keep out someone determined to bypass it.
-					</CAlert>
+					</StaticAlert>
 				</td>
 			</tr>
 

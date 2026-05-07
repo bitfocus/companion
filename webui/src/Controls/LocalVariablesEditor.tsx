@@ -1,4 +1,3 @@
-import { CAlert } from '@coreui/react'
 import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -7,6 +6,7 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { ControlEntitiesEditor } from './EntitiesEditor.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 
@@ -27,10 +27,10 @@ export function LocalVariablesEditor({
 			<ControlEntitiesEditor
 				heading="Local Variables"
 				subheading={
-					<CAlert color="info" className="mb-2 py-2">
+					<StaticAlert color="info" className="mb-2 py-2">
 						Local variables are not supported by all modules or fields. Fields which support local variables can be
 						identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
-					</CAlert>
+					</StaticAlert>
 				}
 				controlId={controlId}
 				entities={variables}

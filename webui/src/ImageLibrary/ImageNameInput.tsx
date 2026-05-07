@@ -1,6 +1,7 @@
-import { CAlert, CFormLabel } from '@coreui/react'
+import { CFormLabel } from '@coreui/react'
 import React, { useId } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import { StaticAlert } from '~/Components/Alert'
 import { TextInputField } from '~/Components/TextInputField.js'
 
 interface ImageNameInputProps {
@@ -40,15 +41,15 @@ export function ImageNameInput({
 	return (
 		<>
 			{errorMessage && (
-				<CAlert color="danger" className="mb-3">
+				<StaticAlert color="danger" className="mb-3">
 					{errorMessage}
-				</CAlert>
+				</StaticAlert>
 			)}
 
 			{showWarning && warningText && (
-				<CAlert color="warning" className="mb-3">
+				<StaticAlert color="warning" className="mb-3">
 					{warningText}
-				</CAlert>
+				</StaticAlert>
 			)}
 
 			<div className="mb-3 row">

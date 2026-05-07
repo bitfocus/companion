@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
@@ -9,6 +9,7 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -103,7 +104,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 					<div className="row edit-connection">
 						{saveError && (
 							<CCol className="fieldtype-textinput" sm={12}>
-								<CAlert color="danger">{saveError}</CAlert>
+								<StaticAlert color="danger">{saveError}</StaticAlert>
 							</CCol>
 						)}
 

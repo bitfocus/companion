@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { CButton, CCallout, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
 import {
 	faCircleInfo,
 	faClock,
@@ -18,6 +18,7 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -210,10 +211,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				A full import will replace the current system configuration of the selected components with the imported
 				configuration of the components.
 			</p>
-			<CAlert color="info" className="margin-top">
+			<StaticAlert color="info" className="mt-3">
 				<FontAwesomeIcon icon={faCircleInfo} /> Want to import specific buttons or triggers instead? Use the{' '}
 				<strong>Buttons</strong> or <strong>Triggers</strong> tabs at the top.
-			</CAlert>
+			</StaticAlert>
 			<CCallout color="warning">
 				<h5>
 					<FontAwesomeIcon icon={faWarning} /> Before You Proceed
@@ -365,10 +366,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								</form.AppField>
 							</div> */}
 
-					<CAlert color="info" className="margin-top">
+					<StaticAlert color="info" className="mt-3">
 						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
 						import any actions and feedbacks.
-					</CAlert>
+					</StaticAlert>
 
 					<CCallout color="success">
 						<h5>Import, Resetting only Selected Components</h5>

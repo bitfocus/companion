@@ -1,6 +1,6 @@
-import { CAlert, CSpinner } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
@@ -8,6 +8,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useDebounced } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { StaticAlert } from './Alert.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
 interface ExpressionValuePreviewProps {
@@ -39,13 +40,13 @@ export function ExpressionValuePreview({
 
 	if (!isParseable) {
 		return (
-			<CAlert
+			<StaticAlert
 				color="warning"
 				className="mt-1 mb-0"
 				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
 			>
 				Invalid expression
-			</CAlert>
+			</StaticAlert>
 		)
 	}
 
@@ -97,16 +98,16 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 		if (!showSpinner) return null
 		return (
 			<div className="mt-1">
-				<CSpinner size="sm" />
+				<PulseLoader size="0.5rem" title="Loading preview" />
 			</div>
 		)
 	}
 
 	if (!displayData.ok) {
 		return (
-			<CAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
+			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
 				Error: {displayData.error}
-			</CAlert>
+			</StaticAlert>
 		)
 	}
 

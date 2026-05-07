@@ -1,7 +1,8 @@
-import { CAlert, CFormInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { NumberInputField } from '~/Components'
+import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface PasswordStepProps {
@@ -17,7 +18,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 				Optionally, you can restrict this interface using a password. This is intended to keep normal users from
 				stumbling upon the settings and changing things. It will not keep out someone determined to bypass it.
 			</p>
-			<CAlert color="danger">This does not make an installation more secure!</CAlert>
+			<StaticAlert color="danger">This does not make an installation more secure!</StaticAlert>
 			<div className="ms-3 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"

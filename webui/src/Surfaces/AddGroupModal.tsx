@@ -1,5 +1,4 @@
 import {
-	CAlert,
 	CButton,
 	CCol,
 	CForm,
@@ -14,6 +13,7 @@ import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
+import { StaticAlert } from '~/Components/Alert'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -86,7 +86,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 					<CRow className="g-sm-2">
 						{saveError && (
 							<CCol className={`fieldtype-textinput`} sm={12}>
-								<CAlert color="danger">{saveError}</CAlert>
+								<StaticAlert color="danger">{saveError}</StaticAlert>
 							</CCol>
 						)}
 
@@ -142,9 +142,9 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 											onBlur={field.handleBlur}
 										/>
 										{field.state.meta.errors.length > 0 && (
-											<CAlert color="warning" className="mt-2">
+											<StaticAlert color="warning" className="mt-2">
 												{field.state.meta.errors}
-											</CAlert>
+											</StaticAlert>
 										)}
 									</CCol>
 								</>

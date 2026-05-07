@@ -1,4 +1,4 @@
-import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
+import { CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
 import {
 	faEyeSlash,
 	faGamepad,
@@ -12,6 +12,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -133,11 +134,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 		components = []
 		components.push(
-			<CAlert color="warning" role="alert">
+			<StaticAlert color="warning" role="alert">
 				Failed to build list of modules:
 				<br />
 				{e?.toString()}
-			</CAlert>
+			</StaticAlert>
 		)
 	}
 

@@ -34,6 +34,7 @@
 @use 'scss/expression';
 @use 'scss/image-library';
 
+@use 'scss/components/alert';
 @use 'scss/components/checkbox-field';
 @use 'scss/components/dropdown-field';
 @use 'scss/components/number-field';
@@ -190,9 +191,9 @@ body {
 	background-color: #fff;
 	min-width: 250px;
 
-	.alert {
-		--cui-alert-padding-x: 0.75rem;
-		--cui-alert-padding-y: 0.5rem;
+	.alert-element {
+		--alert-elm-padding-x: 0.75rem;
+		--alert-elm-padding-y: 0.5rem;
 	}
 
 	.popover-body {

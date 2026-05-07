@@ -1,9 +1,10 @@
-import { CAlert, CButton, CCol, CContainer, CRow } from '@coreui/react'
+import { CButton, CCol, CContainer, CRow } from '@coreui/react'
 import { faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import { StaticAlert } from '~/Components/Alert'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC'
@@ -26,7 +27,7 @@ export const EmulatorList = observer(function EmulatorList() {
 
 						<CRow className="mb-3">
 							<CCol>
-								<CAlert color="dark" className="bg-dark text-light p-3">
+								<StaticAlert color="dark" className="bg-dark text-light p-3">
 									<div>
 										Use <b>1 2 3 4 5 6 7 8</b>, <b>Q W E R T Y U I</b>, <b>A S D F G H J K</b>, <b>Z X C V B N M ,</b>
 										to control this surface with your keyboard!
@@ -35,7 +36,7 @@ export const EmulatorList = observer(function EmulatorList() {
 										If enabled in the Surface Settings, a Logitech R400/Mastercue/DSan will send a button press to
 										button: 2 (Back), 3 (forward), 4 (black), and for logitech: 10/11 (Start and stop) on each page.
 									</div>
-								</CAlert>
+								</StaticAlert>
 							</CCol>
 						</CRow>
 

@@ -1,9 +1,10 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
@@ -108,7 +109,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 
 	// If no rule found, show message
 	if (!rule) {
-		return <CAlert color="warning">Backup rule not found</CAlert>
+		return <StaticAlert color="warning">Backup rule not found</StaticAlert>
 	}
 
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
@@ -149,10 +150,10 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			</CCol>
 			{rule.backupType === 'db' && (
 				<CCol sm={12}>
-					<CAlert color="warning" className="mt-2">
+					<StaticAlert color="warning" className="mt-2">
 						Raw backups are a direct copy of the database file. They cannot be restored through the web interface, but
 						contain more data than the default exports.
-					</CAlert>
+					</StaticAlert>
 				</CCol>
 			)}
 

@@ -1,10 +1,11 @@
-import { CAlert, CButton, CPopover } from '@coreui/react'
+import { CButton, CPopover } from '@coreui/react'
 import { faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
+import { StaticAlert } from './Alert.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 
 interface VariableValueDisplay {
@@ -320,9 +321,9 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 					}}
 				>
 					{invalidReason && (
-						<CAlert color="danger" className="mb-2">
+						<StaticAlert color="danger" className="mb-2">
 							<FontAwesomeIcon icon={faTriangleExclamation} /> {invalidReason}
-						</CAlert>
+						</StaticAlert>
 					)}
 					<VariableValueDisplay
 						value={value}

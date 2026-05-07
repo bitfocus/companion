@@ -1,9 +1,9 @@
-import { CAlert } from '@coreui/react'
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import CryptoJS from 'crypto-js'
 import { useCallback, useContext, useEffect, useState } from 'react'
+import { DismissableAlert } from '~/Components/Alert'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { base64EncodeUint8Array } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -206,9 +206,9 @@ export function ImportModules(): React.JSX.Element {
 				<input type="file" onChange={loadModuleBundle} style={{ display: 'none' }} accept=".tgz,.gz" />
 			</label>
 			{importError ? (
-				<CAlert color="warning" dismissible onClose={() => setImportError(null)}>
+				<DismissableAlert color="warning" onClose={() => setImportError(null)}>
 					{importError}
-				</CAlert>
+				</DismissableAlert>
 			) : (
 				''
 			)}

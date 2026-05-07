@@ -1,8 +1,9 @@
-import { CAlert, CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
+import { CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import { StaticAlert } from '~/Components/Alert.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -44,10 +45,10 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 			<tr>
 				<td colSpan={3}>
 					<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
-					<CAlert color="danger">
+					<StaticAlert color="danger">
 						Never expose the Companion web interface directly to the Internet. Note that HTTPS alone does not provide
 						additional security for this configuration.
-					</CAlert>
+					</StaticAlert>
 				</td>
 			</tr>
 
@@ -154,10 +155,10 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 													This requires you to generate your own self-signed certificate or go through a certificate
 													authority. A properly signed certificate will work.
 												</p>
-												<CAlert color="danger">
+												<StaticAlert color="danger">
 													This option is provided as-is. Support will not be provided for this feature. <br />
 													DO NOT POST GITHUB ISSUES IF THIS DOES NOT WORK.
-												</CAlert>
+												</StaticAlert>
 											</td>
 										</tr>
 

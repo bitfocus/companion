@@ -1,10 +1,11 @@
-import { CAlert, CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
+import { CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
 import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
+import { StaticAlert } from '~/Components/Alert'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -113,9 +114,9 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 					</p>
 
 					{scanError && (
-						<CAlert color="warning" role="alert">
+						<StaticAlert color="warning" role="alert">
 							{scanError}
-						</CAlert>
+						</StaticAlert>
 					)}
 
 					<CButtonGroup size="sm">

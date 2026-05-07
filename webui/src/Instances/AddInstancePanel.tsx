@@ -1,4 +1,4 @@
-import { CAlert, CButton, CButtonGroup, CTooltip } from '@coreui/react'
+import { CButton, CButtonGroup, CTooltip } from '@coreui/react'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import {
 	faCog,
@@ -12,6 +12,7 @@ import { Link } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -92,11 +93,11 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 
 		candidates = []
 		candidates.push(
-			<CAlert color="warning" role="alert">
+			<StaticAlert color="warning" role="alert">
 				Failed to build list of modules:
 				<br />
 				{e?.toString()}
-			</CAlert>
+			</StaticAlert>
 		)
 	}
 
@@ -147,12 +148,12 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 								</div>
 							</div>
 						) : (
-							<CAlert color="info" className="mb-0">
+							<StaticAlert color="info" className="mb-0">
 								<div className="d-flex align-items-center gap-2">
 									<FontAwesomeIcon icon={faPlug} className="text-info" />
 									{description(0)}
 								</div>
-							</CAlert>
+							</StaticAlert>
 						)}
 					</div>
 

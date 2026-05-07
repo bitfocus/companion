@@ -1,5 +1,4 @@
 import {
-	CAlert,
 	CButton,
 	CCol,
 	CForm,
@@ -15,6 +14,7 @@ import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { NumberInputField } from '~/Components'
+import { StaticAlert } from '~/Components/Alert'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
@@ -94,7 +94,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 					<CRow className="g-sm-2">
 						{saveError && (
 							<CCol className={`fieldtype-textinput`} sm={12}>
-								<CAlert color="danger">{saveError}</CAlert>
+								<StaticAlert color="danger">{saveError}</StaticAlert>
 							</CCol>
 						)}
 
@@ -150,9 +150,9 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											onBlur={field.handleBlur}
 										/>
 										{field.state.meta.errors.length > 0 && (
-											<CAlert color="warning" className="mt-2">
+											<StaticAlert color="warning" className="mt-2">
 												{field.state.meta.errors}
-											</CAlert>
+											</StaticAlert>
 										)}
 									</CCol>
 								</>
@@ -182,9 +182,9 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											checkValid={field.state.meta.errors.length === 0}
 										/>
 										{field.state.meta.errors.length > 0 && (
-											<CAlert color="warning" className="mt-2">
+											<StaticAlert color="warning" className="mt-2">
 												{field.state.meta.errors}
-											</CAlert>
+											</StaticAlert>
 										)}
 									</CCol>
 								</>
@@ -214,9 +214,9 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											checkValid={field.state.meta.errors.length === 0}
 										/>
 										{field.state.meta.errors.length > 0 && (
-											<CAlert color="warning" className="mt-2">
+											<StaticAlert color="warning" className="mt-2">
 												{field.state.meta.errors}
-											</CAlert>
+											</StaticAlert>
 										)}
 									</CCol>
 								</>

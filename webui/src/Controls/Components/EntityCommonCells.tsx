@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -15,6 +15,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -253,7 +254,7 @@ function LocalVariableCurrentValue({ controlId, name }: { controlId: string; nam
 	}
 
 	if (!sub.data.ok) {
-		return <CAlert color="danger">Error: {sub.data.error}</CAlert>
+		return <StaticAlert color="danger">Error: {sub.data.error}</StaticAlert>
 	}
 
 	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />

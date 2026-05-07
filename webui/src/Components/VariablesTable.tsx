@@ -1,4 +1,4 @@
-import { CAlert, CButton, CFormInput, CInputGroup } from '@coreui/react'
+import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { faCopy, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { toJS } from 'mobx'
@@ -12,6 +12,7 @@ import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
+import { StaticAlert } from './Alert.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
 
 interface VariablesTableProps {
@@ -72,9 +73,9 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	if (variableDefinitions.length === 0) {
 		return (
-			<CAlert color="warning" role="alert">
+			<StaticAlert color="warning" role="alert">
 				Connection has no variables
-			</CAlert>
+			</StaticAlert>
 		)
 	}
 
@@ -118,11 +119,11 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 						{errorMsg && (
 							<tr>
 								<td colSpan={2}>
-									<CAlert color="warning" role="alert">
+									<StaticAlert color="warning" role="alert">
 										Failed to build list of variables:
 										<br />
 										{errorMsg}
-									</CAlert>
+									</StaticAlert>
 								</td>
 							</tr>
 						)}

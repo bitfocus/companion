@@ -1,9 +1,10 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCopy, faDownload, faEdit, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { StaticAlert } from '~/Components/Alert.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -168,7 +169,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	if (!selectedImageName) {
 		return (
 			<div className="image-library-editor">
-				<CAlert color="info">Select an image from the library to view and edit its properties.</CAlert>
+				<StaticAlert color="info">Select an image from the library to view and edit its properties.</StaticAlert>
 			</div>
 		)
 	}
@@ -176,7 +177,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	if (!imageInfo) {
 		return (
 			<div className="image-library-editor">
-				<CAlert color="danger">Failed to load image data.</CAlert>
+				<StaticAlert color="danger">Failed to load image data.</StaticAlert>
 			</div>
 		)
 	}
