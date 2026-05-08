@@ -4,14 +4,12 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
-import {
-	ColorInputField,
-	DropdownInputField,
-	MultiDropdownInputField,
-	NumberInputField,
-	TextInputField,
-} from '~/Components/index.js'
+import { ColorInputField } from '~/Components/ColorInputField'
+import { DropdownInputField } from '~/Components/DropdownInputField'
+import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField'
+import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
+import { TextInputField } from '~/Components/TextInputField'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface InstanceEditFieldProps {

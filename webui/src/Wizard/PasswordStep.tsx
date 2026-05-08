@@ -1,9 +1,9 @@
 import { CFormInput } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { NumberInputField } from '~/Components'
 import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { NumberInputField } from '~/Components/NumberInputField'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>

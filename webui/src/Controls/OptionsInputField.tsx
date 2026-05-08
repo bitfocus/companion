@@ -13,19 +13,17 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { ColorInputField } from '~/Components/ColorInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
-import {
-	CheckboxInputField,
-	ColorInputField,
-	DropdownInputField,
-	MultiDropdownInputField,
-	NumberInputField,
-	TextInputField,
-} from '~/Components/index.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'

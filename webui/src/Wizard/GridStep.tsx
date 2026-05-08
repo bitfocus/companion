@@ -1,7 +1,7 @@
 import { CCol, CFormLabel, CRow } from '@coreui/react'
 import { useCallback, useState } from 'react'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { NumberInputField } from '~/Components'
+import { NumberInputField } from '~/Components/NumberInputField'
 
 interface GridStepProps {
 	rows: number

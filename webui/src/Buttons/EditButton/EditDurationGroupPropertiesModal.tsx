@@ -1,7 +1,7 @@
 import { CButton, CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
-import { NumberInputField } from '~/Components'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void

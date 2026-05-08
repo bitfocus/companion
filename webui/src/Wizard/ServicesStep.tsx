@@ -1,6 +1,6 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { NumberInputField } from '~/Components'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { NumberInputField } from '~/Components/NumberInputField'
 
 interface ServicesStepProps {
 	config: Partial<UserConfigModel>
