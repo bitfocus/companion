@@ -26,6 +26,7 @@ interface TextInputFieldProps {
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
+	onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLTextAreaElement>) => void
 }
 
 export const TextInputField = observer(function TextInputField({
@@ -41,6 +42,7 @@ export const TextInputField = observer(function TextInputField({
 	multiline,
 	autoFocus,
 	onBlur,
+	onKeyDown,
 }: TextInputFieldProps) {
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 
@@ -100,6 +102,7 @@ export const TextInputField = observer(function TextInputField({
 					onChange={doOnChange}
 					onFocus={focusStoreValue}
 					onBlur={blurClearValue}
+					onKeyDown={onKeyDown}
 					placeholder={placeholder}
 					autoFocus={autoFocus}
 					rows={2}
@@ -114,6 +117,7 @@ export const TextInputField = observer(function TextInputField({
 					onChange={doOnChange}
 					onFocus={focusStoreValue}
 					onBlur={blurClearValue}
+					onKeyDown={onKeyDown}
 					placeholder={placeholder}
 					autoFocus={autoFocus}
 				/>

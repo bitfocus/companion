@@ -1,23 +1,10 @@
-import {
-	CButton,
-	CCol,
-	CForm,
-	CModal,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-	CNav,
-	CNavItem,
-	CNavLink,
-	CRow,
-	CTabContent,
-	CTabPane,
-} from '@coreui/react'
+import { CButton, CCol, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
+import { TabArea } from '~/Components/TabArea.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { ButtonPicker } from './ButtonPicker.js'
@@ -56,30 +43,26 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 						<h5>Select destination</h5>
 					</CModalHeader>
 					<CModalBody>
-						<CNav variant="tabs">
-							<CNavItem>
-								<CNavLink active={activeTab === 'buttons'} onClick={() => setActiveTab('buttons')}>
+						<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+							<TabArea.List>
+								<TabArea.Tab value="buttons">
 									<FontAwesomeIcon icon={faCalendarAlt} /> Buttons
-								</CNavLink>
-							</CNavItem>
-							<CNavItem>
-								<CNavLink active={activeTab === 'triggers'} onClick={() => setActiveTab('triggers')}>
+								</TabArea.Tab>
+								<TabArea.Tab value="triggers">
 									<FontAwesomeIcon icon={faClock} /> Triggers
-								</CNavLink>
-							</CNavItem>
-						</CNav>
-						<CTabContent className="default-scroll">
-							<CTabPane className="action-recorder-finish-button-grid" visible={activeTab === 'buttons'}>
+								</TabArea.Tab>
+							</TabArea.List>
+							<TabArea.Panel className="action-recorder-finish-button-grid" value="buttons">
 								<ButtonPicker selectButton={doSave} />
-							</CTabPane>
-							<CTabPane visible={activeTab === 'triggers'}>
+							</TabArea.Panel>
+							<TabArea.Panel value="triggers">
 								<CRow>
 									<CCol sm={12}>
 										<TriggerPicker selectControl={doSave} />
 									</CCol>
 								</CRow>
-							</CTabPane>
-						</CTabContent>
+							</TabArea.Panel>
+						</TabArea.Root>
 					</CModalBody>
 					<CModalFooter>
 						<CButton color="secondary" onClick={doClose}>

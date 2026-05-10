@@ -68,7 +68,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 				''
 			)}
 
-			<CCol xs={12} className={'row-heading'}>
+			<CCol xs={12} className={'sticky-heading'}>
 				<h5>Action Recorder</h5>
 				<p>
 					You can use this panel to record actions as you make changes directly on a configured device. <br />

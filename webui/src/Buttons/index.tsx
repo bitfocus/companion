@@ -1,8 +1,7 @@
-import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faCalculator, faGift, faLayerGroup, faThLarge, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
-import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
@@ -10,6 +9,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { TabArea } from '~/Components/TabArea.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -324,44 +324,33 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 			<CCol xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
-					<CNav variant="tabs">
-						{!isLargeScreen && (
-							<CNavItem>
-								<CNavLink active={activeTab === 'grid'} onClick={() => doChangeTab('grid')}>
+					<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+						<TabArea.List>
+							{!isLargeScreen && (
+								<TabArea.Tab value="grid">
 									<FontAwesomeIcon icon={faThLarge} /> Buttons
-								</CNavLink>
-							</CNavItem>
-						)}
-						<CNavItem
-							className={classNames({
-								hidden: !selectedButton,
-							})}
-						>
-							<CNavLink active={activeTab === 'edit'} onClick={() => doChangeTab('edit')}>
-								<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-								{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
-							</CNavLink>
-						</CNavItem>
-						<CNavItem>
-							<CNavLink active={activeTab === 'pages'} onClick={() => doChangeTab('pages')}>
+								</TabArea.Tab>
+							)}
+							{selectedButton && (
+								<TabArea.Tab value="edit">
+									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+								</TabArea.Tab>
+							)}
+							<TabArea.Tab value="pages">
 								<FontAwesomeIcon icon={faLayerGroup} /> Pages
-							</CNavLink>
-						</CNavItem>
-						<CNavItem>
-							<CNavLink active={activeTab === 'presets'} onClick={() => doChangeTab('presets')}>
+							</TabArea.Tab>
+							<TabArea.Tab value="presets">
 								<FontAwesomeIcon icon={faGift} /> Presets
-							</CNavLink>
-						</CNavItem>
-						<CNavItem>
-							<CNavLink active={activeTab === 'action-recorder'} onClick={() => doChangeTab('action-recorder')}>
+							</TabArea.Tab>
+							<TabArea.Tab value="action-recorder">
 								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
-							</CNavLink>
-						</CNavItem>
-					</CNav>
-					<CTabContent>
+							</TabArea.Tab>
+						</TabArea.List>
+
 						{/* On small screens, show the grid in its own tab */}
-						{!isLargeScreen && <CTabPane visible={activeTab === 'grid'}>{gridPanel}</CTabPane>}
-						<CTabPane visible={activeTab === 'edit'}>
+						{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
+						<TabArea.Panel value="edit">
 							<MyErrorBoundary>
 								{selectedButton && (
 									<EditButton
@@ -371,23 +360,23 @@ export const ButtonsPage = observer(function ButtonsPage() {
 									/>
 								)}
 							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane visible={activeTab === 'pages'}>
+						</TabArea.Panel>
+						<TabArea.Panel value="pages">
 							<MyErrorBoundary>
 								<PagesList setPageNumber={setPageNumber} />
 							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane visible={activeTab === 'presets'}>
+						</TabArea.Panel>
+						<TabArea.Panel value="presets">
 							<MyErrorBoundary>
 								<ConnectionPresets resetToken={tabResetToken} />
 							</MyErrorBoundary>
-						</CTabPane>
-						<CTabPane visible={activeTab === 'action-recorder'}>
+						</TabArea.Panel>
+						<TabArea.Panel value="action-recorder" className="pt-0">
 							<MyErrorBoundary>
 								<ActionRecorder />
 							</MyErrorBoundary>
-						</CTabPane>
-					</CTabContent>
+						</TabArea.Panel>
+					</TabArea.Root>
 				</div>
 			</CCol>
 		</CRow>

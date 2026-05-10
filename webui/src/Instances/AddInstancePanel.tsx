@@ -121,7 +121,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 
 			<div className="secondary-panel-simple-body">
 				<AddInstanceModal ref={addRef} service={service} openConfigureInstance={service.openConfigureInstance} />
-				<div style={{ clear: 'both' }} className="row-heading">
+				<div style={{ clear: 'both' }} className="sticky-heading">
 					<div className="add-connection-intro-section mb-3">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">

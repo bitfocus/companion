@@ -1,0 +1,141 @@
+.tab-area {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow-y: hidden;
+
+	.tab-bar {
+		display: flex;
+		flex-wrap: nowrap;
+		margin-bottom: 0;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scrollbar-width: thin;
+		flex-shrink: 0;
+		border-bottom: 1px solid #bbb;
+		background: transparent;
+
+		&::-webkit-scrollbar {
+			height: 4px;
+		}
+
+		&::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		&::-webkit-scrollbar-thumb {
+			background: #ccc;
+			border-radius: 2px;
+		}
+
+		&__tab {
+			flex-shrink: 0;
+			display: block;
+			padding: 8px 1rem 7px;
+			margin-bottom: 0;
+			margin-right: 4px;
+			color: #555;
+			background-color: #f3f3f3;
+			font-weight: 500;
+			text-decoration: none;
+			border: 1px solid #ddd;
+			border-bottom-width: 0;
+			border-top-left-radius: 6px;
+			border-top-right-radius: 6px;
+			cursor: pointer;
+			appearance: none;
+			-webkit-appearance: none;
+			font: inherit;
+			transition:
+				color 0.15s ease-in-out,
+				background-color 0.15s ease-in-out,
+				border-color 0.15s ease-in-out;
+
+			@media (prefers-reduced-motion: reduce) {
+				transition: none;
+			}
+
+			&:hover:not([data-active]):not([data-disabled]) {
+				background-color: #e8e8e8;
+				color: #000;
+			}
+
+			&[data-active] {
+				background-color: #fff;
+				border: 1px solid #bbb;
+				border-top: 3px solid #d50215;
+				border-top-left-radius: 6px;
+				border-top-right-radius: 6px;
+				border-bottom-color: #fff;
+				margin-bottom: -1px;
+				padding-top: 6px;
+				color: #000;
+			}
+
+			&[data-disabled] {
+				color: rgba(0, 0, 0, 0.3);
+				pointer-events: none;
+				cursor: default;
+			}
+
+			@media (max-width: 991.98px) {
+				padding: 5px 10px;
+				font-size: 16px;
+				background-color: #ddd;
+				border-top: 3px solid #f0f0f0;
+				border-bottom: 1px solid #ccc;
+
+				&[data-active] {
+					border-top: 3px solid #d50215;
+				}
+			}
+		}
+
+		&__indicator {
+			display: none; // using border-based active styling, not indicator
+		}
+
+		.tab-end-area {
+			margin-left: auto;
+			flex-shrink: 0;
+		}
+	}
+
+	.tab-panel {
+		background-color: #fff;
+		border-bottom-right-radius: 8px;
+		border-bottom-left-radius: 8px;
+		border-left: 1px solid #ccc;
+		border-bottom: 1px solid #ccc;
+		border-right: 1px solid #ccc;
+		min-height: 300px;
+		padding: 1rem;
+		position: relative;
+		flex: 1;
+		min-height: 0; // allow flex shrink so overflow scroll works
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+
+		&[data-hidden] {
+			display: none;
+		}
+
+		// Tabs nested inside a tab panel
+		.tab-bar__tab {
+			color: #000;
+		}
+	}
+}
+
+// Split-panels layout: tab-area spans the full secondary-panel-inner grid
+.split-panels > .secondary-panel .secondary-panel-inner {
+	.tab-area {
+		grid-row: 1 / -1;
+		min-height: 0;
+	}
+
+	.tab-panel {
+		overflow-y: scroll;
+	}
+}
