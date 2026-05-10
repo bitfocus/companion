@@ -19,6 +19,7 @@
     "dev:webui": "yarn workspace @companion-app/webui dev",
     "dev:webui:docs": "tsx ./tools/webui-dev-docs.mts",
     "dev:docs": "yarn workspace @companion-app/docs start",
+    "dev:storybook": "yarn workspace @companion-app/webui storybook",
     "build:ts": "tsc --build --force",
     "build:whatsnew": "tsx ./tools/build_whatsnew.mts",
     "dist:webui": "run build:ts && run build:whatsnew && yarn workspace @companion-app/webui build",

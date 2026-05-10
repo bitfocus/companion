@@ -94,13 +94,16 @@
     "dev": "run start",
     "dev:docs": "yarn workspace @companion-app/workspace dev:webui:docs",
     "test": "vitest",
+    "storybook": "storybook dev -p 6006",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --base=/ROOT_URL_HERE",
     "serve": "vite preview"
   },
   "devDependencies": {
+    "@storybook/react-vite": "^10.3.6",
     "@types/react-transition-group": "^4",
     "jsdom": "^29.1.1",
     "monaco-editor": "^0.55.1",
+    "storybook": "^10.3.6",
     "vitest": "^4.1.5"
   }
 }
