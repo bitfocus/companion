@@ -65,3 +65,10 @@ export const WithValidation: Story = {
 export const Disabled: Story = {
 	args: { disabled: true, value: ['mon', 'wed'] },
 }
+
+const tenThousandChoices = Array.from({ length: 10000 }, (_, i) => ({ id: `item-${i}`, label: `Item ${i}` }))
+
+/** 10 000 items — tests windowed / virtualised menu list performance */
+export const TenThousandItems: Story = {
+	args: { choices: tenThousandChoices, value: ['item-0', 'item-42'] },
+}
