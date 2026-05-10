@@ -591,6 +591,11 @@ export class ControlButtonLayered
 
 		if (changedElements.size === 0) return false
 
+		// Invalidate changed elements
+		for (const elementId of changedElements) {
+			this.#elementConversionCache.delete(elementId)
+		}
+
 		// Save changes and redraw
 		this.commitChange(true)
 
@@ -616,6 +621,11 @@ export class ControlButtonLayered
 			.visitDrawElements(this.#drawElements)
 			.recheckChangedFeedbacks()
 			.hasChanges()
+
+		if (changed) {
+			// Purge all cache, as we don't know what could have changed
+			this.#elementConversionCache.clear()
+		}
 
 		// redraw if needed and save changes
 		this.commitChange(changed)
