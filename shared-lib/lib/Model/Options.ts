@@ -230,7 +230,6 @@ export interface CompanionInputFieldDropdownExtended extends CompanionInputField
 	default: DropdownChoiceId
 	allowCustom?: boolean
 	regex?: string
-	minChoicesForSearch?: number
 }
 export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldBaseExtended {
 	type: 'multidropdown'

@@ -110,7 +110,6 @@ function translateDropdownField(field: CompanionInputFieldDropdown): Complete<Co
 		choices: field.choices,
 		allowCustom: undefined,
 		regex: undefined,
-		minChoicesForSearch: undefined,
 	}
 }
 

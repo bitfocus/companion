@@ -215,7 +215,6 @@ function translateDropdownField(
 		choices: field.choices,
 		allowCustom: field.allowCustom,
 		regex: field.regex,
-		minChoicesForSearch: field.minChoicesForSearch,
 	}
 }
 function translateMultiDropdownField(

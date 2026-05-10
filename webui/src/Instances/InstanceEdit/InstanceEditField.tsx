@@ -70,7 +70,6 @@ export function InstanceEditField({
 				<DropdownInputField
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
-					minChoicesForSearch={definition.minChoicesForSearch}
 					regex={definition.regex}
 					value={value as any}
 					setValue={setValue}

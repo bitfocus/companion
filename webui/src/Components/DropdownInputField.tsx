@@ -7,7 +7,6 @@ import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
-// import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface DropdownInputFieldProps {
@@ -16,7 +15,6 @@ interface DropdownInputFieldProps {
 	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean
 	disableEditingCustom?: boolean
-	minChoicesForSearch?: number
 	tooltip?: string
 	regex?: string
 	value: DropdownChoiceId
@@ -35,7 +33,6 @@ export const DropdownInputField = observer(function DropdownInputField({
 	choices,
 	allowCustom,
 	disableEditingCustom,
-	minChoicesForSearch,
 	tooltip,
 	regex,
 	value,
@@ -120,8 +117,6 @@ export const DropdownInputField = observer(function DropdownInputField({
 		)
 	}, [onPasteIntercept, fancyFormat])
 
-	const minChoicesForSearchNumber = typeof minChoicesForSearch === 'number' ? minChoicesForSearch : 10
-
 	// const selectRef = useRef<any>(null)
 
 	const selectProps: Partial<CreatableProps<any, any, any>> = {
@@ -134,7 +129,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		menuPosition: 'fixed',
 		menuPlacement: 'auto',
 		isClearable: false,
-		isSearchable: minChoicesForSearchNumber <= flatOptions.length,
+		isSearchable: true,
 		isMulti: false,
 		options: options,
 		value: currentValue,

@@ -27,7 +27,6 @@ const meta = {
 		tooltip: '',
 		disabled: false,
 		searchLabelsOnly: true,
-		minChoicesForSearch: 0,
 	},
 	render: function Render(args) {
 		const [, setArgs] = useArgs<{ value: string }>()
