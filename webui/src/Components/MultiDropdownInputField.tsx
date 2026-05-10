@@ -23,7 +23,6 @@ interface MultiDropdownInputFieldProps {
 	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean
 	minSelection?: number
-	minChoicesForSearch?: number // nocommit - remove this
 	maxSelection?: number
 	sortSelection?: boolean
 	tooltip?: string

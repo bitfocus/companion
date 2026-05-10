@@ -229,7 +229,6 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minSelection={option.minSelection}
-					minChoicesForSearch={option.minChoicesForSearch}
 					maxSelection={option.maxSelection}
 					sortSelection={option.sortSelection}
 					regex={option.regex}

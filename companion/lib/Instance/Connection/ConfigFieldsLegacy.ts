@@ -245,7 +245,6 @@ function translateMultiDropdownField(
 		choices: field.choices,
 		allowCustom: false, // Not supported from modules
 		regex: undefined, // Not supported from modules
-		minChoicesForSearch: field.minChoicesForSearch,
 		minSelection: field.minSelection,
 		maxSelection: field.maxSelection,
 		sortSelection: undefined, // Not supported from old modules

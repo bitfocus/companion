@@ -238,8 +238,6 @@ export interface CompanionInputFieldMultiDropdownExtended extends CompanionInput
 	choices: DropdownChoice[]
 	/** The default selected values */
 	default: DropdownChoiceId[]
-	/** The minimum number of entries the dropdown must have before it allows searching */
-	minChoicesForSearch?: number
 	/** The minimum number of selected values */
 	minSelection?: number
 	/** The maximum number of selected values */
