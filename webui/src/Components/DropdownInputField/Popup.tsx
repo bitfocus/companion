@@ -7,7 +7,7 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 export interface DropdownGroupBase {
 	id: string
 	label: string
-	options: DropdownChoice[]
+	items: DropdownChoice[]
 }
 
 /** Extended choice that can carry a display hint for the indicator slot. */
@@ -63,10 +63,12 @@ export function DropdownInputPopup({
 							className={`dropdown-field-list${disableUnselected ? ' dropdown-field-list--max-reached' : ''}`}
 						>
 							{(item: DropdownChoiceWithMeta | DropdownGroupBase) => {
-								if ('options' in item) {
+								if ('items' in item) {
 									return (
-										<Combobox.Group key={item.id} items={item.options} className="dropdown-field-group">
-											<Combobox.GroupLabel className="dropdown-field-group-label">{item.label}</Combobox.GroupLabel>
+										<Combobox.Group key={item.id} items={item.items} className="dropdown-field-group">
+											{item.label && (
+												<Combobox.GroupLabel className="dropdown-field-group-label">{item.label}</Combobox.GroupLabel>
+											)}
 											<Combobox.Collection>{renderItem}</Combobox.Collection>
 										</Combobox.Group>
 									)

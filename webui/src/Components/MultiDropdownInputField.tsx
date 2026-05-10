@@ -15,7 +15,7 @@ import type { DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
 type FuzzyChoice = DropdownChoiceWithMeta & { fuzzy: ReturnType<typeof fuzzyPrepare> }
-type FuzzyGroup = DropdownGroupBase & { options: FuzzyChoice[] }
+type FuzzyGroup = DropdownGroupBase & { items: FuzzyChoice[] }
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -69,7 +69,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 			for (const item of choices) {
 				if ('options' in item) {
 					const opts = item.options.map(toFuzzy)
-					allItems.push({ id: String(item.label), label: String(item.label), options: opts })
+					allItems.push({ id: String(item.label), label: String(item.label), items: opts })
 					flatItems.push(...opts)
 				} else {
 					const f = toFuzzy(item)
@@ -155,9 +155,9 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		const result: Array<FuzzyChoice | FuzzyGroup> = []
 
 		for (const item of allItems) {
-			if ('options' in item) {
-				const filtered = filterFlat(item.options)
-				if (filtered.length > 0) result.push({ ...item, options: filtered })
+			if ('items' in item) {
+				const filtered = filterFlat(item.items)
+				if (filtered.length > 0) result.push({ ...item, items: filtered })
 			} else {
 				if ((fuzzySingle(inputValue, item.fuzzy)?.score ?? 0) >= 0.5) result.push(item)
 			}

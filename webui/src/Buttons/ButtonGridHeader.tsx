@@ -115,7 +115,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 						onInputValueChange={setInputValue}
 						itemToStringLabel={() => ''}
 					>
-						<Combobox.InputGroup className="dropdown-field-input-group button-page-input-group">
+						<Combobox.InputGroup className="dropdown-field-input-group rounded-start-0 rounded-end-0">
 							<Combobox.Input
 								className="dropdown-field-input"
 								placeholder={choiceOptions.find((o) => o.id === pageNumber)?.label ?? String(pageNumber ?? '')}
