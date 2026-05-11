@@ -8,7 +8,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { clamp } from '../../Resources/Util.js'
 import { ControlEntityInstance } from './EntityInstance.js'
-import type { EntityPoolSpecialExpressionManager } from './EntityIsInvertedManager.js'
+import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
 	InstanceDefinitionsForEntity,
