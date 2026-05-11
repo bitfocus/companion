@@ -1,7 +1,7 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
 import type { ModuleManifest } from '@companion-module/base/manifest'
-import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
+import { createModuleLogger, InstanceWrapper, registerLoggingSink, type JsonValue } from '@companion-module/host'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type {
@@ -103,10 +103,19 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
 			const res = await instance.executeAction(msg.action, msg.surfaceId)
-			return {
-				success: res.success,
-				errorMessage: res.errorMessage,
-			}
+			return res.success
+				? {
+						success: true,
+						result:
+							// This can be `res.result` after the `@companion-module/host`
+							// dependency adds `result?: JsonValue | undefined` to its
+							// `ExecuteActionResult` type.
+							'result' in res ? (res.result as JsonValue | undefined) : undefined,
+					}
+				: {
+						success: false,
+						errorMessage: res.errorMessage,
+					}
 		},
 		getConfigFields: async (): Promise<GetConfigFieldsResponseMessage> => {
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')

@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
@@ -38,8 +39,9 @@ export class ActionRunner {
 	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
 		this.#logger.silly('Running action', action)
 
+		let result: JsonValue | undefined
 		if (action.connectionId === 'internal') {
-			await this.#internalModule.executeAction(action, extras)
+			result = await this.#internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
 			if (!instance) {
@@ -50,8 +52,10 @@ export class ActionRunner {
 			const entityModel = action.asEntityModel(false)
 			if (entityModel.type !== EntityModelType.Action)
 				throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
-			await instance.actionRun(entityModel, extras)
+			result = await instance.actionRun(entityModel, extras)
 		}
+
+		void result
 	}
 
 	/**
