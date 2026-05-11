@@ -9,8 +9,8 @@ import {
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
-import { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
 import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
+import { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import {
 	InstanceDefinitionsForEntity,

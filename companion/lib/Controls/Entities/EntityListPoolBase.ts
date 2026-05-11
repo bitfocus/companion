@@ -20,8 +20,8 @@ import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/Conver
 import type { VariablesValues } from '../../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
-import { EntityPoolSpecialExpressionManager } from './EntityIsInvertedManager.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
+import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
 

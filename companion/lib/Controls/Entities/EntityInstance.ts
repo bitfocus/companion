@@ -19,8 +19,8 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
-import type { EntityPoolSpecialExpressionManager } from './EntityIsInvertedManager.js'
 import { ControlEntityList } from './EntityList.js'
+import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
 	InstanceDefinitionsForEntity,
