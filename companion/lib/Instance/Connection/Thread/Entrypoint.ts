@@ -106,7 +106,7 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 			return res.success
 				? {
 						success: true,
-						errorMessage: undefined,
+						result: res.result,
 					}
 				: {
 						success: false,

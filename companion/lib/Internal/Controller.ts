@@ -24,6 +24,7 @@ import type { VariableValue, VariableValues } from '@companion-app/shared/Model/
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionOptionValues, Complete } from '@companion-module/base'
+import type { JsonValue } from '@companion-module/host'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -447,7 +448,7 @@ export class InternalController {
 	/**
 	 * Run a single internal action
 	 */
-	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
+	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (action.type !== EntityModelType.Action)
@@ -498,8 +499,7 @@ export class InternalController {
 
 					if (result) {
 						// It was handled, so break
-						void result.result
-						return
+						return result.result
 					}
 				}
 			}
@@ -510,6 +510,8 @@ export class InternalController {
 				)}`
 			)
 		}
+
+		return undefined
 	}
 
 	/**
