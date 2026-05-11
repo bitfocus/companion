@@ -1,108 +1,145 @@
 import debounceFn from 'debounce-fn'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
-import type { NewIsInvertedValue } from './Types.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
+import type {
+	NewSpecialExpressionValue,
+	SpecialExpression,
+	SpecialExpressions,
+	UpdateSpecialExpressionValuesFn,
+} from './SpecialExpressions.js'
 
-interface EntityWrapper {
-	readonly entity: WeakRef<ControlEntityInstance>
-
-	needsProcessing: boolean
-
-	lastReferencedVariableIds: ReadonlySet<string> | null
-}
-
-export type UpdateIsInvertedValuesFn = (newValues: ReadonlyMap<string, NewIsInvertedValue>) => void
 export type CreateVariablesAndExpressionParser = (
 	overrideVariableValues: VariableValues | null
 ) => VariablesAndExpressionParser
 
-/**
- * A manager to handle isInverted expressions for a control's entity pool.
- * This will track entities, parse their isInverted expressions, and recalcalulate
- * them when variables change.
- */
-export class EntityPoolIsInvertedManager {
-	readonly #logger: Logger
+interface EntityWrapper {
+	readonly entity: WeakRef<ControlEntityInstance>
+	needsProcessing: boolean
+	lastReferencedVariableIds: ReadonlySet<string> | null
+}
 
+type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
+	entity: ControlEntityInstance,
+	wrapper: EntityWrapper,
+	parser: VariablesAndExpressionParser,
+	logger: Logger
+) => SpecialExpressions[Expression]
+
+/**
+ * A manager to handle various expression not contained in entity options.  It
+ * tracks entities that possess these additional expressions, parses the
+ * expressions, and invalidates the parsed results and reevaluates them when the
+ * variables used within them change.
+ */
+export class EntityPoolSpecialExpressionManager {
 	readonly #controlId: string
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
-	readonly #updateFn: UpdateIsInvertedValuesFn
-
-	readonly #entities = new Map<string, EntityWrapper>()
-
 	#destroyed = false
+
+	readonly #specialExpressions: {
+		readonly [Expression in SpecialExpression]: {
+			readonly entities: Map<string, EntityWrapper>
+			readonly computeNewValueFn: ComputeSpecialExpressionValueFn<Expression>
+			readonly updateFn: UpdateSpecialExpressionValuesFn<Expression>
+			readonly logger: Logger
+		}
+	}
 
 	constructor(
 		controlId: string,
 		createVariablesAndExpressionParser: CreateVariablesAndExpressionParser,
-		updateFn: UpdateIsInvertedValuesFn
+		updateFns: {
+			[Expression in SpecialExpression]: UpdateSpecialExpressionValuesFn<Expression>
+		}
 	) {
-		this.#logger = LogController.createLogger(`Controls/${controlId}/EntityPoolIsInvertedManager`)
 		this.#controlId = controlId
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
-		this.#updateFn = updateFn
+
+		this.#specialExpressions = {
+			isInverted: {
+				entities: new Map(),
+				computeNewValueFn: this.#computeIsInverted.bind(this),
+				updateFn: updateFns.isInverted,
+				logger: LogController.createLogger(`Controls/${controlId}/EntityPoolSpecialExpressionManager/isInverted`),
+			},
+		}
+	}
+
+	#computeIsInverted(
+		entity: ControlEntityInstance,
+		wrapper: EntityWrapper,
+		parser: VariablesAndExpressionParser,
+		logger: Logger
+	): boolean {
+		let isInverted: boolean
+
+		const isInvertedExpression = entity.rawIsInverted
+		if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) {
+			isInverted = false
+
+			wrapper.lastReferencedVariableIds = null
+		} else if (!isInvertedExpression.isExpression) {
+			isInverted = !!isInvertedExpression.value
+
+			wrapper.lastReferencedVariableIds = null
+		} else {
+			const parsed = parser.executeExpression(isInvertedExpression.value, 'boolean')
+
+			wrapper.lastReferencedVariableIds = parsed.variableIds
+
+			if (!parsed.ok) {
+				logger.warn(`Failed to parse boolean expression: ${parsed.error}`)
+				isInverted = false
+			} else {
+				isInverted = !!parsed.value
+			}
+		}
+
+		return isInverted
 	}
 
 	readonly #debounceProcessPending = debounceFn(
 		() => {
 			if (this.#destroyed) return
 
-			const updatedValues = new Map<string, NewIsInvertedValue>()
-
 			const parser = this.#createVariablesAndExpressionParser(null)
 
-			for (const [entityId, wrapper] of this.#entities) {
-				// Resolve the entity, and make sure it still exists
-				const entity = wrapper.entity.deref()
-				if (!entity) {
-					this.#entities.delete(entityId)
-					continue
-				}
+			for (const specialExpression of Object.values(this.#specialExpressions)) {
+				// Skip a special expression when no entities track it.
+				const entities = specialExpression.entities
+				if (entities.size === 0) continue
 
-				// Check if processing is needed
-				if (!wrapper.needsProcessing) continue
+				const { computeNewValueFn, updateFn, logger } = specialExpression
 
-				let isInverted = false
+				const updatedValues = new Map<string, NewSpecialExpressionValue<any>>()
 
-				const isInvertedExpression = entity.rawIsInverted
-				if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) {
-					isInverted = false
-
-					wrapper.lastReferencedVariableIds = null
-				} else if (!isInvertedExpression.isExpression) {
-					isInverted = !!isInvertedExpression.value
-
-					wrapper.lastReferencedVariableIds = null
-				} else {
-					const parsed = parser.executeExpression(isInvertedExpression.value, 'boolean')
-
-					wrapper.lastReferencedVariableIds = parsed.variableIds
-
-					if (!parsed.ok) {
-						this.#logger.warn(`Failed to parse boolean expression: ${parsed.error}`)
-						isInverted = false
-					} else {
-						isInverted = !!parsed.value
+				for (const [entityId, wrapper] of entities) {
+					// Resolve the entity, and make sure it still exists
+					const entity = wrapper.entity.deref()
+					if (!entity) {
+						entities.delete(entityId)
+						continue
 					}
+
+					// Check if processing is needed
+					if (!wrapper.needsProcessing) continue
+
+					updatedValues.set(entity.id, {
+						entityId: entity.id,
+						controlId: this.#controlId,
+						value: computeNewValueFn(entity, wrapper, parser, logger),
+					})
+
+					wrapper.needsProcessing = false
 				}
 
-				// Note: it feels like we could optimize this by passing it through directly,
-				// but that is complicated because of the needed invalidation logic
-				updatedValues.set(entity.id, {
-					entityId: entity.id,
-					controlId: this.#controlId,
-					isInverted,
-				})
-
-				wrapper.needsProcessing = false
-			}
-
-			// Propagate the updates if needed
-			if (updatedValues.size > 0) {
-				this.#updateFn(updatedValues)
+				// Propagate the updates if needed
+				if (updatedValues.size > 0) {
+					updateFn(updatedValues)
+				}
 			}
 		},
 		{
@@ -120,32 +157,38 @@ export class EntityPoolIsInvertedManager {
 	destroy(): void {
 		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
-		this.#entities.clear()
+		for (const { entities } of Object.values(this.#specialExpressions)) {
+			entities.clear()
+		}
 	}
 
 	/**
-	 * Track an entity in the manager.
-	 * This will ensure that the entity is processed and isInverted is parsed.
+	 * Track an entity in the manager.  This will ensure that the entity is
+	 * processed and associated expressions parsed.
 	 */
-	trackEntity(entity: ControlEntityInstance): void {
+	trackEntity(entity: ControlEntityInstance, expression: SpecialExpression): void {
+		const { entities, logger } = this.#specialExpressions[expression]
+
 		// This may replace an existing entity, if so it needs to restart the process
-		this.#entities.set(entity.id, {
+		entities.set(entity.id, {
 			entity: new WeakRef(entity),
 			needsProcessing: true,
 			lastReferencedVariableIds: null,
 		})
 
-		this.#logger.silly(`Queued entity ${entity.id} for processing`)
+		logger.silly(`Queued entity ${entity.id} for processing`)
 
 		this.#debounceProcessPending()
 	}
 
 	/**
-	 * Forget an entity in the manager.
-	 * This will remove the entity from the manager and abort any pending processing.
+	 * Forget an entity in the manager.  This will remove the entity from the
+	 * manager and abort any pending processing.
 	 */
 	forgetEntity(entityId: string): void {
-		this.#entities.delete(entityId)
+		for (const { entities } of Object.values(this.#specialExpressions)) {
+			entities.delete(entityId)
+		}
 	}
 
 	/**
@@ -156,24 +199,25 @@ export class EntityPoolIsInvertedManager {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
+		for (const { entities } of Object.values(this.#specialExpressions)) {
+			for (const wrapper of entities.values()) {
+				// Check if already queued for processing
+				if (wrapper.needsProcessing) continue
 
-		for (const wrapper of this.#entities.values()) {
-			// Check if already queued for processing
-			if (wrapper.needsProcessing) continue
+				if (!wrapper.lastReferencedVariableIds || wrapper.lastReferencedVariableIds.size === 0) {
+					// No variables to check, nothing to do
+					continue
+				}
 
-			if (!wrapper.lastReferencedVariableIds || wrapper.lastReferencedVariableIds.size === 0) {
-				// No variables to check, nothing to do
-				continue
+				if (variableIds.isDisjointFrom(wrapper.lastReferencedVariableIds)) {
+					// No variables changed that we care about, nothing to do
+					continue
+				}
+
+				// The entity needs re-processing
+				wrapper.needsProcessing = true
+				anyInvalidated = true
 			}
-
-			if (variableIds.isDisjointFrom(wrapper.lastReferencedVariableIds)) {
-				// No variables changed that we care about, nothing to do
-				continue
-			}
-
-			// The entity needs re-processing
-			wrapper.needsProcessing = true
-			anyInvalidated = true
 		}
 
 		if (anyInvalidated) this.#debounceProcessPending()

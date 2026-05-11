@@ -20,9 +20,10 @@ import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/Conver
 import type { VariablesValues } from '../../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
-import { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
+import { EntityPoolSpecialExpressionManager } from './EntityIsInvertedManager.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
-import type { InstanceDefinitionsForEntity, NewFeedbackValue, NewIsInvertedValue } from './Types.js'
+import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
+import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
@@ -55,7 +56,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #processManager: InstanceProcessManager
 	readonly #variableValues: VariablesValues
 	readonly #isLayeredDrawing: boolean
-	readonly #isInvertedManager: EntityPoolIsInvertedManager
+	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
 	readonly #pageStore: IPageStore
 
 	protected readonly controlId: string
@@ -66,7 +67,7 @@ export abstract class ControlEntityListPoolBase {
 	protected readonly reportChange: (options: ControlEntityListChangeProps) => void
 
 	protected constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
-		this.logger = LogController.createLogger(`Controls/Fragments/EnittyPool/${props.controlId}`)
+		this.logger = LogController.createLogger(`Controls/Fragments/EntityPool/${props.controlId}`)
 
 		this.controlId = props.controlId
 		this.reportChange = props.reportChange
@@ -78,10 +79,12 @@ export abstract class ControlEntityListPoolBase {
 		this.#isLayeredDrawing = isLayeredDrawing
 		this.#pageStore = props.pageStore
 
-		this.#isInvertedManager = new EntityPoolIsInvertedManager(
+		this.#specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			props.controlId,
 			this.createVariablesAndExpressionParser.bind(this),
-			this.updateIsInvertedValues.bind(this)
+			{
+				isInverted: this.updateIsInvertedValues.bind(this),
+			}
 		)
 	}
 
@@ -90,7 +93,7 @@ export abstract class ControlEntityListPoolBase {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#isInvertedManager,
+			this.#specialExpressionManager,
 			this.controlId,
 			null,
 			listDefinition
@@ -185,7 +188,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @access public
 	 */
 	destroy(): void {
-		this.#isInvertedManager.destroy()
+		this.#specialExpressionManager.destroy()
 
 		for (const list of this.getAllEntityLists()) {
 			list.cleanup()
@@ -799,7 +802,9 @@ export abstract class ControlEntityListPoolBase {
 	 * Update the isInverted values on the control with new calculated isInverted values
 	 * @param newValues The new isInverted values
 	 */
-	protected abstract updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): void
+	protected abstract updateIsInvertedValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
+	): void
 
 	/**
 	 * Get all the connectionIds for entities which are active
@@ -819,6 +824,6 @@ export abstract class ControlEntityListPoolBase {
 	 * @param changedVariables - variables with changes
 	 */
 	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
-		this.#isInvertedManager.onVariablesChanged(changedVariables)
+		this.#specialExpressionManager.onVariablesChanged(changedVariables)
 	}
 }
