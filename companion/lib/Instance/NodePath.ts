@@ -53,7 +53,9 @@ export function getNodeJsPermissionArguments(
 	// Node18 is more limited in supported arguments
 	if (manifest.runtime.type === 'node18') return args
 
-	args.push('--use-system-ca')
+	if (!process.env.COMPANION_SKIP_SYSTEM_CA) {
+		args.push('--use-system-ca')
+	}
 
 	if (!enableInspect) {
 		args.push(

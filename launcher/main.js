@@ -949,13 +949,16 @@ if (!lock) {
 				}
 			})
 
+			/** @type {boolean} */
+			let disableSystemCa = false
+
 			child = new RespawnMonitor(
 				// @ts-expect-error - This isn't losing nullable types
 				() =>
 					[
 						// Build a new command string for each start
 						nodeBin,
-						'--use-system-ca',
+						disableSystemCa ? undefined : '--use-system-ca',
 						path.join(companionRootPath, 'main.js'),
 						`--machine-id=${machineId}`,
 						`--config-dir=${configDir}`,
@@ -977,6 +980,7 @@ if (!lock) {
 					env: {
 						...process.env,
 						COMPANION_IPC_PARENT: 1,
+						COMPANION_SKIP_SYSTEM_CA: disableSystemCa ? '1' : undefined,
 					},
 					maxRestarts: -1,
 					sleep: 1000,
@@ -1046,7 +1050,15 @@ if (!lock) {
 				customLog(data.toString())
 			})
 			child.on('stderr', (data) => {
-				customLog(data.toString())
+				const str = data.toString()
+				if (!disableSystemCa && str.includes('OpenSSL configuration error')) {
+					disableSystemCa = true
+					customLog(
+						'Detected OpenSSL configuration error, disabling --use-system-ca for future restarts',
+						'Application'
+					)
+				}
+				customLog(str)
 			})
 			child.on('warn', (data) => {
 				customLog(data.toString())
