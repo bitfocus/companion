@@ -40,6 +40,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
@@ -107,6 +108,7 @@ export class InternalController {
 		surfaceController: SurfaceController,
 		graphicsController: GraphicsController,
 		userConfigController: DataUserConfig,
+		localVariablesController: LocalVariablesController,
 		controlEvents: EventEmitter<ControlCommonEvents>,
 		actionRunner: ActionRunner,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
@@ -127,7 +129,7 @@ export class InternalController {
 			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
-			new InternalVariables(this.#controlsStore, this.#pageStore)
+			new InternalVariables(localVariablesController)
 		)
 
 		// Listen for events from the fragments

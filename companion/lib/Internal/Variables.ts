@@ -10,14 +10,11 @@
  */
 
 import { EventEmitter } from 'node:events'
-import { FeedbackEntitySubType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type { ControlEntityListPoolBase } from '../Controls/Entities/EntityListPoolBase.js'
-import type { IControlStore } from '../Controls/IControlStore.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
-import type { IPageStore } from '../Page/Store.js'
+import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
@@ -31,7 +28,7 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
+import { CHOICES_LOCATION } from './Util.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',
@@ -61,14 +58,12 @@ function compareValues(op: any, value: any, value2: any): boolean {
 }
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
-	readonly #controlsStore: IControlStore
-	readonly #pageStore: IPageStore
+	readonly #localVariables: LocalVariablesController
 
-	constructor(controlsStore: IControlStore, pageStore: IPageStore) {
+	constructor(localVariables: LocalVariablesController) {
 		super()
 
-		this.#controlsStore = controlsStore
-		this.#pageStore = pageStore
+		this.#localVariables = localVariables
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
@@ -300,65 +295,29 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		}
 	}
 
-	#updateLocalVariableValue(
-		action: ActionForInternalExecution,
-		extras: RunActionExtras,
-		updateValue: (
-			entityPool: ControlEntityListPoolBase,
-			listId: SomeSocketEntityLocation,
-			variableEntity: ControlEntityInstance
-		) => void
-	) {
-		if (!action.options.name) return
-
-		const locationStr = stringifyVariableValue(action.options.location)
-
-		let theControlId: string | null = null
-		if (locationStr?.trim().toLocaleLowerCase() === 'this') {
-			// This could be any type of control (button, trigger, etc)
-			theControlId = extras.controlId
-		} else {
-			// Parse the location of a button
-			const location = ParseLocationString(locationStr, extras.location)
-			theControlId = location ? this.#pageStore.getControlIdAt(location) : null
-		}
-		if (!theControlId) return
-
-		const control = this.#controlsStore.getControl(theControlId)
-		if (!control || !control.supportsEntities) return
-
-		const variableEntity = control.entities
-			.getAllEntities()
-			.find((ent) => ent.rawLocalVariableName === action.options.name)
-		if (!variableEntity) return
-
-		const localVariableName = variableEntity.localVariableName
-		if (!localVariableName) return
-
-		if (!isInternalUserValueFeedback(variableEntity)) return
-
-		updateValue(control.entities, 'local-variables', variableEntity) // TODO - dynamic listId
-	}
-
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
 		if (action.definitionId === 'local_variable_set_value') {
-			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				entityPool.entitySetVariableValue(listId, variableEntity.id, action.options.value)
-			})
+			const { location, name } = action.options
+			const localVariable = this.#localVariables.localVariableFor(location, name, extras)
+			if (!localVariable) return true
+
+			this.#localVariables.setLocalVariable(localVariable, action.options.value)
 
 			return true
 		} else if (action.definitionId === 'local_variable_reset_to_default') {
-			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				// This isn't allowed to be an expression
-				const startupValue = variableEntity.rawOptions.startup_value?.value
-				entityPool.entitySetVariableValue(listId, variableEntity.id, startupValue)
-			})
+			const { location, name } = action.options
+			const localVariable = this.#localVariables.localVariableFor(location, name, extras)
+			if (!localVariable) return true
+
+			this.#localVariables.resetLocalVariable(localVariable)
 
 			return true
 		} else if (action.definitionId === 'local_variable_sync_to_default') {
-			this.#updateLocalVariableValue(action, extras, (entityPool, listId, variableEntity) => {
-				entityPool.entitySetOption(listId, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
-			})
+			const { location, name } = action.options
+			const localVariable = this.#localVariables.localVariableFor(location, name, extras)
+			if (!localVariable) return true
+
+			this.#localVariables.writeLocalVariableStartupValue(localVariable)
 
 			return true
 		}
