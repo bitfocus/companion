@@ -21,6 +21,8 @@ export interface DropdownInputPopupProps {
 	disableUnselected?: boolean
 	/** When true, renders the list using @tanstack/react-virtual for large datasets. Only supports flat (non-grouped) item lists. */
 	virtualized?: boolean
+	/** When true, each item renders two lines: the id (top) and the label (bottom), matching the variable dropdown style. */
+	fancyFormat?: boolean
 }
 
 export function DropdownInputPopup({
@@ -29,9 +31,14 @@ export function DropdownInputPopup({
 	showIndicator,
 	disableUnselected,
 	virtualized,
+	fancyFormat,
 }: DropdownInputPopupProps): React.JSX.Element {
 	const renderItem = (item: DropdownChoiceWithMeta) => (
-		<Combobox.Item key={item.id} value={item.id} className="dropdown-field-item">
+		<Combobox.Item
+			key={item.id}
+			value={item.id}
+			className={fancyFormat ? 'dropdown-field-item variable-dropdown-option' : 'dropdown-field-item'}
+		>
 			{showIndicator && (
 				<span className="dropdown-field-item-indicator">
 					{item.plusIndicator ? (
@@ -41,7 +48,14 @@ export function DropdownInputPopup({
 					)}
 				</span>
 			)}
-			{item.label}
+			{fancyFormat ? (
+				<div className="dropdown-field-item-content">
+					<span className="var-name">{String(item.id)}</span>
+					<span className="var-label">{item.label}</span>
+				</div>
+			) : (
+				item.label
+			)}
 		</Combobox.Item>
 	)
 
@@ -56,7 +70,7 @@ export function DropdownInputPopup({
 						<Combobox.List
 							className={`dropdown-field-list dropdown-field-list--virtualized${disableUnselected ? ' dropdown-field-list--max-reached' : ''}`}
 						>
-							<VirtualizedComboboxList showIndicator={showIndicator} />
+							<VirtualizedComboboxList showIndicator={showIndicator} fancyFormat={fancyFormat} />
 						</Combobox.List>
 					) : (
 						<Combobox.List
@@ -86,21 +100,21 @@ export function DropdownInputPopup({
 interface VirtualComboboxItemProps {
 	item: DropdownChoiceWithMeta
 	index: number
-	size: number
 	start: number
 	totalCount: number
 	measureElement: (el: Element | null) => void
 	showIndicator?: boolean
+	fancyFormat?: boolean
 }
 
 const VirtualComboboxItem = React.memo(function VirtualComboboxItem({
 	item,
 	index,
-	size,
 	start,
 	totalCount,
 	measureElement,
 	showIndicator,
+	fancyFormat,
 }: VirtualComboboxItemProps): React.JSX.Element {
 	return (
 		<Combobox.Item
@@ -110,13 +124,12 @@ const VirtualComboboxItem = React.memo(function VirtualComboboxItem({
 			ref={measureElement}
 			aria-setsize={totalCount}
 			aria-posinset={index + 1}
-			className="dropdown-field-item"
+			className={fancyFormat ? 'dropdown-field-item variable-dropdown-option' : 'dropdown-field-item'}
 			style={{
 				position: 'absolute',
 				top: 0,
 				left: 0,
 				width: '100%',
-				height: size,
 				transform: `translateY(${start}px)`,
 			}}
 		>
@@ -129,12 +142,25 @@ const VirtualComboboxItem = React.memo(function VirtualComboboxItem({
 					)}
 				</span>
 			)}
-			{item.label}
+			{fancyFormat ? (
+				<div className="dropdown-field-item-content">
+					<span className="var-name">{String(item.id)}</span>
+					<span className="var-label">{item.label}</span>
+				</div>
+			) : (
+				item.label
+			)}
 		</Combobox.Item>
 	)
 })
 
-function VirtualizedComboboxList({ showIndicator }: { showIndicator?: boolean }): React.JSX.Element | null {
+function VirtualizedComboboxList({
+	showIndicator,
+	fancyFormat,
+}: {
+	showIndicator?: boolean
+	fancyFormat?: boolean
+}): React.JSX.Element | null {
 	const filteredItems = Combobox.useFilteredItems<DropdownChoiceWithMeta>()
 	const scrollElementRef = useRef<HTMLDivElement | null>(null)
 
@@ -181,11 +207,11 @@ function VirtualizedComboboxList({ showIndicator }: { showIndicator?: boolean })
 							key={virtualRow.key}
 							item={item}
 							index={virtualRow.index}
-							size={virtualRow.size}
 							start={virtualRow.start}
 							totalCount={filteredItems.length}
 							measureElement={virtualizer.measureElement}
 							showIndicator={showIndicator}
+							fancyFormat={fancyFormat}
 						/>
 					)
 				})}

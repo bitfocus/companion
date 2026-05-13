@@ -40,7 +40,10 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 
 export const WithAllowCustom: Story = {
-	args: { allowCustom: true, value: 'my-custom-value' },
+	args: { allowCustom: true, value: 'my-custom-value', disableEditingCustom: false },
+	argTypes: {
+		disableEditingCustom: { control: 'boolean' },
+	},
 }
 
 export const WithValidation: Story = {
@@ -49,6 +52,28 @@ export const WithValidation: Story = {
 
 export const Disabled: Story = {
 	args: { disabled: true },
+}
+
+export const GroupedChoices: Story = {
+	args: {
+		choices: [
+			{
+				label: 'Fruits',
+				options: [
+					{ id: 'apple', label: 'Apple' },
+					{ id: 'banana', label: 'Banana' },
+				],
+			},
+			{
+				label: 'Veggies',
+				options: [
+					{ id: 'carrot', label: 'Carrot' },
+					{ id: 'potato', label: 'Potato' },
+				],
+			},
+		],
+		value: 'apple',
+	},
 }
 
 /** FancyFormat uses a custom option renderer that shows the variable name and description on two lines */
@@ -61,5 +86,6 @@ export const FancyFormat: Story = {
 			{ id: 'internal:uptime', label: 'Time since last restart' },
 		],
 		value: 'internal:time_hms',
+		allowCustom: false,
 	},
 }

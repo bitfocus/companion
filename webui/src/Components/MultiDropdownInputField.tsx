@@ -88,6 +88,9 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		return { allItems, flatItems }
 	}, [choices])
 
+	// The popup doesn't handle groups whwn virtualised, so detect if there are any groups
+	const hasGroups = allItems.some((item) => 'items' in item)
+
 	// Compile the regex (and cache)
 	const compiledRegex = useMemo(() => {
 		if (regex) {
@@ -204,7 +207,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		>
 			<Combobox.Root<DropdownChoiceId, true>
 				multiple={true}
-				virtualized
+				virtualized={!hasGroups}
 				autoHighlight
 				value={value}
 				items={effectiveItems}
@@ -243,7 +246,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 					noOptionsMessage={allowCustom ? 'Begin typing to use a custom value' : undefined}
 					showIndicator
 					disableUnselected={isMaxReached}
-					virtualized
+					virtualized={!hasGroups}
 				/>
 			</Combobox.Root>
 		</div>

@@ -12,6 +12,7 @@
 	.dropdown-field-input-group {
 		@include form-input-base;
 
+		position: relative;
 		display: flex;
 		align-items: center;
 		cursor: text;
@@ -32,7 +33,10 @@
 		border: none;
 		background: transparent;
 		outline: none;
-		padding: 0;
+
+		&:not(.variable-dropdown-edit) {
+			padding: 0;
+		}
 		margin: 0;
 		font-size: inherit;
 		font-weight: inherit;
@@ -47,9 +51,71 @@
 			font-size: 0.9rem;
 		}
 
+		// When the placeholder is actually the current value (disableEditingCustom mode),
+		// style it identically to real text so it looks seamless.
+		&.dropdown-field-input-value-placeholder::placeholder {
+			color: var(--cui-body-color);
+			font-weight: inherit;
+			font-size: inherit;
+		}
+
 		&[data-popup-open] {
 			cursor: text;
 		}
+	}
+
+	// Fancy (2-line) display overlay shown when the field is not focused.
+	// The actual input is hidden below it; clicking passes through to focus the input.
+	.dropdown-field-fancy-display {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		pointer-events: none;
+
+		.var-name {
+			font-weight: bold;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.var-label {
+			font-weight: normal;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			font-size: 0.9em;
+		}
+	}
+
+	// When focused or popup is open: show the real input, hide the fancy overlay (but keep its space so height stays consistent)
+	.dropdown-field-input-group:is([data-focused], [data-popup-open]) {
+		.dropdown-field-fancy-display {
+			visibility: hidden;
+		}
+
+		.variable-dropdown-edit {
+			opacity: 1;
+			pointer-events: auto;
+		}
+	}
+
+	// The fancyFormat input always sits absolutely over the container;
+	// overlay always takes layout space and defines the height.
+	// Padding matches form-input-base so text aligns with the container's padding.
+	.variable-dropdown-edit {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 0.375rem 0.75rem;
+		border: none;
+		background: transparent;
+		outline: none;
+		box-sizing: border-box;
+		opacity: 0;
+		pointer-events: none;
 	}
 
 	.dropdown-field-trigger {
@@ -62,6 +128,8 @@
 		background: transparent;
 		cursor: pointer;
 		color: var(--cui-secondary-color);
+		position: relative;
+		z-index: 1;
 	}
 
 	.dropdown-field-icon {
@@ -301,5 +369,30 @@
 		color: var(--popup-color);
 		color: hsl(0, 0%, 60%);
 		text-align: center;
+	}
+
+	// Two-line content layout for fancyFormat items
+	.dropdown-field-item-content {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+
+		.var-name {
+			display: block;
+			font-weight: bold;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.var-label {
+			display: block;
+			font-weight: normal;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			font-size: 0.9em;
+			color: hsl(0, 0%, 50%);
+		}
 	}
 }

@@ -1,13 +1,17 @@
+import { Combobox } from '@base-ui/react/combobox'
 import classNames from 'classnames'
+import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
+import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useState } from 'react'
-import Select, { components, createFilter, type InputActionMeta } from 'react-select'
-import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { useDropdownChoicesForSelect, type DropdownChoiceInt, type DropdownChoicesOrGroups } from './DropdownChoices.js'
-import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { useComputed } from '~/Resources/util.js'
+import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
+import { DropdownInputPopup, type DropdownChoiceWithMeta, type DropdownGroupBase } from './DropdownInputField/Popup.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
+
+type FuzzyChoice = DropdownChoiceWithMeta & { fuzzy: ReturnType<typeof fuzzyPrepare> }
+type FuzzyGroup = DropdownGroupBase & { items: FuzzyChoice[] }
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -46,49 +50,218 @@ export const DropdownInputField = observer(function DropdownInputField({
 }: DropdownInputFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
-	// If fancy format is enabled, always search full option
+	// fancyFormat always searches both label and id
 	if (fancyFormat) searchLabelsOnly = false
 
-	const { options, flatOptions } = useDropdownChoicesForSelect(choices)
+	// Build fuzzy-prepared item lists from choices (choices may be MobX observables)
+	const { allItems, flatItems } = useComputed(() => {
+		const flatItems: FuzzyChoice[] = []
+		const allItems: Array<FuzzyChoice | FuzzyGroup> = []
 
-	const currentValue = useMemo(() => {
-		const entry = flatOptions.find((o) => stringifyVariableValue(o.value) === stringifyVariableValue(value)) // Intentionally loose for compatibility
-		if (entry) {
-			return entry
-		} else if (allowCustom) {
-			return { value: value, label: value }
-		} else if (value === '' || value === undefined || value === null) {
-			return null
-		} else {
-			return { value: value, label: `?? (${value})` }
+		const toFuzzy = (c: DropdownChoice): FuzzyChoice => ({
+			id: c.id,
+			label: String(c.label),
+			fuzzy: fuzzyPrepare(searchLabelsOnly ? String(c.label) : `${String(c.label)} ${String(c.id)}`),
+		})
+
+		if (Array.isArray(choices)) {
+			for (const item of choices) {
+				if ('options' in item) {
+					const opts = item.options.map(toFuzzy)
+					allItems.push({ id: String(item.label), label: String(item.label), items: opts })
+					flatItems.push(...opts)
+				} else {
+					const f = toFuzzy(item)
+					allItems.push(f)
+					flatItems.push(f)
+				}
+			}
+		} else if (typeof choices === 'object') {
+			for (const choice of Object.values(choices)) {
+				const f = toFuzzy(choice)
+				allItems.push(f)
+				flatItems.push(f)
+			}
 		}
-	}, [value, flatOptions, allowCustom])
 
-	// Compile the regex (and cache)
+		return { allItems, flatItems }
+	}, [choices, searchLabelsOnly])
+
+	// The popup doesn't handle groups whwn virtualised, so detect if there are any groups
+	const hasGroups = allItems.some((item) => 'items' in item)
+
+	// Compile the regex for custom value validation
 	const compiledRegex = useMemo(() => {
 		if (regex) {
-			// Compile the regex string
 			const match = regex.match(/^\/(.*)\/(.*)$/)
-			if (match) {
-				return new RegExp(match[1], match[2])
-			}
+			if (match) return new RegExp(match[1], match[2])
 		}
 		return null
 	}, [regex])
 
-	const onChange = useCallback(
-		(e: DropdownChoiceInt) => {
-			const newValue = e?.value
+	const isValidCustom = useCallback((input: string) => !compiledRegex || !!input.match(compiledRegex), [compiledRegex])
 
-			setValue(newValue)
+	// Input value for fuzzy filtering
+	const [inputValue, setInputValue] = useState('')
+
+	// In editing mode the Combobox.Input is controlled so the user can edit the raw value.
+	// undefined = not in editing mode (input is uncontrolled / driven by the Combobox).
+	// string   = focused in editing mode; the ref mirrors it for stale-closure-free reads.
+	const [controlledInputValue, setControlledInputValue] = useState<string | undefined>(undefined)
+	const controlledInputValueRef = useRef<string | undefined>(undefined)
+
+	const setControlledInput = useCallback((v: string | undefined) => {
+		controlledInputValueRef.current = v
+		setControlledInputValue(v)
+	}, [])
+
+	const triggerRef = useRef<HTMLButtonElement>(null)
+
+	// Editing mode: when allowCustom=true and disableEditingCustom=false, focusing the field
+	// pre-fills the input with the raw value so it can be edited directly like a text field.
+	const isEditingMode = !disableEditingCustom && !!allowCustom
+
+	// localDisplayValue mirrors the committed value but is updated synchronously on selection,
+	// staying one render ahead of the parent prop. Without this, selecting "Use XX" clears
+	// inputValue immediately while the parent's MobX value hasn't propagated yet, causing a
+	// flash of the old label.
+	// prevValueProp is not a real value — it is only used to detect when the parent prop
+	// changes so we can reset localDisplayValue (standard React derived-state pattern).
+	const [localDisplayValue, setLocalDisplayValue] = useState<DropdownChoiceId>(value)
+	useEffect(() => setLocalDisplayValue(value), [value])
+
+	// Resolve the current value to a display item
+	const currentItem = useComputed((): FuzzyChoice => {
+		const entry = flatItems.find((o) => o.id == localDisplayValue) // Intentionally loose for compatibility
+		if (entry) return entry
+		const strValue = String(localDisplayValue)
+		if (allowCustom) return { id: localDisplayValue, label: strValue, fuzzy: fuzzyPrepare(strValue) }
+		if (localDisplayValue === '' || localDisplayValue === undefined || localDisplayValue === null)
+			return { id: localDisplayValue, label: '', fuzzy: fuzzyPrepare('') }
+		const unknownLabel = `?? (${strValue})`
+		return { id: localDisplayValue, label: unknownLabel, fuzzy: fuzzyPrepare(unknownLabel) }
+	}, [localDisplayValue, flatItems, allowCustom])
+
+	// Synthetic "Use X" item — appears when the user has typed a value that passes regex
+	// and doesn't exactly match any existing option.
+	const syntheticItem = useComputed((): FuzzyChoice | null => {
+		if (!allowCustom || !inputValue || !isValidCustom(inputValue)) return null
+		if (flatItems.some((o) => o.id == inputValue)) return null
+		return {
+			id: inputValue,
+			label: `Use "${inputValue}"`,
+			fuzzy: fuzzyPrepare(inputValue),
+			plusIndicator: true,
+		}
+	}, [allowCustom, inputValue, isValidCustom, flatItems])
+
+	// Items for base-ui value resolution. Includes the synthetic item and, when the current
+	// value is a custom/unknown entry, the current item itself so itemToStringLabel can find it.
+	const effectiveItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
+		const isCurrentKnown = flatItems.some((o) => o.id == localDisplayValue)
+		const isSyntheticMatchesCurrent = syntheticItem != null && syntheticItem.id == localDisplayValue
+
+		const prefixed: FuzzyChoice[] = []
+		if (syntheticItem) prefixed.push(syntheticItem)
+		// Ensure the current value is resolvable even when it's not in the choices list
+		if (!isCurrentKnown && !isSyntheticMatchesCurrent) {
+			prefixed.push(currentItem)
+		}
+
+		return [...prefixed, ...allItems]
+	}, [syntheticItem, allItems, flatItems, value, currentItem])
+
+	// Items displayed in the popup (excluding the hidden resolution entry for the current custom value)
+	const filteredItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
+		// In editing mode, when the input still shows the pre-filled raw value (user hasn't typed
+		// anything different), show all options rather than filtering.
+		const fuzzyInput =
+			isEditingMode && controlledInputValue !== undefined && inputValue === String(localDisplayValue) ? '' : inputValue
+
+		if (!fuzzyInput) return allItems
+
+		const filterFlat = (items: FuzzyChoice[]): FuzzyChoice[] =>
+			items.filter((o) => (fuzzySingle(fuzzyInput, o.fuzzy)?.score ?? 0) >= 0.5)
+
+		const result: Array<FuzzyChoice | FuzzyGroup> = []
+		for (const item of allItems) {
+			if ('items' in item) {
+				const filtered = filterFlat(item.items)
+				if (filtered.length > 0) result.push({ ...item, items: filtered })
+			} else {
+				if ((fuzzySingle(fuzzyInput, item.fuzzy)?.score ?? 0) >= 0.5) result.push(item)
+			}
+		}
+
+		if (syntheticItem) result.unshift(syntheticItem)
+		return result
+	}, [allItems, syntheticItem, inputValue, isEditingMode, controlledInputValue, value])
+
+	const onValueChange = useCallback(
+		(newId: DropdownChoiceId | null) => {
+			if (newId !== null) {
+				setLocalDisplayValue(newId)
+				setValue(newId)
+				setControlledInput(undefined)
+				setInputValue('')
+
+				// Shift focus to the trigger
+				triggerRef.current?.focus()
+			}
 		},
-		[setValue]
+		[setValue, setControlledInput]
 	)
 
-	const inputComponent = useMemo(() => {
-		const onPaste = (e: React.ClipboardEvent) => {
-			if (!e.clipboardData || !onPasteIntercept) return
+	const onInputValueChange = useCallback(
+		(v: string, eventDetails: Combobox.Root.ChangeEventDetails) => {
+			setInputValue(v)
+			// Only mirror into the controlled value when the user is actually typing.
+			// When base-ui resets the input (e.g. popup close, item selection), the reason
+			// is 'none' or 'item-press' — in those cases we must NOT overwrite the raw id
+			// that was pre-filled on focus.
+			if (controlledInputValueRef.current !== undefined && eventDetails.reason === 'input-change') {
+				setControlledInput(v)
+			}
+		},
+		[setControlledInput]
+	)
 
+	// On focus in editing mode: pre-fill the controlled input value with the raw id so it can be
+	// edited directly. The controlled inputValue prop on Combobox.Root takes over from base-ui's
+	// itemToStringLabel-based display.
+	const onInputFocus = useCallback(() => {
+		if (!isEditingMode) return
+		setControlledInput(String(localDisplayValue))
+	}, [isEditingMode, localDisplayValue, setControlledInput])
+
+	// On blur: if in editing mode and no item was selected via onValueChange, commit the
+	// current input text as the new value. In search-only mode (disableEditingCustom=true),
+	// just reset the filter and focus state.
+	const onInputBlur = useCallback(() => {
+		if (isEditingMode && controlledInputValueRef.current !== undefined) {
+			setValue(controlledInputValueRef.current)
+			setControlledInput(undefined)
+			setInputValue('')
+		} else if (!isEditingMode && allowCustom) {
+			setInputValue('')
+		}
+		onBlur?.()
+	}, [isEditingMode, allowCustom, setValue, setControlledInput, onBlur])
+
+	// In disableEditingCustom mode, when focused the input is cleared for searching but the
+	// current value is shown as a placeholder so the user knows what's selected.
+	const inputPlaceholder = useMemo(() => {
+		if (!disableEditingCustom || !allowCustom) return undefined
+		if (fancyFormat) return String(localDisplayValue)
+		return flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)
+	}, [disableEditingCustom, allowCustom, fancyFormat, localDisplayValue, flatItems])
+
+	// Paste interception: transforms the pasted value and dispatches a native input event so
+	// base-ui picks up the change via onInputValueChange.
+	const onPaste = useMemo(() => {
+		if (!onPasteIntercept) return undefined
+		return (e: React.ClipboardEvent<HTMLInputElement>) => {
+			if (!e.clipboardData) return
 			const rawValue = e.clipboardData.getData('text')
 			const newValue = onPasteIntercept(rawValue)
 
@@ -96,10 +269,9 @@ export const DropdownInputField = observer(function DropdownInputField({
 			if (newValue === rawValue) return
 
 			e.preventDefault()
-			// console.log('Intercept paste', rawValue, 'to', newValue)
 
 			// Set the value of the input, using the native setter
-			const target = e.currentTarget as HTMLInputElement
+			const target = e.currentTarget
 			// eslint-disable-next-line @typescript-eslint/unbound-method
 			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
 			nativeInputValueSetter.call(target, newValue)
@@ -107,150 +279,78 @@ export const DropdownInputField = observer(function DropdownInputField({
 			// Dispatch a change event
 			target.dispatchEvent(new Event('input', { bubbles: true }))
 		}
-
-		return (props: any) => (
-			<components.Input
-				{...props}
-				onPaste={onPaste}
-				className={fancyFormat && (props.className ?? '') + 'variable-dropdown-edit'}
-			/>
-		)
-	}, [onPasteIntercept, fancyFormat])
-
-	// const selectRef = useRef<any>(null)
-
-	const selectProps: Partial<CreatableProps<any, any, any>> = {
-		name: htmlName,
-		isDisabled: disabled,
-		classNamePrefix: 'select-control',
-		className: 'select-control',
-		menuPortalTarget: menuPortal || document.body,
-		menuShouldBlockScroll: !!menuPortal, // The dropdown doesn't follow scroll when in a modal
-		menuPosition: 'fixed',
-		menuPlacement: 'auto',
-		isClearable: false,
-		isSearchable: true,
-		isMulti: false,
-		options: options,
-		value: currentValue,
-		onChange: onChange,
-		filterOption: createFilter({
-			ignoreAccents: false,
-			stringify: searchLabelsOnly ? (option) => option.label : (option) => `${option.label} ${option.value}`,
-		}),
-		components: {
-			// MenuList: WindowedMenuList,
-			Input: inputComponent,
-			// couldn't find a cleaner way to do this: otherwise TypeScript complains about Singlevalue...
-			...((fancyFormat ? { Option: CustomOption, SingleValue: CustomSingleValue } : {}) as Partial<
-				CreatableProps<any, any, any>
-			>),
-		},
-		onBlur: onBlur,
-	}
-
-	const isValidNewOption = useCallback(
-		(newValue: string | number) => typeof newValue === 'string' && (!compiledRegex || !!newValue.match(compiledRegex)),
-		[compiledRegex]
-	)
-	const noOptionsMessage = useCallback(
-		({ inputValue }: { inputValue: string | number }) => {
-			if (!isValidNewOption(inputValue)) {
-				return 'Input is not a valid value'
-			} else {
-				return 'Begin typing to use a custom value'
-			}
-		},
-		[isValidNewOption]
-	)
-	const isValidNewOptionIgnoreCurrent = useCallback(
-		(newValue: string | number) => !flatOptions.find((opt) => opt.value == newValue) && isValidNewOption(newValue),
-		[isValidNewOption, flatOptions]
-	)
-	const formatCreateLabel = useCallback((v: string | number) => `Use "${v}"`, [])
-
-	/**
-	 * Do some mangling with the input value to make custom values flow a bit better
-	 */
-	const [customInputValue, setCustomInputValue] = useState<string | undefined>(undefined)
-	const onFocus = () => setCustomInputValue(value + '')
-	const onBlurEditingCustom = useCallback(() => {
-		setCustomInputValue(undefined)
-
-		onBlur?.()
-	}, [onBlur])
-
-	const onChangeEditingCustom = useCallback(
-		(e: DropdownChoiceInt) => {
-			setCustomInputValue(e.value as any)
-			onChange(e)
-		},
-		[onChange]
-	)
-	const onInputChange = useCallback(
-		(v: string, a: InputActionMeta) => {
-			if (!allowCustom) return
-
-			if (a.action === 'input-blur') {
-				onChange({ value: a.prevInputValue, label: a.prevInputValue })
-			} else if (a.action === 'input-change') {
-				setCustomInputValue(v)
-			}
-		},
-		[onChange, allowCustom]
-	)
-
-	const onCreateOption = useCallback(
-		(inputValue: string) => {
-			setCustomInputValue(inputValue)
-			onChange({ value: inputValue, label: inputValue })
-		},
-		[onChange]
-	)
-
-	if (allowCustom && customInputValue === value) {
-		// If the custom input value has not changed, then don't use it as a filter
-		selectProps.filterOption = null
-	}
+	}, [onPasteIntercept])
 
 	return (
 		<div
 			className={classNames(
-				{
-					'select-tooltip': true,
-					'select-invalid': !!checkValid && !checkValid(currentValue?.value as any),
-				},
+				'dropdown-field',
+				{ 'dropdown-field-invalid': !!checkValid && !checkValid(currentItem.id) },
 				className
 			)}
 			title={tooltip}
 		>
-			{allowCustom ? (
-				<CreatableSelect
-					{...selectProps}
-					className={!disableEditingCustom ? `${selectProps.className} select-control-editable` : selectProps.className}
-					isSearchable={true}
-					noOptionsMessage={noOptionsMessage}
-					createOptionPosition="first"
-					formatCreateLabel={formatCreateLabel}
-					isValidNewOption={isValidNewOptionIgnoreCurrent}
-					onFocus={!disableEditingCustom ? onFocus : undefined}
-					onBlur={!disableEditingCustom ? onBlurEditingCustom : onBlur}
-					onCreateOption={onCreateOption}
-					inputValue={allowCustom && !disableEditingCustom ? customInputValue : undefined}
-					value={
-						!allowCustom ||
-						disableEditingCustom ||
-						customInputValue === undefined ||
-						customInputValue === currentValue?.value
-							? currentValue
-							: ''
-					}
-					onInputChange={!disableEditingCustom ? onInputChange : undefined}
-					onChange={!disableEditingCustom ? onChangeEditingCustom : onChange}
+			<Combobox.Root<DropdownChoiceId>
+				virtualized={!hasGroups}
+				autoHighlight
+				value={localDisplayValue}
+				items={effectiveItems}
+				filteredItems={filteredItems}
+				disabled={disabled}
+				onValueChange={onValueChange}
+				onInputValueChange={onInputValueChange}
+				inputValue={
+					isEditingMode
+						? (controlledInputValue ??
+							(fancyFormat
+								? String(localDisplayValue)
+								: (flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue))))
+						: undefined
+				}
+				itemToStringLabel={(id: DropdownChoiceId) => {
+					if (disableEditingCustom && allowCustom) return ''
+					if (fancyFormat) return String(id)
+					const item = flatItems.find((o) => o.id == id)
+					if (item) return item.label
+					const strId = String(id)
+					if (!allowCustom && strId) return `?? (${strId})`
+					return strId
+				}}
+			>
+				<Combobox.InputGroup className="dropdown-field-input-group">
+					{' '}
+					{fancyFormat && (
+						<div className="dropdown-field-fancy-display" aria-hidden="true">
+							<div className="var-name">{String(localDisplayValue) || '\u00A0'}</div>
+							<div className="var-label">
+								{(flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)) || '\u00A0'}
+							</div>
+						</div>
+					)}{' '}
+					<Combobox.Input
+						className={classNames('dropdown-field-input', {
+							'variable-dropdown-edit': fancyFormat,
+							'dropdown-field-input-value-placeholder': !fancyFormat && inputPlaceholder !== undefined,
+						})}
+						name={htmlName}
+						placeholder={inputPlaceholder}
+						onFocus={onInputFocus}
+						onBlur={onInputBlur}
+						onPaste={onPaste}
+					/>
+					<Combobox.Trigger className="dropdown-field-trigger" ref={triggerRef}>
+						<ChevronDownIcon className="dropdown-field-icon" />
+					</Combobox.Trigger>
+				</Combobox.InputGroup>
+
+				<DropdownInputPopup
+					menuPortal={menuPortal ?? undefined}
+					noOptionsMessage={allowCustom ? 'Begin typing to use a custom value' : undefined}
+					showIndicator={!!allowCustom}
+					fancyFormat={fancyFormat}
+					virtualized={!hasGroups}
 				/>
-			) : (
-				<Select {...selectProps} />
-			)}
+			</Combobox.Root>
 		</div>
 	)
-}) as (props: DropdownInputFieldProps) => JSX.Element
+})
