@@ -10,6 +10,7 @@
  */
 
 import { EventEmitter } from 'node:events'
+import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -28,7 +29,6 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import { CHOICES_LOCATION } from './Util.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	type: 'dropdown',
@@ -207,7 +207,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Set value',
 				description: undefined,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Local variable',
@@ -231,7 +231,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Reset to startup value',
 				description: undefined,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Local variable',
@@ -244,7 +244,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				label: 'Local Variable: Write current value to startup value',
 				description: undefined,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Local variable',
