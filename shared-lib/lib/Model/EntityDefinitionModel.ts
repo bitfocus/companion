@@ -21,6 +21,8 @@ export interface ClientEntityDefinition {
 	learnTimeout: number | undefined
 	showInvert: boolean
 
+	hasResult?: boolean
+
 	/**
 	 * When an advanced feedback, the properties that should have overrides assigned
 	 */

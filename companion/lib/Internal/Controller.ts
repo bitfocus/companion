@@ -595,6 +595,8 @@ export class InternalController {
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
 
+						hasResult: !!action.hasResult,
+
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
 
@@ -629,6 +631,8 @@ export class InternalController {
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,
+
+						hasResult: false,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

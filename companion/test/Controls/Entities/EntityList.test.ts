@@ -11,7 +11,7 @@ import {
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
 import { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
-import { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
+import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,

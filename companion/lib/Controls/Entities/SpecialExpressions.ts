@@ -1,4 +1,5 @@
 import type { ControlEntityInstance } from './EntityInstance.js'
+import type { StoreResult } from './Types.js'
 
 /**
  * A map of special expression kinds (that is, expressions associated with
@@ -6,9 +7,8 @@ import type { ControlEntityInstance } from './EntityInstance.js'
  * value of the special expression.
  */
 export type SpecialExpressions = {
-	// There's currently only one special expression: boolean feedbacks'
-	// expressionable isInverted checkbox.
 	isInverted: boolean
+	storeResult: StoreResult | undefined
 }
 
 /** The possible kinds of special expression. */

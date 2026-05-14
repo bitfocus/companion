@@ -6,6 +6,7 @@ import {
 	EntityModelType,
 	type EntityOwner,
 	type FeedbackEntityStyleOverride,
+	type RawStoreResult,
 	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
@@ -84,6 +85,7 @@ export abstract class ControlEntityListPoolBase {
 			this.createVariablesAndExpressionParser.bind(this),
 			{
 				isInverted: this.updateIsInvertedValues.bind(this),
+				storeResult: this.updateStoreResultValues.bind(this),
 			}
 		)
 	}
@@ -648,6 +650,18 @@ export abstract class ControlEntityListPoolBase {
 		return true
 	}
 
+	/** Set where this action's result will be stored (if at all). */
+	entitySetRawStoreResult(listId: SomeSocketEntityLocation, id: string, target: RawStoreResult | undefined): boolean {
+		const entity = this.getEntityList(listId)?.findById(id)
+		if (!entity) return false
+
+		entity.setRawStoreResult(target)
+
+		this.reportChange({ redraw: true })
+
+		return true
+	}
+
 	/**
 	 * Set the local variable name for an entity
 	 * @param listId The list the entity is in
@@ -804,6 +818,15 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected abstract updateIsInvertedValues(
 		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
+	): void
+
+	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The new storeResult values
+	 */
+	protected abstract updateStoreResultValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>
 	): void
 
 	/**

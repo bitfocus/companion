@@ -144,6 +144,9 @@ export type InternalActionDefinition = SetOptional<
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions' | 'optionsToMonitorForInvalidations'>,
+	Omit<
+		ClientEntityDefinition,
+		'entityType' | 'hasLifecycleFunctions' | 'optionsToMonitorForInvalidations' | 'hasResult'
+	>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

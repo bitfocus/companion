@@ -4,6 +4,7 @@ import type {
 	EntityModelType,
 	EntityOwner,
 	FeedbackEntityStyleOverride,
+	RawStoreResult,
 	SomeEntityModel,
 	SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -72,6 +73,10 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			performLearn: undefined,
 			setEnabled: undefined,
 			setHeadline: undefined,
+
+			setRawStoreResult: (_entityId: string, _target: RawStoreResult | undefined) => {
+				// Not supported
+			},
 
 			setInverted: (_entityId: string, _inverted: ExpressionOrValue<boolean>) => {
 				// Not supported

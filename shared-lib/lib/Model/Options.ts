@@ -335,6 +335,12 @@ export type ExpressionableOptionsObject = {
 	[key: string]: ExpressionOrValue<JsonValue | undefined> | undefined
 }
 
+export type ExpressionValueType<ExprOrValue extends ExpressionOrValue<unknown>> = [ExprOrValue] extends [
+	ExpressionOrValue<infer Value>,
+]
+	? Value
+	: never
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function isExpressionOrValue(input: any): input is ExpressionOrValue<any> {
 	return !!input && typeof input === 'object' && 'isExpression' in input && typeof input.isExpression === 'boolean'

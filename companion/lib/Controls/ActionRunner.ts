@@ -5,6 +5,8 @@ import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
 /**
@@ -27,10 +29,19 @@ export class ActionRunner {
 
 	readonly #instanceController: InstanceController
 	readonly #internalModule: InternalController
+	readonly #variablesController: VariablesController
+	readonly #localVariablesController: LocalVariablesController
 
-	constructor(instanceController: InstanceController, internalModule: InternalController) {
+	constructor(
+		instanceController: InstanceController,
+		internalModule: InternalController,
+		variablesController: VariablesController,
+		localVariablesController: LocalVariablesController
+	) {
 		this.#instanceController = instanceController
 		this.#internalModule = internalModule
+		this.#variablesController = variablesController
+		this.#localVariablesController = localVariablesController
 	}
 
 	/**
@@ -55,7 +66,40 @@ export class ActionRunner {
 			result = await instance.actionRun(entityModel, extras)
 		}
 
-		void result
+		// Store the result if necessary, then return.
+		const storeResult = action.storeResult
+		if (!storeResult) return
+
+		switch (storeResult.type) {
+			case 'local-variable': {
+				const { location, variableName: name } = storeResult
+				const localVariable = this.#localVariablesController.localVariableFor(location, name, extras)
+				if (!localVariable) {
+					this.#logger.warn(`Local variable ${name} in location \`${location}\` is invalid`)
+					break
+				}
+
+				this.#localVariablesController.setLocalVariable(localVariable, result)
+				break
+			}
+			case 'custom-variable': {
+				const variableName = storeResult.variableName
+				if (variableName) {
+					const customVars = this.#variablesController.custom
+					if (customVars.hasCustomVariable(variableName)) {
+						customVars.setValue(variableName, result)
+					} else if (storeResult.createIfNotExists) {
+						customVars.createVariable(variableName, result)
+					} else {
+						this.#logger.warn(`Custom variable "${variableName}" not found`)
+					}
+				}
+				break
+			}
+			default:
+				this.#logger.warn(`Invalid store result target: ${JSON.stringify(storeResult)}`)
+				break
+		}
 	}
 
 	/**

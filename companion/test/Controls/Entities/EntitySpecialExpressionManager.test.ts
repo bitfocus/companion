@@ -13,7 +13,8 @@ import type {
 
 describe('EntityPoolSpecialExpressionManager', () => {
 	// Create mock functions
-	const mockUpdateFn = vi.fn<UpdateSpecialExpressionValuesFn<'isInverted'>>()
+	const mockUpdateIsInvertedFn = vi.fn<UpdateSpecialExpressionValuesFn<'isInverted'>>()
+	const mockUpdateStoreResultFn = vi.fn<UpdateSpecialExpressionValuesFn<'storeResult'>>()
 	let mockParseExpressionResult: ExecuteExpressionResult
 
 	const mockVariablesParser = {
@@ -48,7 +49,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 		// Create a new instance for each test
 		manager = new EntityPoolSpecialExpressionManager('control-1', mockCreateVariablesAndExpressionParser, {
-			isInverted: mockUpdateFn,
+			isInverted: mockUpdateIsInvertedFn,
+			storeResult: mockUpdateStoreResultFn,
 		})
 
 		vi.useFakeTimers()
@@ -62,7 +64,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -83,7 +85,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -104,7 +106,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -124,12 +126,12 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			manager.trackEntity(mockEntity1, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.trackEntity(mockEntity2, 'isInverted')
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -152,8 +154,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -191,7 +193,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			vi.runAllTimers()
 
 			expect(mockVariablesParser.executeExpression).toHaveBeenCalledWith('true && $(internal:test)', 'boolean')
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -218,7 +220,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -245,7 +247,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -272,7 +274,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -293,7 +295,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.forgetEntity('entity-1')
 
@@ -301,7 +303,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should do nothing if entity does not exist', () => {
@@ -309,7 +311,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should remove pending entity before processing', () => {
@@ -320,7 +322,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 
@@ -336,7 +338,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			// Change the expression result for re-processing
 			mockParseExpressionResult = {
@@ -348,7 +350,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -373,12 +375,12 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.onVariablesChanged(new Set(['unrelated-var']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should not invalidate entities without expressions', () => {
@@ -386,12 +388,12 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should invalidate multiple entities that reference the same variable', () => {
@@ -407,7 +409,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			manager.trackEntity(mockEntity1, 'isInverted')
 			manager.trackEntity(mockEntity2, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			// Change the expression result for re-processing
 			mockParseExpressionResult = {
@@ -419,8 +421,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			manager.onVariablesChanged(new Set(['shared-var']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -458,7 +460,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			vi.runAllTimers()
 
 			// Should only be called once despite both trackEntity and onVariablesChanged
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
 		})
 	})
 
@@ -471,7 +473,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should prevent new entities from being processed after destroy', () => {
@@ -482,7 +484,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should prevent variable changes from triggering processing after destroy', () => {
@@ -496,14 +498,14 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.destroy()
 
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 
@@ -519,7 +521,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			// that the code handles the case where deref() returns undefined
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
 		})
 	})
 
@@ -536,8 +538,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			vi.runAllTimers()
 
 			// All three should be processed in a single batch
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
-			const call = mockUpdateFn.mock.calls[0][0]
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			const call = mockUpdateIsInvertedFn.mock.calls[0][0]
 			expect(call.size).toBe(3)
 		})
 
@@ -548,11 +550,11 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			// Advance time less than debounce wait
 			vi.advanceTimersByTime(5)
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 
 			// Advance time past debounce wait
 			vi.advanceTimersByTime(10)
-			expect(mockUpdateFn).toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
 		})
 	})
 
@@ -596,7 +598,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -623,7 +625,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -650,7 +652,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
 				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
@@ -670,7 +672,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 })

@@ -466,6 +466,19 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The new storeResult values
+	 */
+	override updateStoreResultValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>): void {
+		for (const step of this.#steps.values()) {
+			for (const set of step.sets.values()) {
+				set.updateStoreResultValues(newValues)
+			}
+		}
+	}
+
+	/**
 	 * Propagate variable changes
 	 */
 	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
