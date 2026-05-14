@@ -88,7 +88,9 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const [localDisplayValue, setLocalDisplayValue] = useState<DropdownChoiceId>(value)
 	useEffect(() => setLocalDisplayValue(value), [value])
 
-	const { currentItem, effectiveItems, filteredItems } = useDropdownComboboxItems({
+	const isKnownValue = !!allowCustom || flatItems.length === 0 || flatItems.some((o) => o.id == localDisplayValue)
+
+	const { effectiveItems, filteredItems } = useDropdownComboboxItems({
 		allItems,
 		flatItems,
 		localDisplayValue,
@@ -161,7 +163,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		<div
 			className={classNames(
 				'dropdown-field',
-				{ 'dropdown-field-invalid': !!checkValid && !checkValid(currentItem.id) },
+				{ 'dropdown-field-invalid': !isKnownValue || (!!checkValid && !checkValid(localDisplayValue)) },
 				className
 			)}
 			title={tooltip}
@@ -180,7 +182,9 @@ export const DropdownInputField = observer(function DropdownInputField({
 						? (controlledInputValue ??
 							flatItems.find((o) => o.id == localDisplayValue)?.label ??
 							String(localDisplayValue))
-						: undefined
+						: disableEditingCustom && allowCustom
+							? inputValue
+							: undefined
 				}
 				itemToStringLabel={(id: DropdownChoiceId) => {
 					if (disableEditingCustom && allowCustom) return ''

@@ -375,12 +375,6 @@ table .td-reorder {
 	align-self: center;
 }
 
-.select-control {
-	// avoid blowout
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-}
-
 .searchbox {
 	margin-bottom: 0.5rem;
 }

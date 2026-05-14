@@ -42,6 +42,8 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 	const menuPortal = useContext(MenuPortalContext)
 	const { options, flatOptions } = useDropdownChoicesForSelect(choices as DropdownChoicesOrGroups)
 
+	const flatItems = useMemo(() => flatOptions.map((o) => ({ value: o.value, label: o.label })), [flatOptions])
+
 	const onChange = useCallback(
 		(v: DropdownChoiceId | null) => {
 			setValue(v as DropdownChoiceId)
@@ -49,24 +51,19 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 		[setValue]
 	)
 
-	const stringValue = String(value)
-	const stringFlatOptions = useMemo(
-		() => flatOptions.map((o) => ({ value: String(o.value), label: o.label })),
-		[flatOptions]
-	)
-	const isKnownValue = stringFlatOptions.some((o) => o.value === stringValue) || options.length === 0
+	const isKnownValue = flatItems.some((o) => o.value === value) || options.length === 0
 	const itemsForLookup = useMemo(
 		() =>
 			isKnownValue
-				? stringFlatOptions
+				? flatItems
 				: [
-						...stringFlatOptions,
+						...flatItems,
 						{
-							value: stringValue,
-							label: badOptionPrefix ? `${badOptionPrefix}: ${stringValue}` : `?? (${stringValue})`,
+							value,
+							label: badOptionPrefix ? `${badOptionPrefix}: ${value}` : `?? (${value})`,
 						},
 					],
-		[isKnownValue, stringFlatOptions, stringValue, badOptionPrefix]
+		[isKnownValue, flatItems, value, badOptionPrefix]
 	)
 
 	const noOptionsMessageFull = noOptionsMessage || 'No options available'
@@ -84,7 +81,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 		>
 			<Select.Root<DropdownChoiceId>
 				id={id}
-				value={options.length === 0 ? '' : stringValue}
+				value={options.length === 0 ? null : value}
 				onValueChange={onChange}
 				items={itemsForLookup}
 				disabled={disabled}
@@ -107,6 +104,13 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 										<Select.ItemText>{noOptionsMessageFull}</Select.ItemText>
 									</Select.Item>
 								)}
+								{!isKnownValue && (
+									<Select.Item key={`bad-option-${String(value)}`} value={value} className="dropdown-field-item">
+										<Select.ItemText>
+											{badOptionPrefix ? `${badOptionPrefix}: ${value}` : `?? (${value})`}
+										</Select.ItemText>
+									</Select.Item>
+								)}
 								{options.map((item) => {
 									if ('options' in item) {
 										return (
@@ -114,8 +118,8 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 												<Select.GroupLabel className="dropdown-field-group-label">{item.label}</Select.GroupLabel>
 												{item.options.map((opt) => (
 													<Select.Item
-														key={String(opt.value)}
-														value={String(opt.value)}
+														key={JSON.stringify(opt.value)}
+														value={opt.value}
 														className="dropdown-field-item"
 													>
 														<Select.ItemText>{opt.label}</Select.ItemText>
@@ -125,7 +129,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 										)
 									}
 									return (
-										<Select.Item key={String(item.value)} value={String(item.value)} className="dropdown-field-item">
+										<Select.Item key={JSON.stringify(item.value)} value={item.value} className="dropdown-field-item">
 											<Select.ItemText>{item.label}</Select.ItemText>
 										</Select.Item>
 									)

@@ -51,7 +51,7 @@ const toReturnType = <T extends 'string' | 'number'>(
 	enableAlpha: boolean | undefined
 ): AsType<T> => {
 	if (returnType === 'string') {
-		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a})` as any // TODO - typings
+		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a ?? 1})` as any // TODO - typings
 	} else {
 		let colorNumber = parseInt(value.hex.slice(1, 7), 16)
 		if (enableAlpha && value.rgb.a !== undefined && value.rgb.a !== 1) {

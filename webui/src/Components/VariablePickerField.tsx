@@ -71,6 +71,8 @@ export const VariablePickerField = observer(function VariablePickerField({
 	const [localDisplayValue, setLocalDisplayValue] = useState<DropdownChoiceId>(value)
 	useEffect(() => setLocalDisplayValue(value), [value])
 
+	const isKnownValue = flatItems.length === 0 || flatItems.some((o) => o.id == localDisplayValue)
+
 	const { effectiveItems, filteredItems } = useDropdownComboboxItems({
 		allItems,
 		flatItems,
@@ -142,7 +144,9 @@ export const VariablePickerField = observer(function VariablePickerField({
 	)
 
 	return (
-		<div className={classNames('dropdown-field', className)}>
+		<div
+			className={classNames('dropdown-field', { 'dropdown-field-warning': !!allowCustom && !isKnownValue }, className)}
+		>
 			<Combobox.Root<DropdownChoiceId>
 				virtualized={!hasGroups}
 				autoHighlight

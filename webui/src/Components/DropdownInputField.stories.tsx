@@ -75,17 +75,3 @@ export const GroupedChoices: Story = {
 		value: 'apple',
 	},
 }
-
-/** FancyFormat uses a custom option renderer that shows the variable name and description on two lines */
-export const FancyFormat: Story = {
-	args: {
-		fancyFormat: true,
-		choices: [
-			{ id: 'internal:time_hms', label: 'Current time (HH:MM:SS)' },
-			{ id: 'internal:date_y', label: 'Current year' },
-			{ id: 'internal:uptime', label: 'Time since last restart' },
-		],
-		value: 'internal:time_hms',
-		allowCustom: false,
-	},
-}

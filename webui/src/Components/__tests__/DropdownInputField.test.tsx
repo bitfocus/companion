@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { DropdownChoicesOrGroups } from '../DropdownChoices.js'
@@ -108,6 +108,35 @@ describe('Rendering (static)', () => {
 
 	it('does not apply dropdown-field-invalid class when no checkValid is provided', () => {
 		const { container } = renderField()
+		expect(container.querySelector('.dropdown-field-invalid')).toBeNull()
+	})
+
+	it('applies dropdown-field-invalid when value is not in choices and no checkValid', () => {
+		const { container } = renderField({ initialValue: 'unknown-id' as DropdownChoiceId })
+		expect(container.querySelector('.dropdown-field-invalid')).toBeTruthy()
+	})
+
+	it('applies dropdown-field-invalid for unknown value even when checkValid returns true', () => {
+		const { container } = renderField({
+			initialValue: 'unknown-id' as DropdownChoiceId,
+			checkValid: () => true,
+		})
+		expect(container.querySelector('.dropdown-field-invalid')).toBeTruthy()
+	})
+
+	it('does not apply dropdown-field-invalid for unknown value when there are no options', () => {
+		const { container } = renderField({
+			choices: [],
+			initialValue: 'unknown-id' as DropdownChoiceId,
+		})
+		expect(container.querySelector('.dropdown-field-invalid')).toBeNull()
+	})
+
+	it('does not apply dropdown-field-invalid for a custom value not in choices when allowCustom=true', () => {
+		const { container } = renderField({
+			initialValue: 'my-custom' as DropdownChoiceId,
+			allowCustom: true,
+		})
 		expect(container.querySelector('.dropdown-field-invalid')).toBeNull()
 	})
 })

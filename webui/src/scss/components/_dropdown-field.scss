@@ -174,6 +174,12 @@
 		}
 	}
 
+	&.dropdown-field-warning {
+		.dropdown-field-input-group {
+			border-color: var(--cui-warning);
+		}
+	}
+
 	.dropdown-field-multi-input-group {
 		height: auto;
 		min-height: calc(var(--cui-body-font-size) * var(--cui-body-line-height) + 0.375rem * 2 + 2px);

@@ -1,11 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { DropdownChoicesOrGroups } from '../DropdownChoices.js'
-import { MultiDropdownInputField } from '../MultiDropdownInputField.js'
 import { MenuPortalContext } from '../MenuPortalContext.js'
+import { MultiDropdownInputField } from '../MultiDropdownInputField.js'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -105,13 +105,13 @@ describe('Rendering (static)', () => {
 	})
 
 	it('shows a ?? (id) pill for an unknown value when allowCustom is false', () => {
-		const { container } = renderField({ initialValue: ['unknown-id' as DropdownChoiceId] })
+		const { container } = renderField({ initialValue: ['unknown-id'] })
 		const pills = container.querySelectorAll('.dropdown-field-pill-label')
 		expect(pills[0]?.textContent).toBe('?? (unknown-id)')
 	})
 
 	it('shows the raw value pill when allowCustom is true and value not in choices', () => {
-		const { container } = renderField({ initialValue: ['my-custom' as DropdownChoiceId], allowCustom: true })
+		const { container } = renderField({ initialValue: ['my-custom'], allowCustom: true })
 		const pills = container.querySelectorAll('.dropdown-field-pill-label')
 		expect(pills[0]?.textContent).toBe('my-custom')
 	})
@@ -309,12 +309,12 @@ describe('allowCustom', () => {
 
 describe('minSelection / maxSelection', () => {
 	it('disables pill remove buttons when at minSelection', () => {
-		const { container } = renderField({ minSelection: 1, initialValue: ['apple'] })
+		renderField({ minSelection: 1, initialValue: ['apple'] })
 		expect(screen.getByRole('button', { name: 'Remove Apple' })).toBeDisabled()
 	})
 
 	it('enables pill remove buttons when above minSelection', () => {
-		const { container } = renderField({ minSelection: 1, initialValue: ['apple', 'banana'] })
+		renderField({ minSelection: 1, initialValue: ['apple', 'banana'] })
 		expect(screen.getByRole('button', { name: 'Remove Apple' })).not.toBeDisabled()
 	})
 

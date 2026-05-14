@@ -366,8 +366,6 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 		return choices
 	}, [baseVariableDefinitions, localVariableDefinitions])
 
-	const hasMatch = choices.find((c) => c.id === value)
-
 	const onPasteIntercept = useCallback((pastedValue: string) => {
 		let value = pastedValue.trim()
 		if (value.length === 0) return pastedValue
@@ -380,7 +378,6 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 
 	return (
 		<VariablePickerField
-			className={hasMatch ? '' : 'select-warning'}
 			disabled={disabled}
 			value={value ?? ''}
 			choices={choices}

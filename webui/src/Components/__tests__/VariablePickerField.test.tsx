@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { DropdownChoicesOrGroups } from '../DropdownChoices.js'
 import { MenuPortalContext } from '../MenuPortalContext.js'
@@ -38,8 +38,8 @@ function ControlledPicker({
 				{...rest}
 				value={value}
 				setValue={(v) => {
-					setValue(v)
-					externalSetValue?.(v)
+					setValue(v as string)
+					externalSetValue?.(v as string)
 				}}
 			/>
 		</MenuPortalContext.Provider>
@@ -72,6 +72,26 @@ describe('Rendering (static)', () => {
 	it('has a disabled input when disabled=true', () => {
 		const { input } = renderPicker({ disabled: true })
 		expect(input).toBeDisabled()
+	})
+
+	it('does not apply dropdown-field-warning when value is in choices', () => {
+		const { container } = renderPicker({ allowCustom: true })
+		expect(container.querySelector('.dropdown-field-warning')).toBeNull()
+	})
+
+	it('applies dropdown-field-warning when allowCustom=true and value is not in choices', () => {
+		const { container } = renderPicker({ allowCustom: true, initialValue: 'missing:variable' })
+		expect(container.querySelector('.dropdown-field-warning')).toBeTruthy()
+	})
+
+	it('does not apply dropdown-field-warning when allowCustom=false and value is not in choices', () => {
+		const { container } = renderPicker({ allowCustom: false, initialValue: 'missing:variable' })
+		expect(container.querySelector('.dropdown-field-warning')).toBeNull()
+	})
+
+	it('does not apply dropdown-field-warning when there are no options', () => {
+		const { container } = renderPicker({ allowCustom: true, choices: [], initialValue: 'missing:variable' })
+		expect(container.querySelector('.dropdown-field-warning')).toBeNull()
 	})
 })
 
@@ -306,6 +326,7 @@ describe('Grouped choices — interactions', () => {
 		const { user, input } = renderPicker({ choices: GROUPED, initialValue: 'g1:alpha' })
 		await user.click(input)
 		await user.clear(input)
+		// typos:disable-line
 		await user.type(input, 'Alph')
 		const list = getListbox()
 		expect(within(list).queryByText('Group Two')).toBeNull()
