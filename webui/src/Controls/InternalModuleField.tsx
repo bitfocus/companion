@@ -11,6 +11,7 @@ import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { PngImageInputField } from '~/Components/PngImageInputField.js'
+import { VariablePickerField } from '~/Components/VariablePickerField.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 import { useComputed } from '~/Resources/util.js'
 import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
@@ -317,15 +318,7 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		return groupsOrItems
 	}, [customVariables, includeNone])
 
-	return (
-		<DropdownInputField
-			disabled={disabled}
-			value={value ?? ''}
-			choices={choices}
-			setValue={setValue}
-			fancyFormat={true}
-		/>
-	)
+	return <VariablePickerField disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
 })
 
 interface InternalVariableDropdownProps {
@@ -386,7 +379,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 	}, [])
 
 	return (
-		<DropdownInputField
+		<VariablePickerField
 			className={hasMatch ? '' : 'select-warning'}
 			disabled={disabled}
 			value={value ?? ''}
@@ -395,7 +388,6 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 			regex="/^([\w-_]+):([a-zA-Z0-9-_\.]+)$/"
 			allowCustom /* Allow specifying a variable which doesnt currently exist, perhaps as something is offline */
 			onPasteIntercept={onPasteIntercept}
-			fancyFormat={true}
 		/>
 	)
 })

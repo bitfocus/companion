@@ -27,9 +27,7 @@ interface RenderOptions {
 	regex?: string
 	disabled?: boolean
 	onBlur?: () => void
-	onPasteIntercept?: (v: string) => string
 	checkValid?: (v: DropdownChoiceId) => boolean
-	fancyFormat?: boolean
 	searchLabelsOnly?: boolean
 }
 
@@ -231,6 +229,7 @@ describe('Fuzzy filtering', () => {
 	it('shows empty message when no options match', async () => {
 		const { user, input } = renderField()
 		await user.click(input)
+		await user.clear(input)
 		await user.type(input, 'zzzzz')
 		expect(screen.getByText('No options found.')).toBeInTheDocument()
 	})
@@ -239,6 +238,7 @@ describe('Fuzzy filtering', () => {
 		// regex ensures 'zzzzz' fails validation → no synthetic item → filteredItems empty → Empty renders
 		const { user, input } = renderField({ allowCustom: true, regex: '/^\\d+$/' })
 		await user.click(input)
+		await user.clear(input)
 		await user.type(input, 'zzzzz')
 		expect(screen.getAllByText('Begin typing to use a custom value').length).toBeGreaterThan(0)
 	})
@@ -246,6 +246,7 @@ describe('Fuzzy filtering', () => {
 	it('matches by id when searchLabelsOnly=false', async () => {
 		const { user, input } = renderField({ searchLabelsOnly: false })
 		await user.click(input)
+		await user.clear(input)
 		await user.type(input, 'apple')
 		const list = getListbox()
 		expect(within(list).getByText('Apple')).toBeInTheDocument()
@@ -392,75 +393,69 @@ describe('onBlur callback', () => {
 })
 
 // ---------------------------------------------------------------------------
-// onPasteIntercept
+// Grouped choices — interactions
 // ---------------------------------------------------------------------------
 
-describe('onPasteIntercept', () => {
-	it('transforms pasted text using onPasteIntercept', async () => {
-		const setValue = vi.fn()
-		const { user, input } = renderField({
-			allowCustom: true,
-			disableEditingCustom: false,
-			setValue,
-			onPasteIntercept: (v) => v.toUpperCase(),
-		})
-		await user.click(input)
-		await user.clear(input)
-		await user.paste('hello')
-		// The intercept uppercases the value, so the synthetic item should show the transformed string
-		expect(screen.getByText(/Use "HELLO"/)).toBeInTheDocument()
-	})
-
-	it('does not double-fire when onPasteIntercept returns unchanged value', async () => {
-		const onPasteIntercept = vi.fn((v: string) => v)
-		const { user, input } = renderField({
-			allowCustom: true,
-			disableEditingCustom: false,
-			onPasteIntercept,
-		})
-		await user.click(input)
-		await user.clear(input)
-		await user.paste('apple')
-		expect(onPasteIntercept).toHaveBeenCalledTimes(1)
-	})
-})
-
-// ---------------------------------------------------------------------------
-// fancyFormat
-// ---------------------------------------------------------------------------
-
-describe('fancyFormat=true', () => {
-	const fancyChoices = [
-		{ id: 'internal:time_hms', label: 'Current time (HH:MM:SS)' },
-		{ id: 'internal:date_y', label: 'Current year' },
+describe('Grouped choices — interactions', () => {
+	const GROUPED = [
+		{
+			label: 'Fruits',
+			options: [
+				{ id: 'apple', label: 'Apple' },
+				{ id: 'apricot', label: 'Apricot' },
+			],
+		},
+		{
+			label: 'Veggies',
+			options: [
+				{ id: 'carrot', label: 'Carrot' },
+				{ id: 'celery', label: 'Celery' },
+			],
+		},
 	]
 
-	it('renders two lines per item: var-name (id) and var-label (label)', async () => {
-		const user = userEvent.setup()
-		render(
-			<MenuPortalContext.Provider value={document.body}>
-				<DropdownInputField choices={fancyChoices} value="internal:time_hms" setValue={vi.fn()} fancyFormat />
-			</MenuPortalContext.Provider>
-		)
+	it('calls setValue with the correct id when selecting an item from inside a group', async () => {
+		const setValue = vi.fn()
+		const { user } = renderField({ choices: GROUPED, setValue, initialValue: 'apple' })
 		await user.click(screen.getByRole('button'))
-		const list = getListbox()
-		expect(list.querySelector('.var-name')).toBeInTheDocument()
-		expect(list.querySelector('.var-label')).toBeInTheDocument()
+		await user.click(within(getListbox()).getByText('Carrot'))
+		expect(setValue).toHaveBeenCalledWith('carrot')
 	})
 
-	it('searches both id and label (searchLabelsOnly forced false)', async () => {
-		const user = userEvent.setup()
-		render(
-			<MenuPortalContext.Provider value={document.body}>
-				<DropdownInputField choices={fancyChoices} value="internal:time_hms" setValue={vi.fn()} fancyFormat />
-			</MenuPortalContext.Provider>
-		)
-		const input = screen.getByRole('combobox')
+	it('displays the label of a value that lives inside a group', () => {
+		const { input } = renderField({ choices: GROUPED, initialValue: 'carrot' })
+		expect(input).toHaveValue('Carrot')
+	})
+
+	it('removes an entire group from the popup when none of its items match the filter', async () => {
+		const { user, input } = renderField({ choices: GROUPED, initialValue: 'apple' })
 		await user.click(input)
 		await user.clear(input)
-		await user.type(input, 'internal:date')
+		await user.type(input, 'appl')
 		const list = getListbox()
-		expect(within(list).getByText('Current year')).toBeInTheDocument()
-		expect(within(list).queryByText('Current time (HH:MM:SS)')).toBeNull()
+		expect(within(list).queryByText('Veggies')).toBeNull()
+	})
+
+	it('keeps a group in the popup but hides non-matching items within it', async () => {
+		const { user, input } = renderField({ choices: GROUPED, initialValue: 'apple' })
+		await user.click(input)
+		await user.clear(input)
+		await user.type(input, 'cel')
+		const list = getListbox()
+		expect(within(list).getByText('Celery')).toBeInTheDocument()
+		expect(within(list).queryByText('Carrot')).toBeNull()
+	})
+
+	it('still shows the synthetic "Use X" item when allowCustom=true and choices are all grouped', async () => {
+		const { user, input } = renderField({
+			choices: GROUPED,
+			allowCustom: true,
+			disableEditingCustom: false,
+			initialValue: 'apple',
+		})
+		await user.click(input)
+		await user.clear(input)
+		await user.type(input, 'custom-grouped')
+		expect(screen.getByText(/Use "custom-grouped"/)).toBeInTheDocument()
 	})
 })

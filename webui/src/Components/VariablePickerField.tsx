@@ -10,42 +10,36 @@ import { useDropdownComboboxItems } from './DropdownInputField/useDropdownCombob
 import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
-interface DropdownInputFieldProps {
-	htmlName?: string
+interface VariablePickerFieldProps {
 	className?: string
 	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean
-	disableEditingCustom?: boolean
-	tooltip?: string
 	regex?: string
 	value: DropdownChoiceId
 	setValue: (value: DropdownChoiceId) => void
 	disabled?: boolean
-	onBlur?: () => void
-	checkValid?: (value: DropdownChoiceId) => boolean
-	searchLabelsOnly?: boolean
+	onPasteIntercept?: (value: string) => string
 }
 
-export const DropdownInputField = observer(function DropdownInputField({
-	htmlName,
+/**
+ * A specialised dropdown field component, intended for picking variables
+ * This means it displays in a "fancy" way with both variable id and label, and searches both fields as well.
+ */
+export const VariablePickerField = observer(function VariablePickerField({
 	className,
 	choices,
 	allowCustom,
-	disableEditingCustom,
-	tooltip,
 	regex,
 	value,
 	setValue,
 	disabled,
-	onBlur,
-	checkValid,
-	searchLabelsOnly = true,
-}: DropdownInputFieldProps): React.JSX.Element {
+	onPasteIntercept,
+}: VariablePickerFieldProps): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 
-	const { allItems, flatItems } = useFuzzyChoices(choices, searchLabelsOnly)
+	// Always search both label and id for variable pickers
+	const { allItems, flatItems } = useFuzzyChoices(choices, false)
 
-	// The popup doesn't handle groups whwn virtualised, so detect if there are any groups
 	const hasGroups = allItems.some((item) => 'items' in item)
 
 	// Compile the regex for custom value validation
@@ -59,12 +53,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const isValidCustom = useCallback((input: string) => !compiledRegex || !!input.match(compiledRegex), [compiledRegex])
 
-	// Input value for fuzzy filtering
 	const [inputValue, setInputValue] = useState('')
 
-	// In editing mode the Combobox.Input is controlled so the user can edit the raw value.
-	// undefined = not in editing mode (input is uncontrolled / driven by the Combobox).
-	// string   = focused in editing mode; the ref mirrors it for stale-closure-free reads.
 	const [controlledInputValue, setControlledInputValue] = useState<string | undefined>(undefined)
 	const controlledInputValueRef = useRef<string | undefined>(undefined)
 
@@ -75,20 +65,13 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const triggerRef = useRef<HTMLButtonElement>(null)
 
-	// Editing mode: when allowCustom=true and disableEditingCustom=false, focusing the field
-	// pre-fills the input with the raw value so it can be edited directly like a text field.
-	const isEditingMode = !disableEditingCustom && !!allowCustom
+	// isEditingMode: always true when allowCustom (no disableEditingCustom concept here)
+	const isEditingMode = !!allowCustom
 
-	// localDisplayValue mirrors the committed value but is updated synchronously on selection,
-	// staying one render ahead of the parent prop. Without this, selecting "Use XX" clears
-	// inputValue immediately while the parent's MobX value hasn't propagated yet, causing a
-	// flash of the old label.
-	// prevValueProp is not a real value — it is only used to detect when the parent prop
-	// changes so we can reset localDisplayValue (standard React derived-state pattern).
 	const [localDisplayValue, setLocalDisplayValue] = useState<DropdownChoiceId>(value)
 	useEffect(() => setLocalDisplayValue(value), [value])
 
-	const { currentItem, effectiveItems, filteredItems } = useDropdownComboboxItems({
+	const { effectiveItems, filteredItems } = useDropdownComboboxItems({
 		allItems,
 		flatItems,
 		localDisplayValue,
@@ -106,8 +89,6 @@ export const DropdownInputField = observer(function DropdownInputField({
 				setValue(newId)
 				setControlledInput(undefined)
 				setInputValue('')
-
-				// Shift focus to the trigger
 				triggerRef.current?.focus()
 			}
 		},
@@ -117,10 +98,6 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const onInputValueChange = useCallback(
 		(v: string, eventDetails: Combobox.Root.ChangeEventDetails) => {
 			setInputValue(v)
-			// Only mirror into the controlled value when the user is actually typing.
-			// When base-ui resets the input (e.g. popup close, item selection), the reason
-			// is 'none' or 'item-press' — in those cases we must NOT overwrite the raw id
-			// that was pre-filled on focus.
 			if (controlledInputValueRef.current !== undefined && eventDetails.reason === 'input-change') {
 				setControlledInput(v)
 			}
@@ -128,44 +105,44 @@ export const DropdownInputField = observer(function DropdownInputField({
 		[setControlledInput]
 	)
 
-	// On focus in editing mode: pre-fill the controlled input value with the raw id so it can be
-	// edited directly. The controlled inputValue prop on Combobox.Root takes over from base-ui's
-	// itemToStringLabel-based display.
 	const onInputFocus = useCallback(() => {
 		if (!isEditingMode) return
 		setControlledInput(String(localDisplayValue))
 	}, [isEditingMode, localDisplayValue, setControlledInput])
 
-	// On blur: if in editing mode and no item was selected via onValueChange, commit the
-	// current input text as the new value. In search-only mode (disableEditingCustom=true),
-	// just reset the filter and focus state.
 	const onInputBlur = useCallback(() => {
 		if (isEditingMode && controlledInputValueRef.current !== undefined) {
 			setValue(controlledInputValueRef.current)
 			setControlledInput(undefined)
 			setInputValue('')
-		} else if (!isEditingMode && allowCustom) {
-			setInputValue('')
 		}
-		onBlur?.()
-	}, [isEditingMode, allowCustom, setValue, setControlledInput, onBlur])
+	}, [isEditingMode, setValue, setControlledInput])
 
-	// In disableEditingCustom mode, when focused the input is cleared for searching but the
-	// current value is shown as a placeholder so the user knows what's selected.
-	const inputPlaceholder = useMemo(() => {
-		if (!disableEditingCustom || !allowCustom) return undefined
-		return flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)
-	}, [disableEditingCustom, allowCustom, localDisplayValue, flatItems])
+	// Paste interception: transforms the pasted value and dispatches a native input event so
+	// base-ui picks up the change via onInputValueChange.
+	const onPaste = useCallback(
+		(e: React.ClipboardEvent<HTMLInputElement>) => {
+			if (!onPasteIntercept || !e.clipboardData) return
+			const rawValue = e.clipboardData.getData('text')
+			const newValue = onPasteIntercept(rawValue)
+
+			// Nothing changed, let default behaviour happen
+			if (newValue === rawValue) return
+
+			e.preventDefault()
+
+			const target = e.currentTarget
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
+			nativeInputValueSetter.call(target, newValue)
+
+			target.dispatchEvent(new Event('input', { bubbles: true }))
+		},
+		[onPasteIntercept]
+	)
 
 	return (
-		<div
-			className={classNames(
-				'dropdown-field',
-				{ 'dropdown-field-invalid': !!checkValid && !checkValid(currentItem.id) },
-				className
-			)}
-			title={tooltip}
-		>
+		<div className={classNames('dropdown-field', className)}>
 			<Combobox.Root<DropdownChoiceId>
 				virtualized={!hasGroups}
 				autoHighlight
@@ -175,31 +152,22 @@ export const DropdownInputField = observer(function DropdownInputField({
 				disabled={disabled}
 				onValueChange={onValueChange}
 				onInputValueChange={onInputValueChange}
-				inputValue={
-					isEditingMode
-						? (controlledInputValue ??
-							flatItems.find((o) => o.id == localDisplayValue)?.label ??
-							String(localDisplayValue))
-						: undefined
-				}
-				itemToStringLabel={(id: DropdownChoiceId) => {
-					if (disableEditingCustom && allowCustom) return ''
-					const item = flatItems.find((o) => o.id == id)
-					if (item) return item.label
-					const strId = String(id)
-					if (!allowCustom && strId) return `?? (${strId})`
-					return strId
-				}}
+				inputValue={isEditingMode ? (controlledInputValue ?? String(localDisplayValue)) : undefined}
+				itemToStringLabel={(id: DropdownChoiceId) => String(id)}
 			>
 				<Combobox.InputGroup className="dropdown-field-input-group">
+					{' '}
+					<div className="dropdown-field-fancy-display" aria-hidden="true">
+						<div className="var-name">{String(localDisplayValue) || '\u00A0'}</div>
+						<div className="var-label">
+							{(flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)) || '\u00A0'}
+						</div>
+					</div>{' '}
 					<Combobox.Input
-						className={classNames('dropdown-field-input', {
-							'dropdown-field-input-value-placeholder': inputPlaceholder !== undefined,
-						})}
-						name={htmlName}
-						placeholder={inputPlaceholder}
+						className="dropdown-field-input variable-dropdown-edit"
 						onFocus={onInputFocus}
 						onBlur={onInputBlur}
+						onPaste={onPaste}
 					/>
 					<Combobox.Trigger className="dropdown-field-trigger" ref={triggerRef}>
 						<ChevronDownIcon className="dropdown-field-icon" />
@@ -210,6 +178,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 					menuPortal={menuPortal ?? undefined}
 					noOptionsMessage={allowCustom ? 'Begin typing to use a custom value' : undefined}
 					showIndicator={!!allowCustom}
+					fancyFormat={true}
 					virtualized={!hasGroups}
 				/>
 			</Combobox.Root>

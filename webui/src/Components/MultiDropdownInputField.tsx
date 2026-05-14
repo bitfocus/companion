@@ -5,17 +5,11 @@ import { ChevronDownIcon, XIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useState } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import {
-	DropdownInputPopup,
-	type DropdownChoiceWithMeta,
-	type DropdownGroupBase,
-} from '~/Components/DropdownInputField/Popup.js'
+import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
+import { useFuzzyChoices, type FuzzyChoice, type FuzzyGroup } from '~/Components/DropdownInputField/useFuzzyChoices.js'
 import { useComputed } from '~/Resources/util.js'
 import type { DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
-
-type FuzzyChoice = DropdownChoiceWithMeta & { fuzzy: ReturnType<typeof fuzzyPrepare> }
-type FuzzyGroup = DropdownGroupBase & { items: FuzzyChoice[] }
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -55,38 +49,8 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	if (value === undefined) value = []
 
 	// Convert DropdownChoicesOrGroups -> base-ui Combobox format (choices may be mobx proxies)
-	const { allItems, flatItems } = useComputed(() => {
-		const flatItems: FuzzyChoice[] = []
-		const allItems: Array<FuzzyChoice | FuzzyGroup> = []
-
-		const toFuzzy = (c: DropdownChoice): FuzzyChoice => ({
-			id: c.id,
-			label: String(c.label),
-			fuzzy: fuzzyPrepare(String(c.label)),
-		})
-
-		if (Array.isArray(choices)) {
-			for (const item of choices) {
-				if ('options' in item) {
-					const opts = item.options.map(toFuzzy)
-					allItems.push({ id: String(item.label), label: String(item.label), items: opts })
-					flatItems.push(...opts)
-				} else {
-					const f = toFuzzy(item)
-					allItems.push(f)
-					flatItems.push(f)
-				}
-			}
-		} else if (typeof choices === 'object') {
-			for (const choice of Object.values(choices)) {
-				const f = toFuzzy(choice)
-				allItems.push(f)
-				flatItems.push(f)
-			}
-		}
-
-		return { allItems, flatItems }
-	}, [choices])
+	// Always search labels only for multi-dropdown (no id-based search needed)
+	const { allItems, flatItems } = useFuzzyChoices(choices, true)
 
 	// The popup doesn't handle groups whwn virtualised, so detect if there are any groups
 	const hasGroups = allItems.some((item) => 'items' in item)
