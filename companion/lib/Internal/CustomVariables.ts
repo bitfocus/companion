@@ -10,6 +10,10 @@
  */
 
 import { EventEmitter } from 'node:events'
+import {
+	CustomVariableCreateIfNotExistsOption,
+	CustomVariableSelectorOption,
+} from '@companion-app/shared/CustomVariable.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
@@ -44,20 +48,8 @@ export class InternalCustomVariables
 				label: 'Custom Variable: Set value',
 				description: undefined,
 				options: [
-					{
-						type: 'internal:custom_variable',
-						label: 'Custom variable',
-						id: 'name',
-						expressionDescription:
-							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
-					},
-					{
-						type: 'checkbox',
-						label: 'Create if not exists',
-						id: 'create',
-						default: false,
-						disableAutoExpression: true,
-					},
+					CustomVariableSelectorOption,
+					CustomVariableCreateIfNotExistsOption,
 					{
 						type: 'textinput',
 						label: 'Value',
