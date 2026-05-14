@@ -1,6 +1,5 @@
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
 export function ParseLocationString(
 	str: string | null | undefined,
@@ -90,15 +89,4 @@ export function ParseLocationString(
 	} else {
 		return null
 	}
-}
-
-export const CHOICES_LOCATION: SomeCompanionInputField = {
-	type: 'textinput',
-	label: 'Location',
-	description:
-		'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column). "this" can also be used to reference the current control',
-	expressionDescription: 'eg `1/0/0`, `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`, `this`',
-	id: 'location',
-	default: '$(this:page)/$(this:row)/$(this:column)',
-	useVariables: CompanionFieldVariablesSupport.InternalParser,
 }

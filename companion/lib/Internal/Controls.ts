@@ -12,6 +12,7 @@
 import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
@@ -38,7 +39,7 @@ import type {
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
+import { ParseLocationString } from './Util.js'
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
@@ -141,7 +142,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Force press if already pressed',
@@ -157,7 +158,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Force press if already pressed',
@@ -173,7 +174,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Force release even if currently pressed',
@@ -189,14 +190,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				label: 'Button: Trigger rotate left',
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
-				options: [CHOICES_LOCATION],
+				options: [ControlLocationOption],
 				optionsSupportExpressions: true,
 			},
 			button_rotate_right: {
 				label: 'Button: Trigger rotate right',
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
-				options: [CHOICES_LOCATION],
+				options: [ControlLocationOption],
 				optionsSupportExpressions: true,
 			},
 
@@ -206,7 +207,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					"Avoid this if you can. It's better to either set the text to a custom variable, or to use a feedback to dynamically override the text",
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Button Text',
@@ -221,7 +222,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'colorpicker',
 						label: 'Text Color',
@@ -239,7 +240,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'colorpicker',
 						label: 'Background Color',
@@ -259,7 +260,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				showButtonPreview: true,
 				options: [
 					{
-						...CHOICES_LOCATION,
+						...ControlLocationOption,
 						description:
 							'In the format 1/0/0. You can also use this-run to abort just the current run of actions, or this-all-runs to abort all runs on the current button',
 						expressionDescription:
@@ -346,7 +347,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Button Step',
@@ -363,7 +364,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'number',
 						label: 'Amount',
@@ -389,7 +390,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				showButtonPreview: true,
 				feedbackStyle: undefined,
 				showInvert: false,
-				options: [CHOICES_LOCATION],
+				options: [ControlLocationOption],
 				optionsSupportExpressions: true,
 			},
 			bank_pushed: {
@@ -403,7 +404,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				},
 				showInvert: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Treat stepped as pressed? (latch compatibility)',
@@ -425,7 +426,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				},
 				showInvert: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'number',
 						label: 'Step',
