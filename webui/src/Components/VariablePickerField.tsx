@@ -2,13 +2,14 @@ import { Combobox } from '@base-ui/react/combobox'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
 import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
+import { useRegex } from './useRegex.js'
 
 interface VariablePickerFieldProps {
 	className?: string
@@ -43,13 +44,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 	const hasGroups = allItems.some((item) => 'items' in item)
 
 	// Compile the regex for custom value validation
-	const compiledRegex = useMemo(() => {
-		if (regex) {
-			const match = regex.match(/^\/(.*)\/(.*)$/)
-			if (match) return new RegExp(match[1], match[2])
-		}
-		return null
-	}, [regex])
+	const compiledRegex = useRegex(regex)
 
 	const isValidCustom = useCallback((input: string) => !compiledRegex || !!input.match(compiledRegex), [compiledRegex])
 

@@ -488,3 +488,76 @@ describe('Grouped choices — interactions', () => {
 		expect(screen.getByText(/Use "custom-grouped"/)).toBeInTheDocument()
 	})
 })
+
+// ---------------------------------------------------------------------------
+// Type preservation (numeric DropdownChoiceId must not become a string)
+// ---------------------------------------------------------------------------
+
+describe('Type preservation on focus/blur (editing mode)', () => {
+	const NUMERIC_CHOICES = [
+		{ id: 1, label: 'One' },
+		{ id: 2, label: 'Two' },
+		{ id: 3, label: 'Three' },
+	]
+
+	it('preserves a numeric id when the user focuses and blurs without typing', async () => {
+		const setValue = vi.fn()
+		const user = userEvent.setup()
+		render(
+			<MenuPortalContext.Provider value={document.body}>
+				<DropdownInputField
+					choices={NUMERIC_CHOICES}
+					allowCustom={true}
+					disableEditingCustom={false}
+					value={1}
+					setValue={setValue}
+				/>
+			</MenuPortalContext.Provider>
+		)
+		const input = screen.getByRole('combobox')
+		await user.click(input)
+		await user.tab()
+		expect(setValue).toHaveBeenCalledTimes(1)
+		const committed = setValue.mock.calls[0][0]
+		expect(committed).toBe(1)
+		expect(typeof committed).toBe('number')
+	})
+
+	it('preserves a string id when the user focuses and blurs without typing', async () => {
+		const setValue = vi.fn()
+		const { user, input } = renderField({
+			allowCustom: true,
+			disableEditingCustom: false,
+			setValue,
+			initialValue: 'apple',
+		})
+		await user.click(input)
+		await user.tab()
+		expect(setValue).toHaveBeenCalledTimes(1)
+		const committed = setValue.mock.calls[0][0]
+		expect(committed).toBe('apple')
+		expect(typeof committed).toBe('string')
+	})
+
+	it('passes a string when the user actually edits the value', async () => {
+		const setValue = vi.fn()
+		const user = userEvent.setup()
+		render(
+			<MenuPortalContext.Provider value={document.body}>
+				<DropdownInputField
+					choices={NUMERIC_CHOICES}
+					allowCustom={true}
+					disableEditingCustom={false}
+					value={1}
+					setValue={setValue}
+				/>
+			</MenuPortalContext.Provider>
+		)
+		const input = screen.getByRole('combobox')
+		await user.click(input)
+		await user.clear(input)
+		await user.type(input, '99')
+		await user.tab()
+		expect(setValue).toHaveBeenCalledWith('99')
+	})
+})

@@ -229,6 +229,14 @@ describe('Selection', () => {
 		await user.click(within(getListbox()).getByText('Date'))
 		expect(container.querySelectorAll('.dropdown-field-pill')).toHaveLength(2)
 	})
+
+	it('removes selected value when choice id is number and value id is string-equivalent', async () => {
+		const choices = [{ id: 1, label: 'One' }]
+		const setValue = vi.fn()
+		const { user } = renderField({ choices, initialValue: ['1'], setValue })
+		await user.click(screen.getByRole('button', { name: 'Remove One' }))
+		expect(setValue).toHaveBeenCalledWith([])
+	})
 })
 
 // ---------------------------------------------------------------------------

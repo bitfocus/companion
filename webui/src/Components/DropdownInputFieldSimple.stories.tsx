@@ -1,5 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react'
 import { useArgs } from 'storybook/preview-api'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { SimpleDropdownInputField } from './DropdownInputFieldSimple'
 import { MenuPortalContext } from './MenuPortalContext'
 
@@ -27,8 +28,8 @@ const meta = {
 		badOptionPrefix: '⚠ Unknown: ',
 	},
 	render: function Render(args) {
-		const [, setArgs] = useArgs<{ value: string }>()
-		return <SimpleDropdownInputField {...args} setValue={(v) => setArgs({ value: String(v) })} />
+		const [, setArgs] = useArgs<{ value: DropdownChoiceId }>()
+		return <SimpleDropdownInputField {...args} setValue={(v) => setArgs({ value: v })} />
 	},
 } satisfies Meta<typeof SimpleDropdownInputField>
 

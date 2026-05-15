@@ -1,6 +1,7 @@
 import { Combobox } from '@base-ui/react/combobox'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
+import { observable, runInAction } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
@@ -9,6 +10,7 @@ import { DropdownInputPopup } from './DropdownInputField/Popup.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
 import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
+import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
 	htmlName?: string
@@ -45,17 +47,11 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const { allItems, flatItems } = useFuzzyChoices(choices, searchLabelsOnly)
 
-	// The popup doesn't handle groups whwn virtualised, so detect if there are any groups
+	// The popup doesn't handle groups when virtualised, so detect if there are any groups
 	const hasGroups = allItems.some((item) => 'items' in item)
 
 	// Compile the regex for custom value validation
-	const compiledRegex = useMemo(() => {
-		if (regex) {
-			const match = regex.match(/^\/(.*)\/(.*)$/)
-			if (match) return new RegExp(match[1], match[2])
-		}
-		return null
-	}, [regex])
+	const compiledRegex = useRegex(regex)
 
 	const isValidCustom = useCallback((input: string) => !compiledRegex || !!input.match(compiledRegex), [compiledRegex])
 
@@ -64,14 +60,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	// In editing mode the Combobox.Input is controlled so the user can edit the raw value.
 	// undefined = not in editing mode (input is uncontrolled / driven by the Combobox).
-	// string   = focused in editing mode; the ref mirrors it for stale-closure-free reads.
-	const [controlledInputValue, setControlledInputValue] = useState<string | undefined>(undefined)
-	const controlledInputValueRef = useRef<string | undefined>(undefined)
-
-	const setControlledInput = useCallback((v: string | undefined) => {
-		controlledInputValueRef.current = v
-		setControlledInputValue(v)
-	}, [])
+	// string   = focused in editing mode.
+	const controlledInput = useRef(observable.box<string | undefined>(undefined)).current
 
 	const triggerRef = useRef<HTMLButtonElement>(null)
 
@@ -79,14 +69,17 @@ export const DropdownInputField = observer(function DropdownInputField({
 	// pre-fills the input with the raw value so it can be edited directly like a text field.
 	const isEditingMode = !disableEditingCustom && !!allowCustom
 
-	// localDisplayValue mirrors the committed value but is updated synchronously on selection,
+	// localDisplay mirrors the committed value but is updated synchronously on selection,
 	// staying one render ahead of the parent prop. Without this, selecting "Use XX" clears
 	// inputValue immediately while the parent's MobX value hasn't propagated yet, causing a
 	// flash of the old label.
-	// prevValueProp is not a real value — it is only used to detect when the parent prop
-	// changes so we can reset localDisplayValue (standard React derived-state pattern).
-	const [localDisplayValue, setLocalDisplayValue] = useState<DropdownChoiceId>(value)
-	useEffect(() => setLocalDisplayValue(value), [value])
+	const localDisplay = useRef(observable.box<DropdownChoiceId>(value)).current
+	useEffect(() => runInAction(() => localDisplay.set(value)), [localDisplay, value])
+
+	// Derive plain values for this render; observer() tracks the box reads and re-renders
+	// the component whenever either box changes.
+	const localDisplayValue = localDisplay.get()
+	const controlledInputValue = controlledInput.get()
 
 	const isKnownValue = !!allowCustom || flatItems.length === 0 || flatItems.some((o) => o.id == localDisplayValue)
 
@@ -104,16 +97,18 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const onValueChange = useCallback(
 		(newId: DropdownChoiceId | null) => {
 			if (newId !== null) {
-				setLocalDisplayValue(newId)
+				runInAction(() => {
+					localDisplay.set(newId)
+					controlledInput.set(undefined)
+				})
 				setValue(newId)
-				setControlledInput(undefined)
 				setInputValue('')
 
 				// Shift focus to the trigger
 				triggerRef.current?.focus()
 			}
 		},
-		[setValue, setControlledInput]
+		[localDisplay, controlledInput, setValue]
 	)
 
 	const onInputValueChange = useCallback(
@@ -123,11 +118,11 @@ export const DropdownInputField = observer(function DropdownInputField({
 			// When base-ui resets the input (e.g. popup close, item selection), the reason
 			// is 'none' or 'item-press' — in those cases we must NOT overwrite the raw id
 			// that was pre-filled on focus.
-			if (controlledInputValueRef.current !== undefined && eventDetails.reason === 'input-change') {
-				setControlledInput(v)
+			if (controlledInput.get() !== undefined && eventDetails.reason === 'input-change') {
+				runInAction(() => controlledInput.set(v))
 			}
 		},
-		[setControlledInput]
+		[controlledInput]
 	)
 
 	// On focus in editing mode: pre-fill the controlled input value with the raw id so it can be
@@ -135,22 +130,27 @@ export const DropdownInputField = observer(function DropdownInputField({
 	// itemToStringLabel-based display.
 	const onInputFocus = useCallback(() => {
 		if (!isEditingMode) return
-		setControlledInput(String(localDisplayValue))
-	}, [isEditingMode, localDisplayValue, setControlledInput])
+		runInAction(() => controlledInput.set(String(localDisplay.get())))
+	}, [isEditingMode, localDisplay, controlledInput])
 
 	// On blur: if in editing mode and no item was selected via onValueChange, commit the
 	// current input text as the new value. In search-only mode (disableEditingCustom=true),
 	// just reset the filter and focus state.
 	const onInputBlur = useCallback(() => {
-		if (isEditingMode && controlledInputValueRef.current !== undefined) {
-			setValue(controlledInputValueRef.current)
-			setControlledInput(undefined)
+		const currentControlled = controlledInput.get()
+		if (isEditingMode && currentControlled !== undefined) {
+			const currentLocal = localDisplay.get()
+			// Preserve the original value type when the text hasn't changed (e.g. focus + blur
+			// with no edits). Without this, a numeric DropdownChoiceId becomes a string silently.
+			const next = currentControlled === String(currentLocal) ? currentLocal : currentControlled
+			setValue(next)
+			runInAction(() => controlledInput.set(undefined))
 			setInputValue('')
 		} else if (!isEditingMode && allowCustom) {
 			setInputValue('')
 		}
 		onBlur?.()
-	}, [isEditingMode, allowCustom, setValue, setControlledInput, onBlur])
+	}, [isEditingMode, allowCustom, localDisplay, controlledInput, setValue, onBlur])
 
 	// In disableEditingCustom mode, when focused the input is cleared for searching but the
 	// current value is shown as a placeholder so the user knows what's selected.

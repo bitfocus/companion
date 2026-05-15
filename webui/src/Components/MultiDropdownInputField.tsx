@@ -3,13 +3,14 @@ import classNames from 'classnames'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
 import { ChevronDownIcon, XIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
 import { useFuzzyChoices, type FuzzyChoice, type FuzzyGroup } from '~/Components/DropdownInputField/useFuzzyChoices.js'
 import { useComputed } from '~/Resources/util.js'
 import type { DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
+import { useRegex } from './useRegex.js'
 
 interface MultiDropdownInputFieldProps {
 	htmlName?: string
@@ -52,19 +53,11 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	// Always search labels only for multi-dropdown (no id-based search needed)
 	const { allItems, flatItems } = useFuzzyChoices(choices, true)
 
-	// The popup doesn't handle groups whwn virtualised, so detect if there are any groups
+	// The popup doesn't handle groups when virtualised, so detect if there are any groups
 	const hasGroups = allItems.some((item) => 'items' in item)
 
 	// Compile the regex (and cache)
-	const compiledRegex = useMemo(() => {
-		if (regex) {
-			const match = regex.match(/^\/(.*)\/(.*)$/)
-			if (match) {
-				return new RegExp(match[1], match[2])
-			}
-		}
-		return null
-	}, [regex])
+	const compiledRegex = useRegex(regex)
 
 	const currentValue = useComputed(() => {
 		const selectedValue = Array.isArray(value) ? value : [value]
@@ -152,7 +145,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		(id: DropdownChoiceId) => {
 			const isAtMinimum = typeof minSelection === 'number' && value.length <= minSelection
 			if (isAtMinimum) return
-			setValue(value.filter((v) => v !== id))
+			setValue(value.filter((v) => v != id)) // Intentionally loose for compatibility
 		},
 		[setValue, value, minSelection]
 	)

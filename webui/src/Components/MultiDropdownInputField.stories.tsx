@@ -1,5 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react'
 import { useArgs } from 'storybook/preview-api'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { MenuPortalContext } from './MenuPortalContext'
 import { MultiDropdownInputField } from './MultiDropdownInputField'
 
@@ -30,8 +31,8 @@ const meta = {
 		sortSelection: false,
 	},
 	render: function Render(args) {
-		const [, setArgs] = useArgs<{ value: string[] }>()
-		return <MultiDropdownInputField {...args} setValue={(v) => setArgs({ value: v.map(String) })} />
+		const [, setArgs] = useArgs<{ value: DropdownChoiceId[] }>()
+		return <MultiDropdownInputField {...args} setValue={(v) => setArgs({ value: v })} />
 	},
 } satisfies Meta<typeof MultiDropdownInputField>
 
