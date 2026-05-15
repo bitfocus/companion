@@ -164,6 +164,7 @@ export class ControlButtonLayered
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
+			this.entities.stepExpressionUpdate(this.options)
 
 			// HACK: temporary fill in new properties
 			for (const element of this.#drawElements) {
@@ -644,6 +645,19 @@ export class ControlButtonLayered
 
 		this.logger.silly('variable changed in button ' + this.controlId)
 		this.triggerRedraw()
+	}
+
+	/**
+	 * Update an option field of this control
+	 */
+	optionsSetField(key: string, value: JsonValue): boolean {
+		const changed = super.optionsSetField(key, value)
+
+		if (key === 'stepProgression' || key === 'stepExpression') {
+			this.entities.stepExpressionUpdate(this.options)
+		}
+
+		return changed
 	}
 
 	/**

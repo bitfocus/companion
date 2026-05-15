@@ -533,11 +533,15 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	stepExpressionUpdate(options: ButtonOptionsBase): void {
 		if (options.stepProgression === 'expression') {
 			// It may have changed, assume it has and purge the existing state
-			this.#currentStep = {
-				type: 'expression',
-				expression: options.stepExpression || '',
-				lastStepId: this.getStepIds()[0],
-				lastVariables: new Set(),
+			if (this.#currentStep.type !== 'expression') {
+				this.#currentStep = {
+					type: 'expression',
+					expression: options.stepExpression || '',
+					lastStepId: this.getStepIds()[0],
+					lastVariables: new Set(),
+				}
+			} else {
+				this.#currentStep.expression = options.stepExpression || ''
 			}
 
 			this.#stepCheckExpression(true)
