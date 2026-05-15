@@ -1,6 +1,6 @@
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type { DropdownChoiceGroup } from '~/Components/index.js'
+import type { DropdownChoiceGroup } from '~/Components/DropdownChoices.js'
 
 /**
  * Groups items by their collection hierarchy into react-select compatible groups.

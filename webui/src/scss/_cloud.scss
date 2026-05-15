@@ -12,7 +12,7 @@
 	.super-secret-key {
 		margin-top: 1em;
 
-		.alert {
+		.alert-element {
 			display: inline-block;
 
 			font-family: 'monospace';
@@ -60,7 +60,7 @@
 		}
 	}
 
-	.alert {
+	.alert-element {
 		margin-bottom: 0;
 		margin-top: 0.5rem;
 	}

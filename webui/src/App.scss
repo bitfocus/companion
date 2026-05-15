@@ -34,6 +34,14 @@
 @use 'scss/expression';
 @use 'scss/image-library';
 
+@use 'scss/components/alert';
+@use 'scss/components/checkbox-field';
+@use 'scss/components/dropdown-field';
+@use 'scss/components/number-field';
+@use 'scss/components/number-range';
+@use 'scss/components/switch-field';
+@use 'scss/components/tab-area';
+
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 
 body {
@@ -180,25 +188,13 @@ body {
 	white-space: nowrap;
 }
 
-.number-input-inf-overlay {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	padding-left: 0.75rem;
-	pointer-events: none;
-}
-
 .variable-value-expanded {
 	background-color: #fff;
 	min-width: 250px;
 
-	.alert {
-		--cui-alert-padding-x: 0.75rem;
-		--cui-alert-padding-y: 0.5rem;
+	.alert-element {
+		--alert-elm-padding-x: 0.75rem;
+		--alert-elm-padding-y: 0.5rem;
 	}
 
 	.popover-body {

@@ -1,8 +1,10 @@
-import { CAlert, CFormSwitch, CListGroupItem } from '@coreui/react'
+import { CListGroupItem } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { useCallback, useState } from 'react'
 import type { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
+import { StaticAlert } from '~/Components/Alert'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudRegionPanelProps {
@@ -14,8 +16,7 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 	const setEnabledMutation = useMutationExt(trpc.cloud.setRegionEnabled.mutationOptions())
 
 	const cloudSetStateEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const enabled = !!e.currentTarget.checked
+		(enabled: boolean) => {
 			if (!hideDisabled) {
 				setEnabledMutation.mutate({
 					regionId,
@@ -41,17 +42,11 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 					online: regionState.connected,
 				})}
 			>
-				<CFormSwitch
-					color={regionState.connected ? 'success' : 'danger'}
-					checked={!!regionState.enabled}
-					onChange={cloudSetStateEnabled}
-					disabled={hideDisabled}
-					width={100}
-				/>{' '}
+				<SwitchInputField value={!!regionState.enabled} setValue={cloudSetStateEnabled} disabled={hideDisabled} small />{' '}
 				{regionState.name} {regionState.pingResults > -1 ? `(${regionState.pingResults}ms)` : ''}
 			</p>
 
-			{regionState.enabled && regionState.error && <CAlert color="danger">{regionState.error}</CAlert>}
+			{regionState.enabled && regionState.error && <StaticAlert color="danger">{regionState.error}</StaticAlert>}
 		</CListGroupItem>
 	)
 }

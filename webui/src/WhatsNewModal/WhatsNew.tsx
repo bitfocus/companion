@@ -1,10 +1,12 @@
-import { CAlert, CModalBody, CModalHeader, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { CModalBody, CModalHeader } from '@coreui/react'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import semver from 'semver'
 import { useLocalStorage } from 'usehooks-ts'
+import { StaticAlert } from '~/Components/Alert.js'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { TabArea } from '~/Components/TabArea.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '../Resources/Error.js'
 import { DocsContent } from './DocsContent.js'
@@ -87,31 +89,27 @@ export const WhatsNewModal = observer(
 				<CModalBody>
 					{isPending && <div className="p-3">Loading...</div>}
 					{error && (
-						<CAlert color="danger">
+						<StaticAlert color="danger">
 							Failed to load What's New content: {error instanceof Error ? error.message : 'Unknown error'}
-						</CAlert>
+						</StaticAlert>
 					)}
 					{pages && pages.length > 0 && (
-						<>
-							<CNav variant="tabs">
+						<TabArea.Root value={selectedVersion} onValueChange={setSelectedVersion}>
+							<TabArea.List>
 								{pages.map((page) => (
-									<CNavItem key={page.version}>
-										<CNavLink active={selectedVersion === page.file} onClick={() => setSelectedVersion(page.file)}>
-											{page.label}
-										</CNavLink>
-									</CNavItem>
+									<TabArea.Tab key={page.version} value={page.file}>
+										{page.label}
+									</TabArea.Tab>
 								))}
-							</CNav>
-							<CTabContent>
-								{selectedPage && (
-									<CTabPane visible>
-										<MyErrorBoundary>
-											<DocsContent file={selectedPage.file} />
-										</MyErrorBoundary>
-									</CTabPane>
-								)}
-							</CTabContent>
-						</>
+							</TabArea.List>
+							{selectedPage && (
+								<TabArea.Panel value={selectedPage.file}>
+									<MyErrorBoundary>
+										<DocsContent file={selectedPage.file} />
+									</MyErrorBoundary>
+								</TabArea.Panel>
+							)}
+						</TabArea.Root>
 					)}
 				</CModalBody>
 			</CModalExt>

@@ -1,6 +1,7 @@
-import { CCol, CNav, CNavItem, CNavLink, CRow, CTabContent, CTabPane } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { memo, useState } from 'react'
+import { TabArea } from '~/Components/TabArea.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { useUserConfigProps } from './Context.js'
@@ -79,71 +80,46 @@ const RemoteControlInfo = memo(function RemoteControlInfo() {
 	)
 
 	return (
-		<>
-			<CNav variant="tabs" role="tablist" className="remote-control-tabs">
-				<CNavItem>
-					<CNavLink active={activeTab === 'tcp-udp'} onClick={() => setActiveTab('tcp-udp')}>
-						TCP/UDP
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink active={activeTab === 'http'} onClick={() => setActiveTab('http')}>
-						HTTP
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink active={activeTab === 'osc'} onClick={() => setActiveTab('osc')}>
-						OSC
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink active={activeTab === 'artnet'} onClick={() => setActiveTab('artnet')}>
-						Artnet / DMX
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink active={activeTab === 'rosstalk'} onClick={() => setActiveTab('rosstalk')}>
-						Rosstalk
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink active={activeTab === 'emberplus'} onClick={() => setActiveTab('emberplus')}>
-						Ember+
-					</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent>
-				<CTabPane role="tabpanel" aria-labelledby="tcp-udp-tab" visible={activeTab === 'tcp-udp'}>
-					<MyErrorBoundary>
-						<TcpUdpProtocol />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane role="tabpanel" aria-labelledby="http-tab" visible={activeTab === 'http'}>
-					<MyErrorBoundary>
-						<HttpProtocol />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane role="tabpanel" aria-labelledby="osc-tab" visible={activeTab === 'osc'}>
-					<MyErrorBoundary>
-						<OscProtocol />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane role="tabpanel" aria-labelledby="artnet-tab" visible={activeTab === 'artnet'}>
-					<MyErrorBoundary>
-						<ArtnetProtocol />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane role="tabpanel" aria-labelledby="rosstalk-tab" visible={activeTab === 'rosstalk'}>
-					<MyErrorBoundary>
-						<RosstalkProtocol />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane role="tabpanel" aria-labelledby="emberplus-tab" visible={activeTab === 'emberplus'}>
-					<MyErrorBoundary>
-						<EmberPlusProtocol />
-					</MyErrorBoundary>
-				</CTabPane>
-			</CTabContent>
-		</>
+		<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+			<TabArea.List>
+				<TabArea.Tab value="tcp-udp">TCP/UDP</TabArea.Tab>
+				<TabArea.Tab value="http">HTTP</TabArea.Tab>
+				<TabArea.Tab value="osc">OSC</TabArea.Tab>
+				<TabArea.Tab value="artnet">Artnet / DMX</TabArea.Tab>
+				<TabArea.Tab value="rosstalk">Rosstalk</TabArea.Tab>
+				<TabArea.Tab value="emberplus">Ember+</TabArea.Tab>
+				<TabArea.Indicator />
+			</TabArea.List>
+			<TabArea.Panel value="tcp-udp">
+				<MyErrorBoundary>
+					<TcpUdpProtocol />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+			<TabArea.Panel value="http">
+				<MyErrorBoundary>
+					<HttpProtocol />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+			<TabArea.Panel value="osc">
+				<MyErrorBoundary>
+					<OscProtocol />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+			<TabArea.Panel value="artnet">
+				<MyErrorBoundary>
+					<ArtnetProtocol />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+			<TabArea.Panel value="rosstalk">
+				<MyErrorBoundary>
+					<RosstalkProtocol />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+			<TabArea.Panel value="emberplus">
+				<MyErrorBoundary>
+					<EmberPlusProtocol />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+		</TabArea.Root>
 	)
 })

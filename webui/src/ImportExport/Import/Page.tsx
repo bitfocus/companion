@@ -1,10 +1,11 @@
-import { CButton, CCallout, CCol, CFormSelect, CRow } from '@coreui/react'
+import { CButton, CCallout, CCol, CRow } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import { compareExportedInstances } from '@companion-app/shared/Import.js'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { ClientImportObject, ClientImportObjectInstance } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ButtonGridHeader, PageNumberPicker, type PageNumberOption } from '~/Buttons/ButtonGridHeader.js'
@@ -17,10 +18,12 @@ import {
 	type ButtonInfiniteGridRef,
 } from '~/Buttons/ButtonInfiniteGrid.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc } from '~/Resources/TRPC'
+import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ImportPageWizardProps {
@@ -285,25 +288,31 @@ const ImportRemapRow = observer(function ImportRemapRow({
 
 	const moduleManifest = moduleInfo?.display ?? storeInfo
 
-	const currentConnections = connections.getAllOfModuleId(connection.moduleId)
-
 	const onChange = useCallback(
-		(e: React.ChangeEvent<HTMLSelectElement>) => setConnectionRemap(id, e.currentTarget.value),
+		(value: DropdownChoiceId) => setConnectionRemap(id, String(value)),
 		[setConnectionRemap, id]
 	)
+
+	const selectOptions = useComputed(() => {
+		const options: DropdownChoice[] = [
+			{ id: '_blank', label: '[ Create new connection ]' },
+			{ id: '_ignore', label: '[ Ignore ]' },
+		]
+
+		const currentConnections = connections.getAllOfModuleId(connection.moduleId)
+		for (const conn of currentConnections) {
+			options.push({
+				id: conn.id,
+				label: `Link to ${conn.label}`,
+			})
+		}
+		return options
+	}, [connections])
 
 	return (
 		<tr>
 			<td>
-				<CFormSelect value={connectionRemap[id] ?? ''} onChange={onChange}>
-					<option value="_blank">[ Create new connection ]</option>
-					<option value="_ignore">[ Ignore ]</option>
-					{currentConnections.map((conn) => (
-						<option key={conn.id} value={conn.id}>
-							Link to {conn.label}
-						</option>
-					))}
-				</CFormSelect>
+				<SimpleDropdownInputField value={connectionRemap[id] ?? ''} setValue={onChange} choices={selectOptions} />
 			</td>
 			<td>{moduleManifest?.name ?? `Unknown module (${connection.moduleId})`}</td>
 			<td>{connection.label}</td>

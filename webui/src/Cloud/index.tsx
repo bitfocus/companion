@@ -1,5 +1,4 @@
 import {
-	CAlert,
 	CButton,
 	CCallout,
 	CCard,
@@ -8,12 +7,13 @@ import {
 	CCol,
 	CFormInput,
 	CFormLabel,
-	CFormSwitch,
 	CListGroup,
 } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { memo, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
+import { StaticAlert } from '~/Components/Alert.js'
+import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { CloudRegionPanel } from './RegionPanel.js'
@@ -26,11 +26,11 @@ export function CloudPage(): React.JSX.Element {
 		<div className="cloud-region-panel">
 			<h4>Companion Cloud</h4>
 
-			<CAlert color="danger">
+			<StaticAlert color="danger">
 				This service is deprecated and will be removed in a future version of Companion. <br />
 				We hope that before it is removed, an equivalent system will be made available in <i>Bitfocus Buttons</i> <br />
 				As an alternative you can use the new <i>companion-satellite</i> module over a local network or vpn.
-			</CAlert>
+			</StaticAlert>
 			<p>
 				Access your Companion buttons from your Bitfocus Cloud account, or create a sophisticated network of Companion
 				installations that work together over the internet for all your remote production needs.
@@ -79,7 +79,7 @@ function useCloudState() {
 function CloudPageContent({ cloudState }: { cloudState: CloudControllerState }) {
 	return (
 		<>
-			{!!cloudState.error && <CAlert color="danger">{cloudState.error}</CAlert>}
+			{!!cloudState.error && <StaticAlert color="danger">{cloudState.error}</StaticAlert>}
 
 			{!cloudState.authenticated ? (
 				<CloudUserPass
@@ -176,13 +176,13 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 						<CCallout color={'info'}>Companion Cloud is currently activated. Deactivate to change regions.</CCallout>
 					)}
 
-					<CFormSwitch
+					<SwitchInputFieldWithLabel
 						label="Activate Companion Cloud"
-						color="success"
 						disabled={!cloudActive && !canActivate}
-						title="Activate Companion Cloud"
-						checked={cloudActive}
-						onChange={(e) => setCloudActiveMutation.mutate({ active: !!e.target.checked })}
+						value={cloudActive}
+						setValue={(val) => setCloudActiveMutation.mutate({ active: !!val })}
+						small
+						tooltip="Activate Companion Cloud"
 					/>
 				</CCardBody>
 			</CCard>
@@ -203,7 +203,7 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 				it with the key above to start controlling this companion via internet.
 			</p>
 
-			<CAlert color="success">{uuid}</CAlert>
+			<StaticAlert color="success">{uuid}</StaticAlert>
 
 			<div className="my-3">
 				<CButton color="primary" onClick={() => regenerateUUIDMutation.mutate()}>

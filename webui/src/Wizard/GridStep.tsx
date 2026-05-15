@@ -1,6 +1,7 @@
-import { CCol, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CFormLabel, CRow } from '@coreui/react'
 import { useCallback, useState } from 'react'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { NumberInputField } from '~/Components/NumberInputField'
 
 interface GridStepProps {
 	rows: number
@@ -13,8 +14,8 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 	const [totalColumns, setTotalColumns] = useState(columns)
 
 	const setMaxColumn = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = Number(e.currentTarget.value)
+		(newValue: number) => {
+			if (isNaN(newValue)) return
 			const grid: UserConfigGridSize = {
 				minRow: 0,
 				maxRow: totalRows - 1,
@@ -28,8 +29,8 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 		[setValue, totalRows]
 	)
 	const setMaxRow = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = Number(e.currentTarget.value)
+		(newValue: number) => {
+			if (isNaN(newValue)) return
 			const grid: UserConfigGridSize = {
 				minRow: 0,
 				maxRow: newValue - 1,
@@ -58,19 +59,19 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				</p>
 			</CCol>
 
-			<CFormLabel htmlFor="colFormRows" className="col-sm-4 col-form-label col-form-label-sm">
+			<CFormLabel htmlFor="colFormRows" className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Rows
 			</CFormLabel>
-			<CCol sm={5}>
-				<CFormInput name="colFormRows" type="number" value={totalRows} min={0} step={1} onChange={setMaxRow} />
+			<CCol sm={5} className="mb-2">
+				<NumberInputField id="colFormRows" value={totalRows} min={0} step={1} setValue={setMaxRow} />
 			</CCol>
 			<CCol sm={3}></CCol>
 
-			<CFormLabel htmlFor="colFormCols" className="col-sm-4 col-form-label col-form-label-sm">
+			<CFormLabel htmlFor="colFormCols" className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Columns
 			</CFormLabel>
-			<CCol sm={5}>
-				<CFormInput name="colFormRows" type="number" value={totalColumns} min={0} step={1} onChange={setMaxColumn} />
+			<CCol sm={5} className="mb-2">
+				<NumberInputField id="colFormCols" value={totalColumns} min={0} step={1} setValue={setMaxColumn} />
 			</CCol>
 			<CCol sm={3}></CCol>
 

@@ -1,9 +1,10 @@
-import { CAlert, CButton, CCol, CRow } from '@coreui/react'
+import { CButton, CCol, CRow } from '@coreui/react'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
@@ -161,11 +162,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 					clearSelectedButton={clearSelectedButton}
 				/>
 
-				<CAlert color="info" className="mb-2">
+				<StaticAlert color="info" className="mb-2">
 					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
 					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
 					button highlighted to delete it.
-				</CAlert>
+				</StaticAlert>
 			</div>
 		</KeyReceiver>
 	)

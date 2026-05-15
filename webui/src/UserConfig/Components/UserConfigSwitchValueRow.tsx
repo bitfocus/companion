@@ -1,6 +1,6 @@
-import { CFormSwitch } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ResetButton, type UserConfigProps } from './Common.js'
 
 interface UserConfigSwitchValueRowProps<TKey extends keyof UserConfigModel> {
@@ -23,12 +23,9 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 		<tr title={title}>
 			<td style={{ width: '100%' }}>{label}</td>
 			<td>
-				<CFormSwitch
-					className="float-right"
-					color="success"
-					checked={userConfig.config[field] === activeValue}
-					size="xl"
-					onChange={(e) => userConfig.setValue(field, e.currentTarget.checked ? activeValue : inactiveValue)}
+				<SwitchInputField
+					value={userConfig.config[field] === activeValue}
+					setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
 				/>
 			</td>
 			<td className="pe-3">

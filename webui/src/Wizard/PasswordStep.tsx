@@ -1,6 +1,9 @@
-import { CAlert, CFormCheck, CFormInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { StaticAlert } from '~/Components/Alert'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { NumberInputField } from '~/Components/NumberInputField'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>
@@ -15,15 +18,15 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 				Optionally, you can restrict this interface using a password. This is intended to keep normal users from
 				stumbling upon the settings and changing things. It will not keep out someone determined to bypass it.
 			</p>
-			<CAlert color="danger">This does not make an installation more secure!</CAlert>
-			<div className="indent3">
-				<CFormCheck
+			<StaticAlert color="danger">This does not make an installation more secure!</StaticAlert>
+			<div className="ms-3 mb-1">
+				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"
-					checked={config.admin_lockout}
-					onChange={(e) => setValue('admin_lockout', e.currentTarget.checked)}
+					value={!!config.admin_lockout}
+					setValue={(val) => setValue('admin_lockout', val)}
 				/>
 				{config.admin_lockout && (
-					<div className="indent2, group">
+					<div className="ms-3 mb-2">
 						<div className="col-left">Password</div>
 						<div className="col-right">
 							<CFormInput
@@ -33,19 +36,19 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 							/>
 						</div>
 						<br />
-						<div className="col-left">
-							Session Timeout
-							<br />
-							(minutes, 0 for none)
-						</div>
+						<div className="col-left">Session Timeout</div>
 						<div className="col-right">
-							<CFormInput
-								type="number"
+							<NumberInputField
 								value={config.admin_timeout}
 								min={0}
 								step={1}
-								onChange={(e) => setValue('admin_timeout', e.currentTarget.value)}
+								setValue={(val) => setValue('admin_timeout', val)}
 							/>
+						</div>
+						<br />
+						<div className="col-left">&nbsp;</div>
+						<div className="col-right">
+							<span className="text-muted">(minutes, 0 for none)</span>
 						</div>
 					</div>
 				)}

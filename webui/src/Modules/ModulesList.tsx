@@ -1,4 +1,4 @@
-import { CAlert, CButton, CButtonGroup, CNav, CNavItem, CNavLink } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import {
 	faEyeSlash,
 	faGamepad,
@@ -12,9 +12,11 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
+import { TabArea } from '~/Components/TabArea.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
@@ -133,11 +135,15 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 		components = []
 		components.push(
-			<CAlert color="warning" role="alert">
-				Failed to build list of modules:
-				<br />
-				{e?.toString()}
-			</CAlert>
+			<tr key="module-list-build-error">
+				<td colSpan={4}>
+					<StaticAlert color="warning" role="alert">
+						Failed to build list of modules:
+						<br />
+						{e?.toString()}
+					</StaticAlert>
+				</td>
+			</tr>
 		)
 	}
 
@@ -346,30 +352,22 @@ interface FilterTypeTabsProps {
 
 function FilterTypeTabs({ filterType, setFilterType }: FilterTypeTabsProps) {
 	return (
-		<CNav variant="tabs" role="tablist" className="remote-control-tabs">
-			<CNavItem>
-				<CNavLink active={filterType === null} onClick={() => setFilterType(null)} title="Show all module types">
+		<TabArea.Root
+			value={filterType}
+			onValueChange={(v) => setFilterType(v as ModuleInstanceType | null)}
+			className="remote-control-tabs"
+		>
+			<TabArea.List>
+				<TabArea.Tab value={null} title="Show all module types">
 					All Modules
-				</CNavLink>
-			</CNavItem>
-			<CNavItem>
-				<CNavLink
-					active={filterType === ModuleInstanceType.Connection}
-					onClick={() => setFilterType(ModuleInstanceType.Connection)}
-					title="Show only connection modules"
-				>
+				</TabArea.Tab>
+				<TabArea.Tab value={ModuleInstanceType.Connection} title="Show only connection modules">
 					Connection Modules
-				</CNavLink>
-			</CNavItem>
-			<CNavItem>
-				<CNavLink
-					active={filterType === ModuleInstanceType.Surface}
-					onClick={() => setFilterType(ModuleInstanceType.Surface)}
-					title="Show only surface modules"
-				>
+				</TabArea.Tab>
+				<TabArea.Tab value={ModuleInstanceType.Surface} title="Show only surface modules">
 					Surface Modules
-				</CNavLink>
-			</CNavItem>
-		</CNav>
+				</TabArea.Tab>
+			</TabArea.List>
+		</TabArea.Root>
 	)
 }

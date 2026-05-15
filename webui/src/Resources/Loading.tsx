@@ -1,8 +1,9 @@
-import { CAlert, CButton, CCol } from '@coreui/react'
+import { CButton, CCol } from '@coreui/react'
 import type { TRPCClientErrorLike } from '@trpc/client'
 import { useEffect, useState } from 'react'
 import { BarLoader, PuffLoader } from 'react-spinners'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { PRIMARY_COLOR } from './Constants.js'
 
 type LoadingBarProps = LoaderHeightWidthProps
@@ -71,7 +72,7 @@ export function LoadingRetryOrError({
 			{/* Show error message with manual retry button */}
 			{error && (
 				<CCol sm={12}>
-					<CAlert color="danger" role="alert">
+					<StaticAlert color="danger" role="alert">
 						<p>{typeof error === 'string' ? error : error.message}</p>
 						{/* Show retry button with countdown when data is not ready and retry function is provided */}
 						{!dataReady && !!doRetry && (
@@ -79,7 +80,7 @@ export function LoadingRetryOrError({
 								{retryLabel || 'Retry'} {countdown && '(' + countdown + ')'}
 							</CButton>
 						)}
-					</CAlert>
+					</StaticAlert>
 				</CCol>
 			)}
 			{/* Show loading spinner when data is not ready and there's no error */}

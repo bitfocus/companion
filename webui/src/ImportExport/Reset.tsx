@@ -1,10 +1,12 @@
-import { CAlert, CButton, CFormCheck, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import type { ClientImportOrResetSelection, ResetType } from '@companion-app/shared/Model/ImportExport.js'
+import { StaticAlert } from '~/Components/Alert'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -235,29 +237,29 @@ const ResetOptionsStep = withForm({
 				<h5>Reset Options</h5>
 				<p>Please select the components you'd like to reset.</p>
 
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="connections">{(field) => <field.ResetToggleField label="Connections" />}</form.AppField>
 					<form.Subscribe
 						selector={(state: any) => [state.values.connections, state.values.buttons, state.values.triggers]}
 						children={([connections, buttons, triggers]: any[]) =>
 							connections !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<CAlert color="warning">
+								<StaticAlert color="warning">
 									Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the
 									connections even if 'Buttons' and/or 'Triggers' are not also reset.
-								</CAlert>
+								</StaticAlert>
 							) : null
 						}
 					/>
 				</div>
 
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="buttons">{(field) => <field.ResetToggleField label="Buttons" />}</form.AppField>
 				</div>
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="triggers">{(field) => <field.ResetToggleField label="Triggers" />}</form.AppField>
 				</div>
 
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="customVariables">
 						{(field) => <field.ResetToggleField label="Custom Variables" />}
 					</form.AppField>
@@ -265,21 +267,21 @@ const ResetOptionsStep = withForm({
 						selector={(state: any) => [state.values.customVariables, state.values.buttons, state.values.triggers]}
 						children={([customVariables, buttons, triggers]: any[]) =>
 							customVariables !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<CAlert color="warning">
+								<StaticAlert color="warning">
 									Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them
 									can create an unstable environment.
-								</CAlert>
+								</StaticAlert>
 							) : null
 						}
 					/>
 				</div>
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="expressionVariables">
 						{(field) => <field.ResetToggleField label="Expression Variables" />}
 					</form.AppField>
 				</div>
 
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="surfaces">
 						{(field) => (
 							<field.ResetToggleGroup
@@ -302,7 +304,7 @@ const ResetOptionsStep = withForm({
 						)}
 					</form.AppField>
 				</div>
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="surfaces.known">
 						{(field) => (
 							<field.ResetToggleField
@@ -317,7 +319,7 @@ const ResetOptionsStep = withForm({
 						)}
 					</form.AppField>
 				</div>
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="surfaces.instances">
 						{(field) => (
 							<field.ResetToggleField
@@ -332,7 +334,7 @@ const ResetOptionsStep = withForm({
 						)}
 					</form.AppField>
 				</div>
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="surfaces.remote">
 						{(field) => (
 							<field.ResetToggleField
@@ -350,13 +352,13 @@ const ResetOptionsStep = withForm({
 					</form.AppField>
 				</div>
 
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="imageLibrary">
 						{(field) => <field.ResetToggleField label="Image Library" />}
 					</form.AppField>
 				</div>
 
-				<div className="indent3">
+				<div className="ms-2 mb-1">
 					<form.AppField name="userconfig">{(field) => <field.ResetToggleField label="Settings" />}</form.AppField>
 				</div>
 			</div>
@@ -372,10 +374,10 @@ function ResetToggleField({ label, className }: ResetToggleFieldProps) {
 	const field = useFieldContext<ResetType>()
 
 	return (
-		<CFormCheck
+		<CheckboxInputFieldWithLabel
 			className={className}
-			checked={field.state.value !== 'unchanged'}
-			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset' : 'unchanged')}
+			value={field.state.value !== 'unchanged'}
+			setValue={(val) => field.handleChange(val ? 'reset' : 'unchanged')}
 			onBlur={field.handleBlur}
 			label={label}
 		/>
@@ -395,11 +397,11 @@ function ResetToggleGroup({ label, defaultChecked, defaultUnchecked, className }
 	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
 
 	return (
-		<CFormCheck
+		<CheckboxInputFieldWithLabel
 			className={className}
 			indeterminate={isAChildChecked && isAChildUnchecked}
-			checked={isAChildChecked}
-			onChange={(e) => field.handleChange(e.currentTarget.checked ? defaultChecked : defaultUnchecked)}
+			value={isAChildChecked}
+			setValue={(val) => field.handleChange(val ? defaultChecked : defaultUnchecked)}
 			onBlur={field.handleBlur}
 			label={label}
 		/>
@@ -463,7 +465,7 @@ const ResetApplyStep = withForm({
 							<p>The following data will be reset:</p>
 							<ul>{changes}</ul>
 							{changes.length > 0 ? (
-								<CAlert color="danger">Proceeding will permanently clear the above data.</CAlert>
+								<StaticAlert color="danger">Proceeding will permanently clear the above data.</StaticAlert>
 							) : null}
 						</div>
 					)

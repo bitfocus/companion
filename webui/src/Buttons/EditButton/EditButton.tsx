@@ -1,8 +1,9 @@
-import { CAlert, CCol } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useContext, useRef } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
@@ -45,9 +46,9 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 					<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 					{dataReady &&
 						(controlConfig.config.type === 'trigger' || controlConfig.config.type === 'expression-variable' ? (
-							<CAlert color="warning">
+							<StaticAlert color="warning">
 								An incompatible control was selected! This is likely a bug, please report it.
-							</CAlert>
+							</StaticAlert>
 						) : (
 							<EditButtonContent
 								resetModalRef={resetModalRef}

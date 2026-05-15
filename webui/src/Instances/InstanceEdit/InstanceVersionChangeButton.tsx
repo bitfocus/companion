@@ -1,15 +1,4 @@
-import {
-	CAlert,
-	CButton,
-	CCol,
-	CCollapse,
-	CForm,
-	CFormLabel,
-	CFormSelect,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CCol, CCollapse, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -17,8 +6,10 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { StaticAlert } from '~/Components/Alert'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
@@ -123,13 +114,13 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 						}}
 					>
 						<CCol sm={12}>
-							<CAlert color="warning" className="mb-3">
+							<StaticAlert color="warning" className="mb-3">
 								Be careful when downgrading the module version. Some features may not be available in older versions.
-							</CAlert>
+							</StaticAlert>
 							{!!saveError && (
-								<CAlert color="danger" className="mb-3">
+								<StaticAlert color="danger" className="mb-3">
 									Save failed: {saveError}
-								</CAlert>
+								</StaticAlert>
 							)}
 						</CCol>
 
@@ -177,9 +168,9 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 						<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
 							<CCol sm={12}>
-								<CAlert color="danger" className="mt-0 mb-3">
+								<StaticAlert color="danger" className="mt-0 mb-3">
 									{changeModuleDangerMessage}
-								</CAlert>
+								</StaticAlert>
 							</CCol>
 
 							<CFormLabel htmlFor="moduleId" className="col-sm-3 col-form-label col-form-label-sm">
@@ -304,24 +295,15 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 		true
 	)
 
-	const missingSelection = value !== null && !moduleVersionChoices.find((c) => c.value === value)
-
 	return (
-		<CFormSelect
-			name={htmlName}
+		<SimpleDropdownInputField
+			id={htmlName}
 			value={value as string}
-			onChange={(e) => onChange(e.currentTarget.value)}
+			setValue={(value) => onChange(value as string)}
 			onBlur={onBlur}
-		>
-			{missingSelection && <option value={value}>{`Unknown version: ${value}`}</option>}
-			{moduleVersionChoices.map((v) => (
-				<option key={v.value} value={v.value}>
-					{v.label}
-				</option>
-			))}
-			{!moduleVersionChoices.length && (
-				<option value={null as any}>{choicesLoaded ? 'No compatible versions found' : 'Loading...'}</option>
-			)}
-		</CFormSelect>
+			noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
+			badOptionPrefix="Unknown version"
+			choices={moduleVersionChoices}
+		/>
 	)
 })

@@ -1,7 +1,8 @@
-import { CAlert, CButton, CButtonGroup } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
+import { DismissableAlert } from './Alert.js'
 import { PNGInputField } from './PNGInputField.js'
 
 interface PngImageInputFieldProps {
@@ -51,9 +52,9 @@ export function PngImageInputField({
 				</CButton>
 			</CButtonGroup>
 			{imageLoadError && (
-				<CAlert color="warning" dismissible onClose={() => setImageLoadError(null)}>
+				<DismissableAlert color="warning" onClose={() => setImageLoadError(null)}>
 					{imageLoadError}
-				</CAlert>
+				</DismissableAlert>
 			)}
 		</>
 	)

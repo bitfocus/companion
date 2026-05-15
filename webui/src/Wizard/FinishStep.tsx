@@ -1,5 +1,5 @@
-import { CAlert } from '@coreui/react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { StaticAlert } from '~/Components/Alert'
 
 interface FinishStepProps {
 	oldConfig: UserConfigModel
@@ -33,10 +33,10 @@ export function FinishStep({ oldConfig, newConfig }: FinishStepProps): React.JSX
 				</li>
 			</ol>
 			{newConfig.elgato_plugin_enable && oldConfig.elgato_plugin_enable !== newConfig.elgato_plugin_enable && (
-				<CAlert color="danger">
+				<StaticAlert color="danger">
 					After completing this wizard a restart of Companion is recommended to apply your USB detection settings. You
 					will need to do this manually.
-				</CAlert>
+				</StaticAlert>
 			)}
 		</div>
 	)

@@ -1,10 +1,11 @@
-import { CButton, CButtonGroup, CForm, CFormLabel, CFormSwitch, CRow } from '@coreui/react'
+import { CButton, CButtonGroup, CForm, CFormLabel, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, type RefObject } from 'react'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { MultiDropdownInputField } from '~/Components/index.js'
+import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -50,8 +51,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	}, [abortSessionMutation, sessionId, confirmRef])
 
 	const changeRecording = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement> | boolean) => {
-			const isRunning = typeof e === 'boolean' ? e : e.target.checked
+		(isRunning: boolean) => {
 			setRecordingMutation.mutateAsync({ sessionId, isRunning }).catch((e) => {
 				console.error(e)
 			})
@@ -107,7 +107,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 						<div>
 							<CFormLabel>Recording</CFormLabel>
 							<br />
-							<CFormSwitch color="success" size="xl" checked={!!sessionInfo.isRunning} onChange={changeRecording} />
+							<SwitchInputField value={!!sessionInfo.isRunning} setValue={changeRecording} />
 						</div>
 					</div>
 				</CRow>

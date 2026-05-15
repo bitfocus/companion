@@ -1,10 +1,11 @@
-import { CAlert, CButton, CButtonGroup, CCallout } from '@coreui/react'
+import { CButton, CButtonGroup, CCallout } from '@coreui/react'
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
@@ -130,7 +131,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 				</div>
 				<SearchBox filter={searchQuery} setFilter={setSearchQuery} />
 				{allSections.length === 0 ? (
-					<CAlert color="primary">Connection has no presets.</CAlert>
+					<StaticAlert color="primary">Connection has no presets.</StaticAlert>
 				) : visibleSections.length === 0 && searchQuery ? (
 					<NonIdealState icon={faSearch} text="No matching presets" />
 				) : (

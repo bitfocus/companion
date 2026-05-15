@@ -249,39 +249,14 @@ form.row > * {
 	display: flex;
 	flex-direction: column;
 
-	&.no-height-limit {
-		max-height: unset;
-	}
-
-	// &.baseless {
-	// 	border: none;
-	// 	border-radius: 8px;
-	// 	box-shadow:
-	// 		0 4px 6px -1px rgb(0 0 0 / 0.1),
-	// 		0 2px 4px -2px rgb(0 0 0 / 0.1);
-	// }
-
 	.tab-pane {
 		height: 100%;
 		padding: 1rem 1rem 1rem 1rem;
 
-		// display: flex;
-		// flex-direction: column;
 		flex-grow: 1;
 
 		// Make absolute positioned child components be relative to this
 		position: relative;
-	}
-
-	.row-heading {
-		position: sticky;
-		padding-top: 0;
-		padding-top: 1rem;
-		margin-top: -1rem;
-		top: 0;
-		left: 0;
-		background-color: #fff;
-		z-index: 1;
 	}
 
 	.edit-sticky-body {
@@ -289,85 +264,6 @@ form.row > * {
 		min-height: calc(var(--raw-height) - 2.1rem);
 
 		flex-grow: 1;
-	}
-}
-
-.nav.nav-tabs {
-	flex-wrap: nowrap;
-	overflow-x: auto;
-	overflow-y: hidden;
-	scrollbar-width: thin;
-	flex-shrink: 0;
-
-	// Hide scrollbar visually but keep functionality
-	&::-webkit-scrollbar {
-		height: 4px;
-	}
-	&::-webkit-scrollbar-track {
-		background: transparent;
-	}
-	&::-webkit-scrollbar-thumb {
-		background: #ccc;
-		border-radius: 2px;
-	}
-
-	.nav-last {
-		margin-left: auto;
-		flex-shrink: 0;
-	}
-
-	.nav-item {
-		flex-shrink: 0;
-	}
-
-	.nav-item .nav-link {
-		border: 1px solid rgba(255, 255, 255, 0);
-		padding-bottom: 8px;
-		margin-bottom: -2px;
-		color: #555;
-		cursor: pointer;
-		/* this is a mess, but hey, it works */
-		&.active,
-		&.active:hover {
-			background-color: #fff;
-			border: 1px solid #bbb;
-			border-top: 3px solid #d50215;
-			border-top-left-radius: 6px;
-			border-top-right-radius: 6px;
-			border-bottom-color: #fff;
-			padding-top: 6px;
-			color: black;
-		}
-
-		&:hover {
-			border: 1px solid rgba(255, 255, 255, 0);
-			background-color: #e3e3e3;
-		}
-
-		&.disabled {
-			color: rgba(0, 0, 0, 0.3);
-		}
-
-		@include coreui.media-breakpoint-down('lg') {
-			padding: 10px;
-			border-radius: 0px;
-			padding: 5px 10px;
-			font-size: 16px;
-			background-color: #ddd;
-			border-top: 3px solid #f0f0f0;
-			border-bottom: 1px solid #ccc;
-			border-radius: 0;
-
-			&.active,
-			&.active:hover {
-				margin-top: 2px;
-				margin-bottom: 0px;
-				padding-top: 3px;
-				padding-bottom: 3px;
-				border-top: 3px solid #d50215;
-				border-radius: 0;
-			}
-		}
 	}
 }
 
@@ -826,7 +722,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 			overflow-y: auto;
 		}
 
-		.row-heading {
+		.sticky-heading {
 			position: sticky;
 			padding: 1.5rem 1.5rem 0.5rem 1.5rem;
 			margin: -1.5rem -1.5rem 1rem -1.5rem;
@@ -860,6 +756,17 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 
 			.tab-content {
 				overflow-y: scroll;
+			}
+
+			.sticky-heading {
+				position: sticky;
+				padding-top: 0;
+				padding-top: 1rem;
+				// margin-top: -1rem;
+				top: 0;
+				left: 0;
+				background-color: #fff;
+				z-index: 1;
 			}
 		}
 
@@ -962,8 +869,6 @@ hr.slim {
 	}
 
 	.modal-body {
-		display: grid;
-		grid-template-rows: auto 1fr;
 		overflow: hidden; // ← clip at body level, don't scroll
 
 		.default-scroll {

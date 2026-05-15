@@ -1,7 +1,7 @@
 import { memo } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const ExportFormatDefault: ExportFormat = 'json-gz'
@@ -27,7 +27,7 @@ interface SelectExportFormatProps {
 
 export const SelectExportFormat = memo(function SelectExportFormat({ value, setValue }: SelectExportFormatProps) {
 	return (
-		<DropdownInputField
+		<SimpleDropdownInputField
 			choices={formatOptions}
 			value={value}
 			setValue={setValue as (value: DropdownChoiceId) => void}

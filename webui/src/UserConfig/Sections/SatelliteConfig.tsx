@@ -1,5 +1,5 @@
-import { CAlert } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
+import { StaticAlert } from '~/Components/Alert.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigStaticTextRow } from '../Components/UserConfigStaticTextRow.js'
@@ -26,10 +26,10 @@ export const SatelliteConfig = observer(function SatelliteConfig(props: UserConf
 
 			<tr>
 				<td colSpan={3}>
-					<CAlert color="warning">
+					<StaticAlert color="warning">
 						The Subscriptions API is required for full functionality from the Elgato plugin, but enabling it allows any
 						satellite client to bypass the pincode/page system and interact with any button within Companion
-					</CAlert>
+					</StaticAlert>
 				</td>
 			</tr>
 		</>

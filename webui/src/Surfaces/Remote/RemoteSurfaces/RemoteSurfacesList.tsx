@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CFormSwitch } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
@@ -9,6 +9,7 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -119,9 +120,7 @@ function RemoteSurfacesGroupHeaderContent({ collection }: { collection: Outbound
 	const setEnabledMutation = useMutationExt(trpc.surfaces.outbound.collections.setEnabled.mutationOptions())
 
 	const setEnabled = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const enabled = e.target.checked
-
+		(enabled: boolean) => {
 			setEnabledMutation.mutateAsync({ collectionId: collection.id, enabled }).catch((e) => {
 				console.error('Failed to set collection enabled state', stringifyError(e))
 			})
@@ -130,14 +129,13 @@ function RemoteSurfacesGroupHeaderContent({ collection }: { collection: Outbound
 	)
 
 	return (
-		<CFormSwitch
-			className="ms-1"
-			color="success"
-			checked={collection.metaData.enabled}
-			onChange={setEnabled}
-			title={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
-			size="xl"
-		/>
+		<div className="ms-1">
+			<SwitchInputField
+				value={collection.metaData.enabled}
+				setValue={setEnabled}
+				tooltip={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
+			/>
+		</div>
 	)
 }
 

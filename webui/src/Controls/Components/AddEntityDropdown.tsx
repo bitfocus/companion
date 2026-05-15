@@ -1,38 +1,25 @@
+import { Combobox } from '@base-ui/react/combobox'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
+import { ChevronDownIcon } from 'lucide-react'
+import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
-import Select, { type createFilter } from 'react-select'
+import { useCallback, useContext, useRef, useState } from 'react'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackEntitySubType, type EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-const filterOptionsRecent: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
-	if (input) {
-		return !candidate.data.isRecent && (fuzzySingle(input, candidate.data.fuzzy)?.score ?? 0) >= 0.5
-	} else {
-		return candidate.data.isRecent
-	}
-}
-
-const filterOptionsSimple: ReturnType<typeof createFilter<AddEntityOption>> = (candidate, input): boolean => {
-	if (input) {
-		return (fuzzySingle(input, candidate.data.fuzzy)?.score ?? 0) >= 0.5
-	} else {
-		return true
-	}
-}
-
-interface AddEntityOption {
+interface AddEntityOption extends DropdownChoice {
 	isRecent: boolean
-	value: string
-	label: string
 	sortKey: string
 	fuzzy: ReturnType<typeof fuzzyPrepare>
 }
 interface AddEntityGroup {
+	id: string
 	label: string
 	options: AddEntityOption[]
 }
@@ -42,7 +29,6 @@ interface AddEntityDropdownProps {
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
 	disabled: boolean
-	showAll: boolean
 }
 export const AddEntityDropdown = observer(function AddEntityDropdown({
 	onSelect,
@@ -50,7 +36,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	entityTypeLabel,
 	feedbackListType,
 	disabled,
-	showAll,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
 	const menuPortal = useContext(MenuPortalContext)
@@ -72,7 +57,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				const optionLabel = `${label}: ${definition.label}`
 				connectionOptions.push({
 					isRecent: false,
-					value: `${connectionId}:${definitionId}`,
+					id: `${connectionId}:${definitionId}`,
 					label: optionLabel,
 					sortKey: String(definition.sortKey ?? definition.label),
 					fuzzy: fuzzyPrepare(optionLabel),
@@ -89,106 +74,141 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			pushConnection(connection.id, connection.label)
 		}
 
-		if (!showAll) {
-			if (feedbackListType === FeedbackEntitySubType.Value) {
-				// Show the builtin value type options as special, to increase visibility
-				const internalDefs = definitions.connections.get('internal')
-				if (internalDefs) {
-					const commonOptions: AddEntityOption[] = []
+		if (feedbackListType === FeedbackEntitySubType.Value) {
+			// Show the builtin value type options as special, to increase visibility
+			const internalDefs = definitions.connections.get('internal')
+			if (internalDefs) {
+				const commonOptions: AddEntityOption[] = []
 
-					for (const [definitionId, definition] of internalDefs.entries()) {
-						if (
-							!canAddEntityToFeedbackList(feedbackListType, definition) ||
-							definition.feedbackType !== FeedbackEntitySubType.Value
-						)
-							continue
+				for (const [definitionId, definition] of internalDefs.entries()) {
+					if (
+						!canAddEntityToFeedbackList(feedbackListType, definition) ||
+						definition.feedbackType !== FeedbackEntitySubType.Value
+					)
+						continue
 
-						const optionLabel = `internal: ${definition.label}`
-						commonOptions.push({
-							isRecent: true, // Not really, but should behave the same
-							value: `internal:${definitionId}`,
-							label: optionLabel,
-							sortKey: definition.sortKey ?? definition.label,
-							fuzzy: fuzzyPrepare(optionLabel),
-						})
-					}
-
-					options.push({
-						label: 'Common',
-						options: commonOptions,
+					const optionLabel = `internal: ${definition.label}`
+					commonOptions.push({
+						isRecent: true, // Not really, but should behave the same
+						id: `internal:${definitionId}`,
+						label: optionLabel,
+						sortKey: definition.sortKey ?? definition.label,
+						fuzzy: fuzzyPrepare(optionLabel),
 					})
 				}
-			}
 
-			const recents: AddEntityOption[] = []
-			for (const definitionPair of recentlyUsedStore.recentIds) {
-				if (!definitionPair) continue
-
-				const [connectionId, definitionId] = definitionPair.split(':', 2)
-				const definition = definitions.connections.get(connectionId)?.get(definitionId)
-				if (!definition) continue
-
-				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
-
-				const connectionLabel = connections.getLabel(connectionId) ?? connectionId
-				const optionLabel = `${connectionLabel}: ${definition.label}`
-				recents.push({
-					isRecent: true,
-					value: `${connectionId}:${definitionId}`,
-					label: optionLabel,
-					sortKey: definition.sortKey ?? definition.label,
-					fuzzy: fuzzyPrepare(optionLabel),
+				options.push({
+					id: '__common__',
+					label: 'Common',
+					options: commonOptions,
 				})
 			}
-			options.push({
-				label: 'Recently Used',
-				options: recents,
-			})
 		}
 
+		const recents: AddEntityOption[] = []
+		for (const definitionPair of recentlyUsedStore.recentIds) {
+			if (!definitionPair) continue
+
+			const [connectionId, definitionId] = definitionPair.split(':', 2)
+			const definition = definitions.connections.get(connectionId)?.get(definitionId)
+			if (!definition) continue
+
+			if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
+
+			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
+			const optionLabel = `${connectionLabel}: ${definition.label}`
+			recents.push({
+				isRecent: true,
+				id: `${connectionId}:${definitionId}`,
+				label: optionLabel,
+				sortKey: definition.sortKey ?? definition.label,
+				fuzzy: fuzzyPrepare(optionLabel),
+			})
+		}
+		options.push({
+			id: '__recent__',
+			label: 'Recently Used',
+			options: recents,
+		})
+
 		return options
-	}, [definitions, connections, recentlyUsedStore.recentIds, feedbackListType, showAll])
+	}, [definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
 
-	const innerChange = useCallback(
-		(e: AddEntityOption | null) => {
-			if (e?.value) {
-				recentlyUsedStore.trackId(e.value)
+	const onChange = useCallback(
+		(id: DropdownChoice['id'] | null) => {
+			if (!id) return
+			const id2 = String(id)
+			recentlyUsedStore.trackId(id2)
 
-				const [connectionId, definitionId] = e.value.split(':', 2)
-				onSelect(connectionId, definitionId)
-			}
+			const [connectionId, definitionId] = id2.split(':', 2)
+			onSelect(connectionId, definitionId)
 		},
 		[onSelect, recentlyUsedStore]
 	)
 
-	const noOptionsMessage = useCallback(
-		({ inputValue }: { inputValue: string }) => {
-			if (inputValue) {
-				return `No ${entityTypeLabel}s found`
-			} else {
-				return `No recently used ${entityTypeLabel}s`
+	const inputRef = useRef<HTMLInputElement>(null)
+
+	const [inputValue, setInputValue] = useState<string>('')
+
+	const onOpenChange = useCallback((open: boolean) => {
+		if (!open) {
+			inputRef.current?.blur()
+		}
+	}, [])
+
+	const filterOptions = useComputed<Array<DropdownChoice | AddEntityGroup> | undefined>(() => {
+		const filterArray = <T extends AddEntityOption | AddEntityGroup>(options: Array<T>) => {
+			const res: Array<T> = []
+
+			for (const option of options) {
+				if ('options' in option) {
+					const children = filterArray(option.options)
+					if (children.length === 0) {
+						continue
+					}
+
+					res.push({
+						...option,
+						options: children,
+					})
+				} else {
+					const include = inputValue
+						? !option.isRecent && (fuzzySingle(inputValue, option.fuzzy)?.score ?? 0) >= 0.5
+						: option.isRecent
+					if (include) res.push(option)
+				}
 			}
-		},
-		[entityTypeLabel]
-	)
+
+			return res
+		}
+
+		return toJS(filterArray(options))
+	}, [options, inputValue])
 
 	return (
-		<Select
-			menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
-			menuPortalTarget={menuPortal || document.body}
-			menuPosition={'fixed'}
-			classNamePrefix="select-control"
-			menuPlacement="auto"
-			isClearable={false}
-			isSearchable={true}
-			isMulti={false}
-			options={options}
-			placeholder={`+ Add ${entityTypeLabel}`}
-			value={null}
-			onChange={innerChange}
-			filterOption={showAll ? filterOptionsSimple : filterOptionsRecent}
-			noOptionsMessage={noOptionsMessage}
-			isDisabled={disabled}
-		/>
+		<div className="dropdown-field">
+			<Combobox.Root<DropdownChoice['id'] | null>
+				value={null}
+				items={options}
+				multiple={false}
+				autoHighlight
+				onValueChange={onChange}
+				onInputValueChange={setInputValue}
+				onOpenChange={onOpenChange}
+				disabled={disabled}
+				filteredItems={filterOptions}
+			>
+				<Combobox.InputGroup className="dropdown-field-input-group">
+					<Combobox.Input className="dropdown-field-input" placeholder={`+ Add ${entityTypeLabel}`} ref={inputRef} />
+					<Combobox.Trigger className="dropdown-field-trigger">
+						<ChevronDownIcon className="dropdown-field-icon" />
+					</Combobox.Trigger>
+				</Combobox.InputGroup>
+				<DropdownInputPopup
+					menuPortal={menuPortal ?? undefined}
+					noOptionsMessage={inputValue ? `No ${entityTypeLabel}s found` : `No recently used ${entityTypeLabel}s`}
+				/>
+			</Combobox.Root>
+		</div>
 	)
 })

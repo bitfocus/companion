@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCallout, CFormCheck, CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
+import { CButton, CCallout } from '@coreui/react'
 import {
 	faCircleInfo,
 	faClock,
@@ -18,7 +18,10 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { StaticAlert } from '~/Components/Alert.js'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { TabArea } from '~/Components/TabArea.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -69,70 +72,55 @@ export function ImportFullWizard({
 	const [activeTab, setActiveTab] = useState<'full' | 'buttons' | 'triggers'>('full')
 
 	return (
-		<>
-			<CNav variant="tabs">
-				<CNavItem>
-					<CNavLink active={activeTab === 'full'} onClick={() => setActiveTab('full')}>
-						<FontAwesomeIcon icon={faGlobe} /> Full Import
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink
-						active={activeTab === 'buttons'}
-						onClick={() => setActiveTab('buttons')}
-						disabled={!snapshot.buttons}
-					>
-						<FontAwesomeIcon icon={faTh} /> Buttons
-					</CNavLink>
-				</CNavItem>
-				<CNavItem>
-					<CNavLink
-						active={activeTab === 'triggers'}
-						onClick={() => setActiveTab('triggers')}
-						disabled={!snapshot.triggers}
-					>
-						<FontAwesomeIcon icon={faClock} /> Triggers
-					</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent className="no-height-limit">
-				<CTabPane visible={activeTab === 'full'}>
+		<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+			<TabArea.List>
+				<TabArea.Tab value="full">
+					<FontAwesomeIcon icon={faGlobe} /> Full Import
+				</TabArea.Tab>
+				<TabArea.Tab value="buttons" disabled={!snapshot.buttons}>
+					<FontAwesomeIcon icon={faTh} /> Buttons
+				</TabArea.Tab>
+				<TabArea.Tab value="triggers" disabled={!snapshot.triggers}>
+					<FontAwesomeIcon icon={faClock} /> Triggers
+				</TabArea.Tab>
+			</TabArea.List>
+
+			<TabArea.Panel value="full">
+				<MyErrorBoundary>
+					<FullImportTab snapshot={snapshot} />
+				</MyErrorBoundary>
+			</TabArea.Panel>
+			<TabArea.Panel value="buttons" style={{ height: '100%' }}>
+				<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+					<h4>Buttons</h4>
 					<MyErrorBoundary>
-						<FullImportTab snapshot={snapshot} />
-					</MyErrorBoundary>
-				</CTabPane>
-				<CTabPane visible={activeTab === 'buttons'} style={{ height: '100%' }}>
-					<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-						<h4>Buttons</h4>
-						<MyErrorBoundary>
-							{snapshot.buttons ? (
-								<ImportPageWizard
-									snapshot={snapshot}
-									connectionRemap={connectionRemap}
-									setConnectionRemap={setConnectionRemap}
-									doImport={doSinglePageImport}
-								/>
-							) : (
-								''
-							)}
-						</MyErrorBoundary>
-					</div>
-				</CTabPane>
-				<CTabPane visible={activeTab === 'triggers'}>
-					<MyErrorBoundary>
-						{snapshot.triggers ? (
-							<ImportTriggersTab
+						{snapshot.buttons ? (
+							<ImportPageWizard
 								snapshot={snapshot}
 								connectionRemap={connectionRemap}
 								setConnectionRemap={setConnectionRemap}
+								doImport={doSinglePageImport}
 							/>
 						) : (
 							''
 						)}
 					</MyErrorBoundary>
-				</CTabPane>
-			</CTabContent>
-		</>
+				</div>
+			</TabArea.Panel>
+			<TabArea.Panel value="triggers">
+				<MyErrorBoundary>
+					{snapshot.triggers ? (
+						<ImportTriggersTab
+							snapshot={snapshot}
+							connectionRemap={connectionRemap}
+							setConnectionRemap={setConnectionRemap}
+						/>
+					) : (
+						''
+					)}
+				</MyErrorBoundary>
+			</TabArea.Panel>
+		</TabArea.Root>
 	)
 }
 
@@ -209,10 +197,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				A full import will replace the current system configuration of the selected components with the imported
 				configuration of the components.
 			</p>
-			<CAlert color="info" className="margin-top">
+			<StaticAlert color="info" className="mb-0">
 				<FontAwesomeIcon icon={faCircleInfo} /> Want to import specific buttons or triggers instead? Use the{' '}
 				<strong>Buttons</strong> or <strong>Triggers</strong> tabs at the top.
-			</CAlert>
+			</StaticAlert>
 			<CCallout color="warning">
 				<h5>
 					<FontAwesomeIcon icon={faWarning} /> Before You Proceed
@@ -364,10 +352,10 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								</form.AppField>
 							</div> */}
 
-					<CAlert color="info" className="margin-top">
+					<StaticAlert color="info" className="mt-3">
 						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
 						import any actions and feedbacks.
-					</CAlert>
+					</StaticAlert>
 
 					<CCallout color="success">
 						<h5>Import, Resetting only Selected Components</h5>
@@ -442,11 +430,11 @@ function ImportToggleField({ label, disabled, className }: ImportToggleFieldProp
 	const field = useFieldContext<ImportOrResetType>()
 
 	return (
-		<CFormCheck
+		<CheckboxInputFieldWithLabel
 			className={className}
 			disabled={disabled}
-			checked={field.state.value !== 'unchanged'}
-			onChange={(e) => field.handleChange(e.currentTarget.checked ? 'reset-and-import' : 'unchanged')}
+			value={field.state.value !== 'unchanged' && !disabled}
+			setValue={(val) => field.handleChange(val ? 'reset-and-import' : 'unchanged')}
 			onBlur={field.handleBlur}
 			label={label}
 		/>
@@ -465,11 +453,11 @@ function ImportToggleGroup({ label, disabled, defaultChecked, defaultUnchecked }
 	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
 
 	return (
-		<CFormCheck
+		<CheckboxInputFieldWithLabel
 			disabled={disabled}
 			indeterminate={isAChildChecked && isAChildUnchecked}
-			checked={isAChildChecked}
-			onChange={(e) => field.handleChange(e.currentTarget.checked ? defaultChecked : defaultUnchecked)}
+			value={isAChildChecked && !disabled}
+			setValue={(val) => field.handleChange(val ? defaultChecked : defaultUnchecked)}
 			onBlur={field.handleBlur}
 			label={label}
 		/>

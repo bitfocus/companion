@@ -1,14 +1,17 @@
-import { CCol, CFormLabel, CFormSwitch } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
-import { DropdownInputField, NumberInputField, TextInputField } from '~/Components'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
+import { DropdownInputField } from '~/Components/DropdownInputField'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
+import { NumberInputField } from '~/Components/NumberInputField'
+import { SwitchInputField } from '~/Components/SwitchInputField'
+import { TextInputField } from '~/Components/TextInputField'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 
@@ -95,7 +98,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 		case 'checkbox':
 			control = (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<CFormSwitch color="success" checked={!!value} size="xl" onChange={() => setValue2(!value)} />
+					<SwitchInputField value={!!value} setValue={setValue2} tooltip={definition.tooltip} />
 				</div>
 			)
 			break

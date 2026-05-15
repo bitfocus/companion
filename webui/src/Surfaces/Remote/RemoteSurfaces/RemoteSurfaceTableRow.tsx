@@ -1,9 +1,10 @@
-import { CButton, CFormSwitch } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useRemoteSurfacesListContext } from './RemoteSurfacesListContext.js'
@@ -43,11 +44,14 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	}, [deleteMutation, deleteModalRef, id, remoteConnection, configureRemoteConnection])
 
 	const isEnabled = remoteConnection.enabled === undefined || remoteConnection.enabled
-	const doToggleEnabled = useCallback(() => {
-		setEnabledMutation.mutateAsync({ id, enabled: !isEnabled }).catch((e) => {
-			console.error('Set enabled failed', e)
-		})
-	}, [setEnabledMutation, id, isEnabled])
+	const doToggleEnabled = useCallback(
+		(val: boolean) => {
+			setEnabledMutation.mutateAsync({ id, enabled: !!val }).catch((e) => {
+				console.error('Set enabled failed', e)
+			})
+		},
+		[setEnabledMutation, id]
+	)
 
 	const editClickId = isSelected ? null : id // If this row is selected, don't allow editing on click, as it will close the selection
 	const doEdit = useCallback(() => configureRemoteConnection(editClickId), [configureRemoteConnection, editClickId])
@@ -70,15 +74,12 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 				</span>
 			</div>
 
-			<div className="flex align-items-center">
-				<CFormSwitch
-					className="ms-2"
+			<div className="flex align-items-center ps-2">
+				<SwitchInputField
 					// disabled={!moduleInfo || !moduleVersion}
-					color="success"
-					checked={isEnabled}
-					onChange={doToggleEnabled}
-					size="xl"
-					title={isEnabled ? `Disable surface connection` : `Enable surface connection`}
+					value={isEnabled}
+					setValue={doToggleEnabled}
+					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
 				<CButton onClick={doDelete} title="Delete" className="p-1">

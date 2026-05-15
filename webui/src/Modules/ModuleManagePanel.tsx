@@ -1,4 +1,4 @@
-import { CAlert, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -9,6 +9,7 @@ import { useCallback, useContext } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -95,7 +96,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} />
 					<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
 				</div>
-				{moduleStoreInfo?.updateWarning && <CAlert color="danger">{moduleStoreInfo.updateWarning}</CAlert>}
+				{moduleStoreInfo?.updateWarning && <StaticAlert color="danger">{moduleStoreInfo.updateWarning}</StaticAlert>}
 
 				<ModuleVersionsTable moduleType={moduleType} moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
 			</div>

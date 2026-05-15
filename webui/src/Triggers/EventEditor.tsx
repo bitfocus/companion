@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CForm, CFormSwitch } from '@coreui/react'
+import { CButton, CButtonGroup, CCol, CForm } from '@coreui/react'
 import {
 	faClone,
 	faCompressArrowsAlt,
@@ -17,6 +17,7 @@ import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
@@ -330,11 +331,6 @@ const EventEditor = observer(function EventEditor({
 
 	const eventSpec = eventDefinitions.definitions.get(event.type)
 
-	const innerSetEnabled = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => service.setEnabled(e.currentTarget.checked),
-		[service]
-	)
-
 	const name = eventSpec ? eventSpec.name : `${event.type} (undefined)`
 
 	const canSetHeadline = !!service.setHeadline
@@ -377,7 +373,7 @@ const EventEditor = observer(function EventEditor({
 				</div>
 
 				<div className="cell-controls">
-					<CButtonGroup>
+					<CButtonGroup className="me-1">
 						{canSetHeadline && !headlineExpanded && (
 							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
 								<FontAwesomeIcon icon={faPencil} />
@@ -401,11 +397,11 @@ const EventEditor = observer(function EventEditor({
 						{!!service.setEnabled && (
 							<>
 								&nbsp;
-								<CFormSwitch
-									color="success"
-									checked={event.enabled}
-									title={event.enabled ? 'Disable event' : 'Enable event'}
-									onChange={innerSetEnabled}
+								<SwitchInputField
+									value={event.enabled}
+									tooltip={event.enabled ? 'Disable event' : 'Enable event'}
+									setValue={service.setEnabled}
+									small
 								/>
 							</>
 						)}

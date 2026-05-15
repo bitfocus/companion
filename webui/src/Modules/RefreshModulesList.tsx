@@ -1,8 +1,9 @@
-import { CAlert, CButton } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
+import { StaticAlert } from '~/Components/Alert'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -24,7 +25,7 @@ export const RefreshModulesList = observer(function RefreshModulesList({ btnSize
 
 	return (
 		<div>
-			{refreshError ? <CAlert color="warning">{refreshError}</CAlert> : ''}
+			{refreshError ? <StaticAlert color="warning">{refreshError}</StaticAlert> : ''}
 
 			{refreshProgress !== 1 ? (
 				<CButton color="primary" disabled size={btnSize}>

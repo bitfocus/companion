@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CFormSwitch, CInputGroupText } from '@coreui/react'
+import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -13,18 +13,17 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { ColorInputField } from '~/Components/ColorInputField.js'
+import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
-import {
-	CheckboxInputField,
-	ColorInputField,
-	DropdownInputField,
-	MultiDropdownInputField,
-	NumberInputField,
-	TextInputField,
-} from '~/Components/index.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
@@ -242,15 +241,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		}
 		case 'checkbox': {
 			if (option.displayToggle) {
-				return (
-					<CFormSwitch
-						color="success"
-						checked={!!value}
-						size="xl"
-						onChange={(e) => setValue(e.currentTarget.checked)}
-						disabled={readonly}
-					/>
-				)
+				return <SwitchInputField value={!!value} setValue={setValue} tooltip={option.tooltip} disabled={readonly} />
 			} else {
 				return <CheckboxInputField value={value as any} disabled={readonly} setValue={setValue} />
 			}

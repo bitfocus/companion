@@ -1,4 +1,4 @@
-import { CAlert, CButton, CCallout } from '@coreui/react'
+import { CButton, CCallout } from '@coreui/react'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
@@ -193,7 +194,7 @@ export const ImportExportPage = observer(function ImportExport() {
 				<h5>Import</h5>
 				{!fileApiIsSupported ? (
 					<>
-						<CAlert color="warning">File uploading is not supported in your browser</CAlert>
+						<StaticAlert color="warning">File uploading is not supported in your browser</StaticAlert>
 					</>
 				) : (
 					<>
@@ -203,7 +204,7 @@ export const ImportExportPage = observer(function ImportExport() {
 						</p>
 
 						<div>
-							{loadError ? <CAlert color="warning">{loadError}</CAlert> : ''}
+							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
 							<label className="btn btn-warning btn-file">
 								<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />

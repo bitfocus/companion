@@ -54,7 +54,6 @@ export function AddEntityPanel({
 				entityTypeLabel={entityTypeLabel}
 				feedbackListType={feedbackListType}
 				disabled={readonly}
-				showAll={false}
 			/>
 			<CButton
 				color="primary"

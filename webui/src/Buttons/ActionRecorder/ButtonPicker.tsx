@@ -6,7 +6,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { DropdownInputField } from '~/Components/index.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -179,7 +179,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 							<CFormLabel>Step</CFormLabel>
 
-							<DropdownInputField
+							<SimpleDropdownInputField
 								choices={actionStepOptions}
 								value={selectedStep ?? ''}
 								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
@@ -189,7 +189,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
 							<CFormLabel>Action Group</CFormLabel>
 
-							<DropdownInputField
+							<SimpleDropdownInputField
 								choices={actionSetOptions}
 								value={selectedSet ?? ''}
 								setValue={setSelectedSet as (val: DropdownChoiceId) => void}

@@ -1,7 +1,9 @@
-import { CAlert, CButton, CCol, CForm, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { StaticAlert } from '~/Components/Alert.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { UserConfigProps } from '../Components/Common.js'
@@ -115,8 +117,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 			}
 		}, [show, userConfig])
 
-		const setMinColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = Number(e.currentTarget.value)
+		const setMinColumn = useCallback((newValue: number) => {
 			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -127,8 +128,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMaxColumn = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = Number(e.currentTarget.value)
+		const setMaxColumn = useCallback((newValue: number) => {
 			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -139,8 +139,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMinRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = Number(e.currentTarget.value)
+		const setMinRow = useCallback((newValue: number) => {
 			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -151,8 +150,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 					: null
 			)
 		}, [])
-		const setMaxRow = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			const newValue = Number(e.currentTarget.value)
+		const setMaxRow = useCallback((newValue: number) => {
 			if (Number.isNaN(newValue)) return
 			setNewGridSize((oldSize) =>
 				oldSize
@@ -180,56 +178,56 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 				<CModalBody>
 					<CForm onSubmit={doAction} className="row">
 						{newGridSize && (
-							<CCol sm={12}>
+							<CCol sm={12} className="mb-3">
 								New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
 								{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
 							</CCol>
 						)}
-						<CCol sm={12}>
-							<CFormInput
-								label="Min Row"
-								type="number"
-								value={newGridSize?.minRow ?? '' /* avoid switch to/from uncontrolled */}
+
+						<CFormLabel htmlFor="colFormMinRow" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+							Min Row
+						</CFormLabel>
+						<CCol sm={9} className="mb-2">
+							<NumberInputField id="colFormMinRow" value={newGridSize?.minRow} max={0} step={1} setValue={setMinRow} />
+						</CCol>
+
+						<CFormLabel htmlFor="colFormMaxRow" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+							Max Row
+						</CFormLabel>
+						<CCol sm={9} className="mb-2">
+							<NumberInputField id="colFormMaxRow" value={newGridSize?.maxRow} min={0} step={1} setValue={setMaxRow} />
+						</CCol>
+
+						<CFormLabel htmlFor="colFormMinColumn" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+							Min Column
+						</CFormLabel>
+						<CCol sm={9} className="mb-2">
+							<NumberInputField
+								id="colFormMinColumn"
+								value={newGridSize?.minColumn}
 								max={0}
 								step={1}
-								onChange={setMinRow}
+								setValue={setMinColumn}
 							/>
 						</CCol>
-						<CCol sm={12}>
-							<CFormInput
-								label="Max Row"
-								type="number"
-								value={newGridSize?.maxRow ?? ''}
+
+						<CFormLabel htmlFor="colFormMaxColumn" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+							Max Column
+						</CFormLabel>
+						<CCol sm={9} className="mb-2">
+							<NumberInputField
+								id="colFormMaxColumn"
+								value={newGridSize?.maxColumn}
 								min={0}
 								step={1}
-								onChange={setMaxRow}
-							/>
-						</CCol>
-						<CCol sm={12}>
-							<CFormInput
-								label="Min Column"
-								type="number"
-								value={newGridSize?.minColumn ?? ''}
-								max={0}
-								step={1}
-								onChange={setMinColumn}
-							/>
-						</CCol>
-						<CCol sm={12}>
-							<CFormInput
-								label="Max Column"
-								type="number"
-								value={newGridSize?.maxColumn ?? ''}
-								min={0}
-								step={1}
-								onChange={setMaxColumn}
+								setValue={setMaxColumn}
 							/>
 						</CCol>
 					</CForm>
 					{isReducingSize && (
-						<CAlert color="danger">
+						<StaticAlert color="danger" className="mb-0 mt-2">
 							By reducing the grid size, any buttons outside of the new boundaries will be deleted.
-						</CAlert>
+						</StaticAlert>
 					)}
 				</CModalBody>
 				<CModalFooter>

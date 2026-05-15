@@ -1,11 +1,12 @@
-import { CAlert, CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
 import { useCallback, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { TextInputField } from '~/Components/index.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -40,7 +41,9 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 					{controlConfig.config.type === 'trigger' ? (
 						<TriggerPanelContent config={controlConfig.config} controlId={controlId} />
 					) : (
-						<CAlert color="danger">Invalid control type: {controlConfig.config.type}. Expected 'trigger'.</CAlert>
+						<StaticAlert color="danger">
+							Invalid control type: {controlConfig.config.type}. Expected 'trigger'.
+						</StaticAlert>
 					)}
 				</div>
 			) : (

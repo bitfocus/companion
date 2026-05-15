@@ -1,16 +1,8 @@
-import {
-	CButton,
-	CCol,
-	CForm,
-	CFormInput,
-	CFormLabel,
-	CFormSwitch,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-} from '@coreui/react'
+import { CButton, CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 
 type EditDurationCompleteCallback = (duration: number, whileHeld: boolean) => void
 
@@ -67,14 +59,6 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 			[]
 		)
 
-		const onDurationChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			setNewDurationValue(Number(e.target.value))
-		}, [])
-
-		const onWhileHeldChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			setNewWhileHeldValue(!!e.target.checked)
-		}, [])
-
 		return (
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
@@ -86,14 +70,13 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							Press duration
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormInput
-								name="colFormPressDuration"
-								type="number"
-								value={newDurationValue || ''}
+							<NumberInputField
+								id="colFormPressDuration"
+								value={newDurationValue ?? undefined}
 								min={1}
 								step={1}
-								style={{ color: !newDurationValue || newDurationValue <= 0 ? 'red' : undefined }}
-								onChange={onDurationChange}
+								checkValid={newDurationValue !== null && newDurationValue > 0}
+								setValue={setNewDurationValue}
 							/>
 						</CCol>
 
@@ -101,11 +84,10 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							Execute while held
 						</CFormLabel>
 						<CCol sm={8}>
-							<CFormSwitch
-								name="colFormExecuteWhileHeld"
-								size="xl"
-								checked={!!newWhileHeldValue}
-								onChange={onWhileHeldChange}
+							<SwitchInputField
+								id="colFormExecuteWhileHeld"
+								value={!!newWhileHeldValue}
+								setValue={setNewWhileHeldValue}
 							/>
 						</CCol>
 					</CForm>

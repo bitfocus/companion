@@ -1,8 +1,9 @@
-import { CAlert, CButton } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
+import { DismissableAlert } from '~/Components/Alert'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -26,7 +27,7 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 
 	return (
 		<>
-			<CAlert color="info" onClose={doDismiss} dismissible>
+			<DismissableAlert color="info" onClose={doDismiss}>
 				You have some surfaces which overflow the current grid bounds
 				<ul>
 					{overflowing.surfaces.map((s) => (
@@ -37,7 +38,7 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 					<FontAwesomeIcon icon={faExpand} />
 					&nbsp;Resize grid to fit
 				</CButton>
-			</CAlert>
+			</DismissableAlert>
 		</>
 	)
 })

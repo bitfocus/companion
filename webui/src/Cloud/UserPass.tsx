@@ -1,7 +1,8 @@
-import { CAlert, CButton, CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CButton, CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { memo, useState } from 'react'
+import { StaticAlert } from '~/Components/Alert'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudUserPassProps {
@@ -56,13 +57,13 @@ export const CloudUserPass = memo(function CloudUserPass({
 				</CCol>
 
 				<CCol sm={12}>
-					<CAlert color="info">
+					<StaticAlert color="info">
 						<FontAwesomeIcon icon={faInfoCircle} /> &nbsp;Companion Cloud is a premium service. Learn more and sign up{' '}
 						<a target="_blank" href="https://bfoc.us/ezzaf9tfeg">
 							here
 						</a>
 						.
-					</CAlert>
+					</StaticAlert>
 				</CCol>
 			</CRow>
 		</CForm>
