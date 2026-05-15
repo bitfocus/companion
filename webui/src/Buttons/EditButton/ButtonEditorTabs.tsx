@@ -1,6 +1,7 @@
 import { CButton } from '@coreui/react'
 import { faClone, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
@@ -99,9 +100,6 @@ export function ButtonEditorTabs({
 								stepOptions={steps[stepId]?.options}
 								moreThanOneStep={stepKeys.length > 1}
 								isCurrent={runtimeProps.current_step_id === stepId}
-								isActiveAndCurrent={
-									stepId.toString() === selectedIndex.toString() && runtimeProps.current_step_id === stepId
-								}
 							/>
 						))}
 
@@ -160,8 +158,6 @@ interface ActionSetTabProps {
 	moreThanOneStep: boolean
 	// the current step is the one that is currently being executed
 	isCurrent: boolean
-	// both selected and the current step
-	isActiveAndCurrent: boolean
 }
 function ActionSetTab({
 	controlId,
@@ -170,7 +166,6 @@ function ActionSetTab({
 	stepOptions,
 	moreThanOneStep,
 	isCurrent,
-	isActiveAndCurrent,
 }: Readonly<ActionSetTabProps>) {
 	let linkClassname: string | undefined = undefined
 
@@ -182,8 +177,7 @@ function ActionSetTab({
 			: String(stepIndex + 1)
 
 	if (moreThanOneStep) {
-		if (isActiveAndCurrent) linkClassname = 'selected-and-active'
-		else if (isCurrent) linkClassname = 'only-current'
+		if (isCurrent) linkClassname = 'highlight-current'
 	}
 
 	const renameStepMutation = useMutationExt(trpc.controls.steps.rename.mutationOptions())
@@ -211,7 +205,12 @@ function ActionSetTab({
 	)
 
 	return (
-		<TabArea.Tab className={linkClassname} value={`step:${stepId}`} title={displayText} onDoubleClick={showField}>
+		<TabArea.Tab
+			className={classNames('nav-steps-special', linkClassname)}
+			value={`step:${stepId}`}
+			title={displayText}
+			onDoubleClick={showField}
+		>
 			{showInputField ? (
 				<TextInputField value={name ?? ''} setValue={renameStep} onBlur={hideField} onKeyDown={onKeyDown} />
 			) : (

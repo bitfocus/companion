@@ -20,6 +20,24 @@
 	}
 }
 
+.nav-steps-special {
+	margin-bottom: 0px !important;
+
+	&.highlight-current {
+		animation: rotor 0.25s infinite alternate ease-in-out;
+	}
+}
+
+@keyframes rotor {
+	0% {
+		box-shadow: inset 0 10px 15px -10px #2eb85cff;
+	}
+
+	100% {
+		box-shadow: inset 0 10px 10px -10px #2eb85c00;
+	}
+}
+
 .form-label .feature-icons {
 	white-space: nowrap;
 
