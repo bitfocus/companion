@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import { useContext, useMemo, useCallback, useState } from 'react'
 import Select, { createFilter, components, type InputActionMeta } from 'react-select'
 import CreatableSelect, { type CreatableProps } from 'react-select/creatable'
-// import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
+import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { observer } from 'mobx-react-lite'
 import { CustomOption, CustomSingleValue } from './DropDownInputFancy.js'
@@ -144,7 +144,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 			stringify: searchLabelsOnly ? (option) => option.label : (option) => `${option.label} ${option.value}`,
 		}),
 		components: {
-			// MenuList: WindowedMenuList,
+			MenuList: WindowedMenuList,
 			Input: inputComponent,
 			// couldn't find a cleaner way to do this: otherwise TypeScript complains about Singlevalue...
 			...((fancyFormat ? { Option: CustomOption, SingleValue: CustomSingleValue } : {}) as Partial<
