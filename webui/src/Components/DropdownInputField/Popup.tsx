@@ -2,7 +2,6 @@ import { Combobox } from '@base-ui/react/combobox'
 import React from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 
-// nocommit - unify this with elsewhere
 export interface DropdownGroupBase {
 	id: string
 	label: string

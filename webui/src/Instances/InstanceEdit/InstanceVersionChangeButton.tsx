@@ -280,6 +280,7 @@ interface SelectedVersionDropdownProps {
 const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 	moduleType,
 	moduleId,
+	htmlName,
 	value,
 	onChange,
 	onBlur,
@@ -296,7 +297,7 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 
 	return (
 		<SimpleDropdownInputField
-			// id="colFormVersion"
+			id={htmlName}
 			value={value as string}
 			setValue={(value) => onChange(value as string)}
 			onBlur={onBlur}

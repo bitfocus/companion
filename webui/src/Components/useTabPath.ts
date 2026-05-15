@@ -22,7 +22,8 @@ export function useTabPath(basePath: string, defaultValue?: string): Pick<TabAre
 	const navigate = useNavigate()
 
 	const normalized = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath
-	const rest = pathname.startsWith(normalized) ? pathname.slice(normalized.length) : ''
+	const isMatch = pathname === normalized || pathname.startsWith(`${normalized}/`)
+	const rest = isMatch ? pathname.slice(normalized.length) : ''
 	const segment = rest.replace(/^\//, '').split('/')[0]
 	const value: string | undefined = segment || defaultValue
 

@@ -44,11 +44,14 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	}, [deleteMutation, deleteModalRef, id, remoteConnection, configureRemoteConnection])
 
 	const isEnabled = remoteConnection.enabled === undefined || remoteConnection.enabled
-	const doToggleEnabled = useCallback(() => {
-		setEnabledMutation.mutateAsync({ id, enabled: !isEnabled }).catch((e) => {
-			console.error('Set enabled failed', e)
-		})
-	}, [setEnabledMutation, id, isEnabled])
+	const doToggleEnabled = useCallback(
+		(val: boolean) => {
+			setEnabledMutation.mutateAsync({ id, enabled: !!val }).catch((e) => {
+				console.error('Set enabled failed', e)
+			})
+		},
+		[setEnabledMutation, id]
+	)
 
 	const editClickId = isSelected ? null : id // If this row is selected, don't allow editing on click, as it will close the selection
 	const doEdit = useCallback(() => configureRemoteConnection(editClickId), [configureRemoteConnection, editClickId])

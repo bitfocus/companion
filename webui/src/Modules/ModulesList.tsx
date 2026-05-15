@@ -135,11 +135,15 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 		components = []
 		components.push(
-			<StaticAlert color="warning" role="alert">
-				Failed to build list of modules:
-				<br />
-				{e?.toString()}
-			</StaticAlert>
+			<tr key="module-list-build-error">
+				<td colSpan={4}>
+					<StaticAlert color="warning" role="alert">
+						Failed to build list of modules:
+						<br />
+						{e?.toString()}
+					</StaticAlert>
+				</td>
+			</tr>
 		)
 	}
 

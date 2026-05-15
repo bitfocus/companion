@@ -44,7 +44,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 
 	const onChange = useCallback(
 		(v: DropdownChoiceId | null) => {
-			if (v !== null) setValue(v)
+			setValue(v as DropdownChoiceId)
 		},
 		[setValue]
 	)
