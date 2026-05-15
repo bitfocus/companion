@@ -1,7 +1,7 @@
 import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { stringify as csvStringify } from 'csv-stringify/sync'
+import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 import dayjs from 'dayjs'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
