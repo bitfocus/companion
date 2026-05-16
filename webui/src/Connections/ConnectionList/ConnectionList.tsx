@@ -88,7 +88,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="connections-list-header fixed-header">
-				<h4 className="btn-inline">
+				<h4 className="button-inline">
 					Connections <ContextHelpButton action="/user-guide/config/connections" />
 				</h4>
 

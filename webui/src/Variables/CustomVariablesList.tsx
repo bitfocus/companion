@@ -94,7 +94,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={allVariableNames}>
 				<div>
-					<h4 className="btn-inline">
+					<h4 className="button-inline">
 						Custom Variables
 						<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
 					</h4>
@@ -125,7 +125,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						value={filter}
 						style={{ fontSize: '1.2em' }}
 					/>
-					<Button color="danger" onClick={clearFilter}>
+					<Button color="primary" onClick={clearFilter}>
 						<FontAwesomeIcon icon={faTimes} />
 					</Button>
 				</CInputGroup>

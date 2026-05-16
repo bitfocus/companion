@@ -57,7 +57,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4 className="btn-inline">
+								<h4 className="button-inline">
 									Settings - Backups
 									<ContextHelpButton action="/user-guide/config/settings#backups">
 										Companion can back itself up on a schedule to multiple directories if desired. These backups can be
@@ -245,7 +245,7 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 						tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
 					/>
 
-					<Button color="gray" onClick={doDelete} title="Delete">
+					<Button onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</ButtonGroup>

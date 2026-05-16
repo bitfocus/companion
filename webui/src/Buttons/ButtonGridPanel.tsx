@@ -108,7 +108,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
 				<EditPagePropertiesModal ref={editRef} includeName />
 
-				<h4 className="btn-inline">
+				<h4 className="button-inline">
 					Buttons
 					<ContextHelpButton action="/user-guide/config/buttons/" />
 				</h4>
@@ -122,20 +122,20 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<CRow>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-							<Button color="light" onClick={showExportModal} title="Export Page" className="btn-right">
-								<FontAwesomeIcon icon={faFileExport} />
-							</Button>
-							<Button color="light" onClick={configurePage} title="Edit Page" className="btn-right">
-								<FontAwesomeIcon icon={faPencil} />
-							</Button>
-							<Button color="light" onClick={resetPosition} title="Home Position" className="btn-right">
-								<FontAwesomeIcon icon={faHome} />
-							</Button>
 							<ButtonGridZoomControl
 								useCompactButtons={true}
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>
+							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
+								<FontAwesomeIcon icon={faHome} />
+							</Button>
+							<Button color="light" onClick={configurePage} title="Edit Page" className="ms-1">
+								<FontAwesomeIcon icon={faPencil} />
+							</Button>
+							<Button color="light" onClick={showExportModal} title="Export Page" className="ms-1">
+								<FontAwesomeIcon icon={faFileExport} />
+							</Button>
 						</ButtonGridHeader>
 					</CCol>
 				</CRow>

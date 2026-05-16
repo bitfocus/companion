@@ -85,7 +85,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		<CRow>
 			<CCol xs={12} className="flex-column-layout">
 				<div className="fixed-header">
-					<h4 className="btn-inline">
+					<h4 className="button-inline">
 						Variables
 						<ContextHelpButton action="/user-guide/config/variables" />
 					</h4>

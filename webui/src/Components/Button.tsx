@@ -1,7 +1,8 @@
-import { CButton } from '@coreui/react'
+import { Button as ButtonBase } from '@base-ui/react'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import classNames from 'classnames'
 import * as React from 'react'
+import type { Complete } from '@companion-module/base'
 
 export type ButtonColor =
 	| 'primary'
@@ -12,8 +13,6 @@ export type ButtonColor =
 	| 'info'
 	| 'light'
 	| 'dark'
-	| 'gray'
-	| 'white'
 	| 'disabled'
 	| 'link'
 
@@ -26,51 +25,55 @@ interface ButtonVisualProps {
 	hidden?: boolean
 
 	disabled?: boolean
+	active?: boolean
 }
 
-// function getColorClasses(props: ButtonVisualProps): string {
-// 	return classNames(
-// 		'btn',
-// 		{
-// 			[`btn-${props.variant}-${props.color}`]: props.variant && props.color,
-// 			[`btn-${props.variant}`]: props.variant && !props.color,
-// 			[`btn-${props.color}`]: !props.variant && props.color,
-// 			[`btn-${props.size}`]: props.size,
-// 		},
-// 		// props.shape,
-// 		props.className
-// 	)
-// }
-
-export interface ButtonProps extends React.PropsWithChildren<ButtonVisualProps> {
-	title?: string
-	type?: 'submit' | 'reset'
-	autoFocus?: boolean
-	tabIndex?: number
-
-	onClick?: React.MouseEventHandler<HTMLElement>
-	onMouseDown?: React.MouseEventHandler<HTMLElement>
-	onMouseUp?: React.MouseEventHandler<HTMLElement>
+function getColorClasses(props: ButtonVisualProps): string {
+	return classNames(
+		'button',
+		'btn', // For backwards compatibility with coreui - should be removed eventually
+		{
+			[`button-${props.variant}-${props.color}`]: props.variant && props.color,
+			[`button-${props.variant}`]: props.variant && !props.color,
+			[`button-${props.color}`]: !props.variant && props.color,
+			[`button-${props.size}`]: props.size,
+			active: props.active,
+			disabled: props.disabled,
+		},
+		props.className
+	)
 }
 
-// TODO - rebuild this!
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(props, ref) {
-	// return (
-	// 	<CLink
-	// 		// as={rest.href ? 'a' : as}
-	// 		// {...(!rest.href && { type: type })}
-	// 		className={getColorClasses(props)}
-	// 		// {...rest}
-	// 		ref={ref}
-	// 	>
-	// 		{props.children}
-	// 	</CLink>
-	// )
-	return <CButton {...props} ref={ref} />
+export interface ButtonProps
+	extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'color' | 'size'>, ButtonVisualProps {}
+
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+	{ className, color, variant, size, hidden, active, disabled, children, ...rest },
+	ref
+) {
+	return (
+		<ButtonBase
+			className={getColorClasses({
+				className,
+				color,
+				variant,
+				size,
+				hidden,
+				active,
+				disabled,
+			} satisfies Complete<ButtonVisualProps>)}
+			{...(active && { 'aria-current': 'page' })}
+			{...rest}
+			disabled={disabled}
+			hidden={hidden}
+			ref={ref}
+		>
+			{children}
+		</ButtonBase>
+	)
 })
 
 interface LinkButtonBaseProps extends React.PropsWithChildren<ButtonVisualProps> {
-	onClick?: React.MouseEventHandler
 	title?: string
 }
 
@@ -81,24 +84,70 @@ export interface LinkButtonProps<
 	to: ToPathOption<RegisteredRouter, TFrom, TTo>
 }
 
-// TODO - rebuild this!
 export function LinkButton<const TFrom extends string = string, const TTo extends string | undefined = undefined>({
+	className,
+	color,
+	variant,
+	size,
+	hidden,
+	active,
+	disabled,
+	title,
 	to,
-	...rest
+	children,
 }: LinkButtonProps<TFrom, TTo>): React.JSX.Element {
-	return <CButton as={Link} to={to} {...rest} />
+	return (
+		<Link
+			className={getColorClasses({ className, color, variant, size, hidden, active, disabled })}
+			{...(active && { 'aria-current': 'page' })}
+			{...(disabled && { 'aria-disabled': true, tabIndex: -1 })}
+			disabled={disabled}
+			title={title}
+			to={to}
+		>
+			{children}
+		</Link>
+	)
 }
 
 export interface LinkButtonExternalProps extends LinkButtonBaseProps {
 	href: string
 	target?: string
 	rel?: string
+	onClick?: React.MouseEventHandler<HTMLAnchorElement>
 }
 
-// TODO - rebuild this!
-export function LinkButtonExternal({ href, ...rest }: LinkButtonExternalProps): React.JSX.Element {
+export function LinkButtonExternal({
+	className,
+	color,
+	variant,
+	size,
+	hidden,
+	active,
+	disabled,
+	title,
+	href,
+	target,
+	rel,
+	onClick,
+	children,
+}: LinkButtonExternalProps): React.JSX.Element {
 	return (
-		<CButton as="a" href={href} {...rest} target={rest.target ?? '_blank'} rel={rest.rel ?? 'noopener noreferrer'} />
+		<a
+			className={getColorClasses({ className, color, variant, size, hidden, active, disabled })}
+			{...(active && { 'aria-current': 'page' })}
+			{...(disabled && { 'aria-disabled': true, tabIndex: -1 })}
+			onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+				event.preventDefault()
+				if (!disabled) onClick?.(event)
+			}}
+			title={title}
+			href={href}
+			target={target ?? '_blank'}
+			rel={rel ?? 'noopener noreferrer'}
+		>
+			{children}
+		</a>
 	)
 }
 
@@ -119,11 +168,7 @@ export function ButtonGroup({
 	children,
 }: React.PropsWithChildren<ButtonGroupProps>): React.JSX.Element {
 	return (
-		<div
-			className={classNames(vertical ? 'button-group-vertical' : 'button-group', className)}
-			role="group"
-			// ref={ref}
-		>
+		<div className={classNames(vertical ? 'button-group-vertical' : 'button-group', className)} role="group">
 			{children}
 		</div>
 	)

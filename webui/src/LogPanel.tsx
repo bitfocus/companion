@@ -95,7 +95,7 @@ export const LogPanel = memo(function LogPanel() {
 						</ButtonGroup>
 
 						<div className="float-right">
-							<Button color="danger" size="sm" onClick={doClearLog}>
+							<Button color="primary" size="sm" onClick={doClearLog}>
 								Clear log
 							</Button>
 							<LinkButtonExternal color="light" className="ms-2" size="sm" href={makeAbsolutePath(`/int/export/log`)}>

@@ -80,10 +80,10 @@ export function EditActionsRelease({
 					key={id}
 					heading={`${ident} actions`}
 					headingActions={[
-						<Button key="rename" color="white" title="Configure" size="sm" onClick={() => configureSet(id)}>
+						<Button key="rename" title="Configure" size="sm" onClick={() => configureSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
 						</Button>,
-						<Button key="delete" color="white" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
+						<Button key="delete" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
 							<FontAwesomeIcon icon={faTrash} />
 						</Button>,
 					]}

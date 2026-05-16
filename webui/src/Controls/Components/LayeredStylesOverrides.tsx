@@ -130,7 +130,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 						<th>Element & Property</th>
 						<th>Value</th>
 						<th className="fit">
-							<Button color="white" size="sm" title="Add override" onClick={() => setIsAddModalOpen(true)}>
+							<Button size="sm" title="Add override" onClick={() => setIsAddModalOpen(true)} className="py-0">
 								<FontAwesomeIcon icon={faPlus} />
 							</Button>
 						</th>
@@ -198,7 +198,7 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 						<div className="flex-grow-1">
 							<SelectedElementProperty row={row} />
 						</div>
-						<Button color="white" size="sm" title="Edit element and property">
+						<Button size="sm" title="Edit element and property">
 							<FontAwesomeIcon icon={faPencil} />
 						</Button>
 					</div>
@@ -212,7 +212,7 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 					/>
 				</td>
 				<td>
-					<Button color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
+					<Button size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</td>

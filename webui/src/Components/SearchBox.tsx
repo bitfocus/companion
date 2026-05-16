@@ -25,7 +25,7 @@ export function SearchBox({ filter, setFilter }: SearchBoxProps): React.JSX.Elem
 				value={filter}
 				style={{ fontSize: '1.2em' }}
 			/>
-			<Button color="danger" onClick={clearFilter}>
+			<Button color="primary" onClick={clearFilter}>
 				<FontAwesomeIcon icon={faTimes} />
 			</Button>
 		</CInputGroup>

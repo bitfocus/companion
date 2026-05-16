@@ -46,8 +46,8 @@
 			// the following is applied to the text. The buttons need more specific selectors
 			color: var(--cui-disabled);
 
-			.btn {
-				--cui-btn-color: var(--cui-disabled);
+			.button {
+				--btn-color: var(--cui-disabled);
 			}
 		}
 	}
@@ -86,7 +86,7 @@
 			}
 		}
 
-		.btn-link {
+		.button-link {
 			padding: 0 6px;
 			color: #666;
 

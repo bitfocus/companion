@@ -131,7 +131,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<h4 className="btn-inline">
+				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
 				</h4>
@@ -157,7 +157,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 							value={filter}
 							style={{ fontSize: '1.2em' }}
 						/>
-						<Button color="danger" onClick={clearFilter}>
+						<Button color="primary" onClick={clearFilter}>
 							<FontAwesomeIcon icon={faTimes} />
 						</Button>
 					</CInputGroup>
@@ -275,10 +275,10 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 
 			<div className="action-buttons w-auto">
 				<ButtonGroup>
-					<Button color="white" onClick={doClone} title="Clone">
+					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
 					</Button>
-					<Button color="gray" onClick={doDelete} title="Delete">
+					<Button onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</ButtonGroup>

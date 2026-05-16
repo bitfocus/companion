@@ -49,7 +49,7 @@ export function RemoveElementButton({
 	}, [removeElementMutation, confirmModalRef, controlId, elementId])
 
 	return (
-		<Button color="white" size="sm" onClick={removeElement} title="Remove">
+		<Button size="sm" onClick={removeElement} title="Remove">
 			<FontAwesomeIcon icon={faTrash} />
 		</Button>
 	)
@@ -67,7 +67,7 @@ export const ToggleVisibilityButton = observer(function ToggleVisibilityButton({
 	const isVisible = styleStore.isElementVisible(elementId)
 
 	return (
-		<Button color="white" size="sm" onClick={toggleVisibility} title={isVisible ? 'Preview visible' : 'Preview hidden'}>
+		<Button size="sm" onClick={toggleVisibility} title={isVisible ? 'Preview visible' : 'Preview hidden'}>
 			<FontAwesomeIcon icon={faEye} style={{ opacity: isVisible ? undefined : 0.3 }} />
 		</Button>
 	)
@@ -89,7 +89,7 @@ export function AddElementDropdownButton({
 			style={{ backgroundColor: 'white' }}
 			className="add-layered-element-popover"
 		>
-			<Button color="white" size="sm" title="Add element">
+			<Button size="sm" title="Add element">
 				<FontAwesomeIcon icon={faPlus} />
 			</Button>
 		</CPopover>

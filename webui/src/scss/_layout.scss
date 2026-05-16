@@ -617,7 +617,7 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 .context-help-button-btn {
 	border: 0;
 	border-radius: 100%;
-	--cui-btn-color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
+	--btn-color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
 	background-color: white;
 }
 

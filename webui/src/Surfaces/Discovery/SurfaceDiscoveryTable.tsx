@@ -217,11 +217,11 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 			<td>
 				<ButtonGroup>
 					{isAlreadyAdded ? (
-						<Button title={'Already added'} className="btn-undefined" disabled>
+						<Button title={'Already added'} disabled>
 							<FontAwesomeIcon icon={faCheck} /> Already added
 						</Button>
 					) : (
-						<Button onClick={() => addConnection(surfaceInfo)} title="Add Connection" className="btn-undefined">
+						<Button onClick={() => addConnection(surfaceInfo)} title="Add Connection">
 							<FontAwesomeIcon icon={faPlus} /> Add Connection
 						</Button>
 					)}
