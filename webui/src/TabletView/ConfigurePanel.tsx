@@ -1,8 +1,9 @@
-import { CButton, CCol, CForm, CFormInput, CRow } from '@coreui/react'
+import { CCol, CForm, CFormInput, CRow } from '@coreui/react'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 
@@ -30,9 +31,9 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 			<CCol sm={12}>
 				<h3>
 					Configure Buttons View
-					<CButton className="close-config" onClick={() => setShow(false)} title="Close">
+					<Button className="close-config" onClick={() => setShow(false)} title="Close">
 						<FontAwesomeIcon icon={faCog} />
-					</CButton>
+					</Button>
 				</h3>
 				<CForm onSubmit={PreventDefaultHandler}>
 					<CRow>
@@ -115,7 +116,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 		<CRow className="header">
 			<CCol xs={12}>
 				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] && (
-					<CButton
+					<Button
 						onClick={() => {
 							document.documentElement.requestFullscreen().catch((err) => {
 								console.error('Error attempting to enable full-screen mode:', err)
@@ -125,12 +126,12 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 						title="Fullscreen"
 					>
 						<FontAwesomeIcon icon={faExpand} />
-					</CButton>
+					</Button>
 				)}
 				{!query['noconfigure'] && (
-					<CButton className="open-config" onClick={() => setShow(true)} title="Configure">
+					<Button className="open-config" onClick={() => setShow(true)} title="Configure">
 						<FontAwesomeIcon icon={faCog} />
-					</CButton>
+					</Button>
 				)}
 			</CCol>
 		</CRow>

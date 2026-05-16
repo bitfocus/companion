@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import {
 	faEyeSlash,
 	faGamepad,
@@ -13,6 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -331,7 +332,7 @@ const ModulesListRow = observer(function ModulesListRow({
 				{moduleInfo.name}
 			</td>
 			<td className="compact">
-				<CButton
+				<Button
 					onMouseDown={doShowHelp}
 					color="white"
 					title="Show Help"
@@ -339,7 +340,7 @@ const ModulesListRow = observer(function ModulesListRow({
 					style={{ textAlign: 'left' }}
 				>
 					<FontAwesomeIcon icon={faQuestionCircle} />
-				</CButton>
+				</Button>
 			</td>
 		</tr>
 	)

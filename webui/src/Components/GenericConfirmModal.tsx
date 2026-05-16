@@ -1,5 +1,6 @@
-import { CButton, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { CModalExt } from './CModalExt.js'
 
 export interface GenericConfirmModalRef {
@@ -70,12 +71,12 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 				</CModalHeader>
 				<CModalBody>{content}</CModalBody>
 				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
+					<Button color="secondary" onClick={doClose}>
 						Cancel
-					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction} autoFocus>
+					</Button>
+					<Button ref={buttonRef} color="primary" onClick={doAction} autoFocus>
 						{data?.buttonLabel}
-					</CButton>
+					</Button>
 				</CModalFooter>
 			</CModalExt>
 		)

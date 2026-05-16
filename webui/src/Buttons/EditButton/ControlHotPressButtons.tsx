@@ -1,8 +1,9 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import { faPlay, faRedo, faStop, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Button } from '~/Components/Button'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -44,7 +45,7 @@ export function ControlHotPressButtons({
 	return (
 		<>
 			<CButtonGroup>
-				<CButton
+				<Button
 					className="ms-1"
 					color="warning"
 					onMouseDown={hotPressDown}
@@ -54,15 +55,15 @@ export function ControlHotPressButtons({
 				>
 					<FontAwesomeIcon icon={faPlay} />
 					&nbsp;Test
-				</CButton>
-				<CButton color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
+				</Button>
+				<Button color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
 					<FontAwesomeIcon icon={faStop} />
 					&nbsp;Stop
-				</CButton>
+				</Button>
 			</CButtonGroup>
 			{showRotaries && (
 				<MyErrorBoundary>
-					<CButton
+					<Button
 						className="ms-1"
 						color="warning"
 						onMouseDown={hotRotateLeft}
@@ -70,9 +71,9 @@ export function ControlHotPressButtons({
 						title="Test rotate left"
 					>
 						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
+					</Button>
 
-					<CButton
+					<Button
 						className="ms-1"
 						color="warning"
 						onMouseDown={hotRotateRight}
@@ -80,7 +81,7 @@ export function ControlHotPressButtons({
 						title="Test rotate right"
 					>
 						<FontAwesomeIcon icon={faRedo} />
-					</CButton>
+					</Button>
 				</MyErrorBoundary>
 			)}
 		</>

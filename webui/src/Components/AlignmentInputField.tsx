@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import classnames from 'classnames'
 import {
 	AlignHorizontalJustifyCenter,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
 import type { CompanionAlignment } from '@companion-module/base'
+import { Button } from './Button'
 
 interface AlignmentInputFieldProps {
 	value: CompanionAlignment
@@ -93,7 +94,7 @@ function AlignmentButton({
 	children,
 }: React.PropsWithChildren<AlignmentButtonProps>) {
 	return (
-		<CButton
+		<Button
 			color={value === buttonValue ? 'primary' : 'secondary'}
 			onClick={() => setValue(buttonValue)}
 			title={title}
@@ -101,6 +102,6 @@ function AlignmentButton({
 			disabled={disabled}
 		>
 			{children}
-		</CButton>
+		</Button>
 	)
 }

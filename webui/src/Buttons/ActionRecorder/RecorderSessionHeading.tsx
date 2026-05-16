@@ -1,8 +1,9 @@
-import { CButton, CButtonGroup, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CButtonGroup, CForm, CFormLabel, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, type RefObject } from 'react'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -115,15 +116,15 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 				<CRow className="flex-form-row" style={{ clear: 'both' }}>
 					<div>
 						<CButtonGroup className={'margin-bottom'}>
-							<CButton onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
+							<Button onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Clear Actions
-							</CButton>
-							<CButton onClick={doAbort} color="danger">
+							</Button>
+							<Button onClick={doAbort} color="danger">
 								Discard
-							</CButton>
-							<CButton onClick={doFinish2} color="secondary" disabled={!sessionInfo.actions?.length}>
+							</Button>
+							<Button onClick={doFinish2} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Finish
-							</CButton>
+							</Button>
 						</CButtonGroup>
 					</div>
 				</CRow>

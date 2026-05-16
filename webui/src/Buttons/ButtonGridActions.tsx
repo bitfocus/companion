@@ -1,4 +1,4 @@
-import { CButton, CCol } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { faArrowsAlt, faArrowsLeftRight, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -6,6 +6,7 @@ import classnames from 'classnames'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Button, type ButtonColor } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -60,7 +61,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	const useCompactButtons = (holderSize.width ?? 0) < 670 // Cutoff for what of the action buttons fit in their large mode
 
 	const getButton = (label: string, icon: IconProp, func: string) => {
-		let color = 'light'
+		let color: ButtonColor = 'light'
 		let disabled = false
 		if (activeFunction === func) {
 			color = 'success'
@@ -70,9 +71,9 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 
 		return (
 			!disabled && (
-				<CButton color={color} disabled={disabled} onClick={() => startFunction(func)} title={label}>
+				<Button color={color} disabled={disabled} onClick={() => startFunction(func)} title={label}>
 					<FontAwesomeIcon icon={icon} /> {useCompactButtons ? '' : label}
-				</CButton>
+				</Button>
 			)
 		)
 	}
@@ -211,20 +212,20 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						&nbsp;
 					</div>
 					<div style={{ display: activeFunction ? '' : 'none' }}>
-						<CButton color="danger" onClick={() => stopFunction()} title="Cancel">
+						<Button color="danger" onClick={() => stopFunction()} title="Cancel">
 							Cancel
-						</CButton>
+						</Button>
 						&nbsp;
-						<CButton color="disabled">{hintText}</CButton>
+						<Button color="disabled">{hintText}</Button>
 					</div>
 					<div style={{ display: activeFunction ? 'none' : undefined }} title="Reset page buttons">
-						<CButton color="light" onClick={() => resetPageNav()}>
+						<Button color="light" onClick={() => resetPageNav()}>
 							<FontAwesomeIcon icon={faCompass} /> {useCompactButtons ? '' : 'Reset page buttons'}
-						</CButton>
+						</Button>
 						&nbsp;
-						<CButton color="light" onClick={() => resetPage()} title="Wipe page">
+						<Button color="light" onClick={() => resetPage()} title="Wipe page">
 							<FontAwesomeIcon icon={faEraser} /> {useCompactButtons ? '' : 'Wipe page'}
-						</CButton>
+						</Button>
 					</div>
 				</div>
 			</CCol>

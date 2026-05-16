@@ -1,8 +1,9 @@
-import { CButton, CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -32,9 +33,9 @@ export const GridConfigRows = observer(function GridConfigRows(props: GridConfig
 							{props.config.gridSize.maxRow - props.config.gridSize.minRow + 1} rows x{' '}
 							{props.config.gridSize.maxColumn - props.config.gridSize.minColumn + 1} columns
 						</div>
-						<CButton onClick={editGridSize} color="secondary" size="sm" style={{ marginTop: 4 }}>
+						<Button onClick={editGridSize} color="secondary" size="sm" style={{ marginTop: 4 }}>
 							Edit size
-						</CButton>
+						</Button>
 					</>
 				}
 			/>
@@ -231,12 +232,12 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 					)}
 				</CModalBody>
 				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
+					<Button color="secondary" onClick={doClose}>
 						Cancel
-					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction}>
+					</Button>
+					<Button ref={buttonRef} color="primary" onClick={doAction}>
 						Save
-					</CButton>
+					</Button>
 				</CModalFooter>
 			</CModal>
 		)

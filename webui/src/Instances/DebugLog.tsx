@@ -1,9 +1,10 @@
-import { CButton, CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
+import { CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 import dayjs from 'dayjs'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'
@@ -129,56 +130,51 @@ export function InstanceDebugLog({
 				<CRow className="log-debug-buttons">
 					<CCol>
 						<CButtonGroup>
-							<CButton color={isConnected ? 'success' : 'warning'} size="sm" disabled>
+							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>
 								{isConnected ? 'Connected' : 'Reconnecting'}
-							</CButton>
+							</Button>
 						</CButtonGroup>
 
 						<CButtonGroup>
-							<CButton color="danger" size="sm" onClick={doClearLog}>
+							<Button color="danger" size="sm" onClick={doClearLog}>
 								Clear log
-							</CButton>
-							<CButton color="info" size="sm" onClick={doExportLog}>
+							</Button>
+							<Button color="info" size="sm" onClick={doExportLog}>
 								Export log
-							</CButton>
+							</Button>
 						</CButtonGroup>
 
 						<CButtonGroup>
-							<CButton color="danger" size="sm" onClick={doStopInstance}>
+							<Button color="danger" size="sm" onClick={doStopInstance}>
 								Stop {instanceTypeStr}
-							</CButton>
-							<CButton color="success" size="sm" onClick={doStartInstance}>
+							</Button>
+							<Button color="success" size="sm" onClick={doStartInstance}>
 								Start {instanceTypeStr}
-							</CButton>
+							</Button>
 						</CButtonGroup>
 
 						<div className="float-right">
 							<CButtonGroup>
-								<CButton color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
+								<Button color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
 									Error
-								</CButton>
-								<CButton color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
+								</Button>
+								<Button color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
 									Warning
-								</CButton>
-								<CButton color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
+								</Button>
+								<Button color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
 									Info
-								</CButton>
-								<CButton
-									color="secondary"
-									size="sm"
-									onClick={doToggleDebug}
-									style={{ opacity: config.debug ? 1 : 0.2 }}
-								>
+								</Button>
+								<Button color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
 									Debug
-								</CButton>
-								<CButton
+								</Button>
+								<Button
 									color="secondary"
 									size="sm"
 									onClick={doToggleConsole}
 									style={{ opacity: config.console ? 1 : 0.2 }}
 								>
 									Console
-								</CButton>
+								</Button>
 							</CButtonGroup>
 						</div>
 					</CCol>

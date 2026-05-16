@@ -1,7 +1,7 @@
-import { CButton } from '@coreui/react'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, type ElementType } from 'react'
+import { Button } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
@@ -20,7 +20,7 @@ export interface ContextHelpButtonProps {
 */
 export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): React.JSX.Element {
 	return (
-		<CButton
+		<Button
 			color="dark"
 			className={`float_right${visibilityClass ? ' ' + visibilityClass : ''} p-1 ms-2 panel-close-button`}
 			onClick={closeFn}
@@ -29,7 +29,7 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 		>
 			{/* The inline styling here is to make the icon square */}
 			<FontAwesomeIcon icon={faTimes} />
-		</CButton>
+		</Button>
 	)
 }
 
@@ -85,9 +85,9 @@ export function ContextHelpButton({ children, action }: ContextHelpButtonProps):
 	return (
 		<>
 			<HelpWrapper usePopover={!!children} help={children}>
-				<CButton variant="ghost" className={`context-help-button-btn p-0`} {...helpButtonProps}>
+				<Button variant="ghost" className="context-help-button-btn p-0" {...helpButtonProps}>
 					<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
-				</CButton>
+				</Button>
 			</HelpWrapper>
 			<span ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />
 		</>

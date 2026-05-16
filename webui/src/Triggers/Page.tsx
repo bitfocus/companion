@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
+import { CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faClone,
@@ -20,6 +20,7 @@ import sanitizeHtml from 'sanitize-html'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -137,15 +138,15 @@ export const TriggersPage = observer(function Triggers() {
 
 						<div className="mb-2">
 							<CButtonGroup>
-								<CButton color="primary" onClick={doAddNew} size="sm">
+								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Trigger
-								</CButton>
+								</Button>
 								<CreateCollectionButton />
 							</CButtonGroup>
 
-							<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
+							<Button color="secondary" className="right" size="sm" onClick={showExportModal}>
 								<FontAwesomeIcon icon={faFileExport} /> Export all
-							</CButton>
+							</Button>
 						</div>
 
 						<CInputGroup className="variables-table-filter mt-2">
@@ -156,9 +157,9 @@ export const TriggersPage = observer(function Triggers() {
 								value={filter}
 								style={{ fontSize: '1.2em' }}
 							/>
-							<CButton color="danger" onClick={clearFilter}>
+							<Button color="danger" onClick={clearFilter}>
 								<FontAwesomeIcon icon={faTimes} />
-							</CButton>
+							</Button>
 						</CInputGroup>
 					</div>
 
@@ -318,20 +319,19 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						}
 					/>
 
-					<CButton
+					<LinkButtonExternal
 						color="white"
 						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
-						target="_blank"
 						title="Export"
 					>
 						<FontAwesomeIcon icon={faDownload} />
-					</CButton>
-					<CButton color="white" onClick={doClone} title="Clone">
+					</LinkButtonExternal>
+					<Button color="white" onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
-					</CButton>
-					<CButton color="gray" onClick={doDelete} title="Delete">
+					</Button>
+					<Button color="gray" onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+					</Button>
 				</CButtonGroup>
 			</div>
 		</div>
@@ -348,9 +348,9 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<CButton color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-		</CButton>
+		</Button>
 	)
 }
 

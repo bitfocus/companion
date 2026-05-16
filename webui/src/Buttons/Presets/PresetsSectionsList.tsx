@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCallout } from '@coreui/react'
+import { CButtonGroup, CCallout } from '@coreui/react'
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
@@ -120,13 +121,13 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 				<h5>Presets</h5>
 				<div style={{ marginBottom: 10 }}>
 					<CButtonGroup size="sm">
-						<CButton color="primary" onClick={clearSelectedConnectionId}>
+						<Button color="primary" onClick={clearSelectedConnectionId}>
 							<FontAwesomeIcon icon={faArrowLeft} />
 							&nbsp; Go back
-						</CButton>
-						<CButton color="secondary" disabled>
+						</Button>
+						<Button color="secondary" disabled>
 							{connectionInfo?.label || selectedConnectionId}
-						</CButton>
+						</Button>
 					</CButtonGroup>
 				</div>
 				<SearchBox filter={searchQuery} setFilter={setSearchQuery} />

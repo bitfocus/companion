@@ -1,8 +1,8 @@
-import { CButton } from '@coreui/react'
 import { faCaretDown, faCaretRight, faCheckCircle, faPencilAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { TextInputField } from '../TextInputField.js'
 import { CollectionsNestingTableCollectionRowWrapper } from './CollectionsNestingTableRowWrappers.js'
 import type { CollectionsNestingTableCollection, NestingCollectionsApi } from './Types.js'
@@ -93,18 +93,18 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 					{children}
 
 					{isEditing ? (
-						<CButton color="link" onClick={handleNameFieldBlur}>
+						<Button color="link" onClick={handleNameFieldBlur}>
 							<FontAwesomeIcon icon={faCheckCircle} />
-						</CButton>
+						</Button>
 					) : (
-						<CButton color="link" onClick={clickEditName}>
+						<Button color="link" onClick={clickEditName}>
 							<FontAwesomeIcon icon={faPencilAlt} />
-						</CButton>
+						</Button>
 					)}
 
-					<CButton color="link" onClick={clickDeleteCollection}>
+					<Button color="link" onClick={clickDeleteCollection}>
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+					</Button>
 				</div>
 			</div>
 		</CollectionsNestingTableCollectionRowWrapper>

@@ -1,8 +1,9 @@
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
 
@@ -113,12 +114,12 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 				/>
 			</CModalBody>
 			<CModalFooter>
-				<CButton color="secondary" onClick={handleCancel} disabled={isSaving}>
+				<Button color="secondary" onClick={handleCancel} disabled={isSaving}>
 					Cancel
-				</CButton>
-				<CButton color="primary" onClick={handleSave} disabled={!canSave || isSaving}>
+				</Button>
+				<Button color="primary" onClick={handleSave} disabled={!canSave || isSaving}>
 					{isSaving ? 'Saving...' : 'Save'}
-				</CButton>
+				</Button>
 			</CModalFooter>
 		</CModal>
 	)

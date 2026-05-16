@@ -1,8 +1,9 @@
-import { CButton, CFormInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import { blobToDataURL } from '~/Helpers/FileUpload.js'
+import { Button } from './Button'
 
 const allowedImageTypesPng = ['image/png']
 const allowedImageTypesExtended = [...allowedImageTypesPng, 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
@@ -120,7 +121,7 @@ export function PNGInputField({
 	)
 
 	return (
-		<CButton
+		<Button
 			color="primary"
 			className="pnginputfield"
 			onClick={onClick}
@@ -129,6 +130,6 @@ export function PNGInputField({
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
 			<CFormInput type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported || disabled} />
-		</CButton>
+		</Button>
 	)
 }

@@ -1,4 +1,4 @@
-import { CButton, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
@@ -8,6 +8,7 @@ import { createContext, forwardRef, useCallback, useContext, useImperativeHandle
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import {
 	CollapsibleTree,
@@ -241,9 +242,9 @@ export const AddEntitiesModal = observer(
 						/>
 					</CModalBody>
 					<CModalFooter>
-						<CButton color="secondary" onClick={doClose}>
+						<Button color="secondary" onClick={doClose}>
 							Done
-						</CButton>
+						</Button>
 					</CModalFooter>
 				</CModalExt>
 			</EntityTypeLabelContext.Provider>

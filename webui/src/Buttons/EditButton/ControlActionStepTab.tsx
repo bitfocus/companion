@@ -1,9 +1,10 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { Button } from '~/Components/Button'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
@@ -40,24 +41,24 @@ export function ControlActionStepTab({
 	return (
 		<>
 			<CButtonGroup hidden={stepKeys.length === 1} className="mt-2">
-				<CButton
+				<Button
 					color="danger"
 					title="Move step before"
 					disabled={selectedIndex === 0}
 					onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex - 1])}
 				>
 					<FontAwesomeIcon icon={faChevronLeft} />
-				</CButton>
-				<CButton
+				</Button>
+				<Button
 					color="danger"
 					title="Move step after"
 					disabled={selectedIndex === stepKeys.length - 1}
 					onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex + 1])}
 				>
 					<FontAwesomeIcon icon={faChevronRight} />
-				</CButton>
+				</Button>
 
-				<CButton
+				<Button
 					color="success"
 					style={{
 						fontWeight: 'bold',
@@ -68,30 +69,30 @@ export function ControlActionStepTab({
 					title="Make this step the current step, without executing any actions."
 				>
 					Select
-				</CButton>
-				<CButton
+				</Button>
+				<Button
 					style={{ backgroundColor: '#f0f0f0', marginRight: 1 }}
 					title="Add step"
 					disabled={stepKeys.length === 1}
 					onClick={service.appendStep}
 				>
 					<FontAwesomeIcon icon={faPlus} />
-				</CButton>
-				<CButton
+				</Button>
+				<Button
 					style={{ backgroundColor: '#f0f0f0' }}
 					title="Duplicate step"
 					onClick={() => service.duplicateStep(selectedKey)}
 				>
 					<FontAwesomeIcon icon={faClone} />
-				</CButton>
-				<CButton
+				</Button>
+				<Button
 					style={{ backgroundColor: '#f0f0f0' }}
 					title="Delete step"
 					disabled={stepKeys.length === 1}
 					onClick={() => service.removeStep(selectedKey)}
 				>
 					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
+				</Button>
 			</CButtonGroup>
 
 			<div className="mt-10">
@@ -162,9 +163,9 @@ export function ControlActionStepTab({
 			</div>
 
 			<div className="my-3">
-				<CButton onClick={() => service.appendSet(selectedKey)} color="primary">
+				<Button onClick={() => service.appendSet(selectedKey)} color="primary">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
-				</CButton>
+				</Button>
 			</div>
 		</>
 	)

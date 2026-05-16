@@ -1,7 +1,8 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { DismissableAlert } from './Alert.js'
 import { PNGInputField } from './PNGInputField.js'
 
@@ -48,9 +49,9 @@ export function PngImageInputField({
 					allowNonPng={allowNonPng}
 					disabled={disabled}
 				/>
-				<CButton color="danger" disabled={disabled || !value} onClick={clearImage}>
+				<Button color="danger" disabled={disabled || !value} onClick={clearImage}>
 					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
+				</Button>
 			</CButtonGroup>
 			{imageLoadError && (
 				<DismissableAlert color="warning" onClose={() => setImageLoadError(null)}>

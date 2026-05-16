@@ -1,9 +1,10 @@
-import { CButton, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
@@ -331,12 +332,12 @@ export const ExportWizardModal = observer(
 								selector={(state) => [state.canSubmit, state.isSubmitting]}
 								children={([canSubmit, isSubmitting]) => (
 									<>
-										<CButton color="secondary" onClick={doClose} disabled={isSubmitting}>
+										<Button color="secondary" onClick={doClose} disabled={isSubmitting}>
 											Close
-										</CButton>
-										<CButton color="primary" disabled={!canSubmit || isSubmitting} type="submit">
+										</Button>
+										<Button color="primary" disabled={!canSubmit || isSubmitting} type="submit">
 											Download {isSubmitting ? '...' : ''}
-										</CButton>
+										</Button>
 									</>
 								)}
 							/>
