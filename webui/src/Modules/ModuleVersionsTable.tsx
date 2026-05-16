@@ -1,4 +1,3 @@
-import { CButtonGroup } from '@coreui/react'
 import {
 	faCircleMinus,
 	faEyeSlash,
@@ -22,7 +21,7 @@ import type {
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -105,11 +104,11 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					<th>Version</th>
 					<th>&nbsp;</th>
 					<th colSpan={3} className="fit">
-						<CButtonGroup className="table-header-buttons">
+						<ButtonGroup className="table-header-buttons">
 							<VisibilityButton {...visibleVersions} keyId="availableStable" color="success" label="Stable" />
 							<VisibilityButton {...visibleVersions} keyId="availableBeta" color="warning" label="Beta" />
 							<VisibilityButton {...visibleVersions} keyId="availableDeprecated" color="primary" label="Deprecated" />
-						</CButtonGroup>
+						</ButtonGroup>
 					</th>
 				</tr>
 			</thead>

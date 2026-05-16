@@ -1,10 +1,10 @@
-import { CButtonGroup, CCol, CContainer, CRow } from '@coreui/react'
+import { CCol, CContainer, CRow } from '@coreui/react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 import dayjs from 'dayjs'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'
@@ -129,32 +129,32 @@ export function InstanceDebugLog({
 			<div className="log-page">
 				<CRow className="log-debug-buttons">
 					<CCol>
-						<CButtonGroup>
+						<ButtonGroup>
 							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>
 								{isConnected ? 'Connected' : 'Reconnecting'}
 							</Button>
-						</CButtonGroup>
+						</ButtonGroup>
 
-						<CButtonGroup>
+						<ButtonGroup>
 							<Button color="danger" size="sm" onClick={doClearLog}>
 								Clear log
 							</Button>
 							<Button color="info" size="sm" onClick={doExportLog}>
 								Export log
 							</Button>
-						</CButtonGroup>
+						</ButtonGroup>
 
-						<CButtonGroup>
+						<ButtonGroup>
 							<Button color="danger" size="sm" onClick={doStopInstance}>
 								Stop {instanceTypeStr}
 							</Button>
 							<Button color="success" size="sm" onClick={doStartInstance}>
 								Start {instanceTypeStr}
 							</Button>
-						</CButtonGroup>
+						</ButtonGroup>
 
 						<div className="float-right">
-							<CButtonGroup>
+							<ButtonGroup>
 								<Button color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
 									Error
 								</Button>
@@ -175,7 +175,7 @@ export function InstanceDebugLog({
 								>
 									Console
 								</Button>
-							</CButtonGroup>
+							</ButtonGroup>
 						</div>
 					</CCol>
 				</CRow>

@@ -1,4 +1,4 @@
-import { CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -8,7 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
@@ -69,11 +69,11 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 						</div>
 
 						<div className="mb-2">
-							<CButtonGroup>
+							<ButtonGroup>
 								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
 								</Button>
-							</CButtonGroup>
+							</ButtonGroup>
 						</div>
 					</div>
 
@@ -238,7 +238,7 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 				{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<CButtonGroup className="ms-2">
+				<ButtonGroup className="ms-2">
 					<SwitchInputField
 						value={rule.enabled}
 						setValue={doEnableDisable}
@@ -248,7 +248,7 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 					<Button color="gray" onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
-				</CButtonGroup>
+				</ButtonGroup>
 			</td>
 		</tr>
 	)

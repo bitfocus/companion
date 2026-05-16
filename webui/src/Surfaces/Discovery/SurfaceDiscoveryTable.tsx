@@ -1,4 +1,3 @@
-import { CButtonGroup } from '@coreui/react'
 import { faCheck, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
@@ -12,7 +11,7 @@ import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { assertNever, useComputed } from '~/Resources/util.js'
@@ -140,11 +139,11 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 				})}
 			</td>
 			<td>
-				<CButtonGroup>
+				<ButtonGroup>
 					<Button onClick={() => showSetupSatellite(surfaceInfo)} title="Setup">
 						<FontAwesomeIcon icon={faPlus} /> Setup
 					</Button>
-				</CButtonGroup>
+				</ButtonGroup>
 			</td>
 		</tr>
 	)
@@ -216,7 +215,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 				<p className="p-no-margin">{surfaceInfo.address ?? '-'}</p>
 			</td>
 			<td>
-				<CButtonGroup>
+				<ButtonGroup>
 					{isAlreadyAdded ? (
 						<Button title={'Already added'} className="btn-undefined" disabled>
 							<FontAwesomeIcon icon={faCheck} /> Already added
@@ -226,7 +225,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 							<FontAwesomeIcon icon={faPlus} /> Add Connection
 						</Button>
 					)}
-				</CButtonGroup>
+				</ButtonGroup>
 			</td>
 		</tr>
 	)

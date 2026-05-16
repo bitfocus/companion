@@ -1,9 +1,9 @@
-import { CButtonGroup, CCallout } from '@coreui/react'
+import { CCallout } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -109,7 +109,7 @@ export function ImportTriggersTab({
 					))}
 				</tbody>
 			</table>
-			<CButtonGroup className="mb-3">
+			<ButtonGroup className="mb-3">
 				<Button
 					color="info"
 					onClick={selectAllTriggers}
@@ -120,7 +120,7 @@ export function ImportTriggersTab({
 				<Button color="info" onClick={unselectAllTriggers} disabled={selectedTriggers.length === 0}>
 					Unselect all
 				</Button>
-			</CButtonGroup>
+			</ButtonGroup>
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 

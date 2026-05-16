@@ -1,4 +1,4 @@
-import { CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
+import { CCallout, CCol, CRow } from '@coreui/react'
 import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
@@ -6,7 +6,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -120,18 +120,18 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						</StaticAlert>
 					)}
 
-					<CButtonGroup size="sm">
-						<Button color="warning" onClick={refreshUSB}>
+					<ButtonGroup>
+						<Button color="warning" size="sm" onClick={refreshUSB}>
 							<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} />
 							{rescanUsbMutation.isPending ? ' Checking for new surfaces...' : ' Rescan USB'}
 						</Button>
-						<Button color="primary" onClick={addEmulator}>
+						<Button color="primary" size="sm" onClick={addEmulator}>
 							<FontAwesomeIcon icon={faAdd} /> Add Emulator
 						</Button>
-						<Button color="secondary" onClick={addGroup}>
+						<Button color="secondary" size="sm" onClick={addGroup}>
 							<FontAwesomeIcon icon={faAdd} /> Add Group
 						</Button>
-					</CButtonGroup>
+					</ButtonGroup>
 
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />

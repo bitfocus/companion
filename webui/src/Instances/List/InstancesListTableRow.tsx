@@ -1,4 +1,4 @@
-import { CButtonGroup, CPopover } from '@coreui/react'
+import { CPopover } from '@coreui/react'
 import {
 	faBug,
 	faEllipsisV,
@@ -13,7 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
@@ -128,7 +128,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 					content={
 						<>
 							{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-							<CButtonGroup vertical>
+							<ButtonGroup vertical>
 								<Button
 									onMouseDown={doShowHelp}
 									color="secondary"
@@ -177,7 +177,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 									</Tuck>
 									Delete
 								</Button>
-							</CButtonGroup>
+							</ButtonGroup>
 						</>
 					}
 				>

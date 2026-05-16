@@ -1,4 +1,4 @@
-import { CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
+import { CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faArrowLeft,
@@ -19,7 +19,7 @@ import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import { Button, LinkButton } from '~/Components/Button'
+import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -138,7 +138,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
 				<div className="mb-2">
-					<CButtonGroup>
+					<ButtonGroup>
 						<LinkButton color="primary" to="/variables" size="sm">
 							<FontAwesomeIcon icon={faArrowLeft} />
 							&nbsp; Go back
@@ -147,7 +147,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 							<FontAwesomeIcon icon={faAdd} /> Add Expression Variable
 						</Button>
 						<CreateCollectionButton />
-					</CButtonGroup>
+					</ButtonGroup>
 
 					<CInputGroup className="variables-table-filter mt-2">
 						<CFormInput
@@ -274,14 +274,14 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 			</div>
 
 			<div className="action-buttons w-auto">
-				<CButtonGroup>
+				<ButtonGroup>
 					<Button color="white" onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
 					</Button>
 					<Button color="gray" onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 		</div>
 	)

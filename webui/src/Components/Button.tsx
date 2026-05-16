@@ -1,4 +1,4 @@
-import { CButton } from '@coreui/react'
+import { CButton, CButtonGroup } from '@coreui/react'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import * as React from 'react'
 
@@ -63,5 +63,28 @@ export interface LinkButtonExternalProps extends LinkButtonBaseProps {
 export function LinkButtonExternal({ href, ...rest }: LinkButtonExternalProps): React.JSX.Element {
 	return (
 		<CButton as="a" href={href} {...rest} target={rest.target ?? '_blank'} rel={rest.rel ?? 'noopener noreferrer'} />
+	)
+}
+
+export interface ButtonGroupProps {
+	/**
+	 * A string of all className you want applied to the base component.
+	 */
+	className?: string
+	/**
+	 * Create a set of buttons that appear vertically stacked rather than horizontally. Split button dropdowns are not supported here.
+	 */
+	vertical?: boolean
+}
+
+export function ButtonGroup({
+	className,
+	vertical,
+	children,
+}: React.PropsWithChildren<ButtonGroupProps>): React.JSX.Element {
+	return (
+		<CButtonGroup className={className} role="group" vertical={vertical}>
+			{children}
+		</CButtonGroup>
 	)
 }

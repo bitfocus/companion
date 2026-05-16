@@ -1,9 +1,8 @@
-import { CButtonGroup } from '@coreui/react'
 import { faPlay, faRedo, faStop, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -44,7 +43,7 @@ export function ControlHotPressButtons({
 
 	return (
 		<>
-			<CButtonGroup>
+			<ButtonGroup>
 				<Button
 					className="ms-1"
 					color="warning"
@@ -60,7 +59,7 @@ export function ControlHotPressButtons({
 					<FontAwesomeIcon icon={faStop} />
 					&nbsp;Stop
 				</Button>
-			</CButtonGroup>
+			</ButtonGroup>
 			{showRotaries && (
 				<MyErrorBoundary>
 					<Button

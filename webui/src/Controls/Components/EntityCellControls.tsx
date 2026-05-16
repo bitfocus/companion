@@ -1,10 +1,9 @@
-import { CButtonGroup } from '@coreui/react'
 import { faClone, faCompressArrowsAlt, faExpandArrowsAlt, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { Button } from '~/Components/Button.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputField } from '~/Components/TextInputField.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
@@ -64,7 +63,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				)}
 			</div>
 			<div className="cell-controls">
-				<CButtonGroup className="me-1">
+				<ButtonGroup className="me-1">
 					{canSetHeadline && !headlineExpanded && !isPanelCollapsed && (
 						<Button size="sm" onClick={setHeadlineExpanded} title="Set headline">
 							<FontAwesomeIcon icon={faPencil} />
@@ -101,7 +100,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 							/>
 						</>
 					)}
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 		</div>
 	)

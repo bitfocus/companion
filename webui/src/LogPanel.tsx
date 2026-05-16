@@ -1,4 +1,4 @@
-import { CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -10,7 +10,7 @@ import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
-import { Button, LinkButtonExternal } from './Components/Button'
+import { Button, ButtonGroup, LinkButtonExternal } from './Components/Button'
 import { trpc, useMutationExt } from './Resources/TRPC'
 
 interface LogConfig {
@@ -77,7 +77,7 @@ export const LogPanel = memo(function LogPanel() {
 			<div className="log-page">
 				<CRow>
 					<CCol lg={12} className="log-buttons">
-						<CButtonGroup>
+						<ButtonGroup>
 							<Button color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
 								Warning
 							</Button>
@@ -87,7 +87,7 @@ export const LogPanel = memo(function LogPanel() {
 							<Button color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
 								Debug
 							</Button>
-						</CButtonGroup>
+						</ButtonGroup>
 
 						<div className="float-right">
 							<Button color="danger" size="sm" onClick={doClearLog}>

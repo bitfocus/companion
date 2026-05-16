@@ -1,11 +1,11 @@
-import { CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { Button } from '~/Components/Button.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -56,7 +56,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 					</div>
 				)}
 				<div className="cell-header-item">
-					<CButtonGroup style={{ float: 'inline-end' }}>
+					<ButtonGroup className="float-end">
 						{isCollapsed ? (
 							<Button onClick={doExpand} size="sm" title="Expand variable view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />
@@ -70,7 +70,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 						<Button onClick={() => customVariablesApi.doDelete(info.id)} size="sm" title="Delete custom variable">
 							<FontAwesomeIcon icon={faTrash} />
 						</Button>
-					</CButtonGroup>
+					</ButtonGroup>
 				</div>
 			</div>
 			{isCollapsed ? (
