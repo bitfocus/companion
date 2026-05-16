@@ -55,15 +55,7 @@ export function AddEntityPanel({
 				feedbackListType={feedbackListType}
 				disabled={readonly}
 			/>
-			<Button
-				color="primary"
-				onClick={showAddModal}
-				style={{
-					borderTopLeftRadius: 0,
-					borderBottomLeftRadius: 0,
-				}}
-				disabled={readonly}
-			>
+			<Button color="primary" onClick={showAddModal} className="rounded-start-0" disabled={readonly}>
 				<FontAwesomeIcon icon={faFolderOpen} />
 			</Button>
 

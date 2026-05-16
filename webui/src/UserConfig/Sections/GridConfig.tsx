@@ -33,7 +33,7 @@ export const GridConfigRows = observer(function GridConfigRows(props: GridConfig
 							{props.config.gridSize.maxRow - props.config.gridSize.minRow + 1} rows x{' '}
 							{props.config.gridSize.maxColumn - props.config.gridSize.minColumn + 1} columns
 						</div>
-						<Button onClick={editGridSize} color="secondary" size="sm" style={{ marginTop: 4 }}>
+						<Button onClick={editGridSize} color="secondary" size="sm" className="mt-1">
 							Edit size
 						</Button>
 					</>

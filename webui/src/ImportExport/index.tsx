@@ -226,7 +226,7 @@ export const ImportExportPage = observer(function ImportExport() {
 				<h5>Reset</h5>
 				<p>This will clear all connections, triggers and/or buttons.</p>
 				<div>
-					<Button color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
+					<Button color="danger" onClick={doReset}>
 						<FontAwesomeIcon icon={faTrashAlt} style={{ marginRight: 7, marginLeft: -1 }} />
 						Reset configuration
 					</Button>

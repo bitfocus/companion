@@ -124,7 +124,7 @@ function AddElementDropdownPopoverButton({
 	}, [addElementMutation, controlId, elementType, styleStore])
 
 	return (
-		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
+		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`} className="text-start">
 			<Tuck>
 				<FontAwesomeIcon icon={icon} />
 			</Tuck>

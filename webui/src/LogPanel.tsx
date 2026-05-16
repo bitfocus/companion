@@ -78,13 +78,18 @@ export const LogPanel = memo(function LogPanel() {
 				<CRow>
 					<CCol lg={12} className="log-buttons">
 						<ButtonGroup>
-							<Button color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
+							<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 								Warning
 							</Button>
-							<Button color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
+							<Button color="info" size="sm" onClick={doToggleInfo} variant={config.info ? undefined : 'outline'}>
 								Info
 							</Button>
-							<Button color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
+							<Button
+								color="secondary"
+								size="sm"
+								onClick={doToggleDebug}
+								variant={config.debug ? undefined : 'outline'}
+							>
 								Debug
 							</Button>
 						</ButtonGroup>

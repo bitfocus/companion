@@ -42,7 +42,7 @@ export function ControlActionStepTab({
 			{stepKeys.length > 1 && (
 				<ButtonGroup className="mt-2">
 					<Button
-						color="danger"
+						color="primary"
 						title="Move step before"
 						disabled={selectedIndex === 0}
 						onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex - 1])}
@@ -50,7 +50,7 @@ export function ControlActionStepTab({
 						<FontAwesomeIcon icon={faChevronLeft} />
 					</Button>
 					<Button
-						color="danger"
+						color="primary"
 						title="Move step after"
 						disabled={selectedIndex === stepKeys.length - 1}
 						onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex + 1])}
@@ -60,33 +60,22 @@ export function ControlActionStepTab({
 
 					<Button
 						color="success"
-						style={{
-							fontWeight: 'bold',
-							opacity: runtimeProps.current_step_id === selectedKey || disabledSetStep ? 0.3 : 1,
-						}}
+						className="fw-medium"
+						variant={runtimeProps.current_step_id === selectedKey || disabledSetStep ? 'outline' : undefined}
 						disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
 						onClick={() => service.setCurrentStep(selectedKey)}
 						title="Make this step the current step, without executing any actions."
 					>
 						Select
 					</Button>
-					<Button
-						style={{ backgroundColor: '#f0f0f0', marginRight: 1 }}
-						title="Add step"
-						disabled={stepKeys.length === 1}
-						onClick={service.appendStep}
-					>
+					<Button color="secondary" title="Add step" disabled={stepKeys.length === 1} onClick={service.appendStep}>
 						<FontAwesomeIcon icon={faPlus} />
 					</Button>
-					<Button
-						style={{ backgroundColor: '#f0f0f0' }}
-						title="Duplicate step"
-						onClick={() => service.duplicateStep(selectedKey)}
-					>
+					<Button color="secondary" title="Duplicate step" onClick={() => service.duplicateStep(selectedKey)}>
 						<FontAwesomeIcon icon={faClone} />
 					</Button>
 					<Button
-						style={{ backgroundColor: '#f0f0f0' }}
+						color="secondary"
 						title="Delete step"
 						disabled={stepKeys.length === 1}
 						onClick={() => service.removeStep(selectedKey)}

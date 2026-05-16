@@ -147,20 +147,11 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 
 	return (
 		<>
-			<div>
-				<Button
-					color="light"
-					style={{
-						float: 'right',
-						marginTop: 10,
-					}}
-					onClick={resetPosition}
-				>
+			<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
+				<Button color="light" onClick={resetPosition}>
 					<FontAwesomeIcon icon={faHome} /> Home Position
 				</Button>
-
-				<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
-			</div>
+			</ButtonGridHeader>
 			<div className="buttongrid" ref={isInViewRef}>
 				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid

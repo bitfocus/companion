@@ -93,12 +93,10 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 	const buttonProps = isString
 		? {
 				title: 'String entry',
-				style: { color: '#0000cc', boxSizing: 'content-box' as const, height: '24px' },
 				label: <VariableTypeIcon width={14} height={14} fill="#0000cc" icon="string" />,
 			}
 		: {
 				title: 'JSON entry',
-				style: { color: '#cc0000', boxSizing: 'content-box' as const, height: '24px' },
 				label: <VariableTypeIcon width={14} height={14} fill="#cc0000" icon="object" />,
 			}
 
@@ -124,7 +122,6 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 			>
 				<Button
 					color="info"
-					style={buttonProps.style}
 					variant="outline"
 					title={buttonProps.title}
 					onClick={handleToggle}

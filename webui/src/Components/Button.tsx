@@ -18,23 +18,58 @@ export type ButtonColor =
 	| 'link'
 
 interface ButtonVisualProps {
+	className?: string
 	color?: ButtonColor
 	/** 'ghost' renders a text-only button with no background or border */
 	variant?: 'ghost' | 'outline'
 	size?: 'sm' | 'lg'
 	hidden?: boolean
+
+	disabled?: boolean
 }
 
-export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'color'>, ButtonVisualProps {}
+// function getColorClasses(props: ButtonVisualProps): string {
+// 	return classNames(
+// 		'btn',
+// 		{
+// 			[`btn-${props.variant}-${props.color}`]: props.variant && props.color,
+// 			[`btn-${props.variant}`]: props.variant && !props.color,
+// 			[`btn-${props.color}`]: !props.variant && props.color,
+// 			[`btn-${props.size}`]: props.size,
+// 		},
+// 		// props.shape,
+// 		props.className
+// 	)
+// }
+
+export interface ButtonProps extends React.PropsWithChildren<ButtonVisualProps> {
+	title?: string
+	type?: 'submit' | 'reset'
+	autoFocus?: boolean
+	tabIndex?: number
+
+	onClick?: React.MouseEventHandler<HTMLElement>
+	onMouseDown?: React.MouseEventHandler<HTMLElement>
+	onMouseUp?: React.MouseEventHandler<HTMLElement>
+}
 
 // TODO - rebuild this!
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(props, ref) {
+	// return (
+	// 	<CLink
+	// 		// as={rest.href ? 'a' : as}
+	// 		// {...(!rest.href && { type: type })}
+	// 		className={getColorClasses(props)}
+	// 		// {...rest}
+	// 		ref={ref}
+	// 	>
+	// 		{props.children}
+	// 	</CLink>
+	// )
 	return <CButton {...props} ref={ref} />
 })
 
-interface LinkButtonBaseProps extends ButtonVisualProps {
-	children?: React.ReactNode
-	className?: string
+interface LinkButtonBaseProps extends React.PropsWithChildren<ButtonVisualProps> {
 	onClick?: React.MouseEventHandler
 	title?: string
 }

@@ -70,7 +70,7 @@ function AddRemoteSurfacePopoverButton({ instanceId, label }: { instanceId: stri
 	}, [addOutboundMutation, instanceId, navigate, notifier])
 
 	return (
-		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
+		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`}>
 			{label}
 		</Button>
 	)
