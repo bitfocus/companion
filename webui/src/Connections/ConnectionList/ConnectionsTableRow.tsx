@@ -68,7 +68,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					title="Variables"
 					color="secondary"
 					disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
-					style={{ textAlign: 'left' }}
+					className="text-start"
 				>
 					<Tuck>
 						<FontAwesomeIcon icon={faDollarSign} />

@@ -331,13 +331,7 @@ const ModulesListRow = observer(function ModulesListRow({
 				{moduleInfo.name}
 			</td>
 			<td className="compact">
-				<Button
-					onMouseDown={doShowHelp}
-					color="white"
-					title="Show Help"
-					disabled={!moduleInfo.helpUrl}
-					style={{ textAlign: 'left' }}
-				>
+				<Button onMouseDown={doShowHelp} color="white" title="Show Help" disabled={!moduleInfo.helpUrl}>
 					<FontAwesomeIcon icon={faQuestionCircle} />
 				</Button>
 			</td>

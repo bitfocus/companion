@@ -155,23 +155,28 @@ export function InstanceDebugLog({
 
 						<div className="float-right">
 							<ButtonGroup>
-								<Button color="danger" size="sm" onClick={doToggleError} style={{ opacity: config.error ? 1 : 0.2 }}>
+								<Button color="danger" size="sm" onClick={doToggleError} variant={config.error ? undefined : 'outline'}>
 									Error
 								</Button>
-								<Button color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
+								<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 									Warning
 								</Button>
-								<Button color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
+								<Button color="info" size="sm" onClick={doToggleInfo} variant={config.info ? undefined : 'outline'}>
 									Info
 								</Button>
-								<Button color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
+								<Button
+									color="secondary"
+									size="sm"
+									onClick={doToggleDebug}
+									variant={config.debug ? undefined : 'outline'}
+								>
 									Debug
 								</Button>
 								<Button
 									color="secondary"
 									size="sm"
 									onClick={doToggleConsole}
-									style={{ opacity: config.console ? 1 : 0.2 }}
+									variant={config.console ? undefined : 'outline'}
 								>
 									Console
 								</Button>

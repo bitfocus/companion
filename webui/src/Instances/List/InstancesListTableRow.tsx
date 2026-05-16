@@ -134,7 +134,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 									color="secondary"
 									title="Help"
 									disabled={!moduleVersion?.helpPath}
-									style={{ textAlign: 'left' }}
+									className="text-start"
 								>
 									<Tuck>
 										<FontAwesomeIcon icon={faQuestionCircle} />
@@ -147,7 +147,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 									color="secondary"
 									title="Issue Tracker"
 									disabled={!moduleInfo?.display?.bugUrl}
-									style={{ textAlign: 'left' }}
+									className="text-start"
 								>
 									<Tuck>
 										<FontAwesomeIcon icon={faBug} />
@@ -162,7 +162,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 										onMouseDown={() => windowLinkOpen({ href: makeAbsolutePath(debugLogUrl), title: 'View debug log' })}
 										title="Logs"
 										color="secondary"
-										style={{ textAlign: 'left' }}
+										className="text-start"
 									>
 										<Tuck>
 											<FontAwesomeIcon icon={faTerminal} />
@@ -171,7 +171,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 									</Button>
 								)}
 
-								<Button onMouseDown={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
+								<Button onMouseDown={doDelete} title="Delete" color="secondary" className="text-start">
 									<Tuck>
 										<FontAwesomeIcon icon={faTrash} />
 									</Tuck>
@@ -183,7 +183,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				>
 					<Button
 						color="secondary"
-						style={{ padding: '3px 8px' }}
+						className="py-1 px-2"
 						onClick={(e) => e.currentTarget.focus()}
 						title="Click for additional options."
 						aria-label="Click for additional options."

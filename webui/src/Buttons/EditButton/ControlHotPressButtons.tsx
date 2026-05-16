@@ -49,40 +49,29 @@ export function ControlHotPressButtons({
 					color="warning"
 					onMouseDown={hotPressDown}
 					onMouseUp={hotPressUp}
-					style={{ color: 'white' }}
 					title="Test press button"
 				>
 					<FontAwesomeIcon icon={faPlay} />
 					&nbsp;Test
 				</Button>
+
+				{showRotaries && (
+					<MyErrorBoundary>
+						<Button color="warning" onMouseDown={hotRotateLeft} title="Test rotate left">
+							<FontAwesomeIcon icon={faUndo} />
+						</Button>
+
+						<Button color="warning" onMouseDown={hotRotateRight} title="Test rotate right">
+							<FontAwesomeIcon icon={faRedo} />
+						</Button>
+					</MyErrorBoundary>
+				)}
+
 				<Button color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
 					<FontAwesomeIcon icon={faStop} />
 					&nbsp;Stop
 				</Button>
 			</ButtonGroup>
-			{showRotaries && (
-				<MyErrorBoundary>
-					<Button
-						className="ms-1"
-						color="warning"
-						onMouseDown={hotRotateLeft}
-						style={{ color: 'white' }}
-						title="Test rotate left"
-					>
-						<FontAwesomeIcon icon={faUndo} />
-					</Button>
-
-					<Button
-						className="ms-1"
-						color="warning"
-						onMouseDown={hotRotateRight}
-						style={{ color: 'white' }}
-						title="Test rotate right"
-					>
-						<FontAwesomeIcon icon={faRedo} />
-					</Button>
-				</MyErrorBoundary>
-			)}
 		</>
 	)
 }
