@@ -18,9 +18,17 @@ interface PNGInputFieldProps {
 	onSelect: (png64Str: string, name: string) => void
 	onError: (err: string | null) => void
 	allowNonPng?: boolean
+	disabled?: boolean
 }
 
-export function PNGInputField({ min, max, onSelect, onError, allowNonPng }: PNGInputFieldProps): React.JSX.Element {
+export function PNGInputField({
+	min,
+	max,
+	onSelect,
+	onError,
+	allowNonPng,
+	disabled,
+}: PNGInputFieldProps): React.JSX.Element {
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
@@ -116,11 +124,11 @@ export function PNGInputField({ min, max, onSelect, onError, allowNonPng }: PNGI
 			color="primary"
 			className="pnginputfield"
 			onClick={onClick}
-			disabled={!apiIsSupported}
+			disabled={!apiIsSupported || disabled}
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
-			<CFormInput type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported} />
+			<CFormInput type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported || disabled} />
 		</CButton>
 	)
 }

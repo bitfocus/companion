@@ -160,6 +160,16 @@ code {
 	cursor: pointer;
 }
 
+.rounded-start-0 {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.rounded-end-0 {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
 .btn-danger {
 	background-color: $primary;
 }
@@ -363,12 +373,6 @@ table .td-reorder {
 
 .form-range {
 	align-self: center;
-}
-
-.select-control {
-	// avoid blowout
-	display: grid;
-	grid-template-columns: minmax(0, 1fr);
 }
 
 .searchbox {

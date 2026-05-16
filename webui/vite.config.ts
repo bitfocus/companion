@@ -52,6 +52,15 @@ export default defineConfig(({ mode }) => {
 			chunkSizeWarningLimit: 1 * 1000 * 1000, // Disable warning about large chunks
 			sourcemap: true,
 		},
+		// esbuild 0.27.7 introduced lowering of destructuring for Safari 10-14.0 / iOS 10-14.4
+		// (due to a real but rare Safari bug), but it can't actually perform the lowering.
+		// This tells esbuild to treat destructuring as natively supported, matching the
+		// behaviour of esbuild <0.27.7. See https://github.com/vitejs/vite/pull/22346
+		esbuild: {
+			supported: {
+				destructuring: true,
+			},
+		},
 		server: {
 			port: parseInt(env.COMPANION_UI_PORT || '', 10) || undefined,
 			allowedHosts: ['bs-local.com'],

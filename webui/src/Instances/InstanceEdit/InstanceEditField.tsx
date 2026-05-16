@@ -70,7 +70,6 @@ export function InstanceEditField({
 				<DropdownInputField
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
-					minChoicesForSearch={definition.minChoicesForSearch}
 					regex={definition.regex}
 					value={value as any}
 					setValue={setValue}
@@ -83,7 +82,6 @@ export function InstanceEditField({
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
-					minChoicesForSearch={definition.minChoicesForSearch}
 					maxSelection={definition.maxSelection}
 					sortSelection={definition.sortSelection}
 					regex={definition.regex}

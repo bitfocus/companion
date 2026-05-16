@@ -322,7 +322,7 @@ export function validateInputValue(
 	}
 }
 
-function compileRegex(regex: string | undefined): RegExp | null {
+export function compileRegex(regex: string | undefined): RegExp | null {
 	if (!regex) return null
 
 	try {

@@ -21,7 +21,7 @@ interface AddEntityOption extends DropdownChoice {
 interface AddEntityGroup {
 	id: string
 	label: string
-	options: AddEntityOption[]
+	items: AddEntityOption[]
 }
 interface AddEntityDropdownProps {
 	onSelect: (connectionId: string, definitionId: string) => void
@@ -44,7 +44,8 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	const recentlyUsedStore = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
 	const options = useComputed(() => {
-		const options: Array<AddEntityOption | AddEntityGroup> = []
+		const groups: Array<AddEntityGroup> = []
+		const allConnectionOptions: AddEntityOption[] = []
 		const pushConnection = (connectionId: string, label: string) => {
 			const entityDefinitions = definitions.connections.get(connectionId)
 			if (!entityDefinitions) return
@@ -66,13 +67,14 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 
 			connectionOptions.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
 
-			options.push(...connectionOptions)
+			allConnectionOptions.push(...connectionOptions)
 		}
 
 		pushConnection('internal', 'internal')
 		for (const connection of connections.sortedConnections()) {
 			pushConnection(connection.id, connection.label)
 		}
+		groups.push({ id: '__all__', label: '', items: allConnectionOptions })
 
 		if (feedbackListType === FeedbackEntitySubType.Value) {
 			// Show the builtin value type options as special, to increase visibility
@@ -97,10 +99,10 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 					})
 				}
 
-				options.push({
+				groups.push({
 					id: '__common__',
 					label: 'Common',
-					options: commonOptions,
+					items: commonOptions,
 				})
 			}
 		}
@@ -125,13 +127,13 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				fuzzy: fuzzyPrepare(optionLabel),
 			})
 		}
-		options.push({
+		groups.push({
 			id: '__recent__',
 			label: 'Recently Used',
-			options: recents,
+			items: recents,
 		})
 
-		return options
+		return groups
 	}, [definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
 
 	const onChange = useCallback(
@@ -156,20 +158,20 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		}
 	}, [])
 
-	const filterOptions = useComputed<Array<DropdownChoice | AddEntityGroup> | undefined>(() => {
+	const filterOptions = useComputed<Array<AddEntityGroup> | undefined>(() => {
 		const filterArray = <T extends AddEntityOption | AddEntityGroup>(options: Array<T>) => {
 			const res: Array<T> = []
 
 			for (const option of options) {
-				if ('options' in option) {
-					const children = filterArray(option.options)
+				if ('items' in option) {
+					const children = filterArray(option.items)
 					if (children.length === 0) {
 						continue
 					}
 
 					res.push({
 						...option,
-						options: children,
+						items: children,
 					})
 				} else {
 					const include = inputValue
@@ -198,7 +200,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				disabled={disabled}
 				filteredItems={filterOptions}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group">
+				<Combobox.InputGroup className="dropdown-field-input-group rounded-end-0">
 					<Combobox.Input className="dropdown-field-input" placeholder={`+ Add ${entityTypeLabel}`} ref={inputRef} />
 					<Combobox.Trigger className="dropdown-field-trigger">
 						<ChevronDownIcon className="dropdown-field-icon" />

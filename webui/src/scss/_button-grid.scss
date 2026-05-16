@@ -16,6 +16,10 @@
 		// Fix for firefox blowout
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
+
+		.dropdown-field-input::placeholder {
+			color: #000;
+		}
 	}
 
 	.right-buttons {

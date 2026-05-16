@@ -51,8 +51,11 @@ export function NumberInputField({
 
 	// Compute whether we should visually show -∞ or ∞.
 	const numericEffective = Number(tmpValue ?? value ?? 0)
+	// Only show infinity overlays when the user has explicitly set a value.
+	const hasExplicitValue = tmpValue !== null || value !== undefined
 	let showOverlayValue: string | null = null
 	if (
+		hasExplicitValue &&
 		!!showMinAsNegativeInfinity &&
 		typeof min !== 'undefined' &&
 		!isNaN(numericEffective) &&
@@ -60,6 +63,7 @@ export function NumberInputField({
 	) {
 		showOverlayValue = '-∞'
 	} else if (
+		hasExplicitValue &&
 		!!showMaxAsPositiveInfinity &&
 		typeof max !== 'undefined' &&
 		!isNaN(numericEffective) &&
@@ -68,8 +72,7 @@ export function NumberInputField({
 		showOverlayValue = '∞'
 	}
 
-	const valueIsInvalid =
-		typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(Number(tmpValue ?? value))
+	const valueIsInvalid = typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(numericEffective)
 
 	const input = (
 		<NumberField.Root

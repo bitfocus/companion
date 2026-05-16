@@ -57,7 +57,7 @@ export const AddEventDropdown = observer(function AddEventDropdown({ onSelect }:
 				onValueChange={onChange}
 				onOpenChange={onOpenChange}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group">
+				<Combobox.InputGroup className="dropdown-field-input-group rounded-end-0">
 					<Combobox.Input className="dropdown-field-input" placeholder={'+ Add event'} ref={inputRef} />
 					<Combobox.Trigger className="dropdown-field-trigger">
 						<ChevronDownIcon className="dropdown-field-icon" />

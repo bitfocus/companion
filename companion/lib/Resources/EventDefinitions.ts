@@ -72,7 +72,6 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 				id: 'days',
 				label: 'Days',
 				type: 'multidropdown',
-				minChoicesForSearch: 10,
 				minSelection: 1,
 				choices: Array(7)
 					.keys()

@@ -46,6 +46,7 @@ export function PngImageInputField({
 					min={min}
 					max={max}
 					allowNonPng={allowNonPng}
+					disabled={disabled}
 				/>
 				<CButton color="danger" disabled={disabled || !value} onClick={clearImage}>
 					<FontAwesomeIcon icon={faTrash} />
