@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { DataStoreBase } from '../StoreBase.js'
@@ -60,7 +59,7 @@ function convertImportToV12(obj: SomeExportv6): SomeExportv6 {
 		return { ...obj, version: 12 as const }
 	}
 
-	const newObj = { ...cloneDeep(obj), version: 12 as const }
+	const newObj = { ...structuredClone(obj), version: 12 as const }
 	for (const surface of Object.values(newObj.surfaces as Record<string, any>)) {
 		const config: Record<string, unknown> = surface?.config
 		if (config && typeof config === 'object') applyRenamesOnConfig(config)

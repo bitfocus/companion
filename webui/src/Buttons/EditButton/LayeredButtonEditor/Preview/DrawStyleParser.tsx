@@ -1,4 +1,4 @@
-import { cloneDeep, isEqual } from 'lodash-es'
+import { isEqual } from 'lodash-es'
 import { toJS } from 'mobx'
 import { useObserver } from 'mobx-react-lite'
 import { useEffect, useState } from 'react'
@@ -75,7 +75,7 @@ class LayeredButtonDrawStyleParser {
 		// Clone and store the raw elements
 		// TODO - it would be nice to skip this equality check, but the parent observer triggers too often..
 		if (isEqual(this.#rawElements, style)) return
-		this.#rawElements = cloneDeep(style)
+		this.#rawElements = structuredClone(style)
 
 		// Queue update
 		this.#recalculateStyle.trigger()

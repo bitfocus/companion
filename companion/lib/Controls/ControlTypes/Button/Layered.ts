@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import type {
@@ -130,7 +129,7 @@ export class ControlButtonLayered
 	/**
 	 * The base style without feedbacks applied
 	 */
-	#drawElements: SomeButtonGraphicsElement[] = cloneDeep(ControlButtonLayered.DefaultElements)
+	#drawElements: SomeButtonGraphicsElement[] = structuredClone(ControlButtonLayered.DefaultElements)
 
 	/**
 	 * Cache for element conversion results (for future per-element caching optimization)
@@ -145,7 +144,7 @@ export class ControlButtonLayered
 		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true)
 
 		this.options = {
-			...cloneDeep(ButtonControlBase.DefaultOptions),
+			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			canModifyStyleInApis: false,
 		}
@@ -690,7 +689,7 @@ export class ControlButtonLayered
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
 
-		return clone ? cloneDeep(obj) : obj
+		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

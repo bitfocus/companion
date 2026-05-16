@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import type {
 	ExportFullv6,
@@ -256,7 +255,7 @@ function fixupImportInstances(obj: ExportInstancesv6 | undefined): void {
 function convertImportToV10(obj: SomeExportv6): SomeExportv6 {
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 10,
 		}
 
@@ -265,7 +264,7 @@ function convertImportToV10(obj: SomeExportv6): SomeExportv6 {
 		return newObj
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = {
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 10,
 		}
 
@@ -274,7 +273,7 @@ function convertImportToV10(obj: SomeExportv6): SomeExportv6 {
 		return newObj
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = {
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 10,
 		}
 

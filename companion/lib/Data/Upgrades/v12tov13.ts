@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash-es'
 import type {
 	LayeredButtonModel,
 	LayeredButtonOptions,
@@ -78,7 +77,7 @@ function convertImportToV13(obj: SomeExportv6, _logger: Logger, userConfig: User
 
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 13,
 		}
 
@@ -98,7 +97,7 @@ function convertImportToV13(obj: SomeExportv6, _logger: Logger, userConfig: User
 		return newObj
 	} else if (obj.type == 'page') {
 		const newObj: ExportPageModelv6 = {
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 13,
 		}
 
@@ -114,7 +113,7 @@ function convertImportToV13(obj: SomeExportv6, _logger: Logger, userConfig: User
 		return newObj
 	} else if (obj.type == 'trigger_list') {
 		const newObj: ExportTriggersListv6 = {
-			...cloneDeep(obj),
+			...structuredClone(obj),
 			version: 13,
 		}
 
