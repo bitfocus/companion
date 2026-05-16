@@ -1,5 +1,6 @@
-import { CButton, CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -93,12 +94,12 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 					</CForm>
 				</CModalBody>
 				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
+					<Button color="secondary" onClick={doClose}>
 						Cancel
-					</CButton>
-					<CButton ref={buttonRef} color="primary" onClick={doAction}>
+					</Button>
+					<Button ref={buttonRef} color="primary" onClick={doAction}>
 						Save
-					</CButton>
+					</Button>
 				</CModalFooter>
 			</CModalExt>
 		)

@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CButtonGroup, CCol, CRow } from '@coreui/react'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -8,6 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
+import { Button } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
@@ -69,9 +70,9 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 						<div className="mb-2">
 							<CButtonGroup>
-								<CButton color="primary" onClick={doAddNew} size="sm">
+								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
-								</CButton>
+								</Button>
 							</CButtonGroup>
 						</div>
 					</div>
@@ -244,9 +245,9 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 						tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
 					/>
 
-					<CButton color="gray" onClick={doDelete} title="Delete">
+					<Button color="gray" onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+					</Button>
 				</CButtonGroup>
 			</td>
 		</tr>

@@ -1,7 +1,8 @@
-import { CButton, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
+import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
@@ -109,17 +110,17 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 					</CForm>
 				</CModalBody>
 				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
+					<Button color="secondary" onClick={doClose}>
 						Cancel
-					</CButton>
-					<CButton
+					</Button>
+					<Button
 						ref={buttonRef}
 						color="primary"
 						onClick={doAction}
 						disabled={!externalAddressesQuery.data || !selectedAddress || saveMutation.isPending}
 					>
 						Setup
-					</CButton>
+					</Button>
 				</CModalFooter>
 			</MenuPortalContext.Provider>
 		</CModalExt>

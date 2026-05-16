@@ -1,8 +1,9 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import type { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
+import { Button } from '~/Components/Button.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 
@@ -28,24 +29,24 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 			{heading}&nbsp;
 			<CButtonGroup className="right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
-					<CButton
+					<Button
 						color="white"
 						size="sm"
 						onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childEntityIds)}
 						title="Expand all"
 					>
 						<FontAwesomeIcon icon={faExpandArrowsAlt} />
-					</CButton>
+					</Button>
 				)}
 				{childEntityIds.length >= 1 && panelCollapseHelper.canCollapseAll(ownerIdString, childEntityIds) && (
-					<CButton
+					<Button
 						color="white"
 						size="sm"
 						onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childEntityIds)}
 						title="Collapse all"
 					>
 						<FontAwesomeIcon icon={faCompressArrowsAlt} />
-					</CButton>
+					</Button>
 				)}
 				{headingActions || ''}
 			</CButtonGroup>

@@ -1,5 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
-import { CButton, CInputGroup } from '@coreui/react'
+import { CInputGroup } from '@coreui/react'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
@@ -7,6 +7,7 @@ import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
+import { Button } from '~/Components/Button'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { useComputed } from '~/Resources/util.js'
@@ -101,9 +102,9 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 	return (
 		<div className="button-grid-header">
 			<CInputGroup>
-				<CButton color="dark" hidden={!changePage} onClick={prevPage}>
+				<Button color="dark" hidden={!changePage} onClick={prevPage}>
 					<FontAwesomeIcon icon={faChevronLeft} />
-				</CButton>
+				</Button>
 				<div className="dropdown-field button-page-input">
 					<Combobox.Root<number | null>
 						autoHighlight
@@ -127,9 +128,9 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 						<DropdownInputPopup menuPortal={menuPortal ?? undefined} />
 					</Combobox.Root>
 				</div>
-				<CButton color="dark" hidden={!changePage} onClick={nextPage}>
+				<Button color="dark" hidden={!changePage} onClick={nextPage}>
 					<FontAwesomeIcon icon={faChevronRight} />
-				</CButton>
+				</Button>
 			</CInputGroup>
 			<div className="right-buttons">{children}</div>
 		</div>

@@ -1,9 +1,10 @@
-import { CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
+import { CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -72,9 +73,9 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 							</CDropdown>
 						</td>
 						<td>
-							<CButton onClick={() => props.resetValue('https_cert_type')} title="Reset to default">
+							<Button onClick={() => props.resetValue('https_cert_type')} title="Reset to default">
 								<FontAwesomeIcon icon={faUndo} />
-							</CButton>
+							</Button>
 						</td>
 					</tr>
 
@@ -119,21 +120,21 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 											<td>
 												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
 													<div className="my-3">
-														<CButton onClick={renewSslCertificate} color="success" className="mb-2">
+														<Button onClick={renewSslCertificate} color="success" className="mb-2">
 															<FontAwesomeIcon icon={faSync} />
 															&nbsp;Renew
-														</CButton>
+														</Button>
 														<br />
-														<CButton onClick={deleteSslCertificate} color="danger">
+														<Button onClick={deleteSslCertificate} color="danger">
 															<FontAwesomeIcon icon={faTrash} />
 															&nbsp;Delete
-														</CButton>
+														</Button>
 													</div>
 												) : (
-													<CButton onClick={createSslCertificate} color="success">
+													<Button onClick={createSslCertificate} color="success">
 														<FontAwesomeIcon icon={faSync} />
 														&nbsp;Generate
-													</CButton>
+													</Button>
 												)}
 											</td>
 											<td>&nbsp;</td>

@@ -1,10 +1,11 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import { faList } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
+import { Button } from '~/Components/Button'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -22,12 +23,12 @@ function TriggerPickerRow({ id, trigger, selectTrigger }: TriggerPickerRowProps)
 			<td>{trigger.name}</td>
 			<td>
 				<CButtonGroup>
-					<CButton color="primary" title="Replace all the actions on the trigger" onClick={replaceActions}>
+					<Button color="primary" title="Replace all the actions on the trigger" onClick={replaceActions}>
 						Replace
-					</CButton>
-					<CButton color="info" title="Append to the existing actions" onClick={appendActions}>
+					</Button>
+					<Button color="info" title="Append to the existing actions" onClick={appendActions}>
 						Append
-					</CButton>
+					</Button>
 				</CButtonGroup>
 			</td>
 		</tr>

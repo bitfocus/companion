@@ -1,4 +1,4 @@
-import { CButton, CCol, CForm, CRow } from '@coreui/react'
+import { CCol, CForm, CRow } from '@coreui/react'
 import { faCancel, faExpand, faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -6,6 +6,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
 import type { EmulatorConfig } from '@companion-app/shared/Model/Common.js'
+import { Button } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -98,16 +99,16 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 				<CForm onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol xs={12}>
-							<CButton
+							<Button
 								onClick={doRequestFullscreen}
 								title="Fullscreen"
 								disabled={!document.documentElement.requestFullscreen}
 							>
 								<FontAwesomeIcon icon={faExpand} /> Fullscreen
-							</CButton>
-							<CButton onClick={doDismiss} title="Dismiss">
+							</Button>
+							<Button onClick={doDismiss} title="Dismiss">
 								<FontAwesomeIcon icon={faCancel} /> Dismiss
-							</CButton>
+							</Button>
 						</CCol>
 					</CRow>
 				</CForm>
@@ -126,14 +127,14 @@ function EmulatorNotFound({ emulatorId }: { emulatorId: string }) {
 					The emulator with ID <code>{emulatorId}</code> was not found.
 				</div>
 				<div>
-					<CButton
+					<Button
 						color="warning"
 						className="emulator-back-button"
 						onClick={() => void navigate({ to: '/emulators' })}
 						title="Back to emulator list"
 					>
 						Back
-					</CButton>
+					</Button>
 				</div>
 			</NonIdealState>
 		</div>

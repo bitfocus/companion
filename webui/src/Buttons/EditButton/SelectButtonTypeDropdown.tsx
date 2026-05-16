@@ -1,7 +1,8 @@
-import { CButton, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
+import { CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 import { useCallback } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -56,9 +57,9 @@ export function SelectButtonTypeDropdown({
 
 	return (
 		<CDropdown variant="btn-group">
-			<CButton color="danger" onClick={() => setButtonType('button-layered')} title="Create regular button.">
+			<Button color="danger" onClick={() => setButtonType('button-layered')} title="Create regular button.">
 				Create button
-			</CButton>
+			</Button>
 			<CDropdownToggle
 				color="danger"
 				split

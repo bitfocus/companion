@@ -1,4 +1,3 @@
-import { CButton } from '@coreui/react'
 import { faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -17,6 +16,7 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonStylePropertiesWithBuffer } from '@companion-app/shared/Style.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { useComputed } from '~/Resources/util.js'
@@ -130,9 +130,9 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 						<th>Element & Property</th>
 						<th>Value</th>
 						<th className="fit">
-							<CButton color="white" size="sm" title="Add override" onClick={() => setIsAddModalOpen(true)}>
+							<Button color="white" size="sm" title="Add override" onClick={() => setIsAddModalOpen(true)}>
 								<FontAwesomeIcon icon={faPlus} />
-							</CButton>
+							</Button>
 						</th>
 					</tr>
 				</thead>
@@ -198,9 +198,9 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 						<div className="flex-grow-1">
 							<SelectedElementProperty row={row} />
 						</div>
-						<CButton color="white" size="sm" title="Edit element and property">
+						<Button color="white" size="sm" title="Edit element and property">
 							<FontAwesomeIcon icon={faPencil} />
-						</CButton>
+						</Button>
 					</div>
 				</td>
 				<td>
@@ -212,9 +212,9 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 					/>
 				</td>
 				<td>
-					<CButton color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
+					<Button color="white" size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+					</Button>
 				</td>
 			</tr>
 

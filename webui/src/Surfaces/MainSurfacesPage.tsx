@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
+import { CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
 import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
@@ -6,6 +6,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -120,25 +121,25 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 					)}
 
 					<CButtonGroup size="sm">
-						<CButton color="warning" onClick={refreshUSB}>
+						<Button color="warning" onClick={refreshUSB}>
 							<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} />
 							{rescanUsbMutation.isPending ? ' Checking for new surfaces...' : ' Rescan USB'}
-						</CButton>
-						<CButton color="primary" onClick={addEmulator}>
+						</Button>
+						<Button color="primary" onClick={addEmulator}>
 							<FontAwesomeIcon icon={faAdd} /> Add Emulator
-						</CButton>
-						<CButton color="secondary" onClick={addGroup}>
+						</Button>
+						<Button color="secondary" onClick={addGroup}>
 							<FontAwesomeIcon icon={faAdd} /> Add Group
-						</CButton>
+						</Button>
 					</CButtonGroup>
 
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 
 					{!twoPanelMode && (
-						<CButton color="info" className="float-end" size="sm" onClick={handleShowSettings}>
+						<Button color="info" className="float-end" size="sm" onClick={handleShowSettings}>
 							<FontAwesomeIcon icon={faCog} /> Show Settings
-						</CButton>
+						</Button>
 					)}
 				</div>
 

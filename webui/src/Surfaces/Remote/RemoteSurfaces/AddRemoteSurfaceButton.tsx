@@ -1,9 +1,10 @@
-import { CButton, CButtonGroup, CPopover } from '@coreui/react'
+import { CButtonGroup, CPopover } from '@coreui/react'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
+import { Button } from '~/Components/Button.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util'
@@ -36,9 +37,9 @@ export const AddRemoteSurfaceButton = observer(function AddRemoteSurfaceButton()
 			placement="bottom"
 			style={{ backgroundColor: 'white' }}
 		>
-			<CButton color="primary" size="sm" title="Add Remote Surface Connection" disabled={sortedInstances.length === 0}>
+			<Button color="primary" size="sm" title="Add Remote Surface Connection" disabled={sortedInstances.length === 0}>
 				<FontAwesomeIcon icon={faPlus} /> Add Remote Surface Connection
-			</CButton>
+			</Button>
 		</CPopover>
 	)
 })
@@ -69,9 +70,9 @@ function AddRemoteSurfacePopoverButton({ instanceId, label }: { instanceId: stri
 	}, [addOutboundMutation, instanceId, navigate, notifier])
 
 	return (
-		<CButton onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
+		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
 			{label}
-		</CButton>
+		</Button>
 	)
 }
 

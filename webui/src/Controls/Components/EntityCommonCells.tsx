@@ -1,4 +1,4 @@
-import { CButton, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -16,6 +16,7 @@ import {
 import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -94,9 +95,9 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 										The name to give this value as a {localVariablePrefix} variable
 									</InlineHelpIcon>
 									<CopyToClipboard text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`} onCopy={onCopied}>
-										<CButton size="sm" title="Copy variable name" className="ps-0">
+										<Button size="sm" title="Copy variable name" className="ps-0">
 											<FontAwesomeIcon icon={faCopy} color="#d50215" />
-										</CButton>
+										</Button>
 									</CopyToClipboard>
 								</CFormLabel>
 								<CCol sm={8}>

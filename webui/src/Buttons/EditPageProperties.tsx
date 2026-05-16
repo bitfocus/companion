@@ -1,15 +1,6 @@
-import {
-	CButton,
-	CCol,
-	CForm,
-	CFormInput,
-	CFormLabel,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-	CRow,
-} from '@coreui/react'
+import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
@@ -106,12 +97,12 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					</CForm>
 				</CModalBody>
 				<CModalFooter>
-					<CButton color="secondary" onClick={doClose}>
+					<Button color="secondary" onClick={doClose}>
 						Cancel
-					</CButton>
-					<CButton color="primary" onClick={doAction}>
+					</Button>
+					<Button color="primary" onClick={doAction}>
 						Save
-					</CButton>
+					</Button>
 				</CModalFooter>
 			</CModalExt>
 		)

@@ -1,8 +1,8 @@
-import { CButton } from '@coreui/react'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { Button } from '~/Components/Button.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { AddEntitiesModal, type AddEntitiesModalRef } from './AddEntitiesModal.js'
@@ -55,7 +55,7 @@ export function AddEntityPanel({
 				feedbackListType={feedbackListType}
 				disabled={readonly}
 			/>
-			<CButton
+			<Button
 				color="primary"
 				onClick={showAddModal}
 				style={{
@@ -65,7 +65,7 @@ export function AddEntityPanel({
 				disabled={readonly}
 			>
 				<FontAwesomeIcon icon={faFolderOpen} />
-			</CButton>
+			</Button>
 
 			<MyErrorBoundary>
 				<AddEntitiesModal

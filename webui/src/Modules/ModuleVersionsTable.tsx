@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import {
 	faCircleMinus,
 	faEyeSlash,
@@ -22,6 +22,7 @@ import type {
 	ModuleStoreModuleInfoVersion,
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { Button } from '~/Components/Button'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -276,7 +277,7 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 	}, [uninstallModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	return (
-		<CButton color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
+		<Button color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
 			{isRunningInstallOrUninstall ? (
 				<span title="Removing">
 					<FontAwesomeIcon icon={faSync} spin />
@@ -286,7 +287,7 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 					<FontAwesomeIcon icon={faTrash} />
 				</span>
 			)}
-		</CButton>
+		</Button>
 	)
 }
 
@@ -340,7 +341,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 	}
 
 	return (
-		<CButton color="white" disabled={isRunningInstallOrUninstall} onClick={doInstall}>
+		<Button color="white" disabled={isRunningInstallOrUninstall} onClick={doInstall}>
 			{isRunningInstallOrUninstall ? (
 				<span title="Installing">
 					<FontAwesomeIcon icon={faSync} />
@@ -350,6 +351,6 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 					<FontAwesomeIcon icon={faPlus} />
 				</span>
 			)}
-		</CButton>
+		</Button>
 	)
 }

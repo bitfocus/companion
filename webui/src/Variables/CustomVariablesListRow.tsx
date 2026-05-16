@@ -1,10 +1,11 @@
-import { CButton, CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { Button } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -44,9 +45,9 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				<div className={classNames('cell-header-item', !isCollapsed && 'span-2')}>
 					<span className="variable-style">$({fullname})</span>
 					<CopyToClipboard text={`$(${fullname})`} onCopy={customVariablesApi.onCopied}>
-						<CButton size="sm" title="Copy variable name">
+						<Button size="sm" title="Copy variable name">
 							<FontAwesomeIcon icon={faCopy} color="#d50215" />
-						</CButton>
+						</Button>
 					</CopyToClipboard>
 				</div>
 				{isCollapsed && (
@@ -57,18 +58,18 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				<div className="cell-header-item">
 					<CButtonGroup style={{ float: 'inline-end' }}>
 						{isCollapsed ? (
-							<CButton onClick={doExpand} size="sm" title="Expand variable view">
+							<Button onClick={doExpand} size="sm" title="Expand variable view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />
-							</CButton>
+							</Button>
 						) : (
-							<CButton onClick={doCollapse} size="sm" title="Collapse variable view">
+							<Button onClick={doCollapse} size="sm" title="Collapse variable view">
 								<FontAwesomeIcon icon={faCompressArrowsAlt} />
-							</CButton>
+							</Button>
 						)}
 
-						<CButton onClick={() => customVariablesApi.doDelete(info.id)} size="sm" title="Delete custom variable">
+						<Button onClick={() => customVariablesApi.doDelete(info.id)} size="sm" title="Delete custom variable">
 							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
+						</Button>
 					</CButtonGroup>
 				</div>
 			</div>

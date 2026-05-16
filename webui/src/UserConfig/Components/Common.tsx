@@ -1,7 +1,7 @@
-import { CButton } from '@coreui/react'
 import { faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { Button } from '~/Components/Button.js'
 
 export interface UserConfigProps {
 	config: UserConfigModel
@@ -17,8 +17,8 @@ interface ResetButtonProps {
 
 export function ResetButton({ userConfig, field }: ResetButtonProps): React.JSX.Element {
 	return (
-		<CButton onClick={() => userConfig.resetValue(field)} title="Reset to default">
+		<Button onClick={() => userConfig.resetValue(field)} title="Reset to default">
 			<FontAwesomeIcon icon={faUndo} />
-		</CButton>
+		</Button>
 	)
 }

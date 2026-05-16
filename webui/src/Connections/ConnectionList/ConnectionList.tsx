@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButtonGroup } from '@coreui/react'
 import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
@@ -8,6 +8,7 @@ import type { ClientConnectionConfig, ConnectionCollection } from '@companion-ap
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { Button } from '~/Components/Button.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -103,7 +104,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 				<ConnectionVariablesModal ref={variablesModalRef} />
 
 				<CButtonGroup className="connection-group-actions mb-2">
-					<CButton
+					<Button
 						color="primary"
 						size="sm"
 						className="d-xl-none"
@@ -111,7 +112,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 					>
 						<FontAwesomeIcon icon={faPlug} className="me-1" />
 						Add Connection
-					</CButton>
+					</Button>
 					<CreateCollectionButton />
 				</CButtonGroup>
 			</div>
@@ -238,8 +239,8 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<CButton color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-		</CButton>
+		</Button>
 	)
 }

@@ -1,4 +1,4 @@
-import { CButton, CCallout, CCol, CRow } from '@coreui/react'
+import { CCallout, CCol, CRow } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
@@ -18,6 +18,7 @@ import {
 	type ButtonInfiniteGridRef,
 } from '~/Buttons/ButtonInfiniteGrid.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
+import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -129,9 +130,9 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 									setPage={isSinglePage ? undefined : setImportPageNumber}
 									pageOptions={snapshotPageOptions}
 								>
-									<CButton color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
+									<Button color="light" className="btn-right" title="Home Position" onClick={resetSourcePosition}>
 										<FontAwesomeIcon icon={faHome} />
-									</CButton>
+									</Button>
 								</PageNumberPicker>
 							</CCol>
 							<div className="buttongrid" ref={hasBeenRenderedRef}>
@@ -162,9 +163,9 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridZoomController={gridZoomController}
 									/>
 
-									<CButton color="light" className="btn-right" title="Home Position" onClick={resetDestinationPosition}>
+									<Button color="light" className="btn-right" title="Home Position" onClick={resetDestinationPosition}>
 										<FontAwesomeIcon icon={faHome} />
-									</CButton>
+									</Button>
 								</ButtonGridHeader>
 							</CCol>
 							<div className="buttongrid">
@@ -207,10 +208,10 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 						: ' completely override the button on the existing destination page with the buttons on the selected source page'}
 					.
 				</p>
-				<CButton color={pageNumber == -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
+				<Button color={pageNumber == -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
 					<FontAwesomeIcon icon={pageNumber == -1 ? faFileCirclePlus : faFileCircleExclamation} />
 					{pageNumber == -1 ? ' Import to new page' : ` Replace page ${pageNumber} with imported page`}
-				</CButton>
+				</Button>
 			</CCallout>
 		</>
 	)

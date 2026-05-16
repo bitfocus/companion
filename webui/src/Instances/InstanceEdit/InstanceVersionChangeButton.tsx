@@ -1,4 +1,4 @@
-import { CButton, CCol, CCollapse, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CCollapse, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -7,6 +7,7 @@ import { useCallback, useContext, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
@@ -94,9 +95,9 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 	return (
 		<>
-			<CButton color="light" size="sm" title="Change module version" onClick={doShow}>
+			<Button color="light" size="sm" title="Change module version" onClick={doShow}>
 				<FontAwesomeIcon icon={faPencil} />
-			</CButton>
+			</Button>
 
 			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 				<CModalHeader closeButton>
@@ -160,10 +161,10 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 						<CCol sm={12} className="mt-3 mb-2">
 							<hr className="my-2" />
-							<CButton color="link" size="sm" onClick={toggleAdvancedMode} className="p-0 text-decoration-none">
+							<Button color="link" size="sm" onClick={toggleAdvancedMode} className="p-0 text-decoration-none">
 								<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 								Advanced Options
-							</CButton>
+							</Button>
 						</CCol>
 
 						<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
@@ -201,10 +202,10 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 						selector={(state) => [state.canSubmit, state.isSubmitting]}
 						children={([canSubmit, isSubmitting]) => (
 							<>
-								<CButton color="secondary" onClick={doClose} disabled={!canSubmit}>
+								<Button color="secondary" onClick={doClose} disabled={!canSubmit}>
 									Cancel
-								</CButton>
-								<CButton
+								</Button>
+								<Button
 									ref={buttonRef}
 									color="primary"
 									type="submit"
@@ -216,7 +217,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									}}
 								>
 									Save {isSubmitting ? '...' : ''}
-								</CButton>
+								</Button>
 							</>
 						)}
 					/>

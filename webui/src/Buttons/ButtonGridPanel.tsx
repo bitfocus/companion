@@ -1,10 +1,11 @@
-import { CButton, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
@@ -121,15 +122,15 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<CRow>
 					<CCol sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
-							<CButton color="light" onClick={showExportModal} title="Export Page" className="btn-right">
+							<Button color="light" onClick={showExportModal} title="Export Page" className="btn-right">
 								<FontAwesomeIcon icon={faFileExport} />
-							</CButton>
-							<CButton color="light" onClick={configurePage} title="Edit Page" className="btn-right">
+							</Button>
+							<Button color="light" onClick={configurePage} title="Edit Page" className="btn-right">
 								<FontAwesomeIcon icon={faPencil} />
-							</CButton>
-							<CButton color="light" onClick={resetPosition} title="Home Position" className="btn-right">
+							</Button>
+							<Button color="light" onClick={resetPosition} title="Home Position" className="btn-right">
 								<FontAwesomeIcon icon={faHome} />
-							</CButton>
+							</Button>
 							<ButtonGridZoomControl
 								useCompactButtons={true}
 								gridZoomValue={gridZoomValue}

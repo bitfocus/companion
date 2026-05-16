@@ -1,12 +1,4 @@
-import {
-	CAccordion,
-	CAccordionBody,
-	CAccordionHeader,
-	CAccordionItem,
-	CButton,
-	CButtonGroup,
-	CPopover,
-} from '@coreui/react'
+import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CButtonGroup, CPopover } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
 	faCircle,
@@ -25,6 +17,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Tuck } from '~/Components/Tuck.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -56,9 +49,9 @@ export function RemoveElementButton({
 	}, [removeElementMutation, confirmModalRef, controlId, elementId])
 
 	return (
-		<CButton color="white" size="sm" onClick={removeElement} title="Remove">
+		<Button color="white" size="sm" onClick={removeElement} title="Remove">
 			<FontAwesomeIcon icon={faTrash} />
-		</CButton>
+		</Button>
 	)
 }
 
@@ -74,14 +67,9 @@ export const ToggleVisibilityButton = observer(function ToggleVisibilityButton({
 	const isVisible = styleStore.isElementVisible(elementId)
 
 	return (
-		<CButton
-			color="white"
-			size="sm"
-			onClick={toggleVisibility}
-			title={isVisible ? 'Preview visible' : 'Preview hidden'}
-		>
+		<Button color="white" size="sm" onClick={toggleVisibility} title={isVisible ? 'Preview visible' : 'Preview hidden'}>
 			<FontAwesomeIcon icon={faEye} style={{ opacity: isVisible ? undefined : 0.3 }} />
-		</CButton>
+		</Button>
 	)
 })
 
@@ -101,9 +89,9 @@ export function AddElementDropdownButton({
 			style={{ backgroundColor: 'white' }}
 			className="add-layered-element-popover"
 		>
-			<CButton color="white" size="sm" title="Add element">
+			<Button color="white" size="sm" title="Add element">
 				<FontAwesomeIcon icon={faPlus} />
-			</CButton>
+			</Button>
 		</CPopover>
 	)
 }
@@ -136,12 +124,12 @@ function AddElementDropdownPopoverButton({
 	}, [addElementMutation, controlId, elementType, styleStore])
 
 	return (
-		<CButton onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
+		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`} style={{ textAlign: 'left' }}>
 			<Tuck>
 				<FontAwesomeIcon icon={icon} />
 			</Tuck>
 			{label}
-		</CButton>
+		</Button>
 	)
 }
 

@@ -1,7 +1,8 @@
-import { CButton, CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput, CInputGroup } from '@coreui/react'
 import JSON5 from 'json5'
 import { useEffect, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
+import { Button } from '~/Components/Button.js'
 import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariableInputGroupProps {
@@ -121,8 +122,8 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 					marginBottom: '0.5rem',
 				}}
 			>
-				<CButton
-					color={disabled ? '#888888' : 'info'}
+				<Button
+					color="info"
 					style={buttonProps.style}
 					variant="outline"
 					title={buttonProps.title}
@@ -131,7 +132,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 					disabled={disabled}
 				>
 					{buttonProps.label}
-				</CButton>
+				</Button>
 				<CFormInput
 					value={localValue}
 					onChange={(e) => handleInputChange(e.target.value)}

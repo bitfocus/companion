@@ -1,8 +1,9 @@
-import { CButton, CCol, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { Button } from '~/Components/Button'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -65,9 +66,9 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 						</TabArea.Root>
 					</CModalBody>
 					<CModalFooter>
-						<CButton color="secondary" onClick={doClose}>
+						<Button color="secondary" onClick={doClose}>
 							Cancel
-						</CButton>
+						</Button>
 					</CModalFooter>
 				</CForm>
 			</MenuPortalContext.Provider>

@@ -1,18 +1,9 @@
-import {
-	CButton,
-	CCallout,
-	CCard,
-	CCardBody,
-	CCardHeader,
-	CCol,
-	CFormInput,
-	CFormLabel,
-	CListGroup,
-} from '@coreui/react'
+import { CCallout, CCard, CCardBody, CCardHeader, CCol, CFormInput, CFormLabel, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { memo, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -129,7 +120,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 			<CFormInput readOnly type="text" value={authenticatedAs} />
 			{!cloudActive && (
 				<div className="my-3">
-					<CButton
+					<Button
 						color="success"
 						onClick={() => {
 							clearError()
@@ -137,7 +128,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 						}}
 					>
 						Log out
-					</CButton>
+					</Button>
 				</div>
 			)}
 		</CCol>
@@ -206,9 +197,9 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 			<StaticAlert color="success">{uuid}</StaticAlert>
 
 			<div className="my-3">
-				<CButton color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
+				<Button color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
 					Regenerate secret key
-				</CButton>
+				</Button>
 			</div>
 		</CCol>
 	)

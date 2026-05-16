@@ -1,9 +1,10 @@
-import { CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
 import { useCallback, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -184,8 +185,8 @@ function TestActionsButton({ controlId, hidden }: { controlId: string; hidden: b
 		testActionsMutation.mutateAsync({ controlId }).catch((e) => console.error(`Hot press failed: ${e}`))
 	}, [testActionsMutation, controlId])
 	return (
-		<CButton color="warning" hidden={hidden} onMouseDown={hotPressDown}>
+		<Button color="warning" hidden={hidden} onMouseDown={hotPressDown}>
 			Test actions
-		</CButton>
+		</Button>
 	)
 }

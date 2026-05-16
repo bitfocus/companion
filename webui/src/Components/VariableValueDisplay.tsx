@@ -1,8 +1,9 @@
-import { CButton, CPopover } from '@coreui/react'
+import { CPopover } from '@coreui/react'
 import { faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { Button } from '~/Components/Button.js'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { StaticAlert } from './Alert.js'
@@ -238,9 +239,9 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 				{valuePill}
 				{showCopy && (
 					<CopyToClipboard text={valueStr} onCopy={onCopied}>
-						<CButton size="sm" title="Copy variable value">
+						<Button size="sm" title="Copy variable value">
 							<FontAwesomeIcon icon={faCopy} color={color} />
-						</CButton>
+						</Button>
 					</CopyToClipboard>
 				)}
 			</div>

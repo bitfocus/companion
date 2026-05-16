@@ -1,6 +1,6 @@
-import { CButton } from '@coreui/react'
 import classNames from 'classnames'
 import { useCallback, useEffect, useState } from 'react'
+import { Button, type ButtonColor } from './Button'
 
 export interface TableVisibilityHelper<T extends Record<string, any>> {
 	visibility: T
@@ -51,7 +51,7 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 
 interface VisibilityButtonProps<T extends Record<string, boolean>> extends TableVisibilityHelper<T> {
 	keyId: keyof T
-	color: string
+	color: ButtonColor
 	label: string
 	title?: string
 }
@@ -67,7 +67,7 @@ export function VisibilityButton<T extends Record<string, any>>({
 	const doToggle = useCallback(() => toggleVisibility(keyId), [keyId, toggleVisibility])
 
 	return (
-		<CButton
+		<Button
 			size="sm"
 			color={color}
 			className={classNames({ active: visibility[keyId] })}
@@ -75,6 +75,6 @@ export function VisibilityButton<T extends Record<string, any>>({
 			title={title}
 		>
 			{label}
-		</CButton>
+		</Button>
 	)
 }

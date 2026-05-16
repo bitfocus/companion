@@ -1,8 +1,8 @@
-import { CButton } from '@coreui/react'
 import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import { Button } from '~/Components/Button.js'
 import { usePanelCollapseHelperContext, usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
@@ -150,14 +150,14 @@ export const CollectionItemsCollapseButtons = observer(function CollectionItemsC
 	return (
 		<>
 			{hasCollapsed && (
-				<CButton size="sm" color="link" onClick={expandAll} title="Expand all items">
+				<Button size="sm" color="link" onClick={expandAll} title="Expand all items">
 					<FontAwesomeIcon icon={faExpandArrowsAlt} />
-				</CButton>
+				</Button>
 			)}
 			{hasExpanded && (
-				<CButton size="sm" color="link" onClick={collapseAll} title="Collapse all items">
+				<Button size="sm" color="link" onClick={collapseAll} title="Collapse all items">
 					<FontAwesomeIcon icon={faCompressArrowsAlt} />
-				</CButton>
+				</Button>
 			)}
 		</>
 	)

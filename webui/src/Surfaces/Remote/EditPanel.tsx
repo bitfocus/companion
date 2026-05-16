@@ -1,4 +1,4 @@
-import { CButton, CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
+import { CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -7,6 +7,7 @@ import type { JsonValue } from 'type-fest'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -179,18 +180,18 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						<CCol sm={12}>
 							<div className="flex flex-row">
 								<div className="grow">
-									<CButton
+									<Button
 										color="success"
 										className="me-md-1"
 										disabled={!isDirty || !isValid || isSubmitting}
 										type="submit"
 									>
 										Save {isSubmitting ? '...' : ''}
-									</CButton>
+									</Button>
 
-									<CButton color="secondary" onClick={handleCancel} disabled={isSubmitting}>
+									<Button color="secondary" onClick={handleCancel} disabled={isSubmitting}>
 										Cancel
-									</CButton>
+									</Button>
 								</div>
 							</div>
 						</CCol>
