@@ -58,7 +58,7 @@
 }
 
 .flex-form {
-	& > div:not(.btn-group) {
+	& > div:not(.button-group) {
 		// column
 		margin-bottom: 10px;
 	}
@@ -431,7 +431,7 @@
 		text-overflow: ellipsis;
 	}
 
-	.btn-group-vertical {
+	.button-group-vertical {
 		width: 100%;
 	}
 

@@ -33,7 +33,7 @@ h4 {
 h4,
 h5,
 legend {
-	.btn-group {
+	.button-group {
 		float: right;
 	}
 	.btn {
@@ -48,7 +48,7 @@ h5.btn-inline {
 
 	.context-help-button,
 	.btn,
-	.btn-group {
+	.button-group {
 		display: inline-flex;
 		align-items: center;
 		padding-left: 0.75em;
@@ -79,7 +79,7 @@ h5.btn-inline {
 	}
 }
 
-.btn-group {
+.button-group {
 	// do not set "overflow: hidden;" globally! if needed put it in an appropriate scope. If set here it prevents dropdown menus!
 	&.margin-bottom {
 		margin-bottom: 1rem;

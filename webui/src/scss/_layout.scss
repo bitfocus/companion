@@ -136,7 +136,7 @@ form.row > * {
 	--menu-hover-color: #fff;
 	--menu-hover-bg: var(--cui-info);
 	color: var(--menu-color); // this may not affect anything
-	//overflow: visible; // uncomment this if unscoped .btn-group defined in _common.scss needs to make overflow hidden
+	//overflow: visible; // uncomment this if unscoped .button-group defined in _common.scss needs to make overflow hidden
 
 	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
 	.help-toggle {
