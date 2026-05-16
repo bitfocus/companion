@@ -3,15 +3,18 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/E
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import {
-	EntityPoolIsInvertedManager,
 	type CreateVariablesAndExpressionParser,
-	type UpdateIsInvertedValuesFn,
-} from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
-import type { NewIsInvertedValue } from '../../../lib/Controls/Entities/Types.js'
+	EntityPoolSpecialExpressionManager,
+} from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
+import type {
+	UpdateSpecialExpressionValuesFn,
+	NewSpecialExpressionValue,
+} from '../../../lib/Controls/Entities/SpecialExpressions.js'
 
-describe('EntityPoolIsInvertedManager', () => {
+describe('EntityPoolSpecialExpressionManager', () => {
 	// Create mock functions
-	const mockUpdateFn = vi.fn<UpdateIsInvertedValuesFn>()
+	const mockUpdateIsInvertedFn = vi.fn<UpdateSpecialExpressionValuesFn<'isInverted'>>()
+	const mockUpdateStoreResultFn = vi.fn<UpdateSpecialExpressionValuesFn<'storeResult'>>()
 	let mockParseExpressionResult: ExecuteExpressionResult
 
 	const mockVariablesParser = {
@@ -22,7 +25,7 @@ describe('EntityPoolIsInvertedManager', () => {
 		.fn<CreateVariablesAndExpressionParser>()
 		.mockReturnValue(mockVariablesParser as any)
 
-	let manager: EntityPoolIsInvertedManager
+	let manager: EntityPoolSpecialExpressionManager
 
 	// Helper to create mock entities
 	function createMockEntity(id: string, rawIsInverted: ExpressionOrValue<boolean> | undefined): ControlEntityInstance {
@@ -45,7 +48,10 @@ describe('EntityPoolIsInvertedManager', () => {
 		mockCreateVariablesAndExpressionParser.mockReturnValue(mockVariablesParser as any)
 
 		// Create a new instance for each test
-		manager = new EntityPoolIsInvertedManager('control-1', mockCreateVariablesAndExpressionParser, mockUpdateFn)
+		manager = new EntityPoolSpecialExpressionManager('control-1', mockCreateVariablesAndExpressionParser, {
+			isInverted: mockUpdateIsInvertedFn,
+			storeResult: mockUpdateStoreResultFn,
+		})
 
 		vi.useFakeTimers()
 	})
@@ -54,18 +60,18 @@ describe('EntityPoolIsInvertedManager', () => {
 		it('should add an entity and process its isInverted value', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 				])
@@ -75,18 +81,18 @@ describe('EntityPoolIsInvertedManager', () => {
 		it('should handle undefined rawIsInverted as false', () => {
 			const mockEntity = createMockEntity('entity-1', undefined)
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false,
+							value: false,
 						},
 					],
 				])
@@ -96,18 +102,18 @@ describe('EntityPoolIsInvertedManager', () => {
 		it('should handle non-expression false value', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: false })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false,
+							value: false,
 						},
 					],
 				])
@@ -118,21 +124,21 @@ describe('EntityPoolIsInvertedManager', () => {
 			const mockEntity1 = createMockEntity('entity-1', { isExpression: false, value: false })
 			const mockEntity2 = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity1)
+			manager.trackEntity(mockEntity1, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
-			manager.trackEntity(mockEntity2)
+			manager.trackEntity(mockEntity2, 'isInverted')
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 				])
@@ -143,20 +149,20 @@ describe('EntityPoolIsInvertedManager', () => {
 			const mockEntity1 = createMockEntity('entity-1', { isExpression: false, value: true })
 			const mockEntity2 = createMockEntity('entity-2', { isExpression: false, value: false })
 
-			manager.trackEntity(mockEntity1)
-			manager.trackEntity(mockEntity2)
+			manager.trackEntity(mockEntity1, 'isInverted')
+			manager.trackEntity(mockEntity2, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 					[
@@ -164,7 +170,7 @@ describe('EntityPoolIsInvertedManager', () => {
 						{
 							entityId: 'entity-2',
 							controlId: 'control-1',
-							isInverted: false,
+							value: false,
 						},
 					],
 				])
@@ -182,19 +188,19 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: 'true && $(internal:test)' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
 			expect(mockVariablesParser.executeExpression).toHaveBeenCalledWith('true && $(internal:test)', 'boolean')
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 				])
@@ -210,18 +216,18 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: 'invalid expression !!!' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false,
+							value: false,
 						},
 					],
 				])
@@ -237,18 +243,18 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '1' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 				])
@@ -264,18 +270,18 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '0' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false,
+							value: false,
 						},
 					],
 				])
@@ -287,9 +293,9 @@ describe('EntityPoolIsInvertedManager', () => {
 		it('should remove entity from tracking', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.forgetEntity('entity-1')
 
@@ -297,7 +303,7 @@ describe('EntityPoolIsInvertedManager', () => {
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should do nothing if entity does not exist', () => {
@@ -305,18 +311,18 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should remove pending entity before processing', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			manager.forgetEntity('entity-1')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 
@@ -330,9 +336,9 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '$(internal:var1)' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			// Change the expression result for re-processing
 			mockParseExpressionResult = {
@@ -344,14 +350,14 @@ describe('EntityPoolIsInvertedManager', () => {
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 				])
@@ -367,27 +373,27 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '$(internal:specific-var)' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.onVariablesChanged(new Set(['unrelated-var']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should not invalidate entities without expressions', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should invalidate multiple entities that reference the same variable', () => {
@@ -400,10 +406,10 @@ describe('EntityPoolIsInvertedManager', () => {
 			const mockEntity1 = createMockEntity('entity-1', { isExpression: true, value: '$(internal:shared-var)' })
 			const mockEntity2 = createMockEntity('entity-2', { isExpression: true, value: '$(internal:shared-var)' })
 
-			manager.trackEntity(mockEntity1)
-			manager.trackEntity(mockEntity2)
+			manager.trackEntity(mockEntity1, 'isInverted')
+			manager.trackEntity(mockEntity2, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			// Change the expression result for re-processing
 			mockParseExpressionResult = {
@@ -415,15 +421,15 @@ describe('EntityPoolIsInvertedManager', () => {
 			manager.onVariablesChanged(new Set(['shared-var']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 					[
@@ -431,7 +437,7 @@ describe('EntityPoolIsInvertedManager', () => {
 						{
 							entityId: 'entity-2',
 							controlId: 'control-1',
-							isInverted: true,
+							value: true,
 						},
 					],
 				])
@@ -447,14 +453,14 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '$(internal:var1)' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			// Don't run timers yet - entity is still pending
 
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
 			// Should only be called once despite both trackEntity and onVariablesChanged
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
 		})
 	})
 
@@ -462,23 +468,23 @@ describe('EntityPoolIsInvertedManager', () => {
 		it('should clear entities and prevent further processing', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			manager.destroy()
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should prevent new entities from being processed after destroy', () => {
 			manager.destroy()
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
 		it('should prevent variable changes from triggering processing after destroy', () => {
@@ -490,16 +496,16 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '$(internal:var1)' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 			vi.runAllTimers()
-			mockUpdateFn.mockClear()
+			mockUpdateIsInvertedFn.mockClear()
 
 			manager.destroy()
 
 			manager.onVariablesChanged(new Set(['var1']))
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 
@@ -509,13 +515,13 @@ describe('EntityPoolIsInvertedManager', () => {
 			// the manager should skip it during processing
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			// Note: We can't actually force garbage collection in tests, but we can verify
 			// that the code handles the case where deref() returns undefined
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
 		})
 	})
 
@@ -525,30 +531,30 @@ describe('EntityPoolIsInvertedManager', () => {
 			const mockEntity2 = createMockEntity('entity-2', { isExpression: false, value: false })
 			const mockEntity3 = createMockEntity('entity-3', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity1)
-			manager.trackEntity(mockEntity2)
-			manager.trackEntity(mockEntity3)
+			manager.trackEntity(mockEntity1, 'isInverted')
+			manager.trackEntity(mockEntity2, 'isInverted')
+			manager.trackEntity(mockEntity3, 'isInverted')
 
 			vi.runAllTimers()
 
 			// All three should be processed in a single batch
-			expect(mockUpdateFn).toHaveBeenCalledTimes(1)
-			const call = mockUpdateFn.mock.calls[0][0]
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			const call = mockUpdateIsInvertedFn.mock.calls[0][0]
 			expect(call.size).toBe(3)
 		})
 
 		it('should process after debounce timeout', () => {
 			const mockEntity = createMockEntity('entity-1', { isExpression: false, value: true })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			// Advance time less than debounce wait
 			vi.advanceTimersByTime(5)
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 
 			// Advance time past debounce wait
 			vi.advanceTimersByTime(10)
-			expect(mockUpdateFn).toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
 		})
 	})
 
@@ -563,7 +569,7 @@ describe('EntityPoolIsInvertedManager', () => {
 				variableIds: new Set(['var1']),
 			}
 
-			manager.trackEntity(mockEntity1)
+			manager.trackEntity(mockEntity1, 'isInverted')
 			vi.runAllTimers()
 
 			expect(mockCreateVariablesAndExpressionParser).toHaveBeenCalledTimes(1)
@@ -577,7 +583,7 @@ describe('EntityPoolIsInvertedManager', () => {
 				variableIds: new Set(['var2']),
 			}
 
-			manager.trackEntity(mockEntity2)
+			manager.trackEntity(mockEntity2, 'isInverted')
 			vi.runAllTimers()
 
 			expect(mockCreateVariablesAndExpressionParser).toHaveBeenCalledTimes(1)
@@ -588,18 +594,18 @@ describe('EntityPoolIsInvertedManager', () => {
 		it('should handle null rawIsInverted as false', () => {
 			const mockEntity = createMockEntity('entity-1', null as any)
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false,
+							value: false,
 						},
 					],
 				])
@@ -615,18 +621,18 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false, // empty string is falsy
+							value: false, // empty string is falsy
 						},
 					],
 				])
@@ -642,18 +648,18 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			const mockEntity = createMockEntity('entity-1', { isExpression: true, value: '$(missing:var)' })
 
-			manager.trackEntity(mockEntity)
+			manager.trackEntity(mockEntity, 'isInverted')
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).toHaveBeenCalledWith(
-				new Map<string, NewIsInvertedValue>([
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
 					[
 						'entity-1',
 						{
 							entityId: 'entity-1',
 							controlId: 'control-1',
-							isInverted: false, // undefined is falsy
+							value: false, // undefined is falsy
 						},
 					],
 				])
@@ -666,7 +672,7 @@ describe('EntityPoolIsInvertedManager', () => {
 
 			vi.runAllTimers()
 
-			expect(mockUpdateFn).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 })

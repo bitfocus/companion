@@ -19,6 +19,7 @@ import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type CompanionHTTPRequest, type LogLevel, type OSCMetaArgument } from '@companion-module/base'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
+import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
@@ -361,9 +362,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void> {
+	async actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<JsonValue | undefined> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
-		if (action.disabled) return
+		if (action.disabled) return undefined
 
 		try {
 			// This means the new flow is being done, and the options must be parsed at this stage
@@ -404,7 +405,12 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 				surfaceId: extras?.surfaceId,
 			})
-			if (result && !result.success) {
+
+			if (result) {
+				if (result.success) {
+					return result.result
+				}
+
 				const message = result.errorMessage || 'Unknown error'
 				this.logger.warn(`Error executing action: ${message}`)
 				this.#sendToModuleLog('error', `Error executing action: ${message}`)
@@ -418,6 +424,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			throw e
 		}
+
+		return undefined
 	}
 
 	/**

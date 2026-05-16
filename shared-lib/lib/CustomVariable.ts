@@ -1,3 +1,5 @@
+import type { CompanionInputFieldCheckboxExtended, InternalInputFieldCustomVariable } from './Model/Options.js'
+
 /**
  * Make a customvariable 'safe' according to the valid regex
  * @param name Custom variable to check
@@ -17,3 +19,19 @@ export function isCustomVariableValid(name: string): boolean {
 	const safeLabel = makeCustomVariableSafe(name)
 	return safeLabel === name
 }
+
+export const CustomVariableSelectorOption = {
+	type: 'internal:custom_variable',
+	label: 'Custom variable',
+	id: 'name',
+	expressionDescription:
+		'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
+} as const satisfies InternalInputFieldCustomVariable
+
+export const CustomVariableCreateIfNotExistsOption = {
+	type: 'checkbox',
+	label: 'Create if not exists',
+	id: 'create',
+	default: false,
+	disableAutoExpression: true,
+} as const satisfies CompanionInputFieldCheckboxExtended

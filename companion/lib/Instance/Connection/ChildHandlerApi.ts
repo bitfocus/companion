@@ -3,6 +3,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ActionEntityModel, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ExpressionableOptionsObject, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -87,7 +88,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	/**
 	 * Tell the child instance class to execute an action
 	 */
-	actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<void>
+	actionRun(action: ActionEntityModel, extras: RunActionExtras): Promise<JsonValue | undefined>
 
 	/**
 	 *

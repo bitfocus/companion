@@ -7,10 +7,12 @@ import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
+	type ActionEntityModel,
 	type EntitySupportedChildGroupDefinition,
 	type FeedbackEntityModel,
 	type FeedbackEntityStyleOverride,
 	type FeedbackValue,
+	type RawStoreResult,
 	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -19,14 +21,15 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
-import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
 import { ControlEntityList } from './EntityList.js'
+import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
+import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
-	NewIsInvertedValue,
 	ProcessManagerForEntity,
+	StoreResult,
 } from './Types.js'
 
 export class ControlEntityInstance {
@@ -38,7 +41,7 @@ export class ControlEntityInstance {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #isInvertedManager: EntityPoolIsInvertedManager
+	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
 
 	/**
 	 * Id of the control this belongs to
@@ -56,6 +59,11 @@ export class ControlEntityInstance {
 	 * Note: This only applies to boolean feedbacks
 	 */
 	#cachedIsInverted: boolean = false
+
+	/**
+	 * The target into which this action's result is stored, if it has one.
+	 */
+	#cachedStoreResult: StoreResult | undefined
 
 	#children = new Map<string, ControlEntityList>()
 
@@ -102,6 +110,15 @@ export class ControlEntityInstance {
 	 */
 	get rawOptions(): ExpressionableOptionsObject {
 		return this.#data.options
+	}
+
+	/**
+	 * Get the raw storeResult value for this action
+	 */
+	get rawStoreResult(): RawStoreResult | undefined {
+		const data = this.#data
+		if (data.type !== EntityModelType.Action) return undefined
+		return (data as ActionEntityModel).storeResult
 	}
 
 	/**
@@ -154,6 +171,14 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * The location (if any) where this action's result should be written.
+	 */
+	get storeResult(): StoreResult | undefined {
+		if (this.type !== EntityModelType.Action) return undefined
+		return this.#cachedStoreResult
+	}
+
+	/**
 	 * @param instanceDefinitions
 	 * @param internalModule
 	 * @param processManager
@@ -165,7 +190,7 @@ export class ControlEntityInstance {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		isInvertedManager: EntityPoolIsInvertedManager,
+		specialExpressionManager: EntityPoolSpecialExpressionManager,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -175,7 +200,7 @@ export class ControlEntityInstance {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#isInvertedManager = isInvertedManager
+		this.#specialExpressionManager = specialExpressionManager
 		this.#controlId = controlId
 
 		{
@@ -214,6 +239,7 @@ export class ControlEntityInstance {
 
 		this.#cachedFeedbackValue = this.#getStartupValue()
 		this.#cachedIsInverted = this.#getStartupIsInverted()
+		this.#cachedStoreResult = undefined
 	}
 
 	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
@@ -224,7 +250,7 @@ export class ControlEntityInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#isInvertedManager,
+			this.#specialExpressionManager,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
 			listDefinition
@@ -270,7 +296,7 @@ export class ControlEntityInstance {
 			})
 		}
 
-		this.#isInvertedManager.forgetEntity(this.id)
+		this.#specialExpressionManager.forgetEntity(this.id)
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
@@ -291,7 +317,9 @@ export class ControlEntityInstance {
 			(!onlyConnectionId || this.#data.connectionId === onlyConnectionId) &&
 			(!onlyType || this.#data.type === onlyType)
 		) {
-			if (this.#data.connectionId === 'internal') {
+			const thisData = this.#data
+
+			if (thisData.connectionId === 'internal') {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
@@ -300,8 +328,12 @@ export class ControlEntityInstance {
 					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 				})
 			}
-			if (!this.#data.disabled) {
-				this.#isInvertedManager.trackEntity(this)
+			if (thisData.type === EntityModelType.Feedback) {
+				if (!thisData.disabled) {
+					this.#specialExpressionManager.trackEntity(this, 'isInverted')
+				}
+			} else if (thisData.type === EntityModelType.Action) {
+				this.#specialExpressionManager.trackEntity(this, 'storeResult')
 			}
 		}
 
@@ -412,6 +444,17 @@ export class ControlEntityInstance {
 		}
 
 		// Inform relevant module
+		this.subscribe(false)
+	}
+
+	/** Set the target into which an action's result is stored (if any). */
+	setRawStoreResult(target: RawStoreResult | undefined): void {
+		if (this.type !== EntityModelType.Action) return
+
+		const data = this.#data as ActionEntityModel
+
+		this.cleanup()
+		data.storeResult = target
 		this.subscribe(false)
 	}
 
@@ -663,6 +706,12 @@ export class ControlEntityInstance {
 				newPropsData.styleOverrides && newPropsData.styleOverrides.length > 0
 					? newPropsData.styleOverrides
 					: feedbackData.styleOverrides
+		} else if (this.#data.type === EntityModelType.Action) {
+			const actionData = this.#data as ActionEntityModel
+			const newPropsData = newProps as ActionEntityModel
+
+			// This relies on `RawStoreResult` being recursively readonly.
+			actionData.storeResult = newPropsData.storeResult ?? actionData.storeResult
 		}
 
 		if (!skipNotifyModule) {
@@ -810,15 +859,17 @@ export class ControlEntityInstance {
 	 * Update the isInverted values on the control with new calculated isInverted values
 	 * @param newValues The new isInverted values
 	 */
-	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): ControlEntityInstance[] {
+	updateIsInvertedValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
+	): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
 		const newValue = newValues.get(this.#data.id)
 
 		let thisChanged = false
 		if (this.type === EntityModelType.Feedback && newValue && !isInternalUserValueFeedback(this)) {
-			if (!!newValue.isInverted !== this.#cachedIsInverted) {
-				this.#cachedIsInverted = !!newValue.isInverted
+			if (newValue.value !== this.#cachedIsInverted) {
+				this.#cachedIsInverted = newValue.value
 				changed.push(this)
 				thisChanged = true
 			}
@@ -832,6 +883,62 @@ export class ControlEntityInstance {
 				// If this is a logic operator, and one of its children changed, we need to re-evaluate
 				changed.push(this)
 			}
+		}
+
+		return changed
+	}
+
+	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The updated storeResult values
+	 */
+	updateStoreResultValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>
+	): ControlEntityInstance[] {
+		const changed: ControlEntityInstance[] = []
+
+		const newValue = newValues.get(this.#data.id)
+
+		if (this.type === EntityModelType.Action && newValue) {
+			const cachedStoreResultValue = this.#cachedStoreResult
+			let thisChanged: boolean
+			if (newValue.value === undefined) {
+				thisChanged = cachedStoreResultValue !== undefined
+			} else if (
+				cachedStoreResultValue === undefined ||
+				cachedStoreResultValue.variableName !== newValue.value.variableName
+			) {
+				thisChanged = true
+			} else {
+				switch (newValue.value.type) {
+					case 'custom-variable': {
+						thisChanged =
+							cachedStoreResultValue.type !== 'custom-variable' ||
+							cachedStoreResultValue.createIfNotExists !== newValue.value.createIfNotExists
+						break
+					}
+					case 'local-variable': {
+						thisChanged =
+							cachedStoreResultValue.type !== 'local-variable' ||
+							cachedStoreResultValue.location !== newValue.value.location
+						break
+					}
+					default:
+						thisChanged = true
+						break
+				}
+			}
+
+			if (thisChanged) {
+				this.#cachedStoreResult = newValue.value
+				changed.push(this)
+			}
+		}
+
+		for (const childGroup of this.#children.values()) {
+			const childrenChanged = childGroup.updateStoreResultValues(newValues)
+			changed.push(...childrenChanged)
 		}
 
 		return changed

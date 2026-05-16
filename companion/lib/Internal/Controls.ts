@@ -12,6 +12,7 @@
 import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
@@ -33,12 +34,13 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
 	InternalVisitor,
 } from './Types.js'
-import { CHOICES_LOCATION, ParseLocationString } from './Util.js'
+import { ParseLocationString } from './Util.js'
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
@@ -141,7 +143,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Force press if already pressed',
@@ -157,7 +159,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Force press if already pressed',
@@ -173,7 +175,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Force release even if currently pressed',
@@ -189,14 +191,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				label: 'Button: Trigger rotate left',
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
-				options: [CHOICES_LOCATION],
+				options: [ControlLocationOption],
 				optionsSupportExpressions: true,
 			},
 			button_rotate_right: {
 				label: 'Button: Trigger rotate right',
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
-				options: [CHOICES_LOCATION],
+				options: [ControlLocationOption],
 				optionsSupportExpressions: true,
 			},
 
@@ -206,7 +208,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					"Avoid this if you can. It's better to either set the text to a custom variable, or to use a feedback to dynamically override the text",
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Button Text',
@@ -221,7 +223,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'colorpicker',
 						label: 'Text Color',
@@ -239,7 +241,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'colorpicker',
 						label: 'Background Color',
@@ -259,7 +261,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				showButtonPreview: true,
 				options: [
 					{
-						...CHOICES_LOCATION,
+						...ControlLocationOption,
 						description:
 							'In the format 1/0/0. You can also use this-run to abort just the current run of actions, or this-all-runs to abort all runs on the current button',
 						expressionDescription:
@@ -346,7 +348,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'textinput',
 						label: 'Button Step',
@@ -363,7 +365,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				description: undefined,
 				showButtonPreview: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'number',
 						label: 'Amount',
@@ -389,7 +391,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				showButtonPreview: true,
 				feedbackStyle: undefined,
 				showInvert: false,
-				options: [CHOICES_LOCATION],
+				options: [ControlLocationOption],
 				optionsSupportExpressions: true,
 			},
 			bank_pushed: {
@@ -403,7 +405,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				},
 				showInvert: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'checkbox',
 						label: 'Treat stepped as pressed? (latch compatibility)',
@@ -425,7 +427,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				},
 				showInvert: true,
 				options: [
-					CHOICES_LOCATION,
+					ControlLocationOption,
 					{
 						type: 'number',
 						label: 'Step',
@@ -549,164 +551,178 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#pushStateSubscriptions.delete(feedback.id)
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
-		if (action.definitionId === 'button_pressrelease') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
+		switch (action.definitionId) {
+			case 'button_pressrelease': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const forcePress = !!action.options.force
 
-			const forcePress = !!action.options.force
-
-			this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
-			this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
-			return true
-		} else if (action.definitionId === 'button_press') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
-			return true
-		} else if (action.definitionId === 'button_release') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
-			return true
-		} else if (action.definitionId === 'button_rotate_left') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			this.#controlsStore.rotateControl(theControlId, false, extras.surfaceId)
-			return true
-		} else if (action.definitionId === 'button_rotate_right') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			this.#controlsStore.rotateControl(theControlId, true, extras.surfaceId)
-			return true
-		} else if (action.definitionId === 'bgcolor') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsLayeredStyle) {
-				const color = parseColorToNumber(action.options.color as any) || 0
-				control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
-			}
-			return true
-		} else if (action.definitionId === 'textcolor') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsLayeredStyle) {
-				const color = parseColorToNumber(action.options.color as any) || 0
-				control.layeredStyleUpdateFromLegacyProperties({ color: color })
-			}
-			return true
-		} else if (action.definitionId === 'button_text') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsLayeredStyle) {
-				control.layeredStyleUpdateFromLegacyProperties({ text: stringifyVariableValue(action.options.label) ?? '' })
-			}
-
-			return true
-		} else if (action.definitionId === 'panic_bank') {
-			// Special case handling for special modes
-			const rawControlId = stringifyVariableValue(action.options.location)?.trim()?.toLowerCase()
-			if (rawControlId === 'this-run') {
-				const control = this.#controlsStore.getControl(extras.controlId)
-				if (control && control.supportsActions) {
-					control.abortDelayedActionsSingle(Boolean(action.options.unlatch), extras.abortDelayed)
+					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
+					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
 				}
-
-				return true
-			} else if (rawControlId === 'this-all-runs') {
-				const control = this.#controlsStore.getControl(extras.controlId)
-				if (control && control.supportsActions) {
-					control.abortDelayedActions(Boolean(action.options.unlatch), null)
+				break
+			}
+			case 'button_press': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
 				}
-
-				return true
+				break
 			}
-
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			const control = this.#controlsStore.getControl(theControlId)
-			if (control && control.supportsActions) {
-				control.abortDelayedActions(
-					Boolean(action.options.unlatch),
-					theControlId === extras.controlId ? extras.abortDelayed : null
-				)
-			}
-
-			return true
-		} else if (action.definitionId === 'panic_page') {
-			let thePage: number | null = Number(action.options.page)
-
-			if (thePage === 0) thePage = extras.location?.pageNumber ?? null
-
-			if (thePage === null || isNaN(thePage)) return true
-
-			const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
-			for (const controlId of controlIdsOnPage) {
-				if (action.options.ignoreSelf && controlId === extras.controlId) continue
-
-				const control = this.#controlsStore.getControl(controlId)
-				if (control && control.supportsActions) {
-					control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
+			case 'button_release': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
 				}
+				break
 			}
-
-			return true
-		} else if (action.definitionId === 'panic_trigger') {
-			const rawControlId = stringifyVariableValue(action.options.trigger_id)
-			let controlId = rawControlId
-			if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
-
-			if (controlId && ParseControlId(controlId)?.type === 'trigger') {
-				const control = this.#controlsStore.getControl(controlId)
-				if (control && control.supportsActions) {
-					if (rawControlId === 'self') {
-						control.abortDelayedActions(false, extras.abortDelayed)
-					} else if (rawControlId === 'self:only-this-run') {
-						control.abortDelayedActionsSingle(false, extras.abortDelayed)
-					} else {
-						control.abortDelayedActions(false, null)
+			case 'button_rotate_left': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					this.#controlsStore.rotateControl(theControlId, false, extras.surfaceId)
+				}
+				break
+			}
+			case 'button_rotate_right': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					this.#controlsStore.rotateControl(theControlId, true, extras.surfaceId)
+				}
+				break
+			}
+			case 'bgcolor': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsLayeredStyle) {
+						const color = parseColorToNumber(action.options.color as any) || 0
+						control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
 					}
 				}
+				break
 			}
-
-			return true
-		} else if (action.definitionId === 'panic') {
-			this.#controlsStore.abortAllDelayedActions(action.options.ignoreCurrent ? extras.abortDelayed : null)
-			return true
-		} else if (action.definitionId == 'bank_current_step') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			const control = this.#controlsStore.getControl(theControlId)
-
-			if (control && control.supportsActionSets) {
-				control.actionSets.stepMakeCurrent(Number(action.options.step))
+			case 'textcolor': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsLayeredStyle) {
+						const color = parseColorToNumber(action.options.color as any) || 0
+						control.layeredStyleUpdateFromLegacyProperties({ color: color })
+					}
+				}
+				break
 			}
-			return true
-		} else if (action.definitionId == 'bank_current_step_delta') {
-			const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-			if (!theControlId) return true
-
-			const control = this.#controlsStore.getControl(theControlId)
-
-			if (control && control.supportsActionSets) {
-				control.actionSets.stepAdvanceDelta(Number(action.options.amount))
+			case 'button_text': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsLayeredStyle) {
+						control.layeredStyleUpdateFromLegacyProperties({ text: stringifyVariableValue(action.options.label) ?? '' })
+					}
+				}
+				break
 			}
-			return true
-		} else {
-			return false
+			case 'panic_bank': {
+				// Special case handling for special modes
+				const rawControlId = stringifyVariableValue(action.options.location)?.trim()?.toLowerCase()
+				if (rawControlId === 'this-run') {
+					const control = this.#controlsStore.getControl(extras.controlId)
+					if (control && control.supportsActions) {
+						control.abortDelayedActionsSingle(Boolean(action.options.unlatch), extras.abortDelayed)
+					}
+
+					break
+				} else if (rawControlId === 'this-all-runs') {
+					const control = this.#controlsStore.getControl(extras.controlId)
+					if (control && control.supportsActions) {
+						control.abortDelayedActions(Boolean(action.options.unlatch), null)
+					}
+
+					break
+				}
+
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+					if (control && control.supportsActions) {
+						control.abortDelayedActions(
+							Boolean(action.options.unlatch),
+							theControlId === extras.controlId ? extras.abortDelayed : null
+						)
+					}
+				}
+				break
+			}
+			case 'panic_page': {
+				let thePage: number | null = Number(action.options.page)
+
+				if (thePage === 0) thePage = extras.location?.pageNumber ?? null
+
+				if (thePage !== null && !isNaN(thePage)) {
+					const controlIdsOnPage = this.#pageStore.getAllControlIdsOnPage(thePage)
+					for (const controlId of controlIdsOnPage) {
+						if (action.options.ignoreSelf && controlId === extras.controlId) continue
+
+						const control = this.#controlsStore.getControl(controlId)
+						if (control && control.supportsActions) {
+							control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
+						}
+					}
+				}
+				break
+			}
+			case 'panic_trigger': {
+				const rawControlId = stringifyVariableValue(action.options.trigger_id)
+				let controlId = rawControlId
+				if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
+
+				if (controlId && ParseControlId(controlId)?.type === 'trigger') {
+					const control = this.#controlsStore.getControl(controlId)
+					if (control && control.supportsActions) {
+						if (rawControlId === 'self') {
+							control.abortDelayedActions(false, extras.abortDelayed)
+						} else if (rawControlId === 'self:only-this-run') {
+							control.abortDelayedActionsSingle(false, extras.abortDelayed)
+						} else {
+							control.abortDelayedActions(false, null)
+						}
+					}
+				}
+
+				break
+			}
+			case 'panic': {
+				this.#controlsStore.abortAllDelayedActions(action.options.ignoreCurrent ? extras.abortDelayed : null)
+				break
+			}
+			case 'bank_current_step': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+
+					if (control && control.supportsActionSets) {
+						control.actionSets.stepMakeCurrent(Number(action.options.step))
+					}
+				}
+				break
+			}
+			case 'bank_current_step_delta': {
+				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
+				if (theControlId) {
+					const control = this.#controlsStore.getControl(theControlId)
+
+					if (control && control.supportsActionSets) {
+						control.actionSets.stepAdvanceDelta(Number(action.options.amount))
+					}
+				}
+				break
+			}
+			default:
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

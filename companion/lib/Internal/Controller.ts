@@ -24,6 +24,7 @@ import type { VariableValue, VariableValues } from '@companion-app/shared/Model/
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionOptionValues, Complete } from '@companion-module/base'
+import type { JsonValue } from '@companion-module/host'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -40,6 +41,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
@@ -107,6 +109,7 @@ export class InternalController {
 		surfaceController: SurfaceController,
 		graphicsController: GraphicsController,
 		userConfigController: DataUserConfig,
+		localVariablesController: LocalVariablesController,
 		controlEvents: EventEmitter<ControlCommonEvents>,
 		actionRunner: ActionRunner,
 		requestExit: (fromInternal: boolean, restart: boolean) => void
@@ -127,7 +130,7 @@ export class InternalController {
 			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
-			new InternalVariables(this.#controlsStore, this.#pageStore)
+			new InternalVariables(localVariablesController)
 		)
 
 		// Listen for events from the fragments
@@ -445,7 +448,7 @@ export class InternalController {
 	/**
 	 * Run a single internal action
 	 */
-	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
+	async executeAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (action.type !== EntityModelType.Action)
@@ -490,13 +493,13 @@ export class InternalController {
 
 			for (const fragment of this.#fragments) {
 				if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
-					let value = fragment.executeAction(executionAction, extras, parser)
+					let result = fragment.executeAction(executionAction, extras, parser)
 					// Only await if it is a promise, to avoid unnecessary async pauses
-					value = value instanceof Promise ? await value : value
+					result = result instanceof Promise ? await result : result
 
-					if (value) {
+					if (result) {
 						// It was handled, so break
-						return
+						return result.result
 					}
 				}
 			}
@@ -507,6 +510,8 @@ export class InternalController {
 				)}`
 			)
 		}
+
+		return undefined
 	}
 
 	/**
@@ -590,6 +595,8 @@ export class InternalController {
 						hasLearn: action.hasLearn ?? false,
 						learnTimeout: action.learnTimeout,
 
+						hasResult: !!action.hasResult,
+
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
 
@@ -624,6 +631,8 @@ export class InternalController {
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,
+
+						hasResult: false,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

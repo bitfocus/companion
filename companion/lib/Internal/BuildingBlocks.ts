@@ -26,6 +26,7 @@ import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -249,95 +250,103 @@ export class InternalBuildingBlocks
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): Promise<boolean> | boolean {
-		if (action.definitionId === 'wait') {
-			if (extras.abortDelayed.aborted) return true
+	executeAction(
+		action: ActionForInternalExecution,
+		extras: RunActionExtras
+	): Promise<InternalActionResult> | InternalActionResult {
+		switch (action.definitionId) {
+			case 'wait': {
+				if (extras.abortDelayed.aborted) break
 
-			const delay = Number(action.options.time)
+				const delay = Number(action.options.time)
+				if (isNaN(delay) || delay <= 0) {
+					// No wait, return immediately
+					break
+				}
 
-			if (!isNaN(delay) && delay > 0) {
-				// Perform the wait
-				return setTimeout(delay, true, { signal: extras.abortDelayed }).catch(() => {
+				return setTimeout(delay, { result: undefined }, { signal: extras.abortDelayed }).catch(() => {
 					this.#logger.debug(`Aborted wait on ${extras.location ? formatLocation(extras.location) : extras.controlId}`)
 
 					// Discard error
-					return true
+					return { result: undefined }
 				})
-			} else {
-				// No wait, return immediately
-				return true
 			}
-		} else if (action.definitionId === 'action_group') {
-			if (extras.abortDelayed.aborted) return true
+			case 'action_group': {
+				if (extras.abortDelayed.aborted) break
 
-			let executeSequential = false
-			switch (action.options.execution_mode) {
-				case 'sequential':
-					executeSequential = true
-					break
-				case 'concurrent':
-					executeSequential = false
-					break
-				case 'inherit':
-					executeSequential = extras.executionMode === 'sequential'
-					break
-				default:
-					this.#logger.error(`Unknown execution mode: ${stringifyVariableValue(action.options.execution_mode)}`)
-			}
+				let executeSequential = false
+				switch (action.options.execution_mode) {
+					case 'sequential':
+						executeSequential = true
+						break
+					case 'concurrent':
+						executeSequential = false
+						break
+					case 'inherit':
+						executeSequential = extras.executionMode === 'sequential'
+						break
+					default:
+						this.#logger.error(`Unknown execution mode: ${stringifyVariableValue(action.options.execution_mode)}`)
+				}
 
-			const newExtras: RunActionExtras = {
-				...extras,
-				executionMode: executeSequential ? 'sequential' : 'concurrent',
-			}
+				const newExtras: RunActionExtras = {
+					...extras,
+					executionMode: executeSequential ? 'sequential' : 'concurrent',
+				}
 
-			const childActions = action.rawEntity.getChildren('default')?.getDirectEntities() ?? []
+				const childActions = action.rawEntity.getChildren('default')?.getDirectEntities() ?? []
 
-			return this.#actionRunner
-				.runMultipleActions(childActions, newExtras, executeSequential)
-				.catch((e) => {
-					this.#logger.error(`Failed to run actions: ${e.message}`)
-				})
-				.then(() => true)
-		} else if (action.definitionId === 'logic_if') {
-			if (extras.abortDelayed.aborted) return true
-
-			const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
-
-			const executeGroup = booleanAnd(false, conditionValues) ? 'actions' : 'else_actions'
-			const childActions = action.rawEntity.getChildren(executeGroup)?.getDirectEntities() ?? []
-			const executeSequential = extras.executionMode === 'sequential'
-
-			return this.#actionRunner
-				.runMultipleActions(childActions, extras, executeSequential)
-				.catch((e) => {
-					this.#logger.error(`Failed to run actions: ${e.message}`)
-				})
-				.then(() => true)
-		} else if (action.definitionId === 'logic_while') {
-			if (extras.abortDelayed.aborted) return true
-
-			return Promise.resolve().then(async () => {
-				while (!extras.abortDelayed.aborted) {
-					const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
-					if (!booleanAnd(false, conditionValues)) break
-
-					const childActions = action.rawEntity.getChildren('actions')?.getDirectEntities() ?? []
-					const executeSequential = extras.executionMode === 'sequential'
-
-					if (extras.abortDelayed.aborted) break
-
-					await this.#actionRunner.runMultipleActions(childActions, extras, executeSequential).catch((e) => {
+				return this.#actionRunner
+					.runMultipleActions(childActions, newExtras, executeSequential)
+					.catch((e) => {
 						this.#logger.error(`Failed to run actions: ${e.message}`)
 					})
+					.then(() => ({ result: undefined }))
+			}
+			case 'logic_if': {
+				if (extras.abortDelayed.aborted) break
 
-					// Yield to event loop to prevent tight loop
-					await setTimeout(1)
-				}
-				return true
-			})
-		} else {
-			return false
+				const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+
+				const executeGroup = booleanAnd(false, conditionValues) ? 'actions' : 'else_actions'
+				const childActions = action.rawEntity.getChildren(executeGroup)?.getDirectEntities() ?? []
+				const executeSequential = extras.executionMode === 'sequential'
+
+				return this.#actionRunner
+					.runMultipleActions(childActions, extras, executeSequential)
+					.catch((e) => {
+						this.#logger.error(`Failed to run actions: ${e.message}`)
+					})
+					.then(() => ({ result: undefined }))
+			}
+			case 'logic_while': {
+				if (extras.abortDelayed.aborted) break
+
+				return Promise.resolve().then(async () => {
+					while (!extras.abortDelayed.aborted) {
+						const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+						if (!booleanAnd(false, conditionValues)) break
+
+						const childActions = action.rawEntity.getChildren('actions')?.getDirectEntities() ?? []
+						const executeSequential = extras.executionMode === 'sequential'
+
+						if (extras.abortDelayed.aborted) break
+
+						await this.#actionRunner.runMultipleActions(childActions, extras, executeSequential).catch((e) => {
+							this.#logger.error(`Failed to run actions: ${e.message}`)
+						})
+
+						// Yield to event loop to prevent tight loop
+						await setTimeout(1)
+					}
+					return { result: undefined }
+				})
+			}
+			default:
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

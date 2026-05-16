@@ -32,6 +32,7 @@ import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
 	InternalVisitor,
@@ -334,53 +335,59 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		return actions
 	}
 
-	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<boolean> {
-		if (action.definitionId === 'exec') {
-			if (action.options.path) {
-				const command = stringifyVariableValue(action.options.path)
-				const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined
-				const cwd = cwdRaw?.trim() !== '' ? cwdRaw : undefined
-				this.#logger.silly(`Running command: '${command}' in '${cwd ?? process.cwd()}'`)
+	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<InternalActionResult> {
+		switch (action.definitionId) {
+			case 'exec': {
+				if (action.options.path) {
+					const command = stringifyVariableValue(action.options.path)
+					const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined
+					const cwd = cwdRaw?.trim() !== '' ? cwdRaw : undefined
+					this.#logger.silly(`Running command: '${command}' in '${cwd ?? process.cwd()}'`)
 
-				if (!command || command.trim() === '') {
-					this.#logger.warn('No command specified')
-					return true
-				}
-
-				try {
-					const { stdout } = await execAsync(command, {
-						cwd: cwd,
-						timeout: Number(action.options.timeout) || 5000,
-					})
-
-					// Trim EOL character(s) appended by the OS
-					let stdoutStr = stdout.toString()
-					if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
-
-					const targetVarName = stringifyVariableValue(action.options.targetVariable)
-					if (targetVarName) {
-						this.#variableController.custom.setValue(targetVarName, stdoutStr)
+					if (!command || command.trim() === '') {
+						this.#logger.warn('No command specified')
+						break
 					}
-				} catch (error) {
-					this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
-					this.#logger.silly(error)
-				}
-			}
-			return true
-		} else if (action.definitionId === 'custom_log') {
-			const message = stringifyVariableValue(action.options.message)
-			this.#customMessageLogger.info(message ?? '')
 
-			return true
-		} else if (action.definitionId === 'app_restart') {
-			this.#requestExit(true, true)
-			return true
-		} else if (action.definitionId === 'app_exit') {
-			this.#requestExit(true, false)
-			return true
-		} else {
-			return false
+					try {
+						const { stdout } = await execAsync(command, {
+							cwd: cwd,
+							timeout: Number(action.options.timeout) || 5000,
+						})
+
+						// Trim EOL character(s) appended by the OS
+						let stdoutStr = stdout.toString()
+						if (stdoutStr.endsWith(os.EOL)) stdoutStr = stdoutStr.substring(0, stdoutStr.length - os.EOL.length)
+
+						const targetVarName = stringifyVariableValue(action.options.targetVariable)
+						if (targetVarName) {
+							this.#variableController.custom.setValue(targetVarName, stdoutStr)
+						}
+					} catch (error) {
+						this.#logger.error('Shell command failed. Guru meditation: ' + JSON.stringify(error))
+						this.#logger.silly(error)
+					}
+				}
+				break
+			}
+			case 'custom_log': {
+				const message = stringifyVariableValue(action.options.message)
+				this.#customMessageLogger.info(message ?? '')
+				break
+			}
+			case 'app_restart': {
+				this.#requestExit(true, true)
+				break
+			}
+			case 'app_exit': {
+				this.#requestExit(true, false)
+				break
+			}
+			default:
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
