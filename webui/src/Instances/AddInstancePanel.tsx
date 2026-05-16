@@ -1,4 +1,4 @@
-import { CButtonGroup, CTooltip } from '@coreui/react'
+import { CTooltip } from '@coreui/react'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import {
 	faCog,
@@ -13,7 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -128,7 +128,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							<div className="intro-grid">
 								{description(storeModulesOfTypeCount)}
 								<div className="intro-filter">
-									<CButtonGroup role="group" aria-label="Module visibility filter">
+									<ButtonGroup aria-label="Module visibility filter">
 										<Button
 											size="sm"
 											color="info"
@@ -147,7 +147,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 										>
 											All Available
 										</Button>
-									</CButtonGroup>
+									</ButtonGroup>
 								</div>
 							</div>
 						) : (

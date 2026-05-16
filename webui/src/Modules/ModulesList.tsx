@@ -1,4 +1,3 @@
-import { CButtonGroup } from '@coreui/react'
 import {
 	faEyeSlash,
 	faGamepad,
@@ -13,7 +12,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -197,7 +196,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 						<tr>
 							<th colSpan={3}>
 								Module
-								<CButtonGroup className="table-header-buttons">
+								<ButtonGroup className="table-header-buttons">
 									<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
 									<VisibilityButton {...visibleModules} keyId="available" color="warning" label="Available" />
 									<VisibilityButton
@@ -206,7 +205,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 										color="primary"
 										label="Deprecated"
 									/>
-								</CButtonGroup>
+								</ButtonGroup>
 							</th>
 						</tr>
 					</thead>

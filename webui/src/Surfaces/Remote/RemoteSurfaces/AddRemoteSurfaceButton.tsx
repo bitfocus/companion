@@ -1,10 +1,10 @@
-import { CButtonGroup, CPopover } from '@coreui/react'
+import { CPopover } from '@coreui/react'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
-import { Button } from '~/Components/Button.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util'
@@ -84,7 +84,7 @@ const AddRemoteSurfacePopoverContent = observer(function AddRemoteSurfacePopover
 	return (
 		<>
 			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-			<CButtonGroup vertical>
+			<ButtonGroup vertical>
 				{sortedInstances.map((instance) => (
 					<AddRemoteSurfacePopoverButton
 						key={instance.value}
@@ -92,7 +92,7 @@ const AddRemoteSurfacePopoverContent = observer(function AddRemoteSurfacePopover
 						label={instance.label}
 					/>
 				))}
-			</CButtonGroup>
+			</ButtonGroup>
 		</>
 	)
 })

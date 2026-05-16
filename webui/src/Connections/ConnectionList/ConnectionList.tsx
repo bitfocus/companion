@@ -1,4 +1,3 @@
-import { CButtonGroup } from '@coreui/react'
 import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
@@ -8,7 +7,7 @@ import type { ClientConnectionConfig, ConnectionCollection } from '@companion-ap
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button } from '~/Components/Button.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -103,7 +102,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
 
-				<CButtonGroup className="connection-group-actions mb-2">
+				<ButtonGroup className="connection-group-actions mb-2">
 					<Button
 						color="primary"
 						size="sm"
@@ -114,7 +113,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 						Add Connection
 					</Button>
 					<CreateCollectionButton />
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 
 			<div className="connections-list-table-container scrollable-content">
@@ -160,12 +159,12 @@ function ConnectionListTableHeading() {
 		<div className="flex flex-row">
 			<div className="grow">Connection</div>
 			<div className="no-break">
-				<CButtonGroup className="table-header-buttons">
+				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
 					<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
 					<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 		</div>
 	)

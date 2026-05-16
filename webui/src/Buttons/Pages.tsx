@@ -1,10 +1,10 @@
-import { CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -104,11 +104,11 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 								<th style={{ textAlign: 'center' }}>Number</th>
 								<th>Name</th>
 								<th>
-									<CButtonGroup style={{ width: '100%' }}>
+									<ButtonGroup className="w-full">
 										<Button color="warning" size="sm" onClick={doInsertPage} title="Insert page at start" data-page={1}>
 											<FontAwesomeIcon icon={faPlus} />
 										</Button>
-									</CButtonGroup>
+									</ButtonGroup>
 								</th>
 							</tr>
 						</thead>
@@ -235,7 +235,7 @@ const PageListRow = observer(function PageListRow({
 				<TextInputField value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
 			</td>
 			<td style={{ width: 100, textAlign: 'right' }}>
-				<CButtonGroup>
+				<ButtonGroup>
 					<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faShareFromSquare} />
 					</Button>
@@ -265,7 +265,7 @@ const PageListRow = observer(function PageListRow({
 					>
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
-				</CButtonGroup>
+				</ButtonGroup>
 			</td>
 		</tr>
 	)

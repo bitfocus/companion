@@ -1,4 +1,3 @@
-import { CButtonGroup } from '@coreui/react'
 import { faCircleUp, faCopy, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -6,7 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
-import { Button, LinkButtonExternal } from '~/Components/Button'
+import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
@@ -195,11 +194,11 @@ const ManualGroupRow = observer(function ManualGroupRow({
 					</div>
 				</div>
 				<div className="grid-cell">
-					<CButtonGroup>
+					<ButtonGroup>
 						<Button onClick={deleteGroup2} title="Delete group">
 							<FontAwesomeIcon icon={faTrash} />
 						</Button>
-					</CButtonGroup>
+					</ButtonGroup>
 				</div>
 			</div>
 			{(group.surfaces || []).map((surface, i, arr) => (
@@ -308,7 +307,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			</div>
 			<div className="grid-cell">
 				{surface.isConnected ? (
-					<CButtonGroup className="no-break">
+					<ButtonGroup className="no-break">
 						{surface.integrationType === 'emulator' && (
 							<>
 								<LinkButtonExternal
@@ -322,7 +321,7 @@ const SurfaceRow = observer(function SurfaceRow({
 								</Button>
 							</>
 						)}
-					</CButtonGroup>
+					</ButtonGroup>
 				) : (
 					<Button onClick={forgetSurface2} title="Forget">
 						<FontAwesomeIcon icon={faTrash} />

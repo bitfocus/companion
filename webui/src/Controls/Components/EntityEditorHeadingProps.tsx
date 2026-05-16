@@ -1,9 +1,8 @@
-import { CButtonGroup } from '@coreui/react'
 import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import type { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
-import { Button } from '~/Components/Button.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 
@@ -27,7 +26,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 	return (
 		<h5>
 			{heading}&nbsp;
-			<CButtonGroup className="right">
+			<ButtonGroup className="right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
 					<Button
 						color="white"
@@ -49,7 +48,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 					</Button>
 				)}
 				{headingActions || ''}
-			</CButtonGroup>
+			</ButtonGroup>
 		</h5>
 	)
 })

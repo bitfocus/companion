@@ -1,4 +1,4 @@
-import { CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
+import { CForm, CFormInput, CInputGroup } from '@coreui/react'
 import {
 	faArrowLeft,
 	faCompressArrowsAlt,
@@ -12,7 +12,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
-import { Button, LinkButton } from '~/Components/Button'
+import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import {
 	CollectionsNestingTable,
 	UNGROUPED_PANEL_ID,
@@ -102,19 +102,19 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						Here you can create some variables which you can define the values of, and update with actions
 					</p>
 
-					<CButtonGroup size="sm">
-						<LinkButton color="primary" to="/variables">
+					<ButtonGroup>
+						<LinkButton color="primary" size="sm" to="/variables">
 							<FontAwesomeIcon icon={faArrowLeft} />
 							&nbsp; Go back
 						</LinkButton>
-						<Button color="secondary" disabled>
+						<Button color="secondary" size="sm" disabled>
 							Custom Variables
 						</Button>
 						<CreateCollectionButton />
 						{(customVariables.customVariables.size > 0 || customVariables.customVariableCollections.size > 0) && (
 							<ExpandCollapseButtons />
 						)}
-					</CButtonGroup>
+					</ButtonGroup>
 				</div>
 
 				<CInputGroup className="variables-table-filter">
@@ -184,6 +184,7 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 			{panelCollapseHelper.canExpandAll(null, rootPanels) && (
 				<Button
 					color="secondary"
+					size="sm"
 					onClick={() => panelCollapseHelper.setAllExpanded(null, rootPanels)}
 					title="Expand all"
 				>
@@ -193,6 +194,7 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 			{panelCollapseHelper.canCollapseAll(null, rootPanels) && (
 				<Button
 					color="secondary"
+					size="sm"
 					onClick={() => panelCollapseHelper.setAllCollapsed(null, rootPanels)}
 					title="Collapse all"
 				>

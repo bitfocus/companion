@@ -1,11 +1,11 @@
-import { CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { memo, useCallback, useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { Button, LinkButton } from '~/Components/Button'
+import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import {
 	useConnectionLeafTree,
@@ -136,15 +136,15 @@ export function VariablesListPage(): React.JSX.Element {
 		<div className="variables-panel">
 			<div>
 				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
-				<CButtonGroup size="sm">
-					<LinkButton color="primary" to="/variables">
+				<ButtonGroup>
+					<LinkButton color="primary" size="sm" to="/variables">
 						<FontAwesomeIcon icon={faArrowLeft} />
 						&nbsp; Go back
 					</LinkButton>
-					<Button color="secondary" disabled>
+					<Button color="secondary" size="sm" disabled>
 						{label}
 					</Button>
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 
 			<VariablesTable label={label} />

@@ -1,4 +1,4 @@
-import { CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
+import { CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faClone,
@@ -20,7 +20,7 @@ import sanitizeHtml from 'sanitize-html'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, LinkButtonExternal } from '~/Components/Button'
+import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -137,12 +137,12 @@ export const TriggersPage = observer(function Triggers() {
 						</p>
 
 						<div className="mb-2">
-							<CButtonGroup>
+							<ButtonGroup>
 								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Trigger
 								</Button>
 								<CreateCollectionButton />
-							</CButtonGroup>
+							</ButtonGroup>
 
 							<Button color="secondary" className="right" size="sm" onClick={showExportModal}>
 								<FontAwesomeIcon icon={faFileExport} /> Export all
@@ -309,7 +309,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
 			<div className="action-buttons w-auto">
-				<CButtonGroup className="ms-1">
+				<ButtonGroup className="ms-1">
 					<SwitchInputField
 						value={item.enabled}
 						setValue={doEnableDisable}
@@ -332,7 +332,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					<Button color="gray" onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 		</div>
 	)

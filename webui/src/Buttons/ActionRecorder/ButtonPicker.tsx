@@ -1,4 +1,4 @@
-import { CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,7 +6,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
@@ -198,7 +198,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							/>
 						</CCol>
 						<CCol className="py-1" sm={10} xs={9}>
-							<CButtonGroup>
+							<ButtonGroup>
 								<Button
 									color="primary"
 									title="Replace all the actions on the trigger"
@@ -215,7 +215,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 								>
 									Append
 								</Button>
-							</CButtonGroup>
+							</ButtonGroup>
 						</CCol>
 					</CRow>
 				</CForm>

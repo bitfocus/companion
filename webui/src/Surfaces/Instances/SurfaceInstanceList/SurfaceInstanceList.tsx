@@ -1,4 +1,3 @@
-import { CButtonGroup } from '@coreui/react'
 import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
@@ -11,7 +10,7 @@ import type {
 	SurfaceInstanceCollection,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -93,13 +92,13 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				<GenericConfirmModal ref={confirmModalRef} />
 
 				<div className="d-flex align-items-center help-button-float">
-					<CButtonGroup className="connection-group-actions m-1 me-auto">
+					<ButtonGroup className="connection-group-actions m-1 me-auto">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Surface Integration
 						</Button>
 						<CreateCollectionButton />
-					</CButtonGroup>
+					</ButtonGroup>
 					<ContextHelpButton action="/user-guide/surfaces">
 						<p>
 							Surface integrations are like connections but for input surfaces: they provide the ability to use
@@ -152,12 +151,12 @@ function SurfaceInstancesListTableHeading() {
 		<div className="flex flex-row">
 			<div className="grow">Surface Integrations </div>
 			<div className="no-break">
-				<CButtonGroup className="table-header-buttons">
+				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleInstances} keyId="ok" color="success" label="OK" />
 					<VisibilityButton {...visibleInstances} keyId="warning" color="warning" label="Warning" />
 					<VisibilityButton {...visibleInstances} keyId="error" color="danger" label="Error" />
-				</CButtonGroup>
+				</ButtonGroup>
 			</div>
 		</div>
 	)

@@ -1,10 +1,9 @@
-import { CButtonGroup } from '@coreui/react'
 import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
@@ -40,60 +39,62 @@ export function ControlActionStepTab({
 }: ControlActionStepTabProps): React.JSX.Element {
 	return (
 		<>
-			<CButtonGroup hidden={stepKeys.length === 1} className="mt-2">
-				<Button
-					color="danger"
-					title="Move step before"
-					disabled={selectedIndex === 0}
-					onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex - 1])}
-				>
-					<FontAwesomeIcon icon={faChevronLeft} />
-				</Button>
-				<Button
-					color="danger"
-					title="Move step after"
-					disabled={selectedIndex === stepKeys.length - 1}
-					onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex + 1])}
-				>
-					<FontAwesomeIcon icon={faChevronRight} />
-				</Button>
+			{stepKeys.length > 1 && (
+				<ButtonGroup className="mt-2">
+					<Button
+						color="danger"
+						title="Move step before"
+						disabled={selectedIndex === 0}
+						onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex - 1])}
+					>
+						<FontAwesomeIcon icon={faChevronLeft} />
+					</Button>
+					<Button
+						color="danger"
+						title="Move step after"
+						disabled={selectedIndex === stepKeys.length - 1}
+						onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex + 1])}
+					>
+						<FontAwesomeIcon icon={faChevronRight} />
+					</Button>
 
-				<Button
-					color="success"
-					style={{
-						fontWeight: 'bold',
-						opacity: runtimeProps.current_step_id === selectedKey || disabledSetStep ? 0.3 : 1,
-					}}
-					disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
-					onClick={() => service.setCurrentStep(selectedKey)}
-					title="Make this step the current step, without executing any actions."
-				>
-					Select
-				</Button>
-				<Button
-					style={{ backgroundColor: '#f0f0f0', marginRight: 1 }}
-					title="Add step"
-					disabled={stepKeys.length === 1}
-					onClick={service.appendStep}
-				>
-					<FontAwesomeIcon icon={faPlus} />
-				</Button>
-				<Button
-					style={{ backgroundColor: '#f0f0f0' }}
-					title="Duplicate step"
-					onClick={() => service.duplicateStep(selectedKey)}
-				>
-					<FontAwesomeIcon icon={faClone} />
-				</Button>
-				<Button
-					style={{ backgroundColor: '#f0f0f0' }}
-					title="Delete step"
-					disabled={stepKeys.length === 1}
-					onClick={() => service.removeStep(selectedKey)}
-				>
-					<FontAwesomeIcon icon={faTrash} />
-				</Button>
-			</CButtonGroup>
+					<Button
+						color="success"
+						style={{
+							fontWeight: 'bold',
+							opacity: runtimeProps.current_step_id === selectedKey || disabledSetStep ? 0.3 : 1,
+						}}
+						disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
+						onClick={() => service.setCurrentStep(selectedKey)}
+						title="Make this step the current step, without executing any actions."
+					>
+						Select
+					</Button>
+					<Button
+						style={{ backgroundColor: '#f0f0f0', marginRight: 1 }}
+						title="Add step"
+						disabled={stepKeys.length === 1}
+						onClick={service.appendStep}
+					>
+						<FontAwesomeIcon icon={faPlus} />
+					</Button>
+					<Button
+						style={{ backgroundColor: '#f0f0f0' }}
+						title="Duplicate step"
+						onClick={() => service.duplicateStep(selectedKey)}
+					>
+						<FontAwesomeIcon icon={faClone} />
+					</Button>
+					<Button
+						style={{ backgroundColor: '#f0f0f0' }}
+						title="Delete step"
+						disabled={stepKeys.length === 1}
+						onClick={() => service.removeStep(selectedKey)}
+					>
+						<FontAwesomeIcon icon={faTrash} />
+					</Button>
+				</ButtonGroup>
+			)}
 
 			<div className="mt-10">
 				{/* Wrap the entity-category, for :first-child to work */}

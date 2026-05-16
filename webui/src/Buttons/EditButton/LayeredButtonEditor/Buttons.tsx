@@ -1,4 +1,4 @@
-import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CButtonGroup, CPopover } from '@coreui/react'
+import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CPopover } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
 	faCircle,
@@ -17,7 +17,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Tuck } from '~/Components/Tuck.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -165,7 +165,7 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 			<CAccordionItem itemKey={group.connectionId}>
 				<CAccordionHeader onMouseDown={toggleOpen}>{group.connectionLabel}</CAccordionHeader>
 				<CAccordionBody>
-					<CButtonGroup vertical>
+					<ButtonGroup vertical>
 						{group.elements.map(({ elementId, definition }) => (
 							<AddElementDropdownPopoverButton
 								key={`${group.connectionId};${elementId}`}
@@ -176,7 +176,7 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 								icon={faCube}
 							/>
 						))}
-					</CButtonGroup>
+					</ButtonGroup>
 				</CAccordionBody>
 			</CAccordionItem>
 		</CAccordion>
@@ -217,7 +217,7 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 	return (
 		<>
 			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-			<CButtonGroup vertical>
+			<ButtonGroup vertical>
 				<AddElementDropdownPopoverButton
 					styleStore={styleStore}
 					controlId={controlId}
@@ -260,7 +260,7 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 					label="Circle"
 					icon={faCircle}
 				/>
-			</CButtonGroup>
+			</ButtonGroup>
 
 			{/* Composite Elements grouped by connection */}
 			{compositeGroups.map((group) => (
