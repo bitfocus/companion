@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { Button, LinkButton, LinkButtonExternal } from './Button'
+import { Button, ButtonGroup, LinkButton, LinkButtonExternal } from './Button'
 
 const meta = {
 	component: Button,
@@ -72,4 +72,34 @@ export const ExternalLink: StoryObj<typeof LinkButtonExternal> = {
 		target: '_blank',
 		rel: 'noopener noreferrer',
 	},
+}
+
+export const Group: StoryObj<typeof ButtonGroup> = {
+	render: (args) => (
+		<ButtonGroup {...args}>
+			<Button color="primary">Left</Button>
+			<Button color="primary">Middle</Button>
+			<Button color="primary">Right</Button>
+		</ButtonGroup>
+	),
+}
+
+export const GroupVertical: StoryObj<typeof ButtonGroup> = {
+	render: (args) => (
+		<ButtonGroup {...args} vertical>
+			<Button color="primary">Top</Button>
+			<Button color="primary">Middle</Button>
+			<Button color="primary">Bottom</Button>
+		</ButtonGroup>
+	),
+}
+
+export const GroupMixedColors: StoryObj<typeof ButtonGroup> = {
+	render: (args) => (
+		<ButtonGroup {...args}>
+			<Button color="success">Save</Button>
+			<Button color="warning">Reset</Button>
+			<Button color="danger">Delete</Button>
+		</ButtonGroup>
+	),
 }

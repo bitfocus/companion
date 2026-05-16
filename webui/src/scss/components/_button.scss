@@ -1,0 +1,61 @@
+.button-group,
+.button-group-vertical {
+	position: relative;
+	display: inline-flex;
+	vertical-align: middle;
+
+	> .btn {
+		position: relative;
+		flex: 1 1 auto;
+
+		&:hover,
+		&:focus,
+		&:active,
+		&.active {
+			z-index: 1;
+		}
+	}
+}
+
+.button-group {
+	border-radius: var(--cui-border-radius);
+
+	> :not(:first-child) > .btn,
+	> .btn:not(:first-child) {
+		border-start-start-radius: 0;
+		border-end-start-radius: 0;
+		border-inline-start-color: color-mix(in srgb, var(--cui-btn-bg, currentColor) 75%, black);
+	}
+
+	> :not(:last-child) > .btn,
+	> .btn:not(:last-child):not(.dropdown-toggle) {
+		border-start-end-radius: 0;
+		border-end-end-radius: 0;
+		border-inline-end-width: 0;
+	}
+}
+
+.button-group-vertical {
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+
+	> .btn,
+	> .button-group {
+		width: 100%;
+	}
+
+	> :not(:first-child) > .btn,
+	> .btn:not(:first-child) {
+		border-start-start-radius: 0;
+		border-start-end-radius: 0;
+		border-block-start-color: color-mix(in srgb, var(--cui-btn-bg, currentColor) 75%, black);
+	}
+
+	> :not(:last-child) > .btn,
+	> .btn:not(:last-child) {
+		border-end-start-radius: 0;
+		border-end-end-radius: 0;
+		border-block-end-width: 0;
+	}
+}

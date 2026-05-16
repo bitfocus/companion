@@ -1,5 +1,6 @@
-import { CButton, CButtonGroup } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
+import classNames from 'classnames'
 import * as React from 'react'
 
 export type ButtonColor =
@@ -83,8 +84,12 @@ export function ButtonGroup({
 	children,
 }: React.PropsWithChildren<ButtonGroupProps>): React.JSX.Element {
 	return (
-		<CButtonGroup className={className} role="group" vertical={vertical}>
+		<div
+			className={classNames(vertical ? 'button-group-vertical' : 'button-group', className)}
+			role="group"
+			// ref={ref}
+		>
 			{children}
-		</CButtonGroup>
+		</div>
 	)
 }
