@@ -1,9 +1,9 @@
-import { CButton } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import { Button } from '~/Components/Button.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -82,9 +82,9 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
-				<CButton onClick={doDelete} title="Delete" className="p-1">
+				<Button onClick={doDelete} title="Delete" className="p-1">
 					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
+				</Button>
 			</div>
 		</div>
 	)

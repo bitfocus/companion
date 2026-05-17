@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CForm } from '@coreui/react'
+import { CCol, CForm } from '@coreui/react'
 import {
 	faClone,
 	faCompressArrowsAlt,
@@ -16,6 +16,7 @@ import { getEmptyImage } from 'react-dnd-html5-backend'
 import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -65,20 +66,18 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 			<h4 className="mt-3">
 				{heading}
 				{events.length > 1 && (
-					<CButtonGroup className="right">
-						<CButtonGroup>
-							{panelCollapseHelper.canExpandAll() && (
-								<CButton size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all events">
-									<FontAwesomeIcon icon={faExpandArrowsAlt} />
-								</CButton>
-							)}
-							{panelCollapseHelper.canCollapseAll() && (
-								<CButton size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all events">
-									<FontAwesomeIcon icon={faCompressArrowsAlt} />
-								</CButton>
-							)}
-						</CButtonGroup>
-					</CButtonGroup>
+					<ButtonGroup className="right">
+						{panelCollapseHelper.canExpandAll() && (
+							<Button size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all events">
+								<FontAwesomeIcon icon={faExpandArrowsAlt} />
+							</Button>
+						)}
+						{panelCollapseHelper.canCollapseAll() && (
+							<Button size="sm" onClick={panelCollapseHelper.setAllCollapsed} title="Collapse all events">
+								<FontAwesomeIcon icon={faCompressArrowsAlt} />
+							</Button>
+						)}
+					</ButtonGroup>
 				)}
 			</h4>
 
@@ -373,27 +372,27 @@ const EventEditor = observer(function EventEditor({
 				</div>
 
 				<div className="cell-controls">
-					<CButtonGroup className="me-1">
+					<ButtonGroup className="me-1">
 						{canSetHeadline && !headlineExpanded && (
-							<CButton size="sm" onClick={doEditHeadline} title="Set headline">
+							<Button size="sm" onClick={doEditHeadline} title="Set headline">
 								<FontAwesomeIcon icon={faPencil} />
-							</CButton>
+							</Button>
 						)}
 						{isCollapsed ? (
-							<CButton size="sm" onClick={doExpand} title="Expand event view">
+							<Button size="sm" onClick={doExpand} title="Expand event view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />
-							</CButton>
+							</Button>
 						) : (
-							<CButton size="sm" onClick={doCollapse} title="Collapse event view">
+							<Button size="sm" onClick={doCollapse} title="Collapse event view">
 								<FontAwesomeIcon icon={faCompressArrowsAlt} />
-							</CButton>
+							</Button>
 						)}
-						<CButton size="sm" onClick={service.performDuplicate} title="Duplicate event">
+						<Button size="sm" onClick={service.performDuplicate} title="Duplicate event">
 							<FontAwesomeIcon icon={faClone} />
-						</CButton>
-						<CButton size="sm" onClick={service.performDelete} title="Remove event">
+						</Button>
+						<Button size="sm" onClick={service.performDelete} title="Remove event">
 							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
+						</Button>
 						{!!service.setEnabled && (
 							<>
 								&nbsp;
@@ -405,7 +404,7 @@ const EventEditor = observer(function EventEditor({
 								/>
 							</>
 						)}
-					</CButtonGroup>
+					</ButtonGroup>
 				</div>
 			</div>
 

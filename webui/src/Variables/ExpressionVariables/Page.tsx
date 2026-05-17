@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
+import { CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faArrowLeft,
@@ -10,7 +10,7 @@ import {
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link, Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import CopyToClipboard from 'react-copy-to-clipboard'
@@ -19,6 +19,7 @@ import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -130,23 +131,23 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
-				<h4 className="btn-inline">
+				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
 				</h4>
 				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
 				<div className="mb-2">
-					<CButtonGroup>
-						<CButton color="primary" as={Link} to="/variables" size="sm">
+					<ButtonGroup>
+						<LinkButton color="primary" to="/variables" size="sm">
 							<FontAwesomeIcon icon={faArrowLeft} />
 							&nbsp; Go back
-						</CButton>
-						<CButton color="warning" onClick={doAddNew} size="sm">
+						</LinkButton>
+						<Button color="warning" onClick={doAddNew} size="sm">
 							<FontAwesomeIcon icon={faAdd} /> Add Expression Variable
-						</CButton>
+						</Button>
 						<CreateCollectionButton />
-					</CButtonGroup>
+					</ButtonGroup>
 
 					<CInputGroup className="variables-table-filter mt-2">
 						<CFormInput
@@ -156,9 +157,9 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 							value={filter}
 							style={{ fontSize: '1.2em' }}
 						/>
-						<CButton color="danger" onClick={clearFilter}>
+						<Button color="primary" onClick={clearFilter}>
 							<FontAwesomeIcon icon={faTimes} />
-						</CButton>
+						</Button>
 					</CInputGroup>
 				</div>
 
@@ -260,9 +261,9 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 					<span className="variable-style">
 						{fullname}
 						<CopyToClipboard text={fullname} onCopy={onCopied}>
-							<CButton size="sm" title="Copy variable name">
+							<Button size="sm" title="Copy variable name">
 								<FontAwesomeIcon icon={faCopy} color="#d50215" />
-							</CButton>
+							</Button>
 						</CopyToClipboard>
 					</span>
 				) : (
@@ -273,14 +274,14 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 			</div>
 
 			<div className="action-buttons w-auto">
-				<CButtonGroup>
-					<CButton color="white" onClick={doClone} title="Clone">
+				<ButtonGroup>
+					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
-					</CButton>
-					<CButton color="gray" onClick={doDelete} title="Delete">
+					</Button>
+					<Button onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-				</CButtonGroup>
+					</Button>
+				</ButtonGroup>
 			</div>
 		</div>
 	)
@@ -296,9 +297,9 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<CButton color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-		</CButton>
+		</Button>
 	)
 }
 

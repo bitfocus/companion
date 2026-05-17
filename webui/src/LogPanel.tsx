@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -10,6 +10,7 @@ import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
+import { Button, ButtonGroup, LinkButtonExternal } from './Components/Button'
 import { trpc, useMutationExt } from './Resources/TRPC'
 
 interface LogConfig {
@@ -76,43 +77,33 @@ export const LogPanel = memo(function LogPanel() {
 			<div className="log-page">
 				<CRow>
 					<CCol lg={12} className="log-buttons">
-						<CButtonGroup>
-							<CButton color="warning" size="sm" onClick={doToggleWarn} style={{ opacity: config.warn ? 1 : 0.2 }}>
+						<ButtonGroup>
+							<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 								Warning
-							</CButton>
-							<CButton color="info" size="sm" onClick={doToggleInfo} style={{ opacity: config.info ? 1 : 0.2 }}>
+							</Button>
+							<Button color="info" size="sm" onClick={doToggleInfo} variant={config.info ? undefined : 'outline'}>
 								Info
-							</CButton>
-							<CButton color="secondary" size="sm" onClick={doToggleDebug} style={{ opacity: config.debug ? 1 : 0.2 }}>
+							</Button>
+							<Button
+								color="secondary"
+								size="sm"
+								onClick={doToggleDebug}
+								variant={config.debug ? undefined : 'outline'}
+							>
 								Debug
-							</CButton>
-						</CButtonGroup>
+							</Button>
+						</ButtonGroup>
 
 						<div className="float-right">
-							<CButton color="danger" size="sm" onClick={doClearLog}>
+							<Button color="primary" size="sm" onClick={doClearLog}>
 								Clear log
-							</CButton>
-							<CButton
-								color="light"
-								style={{
-									marginLeft: 10,
-								}}
-								size="sm"
-								href={makeAbsolutePath(`/int/export/log`)}
-								target="_blank"
-							>
+							</Button>
+							<LinkButtonExternal color="light" className="ms-2" size="sm" href={makeAbsolutePath(`/int/export/log`)}>
 								<FontAwesomeIcon icon={faFileExport} /> Export log
-							</CButton>
-							<CButton
-								color="light"
-								style={{
-									marginLeft: 10,
-								}}
-								onClick={exportSupportModal}
-								size="sm"
-							>
+							</LinkButtonExternal>
+							<Button color="light" className="ms-2" onClick={exportSupportModal} size="sm">
 								<FontAwesomeIcon icon={faFileExport} /> Export support bundle
-							</CButton>
+							</Button>
 						</div>
 					</CCol>
 				</CRow>

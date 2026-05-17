@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CPopover } from '@coreui/react'
+import { CPopover } from '@coreui/react'
 import {
 	faBug,
 	faEllipsisV,
@@ -13,6 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
@@ -127,68 +128,68 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 					content={
 						<>
 							{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-							<CButtonGroup vertical>
-								<CButton
+							<ButtonGroup vertical>
+								<Button
 									onMouseDown={doShowHelp}
 									color="secondary"
 									title="Help"
 									disabled={!moduleVersion?.helpPath}
-									style={{ textAlign: 'left' }}
+									className="text-start"
 								>
 									<Tuck>
 										<FontAwesomeIcon icon={faQuestionCircle} />
 									</Tuck>
 									Help
-								</CButton>
+								</Button>
 
-								<CButton
+								<Button
 									onMouseDown={openBugUrl}
 									color="secondary"
 									title="Issue Tracker"
 									disabled={!moduleInfo?.display?.bugUrl}
-									style={{ textAlign: 'left' }}
+									className="text-start"
 								>
 									<Tuck>
 										<FontAwesomeIcon icon={faBug} />
 									</Tuck>
 									Known issues
-								</CButton>
+								</Button>
 
 								{extraMenuItems}
 
 								{!!debugLogUrl && (
-									<CButton
+									<Button
 										onMouseDown={() => windowLinkOpen({ href: makeAbsolutePath(debugLogUrl), title: 'View debug log' })}
 										title="Logs"
 										color="secondary"
-										style={{ textAlign: 'left' }}
+										className="text-start"
 									>
 										<Tuck>
 											<FontAwesomeIcon icon={faTerminal} />
 										</Tuck>
 										View logs
-									</CButton>
+									</Button>
 								)}
 
-								<CButton onMouseDown={doDelete} title="Delete" color="secondary" style={{ textAlign: 'left' }}>
+								<Button onMouseDown={doDelete} title="Delete" color="secondary" className="text-start">
 									<Tuck>
 										<FontAwesomeIcon icon={faTrash} />
 									</Tuck>
 									Delete
-								</CButton>
-							</CButtonGroup>
+								</Button>
+							</ButtonGroup>
 						</>
 					}
 				>
-					<CButton
+					<Button
 						color="secondary"
-						style={{ padding: '3px 8px' }}
+						className="py-1 px-2"
 						onClick={(e) => e.currentTarget.focus()}
 						title="Click for additional options."
 						aria-label="Click for additional options."
 					>
 						<FontAwesomeIcon icon={faEllipsisV} />
-					</CButton>
+					</Button>
 				</CPopover>
 			</div>
 		</div>

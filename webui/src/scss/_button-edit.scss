@@ -58,7 +58,7 @@
 }
 
 .flex-form {
-	& > div:not(.btn-group) {
+	& > div:not(.button-group) {
 		// column
 		margin-bottom: 10px;
 	}
@@ -409,8 +409,8 @@ table.variables-table,
 				white-space: nowrap;
 				padding: 0 0.25rem;
 
-				.btn {
-					--cui-btn-padding-x: 0.15rem;
+				.button {
+					--btn-padding-x: 0.15rem;
 				}
 			}
 		}
@@ -427,14 +427,14 @@ table.variables-table,
 	max-width: 300px;
 	width: 300px;
 
-	.btn {
+	.button {
 		width: 100%;
 
 		white-space: nowrap;
 		text-overflow: ellipsis;
 	}
 
-	.btn-group-vertical {
+	.button-group-vertical {
 		width: 100%;
 	}
 

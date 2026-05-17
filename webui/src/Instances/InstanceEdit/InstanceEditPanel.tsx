@@ -1,4 +1,4 @@
-import { CButton, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
@@ -10,6 +10,7 @@ import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@com
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -364,7 +365,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 			<CCol sm={12}>
 				<div className="flex flex-row">
 					<div className="grow">
-						<CButton
+						<Button
 							color="success"
 							className="me-md-1"
 							disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
@@ -372,17 +373,17 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 							title={!isValid ? 'Please fix the errors before saving' : undefined}
 						>
 							Save {isSaving ? '...' : ''}
-						</CButton>
+						</Button>
 
-						<CButton color="secondary" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
+						<Button color="secondary" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
 							{panelStore.isDirty() ? 'Cancel' : 'Done'}
-						</CButton>
+						</Button>
 					</div>
 
 					<div>
-						<CButton color="danger" onClick={doDelete} disabled={isSaving || isLoading}>
+						<Button color="danger" onClick={doDelete} disabled={isSaving || isLoading}>
 							Delete
-						</CButton>
+						</Button>
 					</div>
 				</div>
 			</CCol>

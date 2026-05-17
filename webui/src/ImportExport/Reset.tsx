@@ -1,4 +1,4 @@
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faDownload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import type { ClientImportOrResetSelection, ResetType } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
@@ -128,7 +129,7 @@ export const ResetWizardModal = observer(
 					<form.Subscribe
 						selector={(state) => [state.canSubmit, state.isSubmitting]}
 						children={([canSubmit, isSubmitting]) => (
-							<CButton
+							<Button
 								color="primary"
 								disabled={!canSubmit || isSubmitting}
 								onClick={() => {
@@ -138,23 +139,23 @@ export const ResetWizardModal = observer(
 								}}
 							>
 								Apply {isSubmitting ? '...' : ''}
-							</CButton>
+							</Button>
 						)}
 					/>
 				)
 				break
 			case maxSteps:
 				nextButton = (
-					<CButton color="primary" onClick={doClose}>
+					<Button color="primary" onClick={doClose}>
 						Finish
-					</CButton>
+					</Button>
 				)
 				break
 			default:
 				nextButton = (
-					<CButton color="primary" onClick={doNextStep}>
+					<Button color="primary" onClick={doNextStep}>
 						Next
-					</CButton>
+					</Button>
 				)
 		}
 
@@ -196,12 +197,12 @@ export const ResetWizardModal = observer(
 							<CModalFooter>
 								{currentStep <= applyStep && (
 									<>
-										<CButton color="secondary" onClick={doClose}>
+										<Button color="secondary" onClick={doClose}>
 											Cancel
-										</CButton>
-										<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+										</Button>
+										<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
 											Back
-										</CButton>
+										</Button>
 									</>
 								)}
 								{nextButton}
@@ -222,9 +223,9 @@ function ResetBeginStep() {
 			</p>
 			<p>It is recommended to export the system configuration first.</p>
 
-			<CButton color="success" href={makeAbsolutePath('/int/export/full')} target="_blank">
+			<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
 				<FontAwesomeIcon icon={faDownload} /> Export
-			</CButton>
+			</LinkButtonExternal>
 		</div>
 	)
 }

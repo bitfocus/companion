@@ -7,6 +7,15 @@
 @use 'scss/react-time-picker';
 @use 'scss/react-date-picker';
 
+@use 'scss/components/alert';
+@use 'scss/components/button';
+@use 'scss/components/checkbox-field';
+@use 'scss/components/dropdown-field';
+@use 'scss/components/number-field';
+@use 'scss/components/number-range';
+@use 'scss/components/switch-field';
+@use 'scss/components/tab-area';
+
 @use 'scss/layout';
 @use 'scss/common';
 @use 'scss/tablet';
@@ -33,14 +42,6 @@
 @use 'scss/sticky-tables';
 @use 'scss/expression';
 @use 'scss/image-library';
-
-@use 'scss/components/alert';
-@use 'scss/components/checkbox-field';
-@use 'scss/components/dropdown-field';
-@use 'scss/components/number-field';
-@use 'scss/components/number-range';
-@use 'scss/components/switch-field';
-@use 'scss/components/tab-area';
 
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 

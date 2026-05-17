@@ -1,10 +1,11 @@
-import { CButton, CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
@@ -63,9 +64,9 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 				</small>
 			</td>
 			<td className="no-wrap" style={{ verticalAlign: 'middle' }}>
-				<CButton color="danger" size="sm" onClick={deleteBackup} title="Delete backup">
+				<Button color="danger" size="sm" onClick={deleteBackup} title="Delete backup">
 					<FontAwesomeIcon icon={faTrash} />
-				</CButton>
+				</Button>
 			</td>
 		</tr>
 	)
@@ -120,9 +121,9 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CInputGroup>
 					<TextInputField value={rule.name} setValue={(value) => updateField('name', value)} />
-					<CButton color="warning" onClick={runNow}>
+					<Button color="warning" onClick={runNow}>
 						Run Now
-					</CButton>
+					</Button>
 				</CInputGroup>
 			</CCol>
 

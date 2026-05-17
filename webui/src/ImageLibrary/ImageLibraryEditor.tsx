@@ -1,10 +1,11 @@
-import { CButton, CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CForm, CFormLabel } from '@coreui/react'
 import { faCopy, faDownload, faEdit, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -196,18 +197,18 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			<div className="mb-3">
 				<div className="d-flex flex-wrap gap-2">
-					<CButton color="danger" onClick={handleDelete} title="Delete Image">
+					<Button color="danger" onClick={handleDelete} title="Delete Image">
 						<FontAwesomeIcon icon={faTrashAlt} />
-					</CButton>
+					</Button>
 
-					<CButton color="secondary" onClick={handleDownload}>
+					<Button color="secondary" onClick={handleDownload}>
 						<FontAwesomeIcon icon={faDownload} /> Download
-					</CButton>
+					</Button>
 
-					<CButton color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+					<Button color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
 						<FontAwesomeIcon icon={faUpload} />
 						{uploading ? ' Replacing...' : ' Replace'}
-					</CButton>
+					</Button>
 				</div>
 
 				<input
@@ -225,14 +226,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					<div className="d-flex align-items-center">
 						<span className="font-monospace">{imageInfo.name}</span>
 						<CopyToClipboard text={`$(image:${imageInfo.name})`} onCopy={handleCopyVariableValue}>
-							<CButton size="sm" title="Copy variable name">
+							<Button size="sm" title="Copy variable name">
 								<FontAwesomeIcon icon={faCopy} />
-							</CButton>
+							</Button>
 						</CopyToClipboard>
 					</div>
-					<CButton color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image name">
+					<Button color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image name">
 						<FontAwesomeIcon icon={faEdit} />
-					</CButton>
+					</Button>
 				</CCol>
 			</CForm>
 			<CForm className="row mb-3">

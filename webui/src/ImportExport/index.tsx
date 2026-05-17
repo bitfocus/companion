@@ -1,4 +1,4 @@
-import { CButton, CCallout } from '@coreui/react'
+import { CCallout } from '@coreui/react'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
@@ -7,6 +7,7 @@ import { useCallback, useContext, useRef, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
@@ -175,7 +176,7 @@ export const ImportExportPage = observer(function ImportExport() {
 			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
-			<h4 className="btn-inline">
+			<h4 className="button-inline">
 				Import / Export Configuration
 				<ContextHelpButton action="/user-guide/config/import-export" />
 			</h4>
@@ -184,10 +185,10 @@ export const ImportExportPage = observer(function ImportExport() {
 			<CCallout color="success">
 				<h5>Export</h5>
 				<p>Download a file containing all connections and button pages.</p>
-				<CButton color="success" onClick={doExport}>
+				<Button color="success" onClick={doExport}>
 					<FontAwesomeIcon icon={faDownload} style={{ marginRight: 7, marginLeft: -2 }} />
 					Export configuration
-				</CButton>
+				</Button>
 			</CCallout>
 
 			<CCallout color="warning">
@@ -206,7 +207,7 @@ export const ImportExportPage = observer(function ImportExport() {
 						<div>
 							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
-							<label className="btn btn-warning btn-file">
+							<label className="button button-warning button-file">
 								<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 								Import configuration
 								<input
@@ -225,10 +226,10 @@ export const ImportExportPage = observer(function ImportExport() {
 				<h5>Reset</h5>
 				<p>This will clear all connections, triggers and/or buttons.</p>
 				<div>
-					<CButton color="danger" style={{ backgroundColor: 'rgba(180,0,0,1)' }} onClick={doReset}>
+					<Button color="danger" onClick={doReset}>
 						<FontAwesomeIcon icon={faTrashAlt} style={{ marginRight: 7, marginLeft: -1 }} />
 						Reset configuration
-					</CButton>
+					</Button>
 				</div>
 			</CCallout>
 		</div>

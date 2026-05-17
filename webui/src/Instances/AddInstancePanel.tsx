@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CTooltip } from '@coreui/react'
+import { CTooltip } from '@coreui/react'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import {
 	faCog,
@@ -13,6 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -127,24 +128,26 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							<div className="intro-grid">
 								{description(storeModulesOfTypeCount)}
 								<div className="intro-filter">
-									<CButtonGroup role="group" aria-label="Module visibility filter">
-										<CButton
+									<ButtonGroup aria-label="Module visibility filter">
+										<Button
 											size="sm"
-											color={!typeFilter.visibility.available ? 'info' : 'outline-info'}
+											color="info"
+											variant={typeFilter.visibility.available ? 'outline' : undefined}
 											onClick={() => typeFilter.toggleVisibility('available')}
 											disabled={!typeFilter.visibility.available}
 										>
 											Installed Only
-										</CButton>
-										<CButton
+										</Button>
+										<Button
 											size="sm"
-											color={typeFilter.visibility.available ? 'info' : 'outline-info'}
+											color="info"
+											variant={!typeFilter.visibility.available ? 'outline' : undefined}
 											onClick={() => typeFilter.toggleVisibility('available')}
 											disabled={typeFilter.visibility.available}
 										>
 											All Available
-										</CButton>
-									</CButtonGroup>
+										</Button>
+									</ButtonGroup>
 								</div>
 							</div>
 						) : (
@@ -245,15 +248,15 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 			{isLimitReached ? (
 				<CTooltip content="This module is limited to one instance">
 					<span>
-						<CButton color="primary" disabled>
+						<Button color="primary" disabled>
 							Add
-						</CButton>
+						</Button>
 					</span>
 				</CTooltip>
 			) : (
-				<CButton color="primary" onClick={addInstanceClick}>
+				<Button color="primary" onClick={addInstanceClick}>
 					Add
-				</CButton>
+				</Button>
 			)}
 			&nbsp;
 			{moduleInfo.installedInfo?.stableVersion?.isLegacy && (

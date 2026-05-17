@@ -1,4 +1,4 @@
-import { CButton, CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,6 +6,7 @@ import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, us
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
@@ -217,16 +218,16 @@ export const AddInstanceModal = observer(
 							)}
 						</CModalBody>
 						<CModalFooter>
-							<CButton color="secondary" onClick={doClose}>
+							<Button color="secondary" onClick={doClose}>
 								Cancel
-							</CButton>
-							<CButton
+							</Button>
+							<Button
 								color="primary"
 								onClick={doAction}
 								disabled={!moduleInfo || !instanceLabel || !selectedVersion || !versionChoices.length}
 							>
 								Add
-							</CButton>
+							</Button>
 						</CModalFooter>
 					</>
 				)}

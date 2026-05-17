@@ -1,9 +1,9 @@
-import { CButton } from '@coreui/react'
 import { faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { DismissableAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -34,10 +34,10 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 						<li key={s.id}>{s.displayName}</li>
 					))}
 				</ul>
-				<CButton color="info" onClick={doAutoResize}>
+				<Button color="info" onClick={doAutoResize}>
 					<FontAwesomeIcon icon={faExpand} />
 					&nbsp;Resize grid to fit
-				</CButton>
+				</Button>
 			</DismissableAlert>
 		</>
 	)

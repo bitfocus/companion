@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCallout, CCol, CRow } from '@coreui/react'
+import { CCallout, CCol, CRow } from '@coreui/react'
 import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
@@ -6,6 +6,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -92,7 +93,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
 			>
 				<div className="fixed-header">
-					<h4 className="btn-inline">
+					<h4 className="button-inline">
 						Surfaces
 						<ContextHelpButton action="/user-guide/config/surfaces">
 							Use the table, below to configure currently-known surfaces and groups.
@@ -119,26 +120,26 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						</StaticAlert>
 					)}
 
-					<CButtonGroup size="sm">
-						<CButton color="warning" onClick={refreshUSB}>
+					<ButtonGroup>
+						<Button color="warning" size="sm" onClick={refreshUSB}>
 							<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} />
 							{rescanUsbMutation.isPending ? ' Checking for new surfaces...' : ' Rescan USB'}
-						</CButton>
-						<CButton color="primary" onClick={addEmulator}>
+						</Button>
+						<Button color="primary" size="sm" onClick={addEmulator}>
 							<FontAwesomeIcon icon={faAdd} /> Add Emulator
-						</CButton>
-						<CButton color="secondary" onClick={addGroup}>
+						</Button>
+						<Button color="secondary" size="sm" onClick={addGroup}>
 							<FontAwesomeIcon icon={faAdd} /> Add Group
-						</CButton>
-					</CButtonGroup>
+						</Button>
+					</ButtonGroup>
 
 					<AddSurfaceGroupModal ref={addGroupModalRef} />
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 
 					{!twoPanelMode && (
-						<CButton color="info" className="float-end" size="sm" onClick={handleShowSettings}>
+						<Button color="info" className="float-end" size="sm" onClick={handleShowSettings}>
 							<FontAwesomeIcon icon={faCog} /> Show Settings
-						</CButton>
+						</Button>
 					)}
 				</div>
 

@@ -1,8 +1,8 @@
-import { CButton, CButtonGroup } from '@coreui/react'
 import { faPlay, faRedo, faStop, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -43,46 +43,35 @@ export function ControlHotPressButtons({
 
 	return (
 		<>
-			<CButtonGroup>
-				<CButton
+			<ButtonGroup>
+				<Button
 					className="ms-1"
 					color="warning"
 					onMouseDown={hotPressDown}
 					onMouseUp={hotPressUp}
-					style={{ color: 'white' }}
 					title="Test press button"
 				>
 					<FontAwesomeIcon icon={faPlay} />
 					&nbsp;Test
-				</CButton>
-				<CButton color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
+				</Button>
+
+				{showRotaries && (
+					<MyErrorBoundary>
+						<Button color="warning" onMouseDown={hotRotateLeft} title="Test rotate left">
+							<FontAwesomeIcon icon={faUndo} />
+						</Button>
+
+						<Button color="warning" onMouseDown={hotRotateRight} title="Test rotate right">
+							<FontAwesomeIcon icon={faRedo} />
+						</Button>
+					</MyErrorBoundary>
+				)}
+
+				<Button color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
 					<FontAwesomeIcon icon={faStop} />
 					&nbsp;Stop
-				</CButton>
-			</CButtonGroup>
-			{showRotaries && (
-				<MyErrorBoundary>
-					<CButton
-						className="ms-1"
-						color="warning"
-						onMouseDown={hotRotateLeft}
-						style={{ color: 'white' }}
-						title="Test rotate left"
-					>
-						<FontAwesomeIcon icon={faUndo} />
-					</CButton>
-
-					<CButton
-						className="ms-1"
-						color="warning"
-						onMouseDown={hotRotateRight}
-						style={{ color: 'white' }}
-						title="Test rotate right"
-					>
-						<FontAwesomeIcon icon={faRedo} />
-					</CButton>
-				</MyErrorBoundary>
-			)}
+				</Button>
+			</ButtonGroup>
 		</>
 	)
 }

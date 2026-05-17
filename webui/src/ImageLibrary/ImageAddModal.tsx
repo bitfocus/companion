@@ -1,8 +1,9 @@
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { Button } from '~/Components/Button.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
 
@@ -119,12 +120,12 @@ export const ImageAddModal = observer(
 					/>
 				</CModalBody>
 				<CModalFooter>
-					<CButton color="secondary" onClick={handleCancel} disabled={isCreating}>
+					<Button color="secondary" onClick={handleCancel} disabled={isCreating}>
 						Cancel
-					</CButton>
-					<CButton color="primary" onClick={handleCreate} disabled={!canCreate || isCreating}>
+					</Button>
+					<Button color="primary" onClick={handleCreate} disabled={!canCreate || isCreating}>
 						{isCreating ? 'Creating...' : 'Create'}
-					</CButton>
+					</Button>
 				</CModalFooter>
 			</CModal>
 		)

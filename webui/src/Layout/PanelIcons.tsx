@@ -1,7 +1,7 @@
-import { CButton } from '@coreui/react'
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, type ElementType } from 'react'
+import { Button } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
@@ -20,7 +20,7 @@ export interface ContextHelpButtonProps {
 */
 export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): React.JSX.Element {
 	return (
-		<CButton
+		<Button
 			color="dark"
 			className={`float_right${visibilityClass ? ' ' + visibilityClass : ''} p-1 ms-2 panel-close-button`}
 			onClick={closeFn}
@@ -29,7 +29,7 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 		>
 			{/* The inline styling here is to make the icon square */}
 			<FontAwesomeIcon icon={faTimes} />
-		</CButton>
+		</Button>
 	)
 }
 
@@ -78,16 +78,16 @@ export function ContextHelpButton({ children, action }: ContextHelpButtonProps):
 		children += ' Click the icon for further help.'
 	}
 
-	// note some styling here needs to be on the FontAwesomeIcon, not .context-help-button or the CButton,
+	// note some styling here needs to be on the FontAwesomeIcon, not .context-help-button or the Button,
 	//  in order to get the shadowing right. However it will have to be hand-coded for different sizes even if using em units
 	//  See _layout.scss for the context-help-button-2xl example (FontAwesomeIcons get class 'fa-<size>')
 	// NOTE: removed the float_right class here -- we end up fighting against its margin and it doesn't seem to do much else...
 	return (
 		<>
 			<HelpWrapper usePopover={!!children} help={children}>
-				<CButton variant="ghost" className={`context-help-button-btn p-0`} {...helpButtonProps}>
+				<Button variant="ghost" className="context-help-button-btn p-0" {...helpButtonProps}>
 					<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
-				</CButton>
+				</Button>
 			</HelpWrapper>
 			<span ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />
 		</>

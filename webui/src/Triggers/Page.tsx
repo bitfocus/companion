@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
+import { CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faClone,
@@ -20,6 +20,7 @@ import sanitizeHtml from 'sanitize-html'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -126,7 +127,7 @@ export const TriggersPage = observer(function Triggers() {
 			<CCol xs={twoPanelMode ? 6 : 12} className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<h4 className="btn-inline">
+						<h4 className="button-inline">
 							Triggers
 							<ContextHelpButton action="/user-guide/config/triggers" />
 						</h4>
@@ -136,16 +137,16 @@ export const TriggersPage = observer(function Triggers() {
 						</p>
 
 						<div className="mb-2">
-							<CButtonGroup>
-								<CButton color="primary" onClick={doAddNew} size="sm">
+							<ButtonGroup>
+								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Trigger
-								</CButton>
+								</Button>
 								<CreateCollectionButton />
-							</CButtonGroup>
+							</ButtonGroup>
 
-							<CButton color="secondary" className="right" size="sm" onClick={showExportModal}>
+							<Button color="secondary" className="right" size="sm" onClick={showExportModal}>
 								<FontAwesomeIcon icon={faFileExport} /> Export all
-							</CButton>
+							</Button>
 						</div>
 
 						<CInputGroup className="variables-table-filter mt-2">
@@ -156,9 +157,9 @@ export const TriggersPage = observer(function Triggers() {
 								value={filter}
 								style={{ fontSize: '1.2em' }}
 							/>
-							<CButton color="danger" onClick={clearFilter}>
+							<Button color="primary" onClick={clearFilter}>
 								<FontAwesomeIcon icon={faTimes} />
-							</CButton>
+							</Button>
 						</CInputGroup>
 					</div>
 
@@ -308,7 +309,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
 			<div className="action-buttons w-auto">
-				<CButtonGroup className="ms-1">
+				<ButtonGroup className="ms-1">
 					<SwitchInputField
 						value={item.enabled}
 						setValue={doEnableDisable}
@@ -318,21 +319,16 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						}
 					/>
 
-					<CButton
-						color="white"
-						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
-						target="_blank"
-						title="Export"
-					>
+					<LinkButtonExternal href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)} title="Export">
 						<FontAwesomeIcon icon={faDownload} />
-					</CButton>
-					<CButton color="white" onClick={doClone} title="Clone">
+					</LinkButtonExternal>
+					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
-					</CButton>
-					<CButton color="gray" onClick={doDelete} title="Delete">
+					</Button>
+					<Button onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-				</CButtonGroup>
+					</Button>
+				</ButtonGroup>
 			</div>
 		</div>
 	)
@@ -348,9 +344,9 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<CButton color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-		</CButton>
+		</Button>
 	)
 }
 

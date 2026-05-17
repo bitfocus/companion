@@ -11,7 +11,7 @@ h4 {
 	// make compact
 	width: 1px;
 
-	.btn {
+	.button {
 		text-transform: uppercase;
 
 		padding: 4px;
@@ -21,7 +21,7 @@ h4 {
 		}
 	}
 
-	.btn-primary.disabled {
+	.button-primary.disabled {
 		opacity: 0.5;
 	}
 }
@@ -33,22 +33,22 @@ h4 {
 h4,
 h5,
 legend {
-	.btn-group {
+	.button-group {
 		float: right;
 	}
-	.btn {
+	.button {
 		float: right;
 	}
 }
 
-// special case, mainly for context help buttons: add btn-inline to the <h4> or <h5> element to prevent buttons from floating right
-h4.btn-inline,
-h5.btn-inline {
+// special case, mainly for context help buttons: add button-inline to the <h4> or <h5> element to prevent buttons from floating right
+h4.button-inline,
+h5.button-inline {
 	display: flex;
 
 	.context-help-button,
-	.btn,
-	.btn-group {
+	.button,
+	.button-group {
 		display: inline-flex;
 		align-items: center;
 		padding-left: 0.75em;
@@ -79,7 +79,7 @@ h5.btn-inline {
 	}
 }
 
-.btn-group {
+.button-group {
 	// do not set "overflow: hidden;" globally! if needed put it in an appropriate scope. If set here it prevents dropdown menus!
 	&.margin-bottom {
 		margin-bottom: 1rem;
@@ -137,7 +137,7 @@ th {
 			opacity: 1;
 		}
 
-		&.btn-secondary {
+		&.button-secondary {
 			background-color: white;
 			color: black;
 		}
@@ -168,34 +168,6 @@ code {
 .rounded-end-0 {
 	border-top-right-radius: 0;
 	border-bottom-right-radius: 0;
-}
-
-.btn-danger {
-	background-color: $primary;
-}
-
-.btn-danger:hover {
-	background-color: color.adjust($primary, $lightness: -5%, $space: hsl);
-	color: #eee;
-	animation: blinker 0.3s linear infinite;
-}
-
-.btn-danger:disabled {
-	color: rgba(255, 255, 255, 0.8);
-}
-
-.btn-success:disabled {
-	color: rgba(255, 255, 255, 0.9);
-}
-
-.btn-info:disabled {
-	color: rgba(255, 255, 255, 0.9);
-}
-
-@keyframes blinker {
-	50% {
-		opacity: 0.8;
-	}
 }
 
 .c-app {
@@ -252,29 +224,6 @@ code {
 	}
 }
 
-.btn-secondary {
-	background-color: color.adjust($secondary, $lightness: 15%, $space: hsl);
-}
-.btn-danger,
-.btn-success,
-.btn-info {
-	color: #fff;
-}
-
-.btn-success:hover {
-	color: #fff;
-}
-
-.btn.disabled.with-tooltip {
-	cursor: inherit;
-	pointer-events: inherit;
-}
-
-.btn-white.disabled {
-	opacity: 0.4;
-	border-color: transparent;
-}
-
 .text-right {
 	text-align: right;
 }
@@ -325,10 +274,6 @@ code {
 
 .noBorder td {
 	border: none;
-}
-
-.btn-undefined:disabled {
-	border-color: transparent;
 }
 
 .nav-item {
@@ -425,7 +370,7 @@ svg.pad-left {
 	.expression-toggle-button {
 		justify-self: flex-end;
 
-		.btn {
+		.button {
 			height: 100%;
 			width: 3em;
 		}

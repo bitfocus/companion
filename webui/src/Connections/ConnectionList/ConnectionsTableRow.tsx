@@ -1,8 +1,8 @@
-import { CButton } from '@coreui/react'
 import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
+import { Button } from '~/Components/Button.js'
 import { Tuck } from '~/Components/Tuck.js'
 import { InstancesListTableRow } from '~/Instances/List/InstancesListTableRow.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -63,18 +63,18 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			instance={connection}
 			instanceStatus={connection.status}
 			extraMenuItems={
-				<CButton
+				<Button
 					onMouseDown={doShowVariables}
 					title="Variables"
 					color="secondary"
 					disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
-					style={{ textAlign: 'left' }}
+					className="text-start"
 				>
 					<Tuck>
 						<FontAwesomeIcon icon={faDollarSign} />
 					</Tuck>
 					Variables
-				</CButton>
+				</Button>
 			}
 			labelStr="connection"
 			doDelete={doDelete}

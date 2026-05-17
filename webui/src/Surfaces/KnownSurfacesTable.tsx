@@ -1,4 +1,3 @@
-import { CButton, CButtonGroup } from '@coreui/react'
 import { faCircleUp, faCopy, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -6,6 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
+import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
@@ -187,18 +187,18 @@ const ManualGroupRow = observer(function ManualGroupRow({
 							{group.id}
 						</span>
 						<CopyToClipboard text={group.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
-							<CButton size="sm" title="Copy group id" className="p-0 px-1">
+							<Button size="sm" title="Copy group id" className="p-0 px-1">
 								<FontAwesomeIcon icon={faCopy} color="#000" />
-							</CButton>
+							</Button>
 						</CopyToClipboard>
 					</div>
 				</div>
 				<div className="grid-cell">
-					<CButtonGroup>
-						<CButton onClick={deleteGroup2} title="Delete group">
+					<ButtonGroup>
+						<Button onClick={deleteGroup2} title="Delete group">
 							<FontAwesomeIcon icon={faTrash} />
-						</CButton>
-					</CButtonGroup>
+						</Button>
+					</ButtonGroup>
 				</div>
 			</div>
 			{(group.surfaces || []).map((surface, i, arr) => (
@@ -296,9 +296,9 @@ const SurfaceRow = observer(function SurfaceRow({
 				<div className="surface-id-row">
 					<span className="surface-id">{surface.id}</span>
 					<CopyToClipboard text={surface.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
-						<CButton size="sm" title="Copy surface id" className="p-0 px-1">
+						<Button size="sm" title="Copy surface id" className="p-0 px-1">
 							<FontAwesomeIcon icon={faCopy} color="#000" />
-						</CButton>
+						</Button>
 					</CopyToClipboard>
 					<span className={classNames('surface-status', { 'surface-disabled': surfaceDisabled })}>
 						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
@@ -307,26 +307,25 @@ const SurfaceRow = observer(function SurfaceRow({
 			</div>
 			<div className="grid-cell">
 				{surface.isConnected ? (
-					<CButtonGroup className="no-break">
+					<ButtonGroup className="no-break">
 						{surface.integrationType === 'emulator' && (
 							<>
-								<CButton
+								<LinkButtonExternal
 									href={makeAbsolutePath(`/emulator/${surface.id.substring(9)}`)}
-									target="_blank"
 									title="Open Emulator"
 								>
 									<FontAwesomeIcon icon={faFolderOpen} />
-								</CButton>
-								<CButton onClick={deleteEmulator2} title="Delete Emulator">
+								</LinkButtonExternal>
+								<Button onClick={deleteEmulator2} title="Delete Emulator">
 									<FontAwesomeIcon icon={faTrash} />
-								</CButton>
+								</Button>
 							</>
 						)}
-					</CButtonGroup>
+					</ButtonGroup>
 				) : (
-					<CButton onClick={forgetSurface2} title="Forget">
+					<Button onClick={forgetSurface2} title="Forget">
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
+					</Button>
 				)}
 			</div>
 		</div>

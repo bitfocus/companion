@@ -1,7 +1,8 @@
-import { CButton, CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput, CInputGroup } from '@coreui/react'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
+import { Button } from '~/Components/Button'
 
 export interface SearchBoxProps {
 	filter: string
@@ -24,9 +25,9 @@ export function SearchBox({ filter, setFilter }: SearchBoxProps): React.JSX.Elem
 				value={filter}
 				style={{ fontSize: '1.2em' }}
 			/>
-			<CButton color="danger" onClick={clearFilter}>
+			<Button color="primary" onClick={clearFilter}>
 				<FontAwesomeIcon icon={faTimes} />
-			</CButton>
+			</Button>
 		</CInputGroup>
 	)
 }

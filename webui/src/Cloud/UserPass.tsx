@@ -1,8 +1,9 @@
-import { CButton, CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { memo, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudUserPassProps {
@@ -51,9 +52,9 @@ export const CloudUserPass = memo(function CloudUserPass({
 				<CCol sm={6}></CCol>
 
 				<CCol sm={6}>
-					<CButton color="success" type="submit" disabled={working || !email || !password}>
+					<Button color="success" type="submit" disabled={working || !email || !password}>
 						Log in
-					</CButton>
+					</Button>
 				</CCol>
 
 				<CCol sm={12}>

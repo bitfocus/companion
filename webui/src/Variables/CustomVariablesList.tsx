@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CForm, CFormInput, CInputGroup } from '@coreui/react'
+import { CForm, CFormInput, CInputGroup } from '@coreui/react'
 import {
 	faArrowLeft,
 	faCompressArrowsAlt,
@@ -8,11 +8,11 @@ import {
 	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import {
 	CollectionsNestingTable,
 	UNGROUPED_PANEL_ID,
@@ -94,7 +94,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={allVariableNames}>
 				<div>
-					<h4 className="btn-inline">
+					<h4 className="button-inline">
 						Custom Variables
 						<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
 					</h4>
@@ -102,19 +102,19 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						Here you can create some variables which you can define the values of, and update with actions
 					</p>
 
-					<CButtonGroup size="sm">
-						<CButton color="primary" as={Link} to="/variables">
+					<ButtonGroup>
+						<LinkButton color="primary" size="sm" to="/variables">
 							<FontAwesomeIcon icon={faArrowLeft} />
 							&nbsp; Go back
-						</CButton>
-						<CButton color="secondary" disabled>
+						</LinkButton>
+						<Button color="secondary" size="sm" disabled>
 							Custom Variables
-						</CButton>
+						</Button>
 						<CreateCollectionButton />
 						{(customVariables.customVariables.size > 0 || customVariables.customVariableCollections.size > 0) && (
 							<ExpandCollapseButtons />
 						)}
-					</CButtonGroup>
+					</ButtonGroup>
 				</div>
 
 				<CInputGroup className="variables-table-filter">
@@ -125,9 +125,9 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						value={filter}
 						style={{ fontSize: '1.2em' }}
 					/>
-					<CButton color="danger" onClick={clearFilter}>
+					<Button color="primary" onClick={clearFilter}>
 						<FontAwesomeIcon icon={faTimes} />
-					</CButton>
+					</Button>
 				</CInputGroup>
 
 				<div className="variables-table-scroller ">
@@ -182,22 +182,24 @@ const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
 	return (
 		<>
 			{panelCollapseHelper.canExpandAll(null, rootPanels) && (
-				<CButton
+				<Button
 					color="secondary"
+					size="sm"
 					onClick={() => panelCollapseHelper.setAllExpanded(null, rootPanels)}
 					title="Expand all"
 				>
 					<FontAwesomeIcon icon={faExpandArrowsAlt} /> Expand All
-				</CButton>
+				</Button>
 			)}
 			{panelCollapseHelper.canCollapseAll(null, rootPanels) && (
-				<CButton
+				<Button
 					color="secondary"
+					size="sm"
 					onClick={() => panelCollapseHelper.setAllCollapsed(null, rootPanels)}
 					title="Collapse all"
 				>
 					<FontAwesomeIcon icon={faCompressArrowsAlt} /> Collapse All
-				</CButton>
+				</Button>
 			)}
 		</>
 	)
@@ -247,9 +249,9 @@ function AddVariablePanel() {
 					onChange={(e) => setNewName(e.currentTarget.value)}
 					placeholder="variableName"
 				/>
-				<CButton color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
+				<Button color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 					Add
-				</CButton>
+				</Button>
 			</CInputGroup>
 		</CForm>
 	)
@@ -265,8 +267,8 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<CButton color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-		</CButton>
+		</Button>
 	)
 }
