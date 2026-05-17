@@ -57,11 +57,11 @@ export function SelectButtonTypeDropdown({
 
 	return (
 		<CDropdown variant="btn-group">
-			<Button color="danger" onClick={() => setButtonType('button-layered')} title="Create regular button.">
+			<Button color="primary" onClick={() => setButtonType('button-layered')} title="Create regular button.">
 				Create button
 			</Button>
 			<CDropdownToggle
-				color="danger"
+				color="primary"
 				split
 				style={{ opacity: 0.7, padding: '0 0.75em' }}
 				aria-label="Toggle Button-Type Dropdown"

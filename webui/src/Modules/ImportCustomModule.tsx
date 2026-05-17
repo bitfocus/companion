@@ -194,13 +194,13 @@ export function ImportModules(): React.JSX.Element {
 
 	return (
 		<div className="import-module">
-			<label className="btn btn-warning btn-file">
+			<label className="button button-warning button-file">
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import module package
 				<input type="file" onChange={loadModuleFile} style={{ display: 'none' }} accept=".tgz" />
 			</label>
 			&nbsp;
-			<label className="btn btn-info btn-file">
+			<label className="button button-info button-file">
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import offline module bundle
 				<input type="file" onChange={loadModuleBundle} style={{ display: 'none' }} accept=".tgz,.gz" />

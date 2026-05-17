@@ -176,7 +176,7 @@ export const ImportExportPage = observer(function ImportExport() {
 			<ResetWizardModal ref={resetRef} />
 			<ExportWizardModal ref={exportRef} />
 
-			<h4 className="btn-inline">
+			<h4 className="button-inline">
 				Import / Export Configuration
 				<ContextHelpButton action="/user-guide/config/import-export" />
 			</h4>
@@ -207,7 +207,7 @@ export const ImportExportPage = observer(function ImportExport() {
 						<div>
 							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
-							<label className="btn btn-warning btn-file">
+							<label className="button button-warning button-file">
 								<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 								Import configuration
 								<input

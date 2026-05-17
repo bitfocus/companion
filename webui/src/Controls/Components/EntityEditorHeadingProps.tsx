@@ -29,7 +29,6 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 			<ButtonGroup className="right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
 					<Button
-						color="white"
 						size="sm"
 						onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childEntityIds)}
 						title="Expand all"
@@ -39,7 +38,6 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 				)}
 				{childEntityIds.length >= 1 && panelCollapseHelper.canCollapseAll(ownerIdString, childEntityIds) && (
 					<Button
-						color="white"
 						size="sm"
 						onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childEntityIds)}
 						title="Collapse all"

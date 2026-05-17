@@ -28,7 +28,7 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4 className="btn-inline">
+								<h4 className="button-inline">
 									Settings - Protocols
 									<ContextHelpButton action="/user-guide/config/settings#protocols" />
 								</h4>

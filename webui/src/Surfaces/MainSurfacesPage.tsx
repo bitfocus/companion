@@ -93,7 +93,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
 			>
 				<div className="fixed-header">
-					<h4 className="btn-inline">
+					<h4 className="button-inline">
 						Surfaces
 						<ContextHelpButton action="/user-guide/config/surfaces">
 							Use the table, below to configure currently-known surfaces and groups.

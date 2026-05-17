@@ -276,7 +276,7 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 	}, [uninstallModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	return (
-		<Button color="white" disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
+		<Button disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
 			{isRunningInstallOrUninstall ? (
 				<span title="Removing">
 					<FontAwesomeIcon icon={faSync} spin />
@@ -340,7 +340,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 	}
 
 	return (
-		<Button color="white" disabled={isRunningInstallOrUninstall} onClick={doInstall}>
+		<Button disabled={isRunningInstallOrUninstall} onClick={doInstall}>
 			{isRunningInstallOrUninstall ? (
 				<span title="Installing">
 					<FontAwesomeIcon icon={faSync} />

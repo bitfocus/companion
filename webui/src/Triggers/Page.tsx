@@ -127,7 +127,7 @@ export const TriggersPage = observer(function Triggers() {
 			<CCol xs={twoPanelMode ? 6 : 12} className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<h4 className="btn-inline">
+						<h4 className="button-inline">
 							Triggers
 							<ContextHelpButton action="/user-guide/config/triggers" />
 						</h4>
@@ -157,7 +157,7 @@ export const TriggersPage = observer(function Triggers() {
 								value={filter}
 								style={{ fontSize: '1.2em' }}
 							/>
-							<Button color="danger" onClick={clearFilter}>
+							<Button color="primary" onClick={clearFilter}>
 								<FontAwesomeIcon icon={faTimes} />
 							</Button>
 						</CInputGroup>
@@ -319,17 +319,13 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						}
 					/>
 
-					<LinkButtonExternal
-						color="white"
-						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
-						title="Export"
-					>
+					<LinkButtonExternal href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)} title="Export">
 						<FontAwesomeIcon icon={faDownload} />
 					</LinkButtonExternal>
-					<Button color="white" onClick={doClone} title="Clone">
+					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
 					</Button>
-					<Button color="gray" onClick={doDelete} title="Delete">
+					<Button onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</ButtonGroup>

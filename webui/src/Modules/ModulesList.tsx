@@ -154,7 +154,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	return (
 		<div className="flex-column-layout">
 			<div className="fixed-header">
-				<h4 className="btn-inline">
+				<h4 className="button-inline">
 					Manage Modules
 					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
@@ -331,7 +331,7 @@ const ModulesListRow = observer(function ModulesListRow({
 				{moduleInfo.name}
 			</td>
 			<td className="compact">
-				<Button onMouseDown={doShowHelp} color="white" title="Show Help" disabled={!moduleInfo.helpUrl}>
+				<Button onMouseDown={doShowHelp} title="Show Help" disabled={!moduleInfo.helpUrl}>
 					<FontAwesomeIcon icon={faQuestionCircle} />
 				</Button>
 			</td>
