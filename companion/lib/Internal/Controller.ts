@@ -598,6 +598,7 @@ export class InternalController {
 						feedbackType: null,
 						feedbackStyle: undefined,
 						feedbackAffectedProperties: undefined,
+						feedbackDisableStyleOverrides: false,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -629,6 +630,7 @@ export class InternalController {
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
 						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
+						feedbackDisableStyleOverrides: false,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 

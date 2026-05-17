@@ -16,6 +16,10 @@ export interface ClientEntityDefinition {
 	optionsToMonitorForInvalidations: string[] | null
 	feedbackType: FeedbackEntitySubType | null
 	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
+	/**
+	 * Special case for 'conditionalise existing feedbacks' to avoid the root getting style overrides, as we defer that to the children feedbacks
+	 */
+	feedbackDisableStyleOverrides?: boolean
 	hasLifecycleFunctions: boolean
 	hasLearn: boolean
 	learnTimeout: number | undefined

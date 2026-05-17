@@ -92,6 +92,7 @@ export class InternalBuildingBlocks
 				options: [],
 				hasLearn: false,
 				learnTimeout: undefined,
+				feedbackDisableStyleOverrides: true,
 				supportsChildGroups: [
 					{
 						type: EntityModelType.Feedback,
@@ -103,6 +104,7 @@ export class InternalBuildingBlocks
 					},
 					{
 						type: EntityModelType.Feedback,
+						feedbackListType: FeedbackEntitySubType.StyleOverride, // Allow these to do their own styleOverrides
 						groupId: 'feedbacks',
 						entityTypeLabel: 'feedback',
 						label: 'Feedbacks',

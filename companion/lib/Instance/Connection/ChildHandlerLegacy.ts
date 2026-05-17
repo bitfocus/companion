@@ -772,6 +772,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				feedbackType: null,
 				feedbackStyle: undefined,
 				feedbackAffectedProperties: undefined,
+				feedbackDisableStyleOverrides: false,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}
@@ -810,6 +811,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
 				feedbackAffectedProperties: undefined,
+				feedbackDisableStyleOverrides: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules

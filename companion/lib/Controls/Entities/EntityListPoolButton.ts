@@ -207,13 +207,30 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			result.set(elementId, targetMap)
 		}
 
-		for (const feedback of this.#feedbacks.getDirectEntities()) {
+		const processFeedback = (feedback: ControlEntityInstance) => {
 			const overrides = feedback.styleOverrides
-			if (!overrides || overrides.length === 0) continue
+			if (!overrides || overrides.length === 0) return
+
+			// Special case to flatten the 'conditionalise existing feedbacks'
+			if (feedback.connectionId === 'internal' && feedback.definitionId === 'logic_conditionalise_advanced') {
+				// Check if the condition (all 'children' boolean feedbacks) is true
+				if (!feedback.getBooleanFeedbackValue()) return
+
+				// Get the children to treat as overrides
+				const children = feedback.getChildren('feedbacks')
+				if (!children || children.getAllEntities().length === 0) return
+
+				// Process the children as if they were overrides themselves, allowing nesting of the conditionalise feedback
+				for (const childFeedback of children.getDirectEntities()) {
+					processFeedback(childFeedback)
+				}
+
+				return
+			}
 
 			// Get the definition, to know how to handle it
 			const entityDefinition = feedback.getEntityDefinition()
-			if (!entityDefinition) continue
+			if (!entityDefinition) return
 
 			switch (entityDefinition.feedbackType) {
 				case FeedbackEntitySubType.Boolean:
@@ -256,6 +273,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 					assertNever(entityDefinition.feedbackType)
 					break
 			}
+		}
+
+		for (const feedback of this.#feedbacks.getDirectEntities()) {
+			processFeedback(feedback)
 		}
 
 		return result
