@@ -35,7 +35,7 @@ interface ParsedLegacyStyle {
 	image: {
 		halign: HorizontalAlignment | undefined
 		valign: VerticalAlignment | undefined
-		image: string | undefined
+		image: string | null | undefined
 	}
 	imageBuffers: DrawImageBuffer[] | undefined
 	background: {
@@ -83,7 +83,7 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultN
 		image: {
 			halign: imageAlign ? imageAlign[0] : undefined,
 			valign: imageAlign ? imageAlign[1] : undefined,
-			image: style.png64 ? ensurePng64IsDataUrl(style.png64) : undefined,
+			image: style.png64 !== undefined ? ensurePng64IsDataUrl(style.png64) : undefined,
 		},
 		imageBuffers: styleHack.imageBuffer
 			? [
@@ -173,7 +173,7 @@ export function GetLegacyStyleProperty(
 				}
 			break
 		case 'png64':
-			if (parsedStyle.image.image) {
+			if (parsedStyle.image.image !== undefined) {
 				return {
 					isExpression: false,
 					value: parsedStyle.image.image,
@@ -454,7 +454,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 			})
 		}
 
-		if (parsedStyle.image.image) {
+		if (parsedStyle.image.image !== undefined) {
 			overrides.push({
 				overrideId: nanoid(),
 				elementId: imageElementId,
@@ -586,7 +586,8 @@ export function CreateAdvancedFeedbackStyleOverrides(
 	return overrides
 }
 
-function ensurePng64IsDataUrl(png64: string): string {
+function ensurePng64IsDataUrl(png64: string | null): string | null {
+	if (!png64) return null
 	if (png64.startsWith('data:')) {
 		return png64
 	} else {
