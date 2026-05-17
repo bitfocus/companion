@@ -45,7 +45,7 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.5",
-    "node": ">=22.22.2 <23"
+    "node": ">=22.22.3 <23"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": "eslint",
