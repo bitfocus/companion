@@ -1,21 +1,15 @@
 import path from 'node:path'
-import type { Database as SQLiteDB, Statement } from 'better-sqlite3'
 import fs from 'fs-extra'
+import { DatabaseSync, backup as SqliteBackup, type StatementSync } from 'node:sqlite'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
-import { createSqliteDatabase } from './Util.js'
 
 enum DatabaseStartupState {
 	Normal = 0,
 	Reset = 1,
 	RAM = 2,
 	Fatal = 3,
-}
-
-interface ITableRow {
-	id: string
-	value: string
 }
 
 /**
@@ -96,7 +90,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	/**
 	 * The SQLite database
 	 */
-	public store!: SQLiteDB
+	public store!: DatabaseSync
 
 	/**
 	 * This needs to be called in the extending class
@@ -155,11 +149,10 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	private saveBackup(): void {
 		const timeBefore = performance.now()
-		this.store
-			?.backup(`${this.cfgBakFile}`)
+		SqliteBackup(this.store, `${this.cfgBakFile}`)
 			.then(() => {
 				// perform a flush of the WAL file. It may be a little aggressive for this to be a TRUNCATE vs FULL, but it ensures the WAL doesn't grow infinitely
-				this.store.pragma('wal_checkpoint(TRUNCATE)')
+				this.store.exec('PRAGMA wal_checkpoint(TRUNCATE)')
 
 				const saveDuration = performance.now() - timeBefore
 
@@ -207,7 +200,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
-			this.store = createSqliteDatabase(this.cfgDir)
+			this.store = new DatabaseSync(this.cfgDir)
 			this.tableCache.clear()
 			this.create()
 			this.defaultTableView.get('test')
@@ -261,7 +254,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 		if (!this.store) {
 			try {
-				this.store = createSqliteDatabase(':memory:')
+				this.store = new DatabaseSync(':memory:')
 				this.tableCache.clear()
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
@@ -294,10 +287,10 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	}
 
 	#createDatabase(filename: string) {
-		const db = createSqliteDatabase(filename)
+		const db = new DatabaseSync(filename)
 
 		try {
-			db.pragma('journal_mode = WAL')
+			db.exec('PRAGMA journal_mode = WAL')
 		} catch (err) {
 			this.logger.warn(`Error setting journal mode: ${err}`)
 		}
@@ -438,7 +431,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 		try {
 			// Get all rows from the old table
-			const oldRows = this.store.prepare(`SELECT id, value FROM ${oldTableName}`).all() as ITableRow[]
+			const oldRows = this.store.prepare(`SELECT id, value FROM ${oldTableName}`).all()
 
 			// Get existing IDs from the new table to avoid conflicts
 			const newTableIds = new Set<string>(
@@ -452,13 +445,17 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 			// Copy rows from old table to new table
 			// Using transaction for better performance and atomicity
-			const transaction = this.store.transaction((rows: ITableRow[]) => {
-				for (const row of rows) {
+			this.store.prepare('BEGIN').run()
+			try {
+				for (const row of oldRows) {
 					insertStmt.run(row)
 				}
-			})
 
-			transaction(oldRows)
+				this.store.prepare('COMMIT').run()
+			} catch (e) {
+				this.store.prepare('ROLLBACK').run()
+				throw e
+			}
 
 			// Drop the old table
 			this.store.prepare(`DROP TABLE ${oldTableName}`).run()
@@ -481,17 +478,17 @@ type ValueIfString<T> = T extends string ? T : never
 export class DataStoreTableView<TableContent extends Record<string, any>> {
 	readonly #logger: Logger
 
-	readonly #store: SQLiteDB
+	readonly #store: DatabaseSync
 	readonly tableName: string
 	readonly #triggerDirty: () => void
 
-	readonly #deleteByIdQuery: Statement<[{ id: string }], ITableRow>
-	readonly #emptyTableQuery: Statement<[], ITableRow>
-	readonly #getAllQuery: Statement<[], ITableRow>
-	readonly #getByIdQuery: Statement<[{ id: string }], ITableRow>
-	readonly #setByIdQuery: Statement<[{ id: string; value: string }], ITableRow>
+	readonly #deleteByIdQuery: StatementSync
+	readonly #emptyTableQuery: StatementSync
+	readonly #getAllQuery: StatementSync
+	readonly #getByIdQuery: StatementSync
+	readonly #setByIdQuery: StatementSync
 
-	constructor(logger: Logger, store: SQLiteDB, tableName: string, triggerDirty: () => void) {
+	constructor(logger: Logger, store: DatabaseSync, tableName: string, triggerDirty: () => void) {
 		this.#logger = logger.child({ source: tableName })
 		this.#store = store
 		this.tableName = tableName
@@ -546,7 +543,7 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 		try {
 			const row = this.#getByIdQuery.get({ id: key })
-			return row?.value
+			return row?.value as string | undefined
 		} catch (e) {
 			this.#logger.warn(`Error getting ${key}: ${stringifyError(e)}`)
 			return undefined

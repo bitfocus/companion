@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import { backup as SqliteBackup } from 'node:sqlite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
@@ -76,10 +77,10 @@ export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 	 */
 	public async createBackup(filePath: string): Promise<number> {
 		// Ensure the database is synced to disk before backing up
-		this.store.pragma('wal_checkpoint(TRUNCATE)')
+		this.store.exec('PRAGMA wal_checkpoint(TRUNCATE)')
 
 		// Use SQLite's backup functionality to copy the database
-		await this.store.backup(filePath)
+		await SqliteBackup(this.store, filePath)
 
 		// Get the file size of the created backup
 		try {

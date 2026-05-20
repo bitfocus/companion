@@ -121,6 +121,13 @@ export default [
 				},
 			],
 			'n/prefer-node-protocol': 'error',
+			'n/no-unsupported-features/node-builtins': [
+				'error',
+				{
+					version: 'current',
+					ignores: ['sqlite'],
+				},
+			],
 		},
 	},
 	{
