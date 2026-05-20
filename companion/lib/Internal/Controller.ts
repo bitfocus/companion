@@ -630,7 +630,7 @@ export class InternalController {
 						showButtonPreview: feedback.showButtonPreview ?? false,
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
 						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
-						feedbackDisableStyleOverrides: false,
+						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 

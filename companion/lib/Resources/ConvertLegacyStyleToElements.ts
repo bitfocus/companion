@@ -311,7 +311,7 @@ export function ConvertLegacyStyleToElements(
 		[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
 	}
 
-	const updatedFeedbacks = feedbacks.map((fb) => {
+	const updateFeedback = (fb: SomeEntityModel): SomeEntityModel & { style?: undefined } => {
 		if (fb.type !== EntityModelType.Feedback) return fb // Not a feedback
 		if (fb.styleOverrides) return fb // Already converted
 
@@ -341,12 +341,22 @@ export function ConvertLegacyStyleToElements(
 			overrides = CreateAdvancedFeedbackStyleOverrides(selectedElementIds, bufferElement.id, undefined)
 		}
 
+		// Special case to preserve behaviour of 'conditionalise existing feedbacks'
+		if (fb.connectionId === 'internal' && fb.definitionId === 'logic_conditionalise_advanced' && fb.children) {
+			const children = fb.children['feedbacks']
+			if (children && Array.isArray(children)) {
+				fb.children['feedbacks'] = children.map(updateFeedback)
+			}
+		}
+
 		return {
 			...fb,
 			style: undefined,
 			styleOverrides: overrides,
 		}
-	})
+	}
+
+	const updatedFeedbacks = feedbacks.map(updateFeedback)
 
 	const layers: SomeButtonGraphicsElement[] = [canvasElement, backgroundElement, imageElement, textElement]
 	if (hasAnyAdvancedFeedbacks) layers.push(bufferElement)
