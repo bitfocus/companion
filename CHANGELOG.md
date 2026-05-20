@@ -1,5 +1,12 @@
 # Bitfocus Companion
 
+## Companion v4.3.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- disable --use-system-ca if encountering openssl launch errors
+- improve DropdownInputField performance
+
 ## Companion v4.3.2 - Release Notes
 
 ### 🐞 BUG FIXES
