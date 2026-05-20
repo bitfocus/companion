@@ -27,24 +27,6 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
 				<div>
 					<SurfaceInstancesList selectedInstanceId={null} />
-					{userConfigProps && (
-						<>
-							<div className="d-flex" style={{ border: '1px solid var(--cui-border-color)', borderTop: 0 }}>
-								<span style={{ paddingRight: 'calc(1.5em + 10px)' }}> </span>
-								<span className="d-inline" style={{ width: '100%' }}>
-									<table className="table table-responsive-sm table-settings elgato-plugin">
-										<tbody>
-											<UserConfigSwitchRow
-												userConfig={userConfigProps}
-												label={<strong>Enable Elgato software Plugin API</strong>}
-												field="elgato_plugin_enable"
-											/>
-										</tbody>
-									</table>
-								</span>
-							</div>
-						</>
-					)}
 				</div>
 
 				<br />

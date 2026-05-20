@@ -7,7 +7,6 @@ export type UserConfigModel = {
 	remove_topbar: boolean
 	buttons_status_icons: 'show' | 'none'
 
-	elgato_plugin_enable: boolean
 	usb_hotplug: boolean
 	auto_enable_discovered_surfaces: boolean
 

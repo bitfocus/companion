@@ -46,13 +46,11 @@ import {
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
 import LogController from '../Log/Controller.js'
-import type { ServiceElgatoPluginSocket } from '../Service/ElgatoPlugin.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { getSurfaceName, SurfaceHandler } from './Handler.js'
 import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
-import { SurfaceIPElgatoPlugin } from './IP/ElgatoPlugin.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
@@ -1414,26 +1412,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#createSurfaceHandler(panel.info.surfaceId, moduleId, panel)
 
 		this.triggerUpdateDevicesList()
-	}
-
-	/**
-	 * Add the elgato plugin connection
-	 */
-	addElgatoPluginDevice(surfaceId: string, socket: ServiceElgatoPluginSocket): SurfaceIPElgatoPlugin {
-		this.removeDevice(surfaceId)
-
-		const device = new SurfaceIPElgatoPlugin(
-			this.#handlerDependencies.controls,
-			this.#handlerDependencies.pageStore,
-			surfaceId,
-			socket
-		)
-
-		this.#createSurfaceHandler(surfaceId, 'elgato-plugin', device)
-
-		this.triggerUpdateDevicesList()
-
-		return device
 	}
 
 	surfaceExecuteExpression(
