@@ -1,12 +1,11 @@
 #!/usr/bin/env zx
-
-import { $, fs, glob, usePowerShell, argv } from 'zx'
 import path from 'path'
-import { determinePlatformInfo } from './util.mts'
-import { generateVersionString } from '../lib.mts'
-import { fetchNodejs } from '../fetch_nodejs.mts'
 import electronBuilder from 'electron-builder'
+import { $, argv, fs, glob, usePowerShell } from 'zx'
 import { fetchBuiltinSurfaceModules } from '../fetch_builtin_modules.mts'
+import { fetchNodejs } from '../fetch_nodejs.mts'
+import { generateVersionString } from '../lib.mts'
+import { determinePlatformInfo } from './util.mts'
 
 $.verbose = true
 
@@ -26,7 +25,7 @@ if (platformInfo.nodeArch) {
 const nodeVersions = await fetchNodejs(platformInfo)
 
 const runtimesDir = 'dist/node-runtimes/'
-const latestRuntimeDir = path.join(runtimesDir, 'node22')
+const latestRuntimeDir = path.join(runtimesDir, 'node26')
 await fs.remove(runtimesDir)
 await fs.mkdirp(runtimesDir)
 

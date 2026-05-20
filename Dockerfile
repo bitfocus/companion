@@ -1,6 +1,6 @@
-FROM node:22-bookworm AS companion-builder
+FROM node:26-bookworm AS companion-builder
 
-RUN corepack enable
+RUN npm install -g corepack
 
 # Installation Prep
 RUN apt-get update && apt-get install -y \
@@ -21,6 +21,12 @@ RUN yarn build:ts
 # build the application
 RUN ELECTRON=0 yarn dist
 
+# Package corepack for the production image (tar preserves symlinks, unlike COPY)
+RUN corepack enable && \
+    tar -czf /tmp/corepack.tar.gz \
+    -C / usr/local/lib/node_modules/corepack \
+    usr/local/bin/corepack usr/local/bin/yarn usr/local/bin/yarnpkg
+
 # make the production image
 FROM debian:bookworm-slim
 
@@ -37,6 +43,7 @@ RUN apt update && apt install -y \
     iputils-ping \
     libasound2 \
     libfontconfig1 \
+    libatomic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Don't run as root
@@ -45,7 +52,8 @@ RUN useradd -ms /bin/bash companion
 # setup path and corepack
 ENV PATH="$PATH:/app/node-runtimes/main/bin"
 RUN echo "PATH="${PATH}"" | tee -a /etc/environment
-RUN corepack enable
+RUN --mount=type=bind,from=companion-builder,source=/tmp/corepack.tar.gz,target=/tmp/corepack.tar.gz \
+    tar -xzf /tmp/corepack.tar.gz -C /
 
 # Create config directory and set correct permissions
 # Once docker mounts the volume, the directory will be owned by node:node
