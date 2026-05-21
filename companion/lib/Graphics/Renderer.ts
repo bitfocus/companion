@@ -26,10 +26,6 @@ import { Image } from './Image.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 
-const colorButtonYellow = 'rgb(255, 198, 0)'
-const colorWhite = 'white'
-const colorDarkGrey = 'rgba(15, 15, 15, 1)'
-
 /**
  * Shared style for lock icon display
  */
@@ -54,21 +50,6 @@ export class GraphicsRenderer {
 
 	/** Static cache for text layout computations, shared across all Image instances */
 	static #textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 5000 })
-
-	private static calculateTransforms(resolution: { width: number; height: number }) {
-		// Calculate some constants for drawing without reinventing the numbers
-		const drawScale = Math.min(resolution.width, resolution.height) / 72
-		const xOffset = (resolution.width - 72 * drawScale) / 2
-		const yOffset = (resolution.height - 72 * drawScale) / 2
-		const transformX = (x: number): number => xOffset + x * drawScale
-		const transformY = (y: number): number => yOffset + y * drawScale
-
-		return {
-			drawScale,
-			transformX,
-			transformY,
-		}
-	}
 
 	/**
 	 * Get a cached Image instance.
@@ -171,10 +152,7 @@ export class GraphicsRenderer {
 			dimensions[1],
 			resolution.oversampling,
 			async (img) => {
-				await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle, {
-					width: dimensions[0],
-					height: dimensions[1],
-				})
+				await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle)
 
 				return {
 					buffer: img.buffer(),
@@ -195,10 +173,7 @@ export class GraphicsRenderer {
 		processedStyle: ImageResultProcessedStyle
 	}> {
 		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
-			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle, {
-				width: 72,
-				height: 72,
-			})
+			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle)
 
 			return {
 				dataUrl: img.toDataURLSync(),
@@ -207,46 +182,15 @@ export class GraphicsRenderer {
 		})
 	}
 
-	static async #drawButtonImageInternal(
-		img: Image,
-		drawStyle: RendererDrawStyle,
-		resolution: { width: number; height: number }
-	): Promise<ImageResultProcessedStyle> {
+	static async #drawButtonImageInternal(img: Image, drawStyle: RendererDrawStyle): Promise<ImageResultProcessedStyle> {
 		// console.log('starting drawButtonImage '+ performance.now())
 		// console.time('drawButtonImage')
 
 		let processedStyle: ImageResultProcessedStyle
 
 		// Calculate some constants for drawing without reinventing the numbers
-		const { drawScale, transformX, transformY } = GraphicsRenderer.calculateTransforms(resolution)
 
-		// special button types
-		if (drawStyle.style == 'pageup') {
-			processedStyle = { type: 'pageup' }
-
-			img.fillColor(colorDarkGrey)
-
-			if (drawStyle.plusminus) {
-				img.drawTextLine(
-					transformX(31),
-					transformY(20),
-					drawStyle.direction_flipped ? '–' : '+',
-					colorWhite,
-					18 * drawScale
-				)
-			} else {
-				img.drawPath(
-					[
-						[transformX(46), transformY(30)],
-						[transformX(36), transformY(20)],
-						[transformX(26), transformY(30)],
-					],
-					{ color: colorWhite, width: 2 }
-				) // Arrow up path
-			}
-
-			img.drawTextLineAligned(transformX(36), transformY(39), 'UP', colorButtonYellow, 10 * drawScale, 'center', 'top')
-		} else if (drawStyle.style === 'button-layered') {
+		if (drawStyle.style === 'button-layered') {
 			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 			await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {

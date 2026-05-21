@@ -31,7 +31,6 @@ import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import { assertNever } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -67,11 +66,6 @@ interface GraphicsControllerEvents {
 	resubscribeFeedbacks: []
 }
 
-interface GraphicsOptions extends ResolveButtonStylePropertiesConfig {
-	page_direction_flipped: boolean
-	page_plusminus: boolean
-}
-
 interface RenderArgumentsButton {
 	type: 'button'
 	location: ControlLocation
@@ -93,7 +87,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Cached UserConfig values that affect button rendering
 	 */
-	readonly #drawOptions: GraphicsOptions
+	readonly #drawOptions: ResolveButtonStylePropertiesConfig
 
 	/**
 	 * Current button renders cache
@@ -230,8 +224,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.setMaxListeners(0)
 
 		this.#drawOptions = {
-			page_direction_flipped: this.#userConfigController.getKey('page_direction_flipped'),
-			page_plusminus: this.#userConfigController.getKey('page_plusminus'),
 			remove_topbar: this.#userConfigController.getKey('remove_topbar'),
 			buttons_status_icons: this.#userConfigController.getKey('buttons_status_icons'),
 		}
@@ -303,64 +295,39 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
-						let renderStyle: RendererDrawStyle | undefined
-						let cacheKey: string | undefined
+						const showButtonConfig = resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements)
 
-						switch (buttonStyle.style) {
-							case 'button-layered': {
-								const showButtonConfig = resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements)
+						const renderStyle = {
+							...buttonStyle,
 
-								renderStyle = {
-									...buttonStyle,
-
-									...showButtonConfig,
-									location: showButtonConfig.show_topbar ? location : undefined, // Only needed if the topbar is shown
-								}
-
-								const cacheKeyObj: Record<string, any> = {
-									...renderStyle,
-									elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
-								}
-								cacheKey = JSON.stringify(cacheKeyObj)
-
-								break
-							}
-							case 'pageup': {
-								renderStyle = {
-									style: buttonStyle.style,
-									plusminus: this.#drawOptions.page_plusminus,
-									direction_flipped: this.#drawOptions.page_direction_flipped,
-								}
-								cacheKey = JSON.stringify(renderStyle)
-								break
-							}
-							default:
-								assertNever(buttonStyle)
-								break
+							...showButtonConfig,
+							location: showButtonConfig.show_topbar ? location : undefined, // Only needed if the topbar is shown
 						}
 
-						if (renderStyle && cacheKey) {
-							// Check if the image is already present in the render cache and if so, return it
-							render = this.#renderLRUCache.get(cacheKey)
+						const cacheKeyObj: Record<string, any> = {
+							...renderStyle,
+							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
+						}
+						const cacheKey = JSON.stringify(cacheKeyObj)
 
-							if (!render) {
-								const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
+						// Check if the image is already present in the render cache and if so, return it
+						render = this.#renderLRUCache.get(cacheKey)
+
+						if (!render) {
+							const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
+								renderStyle,
+								CRASHED_WORKER_RETRY_COUNT
+							)
+							render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
+								this.#executePoolDrawButtonBareImage(
 									renderStyle,
+									{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+									rotation,
+									format,
 									CRASHED_WORKER_RETRY_COUNT
 								)
-								render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
-									this.#executePoolDrawButtonBareImage(
-										renderStyle,
-										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-										rotation,
-										format,
-										CRASHED_WORKER_RETRY_COUNT
-									)
-								)
-								this.#renderLRUCache.set(cacheKey, render)
-							}
-						} else {
-							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
+							)
+							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
 						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
@@ -504,18 +471,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	/**
-	 * Redraw the page controls on every page
-	 */
-	invalidatePageControls(): void {
-		const allControls = this.controlsStore.getAllControls()
-		for (const control of allControls.values()) {
-			if (control.type === 'pageup' || control.type === 'pagedown') {
-				this.invalidateControl(control.controlId)
-			}
-		}
-	}
-
-	/**
 	 * Draw a preview of a button
 	 */
 	async drawPreview(
@@ -558,13 +513,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @param value - the saved value
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
-		if (key == 'page_direction_flipped') {
-			this.#drawOptions.page_direction_flipped = !!value
-			this.invalidatePageControls()
-		} else if (key == 'page_plusminus') {
-			this.#drawOptions.page_plusminus = !!value
-			this.invalidatePageControls()
-		} else if (key == 'remove_topbar') {
+		if (key == 'remove_topbar') {
 			this.#drawOptions.remove_topbar = !!value
 			this.#logger.silly('Topbar removed')
 			// Delay redrawing to give connections a chance to adjust

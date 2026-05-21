@@ -29,6 +29,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { pageDownElements } from '../Controls/ControlTypes/PageDown.js'
 import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
+import { pageUpElements } from '../Controls/ControlTypes/PageUp.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { upgradeImport } from '../Data/Upgrade.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -374,8 +375,7 @@ export class ImportExportController {
 							break
 						case 'pageup':
 							drawType = 'pageup'
-							// TODO
-							rawElements = structuredClone(pageNumberElements)
+							rawElements = structuredClone(pageUpElements)
 							break
 						case 'pagedown':
 							drawType = 'pagedown'
