@@ -473,7 +473,7 @@ jobs:
       - name: build & package
         shell: bash
         run: |
-          npm install -g corepack
+          npm install -g corepack --force
 
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
