@@ -169,7 +169,7 @@ export class GraphicsRenderer {
 
 			img.fillColor(colorDarkGrey)
 
-			if (drawStyle.pageNumber <= 0) {
+			if (!drawStyle.pageNumber || drawStyle.pageNumber <= 0) {
 				// Preview (no location)
 				img.drawTextLineAligned(36, 18, 'PAGE', colorButtonYellow, 10, 'center', 'top')
 				img.drawTextLineAligned(36, 32, 'x', colorWhite, 18, 'center', 'top')
