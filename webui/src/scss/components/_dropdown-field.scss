@@ -2,6 +2,7 @@
 
 .dropdown-field {
 	display: block;
+	min-width: 0;
 
 	&.dropdown-field-invalid {
 		.dropdown-field-select-value {
@@ -15,6 +16,8 @@
 		position: relative;
 		display: flex;
 		align-items: center;
+		width: 100%;
+		min-width: 0;
 		cursor: text;
 
 		&[data-popup-open],
@@ -109,7 +112,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		padding: 0.375rem 0.75rem;
+		padding: 0.375rem 2rem;
 		border: none;
 		background: transparent;
 		outline: none;

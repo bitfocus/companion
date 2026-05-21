@@ -166,6 +166,11 @@
 			display: flex;
 			flex-direction: row;
 			column-gap: 0.5rem;
+
+			> * {
+				// Avoid blowout when content is too wide
+				min-width: 0;
+			}
 		}
 
 		.cell-name {
