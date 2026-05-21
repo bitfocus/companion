@@ -20,6 +20,11 @@ if [ -d /app/module-local-dev ]; then
       else
         yarn workspaces focus --production
       fi
+
+      # Some modules have a build script, but many do not
+      if jq -e '.scripts.build' package.json > /dev/null; then
+        yarn run build
+      fi
     fi
   done
 fi
