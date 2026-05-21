@@ -21,6 +21,7 @@
 @use 'scss/cloud';
 @use 'scss/controls';
 @use 'scss/instances';
+@use 'scss/variables-table';
 @use 'scss/loading';
 @use 'scss/log';
 @use 'scss/presets';
@@ -131,13 +132,13 @@ body {
 	letter-spacing: -0.15;
 	border-radius: 6;
 	display: inline-block;
+}
 
-	&.autowrap {
-		max-width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
+.autowrap {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .toast {

@@ -1,9 +1,10 @@
 import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { faCopy, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -71,6 +72,15 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	const clearFilter = useCallback(() => setFilter(''), [])
 	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
+	const parentRef = useRef<HTMLDivElement | null>(null)
+
+	const virtualizer = useVirtualizer({
+		count: candidates?.length ?? 0,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 45,
+		overscan: 5,
+	})
+
 	if (variableDefinitions.length === 0) {
 		return (
 			<StaticAlert color="warning" role="alert">
@@ -107,45 +117,52 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 					</>
 				)}
 			</p>
-			<div className="variables-table-scroller ">
-				<table className="table table-responsive-sm variables-table">
-					<thead>
-						<tr>
-							<th>Variable</th>
-							<th>Value</th>
-						</tr>
-					</thead>
-					<tbody>
-						{errorMsg && (
-							<tr>
-								<td colSpan={2}>
-									<StaticAlert color="warning" role="alert">
-										Failed to build list of variables:
-										<br />
-										{errorMsg}
-									</StaticAlert>
-								</td>
-							</tr>
-						)}
-						{candidates?.length === 0 && !!filter && (
-							<tr>
-								<td colSpan={2}>
-									<NonIdealState icon={faSearch} text="No variables match the filter" />
-								</td>
-							</tr>
-						)}
-						{candidates?.map((variable) => (
-							<VariablesTableRow
-								key={variable.name}
-								variable={variable}
-								value={variableValues.get(variable.name)}
-								label={label}
-								onCopied={onCopied}
-								panelCollapseHelper={panelCollapseHelper}
-							/>
-						))}
-					</tbody>
-				</table>
+			<div className="variables-table-scroller" ref={parentRef}>
+				<div className="variables-table-header">
+					<div>Variable</div>
+					<div>Value</div>
+				</div>
+				{errorMsg && (
+					<StaticAlert color="warning" role="alert">
+						Failed to build list of variables:
+						<br />
+						{errorMsg}
+					</StaticAlert>
+				)}
+				{candidates?.length === 0 && !!filter && <NonIdealState icon={faSearch} text="No variables match the filter" />}
+				<div
+					style={{
+						height: virtualizer.getTotalSize(),
+						width: '100%',
+						position: 'relative',
+					}}
+				>
+					{virtualizer.getVirtualItems().map((virtualRow) => {
+						const variable = candidates![virtualRow.index]
+						return (
+							<div
+								key={virtualRow.key}
+								data-index={virtualRow.index}
+								ref={virtualizer.measureElement}
+								style={{
+									position: 'absolute',
+									top: 0,
+									left: 0,
+									width: '100%',
+									transform: `translateY(${virtualRow.start}px)`,
+								}}
+							>
+								<VariablesTableRow
+									variable={variable}
+									value={variableValues.get(variable.name)}
+									label={label}
+									onCopied={onCopied}
+									panelCollapseHelper={panelCollapseHelper}
+								/>
+							</div>
+						)
+					})}
+				</div>
 			</div>
 		</>
 	)
@@ -169,8 +186,8 @@ const VariablesTableRow = observer(function VariablesTableRow({
 	const variableId = `$(${label}:${variable.name})`
 
 	return (
-		<tr>
-			<td>
+		<div className="variables-table-row">
+			<div className="variables-table-cell">
 				<div className="grid grid-col">
 					<div className="flex flex-row ">
 						<span className="variable-style autowrap" title={variableId}>
@@ -182,17 +199,19 @@ const VariablesTableRow = observer(function VariablesTableRow({
 							</CButton>
 						</CopyToClipboard>
 					</div>
-					<div>{variable.description}</div>
+					<div className="autowrap" title={variable.description}>
+						{variable.description}
+					</div>
 				</div>
-			</td>
-			<td>
+			</div>
+			<div className="variables-table-cell">
 				<VariableValueDisplay
 					value={toJS(value)}
 					collapsePanelId={variable.name}
 					panelCollapseHelper={panelCollapseHelper}
 					onCopied={onCopied}
 				/>
-			</td>
-		</tr>
+			</div>
+		</div>
 	)
 })
