@@ -12,7 +12,7 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 
 	const overflowing = userConfig.properties && surfaces.getSurfacesOverflowingBounds(userConfig.properties.gridSize)
-	if (!overflowing || overflowing.surfaces.length === 0) return null
+	if (!overflowing || overflowing.surfaces.length === 0 || !userConfig.properties.gridSizePromptGrow) return null
 
 	const doAutoResize = () => {
 		if (!overflowing) return
