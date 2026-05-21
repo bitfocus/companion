@@ -3,7 +3,7 @@ import type { SomeButtonGraphicsDrawElement } from './StyleLayersModel.js'
 
 export type DrawStyleModel =
 	| {
-			style: 'pageup' | 'pagedown'
+			style: 'pageup'
 	  }
 	| DrawStyleLayeredButtonModel
 

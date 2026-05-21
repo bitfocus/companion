@@ -10,7 +10,7 @@ export interface RendererButtonStyle extends DrawStyleLayeredButtonModel {
 }
 
 export interface RendererPageUpDownStyle {
-	style: 'pageup' | 'pagedown'
+	style: 'pageup'
 	plusminus: boolean
 	direction_flipped: boolean
 }

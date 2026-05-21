@@ -246,39 +246,6 @@ export class GraphicsRenderer {
 			}
 
 			img.drawTextLineAligned(transformX(36), transformY(39), 'UP', colorButtonYellow, 10 * drawScale, 'center', 'top')
-		} else if (drawStyle.style == 'pagedown') {
-			processedStyle = { type: 'pagedown' }
-
-			img.fillColor(colorDarkGrey)
-
-			if (drawStyle.plusminus) {
-				img.drawTextLine(
-					transformX(31),
-					transformY(36),
-					drawStyle.direction_flipped ? '+' : '–',
-					colorWhite,
-					18 * drawScale
-				)
-			} else {
-				img.drawPath(
-					[
-						[transformX(46), transformY(40)],
-						[transformX(36), transformY(50)],
-						[transformX(26), transformY(40)],
-					],
-					{ color: colorWhite, width: 2 }
-				) // Arrow down path
-			}
-
-			img.drawTextLineAligned(
-				transformX(36),
-				transformY(23),
-				'DOWN',
-				colorButtonYellow,
-				10 * drawScale,
-				'center',
-				'top'
-			)
 		} else if (drawStyle.style === 'button-layered') {
 			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 

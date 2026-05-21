@@ -325,8 +325,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 								break
 							}
-							case 'pageup':
-							case 'pagedown': {
+							case 'pageup': {
 								renderStyle = {
 									style: buttonStyle.style,
 									plusminus: this.#drawOptions.page_plusminus,

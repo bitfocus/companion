@@ -132,6 +132,10 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			() => {
 				const values: VariableValues = {
 					installation_name: this.#userConfigController.getKey('installName'),
+
+					// Some internal values needed for the drawing
+					_graphics_page_plusminus: !!this.#userConfigController.getKey('page_plusminus'),
+					_graphics_page_direction_flipped: !!this.#userConfigController.getKey('page_direction_flipped'),
 				}
 
 				this.emit('setVariables', values)

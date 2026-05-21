@@ -27,6 +27,7 @@ import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { pageDownElements } from '../Controls/ControlTypes/PageDown.js'
 import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { upgradeImport } from '../Data/Upgrade.js'
@@ -378,8 +379,7 @@ export class ImportExportController {
 							break
 						case 'pagedown':
 							drawType = 'pagedown'
-							// TODO
-							rawElements = structuredClone(pageNumberElements)
+							rawElements = structuredClone(pageDownElements)
 							break
 						default:
 							assertNever(controlObjLayered)
