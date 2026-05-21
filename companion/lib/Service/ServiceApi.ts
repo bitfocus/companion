@@ -19,6 +19,13 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesCustomVariableEvents } from '../Variables/CustomVariable.js'
 import type { VariablesValuesEvents } from '../Variables/Values.js'
 
+interface ServiceApiEvents {
+	variables_changed: VariablesValuesEvents['variables_changed']
+	custom_variable_definition_changed: VariablesCustomVariableEvents['custom_variable_definition_changed']
+	action_recorder_is_running: ActionRecorderEvents['action_recorder_is_running']
+	updateButtonState: ControlCommonEvents['updateButtonState']
+}
+
 /**
  * Class providing an abstract api for consumption by services.
  *
@@ -34,13 +41,6 @@ import type { VariablesValuesEvents } from '../Variables/Values.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-
-type ServiceApiEvents =
-	| Pick<VariablesValuesEvents, 'variables_changed'>
-	| Pick<ActionRecorderEvents, 'action_recorder_is_running'>
-	| Pick<VariablesCustomVariableEvents, 'custom_variable_definition_changed'>
-	| Pick<ControlCommonEvents, 'updateButtonState'>
-
 export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	readonly #appInfo: AppInfo
 	readonly #pageStore: IPageStore
