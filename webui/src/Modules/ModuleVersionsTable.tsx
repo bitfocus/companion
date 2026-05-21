@@ -179,7 +179,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 
 	return (
 		<tr>
-			<td>
+			<td className="compact">
 				{installedInfo ? (
 					<ModuleUninstallButton
 						moduleType={moduleType}
@@ -217,7 +217,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 					</>
 				)}
 			</td>
-			<td>
+			<td className="compact">
 				<ModuleVersionUsageIcon matchingConnections={matchingConnections} isInstalled={!!installedInfo} />
 				{helpPath && (
 					<div className="float_right" onClick={doShowHelp}>
