@@ -38,6 +38,7 @@ COPY --from=companion-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
 RUN apt update && apt install -y \
     procps \
     curl \
+    jq \
     libusb-1.0-0 \
     libudev1 \
     iputils-ping \
