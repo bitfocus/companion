@@ -1,0 +1,13 @@
+diff --git a/lib/src/constants.js b/lib/src/constants.js
+index 78e210a72b373102bcd5da293aa3e5ad46cf3f6e..90b8defceb1d575fd4032293cf182eda552c85e3 100644
+--- a/lib/src/constants.js
++++ b/lib/src/constants.js
+@@ -24,7 +24,7 @@ exports.mergeableImportFlavors = [
+ // Update: Started being included in node 24 after https://github.com/nodejs/node/pull/56185
+ exports.BUILTIN_MODULES_REGEX_STR = `^(?:${module_1.builtinModules
+     .flatMap((m) => (m.startsWith('node:') ? m : [`node:${m}`, m]))
+-    .join('|')}|node:test)$`;
++    .join('|')}|node:test|node:sqlite)$`;
+ exports.BUILTIN_MODULES_SPECIAL_WORD = '<BUILTIN_MODULES>';
+ /**
+  * Used to mark not otherwise matched imports should be placed

@@ -1,6 +1,6 @@
 import path from 'node:path'
-import fs from 'fs-extra'
 import { DatabaseSync, backup as SqliteBackup, type StatementSync } from 'node:sqlite'
+import fs from 'fs-extra'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'

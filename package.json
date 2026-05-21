@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
+    "@ianvs/prettier-plugin-sort-imports": "patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch",
     "@tanstack/eslint-plugin-query": "^5.100.10",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/node": "^25.8.0",

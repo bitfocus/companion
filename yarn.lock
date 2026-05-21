@@ -1855,7 +1855,7 @@ __metadata:
   resolution: "@companion-app/workspace@workspace:."
   dependencies:
     "@eslint/js": "npm:^10.0.1"
-    "@ianvs/prettier-plugin-sort-imports": "npm:^4.7.1"
+    "@ianvs/prettier-plugin-sort-imports": "patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch"
     "@tanstack/eslint-plugin-query": "npm:^5.100.10"
     "@types/express-serve-static-core": "npm:^5.1.1"
     "@types/node": "npm:^25.8.0"
@@ -4263,7 +4263,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@ianvs/prettier-plugin-sort-imports@npm:^4.7.1":
+"@ianvs/prettier-plugin-sort-imports@npm:4.7.1":
   version: 4.7.1
   resolution: "@ianvs/prettier-plugin-sort-imports@npm:4.7.1"
   dependencies:
@@ -4288,6 +4288,34 @@ __metadata:
     prettier-plugin-ember-template-tag:
       optional: true
   checksum: 10c0/cda335ef13b4f95825c7667a4962bd679c0065863572f9d3bd715f2d2a463e56e93808dc7b5c24ecca33d63ddf2159780cfdb3d78f30c828b6efb054972dfc5b
+  languageName: node
+  linkType: hard
+
+"@ianvs/prettier-plugin-sort-imports@patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch":
+  version: 4.7.1
+  resolution: "@ianvs/prettier-plugin-sort-imports@patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch::version=4.7.1&hash=495d8c"
+  dependencies:
+    "@babel/generator": "npm:^7.26.2"
+    "@babel/parser": "npm:^7.26.2"
+    "@babel/traverse": "npm:^7.25.9"
+    "@babel/types": "npm:^7.26.0"
+    semver: "npm:^7.5.2"
+  peerDependencies:
+    "@prettier/plugin-oxc": ^0.0.4 || ^0.1.0
+    "@vue/compiler-sfc": 2.7.x || 3.x
+    content-tag: ^4.0.0
+    prettier: 2 || 3 || ^4.0.0-0
+    prettier-plugin-ember-template-tag: ^2.1.0
+  peerDependenciesMeta:
+    "@prettier/plugin-oxc":
+      optional: true
+    "@vue/compiler-sfc":
+      optional: true
+    content-tag:
+      optional: true
+    prettier-plugin-ember-template-tag:
+      optional: true
+  checksum: 10c0/5a897a5263db3b91b698d5c59aa0397bb3440fc1a7610d8e35e1aacb8154a4d24e1489e25155dfa5a202bbf62ca10969d19a42d73c24c97bcdef1d7030bd150c
   languageName: node
   linkType: hard
 
