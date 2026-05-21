@@ -291,6 +291,17 @@ export class ControlButtonLayered
 			.visitDrawElements(this.#drawElements)
 	}
 
+	/**
+	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
+	 */
+	triggerLocationHasChanged(): void {
+		super.triggerLocationHasChanged()
+
+		// Ensure any dependencies on the location in the drawing are updated
+		this.#elementConversionCache.clear()
+		this.triggerRedraw()
+	}
+
 	layeredStyleAddElement(type: string, index: number | null): string {
 		let newElement: SomeButtonGraphicsElement
 
