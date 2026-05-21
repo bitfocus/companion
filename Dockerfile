@@ -1,4 +1,4 @@
-FROM node:26-bookworm AS companion-builder
+FROM node:26-trixie AS companion-builder
 
 RUN npm install -g corepack
 
@@ -28,7 +28,7 @@ RUN corepack enable && \
     usr/local/bin/corepack usr/local/bin/yarn usr/local/bin/yarnpkg
 
 # make the production image
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 WORKDIR /app
 COPY --from=companion-builder /app/dist	/app/

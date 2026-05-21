@@ -1,11 +1,11 @@
-FROM node:26-bookworm AS corepack-setup
+FROM node:26-trixie AS corepack-setup
 # This is a bit of a hack, but we need corepack from somewhere, and dont' have npm inside the shipped binaries
 RUN npm install -g corepack && corepack enable && \
     tar -czf /tmp/corepack.tar.gz \
     -C / usr/local/lib/node_modules/corepack \
     usr/local/bin/corepack usr/local/bin/yarn usr/local/bin/yarnpkg
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG linux_x64_url
 ARG linux_arm64_url
