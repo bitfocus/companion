@@ -1,5 +1,19 @@
 import type { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
+import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import type {
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
+	type DrawStyleLayeredButtonModel,
+} from '@companion-app/shared/Model/StyleModel.js'
+import { ConvertSomeButtonGraphicsElementForDrawing } from '../../Graphics/ConvertGraphicsElements.js'
+import { ElementConversionCache } from '../../Graphics/ElementConversionCache.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import type {
@@ -10,6 +24,63 @@ import type {
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 } from '../IControlFragments.js'
+import { CreateElementOfType } from './Button/LayerDefaults.js'
+
+const emptyMap: ReadonlyMap<string, never> = new Map<string, never>()
+
+export const pageNumberElements: SomeButtonGraphicsElement[] = [
+	{
+		type: 'canvas',
+		id: 'canvas',
+		name: 'Canvas',
+		decoration: exprVal(ButtonGraphicsDecorationType.None),
+		showStatusIcons: exprVal(ButtonGraphicsShowStatusIcons.None),
+		usage: ButtonGraphicsElementUsage.Automatic,
+	},
+	{
+		...(CreateElementOfType('box') as ButtonGraphicsBoxElement),
+		color: exprVal(0x0f0f0f), // Grey background
+	},
+
+	{
+		// If page has a name
+		...(CreateElementOfType('group') as ButtonGraphicsGroupElement),
+		enabled: exprExpr('!!$(this:page_name) && toLowerCase($(this:page_name)) != "page" && $(this:page_name) != "$NA"'),
+		children: [
+			{
+				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+				text: exprVal('$(this:page_name)'),
+				color: exprVal(0xffffff),
+				fontsize: exprVal('30'),
+			},
+		],
+	},
+
+	{
+		// No name, default display
+		...(CreateElementOfType('group') as ButtonGraphicsGroupElement),
+		enabled: exprExpr('!$(this:page_name) || toLowerCase($(this:page_name)) == "page" || $(this:page_name) == "$NA"'),
+		children: [
+			{
+				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+				text: exprVal('PAGE'),
+				color: exprVal(0xffc600), // Yellow color
+				fontsize: exprVal('16.5'),
+				valign: exprVal('bottom'),
+				height: exprVal(40),
+			},
+			{
+				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+				text: exprExpr('getVariable("this:page") || "x"'),
+				color: exprVal(0xffffff),
+				fontsize: exprVal('30'),
+				valign: exprVal('top'),
+				y: exprVal(45),
+				height: exprVal(55),
+			},
+		],
+	},
+]
 
 /**
  * Class for a pagenum button control.
@@ -47,6 +118,16 @@ export class ControlButtonPageNumber
 	readonly supportsPushed = false
 
 	/**
+	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
+	 */
+	#lastDrawVariables: ReadonlySet<string> | null = null
+
+	/**
+	 * Cache for element conversion results (for future per-element caching optimization)
+	 */
+	readonly #elementConversionCache = new ElementConversionCache()
+
+	/**
 	 * @param registry - the application core
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
@@ -71,13 +152,57 @@ export class ControlButtonPageNumber
 	}
 
 	/**
+	 * Prepare this control for deletion
+	 */
+	destroy(): void {
+		this.#elementConversionCache.clear()
+		super.destroy()
+	}
+
+	/**
 	 * Get the complete style object of a button
 	 * @returns the processed style of the button
 	 */
-	getLastDrawStyle(): DrawStyleModel {
-		return {
-			style: 'pagenum',
+	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
+	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
+		return this.#lastDrawStyle
+	}
+
+	/**
+	 * Get the complete style object of a button
+	 * @returns the processed style of the button
+	 */
+	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
+		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		const parser = this.deps.variableValues.createVariablesAndExpressionParser(location, null, null)
+
+		// Compute the new drawing, using the element conversion cache for per-element caching
+		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
+			this.deps.instance.definitions,
+			parser,
+			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
+			pageNumberElements,
+			emptyMap,
+			true,
+			this.#elementConversionCache
+		)
+		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
+
+		const result: DrawStyleLayeredButtonModel = {
+			pushed: false,
+			stepCurrent: 0,
+			stepCount: 0,
+			button_status: undefined,
+			action_running: undefined,
+
+			elements,
+
+			style: 'button-layered',
+			drawType: 'pagenum',
 		}
+
+		this.#lastDrawStyle = result
+		return result
 	}
 
 	/**
@@ -98,7 +223,9 @@ export class ControlButtonPageNumber
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
 	triggerLocationHasChanged(): void {
-		// Nothing to do
+		// Ensure any dependencies on the location in the drawing are updated
+		this.#elementConversionCache.clear()
+		this.triggerRedraw()
 	}
 
 	/**
@@ -126,7 +253,18 @@ export class ControlButtonPageNumber
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
 	}
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
-		// Nothing to do
+	/**
+	 * Propagate variable changes
+	 * @param allChangedVariables - variables with changes
+	 */
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+		if (!this.#lastDrawVariables) return
+		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
+
+		// Queue invalidation for cached elements that use any of the changed variables
+		this.#elementConversionCache.queueInvalidateVariables(allChangedVariables)
+
+		this.logger.silly('variable changed in button ' + this.controlId)
+		this.triggerRedraw()
 	}
 }

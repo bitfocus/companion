@@ -15,6 +15,11 @@ import type { ImageResultProcessedStyle } from './ImageResult.js'
 
 export class GraphicsLayeredProcessedStyleGenerator {
 	static Generate(drawStyle: DrawStyleLayeredButtonModel): ImageResultProcessedStyle {
+		if (drawStyle.drawType !== 'button') {
+			// Special case for backwards compatibility
+			return { type: drawStyle.drawType }
+		}
+
 		const canvasLayer = drawStyle.elements.find((e) => e.type === 'canvas')
 		const textLayer = GraphicsLayeredProcessedStyleGenerator.SelectLayerForUsage<ButtonGraphicsTextDrawElement>(
 			drawStyle.elements,

@@ -279,47 +279,6 @@ export class GraphicsRenderer {
 				'center',
 				'top'
 			)
-		} else if (drawStyle.style == 'pagenum') {
-			processedStyle = { type: 'pagenum' }
-
-			img.fillColor(colorDarkGrey)
-
-			if (drawStyle.pageNumber <= 0) {
-				// Preview (no location)
-				img.drawTextLineAligned(
-					transformX(36),
-					transformY(18),
-					'PAGE',
-					colorButtonYellow,
-					10 * drawScale,
-					'center',
-					'top'
-				)
-				img.drawTextLineAligned(transformX(36), transformY(32), 'x', colorWhite, 18 * drawScale, 'center', 'top')
-			} else if (!drawStyle.pageName || drawStyle.pageName.toLowerCase() == 'page') {
-				img.drawTextLine(transformX(23), transformY(18), 'PAGE', colorButtonYellow, 10 * drawScale)
-				img.drawTextLineAligned(
-					transformX(36),
-					transformY(32),
-					'' + drawStyle.pageNumber,
-					colorWhite,
-					18 * drawScale,
-					'center',
-					'top'
-				)
-			} else {
-				img.drawAlignedText(
-					0,
-					0,
-					img.width,
-					img.height,
-					drawStyle.pageName,
-					colorWhite,
-					18 * drawScale,
-					'center',
-					'center'
-				)
-			}
 		} else if (drawStyle.style === 'button-layered') {
 			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 

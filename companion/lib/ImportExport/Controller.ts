@@ -14,7 +14,7 @@ import path from 'node:path'
 import type express from 'express'
 import workerPool from 'workerpool'
 import z from 'zod'
-import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
 	zodClientImportOrResetSelection,
@@ -23,7 +23,11 @@ import {
 	type ClientPageInfo,
 	type ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
+import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { upgradeImport } from '../Data/Upgrade.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -354,7 +358,33 @@ export class ImportExportController {
 					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
 					if (!controlObj) return null
 
-					const controlObjLayered = controlObj as LayeredButtonModel
+					const controlObjLayered = controlObj as SomeButtonModel
+
+					let drawType: RendererButtonStyle['drawType']
+					let rawElements: SomeButtonGraphicsElement[]
+					switch (controlObjLayered.type) {
+						case 'button-layered':
+							drawType = 'button'
+							rawElements = controlObjLayered.style.layers
+							break
+						case 'pagenum':
+							drawType = 'pagenum'
+							rawElements = structuredClone(pageNumberElements)
+							break
+						case 'pageup':
+							drawType = 'pageup'
+							// TODO
+							rawElements = structuredClone(pageNumberElements)
+							break
+						case 'pagedown':
+							drawType = 'pagedown'
+							// TODO
+							rawElements = structuredClone(pageNumberElements)
+							break
+						default:
+							assertNever(controlObjLayered)
+							return null
+					}
 
 					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
 
@@ -363,13 +393,13 @@ export class ImportExportController {
 						this.#instancesController.definitions,
 						parser,
 						this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
-						controlObjLayered.style.layers,
+						rawElements,
 						new Map(),
 						true,
 						null
 					)
 
-					const res = await this.#graphicsController.drawPreview(elements)
+					const res = await this.#graphicsController.drawPreview(drawType, elements)
 					return res?.style ? (res?.asDataUrl ?? null) : null
 				}),
 

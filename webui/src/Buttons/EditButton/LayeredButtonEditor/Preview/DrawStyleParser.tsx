@@ -298,6 +298,7 @@ class LayeredButtonDrawStyleParser {
 			// Emit the new elements
 			this.#changed({
 				style: 'button-layered',
+				drawType: 'button',
 
 				elements,
 

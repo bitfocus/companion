@@ -303,8 +303,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
-						const pagename = this.#pageStore.getPageName(location.pageNumber)
-
 						let renderStyle: RendererDrawStyle | undefined
 						let cacheKey: string | undefined
 
@@ -333,15 +331,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									style: buttonStyle.style,
 									plusminus: this.#drawOptions.page_plusminus,
 									direction_flipped: this.#drawOptions.page_direction_flipped,
-								}
-								cacheKey = JSON.stringify(renderStyle)
-								break
-							}
-							case 'pagenum': {
-								renderStyle = {
-									style: 'pagenum',
-									pageNumber: location.pageNumber,
-									pageName: pagename,
 								}
 								cacheKey = JSON.stringify(renderStyle)
 								break
@@ -530,9 +519,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Draw a preview of a button
 	 */
-	async drawPreview(elements: SomeButtonGraphicsDrawElement[]): Promise<ImageResult> {
+	async drawPreview(
+		drawType: RendererButtonStyle['drawType'],
+		elements: SomeButtonGraphicsDrawElement[]
+	): Promise<ImageResult> {
 		const drawStyle: RendererButtonStyle = {
 			style: 'button-layered',
+			drawType,
 
 			elements: elements,
 

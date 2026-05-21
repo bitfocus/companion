@@ -266,6 +266,7 @@ export class ControlButtonPreset
 			button_status: this.button_status,
 
 			style: 'button-layered',
+			drawType: 'button',
 		}
 
 		this.#lastDrawStyle = result
