@@ -1,6 +1,3 @@
-import { CNav, CNavItem, CNavLink, CTabContent, CTabPane } from '@coreui/react'
-import { faImage } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
@@ -35,27 +32,16 @@ const RouteComponent = observer(function RouteComponent() {
 	}
 
 	return (
-		<>
-			<CNav variant="tabs" role="tablist">
-				<CNavItem>
-					<CNavLink active>
-						<FontAwesomeIcon icon={faImage} /> Edit Image
-					</CNavLink>
-				</CNavItem>
-			</CNav>
-			<CTabContent>
-				<CTabPane data-tab="edit" visible>
-					<MyErrorBoundary>
-						<ImageLibraryEditor
-							key={imageName}
-							selectedImageName={imageName}
-							onDeleteImage={handleDeleteImage}
-							onImageNameChanged={handleImageNameChanged}
-						/>
-					</MyErrorBoundary>
-				</CTabPane>
-			</CTabContent>
-		</>
+		<div className="secondary-panel-simple-body">
+			<MyErrorBoundary>
+				<ImageLibraryEditor
+					key={imageName}
+					selectedImageName={imageName}
+					onDeleteImage={handleDeleteImage}
+					onImageNameChanged={handleImageNameChanged}
+				/>
+			</MyErrorBoundary>
+		</div>
 	)
 })
 
