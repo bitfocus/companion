@@ -1,6 +1,6 @@
 import { Combobox } from '@base-ui/react/combobox'
 import classNames from 'classnames'
-import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
+import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon, XIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
@@ -8,6 +8,7 @@ import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Mod
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
 import { useFuzzyChoices, type FuzzyChoice, type FuzzyGroup } from '~/Components/DropdownInputField/useFuzzyChoices.js'
 import { useComputed } from '~/Resources/util.js'
+import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import type { DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 import { useRegex } from './useRegex.js'
@@ -109,19 +110,23 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	const filteredItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
 		if (!inputValue) return allItems
 
-		const filterFlat = (items: FuzzyChoice[]): FuzzyChoice[] =>
-			items.filter((o) => (fuzzySingle(inputValue, o.fuzzy)?.score ?? 0) >= 0.5)
-
 		const result: Array<FuzzyChoice | FuzzyGroup> = []
 
+		// Batch root-level choices between groups so they get sorted together by score
+		const pendingRoot: FuzzyChoice[] = []
 		for (const item of allItems) {
 			if ('items' in item) {
-				const filtered = filterFlat(item.items)
+				if (pendingRoot.length > 0) {
+					result.push(...fuzzyFilterSort(pendingRoot, inputValue))
+					pendingRoot.length = 0
+				}
+				const filtered = fuzzyFilterSort(item.items, inputValue)
 				if (filtered.length > 0) result.push({ ...item, items: filtered })
 			} else {
-				if ((fuzzySingle(inputValue, item.fuzzy)?.score ?? 0) >= 0.5) result.push(item)
+				pendingRoot.push(item)
 			}
 		}
+		if (pendingRoot.length > 0) result.push(...fuzzyFilterSort(pendingRoot, inputValue))
 
 		if (syntheticItem) result.unshift(syntheticItem)
 

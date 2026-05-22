@@ -1,5 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
-import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
+import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon } from 'lucide-react'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
@@ -12,14 +12,16 @@ import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { fuzzyFilterSort } from '~/util/fuzzy.js'
 
 interface AddEntityOption extends DropdownChoice {
-	isRecent: boolean
 	sortKey: string
 	fuzzy: ReturnType<typeof fuzzyPrepare>
 }
 interface AddEntityGroup {
 	id: string
+	showWhenUnfiltered: boolean
+
 	label: string
 	items: AddEntityOption[]
 }
@@ -57,7 +59,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 
 				const optionLabel = `${label}: ${definition.label}`
 				connectionOptions.push({
-					isRecent: false,
 					id: `${connectionId}:${definitionId}`,
 					label: optionLabel,
 					sortKey: String(definition.sortKey ?? definition.label),
@@ -74,7 +75,12 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		for (const connection of connections.sortedConnections()) {
 			pushConnection(connection.id, connection.label)
 		}
-		groups.push({ id: '__all__', label: '', items: allConnectionOptions })
+		groups.push({
+			id: '__all__',
+			label: '',
+			showWhenUnfiltered: false,
+			items: allConnectionOptions,
+		})
 
 		if (feedbackListType === FeedbackEntitySubType.Value) {
 			// Show the builtin value type options as special, to increase visibility
@@ -91,7 +97,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 
 					const optionLabel = `internal: ${definition.label}`
 					commonOptions.push({
-						isRecent: true, // Not really, but should behave the same
 						id: `internal:${definitionId}`,
 						label: optionLabel,
 						sortKey: definition.sortKey ?? definition.label,
@@ -102,6 +107,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				groups.push({
 					id: '__common__',
 					label: 'Common',
+					showWhenUnfiltered: true,
 					items: commonOptions,
 				})
 			}
@@ -120,7 +126,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 			const optionLabel = `${connectionLabel}: ${definition.label}`
 			recents.push({
-				isRecent: true,
 				id: `${connectionId}:${definitionId}`,
 				label: optionLabel,
 				sortKey: definition.sortKey ?? definition.label,
@@ -130,6 +135,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		groups.push({
 			id: '__recent__',
 			label: 'Recently Used',
+			showWhenUnfiltered: true,
 			items: recents,
 		})
 
@@ -159,32 +165,19 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	}, [])
 
 	const filterOptions = useComputed<Array<AddEntityGroup> | undefined>(() => {
-		const filterArray = <T extends AddEntityOption | AddEntityGroup>(options: Array<T>) => {
-			const res: Array<T> = []
+		const res: Array<AddEntityGroup> = []
 
-			for (const option of options) {
-				if ('items' in option) {
-					const children = filterArray(option.items)
-					if (children.length === 0) {
-						continue
-					}
-
-					res.push({
-						...option,
-						items: children,
-					})
-				} else {
-					const include = inputValue
-						? !option.isRecent && (fuzzySingle(inputValue, option.fuzzy)?.score ?? 0) >= 0.5
-						: option.isRecent
-					if (include) res.push(option)
-				}
+		for (const group of options) {
+			if (inputValue) {
+				if (group.showWhenUnfiltered) continue
+				const items = fuzzyFilterSort(group.items, inputValue)
+				if (items.length > 0) res.push({ ...group, items })
+			} else {
+				if (group.showWhenUnfiltered && group.items.length > 0) res.push(group)
 			}
-
-			return res
 		}
 
-		return toJS(filterArray(options))
+		return toJS(res)
 	}, [options, inputValue])
 
 	return (

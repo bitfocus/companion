@@ -2,7 +2,7 @@ import { Combobox } from '@base-ui/react/combobox'
 import { CButton, CInputGroup } from '@coreui/react'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
+import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
@@ -11,6 +11,7 @@ import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { fuzzyFilterSort } from '~/util/fuzzy'
 
 interface ButtonGridHeaderProps {
 	pageNumber: number
@@ -95,7 +96,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 
 	const filteredItems = useComputed<DropdownChoice[]>(() => {
 		if (!inputValue) return choiceOptions
-		return choiceOptions.filter((o) => (fuzzySingle(inputValue, o.fuzzy)?.score ?? 0) >= 0.5)
+		return fuzzyFilterSort(choiceOptions, inputValue)
 	}, [choiceOptions, inputValue])
 
 	return (

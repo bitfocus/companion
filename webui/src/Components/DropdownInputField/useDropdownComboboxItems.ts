@@ -1,6 +1,7 @@
-import { prepare as fuzzyPrepare, single as fuzzySingle } from 'fuzzysort'
+import { prepare as fuzzyPrepare } from 'fuzzysort'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { useComputed } from '~/Resources/util.js'
+import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import type { FuzzyChoice, FuzzyGroup } from './useFuzzyChoices.js'
 
 interface UseDropdownComboboxItemsParams {
@@ -81,18 +82,23 @@ export function useDropdownComboboxItems({
 
 		if (!fuzzyInput) return allItems
 
-		const filterFlat = (items: FuzzyChoice[]): FuzzyChoice[] =>
-			items.filter((o) => (fuzzySingle(fuzzyInput, o.fuzzy)?.score ?? 0) >= 0.5)
-
 		const result: Array<FuzzyChoice | FuzzyGroup> = []
+
+		// Batch root-level choices between groups so they get sorted together by score
+		const pendingRoot: FuzzyChoice[] = []
 		for (const item of allItems) {
 			if ('items' in item) {
-				const filtered = filterFlat(item.items)
+				if (pendingRoot.length > 0) {
+					result.push(...fuzzyFilterSort(pendingRoot, fuzzyInput))
+					pendingRoot.length = 0
+				}
+				const filtered = fuzzyFilterSort(item.items, fuzzyInput)
 				if (filtered.length > 0) result.push({ ...item, items: filtered })
 			} else {
-				if ((fuzzySingle(fuzzyInput, item.fuzzy)?.score ?? 0) >= 0.5) result.push(item)
+				pendingRoot.push(item)
 			}
 		}
+		if (pendingRoot.length > 0) result.push(...fuzzyFilterSort(pendingRoot, fuzzyInput))
 
 		if (syntheticItem) result.unshift(syntheticItem)
 		return result
