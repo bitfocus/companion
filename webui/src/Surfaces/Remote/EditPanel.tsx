@@ -8,6 +8,7 @@ import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.j
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
+import { Form } from '~/Components/Form.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -90,7 +91,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 	}, [form, doClose])
 
 	return (
-		<form
+		<Form
 			className="secondary-panel-simple-body d-flex flex-column pb-0"
 			onSubmit={(e) => {
 				e.preventDefault()
@@ -198,6 +199,6 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					</div>
 				)}
 			/>
-		</form>
+		</Form>
 	)
 })

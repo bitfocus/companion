@@ -1,9 +1,10 @@
-import { CCol, CForm, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { memo, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudUserPassProps {
@@ -23,7 +24,7 @@ export const CloudUserPass = memo(function CloudUserPass({
 	const loginMutation = useMutationExt(trpc.cloud.login.mutationOptions())
 
 	return (
-		<CForm
+		<Form
 			className="cloud-auth-form"
 			onSubmit={(e) => {
 				e.preventDefault()
@@ -67,6 +68,6 @@ export const CloudUserPass = memo(function CloudUserPass({
 					</StaticAlert>
 				</CCol>
 			</CRow>
-		</CForm>
+		</Form>
 	)
 })

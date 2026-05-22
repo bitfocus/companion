@@ -21,6 +21,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { Callout } from '~/Components/Callout.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -221,7 +222,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			</p>
 
 			<form.AppForm>
-				<form
+				<Form
 					className={'flex-form'}
 					onSubmit={(e) => {
 						e.preventDefault()
@@ -416,7 +417,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 							}}
 						</form.Subscribe>
 					</Callout>
-				</form>
+				</Form>
 			</form.AppForm>
 		</>
 	)

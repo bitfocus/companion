@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -13,6 +13,7 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -334,7 +335,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	return (
 		<>
-			<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+			<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 				{surfaceInfo && (
 					<>
 						<CFormLabel htmlFor="colFormSurfaceName" className="col-sm-4 col-form-label col-form-label-sm">
@@ -478,7 +479,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						/>
 					</CCol>
 				)}
-			</CForm>
+			</Form>
 		</>
 	)
 })

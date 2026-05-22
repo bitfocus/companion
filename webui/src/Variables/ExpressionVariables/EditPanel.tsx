@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -13,6 +13,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { StaticAlert } from '~/Components/Alert'
+import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -128,7 +129,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 					Name
 					<InlineHelpIcon className="ms-1">
@@ -143,7 +144,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 				<CCol xs={8}>
 					<TextInputField setValue={setDescription} value={options.description} />
 				</CCol>
-			</CForm>
+			</Form>
 		</CCol>
 	)
 }
@@ -224,7 +225,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 	return (
 		<>
 			<CCol sm={12} className="p-0">
-				<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
 					<CCol xs={8}>
 						{expressionVariableDefinition?.isActive ? (
@@ -233,7 +234,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
 						)}
 					</CCol>
-				</CForm>
+				</Form>
 			</CCol>
 
 			<div className="editor-grid">

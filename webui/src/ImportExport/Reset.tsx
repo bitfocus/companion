@@ -8,6 +8,7 @@ import type { ClientImportOrResetSelection, ResetType } from '@companion-app/sha
 import { StaticAlert } from '~/Components/Alert'
 import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -177,7 +178,7 @@ export const ResetWizardModal = observer(
 			<CModal ref={setModalRef} visible={show} onClose={doClose} className={'wizard'} backdrop="static">
 				<MenuPortalContext.Provider value={modalRef}>
 					<form.AppForm>
-						<form
+						<Form
 							className={'flex-form'}
 							onSubmit={(e) => {
 								e.preventDefault()
@@ -207,7 +208,7 @@ export const ResetWizardModal = observer(
 								)}
 								{nextButton}
 							</CModalFooter>
-						</form>
+						</Form>
 					</form.AppForm>
 				</MenuPortalContext.Provider>
 			</CModal>

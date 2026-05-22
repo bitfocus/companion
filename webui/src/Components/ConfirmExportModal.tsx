@@ -1,7 +1,8 @@
-import { CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -88,7 +89,7 @@ export const ConfirmExportModal = observer(
 						<h5>{props.title}</h5>
 					</CModalHeader>
 					<CModalBody>
-						<CForm className="row g-3" onSubmit={doAction}>
+						<Form className="row g-3" onSubmit={doAction}>
 							<CFormLabel htmlFor="colFormLabelSm" className="col-sm-4 col-form-label col-form-label-sm">
 								File format
 							</CFormLabel>
@@ -111,7 +112,7 @@ export const ConfirmExportModal = observer(
 							<CCol sm={8} className="d-flex align-items-center">
 								<SwitchInputField id="export_include_secrets" value={includeSecrets} setValue={setIncludeSecrets} />
 							</CCol>
-						</CForm>
+						</Form>
 					</CModalBody>
 					<CModalFooter>
 						<Button color="secondary" onClick={doClose}>

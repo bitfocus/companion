@@ -1,10 +1,11 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { useCallback, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
+import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -65,7 +66,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 	return (
 		<>
 			<GenericConfirmModal ref={confirmRef} />
-			<CForm className="row g-2 grow" onSubmit={PreventDefaultHandler}>
+			<Form className="row g-2 grow" onSubmit={PreventDefaultHandler}>
 				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
 					Step Progression
 					<InlineHelpIcon className="ms-1">
@@ -112,7 +113,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 				<CCol sm={8}>
 					<SwitchInputField value={options.canModifyStyleInApis} setValue={setCanModifyStyleInApis} />
 				</CCol>
-			</CForm>
+			</Form>
 		</>
 	)
 }

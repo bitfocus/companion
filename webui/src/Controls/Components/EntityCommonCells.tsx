@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -17,6 +17,7 @@ import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@co
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -85,7 +86,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					</div>
 				)}
 
-				<CForm className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
+				<Form className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
 					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
@@ -187,7 +188,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								localVariablesStore={localVariablesStore}
 							/>
 						)}
-				</CForm>
+				</Form>
 			</div>
 		</>
 	)

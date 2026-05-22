@@ -39,7 +39,7 @@ export function PngImageInputField({
 
 	return (
 		<>
-			<ButtonGroup className="png-browse">
+			<ButtonGroup className="d-block">
 				<PNGInputField
 					onSelect={setImageDataAndClearError}
 					onError={setImageLoadError}

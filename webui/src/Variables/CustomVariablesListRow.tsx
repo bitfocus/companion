@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CFormLabel, CRow } from '@coreui/react'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -7,6 +7,7 @@ import { useCallback } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputField } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
@@ -79,7 +80,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				</>
 			) : (
 				<>
-					<CForm onSubmit={PreventDefaultHandler} className="cell-fields">
+					<Form onSubmit={PreventDefaultHandler} className="cell-fields">
 						<div>
 							<CFormLabel>
 								Persist value
@@ -134,7 +135,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								/>
 							</CCol>
 						</CRow>
-					</CForm>
+					</Form>
 				</>
 			)}
 		</div>

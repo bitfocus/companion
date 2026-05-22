@@ -1,4 +1,4 @@
-import { CCol, CForm } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import {
 	faClone,
 	faCompressArrowsAlt,
@@ -17,6 +17,7 @@ import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -415,7 +416,7 @@ const EventEditor = observer(function EventEditor({
 						{eventSpec?.description || ''}
 					</CCol>
 
-					<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+					<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 						{eventSpec?.options.map((opt, i) => (
 							<MyErrorBoundary key={i}>
 								<OptionsInputField
@@ -432,7 +433,7 @@ const EventEditor = observer(function EventEditor({
 								/>
 							</MyErrorBoundary>
 						))}
-					</CForm>
+					</Form>
 				</div>
 			)}
 		</>

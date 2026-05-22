@@ -1,4 +1,4 @@
-import { CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
@@ -6,6 +6,7 @@ import type { ClientExportSelection } from '@companion-app/shared/Model/ImportEx
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -83,7 +84,7 @@ export const ExportWizardModal = observer(
 		return (
 			<CModal ref={setModalRef} visible={show} onClose={doClose} className={'wizard'} backdrop="static">
 				<MenuPortalContext.Provider value={modalRef}>
-					<CForm
+					<Form
 						className={'flex-form'}
 						onSubmit={(e) => {
 							e.preventDefault()
@@ -342,7 +343,7 @@ export const ExportWizardModal = observer(
 								)}
 							/>
 						</CModalFooter>
-					</CForm>
+					</Form>
 				</MenuPortalContext.Provider>
 			</CModal>
 		)

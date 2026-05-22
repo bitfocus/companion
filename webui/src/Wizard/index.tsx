@@ -1,9 +1,10 @@
-import { CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { toJS } from 'mobx'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -155,7 +156,7 @@ export function WizardModal(): React.JSX.Element {
 
 	return (
 		<CModal visible={show} onClose={doClose} className={'wizard'}>
-			<CForm onSubmit={doSave} className={'flex-form'}>
+			<Form onSubmit={doSave} className={'flex-form'}>
 				<CModalHeader>
 					<h2>
 						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
@@ -212,7 +213,7 @@ export function WizardModal(): React.JSX.Element {
 					</Button>
 					{nextButton}
 				</CModalFooter>
-			</CForm>
+			</Form>
 		</CModal>
 	)
 }

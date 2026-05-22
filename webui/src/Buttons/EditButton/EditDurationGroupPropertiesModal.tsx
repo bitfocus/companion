@@ -1,7 +1,8 @@
-import { CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { Form } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 
@@ -66,7 +67,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 					<h5>Change delay group properties</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm className="row g-sm-2" onSubmit={doAction}>
+					<Form className="row g-sm-2" onSubmit={doAction}>
 						<CFormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
 							Press duration
 						</CFormLabel>
@@ -91,7 +92,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 								setValue={setNewWhileHeldValue}
 							/>
 						</CCol>
-					</CForm>
+					</Form>
 				</CModalBody>
 				<CModalFooter>
 					<Button color="secondary" onClick={doClose}>

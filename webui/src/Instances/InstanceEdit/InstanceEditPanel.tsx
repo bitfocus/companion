@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol, CFormLabel } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
@@ -12,6 +12,7 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
@@ -93,7 +94,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 	return (
 		<>
-			<CForm
+			<Form
 				className="secondary-panel-simple-body d-flex flex-column pb-0"
 				onSubmit={(e) => {
 					e.preventDefault()
@@ -161,7 +162,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 					instanceShouldBeRunning={instanceShouldBeRunning}
 					isSaving={isSaving.get()}
 				/>
-			</CForm>
+			</Form>
 		</>
 	)
 })

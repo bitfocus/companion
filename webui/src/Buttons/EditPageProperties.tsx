@@ -1,7 +1,8 @@
-import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { Form } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 
@@ -76,7 +77,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					<h5>Configure Page {pageNumber}</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm onSubmit={doAction}>
+					<Form onSubmit={doAction}>
 						{includeName && (
 							<CRow className="mb-3">
 								<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
@@ -94,7 +95,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 							</CRow>
 						)}
 						{/* TODO: more fields should be added here */}
-					</CForm>
+					</Form>
 				</CModalBody>
 				<CModalFooter>
 					<Button color="secondary" onClick={doClose}>

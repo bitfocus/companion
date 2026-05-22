@@ -1,4 +1,4 @@
-import { CCol, CCollapse, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CCollapse, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -11,6 +11,7 @@ import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
+import { Form } from '~/Components/Form.js'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
@@ -104,7 +105,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 					<h5>Change Module Version</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm
+					<Form
 						className="row g-sm-2"
 						onSubmit={(e) => {
 							e.preventDefault()
@@ -195,7 +196,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 								/>
 							</CCol>
 						</CCollapse>
-					</CForm>
+					</Form>
 				</CModalBody>
 				<CModalFooter>
 					<form.Subscribe

@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CFormLabel, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -8,6 +8,7 @@ import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { Form } from '~/Components/Form.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -166,7 +167,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 				)}
 			</div>
 			<div>
-				<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
+				<Form className="flex-form" onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 							<CFormLabel>Step</CFormLabel>
@@ -209,7 +210,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							</ButtonGroup>
 						</CCol>
 					</CRow>
-				</CForm>
+				</Form>
 			</div>
 		</>
 	)

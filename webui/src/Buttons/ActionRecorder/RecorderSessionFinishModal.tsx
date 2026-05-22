@@ -1,9 +1,10 @@
-import { CCol, CForm, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CModal, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { Button } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -39,7 +40,7 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 	return (
 		<CModal ref={setModalRef} visible={true} onClose={doClose} size="lg" className="modal-full-height" scrollable>
 			<MenuPortalContext.Provider value={modalRef}>
-				<CForm onSubmit={PreventDefaultHandler} className={'action-recorder-finish-panel'}>
+				<Form onSubmit={PreventDefaultHandler} className={'action-recorder-finish-panel'}>
 					<CModalHeader closeButton>
 						<h5>Select destination</h5>
 					</CModalHeader>
@@ -70,7 +71,7 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 							Cancel
 						</Button>
 					</CModalFooter>
-				</CForm>
+				</Form>
 			</MenuPortalContext.Provider>
 		</CModal>
 	)

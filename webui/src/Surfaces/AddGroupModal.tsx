@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
@@ -6,6 +6,7 @@ import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -64,7 +65,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 			<CModalHeader closeButton>
 				<h5>Add Surface Group</h5>
 			</CModalHeader>
-			<CForm
+			<Form
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
@@ -159,7 +160,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 						)}
 					/>
 				</CModalFooter>
-			</CForm>
+			</Form>
 		</CModalExt>
 	)
 })

@@ -1,0 +1,17 @@
+.flex-form {
+	& > div:not(.button-group) {
+		// column
+		margin-bottom: 10px;
+	}
+
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 0.95em;
+		margin-bottom: 0.15rem;
+
+		svg {
+			margin-left: 5px;
+		}
+	}
+}

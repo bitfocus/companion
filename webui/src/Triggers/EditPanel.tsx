@@ -1,10 +1,11 @@
-import { CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { CCol, CFormLabel, CInputGroup } from '@coreui/react'
 import { useCallback, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -164,7 +165,7 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<CCol xs={12}>
 					<CFormLabel>Name</CFormLabel>
 					<br />
@@ -173,7 +174,7 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 						<TestActionsButton controlId={controlId} hidden={!options} />
 					</CInputGroup>
 				</CCol>
-			</CForm>
+			</Form>
 		</CCol>
 	)
 }

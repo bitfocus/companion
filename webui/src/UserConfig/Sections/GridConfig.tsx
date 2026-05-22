@@ -1,9 +1,10 @@
-import { CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
+import { Form } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -177,7 +178,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 					<h5>Configure Grid Size</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm onSubmit={doAction} className="row">
+					<Form onSubmit={doAction} className="row">
 						{newGridSize && (
 							<CCol sm={12} className="mb-3">
 								New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
@@ -224,7 +225,7 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 								setValue={setMaxColumn}
 							/>
 						</CCol>
-					</CForm>
+					</Form>
 					{isReducingSize && (
 						<StaticAlert color="danger" className="mb-0 mt-2">
 							By reducing the grid size, any buttons outside of the new boundaries will be deleted.

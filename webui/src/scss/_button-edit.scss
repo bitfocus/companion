@@ -57,33 +57,6 @@
 	}
 }
 
-.flex-form {
-	& > div:not(.button-group) {
-		// column
-		margin-bottom: 10px;
-	}
-
-	label {
-		justify-content: left;
-		font-weight: bold;
-		font-size: 0.95em;
-		margin-bottom: 0.15rem;
-
-		svg {
-			margin-left: 5px;
-		}
-	}
-
-	.png-browse {
-		display: block;
-		white-space: nowrap;
-	}
-}
-
-.flex-form-row {
-	margin: 0;
-}
-
 .entity-list,
 .entity-list-drag-layer {
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)

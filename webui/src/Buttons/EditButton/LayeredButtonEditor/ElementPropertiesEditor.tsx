@@ -1,4 +1,3 @@
-import { CForm } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -6,6 +5,7 @@ import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/G
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { Form } from '~/Components/Form.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { getInputFeatures, OptionsInputControl } from '~/Controls/OptionsInputField.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
@@ -36,11 +36,11 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			localVariablesStore={localVariablesStore}
 			isPropertyOverridden={isPropertyOverridden}
 		>
-			<CForm className="row g-2" onSubmit={PreventDefaultHandler}>
+			<Form className="row g-2" onSubmit={PreventDefaultHandler}>
 				<ElementCommonProperties elementProps={elementProps} simpleMode={simpleMode} />
 
 				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} simpleMode={simpleMode} />
-			</CForm>
+			</Form>
 		</ElementPropertiesProvider>
 	)
 })

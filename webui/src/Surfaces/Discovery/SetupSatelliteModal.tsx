@@ -1,10 +1,11 @@
-import { CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
 import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { Form } from '~/Components/Form.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { LoadingBar } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC'
@@ -88,7 +89,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 					<h5>Setup Companion Satellite</h5>
 				</CModalHeader>
 				<CModalBody>
-					<CForm onSubmit={doAction}>
+					<Form onSubmit={doAction}>
 						<p>This will configure the selected Companion Satellite installation to connect to Companion</p>
 
 						{!externalAddressesQuery.data ? (
@@ -107,7 +108,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 								<p>Select the address of Companion that satellite should connect to</p>
 							</>
 						)}
-					</CForm>
+					</Form>
 				</CModalBody>
 				<CModalFooter>
 					<Button color="secondary" onClick={doClose}>

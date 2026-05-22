@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
@@ -6,6 +6,7 @@ import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
@@ -72,7 +73,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 			<CModalHeader closeButton>
 				<h5>Add Emulator</h5>
 			</CModalHeader>
-			<CForm
+			<Form
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
@@ -231,7 +232,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 						)}
 					/>
 				</CModalFooter>
-			</CForm>
+			</Form>
 		</CModalExt>
 	)
 })

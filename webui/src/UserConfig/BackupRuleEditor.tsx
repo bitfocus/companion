@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
+import { CCol, CFormLabel, CInputGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,6 +7,7 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { Form } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -116,7 +117,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<CForm className="p-3 row g-sm-2">
+		<Form className="p-3 row g-sm-2">
 			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Rule Name</CFormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CInputGroup>
@@ -205,6 +206,6 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 					</div>
 				)}
 			</CCol>
-		</CForm>
+		</Form>
 	)
 })

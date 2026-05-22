@@ -1,4 +1,4 @@
-import { CForm, CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput, CInputGroup } from '@coreui/react'
 import {
 	faArrowLeft,
 	faCompressArrowsAlt,
@@ -21,6 +21,7 @@ import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types'
+import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
@@ -241,7 +242,7 @@ function AddVariablePanel() {
 	)
 
 	return (
-		<CForm onSubmit={doCreateNew}>
+		<Form onSubmit={doCreateNew}>
 			<CInputGroup>
 				<CFormInput
 					type="text"
@@ -253,7 +254,7 @@ function AddVariablePanel() {
 					Add
 				</Button>
 			</CInputGroup>
-		</CForm>
+		</Form>
 	)
 }
 

@@ -1,4 +1,4 @@
-import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -9,6 +9,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { Form } from '~/Components/Form.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -147,7 +148,7 @@ export const AddInstanceModal = observer(
 									here.
 								</p>
 							)}
-							<CForm className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+							<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 								<CFormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
 									Label&nbsp;
 								</CFormLabel>
@@ -193,7 +194,7 @@ export const AddInstanceModal = observer(
 										</StaticAlert>
 									</CCol>
 								)}
-							</CForm>
+							</Form>
 
 							{selectedVersionIsLegacy && (
 								<>
