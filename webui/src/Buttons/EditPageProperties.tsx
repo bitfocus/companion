@@ -1,8 +1,8 @@
-import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 
@@ -80,9 +80,9 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					<Form onSubmit={doAction}>
 						{includeName && (
 							<CRow className="mb-3">
-								<CFormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+								<FormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
 									Name
-								</CFormLabel>
+								</FormLabel>
 								<CCol sm={9}>
 									<CFormInput
 										ref={inputRef}

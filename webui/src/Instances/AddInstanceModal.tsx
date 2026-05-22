@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -9,7 +9,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -149,9 +149,9 @@ export const AddInstanceModal = observer(
 								</p>
 							)}
 							<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
-								<CFormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
 									Label&nbsp;
-								</CFormLabel>
+								</FormLabel>
 								<CCol sm={8}>
 									<CFormInput
 										name="colFormLabel"
@@ -160,7 +160,7 @@ export const AddInstanceModal = observer(
 									/>
 								</CCol>
 
-								<CFormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
+								<FormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
 									<div className="flex">
 										<span className="grow">Module Version&nbsp;</span>
 										{moduleInfo && selectedVersionInfo && (
@@ -172,7 +172,7 @@ export const AddInstanceModal = observer(
 											<ModuleVersionsRefresh moduleType={moduleInfo.moduleType} moduleId={moduleInfo.moduleId} />
 										)}
 									</div>
-								</CFormLabel>
+								</FormLabel>
 								<CCol sm={8}>
 									<SimpleDropdownInputField
 										id="colFormVersion"

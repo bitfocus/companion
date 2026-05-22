@@ -1,10 +1,10 @@
-import { CCol, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -186,23 +186,23 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 							</CCol>
 						)}
 
-						<CFormLabel htmlFor="colFormMinRow" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+						<FormLabel htmlFor="colFormMinRow" className="col-sm-3 col-form-label col-form-label-sm mb-2">
 							Min Row
-						</CFormLabel>
+						</FormLabel>
 						<CCol sm={9} className="mb-2">
 							<NumberInputField id="colFormMinRow" value={newGridSize?.minRow} max={0} step={1} setValue={setMinRow} />
 						</CCol>
 
-						<CFormLabel htmlFor="colFormMaxRow" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+						<FormLabel htmlFor="colFormMaxRow" className="col-sm-3 col-form-label col-form-label-sm mb-2">
 							Max Row
-						</CFormLabel>
+						</FormLabel>
 						<CCol sm={9} className="mb-2">
 							<NumberInputField id="colFormMaxRow" value={newGridSize?.maxRow} min={0} step={1} setValue={setMaxRow} />
 						</CCol>
 
-						<CFormLabel htmlFor="colFormMinColumn" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+						<FormLabel htmlFor="colFormMinColumn" className="col-sm-3 col-form-label col-form-label-sm mb-2">
 							Min Column
-						</CFormLabel>
+						</FormLabel>
 						<CCol sm={9} className="mb-2">
 							<NumberInputField
 								id="colFormMinColumn"
@@ -213,9 +213,9 @@ export const GridSizeModal = observer<object, GridSizeModalRef>(
 							/>
 						</CCol>
 
-						<CFormLabel htmlFor="colFormMaxColumn" className="col-sm-3 col-form-label col-form-label-sm mb-2">
+						<FormLabel htmlFor="colFormMaxColumn" className="col-sm-3 col-form-label col-form-label-sm mb-2">
 							Max Column
-						</CFormLabel>
+						</FormLabel>
 						<CCol sm={9} className="mb-2">
 							<NumberInputField
 								id="colFormMaxColumn"

@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,6 +6,7 @@ import React, { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -65,7 +66,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 
 	return (
 		<>
-			<CFormLabel className={'col-sm-4 col-form-label col-form-label-sm'}>
+			<FormLabel className={'col-sm-4 col-form-label col-form-label-sm'}>
 				{label}
 				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
@@ -74,7 +75,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 						<FontAwesomeIcon icon={faLayerGroup} />
 					</span>
 				) : null}
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				{disableAutoExpression ? (
 					children({ value: elementProp.value }, setInnerValue)

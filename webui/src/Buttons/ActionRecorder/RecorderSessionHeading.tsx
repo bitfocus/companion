@@ -1,10 +1,10 @@
-import { CFormLabel, CRow } from '@coreui/react'
+import { CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, type RefObject } from 'react'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { Button, ButtonGroup } from '~/Components/Button'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -98,7 +98,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 				<CRow className="flex-form m-0" style={{ clear: 'both' }}>
 					<div className="flex w-full gap-2rem">
 						<div className="w-full">
-							<CFormLabel>Connections</CFormLabel>
+							<FormLabel>Connections</FormLabel>
 							<MultiDropdownInputField
 								value={sessionInfo.connectionIds}
 								setValue={changeConnectionIds}
@@ -107,7 +107,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 						</div>
 
 						<div>
-							<CFormLabel>Recording</CFormLabel>
+							<FormLabel>Recording</FormLabel>
 							<br />
 							<SwitchInputField value={!!sessionInfo.isRunning} setValue={changeRecording} />
 						</div>

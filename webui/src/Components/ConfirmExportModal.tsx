@@ -1,8 +1,8 @@
-import { CCol, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -90,25 +90,25 @@ export const ConfirmExportModal = observer(
 					</CModalHeader>
 					<CModalBody>
 						<Form className="row g-3" onSubmit={doAction}>
-							<CFormLabel htmlFor="colFormLabelSm" className="col-sm-4 col-form-label col-form-label-sm">
+							<FormLabel htmlFor="colFormLabelSm" className="col-sm-4 col-form-label col-form-label-sm">
 								File format
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={8}>
 								<SelectExportFormat value={format} setValue={setFormat} />
 							</CCol>
-							<CFormLabel htmlFor="colFormLabelSm" className="col-sm-4 col-form-label col-form-label-sm">
+							<FormLabel htmlFor="colFormLabelSm" className="col-sm-4 col-form-label col-form-label-sm">
 								File name
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={8}>
 								<TextInputField value={filename} setValue={setFilename} useVariables={true} />
 							</CCol>
-							<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+							<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
 								Include secrets
 								<InlineHelpIcon className="ms-1">
 									Some connections have secret values that can be omitted from the export. Not all modules are
 									compatible with this
 								</InlineHelpIcon>
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={8} className="d-flex align-items-center">
 								<SwitchInputField id="export_include_secrets" value={includeSecrets} setValue={setIncludeSecrets} />
 							</CCol>

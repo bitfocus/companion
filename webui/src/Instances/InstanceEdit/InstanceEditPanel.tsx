@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
@@ -12,7 +12,7 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
@@ -183,7 +183,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 }): React.JSX.Element {
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Label</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Label</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField
 					setValue={panelStore.setLabelValue}
@@ -210,7 +210,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Module Version</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Module Version</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<div className="d-flex align-items-center gap-2">
 					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
@@ -241,7 +241,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SwitchInputField
 					value={isEnabled}
@@ -271,12 +271,12 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 >({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
 				<InlineHelpIcon className="ms-1">
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
 				</InlineHelpIcon>
-			</CFormLabel>
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SimpleDropdownInputField
 					id="colFormUpdatePolicy"
@@ -414,7 +414,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
 				return (
 					<CCol sm={12}>
-						{fieldInfo.label ? <CFormLabel>{fieldInfo.label}</CFormLabel> : ''}
+						{fieldInfo.label ? <FormLabel>{fieldInfo.label}</FormLabel> : ''}
 						<StaticTextFieldText {...fieldInfo} allowImages />
 					</CCol>
 				)
@@ -423,12 +423,12 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 		return (
 			<React.Fragment>
-				<CFormLabel
+				<FormLabel
 					className="col-sm-4 col-form-label col-form-label-sm"
 					style={{ display: !isVisible ? 'none' : undefined }}
 				>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
-				</CFormLabel>
+				</FormLabel>
 				<CCol sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
 					{children}
 				</CCol>
@@ -444,9 +444,9 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
 			>
-				<CFormLabel>
+				<FormLabel>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
-				</CFormLabel>
+				</FormLabel>
 
 				{children}
 			</CCol>

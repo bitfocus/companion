@@ -1,10 +1,11 @@
-import { CCard, CCardBody, CCardHeader, CCol, CFormInput, CFormLabel, CListGroup } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CFormInput, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { memo, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Callout } from '~/Components/Callout.js'
+import { FormLabel } from '~/Components/Form.js'
 import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -117,7 +118,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 
 	return (
 		<CCol sm={6} className="cloud-auth-state">
-			<CFormLabel>Logged in as</CFormLabel>
+			<FormLabel>Logged in as</FormLabel>
 			<CFormInput readOnly type="text" value={authenticatedAs} />
 			{!cloudActive && (
 				<div className="my-3">

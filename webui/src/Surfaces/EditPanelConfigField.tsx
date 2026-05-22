@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -8,6 +8,7 @@ import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
+import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -124,11 +125,11 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				{control}
 				{definition.description && <div className="form-text">{definition.description}</div>}

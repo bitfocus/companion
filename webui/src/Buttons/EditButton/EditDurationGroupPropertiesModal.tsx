@@ -1,8 +1,8 @@
-import { CCol, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 
@@ -68,9 +68,9 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 				</CModalHeader>
 				<CModalBody>
 					<Form className="row g-sm-2" onSubmit={doAction}>
-						<CFormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
 							Press duration
-						</CFormLabel>
+						</FormLabel>
 						<CCol sm={8}>
 							<NumberInputField
 								id="colFormPressDuration"
@@ -82,9 +82,9 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							/>
 						</CCol>
 
-						<CFormLabel htmlFor="colFormExecuteWhileHeld" className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor="colFormExecuteWhileHeld" className="col-sm-4 col-form-label col-form-label-sm">
 							Execute while held
-						</CFormLabel>
+						</FormLabel>
 						<CCol sm={8}>
 							<SwitchInputField
 								id="colFormExecuteWhileHeld"

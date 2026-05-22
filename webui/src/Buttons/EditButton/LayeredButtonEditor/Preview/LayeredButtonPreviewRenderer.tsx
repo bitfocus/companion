@@ -1,4 +1,3 @@
-import { CFormLabel } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useContext, useEffect, useRef, useState } from 'react'
@@ -11,6 +10,7 @@ import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { FormLabel } from '~/Components/Form'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
@@ -78,7 +78,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 				/>
 			</div>
 			<div>
-				<CFormLabel>Preview Aspect Ratio</CFormLabel>
+				<FormLabel>Preview Aspect Ratio</FormLabel>
 				<DropdownInputField
 					allowCustom
 					choices={ASPECT_RATIO_OPTIONS}

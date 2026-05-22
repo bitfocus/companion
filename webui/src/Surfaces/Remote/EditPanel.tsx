@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
+import { CCol, CFormInput, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -8,7 +8,7 @@ import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.j
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -119,7 +119,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						}}
 						children={(field) => (
 							<>
-								<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</CFormLabel>
+								<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</FormLabel>
 								<CCol className="fieldtype-textinput" sm={8}>
 									<CFormInput
 										type="text"
@@ -138,7 +138,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Integration</CFormLabel>
+					<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Integration</FormLabel>
 					<CCol sm={8}>
 						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
 					</CCol>

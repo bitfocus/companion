@@ -1,4 +1,4 @@
-import { CCol, CCollapse, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CCollapse, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -11,7 +11,7 @@ import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
@@ -137,12 +137,12 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										name="versionId"
 										children={(field) => (
 											<>
-												<CFormLabel htmlFor={field.name} className="col-sm-3 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={field.name} className="col-sm-3 col-form-label col-form-label-sm">
 													Version
 													{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
 														<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
 													)}
-												</CFormLabel>
+												</FormLabel>
 												<CCol sm={9}>
 													<SelectedVersionDropdown
 														moduleType={service.moduleType}
@@ -175,9 +175,9 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 								</StaticAlert>
 							</CCol>
 
-							<CFormLabel htmlFor="moduleId" className="col-sm-3 col-form-label col-form-label-sm">
+							<FormLabel htmlFor="moduleId" className="col-sm-3 col-form-label col-form-label-sm">
 								Module
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={9}>
 								<form.Field
 									name="moduleId"

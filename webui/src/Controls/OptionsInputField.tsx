@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
+import { CCol, CInputGroupText } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -19,6 +19,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -125,7 +126,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	return (
 		<>
-			<CFormLabel
+			<FormLabel
 				htmlFor="colFormConnection"
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
@@ -137,7 +138,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 						fieldDefinition={option}
 					/>
 				)}
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
 				{description && <div className="form-text">{description}</div>}

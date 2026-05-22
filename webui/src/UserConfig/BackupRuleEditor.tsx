@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CInputGroup } from '@coreui/react'
+import { CCol, CInputGroup } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,7 +7,7 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -118,7 +118,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 
 	return (
 		<Form className="p-3 row g-sm-2">
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Rule Name</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Rule Name</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<CInputGroup>
 					<TextInputField value={rule.name} setValue={(value) => updateField('name', value)} />
@@ -128,7 +128,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</CInputGroup>
 			</CCol>
 
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Cron Schedule</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Cron Schedule</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField value={rule.cron} setValue={(value) => updateField('cron', value)} />
 			</CCol>
@@ -142,7 +142,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</small>
 			</CCol>
 
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Type</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Type</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SimpleDropdownInputField
 					value={rule.backupType}
@@ -159,7 +159,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</CCol>
 			)}
 
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Path</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Path</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField value={rule.backupPath} setValue={(value) => updateField('backupPath', value)} />
 			</CCol>
@@ -169,7 +169,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</small>
 			</CCol>
 
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Name Pattern</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Backup Name Pattern</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField
 					value={rule.backupNamePattern}
@@ -178,7 +178,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				/>
 			</CCol>
 
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Number of Backups to Keep</CFormLabel>
+			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Number of Backups to Keep</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<NumberInputField value={rule.keep} min={1} setValue={(value) => updateField('keep', value)} />
 			</CCol>

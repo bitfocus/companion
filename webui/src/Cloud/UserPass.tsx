@@ -1,10 +1,10 @@
-import { CCol, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CFormInput, CRow } from '@coreui/react'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { memo, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudUserPassProps {
@@ -41,13 +41,13 @@ export const CloudUserPass = memo(function CloudUserPass({
 		>
 			<CRow>
 				<CCol sm={6}>
-					<CFormLabel>Email address</CFormLabel>
+					<FormLabel>Email address</FormLabel>
 					<CFormInput type="text" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
 				</CCol>
 				<CCol sm={6}></CCol>
 
 				<CCol sm={6}>
-					<CFormLabel>Password</CFormLabel>
+					<FormLabel>Password</FormLabel>
 					<CFormInput type="password" value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
 				</CCol>
 				<CCol sm={6}></CCol>

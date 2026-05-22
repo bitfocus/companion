@@ -1,6 +1,6 @@
 import { Switch } from '@base-ui/react/switch'
-import { CFormLabel } from '@coreui/react'
 import classNames from 'classnames'
+import { FormLabel } from '~/Components/Form.js'
 
 interface SwitchInputFieldProps {
 	id?: string
@@ -51,7 +51,7 @@ export function SwitchInputFieldWithLabel({
 	return (
 		<div className={`switch-input-with-label ${className}`}>
 			<SwitchInputField {...props} />
-			<CFormLabel title={props.tooltip}>{label}</CFormLabel>
+			<FormLabel title={props.tooltip}>{label}</FormLabel>
 		</div>
 	)
 }

@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -7,7 +7,7 @@ import { useCallback } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputField } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
@@ -82,12 +82,12 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				<>
 					<Form onSubmit={PreventDefaultHandler} className="cell-fields">
 						<div>
-							<CFormLabel>
+							<FormLabel>
 								Persist value
 								<InlineHelpIcon className="ms-1">
 									If enabled, variable value will be saved and restored when Companion restarts.
 								</InlineHelpIcon>
-							</CFormLabel>
+							</FormLabel>
 							<div
 								style={{
 									display: 'inline-flex',
@@ -105,9 +105,9 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 							</div>
 						</div>
 						<CRow>
-							<CFormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
+							<FormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
 								Description:
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={9}>
 								<TextInputField
 									value={info.description}
@@ -116,16 +116,16 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								/>
 							</CCol>
 
-							<CFormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
+							<FormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
 								Current value:
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={9}>
 								<VariableInputGroup value={value} name={info.id} setCurrentValue={customVariablesApi.setCurrentValue} />
 							</CCol>
 
-							<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
+							<FormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
 								Startup value:
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={9}>
 								<VariableInputGroup
 									disabled={!!info.persistCurrentValue}

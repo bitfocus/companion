@@ -1,4 +1,4 @@
-import { CCol, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -8,6 +8,7 @@ import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { FormLabel } from '~/Components/Form'
 import { Form } from '~/Components/Form.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
@@ -170,7 +171,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 				<Form className="flex-form" onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
-							<CFormLabel>Step</CFormLabel>
+							<FormLabel>Step</FormLabel>
 
 							<SimpleDropdownInputField
 								choices={actionStepOptions}
@@ -180,7 +181,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							/>
 						</CCol>
 						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-							<CFormLabel>Action Group</CFormLabel>
+							<FormLabel>Action Group</FormLabel>
 
 							<SimpleDropdownInputField
 								choices={actionSetOptions}

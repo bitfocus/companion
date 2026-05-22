@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faCopy, faDownload, faEdit, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,7 +6,7 @@ import React, { useCallback, useContext, useId, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -222,7 +222,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<Form className="row mb-3">
-				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</CFormLabel>
+				<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</FormLabel>
 				<CCol sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
 						<span className="font-monospace">{imageInfo.name}</span>
@@ -238,9 +238,9 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</CCol>
 			</Form>
 			<Form className="row mb-3">
-				<CFormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Description
-				</CFormLabel>
+				</FormLabel>
 				<CCol sm={8}>
 					<ImageDescriptionEditor
 						id={descriptionFieldId}

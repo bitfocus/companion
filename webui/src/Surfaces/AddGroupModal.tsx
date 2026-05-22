@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
@@ -6,7 +6,7 @@ import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -86,12 +86,12 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 							name="name"
 							children={(field) => (
 								<>
-									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
 										Name
 										<InlineHelpIcon className="ms-1">
 											Display name for the group. This can be changed later
 										</InlineHelpIcon>
-									</CFormLabel>
+									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
 											type="text"
@@ -119,12 +119,12 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 							}}
 							children={(field) => (
 								<>
-									<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
 										Id
 										<InlineHelpIcon className="ms-1">
 											Id for the group, this is used for internal references. This cannot be changed once set.
 										</InlineHelpIcon>
-									</CFormLabel>
+									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
 											type="text"

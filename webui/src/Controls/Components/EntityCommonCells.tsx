@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -17,7 +17,7 @@ import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@co
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -90,7 +90,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
-								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
 									Variable name
 									<InlineHelpIcon className="ms-1">
 										The name to give this value as a {localVariablePrefix} variable
@@ -100,7 +100,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 											<FontAwesomeIcon icon={faCopy} color="#d50215" />
 										</Button>
 									</CopyToClipboard>
-								</CFormLabel>
+								</FormLabel>
 								<CCol sm={8}>
 									<TextInputField
 										value={entity.variableName ?? ''}
@@ -211,9 +211,9 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 
 	return (
 		<MyErrorBoundary>
-			<CFormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
 				Current Value
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
 					<TextInputField

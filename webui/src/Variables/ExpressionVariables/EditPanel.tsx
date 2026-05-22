@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -13,7 +13,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { StaticAlert } from '~/Components/Alert'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -130,17 +130,17 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	return (
 		<CCol sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
-				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
 					Name
 					<InlineHelpIcon className="ms-1">
 						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
 					</InlineHelpIcon>
-				</CFormLabel>
+				</FormLabel>
 				<CCol xs={8}>
 					<TextInputField setValue={setName} value={options.variableName} checkValid={isLabelValid} />
 				</CCol>
 
-				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Description</CFormLabel>
+				<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Description</FormLabel>
 				<CCol xs={8}>
 					<TextInputField setValue={setDescription} value={options.description} />
 				</CCol>
@@ -226,7 +226,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 		<>
 			<CCol sm={12} className="p-0">
 				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
-					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
+					<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</FormLabel>
 					<CCol xs={8}>
 						{expressionVariableDefinition?.isActive ? (
 							<ExpressionVariableCurrentValue name={expressionVariableDefinition.variableName} />

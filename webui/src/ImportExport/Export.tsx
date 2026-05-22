@@ -1,4 +1,4 @@
-import { CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
@@ -6,7 +6,7 @@ import type { ClientExportSelection } from '@companion-app/shared/Model/ImportEx
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -305,7 +305,7 @@ export const ExportWizardModal = observer(
 								</div>
 
 								<div style={{ paddingTop: '1em' }}>
-									<CFormLabel>File format</CFormLabel>
+									<FormLabel>File format</FormLabel>
 									<form.Field
 										name="format"
 										children={(field) => (
@@ -314,7 +314,7 @@ export const ExportWizardModal = observer(
 									/>
 								</div>
 								<div style={{ paddingTop: '1em' }}>
-									<CFormLabel>File name</CFormLabel>
+									<FormLabel>File name</FormLabel>
 									<form.Field
 										name="filename"
 										children={(field) => (

@@ -1,4 +1,4 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
@@ -8,6 +8,7 @@ import {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -22,16 +23,16 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 }) {
 	return (
 		<>
-			<CFormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
 				Element Name
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				<FieldElementNameInput elementProps={elementProps} />
 			</CCol>
 
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
 				<>
-					<CFormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
+					<FormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
 						External Usage
 						<InlineHelpIcon className="ms-1">
 							Some surfaces do not have full rgb displays and require specific elements for providing feedback in
@@ -40,7 +41,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 							You can override the automatic selection of elements for these purposes by selecting the appropriate usage
 							for this element
 						</InlineHelpIcon>
-					</CFormLabel>
+					</FormLabel>
 					<CCol sm={8}>
 						<FieldElementUsageInput elementProps={elementProps} />
 					</CCol>

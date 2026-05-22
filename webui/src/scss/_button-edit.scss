@@ -38,25 +38,6 @@
 	}
 }
 
-.form-label .feature-icons {
-	white-space: nowrap;
-
-	background-color: #ddd;
-	border-radius: 100px; // as much as possible
-
-	margin-left: 3px;
-
-	padding-left: 3px;
-	padding-right: 3px;
-
-	svg {
-		margin-left: 1px;
-		margin-right: 1px;
-
-		font-size: 0.8rem;
-	}
-}
-
 .entity-list,
 .entity-list-drag-layer {
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)

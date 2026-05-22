@@ -1,6 +1,7 @@
-import { CCol, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { useCallback, useState } from 'react'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { FormLabel } from '~/Components/Form'
 import { NumberInputField } from '~/Components/NumberInputField'
 
 interface GridStepProps {
@@ -59,17 +60,17 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				</p>
 			</CCol>
 
-			<CFormLabel htmlFor="colFormRows" className="col-sm-4 col-form-label col-form-label-sm mb-2">
+			<FormLabel htmlFor="colFormRows" className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Rows
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={5} className="mb-2">
 				<NumberInputField id="colFormRows" value={totalRows} min={0} step={1} setValue={setMaxRow} />
 			</CCol>
 			<CCol sm={3}></CCol>
 
-			<CFormLabel htmlFor="colFormCols" className="col-sm-4 col-form-label col-form-label-sm mb-2">
+			<FormLabel htmlFor="colFormCols" className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Columns
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={5} className="mb-2">
 				<NumberInputField id="colFormCols" value={totalColumns} min={0} step={1} setValue={setMaxColumn} />
 			</CCol>

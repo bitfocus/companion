@@ -1,6 +1,6 @@
 import { Checkbox } from '@base-ui/react/checkbox'
-import { CFormLabel } from '@coreui/react'
 import { useId } from 'react'
+import { FormLabel } from '~/Components/Form.js'
 
 interface CheckboxInputFieldProps {
 	id?: string
@@ -52,9 +52,9 @@ export function CheckboxInputFieldWithLabel({
 	return (
 		<div className={`checkbox-input-with-label ${className || ''}`}>
 			<CheckboxInputField {...props} id={props.id || id} />
-			<CFormLabel title={props.tooltip} className="m-0 ms-1" htmlFor={props.id || id}>
+			<FormLabel title={props.tooltip} className="m-0 ms-1" htmlFor={props.id || id}>
 				{label}
-			</CFormLabel>
+			</FormLabel>
 		</div>
 	)
 }

@@ -1,10 +1,11 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { FormLabel } from '~/Components/Form.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -50,9 +51,9 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 
 	return (
 		<>
-			<CFormLabel htmlFor="colFormConnection" className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor="colFormConnection" className="col-sm-4 col-form-label col-form-label-sm">
 				Connection
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				<DropdownInputField
 					htmlName="colFormConnection"
