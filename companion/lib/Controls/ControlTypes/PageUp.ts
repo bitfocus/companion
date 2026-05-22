@@ -60,7 +60,7 @@ export const pageUpElements: SomeButtonGraphicsElement[] = [
 		// Draw +/- if enabled
 		...(CreateElementOfType('text') as ButtonGraphicsTextElement),
 		enabled: exprExpr('$(internal:_graphics_page_plusminus)'),
-		text: exprExpr('$(internal:_graphics_page_direction_flipped") ? "–" : "+"'),
+		text: exprExpr('$(internal:_graphics_page_direction_flipped) ? "–" : "+"'),
 		color: exprVal(0xffffff),
 		fontsize: exprVal('30'),
 		valign: exprVal('bottom'),
