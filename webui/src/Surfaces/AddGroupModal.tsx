@@ -152,17 +152,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 									Cancel
 								</Button>
 
-								<Button
-									color="primary"
-									className="me-md-1"
-									disabled={!canSubmit || isSubmitting}
-									type="submit"
-									onClick={() => {
-										form.handleSubmit().catch((err) => {
-											console.error('Form submission error', err)
-										})
-									}}
-								>
+								<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
 									Add {isSubmitting ? '...' : ''}
 								</Button>
 							</>

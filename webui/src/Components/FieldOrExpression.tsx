@@ -82,6 +82,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 					variant="outline"
 					onClick={toggleExpression}
 					title={value.isExpression ? 'Expression mode' : 'Value mode'}
+					aria-label={value.isExpression ? 'Switch to value mode' : 'Switch to expression mode'}
 					disabled={disabled}
 				>
 					<FontAwesomeIcon icon={value.isExpression ? faSquareRootVariable : faFilter} />

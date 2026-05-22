@@ -67,6 +67,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 				<Button
 					color="secondary"
 					title={showSecretValue ? 'Hide secret' : 'Show secret'}
+					aria-label={showSecretValue ? 'Hide secret value' : 'Show secret value'}
 					onClick={toggleShowSecretValue}
 				>
 					<FontAwesomeIcon icon={showSecretValue ? faEyeSlash : faEye} />

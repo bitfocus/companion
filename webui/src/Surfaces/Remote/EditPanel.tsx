@@ -189,7 +189,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 										Save {isSubmitting ? '...' : ''}
 									</Button>
 
-									<Button color="secondary" onClick={handleCancel} disabled={isSubmitting}>
+									<Button type="button" color="secondary" onClick={handleCancel} disabled={isSubmitting}>
 										Cancel
 									</Button>
 								</div>

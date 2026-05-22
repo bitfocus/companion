@@ -120,7 +120,7 @@ export const ImageAddModal = observer(
 					/>
 				</CModalBody>
 				<CModalFooter>
-					<Button color="secondary" onClick={handleCancel} disabled={isCreating}>
+					<Button type="button" color="secondary" onClick={handleCancel} disabled={isCreating}>
 						Cancel
 					</Button>
 					<Button color="primary" onClick={handleCreate} disabled={!canCreate || isCreating}>

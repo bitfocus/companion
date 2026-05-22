@@ -95,7 +95,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 	return (
 		<>
-			<Button color="light" size="sm" title="Change module version" onClick={doShow}>
+			<Button color="light" size="sm" title="Change module version" aria-label="Change module version" onClick={doShow}>
 				<FontAwesomeIcon icon={faPencil} />
 			</Button>
 

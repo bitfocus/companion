@@ -157,7 +157,12 @@ export const TriggersPage = observer(function Triggers() {
 								value={filter}
 								style={{ fontSize: '1.2em' }}
 							/>
-							<Button color="primary" onClick={clearFilter}>
+							<Button
+								color="primary"
+								onClick={clearFilter}
+								aria-label="Clear search filter"
+								title="Clear search filter"
+							>
 								<FontAwesomeIcon icon={faTimes} />
 							</Button>
 						</CInputGroup>

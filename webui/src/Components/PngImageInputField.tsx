@@ -48,7 +48,13 @@ export function PngImageInputField({
 					allowNonPng={allowNonPng}
 					disabled={disabled}
 				/>
-				<Button color="danger" disabled={disabled || !value} onClick={clearImage}>
+				<Button
+					color="danger"
+					disabled={disabled || !value}
+					onClick={clearImage}
+					aria-label="Clear image"
+					title="Clear image"
+				>
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</ButtonGroup>

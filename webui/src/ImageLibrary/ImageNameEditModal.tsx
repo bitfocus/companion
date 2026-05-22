@@ -114,7 +114,7 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 				/>
 			</CModalBody>
 			<CModalFooter>
-				<Button color="secondary" onClick={handleCancel} disabled={isSaving}>
+				<Button type="button" color="secondary" onClick={handleCancel} disabled={isSaving}>
 					Cancel
 				</Button>
 				<Button color="primary" onClick={handleSave} disabled={!canSave || isSaving}>

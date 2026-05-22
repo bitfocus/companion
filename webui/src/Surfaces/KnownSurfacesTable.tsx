@@ -163,7 +163,7 @@ const ManualGroupRow = observer(function ManualGroupRow({
 	const handleGroupClick = useCallback(
 		(e: React.MouseEvent) => {
 			// Don't trigger row click if clicking on input field or buttons
-			if ((e.target as HTMLElement).closest('input, button')) {
+			if ((e.target as HTMLElement).closest('input, button, a, [role="button"]')) {
 				return
 			}
 			selectItem(group.id)

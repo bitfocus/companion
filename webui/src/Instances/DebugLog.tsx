@@ -127,15 +127,15 @@ export function InstanceDebugLog({
 	return (
 		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
-				<CRow className="log-debug-buttons">
+				<CRow className="px-3">
 					<CCol>
-						<ButtonGroup>
+						<ButtonGroup className="me-2">
 							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>
 								{isConnected ? 'Connected' : 'Reconnecting'}
 							</Button>
 						</ButtonGroup>
 
-						<ButtonGroup>
+						<ButtonGroup className="me-2">
 							<Button color="danger" size="sm" onClick={doClearLog}>
 								Clear log
 							</Button>
@@ -144,7 +144,7 @@ export function InstanceDebugLog({
 							</Button>
 						</ButtonGroup>
 
-						<ButtonGroup>
+						<ButtonGroup className="me-2">
 							<Button color="danger" size="sm" onClick={doStopInstance}>
 								Stop {instanceTypeStr}
 							</Button>

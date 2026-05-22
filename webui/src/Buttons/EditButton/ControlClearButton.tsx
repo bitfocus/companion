@@ -30,7 +30,7 @@ export function ControlClearButton({
 	}, [resetControlMutation, location, resetModalRef])
 
 	return (
-		<Button color="danger" onClick={clearButton} title="Clear Button">
+		<Button color="danger" onClick={clearButton} title="Clear Button" aria-label="Clear button">
 			<FontAwesomeIcon icon={faTrashAlt} />
 		</Button>
 	)

@@ -224,17 +224,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 									Cancel
 								</Button>
 
-								<Button
-									color="primary"
-									className="me-md-1"
-									disabled={!canSubmit || isSubmitting}
-									type="submit"
-									onClick={() => {
-										form.handleSubmit().catch((err) => {
-											console.error('Add emulator failed', err)
-										})
-									}}
-								>
+								<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
 									Add {isSubmitting ? '...' : ''}
 								</Button>
 							</>
