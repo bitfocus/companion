@@ -2,9 +2,10 @@ import { CButton, CFormInput, CInputGroup } from '@coreui/react'
 import { faCopy, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -12,6 +13,7 @@ import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Help
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
+import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
 import { StaticAlert } from './Alert.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
@@ -19,6 +21,10 @@ import { VariableValueDisplay } from './VariableValueDisplay.js'
 interface VariablesTableProps {
 	label: string
 }
+
+type FuzzyVariableDefinition = VariableDefinitionExt & { fuzzy: ReturnType<typeof fuzzyPrepare> }
+
+const nameCollator = new Intl.Collator(undefined, { numeric: true })
 
 export const VariablesTable = observer(function VariablesTable({ label }: VariablesTableProps) {
 	const { notifier, variablesStore } = useContext(RootAppStoreContext)
@@ -33,33 +39,24 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		true
 	)
 
-	const variableDefinitions = useComputed(() => {
-		const defs = variablesStore.variableDefinitionsForLabel(label)
-
-		defs.sort((a, b) =>
-			a.name.localeCompare(b.name, undefined, {
-				numeric: true,
-			})
-		)
-
-		return defs
+	const variableDefinitions = useComputed((): FuzzyVariableDefinition[] => {
+		return variablesStore.variableDefinitionsForLabel(label).map((def) => ({
+			...def,
+			fuzzy: fuzzyPrepare(`${def.name} ${def.description}`),
+		}))
 	}, [variablesStore, label])
 
 	const onCopied = useCallback(() => {
 		notifier.show(`Copied`, 'Copied to clipboard', 3000)
 	}, [notifier])
 
-	const [candidates, errorMsg] = useMemo(() => {
+	const [candidates, errorMsg] = useComputed(() => {
 		let candidates: VariableDefinitionExt[] = []
 		try {
 			if (!filter) {
-				candidates = variableDefinitions
+				candidates = variableDefinitions.sort((a, b) => nameCollator.compare(a.name, b.name))
 			} else {
-				const regexp = new RegExp(filter, 'i')
-
-				candidates = variableDefinitions.filter(
-					(variable) => variable.name.match(regexp) || variable.description.match(regexp)
-				)
+				candidates = fuzzyFilterSort(variableDefinitions, filter)
 			}
 			return [candidates, null]
 		} catch (e) {
@@ -78,7 +75,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		count: candidates?.length ?? 0,
 		getScrollElement: () => parentRef.current,
 		estimateSize: () => 45,
-		overscan: 5,
+		overscan: 20,
 	})
 
 	if (variableDefinitions.length === 0) {

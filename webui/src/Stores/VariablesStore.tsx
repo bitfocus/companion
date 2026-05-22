@@ -150,21 +150,20 @@ export class VariablesStore {
 	})
 
 	public variableDefinitionsForLabel = (label: string): VariableDefinitionExt[] => {
-		const definitions: VariableDefinitionExt[] = []
-
 		// Module variables
 		const variables = this.variables.get(label)
-		if (variables) {
-			for (const [name, variable] of variables) {
-				definitions.push({
+		if (!variables) return []
+
+		return variables
+			.entries()
+			.map(
+				([name, variable]): VariableDefinitionExt => ({
 					...variable,
 					connectionLabel: label,
 					name,
 				})
-			}
-		}
-
-		return definitions
+			)
+			.toArray()
 	}
 
 	public get allCustomVariableCollectionIds(): string[] {
