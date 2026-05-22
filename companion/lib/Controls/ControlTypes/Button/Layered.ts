@@ -269,6 +269,7 @@ export class ControlButtonLayered
 			elements,
 
 			style: 'button-layered',
+			drawType: 'button',
 		}
 
 		this.#lastDrawStyle = result

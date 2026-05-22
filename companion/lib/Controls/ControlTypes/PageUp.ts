@@ -1,15 +1,82 @@
 import type { PageUpButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import { ControlBase } from '../ControlBase.js'
-import type { ControlDependencies } from '../ControlDependencies.js'
+import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
-	ControlWithoutActions,
-	ControlWithoutActionSets,
-	ControlWithoutEvents,
-	ControlWithoutLayeredStyle,
-	ControlWithoutOptions,
-	ControlWithoutPushed,
-} from '../IControlFragments.js'
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
+} from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
+import { CreateElementOfType } from './Button/LayerDefaults.js'
+import { ControlButtonPage } from './PageButton.js'
+
+export const pageUpElements: SomeButtonGraphicsElement[] = [
+	{
+		type: 'canvas',
+		id: 'canvas',
+		name: 'Canvas',
+		decoration: exprVal(ButtonGraphicsDecorationType.None),
+		showStatusIcons: exprVal(ButtonGraphicsShowStatusIcons.None),
+		usage: ButtonGraphicsElementUsage.Automatic,
+	},
+	{
+		...(CreateElementOfType('box') as ButtonGraphicsBoxElement),
+		color: exprVal(0x0f0f0f), // Grey background
+	},
+
+	{
+		// Draw the arrow
+		...(CreateElementOfType('group') as ButtonGraphicsGroupElement),
+		enabled: exprExpr('!$(internal:_graphics_page_plusminus)'),
+		children: [
+			{
+				...(CreateElementOfType('line') as ButtonGraphicsLineElement),
+				fromX: exprVal(64),
+				fromY: exprVal(42),
+				toX: exprVal(50),
+				toY: exprVal(28),
+				borderColor: exprVal(0xffffff),
+				borderWidth: exprVal(2.5),
+			},
+			{
+				...(CreateElementOfType('line') as ButtonGraphicsLineElement),
+				fromX: exprVal(36),
+				fromY: exprVal(42),
+				toX: exprVal(50),
+				toY: exprVal(28),
+				borderColor: exprVal(0xffffff),
+				borderWidth: exprVal(2.5),
+			},
+		],
+	},
+
+	{
+		// Draw +/- if enabled
+		...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+		enabled: exprExpr('$(internal:_graphics_page_plusminus)'),
+		text: exprExpr('$(internal:_graphics_page_direction_flipped) ? "–" : "+"'),
+		color: exprVal(0xffffff),
+		fontsize: exprVal('30'),
+		valign: exprVal('bottom'),
+		height: exprVal(50),
+	},
+
+	{
+		...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+		text: exprVal('UP'),
+		color: exprVal(0xffc600), // Yellow color
+		fontsize: exprVal('16.5'),
+		valign: exprVal('top'),
+		y: exprVal(53),
+		height: exprVal(47),
+	},
+]
 
 /**
  * Class for a pageup button control.
@@ -26,25 +93,8 @@ import type {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ControlButtonPageUp
-	extends ControlBase<PageUpButtonModel>
-	implements
-		ControlWithoutActions,
-		ControlWithoutLayeredStyle,
-		ControlWithoutEvents,
-		ControlWithoutActionSets,
-		ControlWithoutOptions,
-		ControlWithoutPushed
-{
+export class ControlButtonPageUp extends ControlButtonPage<PageUpButtonModel> {
 	readonly type = 'pageup'
-
-	readonly supportsActions = false
-	readonly supportsEntities = false
-	readonly supportsLayeredStyle = false
-	readonly supportsEvents = false
-	readonly supportsActionSets = false
-	readonly supportsOptions = false
-	readonly supportsPushed = false
 
 	/**
 	 * @param registry - the application core
@@ -69,35 +119,11 @@ export class ControlButtonPageUp
 		}
 	}
 
-	/**
-	 * Get the complete style object of a button
-	 * @returns the processed style of the button
-	 */
-	getLastDrawStyle(): DrawStyleModel {
+	protected getDrawElements(): ReturnType<ControlButtonPage<any>['getDrawElements']> {
 		return {
-			style: 'pageup',
+			drawType: 'pageup',
+			elements: pageUpElements,
 		}
-	}
-
-	/**
-	 * Collect the connection ids, labels, and variables referenced by this control
-	 * @param foundConnectionIds - connection ids being referenced
-	 * @param foundConnectionLabels - connection labels being referenced
-	 * @param foundVariables - variables being referenced
-	 */
-	collectReferencedConnectionsAndVariables(
-		_foundConnectionIds: Set<string>,
-		_foundConnectionLabels: Set<string>,
-		_foundVariables: Set<string>
-	): void {
-		// Nothing being referenced
-	}
-
-	/**
-	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
-	 */
-	triggerLocationHasChanged(): void {
-		// Nothing to do
 	}
 
 	/**
@@ -120,12 +146,5 @@ export class ControlButtonPageUp
 		return {
 			type: this.type,
 		}
-	}
-
-	renameVariables(_labelFrom: string, _labelTo: string): void {
-		// Nothing to do
-	}
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
-		// Nothing to do
 	}
 }

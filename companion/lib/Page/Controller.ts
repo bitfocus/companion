@@ -116,7 +116,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				.mutation(({ input }) => {
 					this.#logger.silly(`trpc: pages:setName ${input.pageNumber}: ${input.name}`)
 
-					this.setPageName(input.pageNumber, input.name, true)
+					this.setPageName(input.pageNumber, input.name)
 				}),
 
 			remove: publicProcedure
@@ -398,10 +398,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * Reset a page to defaults and empty
 	 * Note: Controls will be orphaned if not explicitly deleted by the caller
 	 * @param pageNumber - the page id
-	 * @param [redraw = true] - <code>true</code> if the graphics should invalidate
 	 * @returns ControlIds referenced on the page
 	 */
-	resetPage(pageNumber: number, redraw = true): string[] {
+	resetPage(pageNumber: number): string[] {
 		this.#logger.silly('Reset page ' + pageNumber)
 
 		// Fetch the page and ensure it exists
@@ -428,9 +427,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#store._resetPageControls(pageNumber)
 
 		// Reset page name using the store
-		const newPageInfo = this.#store._setPageName(pageNumber, 'PAGE')
+		this.#store._setPageName(pageNumber, 'PAGE')
 
-		if (redraw && newPageInfo) this.#invalidatePageNumberControls(pageNumber, newPageInfo)
 		this.emit('clientUpdate', {
 			type: 'update',
 			updatedOrder: null,
@@ -500,19 +498,16 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * Set/update a page
 	 * @param pageNumber - the page id
 	 * @param name - the page object containing the name
-	 * @param redraw - <code>true</code> if the graphics should invalidate
 	 */
-	setPageName(pageNumber: number, name: string, redraw = true): void {
+	setPageName(pageNumber: number, name: string): void {
 		const pageInfo = this.#store.getPageInfo(pageNumber)
 		if (!pageInfo) {
 			throw new Error('Page must be created before it can be imported to')
 		}
 
-		const newPageInfo = this.#store._setPageName(pageNumber, name)
+		this.#store._setPageName(pageNumber, name)
 
 		this.#logger.silly('Set page ' + pageNumber + ' to ', name)
-
-		if (redraw && newPageInfo) this.#invalidatePageNumberControls(pageNumber, newPageInfo)
 
 		this.emit('clientUpdate', {
 			type: 'update',
@@ -526,26 +521,6 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				},
 			],
 		})
-	}
-
-	/**
-	 * Redraw the page number control on the specified page
-	 */
-	#invalidatePageNumberControls(pageNumber: number, pageInfo: PageModel): void {
-		if (!pageInfo?.controls) return
-
-		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
-			for (const [column, controlId] of Object.entries(rowObj)) {
-				const control = this.#controlsController.getControl(controlId)
-				if (control && control.type === 'pagenum') {
-					this.#graphicsController.invalidateButton({
-						pageNumber: Number(pageNumber),
-						column: Number(column),
-						row: Number(row),
-					})
-				}
-			}
-		}
 	}
 
 	/**

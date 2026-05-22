@@ -1,15 +1,73 @@
 import type { PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
-import { ControlBase } from '../ControlBase.js'
-import type { ControlDependencies } from '../ControlDependencies.js'
+import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
-	ControlWithoutActions,
-	ControlWithoutActionSets,
-	ControlWithoutEvents,
-	ControlWithoutLayeredStyle,
-	ControlWithoutOptions,
-	ControlWithoutPushed,
-} from '../IControlFragments.js'
+	ButtonGraphicsBoxElement,
+	ButtonGraphicsGroupElement,
+	ButtonGraphicsTextElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
+} from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
+import { CreateElementOfType } from './Button/LayerDefaults.js'
+import { ControlButtonPage } from './PageButton.js'
+
+export const pageNumberElements: SomeButtonGraphicsElement[] = [
+	{
+		type: 'canvas',
+		id: 'canvas',
+		name: 'Canvas',
+		decoration: exprVal(ButtonGraphicsDecorationType.None),
+		showStatusIcons: exprVal(ButtonGraphicsShowStatusIcons.None),
+		usage: ButtonGraphicsElementUsage.Automatic,
+	},
+	{
+		...(CreateElementOfType('box') as ButtonGraphicsBoxElement),
+		color: exprVal(0x0f0f0f), // Grey background
+	},
+
+	{
+		// If page has a name
+		...(CreateElementOfType('group') as ButtonGraphicsGroupElement),
+		enabled: exprExpr('!!$(this:page_name) && toLowerCase($(this:page_name)) != "page" && $(this:page_name) != "$NA"'),
+		children: [
+			{
+				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+				text: exprVal('$(this:page_name)'),
+				color: exprVal(0xffffff),
+				fontsize: exprVal('30'),
+			},
+		],
+	},
+
+	{
+		// No name, default display
+		...(CreateElementOfType('group') as ButtonGraphicsGroupElement),
+		enabled: exprExpr('!$(this:page_name) || toLowerCase($(this:page_name)) == "page" || $(this:page_name) == "$NA"'),
+		children: [
+			{
+				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+				text: exprVal('PAGE'),
+				color: exprVal(0xffc600), // Yellow color
+				fontsize: exprVal('16.5'),
+				valign: exprVal('bottom'),
+				height: exprVal(40),
+			},
+			{
+				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
+				text: exprExpr('getVariable("this:page") || "x"'),
+				color: exprVal(0xffffff),
+				fontsize: exprVal('30'),
+				valign: exprVal('top'),
+				y: exprVal(45),
+				height: exprVal(55),
+			},
+		],
+	},
+]
 
 /**
  * Class for a pagenum button control.
@@ -26,25 +84,8 @@ import type {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export class ControlButtonPageNumber
-	extends ControlBase<PageNumberButtonModel>
-	implements
-		ControlWithoutActions,
-		ControlWithoutLayeredStyle,
-		ControlWithoutEvents,
-		ControlWithoutActionSets,
-		ControlWithoutOptions,
-		ControlWithoutPushed
-{
+export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonModel> {
 	readonly type = 'pagenum'
-
-	readonly supportsActions = false
-	readonly supportsEntities = false
-	readonly supportsLayeredStyle = false
-	readonly supportsEvents = false
-	readonly supportsActionSets = false
-	readonly supportsOptions = false
-	readonly supportsPushed = false
 
 	/**
 	 * @param registry - the application core
@@ -70,35 +111,11 @@ export class ControlButtonPageNumber
 		}
 	}
 
-	/**
-	 * Get the complete style object of a button
-	 * @returns the processed style of the button
-	 */
-	getLastDrawStyle(): DrawStyleModel {
+	protected getDrawElements(): ReturnType<ControlButtonPage<any>['getDrawElements']> {
 		return {
-			style: 'pagenum',
+			drawType: 'pagenum',
+			elements: pageNumberElements,
 		}
-	}
-
-	/**
-	 * Collect the connection ids, labels, and variables referenced by this control
-	 * @param foundConnectionIds - connection ids being referenced
-	 * @param foundConnectionLabels - connection labels being referenced
-	 * @param foundVariables - variables being referenced
-	 */
-	collectReferencedConnectionsAndVariables(
-		_foundConnectionIds: Set<string>,
-		_foundConnectionLabels: Set<string>,
-		_foundVariables: Set<string>
-	): void {
-		// Nothing being referenced
-	}
-
-	/**
-	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
-	 */
-	triggerLocationHasChanged(): void {
-		// Nothing to do
 	}
 
 	/**
@@ -121,12 +138,5 @@ export class ControlButtonPageNumber
 		return {
 			type: this.type,
 		}
-	}
-
-	renameVariables(_labelFrom: string, _labelTo: string): void {
-		// Nothing to do
-	}
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
-		// Nothing to do
 	}
 }
