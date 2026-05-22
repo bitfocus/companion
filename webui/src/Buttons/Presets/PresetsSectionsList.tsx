@@ -1,4 +1,3 @@
-import { CCallout } from '@coreui/react'
 import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,6 +6,7 @@ import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connect
 import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Callout } from '~/Components/Callout.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
@@ -137,9 +137,9 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 					<NonIdealState icon={faSearch} text="No matching presets" />
 				) : (
 					<>
-						<CCallout color="info" className="my-2">
+						<Callout color="info" className="my-2">
 							<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
-						</CCallout>
+						</Callout>
 						<div className="collapsible-tree">{sections}</div>
 					</>
 				)}

@@ -1,4 +1,3 @@
-import { CCallout } from '@coreui/react'
 import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
@@ -8,6 +7,7 @@ import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
+import { Callout } from '~/Components/Callout.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
@@ -182,16 +182,16 @@ export const ImportExportPage = observer(function ImportExport() {
 			</h4>
 			<p>On this page, you can import, export, and reset all settings stored in your Companion installation.</p>
 
-			<CCallout color="success">
+			<Callout color="success">
 				<h5>Export</h5>
 				<p>Download a file containing all connections and button pages.</p>
 				<Button color="success" onClick={doExport}>
 					<FontAwesomeIcon icon={faDownload} style={{ marginRight: 7, marginLeft: -2 }} />
 					Export configuration
 				</Button>
-			</CCallout>
+			</Callout>
 
-			<CCallout color="warning">
+			<Callout color="warning">
 				<h5>Import</h5>
 				{!fileApiIsSupported ? (
 					<>
@@ -220,9 +220,9 @@ export const ImportExportPage = observer(function ImportExport() {
 						</div>
 					</>
 				)}
-			</CCallout>
+			</Callout>
 
-			<CCallout color="danger">
+			<Callout color="danger">
 				<h5>Reset</h5>
 				<p>This will clear all connections, triggers and/or buttons.</p>
 				<div>
@@ -231,7 +231,7 @@ export const ImportExportPage = observer(function ImportExport() {
 						Reset configuration
 					</Button>
 				</div>
-			</CCallout>
+			</Callout>
 		</div>
 	)
 })

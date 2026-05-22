@@ -1,8 +1,9 @@
-import { CCallout, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef } from 'react'
 import type { RecordSessionUpdate } from '@companion-app/shared/Model/ActionRecorderModel.js'
+import { Callout } from '~/Components/Callout.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc } from '~/Resources/TRPC.js'
@@ -90,7 +91,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 					<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionsStore.selectedSessionInfo} />
 				</PanelCollapseHelperProvider>
 			) : (
-				<CCallout color="danger">There is no session, this looks like a bug!</CCallout>
+				<Callout color="danger">There is no session, this looks like a bug!</Callout>
 			)}
 		</CRow>
 	)

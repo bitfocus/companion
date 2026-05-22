@@ -1,0 +1,40 @@
+.callout2-element {
+	padding: 1rem 1rem;
+	margin: 1rem 0;
+	border: var(--cui-border-width) solid var(--cui-border-color);
+	border-inline-start-color: var(--callout2-border-left-color);
+	border-inline-start-width: calc(var(--cui-border-width) * 4);
+	border-radius: var(--cui-border-radius);
+}
+
+.callout2-primary {
+	--callout2-border-left-color: var(--cui-primary);
+}
+
+.callout2-secondary {
+	--callout2-border-left-color: var(--cui-secondary);
+}
+
+.callout2-success {
+	--callout2-border-left-color: var(--cui-success);
+}
+
+.callout2-danger {
+	--callout2-border-left-color: var(--cui-danger);
+}
+
+.callout2-warning {
+	--callout2-border-left-color: var(--cui-warning);
+}
+
+.callout2-info {
+	--callout2-border-left-color: var(--cui-info);
+}
+
+.callout2-light {
+	--callout2-border-left-color: var(--cui-light);
+}
+
+.callout2-dark {
+	--callout2-border-left-color: var(--cui-dark);
+}

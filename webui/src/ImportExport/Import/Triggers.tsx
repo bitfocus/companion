@@ -1,9 +1,9 @@
-import { CCallout } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Callout } from '~/Components/Callout.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -124,20 +124,20 @@ export function ImportTriggersTab({
 
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 
-			<CCallout color="success">
+			<Callout color="success">
 				<h5>Import to Existing Triggers</h5>
 				<p>This will import the selected triggers, while keeping your existing triggers.</p>
 				<Button color="success" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
 					<FontAwesomeIcon icon={faFileCirclePlus} /> Add to existing triggers
 				</Button>
-			</CCallout>
-			<CCallout color="warning">
+			</Callout>
+			<Callout color="warning">
 				<h5>Reset & Import Triggers</h5>
 				<p>This will remove all existing triggers and replace them with the selected ones.</p>
 				<Button color="warning" data-replace={true} onClick={doImport} disabled={selectedTriggers.length === 0}>
 					<FontAwesomeIcon icon={faFileCircleExclamation} /> Reset and import triggers
 				</Button>
-			</CCallout>
+			</Callout>
 		</>
 	)
 }
