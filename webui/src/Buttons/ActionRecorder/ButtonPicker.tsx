@@ -2,7 +2,7 @@ import { CCol, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
@@ -147,6 +147,9 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 		gridRef.current?.resetPosition()
 	}, [gridRef])
 
+	const stepInputId = useId()
+	const setInputId = useId()
+
 	return (
 		<>
 			<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
@@ -171,9 +174,10 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 				<Form className="flex-form" onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
-							<FormLabel>Step</FormLabel>
+							<FormLabel htmlFor={stepInputId}>Step</FormLabel>
 
 							<SimpleDropdownInputField
+								id={stepInputId}
 								choices={actionStepOptions}
 								value={selectedStep ?? ''}
 								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
@@ -181,9 +185,10 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							/>
 						</CCol>
 						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-							<FormLabel>Action Group</FormLabel>
+							<FormLabel htmlFor={setInputId}>Action Group</FormLabel>
 
 							<SimpleDropdownInputField
+								id={setInputId}
 								choices={actionSetOptions}
 								value={selectedSet ?? ''}
 								setValue={setSelectedSet as (val: DropdownChoiceId) => void}

@@ -1,6 +1,6 @@
 import { CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from 'react'
 import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
 import { Button } from '~/Components/Button.js'
 import { CModalExt } from '~/Components/CModalExt.js'
@@ -82,6 +82,8 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 
 	const [modalRef, setModalRef] = useState<HTMLElement | null>(null)
 
+	const companionAddressFieldId = useId()
+
 	return (
 		<CModalExt ref={setModalRef} visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
 			<MenuPortalContext.Provider value={modalRef}>
@@ -97,8 +99,9 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 							<LoadingBar />
 						) : (
 							<>
-								<FormLabel>Companion Address</FormLabel>
+								<FormLabel htmlFor={companionAddressFieldId}>Companion Address</FormLabel>
 								<DropdownInputField
+									htmlName={companionAddressFieldId}
 									choices={externalAddressesQuery.data?.addresses}
 									value={selectedAddress ?? ''}
 									setValue={(selected) => setSelectedAddress(selected?.toString() ?? '')}

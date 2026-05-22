@@ -1,7 +1,7 @@
 import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
 import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
@@ -60,6 +60,9 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 		[form]
 	)
 
+	const nameFieldId = useId()
+	const idFieldId = useId()
+
 	return (
 		<CModalExt visible={show} onClose={doClose} onClosed={onClosed}>
 			<CModalHeader closeButton>
@@ -86,7 +89,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 							name="name"
 							children={(field) => (
 								<>
-									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Name
 										<InlineHelpIcon className="ms-1">
 											Display name for the group. This can be changed later
@@ -94,6 +97,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
+											id={nameFieldId}
 											type="text"
 											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
@@ -119,7 +123,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 							}}
 							children={(field) => (
 								<>
-									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={idFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Id
 										<InlineHelpIcon className="ms-1">
 											Id for the group, this is used for internal references. This cannot be changed once set.
@@ -127,6 +131,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
+											id={idFieldId}
 											type="text"
 											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}

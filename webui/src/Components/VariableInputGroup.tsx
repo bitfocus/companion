@@ -6,13 +6,20 @@ import { Button } from '~/Components/Button.js'
 import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariableInputGroupProps {
+	id: string | undefined
 	value: JsonValue | undefined // The external variable value
 	setCurrentValue: (name: string, value: JsonValue | undefined) => void
 	name: string
 	disabled?: boolean
 }
 
-const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurrentValue, name, disabled = false }) => {
+const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
+	id,
+	value,
+	setCurrentValue,
+	name,
+	disabled = false,
+}) => {
 	// Determine initial type
 	const isStringInitial = typeof value === 'string'
 
@@ -131,6 +138,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ value, setCurre
 					{buttonProps.label}
 				</Button>
 				<CFormInput
+					id={id}
 					value={localValue}
 					onChange={(e) => handleInputChange(e.target.value)}
 					style={{ outline: 'none', boxShadow: 'none', color: !isValueValid ? 'red' : undefined }}

@@ -21,6 +21,7 @@ const meta = {
 	component: SimpleDropdownInputField,
 	decorators: [withPortal],
 	args: {
+		id: undefined,
 		choices,
 		value: 'red',
 		setValue: () => {},

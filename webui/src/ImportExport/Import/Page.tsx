@@ -314,7 +314,12 @@ const ImportRemapRow = observer(function ImportRemapRow({
 	return (
 		<tr>
 			<td>
-				<SimpleDropdownInputField value={connectionRemap[id] ?? ''} setValue={onChange} choices={selectOptions} />
+				<SimpleDropdownInputField
+					id={undefined} // TODO - link up with a label
+					value={connectionRemap[id] ?? ''}
+					setValue={onChange}
+					choices={selectOptions}
+				/>
 			</td>
 			<td>{moduleManifest?.name ?? `Unknown module (${connection.moduleId})`}</td>
 			<td>{connection.label}</td>

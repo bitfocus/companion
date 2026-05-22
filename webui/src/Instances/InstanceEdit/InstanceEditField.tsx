@@ -13,6 +13,7 @@ import { TextInputField } from '~/Components/TextInputField'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface InstanceEditFieldProps {
+	inputId: string
 	setValue: (value: JsonValue | undefined) => void
 	definition: SomeCompanionInputField
 	value: JsonValue | undefined
@@ -21,6 +22,7 @@ interface InstanceEditFieldProps {
 }
 
 export function InstanceEditField({
+	inputId,
 	setValue,
 	definition,
 	value,
@@ -35,11 +37,12 @@ export function InstanceEditField({
 	const fieldType = definition.type
 	switch (definition.type) {
 		case 'static-text': {
-			return <StaticTextFieldText {...definition} allowImages />
+			return <StaticTextFieldText {...definition} id={inputId} allowImages />
 		}
 		case 'textinput':
 			return (
 				<TextInputField
+					id={inputId}
 					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
@@ -50,6 +53,7 @@ export function InstanceEditField({
 		case 'number':
 			return (
 				<NumberInputField
+					id={inputId}
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
@@ -62,12 +66,13 @@ export function InstanceEditField({
 		case 'checkbox':
 			return (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<SwitchInputField value={!!value} setValue={setValue} tooltip={definition.tooltip} />
+					<SwitchInputField id={inputId} value={!!value} setValue={setValue} tooltip={definition.tooltip} />
 				</div>
 			)
 		case 'dropdown':
 			return (
 				<DropdownInputField
+					htmlName={inputId}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					regex={definition.regex}
@@ -79,6 +84,7 @@ export function InstanceEditField({
 		case 'multidropdown':
 			return (
 				<MultiDropdownInputField
+					htmlName={inputId}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					minSelection={definition.minSelection}
@@ -93,6 +99,7 @@ export function InstanceEditField({
 		case 'colorpicker': {
 			return (
 				<ColorInputField
+					id={inputId}
 					value={value as any}
 					setValue={setValue}
 					enableAlpha={definition.enableAlpha ?? false}
@@ -104,6 +111,7 @@ export function InstanceEditField({
 		case 'bonjour-device':
 			return moduleType === ModuleInstanceType.Connection ? (
 				<BonjourDeviceInputField
+					id={inputId}
 					value={value as any}
 					setValue={setValue}
 					connectionId={instanceId}

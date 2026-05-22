@@ -60,6 +60,7 @@ function ControlledMultiDropdown({
 			<MultiDropdownInputField
 				choices={CHOICES}
 				{...rest}
+				htmlName={undefined}
 				value={value}
 				setValue={(v) => {
 					setValue(v)

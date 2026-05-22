@@ -1,6 +1,6 @@
 import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useId } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import {
 	type ButtonGraphicsElementBase,
@@ -21,18 +21,21 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 	elementProps: Readonly<SomeButtonGraphicsElement>
 	simpleMode: boolean
 }) {
+	const nameFieldId = useId()
+	const usageFieldId = useId()
+
 	return (
 		<>
-			<FormLabel htmlFor="inputName" className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 				Element Name
 			</FormLabel>
 			<CCol sm={8}>
-				<FieldElementNameInput elementProps={elementProps} />
+				<FieldElementNameInput elementProps={elementProps} inputId={nameFieldId} />
 			</CCol>
 
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
 				<>
-					<FormLabel htmlFor="inputUsage" className="col-sm-4 col-form-label col-form-label-sm">
+					<FormLabel htmlFor={usageFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 						External Usage
 						<InlineHelpIcon className="ms-1">
 							Some surfaces do not have full rgb displays and require specific elements for providing feedback in
@@ -43,7 +46,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 						</InlineHelpIcon>
 					</FormLabel>
 					<CCol sm={8}>
-						<FieldElementUsageInput elementProps={elementProps} />
+						<FieldElementUsageInput elementProps={elementProps} inputId={usageFieldId} />
 					</CCol>
 				</>
 			)}
@@ -52,8 +55,10 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 })
 
 const FieldElementNameInput = observer(function FieldElementNameInput({
+	inputId,
 	elementProps,
 }: {
+	inputId: string
 	elementProps: SomeButtonGraphicsElement
 }) {
 	const { controlId } = useElementPropertiesContext()
@@ -73,12 +78,14 @@ const FieldElementNameInput = observer(function FieldElementNameInput({
 		[setElementNameMutation, controlId, elementProps.id]
 	)
 
-	return <TextInputField setValue={setName} value={elementProps.name ?? ''} />
+	return <TextInputField id={inputId} setValue={setName} value={elementProps.name ?? ''} />
 })
 
 const FieldElementUsageInput = observer(function FieldElementUsageInput({
+	inputId,
 	elementProps,
 }: {
+	inputId: string
 	elementProps: ButtonGraphicsElementBase
 }) {
 	const { controlId } = useElementPropertiesContext()
@@ -103,7 +110,14 @@ const FieldElementUsageInput = observer(function FieldElementUsageInput({
 	)
 
 	// TODO: Should the choices be dynamic based on the element type?
-	return <SimpleDropdownInputField setValue={setUsage} value={elementProps.usage} choices={elementUsageChoices} />
+	return (
+		<SimpleDropdownInputField
+			id={inputId}
+			setValue={setUsage}
+			value={elementProps.usage}
+			choices={elementUsageChoices}
+		/>
+	)
 })
 
 const elementUsageChoices: DropdownChoice[] = [

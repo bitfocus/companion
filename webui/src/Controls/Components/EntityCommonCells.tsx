@@ -3,7 +3,7 @@ import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useId } from 'react'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
@@ -77,6 +77,8 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 		notifier.show(`Copied`, 'Copied to clipboard', 3000)
 	}, [notifier])
 
+	const variableNameId = useId()
+
 	return (
 		<>
 			<div className="entity-cells-wrapper">
@@ -90,7 +92,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
-								<FormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={variableNameId} className="col-sm-4 col-form-label col-form-label-sm">
 									Variable name
 									<InlineHelpIcon className="ms-1">
 										The name to give this value as a {localVariablePrefix} variable
@@ -103,6 +105,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								</FormLabel>
 								<CCol sm={8}>
 									<TextInputField
+										id={variableNameId}
 										value={entity.variableName ?? ''}
 										setValue={service.setVariableName}
 										checkValid={(str) => str === '' || isLabelValid(str)}
@@ -207,16 +210,19 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 	readonly: boolean
 	service: IEntityEditorActionService
 }) {
+	const invertFieldId = useId()
+
 	if (!localVariablesStore || entity.type !== EntityModelType.Feedback) return null
 
 	return (
 		<MyErrorBoundary>
-			<FormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={invertFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 				Current Value
 			</FormLabel>
 			<CCol sm={8}>
 				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
 					<TextInputField
+						id={invertFieldId}
 						disabled={!entity.variableName || readonly}
 						value={
 							stringifyVariableValue(

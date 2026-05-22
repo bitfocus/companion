@@ -13,7 +13,7 @@ import { MenuPortalContext } from './MenuPortalContext.js'
 import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
-	htmlName?: string
+	htmlName: string | undefined
 	className?: string
 	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean

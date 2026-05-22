@@ -14,6 +14,7 @@ interface MinMaxDimension {
 }
 
 interface PNGInputFieldProps {
+	id: string | undefined
 	min: MinMaxDimension
 	max: MinMaxDimension
 	onSelect: (png64Str: string, name: string) => void
@@ -23,6 +24,7 @@ interface PNGInputFieldProps {
 }
 
 export function PNGInputField({
+	id,
 	min,
 	max,
 	onSelect,
@@ -129,7 +131,7 @@ export function PNGInputField({
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
-			<CFormInput type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported || disabled} />
+			<CFormInput id={id} type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported || disabled} />
 		</Button>
 	)
 }

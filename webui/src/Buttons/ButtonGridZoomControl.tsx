@@ -48,7 +48,13 @@ export function ButtonGridZoomControl({
 					</Button>
 				</CInputGroup>
 				<CInputGroup className="dropdown-item-padding">
-					<NumberInputField value={gridZoomValue} setValue={gridZoomController.setZoom} min={ZOOM_MIN} max={ZOOM_MAX} />
+					<NumberInputField
+						id={undefined}
+						value={gridZoomValue}
+						setValue={gridZoomController.setZoom}
+						min={ZOOM_MIN}
+						max={ZOOM_MAX}
+					/>
 					<CInputGroupText>%</CInputGroupText>
 				</CInputGroup>
 				<CLink className="dropdown-item" onClick={gridZoomController.zoomReset}>

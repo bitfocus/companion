@@ -1,7 +1,7 @@
 import { CCol, CFormInput, CRow } from '@coreui/react'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { memo, useState } from 'react'
+import { memo, useId, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -23,6 +23,9 @@ export const CloudUserPass = memo(function CloudUserPass({
 
 	const loginMutation = useMutationExt(trpc.cloud.login.mutationOptions())
 
+	const emailFieldId = useId()
+	const passwordFieldId = useId()
+
 	return (
 		<Form
 			className="cloud-auth-form"
@@ -41,14 +44,19 @@ export const CloudUserPass = memo(function CloudUserPass({
 		>
 			<CRow>
 				<CCol sm={6}>
-					<FormLabel>Email address</FormLabel>
-					<CFormInput type="text" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
+					<FormLabel htmlFor={emailFieldId}>Email address</FormLabel>
+					<CFormInput id={emailFieldId} type="text" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
 				</CCol>
 				<CCol sm={6}></CCol>
 
 				<CCol sm={6}>
-					<FormLabel>Password</FormLabel>
-					<CFormInput type="password" value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
+					<FormLabel htmlFor={passwordFieldId}>Password</FormLabel>
+					<CFormInput
+						id={passwordFieldId}
+						type="password"
+						value={password}
+						onChange={(e) => setPassword(e.currentTarget.value)}
+					/>
 				</CCol>
 				<CCol sm={6}></CCol>
 

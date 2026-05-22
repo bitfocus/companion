@@ -71,6 +71,7 @@ function ControlledSimple({
 			<SimpleDropdownInputField
 				choices={choices}
 				{...rest}
+				id={undefined}
 				value={value}
 				setValue={(v) => {
 					setValue(v)
@@ -255,7 +256,13 @@ describe('Validity (checkValid and isKnownValue)', () => {
 		const checkValid = vi.fn(() => true)
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={NUMERIC_CHOICES} value={1} setValue={vi.fn()} checkValid={checkValid} />
+				<SimpleDropdownInputField
+					id={undefined}
+					choices={NUMERIC_CHOICES}
+					value={1}
+					setValue={vi.fn()}
+					checkValid={checkValid}
+				/>
 			</MenuPortalContext.Provider>
 		)
 		// The value prop is the number 1; checkValid should receive 1, not '1'
@@ -278,7 +285,13 @@ describe('No options', () => {
 		const user = userEvent.setup()
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={[]} value="" setValue={vi.fn()} noOptionsMessage="Nothing here" />
+				<SimpleDropdownInputField
+					id={undefined}
+					choices={[]}
+					value=""
+					setValue={vi.fn()}
+					noOptionsMessage="Nothing here"
+				/>
 			</MenuPortalContext.Provider>
 		)
 		const trigger = container.querySelector<HTMLButtonElement>('.dropdown-field-select-trigger')!
@@ -291,7 +304,7 @@ describe('No options', () => {
 		const user = userEvent.setup()
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={[]} value="" setValue={vi.fn()} />
+				<SimpleDropdownInputField id={undefined} choices={[]} value="" setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		const trigger = container.querySelector<HTMLButtonElement>('.dropdown-field-select-trigger')!
@@ -304,7 +317,7 @@ describe('No options', () => {
 		// isKnownValue = true when options.length === 0 (guard in the source)
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={[]} value="anything" setValue={vi.fn()} />
+				<SimpleDropdownInputField id={undefined} choices={[]} value="anything" setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		expect(container.querySelector('.dropdown-field')).not.toHaveClass('dropdown-field-invalid')
@@ -371,7 +384,7 @@ describe('Numeric vs string ID disambiguation', () => {
 	it('shows the numeric-ID label when value={1}', () => {
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={AMBIGUOUS_CHOICES} value={1} setValue={vi.fn()} />
+				<SimpleDropdownInputField id={undefined} choices={AMBIGUOUS_CHOICES} value={1} setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		const trigger = container.querySelector('.dropdown-field-select-trigger')!
@@ -381,7 +394,7 @@ describe('Numeric vs string ID disambiguation', () => {
 	it('shows the string-ID label when value={"1"}', () => {
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={AMBIGUOUS_CHOICES} value="1" setValue={vi.fn()} />
+				<SimpleDropdownInputField id={undefined} choices={AMBIGUOUS_CHOICES} value="1" setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		const trigger = container.querySelector('.dropdown-field-select-trigger')!
@@ -425,7 +438,7 @@ describe('Numeric vs string ID disambiguation', () => {
 	it('value={1} is known (not treated as unknown just because "1" also exists)', () => {
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={AMBIGUOUS_CHOICES} value={1} setValue={vi.fn()} />
+				<SimpleDropdownInputField id={undefined} choices={AMBIGUOUS_CHOICES} value={1} setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		expect(container.querySelector('.dropdown-field')).not.toHaveClass('dropdown-field-invalid')
@@ -434,7 +447,7 @@ describe('Numeric vs string ID disambiguation', () => {
 	it('value={"1"} is known (not treated as unknown just because 1 also exists)', () => {
 		const { container } = render(
 			<MenuPortalContext.Provider value={document.body}>
-				<SimpleDropdownInputField choices={AMBIGUOUS_CHOICES} value="1" setValue={vi.fn()} />
+				<SimpleDropdownInputField id={undefined} choices={AMBIGUOUS_CHOICES} value="1" setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		expect(container.querySelector('.dropdown-field')).not.toHaveClass('dropdown-field-invalid')

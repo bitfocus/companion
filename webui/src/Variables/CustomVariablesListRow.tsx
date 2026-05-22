@@ -3,7 +3,7 @@ import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortaw
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useId } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
@@ -39,6 +39,11 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(null, info.id)
 
 	const value = customVariableValues.get(info.id)
+
+	const persistFieldId = useId()
+	const descriptionFieldId = useId()
+	const currentValueFieldId = useId()
+	const startupValueFieldId = useId()
 
 	return (
 		<div className="editor-grid">
@@ -82,7 +87,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				<>
 					<Form onSubmit={PreventDefaultHandler} className="cell-fields">
 						<div>
-							<FormLabel>
+							<FormLabel htmlFor={persistFieldId}>
 								Persist value
 								<InlineHelpIcon className="ms-1">
 									If enabled, variable value will be saved and restored when Companion restarts.
@@ -99,35 +104,43 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								}}
 							>
 								<CheckboxInputField
+									id={persistFieldId}
 									value={info.persistCurrentValue}
 									setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
 								/>
 							</div>
 						</div>
 						<CRow>
-							<FormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
+							<FormLabel htmlFor={descriptionFieldId} className="col-sm-3 align-right">
 								Description:
 							</FormLabel>
 							<CCol sm={9}>
 								<TextInputField
+									id={descriptionFieldId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
 									style={{ marginBottom: '0.5rem' }}
 								/>
 							</CCol>
 
-							<FormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
+							<FormLabel htmlFor={currentValueFieldId} className="col-sm-3 align-right">
 								Current value:
 							</FormLabel>
 							<CCol sm={9}>
-								<VariableInputGroup value={value} name={info.id} setCurrentValue={customVariablesApi.setCurrentValue} />
+								<VariableInputGroup
+									id={currentValueFieldId}
+									value={value}
+									name={info.id}
+									setCurrentValue={customVariablesApi.setCurrentValue}
+								/>
 							</CCol>
 
-							<FormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
+							<FormLabel htmlFor={startupValueFieldId} className="col-sm-3 align-right">
 								Startup value:
 							</FormLabel>
 							<CCol sm={9}>
 								<VariableInputGroup
+									id={startupValueFieldId}
 									disabled={!!info.persistCurrentValue}
 									value={info.defaultValue}
 									name={info.id}

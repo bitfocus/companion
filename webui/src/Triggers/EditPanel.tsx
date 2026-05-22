@@ -1,5 +1,5 @@
 import { CCol, CInputGroup } from '@coreui/react'
-import { useCallback, useRef } from 'react'
+import { useCallback, useId, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
@@ -163,14 +163,16 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 
 	const setName = useCallback((val: string) => setValueInner('name', val), [setValueInner])
 
+	const nameFieldId = useId()
+
 	return (
 		<CCol sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<CCol xs={12}>
-					<FormLabel>Name</FormLabel>
+					<FormLabel htmlFor={nameFieldId}>Name</FormLabel>
 					<br />
 					<CInputGroup>
-						<TextInputField setValue={setName} value={options.name} />
+						<TextInputField id={nameFieldId} setValue={setName} value={options.name} />
 						<TestActionsButton controlId={controlId} hidden={!options} />
 					</CInputGroup>
 				</CCol>

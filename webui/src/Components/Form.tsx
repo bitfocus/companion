@@ -25,7 +25,7 @@ export interface FormLabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
 	/**
 	 * The id of the form element this label is associated with. This is required for accessibility reasons.
 	 */
-	// htmlFor: string | undefined
+	htmlFor: string | undefined
 }
 
 export const FormLabel = forwardRef<HTMLLabelElement, FormLabelProps>(({ children, className, ...rest }, ref) => {

@@ -20,6 +20,7 @@ const meta = {
 	component: VariablePickerField,
 	decorators: [withPortal],
 	args: {
+		htmlName: undefined,
 		choices,
 		value: 'internal:time_hms',
 		setValue: () => {},

@@ -5,6 +5,7 @@ import { NumberInputField } from './NumberInputField'
 const meta = {
 	component: NumberInputField,
 	args: {
+		id: undefined,
 		value: 0,
 		setValue: () => {},
 		tooltip: '',

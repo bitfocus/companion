@@ -2,11 +2,13 @@ import { parse } from 'marked'
 import sanitizeHtml from 'sanitize-html'
 
 export function StaticTextFieldText({
+	id,
 	value,
 	label,
 	tooltip,
 	allowImages,
 }: {
+	id?: string
 	value: string
 	label?: string
 	tooltip?: string
@@ -20,7 +22,7 @@ export function StaticTextFieldText({
 			}),
 		}
 
-		return <div title={tooltip} dangerouslySetInnerHTML={descriptionHtml} className="static-text-content"></div>
+		return <div id={id} title={tooltip} dangerouslySetInnerHTML={descriptionHtml} className="static-text-content"></div>
 	}
 
 	return null

@@ -232,7 +232,7 @@ const PageListRow = observer(function PageListRow({
 			</td>
 			<td style={{ width: 80, textAlign: 'center', fontWeight: 'bold' }}>{pageNumber}</td>
 			<td>
-				<TextInputField value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
+				<TextInputField id={undefined} value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
 			</td>
 			<td style={{ width: 100, textAlign: 'right' }}>
 				<ButtonGroup>

@@ -58,7 +58,7 @@ export function ImageNameInput({
 				</FormLabel>
 				<div className="col-sm-9">
 					<TextInputField
-						// id={labelInputId}
+						id={labelInputId}
 						value={value}
 						setValue={onChange}
 						placeholder={placeholder}

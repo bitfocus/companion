@@ -1,6 +1,6 @@
 import { CCard, CCardBody, CCardHeader, CCol, CFormInput, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { memo, useState } from 'react'
+import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
@@ -116,10 +116,12 @@ interface AuthStateProps {
 function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps) {
 	const logoutMutation = useMutationExt(trpc.cloud.logout.mutationOptions())
 
+	const userId = useId()
+
 	return (
 		<CCol sm={6} className="cloud-auth-state">
-			<FormLabel>Logged in as</FormLabel>
-			<CFormInput readOnly type="text" value={authenticatedAs} />
+			<FormLabel htmlFor={userId}>Logged in as</FormLabel>
+			<CFormInput id={userId} readOnly type="text" value={authenticatedAs} />
 			{!cloudActive && (
 				<div className="my-3">
 					<Button

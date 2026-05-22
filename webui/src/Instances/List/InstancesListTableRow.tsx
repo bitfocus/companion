@@ -116,6 +116,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			<div className="flex">
 				<div className="ms-2" title={toggleEnabledTitle}>
 					<SwitchInputField
+						id={undefined}
 						value={isEnabled}
 						setValue={doToggleEnabled}
 						disabled={!moduleInfo || !moduleVersion || !canToggleEnabled}

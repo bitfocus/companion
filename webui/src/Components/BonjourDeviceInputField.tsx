@@ -5,6 +5,7 @@ import { trpc } from '~/Resources/TRPC.js'
 import { DropdownInputField } from './DropdownInputField.js'
 
 interface BonjourDeviceInputFieldProps {
+	id: string | undefined
 	value: string
 	setValue: (value: DropdownChoiceId) => void
 	connectionId: string
@@ -12,6 +13,7 @@ interface BonjourDeviceInputFieldProps {
 }
 
 export function BonjourDeviceInputField({
+	id,
 	value,
 	setValue,
 	connectionId,
@@ -83,5 +85,5 @@ export function BonjourDeviceInputField({
 		return choices
 	}, [choicesRaw, value])
 
-	return <DropdownInputField value={value} setValue={setValue} choices={choices} />
+	return <DropdownInputField htmlName={id} value={value} setValue={setValue} choices={choices} />
 }

@@ -21,6 +21,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { InstanceEditPanelService } from './InstanceEditPanelService'
 
 interface InstanceVersionChangeButtonProps<TConfig extends ClientInstanceConfigBase> {
+	id: string
 	service: InstanceEditPanelService<TConfig>
 	currentModuleId: string
 	currentVersionId: string | null
@@ -29,6 +30,7 @@ interface InstanceVersionChangeButtonProps<TConfig extends ClientInstanceConfigB
 }
 
 export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfigBase>({
+	id,
 	service,
 	currentModuleId,
 	currentVersionId,
@@ -96,7 +98,14 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 	return (
 		<>
-			<Button color="light" size="sm" title="Change module version" aria-label="Change module version" onClick={doShow}>
+			<Button
+				id={id}
+				color="light"
+				size="sm"
+				title="Change module version"
+				aria-label="Change module version"
+				onClick={doShow}
+			>
 				<FontAwesomeIcon icon={faPencil} />
 			</Button>
 

@@ -5,6 +5,7 @@ import { SecretTextInputField } from './SecretTextInputField'
 const meta = {
 	component: SecretTextInputField,
 	args: {
+		id: undefined,
 		value: '',
 		setValue: () => {},
 		tooltip: '',

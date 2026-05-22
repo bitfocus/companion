@@ -1,6 +1,6 @@
 import { CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, type RefObject } from 'react'
+import { useCallback, useContext, useId, type RefObject } from 'react'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { Button, ButtonGroup } from '~/Components/Button'
@@ -92,14 +92,18 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 		return result
 	}, [connections])
 
+	const connectionsFieldId = useId()
+	const recordingFieldId = useId()
+
 	return (
 		<>
 			<Form onSubmit={PreventDefaultHandler}>
 				<CRow className="flex-form m-0" style={{ clear: 'both' }}>
 					<div className="flex w-full gap-2rem">
 						<div className="w-full">
-							<FormLabel>Connections</FormLabel>
+							<FormLabel htmlFor={connectionsFieldId}>Connections</FormLabel>
 							<MultiDropdownInputField
+								htmlName={connectionsFieldId}
 								value={sessionInfo.connectionIds}
 								setValue={changeConnectionIds}
 								choices={connectionsWhichCanRecord}
@@ -107,9 +111,9 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 						</div>
 
 						<div>
-							<FormLabel>Recording</FormLabel>
+							<FormLabel htmlFor={recordingFieldId}>Recording</FormLabel>
 							<br />
-							<SwitchInputField value={!!sessionInfo.isRunning} setValue={changeRecording} />
+							<SwitchInputField id={recordingFieldId} value={!!sessionInfo.isRunning} setValue={changeRecording} />
 						</div>
 					</div>
 				</CRow>

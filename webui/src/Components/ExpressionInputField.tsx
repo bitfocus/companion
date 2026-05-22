@@ -10,6 +10,7 @@ import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
 interface ExpressionInputFieldProps {
+	id: string | undefined
 	value: string
 	setValue: (value: string) => void
 	disabled?: boolean
@@ -17,6 +18,7 @@ interface ExpressionInputFieldProps {
 }
 
 export const ExpressionInputField = observer(function ExpressionInputField({
+	// id,
 	value,
 	setValue,
 	disabled,
@@ -84,6 +86,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 			})}
 		>
 			<Editor
+				// name={id}
 				height="100%"
 				value={showValue}
 				onChange={storeValue2}

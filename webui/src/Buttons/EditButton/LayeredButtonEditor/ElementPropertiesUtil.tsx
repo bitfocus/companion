@@ -2,7 +2,7 @@ import { CCol } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback } from 'react'
+import React, { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
@@ -26,7 +26,7 @@ interface FormPropertyFieldProps {
 	tooltip: string | undefined
 	features: InputFeatureIconsProps | undefined
 	disableAutoExpression: boolean | undefined
-	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn) => React.ReactNode
+	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn, inputId: string) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField({
 	elementProps,
@@ -64,9 +64,11 @@ export const FormPropertyField = observer(function FormPropertyField({
 
 	const isOverridden = isPropertyOverridden(elementId, property)
 
+	const inputId = useId()
+
 	return (
 		<>
-			<FormLabel className={'col-sm-4 col-form-label col-form-label-sm'}>
+			<FormLabel htmlFor={inputId} className={'col-sm-4 col-form-label col-form-label-sm'}>
 				{label}
 				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
@@ -78,9 +80,10 @@ export const FormPropertyField = observer(function FormPropertyField({
 			</FormLabel>
 			<CCol sm={8}>
 				{disableAutoExpression ? (
-					children({ value: elementProp.value }, setInnerValue)
+					children({ value: elementProp.value }, setInnerValue, inputId)
 				) : (
 					<FieldOrExpression
+						inputId={inputId}
 						value={elementProp}
 						setValue={setExpressionOrValue}
 						localVariablesStore={localVariablesStore}
@@ -88,7 +91,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 						isLocatedInGrid={true}
 						disabled={false}
 					>
-						{children({ value: elementProp.value }, setInnerValue)}
+						{children({ value: elementProp.value }, setInnerValue, inputId)}
 					</FieldOrExpression>
 				)}
 			</CCol>

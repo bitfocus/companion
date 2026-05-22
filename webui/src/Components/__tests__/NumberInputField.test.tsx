@@ -15,7 +15,7 @@ function ControlledNumber({
 	initialValue = 5,
 	setValue: externalSetValue,
 	...rest
-}: Omit<Props, 'value' | 'setValue'> & {
+}: Omit<Props, 'id' | 'value' | 'setValue'> & {
 	initialValue?: number | undefined
 	setValue?: (v: number) => void
 }) {
@@ -23,6 +23,7 @@ function ControlledNumber({
 	return (
 		<NumberInputField
 			{...rest}
+			id={undefined}
 			value={value}
 			setValue={(v) => {
 				setValue(v)
@@ -39,37 +40,41 @@ function ControlledNumber({
 describe('NumberInputField', () => {
 	describe('Rendering', () => {
 		it('renders the numeric input', () => {
-			render(<NumberInputField value={42} setValue={vi.fn()} />)
+			render(<NumberInputField id={undefined} value={42} setValue={vi.fn()} />)
 			expect(screen.getByRole('textbox')).toBeInTheDocument()
 		})
 
 		it('displays the provided value', () => {
-			render(<NumberInputField value={42} setValue={vi.fn()} />)
+			render(<NumberInputField id={undefined} value={42} setValue={vi.fn()} />)
 			expect(screen.getByRole('textbox')).toHaveValue('42')
 		})
 
 		it('displays 0 when value is undefined', () => {
-			render(<NumberInputField value={undefined} setValue={vi.fn()} />)
+			render(<NumberInputField id={undefined} value={undefined} setValue={vi.fn()} />)
 			expect(screen.getByRole('textbox')).toHaveValue('0')
 		})
 
 		it('does not render a slider when range is not set', () => {
-			const { container } = render(<NumberInputField value={5} setValue={vi.fn()} />)
+			const { container } = render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} />)
 			expect(container.querySelector('input[type="range"]')).toBeNull()
 		})
 
 		it('renders a slider when range=true', () => {
-			const { container } = render(<NumberInputField value={5} setValue={vi.fn()} min={0} max={100} range />)
+			const { container } = render(
+				<NumberInputField id={undefined} value={5} setValue={vi.fn()} min={0} max={100} range />
+			)
 			expect(container.querySelector('input[type="range"]')).toBeInTheDocument()
 		})
 
 		it('disables the input when disabled=true', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} disabled />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} disabled />)
 			expect(screen.getByRole('textbox')).toBeDisabled()
 		})
 
 		it('disables the slider when disabled=true', () => {
-			const { container } = render(<NumberInputField value={5} setValue={vi.fn()} min={0} max={100} range disabled />)
+			const { container } = render(
+				<NumberInputField id={undefined} value={5} setValue={vi.fn()} min={0} max={100} range disabled />
+			)
 			expect(container.querySelector('input[type="range"]')).toBeDisabled()
 		})
 	})
@@ -78,41 +83,41 @@ describe('NumberInputField', () => {
 
 	describe('checkValid', () => {
 		it('applies invalid-value class when checkValid=false', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} checkValid={false} />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={false} />)
 			expect(screen.getByRole('textbox')).toHaveClass('invalid-value')
 		})
 
 		it('does not apply invalid-value class when checkValid=true', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} checkValid={true} />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={true} />)
 			expect(screen.getByRole('textbox')).not.toHaveClass('invalid-value')
 		})
 
 		it('applies invalid-value class when checkValid function returns false', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} checkValid={() => false} />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={() => false} />)
 			expect(screen.getByRole('textbox')).toHaveClass('invalid-value')
 		})
 
 		it('does not apply invalid-value class when checkValid function returns true', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} checkValid={() => true} />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={() => true} />)
 			expect(screen.getByRole('textbox')).not.toHaveClass('invalid-value')
 		})
 
 		it('passes the current value to checkValid', () => {
 			const checkValid = vi.fn(() => true)
-			render(<NumberInputField value={42} setValue={vi.fn()} checkValid={checkValid} />)
+			render(<NumberInputField id={undefined} value={42} setValue={vi.fn()} checkValid={checkValid} />)
 			// Called at least once during render
 			expect(checkValid).toHaveBeenCalledWith(42)
 		})
 
 		it('is conditionally invalid based on checkValid function result', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} checkValid={(v) => v > 10} />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={(v) => v > 10} />)
 			// 5 is NOT > 10, so checkValid returns false → invalid
 			expect(screen.getByRole('textbox')).toHaveClass('invalid-value')
 		})
 
 		it('receives 0 (not NaN) when value is undefined', () => {
 			const checkValid = vi.fn(() => true)
-			render(<NumberInputField value={undefined} setValue={vi.fn()} checkValid={checkValid} />)
+			render(<NumberInputField id={undefined} value={undefined} setValue={vi.fn()} checkValid={checkValid} />)
 			expect(checkValid).toHaveBeenCalledWith(0)
 		})
 	})
@@ -121,38 +126,45 @@ describe('NumberInputField', () => {
 
 	describe('showMinAsNegativeInfinity', () => {
 		it('shows -∞ overlay when value equals min', () => {
-			render(<NumberInputField value={0} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
+			render(<NumberInputField id={undefined} value={0} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
 			expect(screen.getByText('-∞')).toBeInTheDocument()
 		})
 
 		it('shows -∞ overlay when value is below min', () => {
-			render(<NumberInputField value={-5} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
+			render(<NumberInputField id={undefined} value={-5} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
 			expect(screen.getByText('-∞')).toBeInTheDocument()
 		})
 
 		it('does not show -∞ overlay when value is above min', () => {
-			render(<NumberInputField value={5} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
 			expect(screen.queryByText('-∞')).toBeNull()
 		})
 
 		it('does not show -∞ overlay when showMinAsNegativeInfinity is not set', () => {
-			render(<NumberInputField value={0} setValue={vi.fn()} min={0} />)
+			render(<NumberInputField id={undefined} value={0} setValue={vi.fn()} min={0} />)
 			expect(screen.queryByText('-∞')).toBeNull()
 		})
 
 		it('does not show -∞ overlay when min is not defined', () => {
-			render(<NumberInputField value={0} setValue={vi.fn()} showMinAsNegativeInfinity />)
+			render(<NumberInputField id={undefined} value={0} setValue={vi.fn()} showMinAsNegativeInfinity />)
 			expect(screen.queryByText('-∞')).toBeNull()
 		})
 
 		it('does not show -∞ overlay when value is undefined and min=0', () => {
-			render(<NumberInputField value={undefined} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
+			render(<NumberInputField id={undefined} value={undefined} setValue={vi.fn()} min={0} showMinAsNegativeInfinity />)
 			expect(screen.queryByText('-∞')).toBeNull()
 		})
 
 		it('-∞ overlay also shows invalid-value class when checkValid=false', () => {
 			const { container } = render(
-				<NumberInputField value={0} setValue={vi.fn()} min={0} showMinAsNegativeInfinity checkValid={false} />
+				<NumberInputField
+					id={undefined}
+					value={0}
+					setValue={vi.fn()}
+					min={0}
+					showMinAsNegativeInfinity
+					checkValid={false}
+				/>
 			)
 			const overlay = container.querySelector('.number-field-inf-overlay')
 			expect(overlay).toHaveClass('invalid-value')
@@ -163,27 +175,27 @@ describe('NumberInputField', () => {
 
 	describe('showMaxAsPositiveInfinity', () => {
 		it('shows ∞ overlay when value equals max', () => {
-			render(<NumberInputField value={100} setValue={vi.fn()} max={100} showMaxAsPositiveInfinity />)
+			render(<NumberInputField id={undefined} value={100} setValue={vi.fn()} max={100} showMaxAsPositiveInfinity />)
 			expect(screen.getByText('∞')).toBeInTheDocument()
 		})
 
 		it('shows ∞ overlay when value is above max', () => {
-			render(<NumberInputField value={150} setValue={vi.fn()} max={100} showMaxAsPositiveInfinity />)
+			render(<NumberInputField id={undefined} value={150} setValue={vi.fn()} max={100} showMaxAsPositiveInfinity />)
 			expect(screen.getByText('∞')).toBeInTheDocument()
 		})
 
 		it('does not show ∞ overlay when value is below max', () => {
-			render(<NumberInputField value={50} setValue={vi.fn()} max={100} showMaxAsPositiveInfinity />)
+			render(<NumberInputField id={undefined} value={50} setValue={vi.fn()} max={100} showMaxAsPositiveInfinity />)
 			expect(screen.queryByText('∞')).toBeNull()
 		})
 
 		it('does not show ∞ overlay when showMaxAsPositiveInfinity is not set', () => {
-			render(<NumberInputField value={100} setValue={vi.fn()} max={100} />)
+			render(<NumberInputField id={undefined} value={100} setValue={vi.fn()} max={100} />)
 			expect(screen.queryByText('∞')).toBeNull()
 		})
 
 		it('does not show ∞ overlay when max is not defined', () => {
-			render(<NumberInputField value={100} setValue={vi.fn()} showMaxAsPositiveInfinity />)
+			render(<NumberInputField id={undefined} value={100} setValue={vi.fn()} showMaxAsPositiveInfinity />)
 			expect(screen.queryByText('∞')).toBeNull()
 		})
 	})
@@ -246,7 +258,7 @@ describe('NumberInputField', () => {
 		it('calls onBlur when the input loses focus', async () => {
 			const onBlur = vi.fn()
 			const user = userEvent.setup()
-			render(<NumberInputField value={5} setValue={vi.fn()} onBlur={onBlur} />)
+			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} onBlur={onBlur} />)
 
 			await user.click(screen.getByRole('textbox'))
 			await user.tab()
@@ -269,14 +281,14 @@ describe('NumberInputField', () => {
 		 */
 		it('external value updates are ignored while the user is typing', async () => {
 			const user = userEvent.setup()
-			const { rerender } = render(<NumberInputField value={5} setValue={vi.fn()} />)
+			const { rerender } = render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} />)
 			const input = screen.getByRole('textbox')
 
 			await user.clear(input)
 			await user.type(input, '10')
 
 			// Parent tries to push a different value mid-edit
-			rerender(<NumberInputField value={7} setValue={vi.fn()} />)
+			rerender(<NumberInputField id={undefined} value={7} setValue={vi.fn()} />)
 
 			// tmpValue wins — the user's in-progress text is preserved
 			expect(input).toHaveValue('10')

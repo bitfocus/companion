@@ -19,6 +19,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LocalVariablesStore } from './LocalVariablesStore'
 
 export function InternalModuleField(
+	id: string | undefined,
 	option: InternalInputField,
 	isLocatedInGrid: boolean,
 	localVariablesStore: LocalVariablesStore | null,
@@ -31,6 +32,7 @@ export function InternalModuleField(
 		case 'internal:connection_id':
 			return (
 				<InternalConnectionIdDropdown
+					id={id}
 					disabled={readonly}
 					value={value}
 					includeAll={option.includeAll}
@@ -42,6 +44,7 @@ export function InternalModuleField(
 		case 'internal:page':
 			return (
 				<InternalPageDropdown
+					id={id}
 					disabled={readonly}
 					isLocatedInGrid={isLocatedInGrid}
 					includeDirection={option.includeDirection}
@@ -53,6 +56,7 @@ export function InternalModuleField(
 		case 'internal:custom_variable':
 			return (
 				<InternalCustomVariableDropdown
+					id={id}
 					disabled={readonly}
 					value={value}
 					setValue={setValue}
@@ -62,6 +66,7 @@ export function InternalModuleField(
 		case 'internal:variable':
 			return (
 				<InternalVariableDropdown
+					id={id}
 					disabled={readonly}
 					value={value}
 					setValue={setValue}
@@ -72,6 +77,7 @@ export function InternalModuleField(
 		case 'internal:surface_serial':
 			return (
 				<InternalSurfaceBySerialDropdown
+					id={id}
 					disabled={readonly}
 					isLocatedInGrid={isLocatedInGrid}
 					value={value}
@@ -83,6 +89,7 @@ export function InternalModuleField(
 		case 'internal:trigger':
 			return (
 				<InternalTriggerDropdown
+					id={id}
 					disabled={readonly}
 					isLocatedInGrid={isLocatedInGrid}
 					value={value}
@@ -91,20 +98,21 @@ export function InternalModuleField(
 				/>
 			)
 		case 'internal:trigger_collection':
-			return <InternalTriggerCollectionDropdown disabled={readonly} value={value} setValue={setValue} />
+			return <InternalTriggerCollectionDropdown id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:connection_collection':
-			return <InternalConnectionCollectionDropdown disabled={readonly} value={value} setValue={setValue} />
+			return <InternalConnectionCollectionDropdown id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:time':
-			return <InternalTimePicker disabled={readonly} value={value} setValue={setValue} />
+			return <InternalTimePicker id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:date':
-			return <InternalDatePicker disabled={readonly} value={value} setValue={setValue} />
+			return <InternalDatePicker id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:horizontal-alignment':
-			return <HorizontalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
+			return <HorizontalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:vertical-alignment':
-			return <VerticalAlignmentInputField value={value} setValue={setValue} disabled={readonly} />
+			return <VerticalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:png-image': {
 			return (
 				<PngImageInputField
+					id={id}
 					value={value}
 					setValue={setValue}
 					disabled={readonly}
@@ -121,6 +129,7 @@ export function InternalModuleField(
 }
 
 interface InternalConnectionIdDropdownProps {
+	id: string | undefined
 	includeAll: boolean | undefined
 	value: any
 	setValue: (value: any) => void
@@ -130,6 +139,7 @@ interface InternalConnectionIdDropdownProps {
 }
 
 const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropdown({
+	id,
 	includeAll,
 	value,
 	setValue,
@@ -172,14 +182,22 @@ const InternalConnectionIdDropdown = observer(function InternalConnectionIdDropd
 
 	if (multiple) {
 		return (
-			<MultiDropdownInputField disabled={disabled} value={value} choices={choices} sortSelection setValue={setValue} />
+			<MultiDropdownInputField
+				htmlName={id}
+				disabled={disabled}
+				value={value}
+				choices={choices}
+				sortSelection
+				setValue={setValue}
+			/>
 		)
 	} else {
-		return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+		return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 	}
 })
 
 interface InternalPageDropdownProps {
+	id: string | undefined
 	isLocatedInGrid: boolean
 	includeStartup: boolean | undefined
 	includeDirection: boolean | undefined
@@ -189,6 +207,7 @@ interface InternalPageDropdownProps {
 }
 
 export const InternalPageDropdown = observer(function InternalPageDropdown({
+	id,
 	isLocatedInGrid,
 	includeStartup,
 	includeDirection,
@@ -217,10 +236,11 @@ export const InternalPageDropdown = observer(function InternalPageDropdown({
 		return choices
 	}, [pages, isLocatedInGrid, includeStartup, includeDirection])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalPageIdDropdownProps {
+	id: string | undefined
 	// isLocatedInGrid: boolean
 	includeStartup: boolean | undefined
 	includeDirection: boolean | undefined
@@ -231,6 +251,7 @@ interface InternalPageIdDropdownProps {
 }
 
 export const InternalPageIdDropdown = observer(function InternalPageDropdown({
+	id,
 	// isLocatedInGrid,
 	includeStartup,
 	includeDirection,
@@ -261,13 +282,16 @@ export const InternalPageIdDropdown = observer(function InternalPageDropdown({
 	}, [pages, /*isLocatedInGrid,*/ includeStartup, includeDirection])
 
 	if (multiple === undefined || !multiple) {
-		return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+		return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 	} else {
-		return <MultiDropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+		return (
+			<MultiDropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
+		)
 	}
 })
 
 interface InternalCustomVariableDropdownProps {
+	id: string | undefined
 	value: any
 	setValue: (value: any) => void
 	includeNone: boolean | undefined
@@ -275,6 +299,7 @@ interface InternalCustomVariableDropdownProps {
 }
 
 export const InternalCustomVariableDropdown = observer(function InternalCustomVariableDropdown({
+	id,
 	value,
 	setValue,
 	includeNone,
@@ -318,10 +343,13 @@ export const InternalCustomVariableDropdown = observer(function InternalCustomVa
 		return groupsOrItems
 	}, [customVariables, includeNone])
 
-	return <VariablePickerField disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
+	return (
+		<VariablePickerField htmlName={id} disabled={disabled} value={value ?? ''} choices={choices} setValue={setValue} />
+	)
 })
 
 interface InternalVariableDropdownProps {
+	id: string | undefined
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
@@ -330,6 +358,7 @@ interface InternalVariableDropdownProps {
 }
 
 const InternalVariableDropdown = observer(function InternalVariableDropdown({
+	id,
 	value,
 	setValue,
 	disabled,
@@ -378,6 +407,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 
 	return (
 		<VariablePickerField
+			htmlName={id}
 			disabled={disabled}
 			value={value ?? ''}
 			choices={choices}
@@ -390,6 +420,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 })
 
 interface InternalSurfaceBySerialDropdownProps {
+	id: string | undefined
 	isLocatedInGrid: boolean
 	value: any
 	setValue: (value: any) => void
@@ -399,6 +430,7 @@ interface InternalSurfaceBySerialDropdownProps {
 }
 
 const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySerialDropdown({
+	id,
 	isLocatedInGrid,
 	value,
 	setValue,
@@ -439,10 +471,11 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 		return choices
 	}, [surfaces, isLocatedInGrid, includeSelf, useRawSurfaces])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalTriggerDropdownProps {
+	id: string | undefined
 	isLocatedInGrid: boolean
 	value: any
 	setValue: (value: any) => void
@@ -451,6 +484,7 @@ interface InternalTriggerDropdownProps {
 }
 
 const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
+	id,
 	isLocatedInGrid,
 	value,
 	setValue,
@@ -499,16 +533,18 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 		return [...selfChoices, ...groupsOrItems]
 	}, [triggersList, isLocatedInGrid, includeSelf])
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalTriggerCollectionDropdownProps {
+	id: string | undefined
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
 }
 
 const InternalTriggerCollectionDropdown = observer(function InternalTriggerCollectionDropdown({
+	id,
 	value,
 	setValue,
 	disabled,
@@ -517,16 +553,18 @@ const InternalTriggerCollectionDropdown = observer(function InternalTriggerColle
 
 	const choices = useCollectionChoices(triggersList)
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalConnectionCollectionDropdownProps {
+	id: string | undefined
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
 }
 
 const InternalConnectionCollectionDropdown = observer(function InternalConnectionCollectionDropdown({
+	id,
 	value,
 	setValue,
 	disabled,
@@ -535,19 +573,21 @@ const InternalConnectionCollectionDropdown = observer(function InternalConnectio
 
 	const choices = useCollectionChoices(connections)
 
-	return <DropdownInputField disabled={disabled} value={value} choices={choices} setValue={setValue} />
+	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
 
 interface InternalTimePickerProps {
+	id: string | undefined
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
 }
 
-function InternalTimePicker({ value, setValue, disabled }: InternalTimePickerProps) {
+function InternalTimePicker({ id, value, setValue, disabled }: InternalTimePickerProps) {
 	return (
 		<>
 			<TimePicker
+				id={id}
 				disabled={disabled}
 				format="HH:mm:ss"
 				maxDetail="second"
@@ -562,15 +602,17 @@ function InternalTimePicker({ value, setValue, disabled }: InternalTimePickerPro
 }
 
 interface InternalDatePickerProps {
+	id: string | undefined
 	value: any
 	setValue: (value: any) => void
 	disabled: boolean
 }
 
-function InternalDatePicker({ value, setValue, disabled }: InternalDatePickerProps) {
+function InternalDatePicker({ id, value, setValue, disabled }: InternalDatePickerProps) {
 	return (
 		<>
 			<DatePicker
+				id={id}
 				disabled={disabled}
 				format="yyyy-M-dd"
 				minDate={new Date()}

@@ -5,6 +5,7 @@ import { SwitchInputField, SwitchInputFieldWithLabel } from './SwitchInputField'
 const meta = {
 	component: SwitchInputField,
 	args: {
+		id: undefined,
 		value: false,
 		setValue: () => {},
 		tooltip: '',

@@ -1,9 +1,10 @@
 import { Checkbox } from '@base-ui/react/checkbox'
 import { useId } from 'react'
+import type { SetOptional } from 'type-fest'
 import { FormLabel } from '~/Components/Form.js'
 
 interface CheckboxInputFieldProps {
-	id?: string
+	id: string | undefined
 	tooltip?: string
 	value: boolean
 	indeterminate?: boolean
@@ -37,7 +38,7 @@ export function CheckboxInputField({
 	)
 }
 
-export interface CheckboxInputFieldWithLabelProps extends CheckboxInputFieldProps {
+export interface CheckboxInputFieldWithLabelProps extends SetOptional<CheckboxInputFieldProps, 'id'> {
 	className?: string
 	label: string | React.ReactNode
 }

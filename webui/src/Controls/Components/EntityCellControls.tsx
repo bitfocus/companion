@@ -56,6 +56,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					headline
 				) : (
 					<TextInputField
+						id={undefined}
 						value={entity.headline ?? ''}
 						placeholder={`Describe the intent of the ${entityTypeLabel}`}
 						setValue={service.setHeadline}
@@ -93,6 +94,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						<>
 							&nbsp;
 							<SwitchInputField
+								id={undefined}
 								value={!entity.disabled}
 								tooltip={entity.disabled ? `Enable ${entityTypeLabel}` : `Disable ${entityTypeLabel}`}
 								setValue={service.setEnabled}

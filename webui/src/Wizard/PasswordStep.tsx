@@ -1,8 +1,10 @@
-import { CFormInput } from '@coreui/react'
+import { CCol, CFormInput, CRow } from '@coreui/react'
+import { useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { FormLabel } from '~/Components/Form'
 import { NumberInputField } from '~/Components/NumberInputField'
 
 interface PasswordStepProps {
@@ -11,48 +13,59 @@ interface PasswordStepProps {
 }
 
 export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX.Element {
+	const passwordFieldId = useId()
+	const timeoutFieldId = useId()
+
 	return (
-		<div>
-			<h5>Admin GUI Password</h5>
-			<p>
-				Optionally, you can restrict this interface using a password. This is intended to keep normal users from
-				stumbling upon the settings and changing things. It will not keep out someone determined to bypass it.
-			</p>
-			<StaticAlert color="danger">This does not make an installation more secure!</StaticAlert>
-			<div className="ms-3 mb-1">
+		<CRow>
+			<CCol sm={12}>
+				<h5>Admin GUI Password</h5>
+				<p>
+					Optionally, you can restrict this interface using a password. This is intended to keep normal users from
+					stumbling upon the settings and changing things. It will not keep out someone determined to bypass it.
+				</p>
+				<StaticAlert color="danger">This does not make an installation more secure!</StaticAlert>
+			</CCol>
+
+			<CCol xs={12} className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"
 					value={!!config.admin_lockout}
 					setValue={(val) => setValue('admin_lockout', val)}
 				/>
-				{config.admin_lockout && (
-					<div className="ms-3 mb-2">
-						<div className="col-left">Password</div>
-						<div className="col-right">
-							<CFormInput
-								type="text"
-								value={config.admin_password}
-								onChange={(e) => setValue('admin_password', e.currentTarget.value)}
-							/>
-						</div>
-						<br />
-						<div className="col-left">Session Timeout</div>
-						<div className="col-right">
-							<NumberInputField
-								value={config.admin_timeout}
-								min={0}
-								step={1}
-								setValue={(val) => setValue('admin_timeout', val)}
-							/>
-						</div>
-						<br />
-						<div className="col-left">&nbsp;</div>
-						<div className="col-right">
-							<span className="text-muted">(minutes, 0 for none)</span>
-						</div>
-					</div>
-				)}
-			</div>
-		</div>
+			</CCol>
+
+			{config.admin_lockout && (
+				<>
+					<FormLabel htmlFor={passwordFieldId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+						Password
+					</FormLabel>
+					<CCol sm={5} className="mb-2">
+						<CFormInput
+							id={passwordFieldId}
+							type="text"
+							value={config.admin_password}
+							onChange={(e) => setValue('admin_password', e.currentTarget.value)}
+						/>
+					</CCol>
+					<CCol sm={2}></CCol>
+
+					<FormLabel htmlFor={timeoutFieldId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+						Session Timeout
+					</FormLabel>
+					<CCol sm={5} className="mb-2">
+						<NumberInputField
+							id={timeoutFieldId}
+							value={config.admin_timeout}
+							min={0}
+							step={1}
+							setValue={(val) => setValue('admin_timeout', val)}
+						/>
+						<span className="text-muted">(minutes, 0 for none)</span>
+					</CCol>
+					<CCol sm={2}></CCol>
+				</>
+			)}
+		</CRow>
 	)
 }

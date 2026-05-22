@@ -365,9 +365,11 @@ const EventEditor = observer(function EventEditor({
 						headline || name
 					) : (
 						<TextInputField
+							id={undefined}
 							value={headline ?? ''}
 							placeholder={'Describe the intent of the event'}
 							setValue={service.setHeadline}
+							aria-label="Event headline"
 						/>
 					)}
 				</div>
@@ -398,6 +400,7 @@ const EventEditor = observer(function EventEditor({
 							<>
 								&nbsp;
 								<SwitchInputField
+									id={undefined}
 									value={event.enabled}
 									tooltip={event.enabled ? 'Disable event' : 'Enable event'}
 									setValue={service.setEnabled}

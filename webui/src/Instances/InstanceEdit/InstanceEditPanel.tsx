@@ -4,7 +4,7 @@ import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -181,11 +181,16 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 }: {
 	panelStore: InstanceEditPanelStore<TConfig>
 }): React.JSX.Element {
+	const labelId = useId()
+
 	return (
 		<>
-			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Label</FormLabel>
+			<FormLabel htmlFor={labelId} className="col-sm-4 col-form-label col-form-label-sm">
+				Label
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField
+					id={labelId}
 					setValue={panelStore.setLabelValue}
 					checkValid={panelStore.checkLabelIsValid}
 					value={panelStore.labelValue}
@@ -206,16 +211,21 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 	moduleInfo: ClientModuleInfo | undefined
 	changeModuleDangerMessage: React.ReactNode
 }): React.JSX.Element {
+	const moduleVersionId = useId()
+
 	const moduleVersion = getModuleVersionInfo(moduleInfo, panelStore.instanceInfo.moduleVersionId)
 
 	return (
 		<>
-			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Module Version</FormLabel>
+			<FormLabel htmlFor={moduleVersionId} className="col-sm-4 col-form-label col-form-label-sm">
+				Module Version
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<div className="d-flex align-items-center gap-2">
 					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
 					<InstanceVersionChangeButton
+						id={moduleVersionId}
 						service={panelStore.service}
 						currentModuleId={panelStore.instanceInfo.moduleId}
 						currentVersionId={panelStore.instanceInfo.moduleVersionId}
@@ -236,14 +246,19 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	panelStore: InstanceEditPanelStore<TConfig>
 	cannotEnableReason?: string | null
 }): React.JSX.Element {
+	const enabledId = useId()
+
 	const isEnabled = panelStore.enabled
 	const canToggle = !cannotEnableReason || isEnabled
 
 	return (
 		<>
-			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</FormLabel>
+			<FormLabel htmlFor={enabledId} className="col-sm-4 col-form-label col-form-label-sm">
+				Enabled
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SwitchInputField
+					id={enabledId}
 					value={isEnabled}
 					setValue={panelStore.setEnabled}
 					disabled={!canToggle}
@@ -269,9 +284,11 @@ const UpdatePolicyOptions: DropdownChoice[] = [
 const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField<
 	TConfig extends ClientInstanceConfigBase,
 >({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
+	const updatePolicyId = useId()
+
 	return (
 		<>
-			<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={updatePolicyId} className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
 				<InlineHelpIcon className="ms-1">
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
@@ -279,7 +296,7 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SimpleDropdownInputField
-					id="colFormUpdatePolicy"
+					id={updatePolicyId}
 					value={panelStore.updatePolicy}
 					setValue={(value) => panelStore.setUpdatePolicy(value as InstanceVersionUpdatePolicy)}
 					choices={UpdatePolicyOptions}
@@ -294,6 +311,8 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 }: {
 	panelStore: InstanceEditPanelStore<TConfig>
 }): React.JSX.Element {
+	const idPrefix = useId()
+
 	const configData = panelStore.configAndSecrets
 
 	if (!configData) {
@@ -315,22 +334,27 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
 
+				const inputId = `${idPrefix}_${fieldInfo.id}`
+
 				const isSecret = isConfigFieldSecret(fieldInfo)
 				return (
 					<InstanceFormRow
 						key={fieldInfo.id}
+						inputId={inputId}
 						fieldInfo={fieldInfo}
 						isVisible={isVisible}
 						useNewLayout={configData.useNewLayout}
 					>
 						{isSecret ? (
 							<InstanceSecretField
+								inputId={inputId}
 								definition={fieldInfo}
 								value={configData.secrets[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 							/>
 						) : (
 							<InstanceEditField
+								inputId={inputId}
 								definition={fieldInfo}
 								value={configData.config[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
@@ -393,12 +417,14 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 })
 
 interface InstanceFormRowProps {
+	inputId: string
 	fieldInfo: SomeCompanionInputField
 	isVisible: boolean
 	useNewLayout: boolean
 }
 
 const InstanceFormRow = observer(function InstanceFormRow({
+	inputId,
 	fieldInfo,
 	isVisible,
 	useNewLayout,
@@ -414,8 +440,8 @@ const InstanceFormRow = observer(function InstanceFormRow({
 			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
 				return (
 					<CCol sm={12}>
-						{fieldInfo.label ? <FormLabel>{fieldInfo.label}</FormLabel> : ''}
-						<StaticTextFieldText {...fieldInfo} allowImages />
+						{fieldInfo.label ? <FormLabel htmlFor={inputId}>{fieldInfo.label}</FormLabel> : ''}
+						<StaticTextFieldText {...fieldInfo} id={inputId} allowImages />
 					</CCol>
 				)
 			}
@@ -424,6 +450,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 		return (
 			<React.Fragment>
 				<FormLabel
+					htmlFor={inputId}
 					className="col-sm-4 col-form-label col-form-label-sm"
 					style={{ display: !isVisible ? 'none' : undefined }}
 				>
@@ -444,7 +471,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
 			>
-				<FormLabel>
+				<FormLabel htmlFor={inputId}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
 

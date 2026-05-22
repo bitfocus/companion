@@ -20,6 +20,7 @@ export const UserConfigTextInputRow = observer(function UserConfigTextInputRow({
 			<td>{label}</td>
 			<td>
 				<TextInputField
+					id={undefined} // Future: set this for better accessibility
 					value={String(userConfig.config[field] as any)}
 					setValue={(value) => userConfig.setValue(field, value)}
 					useVariables={useVariables}

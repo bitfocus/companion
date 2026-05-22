@@ -1,7 +1,7 @@
 import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 import { Button } from '~/Components/Button'
@@ -80,6 +80,9 @@ export const ExportWizardModal = observer(
 			}),
 			[form]
 		)
+
+		const exportFormatId = useId()
+		const exportNameId = useId()
 
 		return (
 			<CModal ref={setModalRef} visible={show} onClose={doClose} className={'wizard'} backdrop="static">
@@ -305,20 +308,25 @@ export const ExportWizardModal = observer(
 								</div>
 
 								<div style={{ paddingTop: '1em' }}>
-									<FormLabel>File format</FormLabel>
+									<FormLabel htmlFor={exportFormatId}>File format</FormLabel>
 									<form.Field
 										name="format"
 										children={(field) => (
-											<SelectExportFormat value={field.state.value} setValue={(val) => field.handleChange(val)} />
+											<SelectExportFormat
+												id={exportFormatId}
+												value={field.state.value}
+												setValue={(val) => field.handleChange(val)}
+											/>
 										)}
 									/>
 								</div>
 								<div style={{ paddingTop: '1em' }}>
-									<FormLabel>File name</FormLabel>
+									<FormLabel htmlFor={exportNameId}>File name</FormLabel>
 									<form.Field
 										name="filename"
 										children={(field) => (
 											<TextInputField
+												id={exportNameId}
 												value={String(field.state.value)}
 												setValue={(val) => field.handleChange(val)}
 												useVariables={true}

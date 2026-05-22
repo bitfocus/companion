@@ -212,7 +212,13 @@ function ActionSetTab({
 			onDoubleClick={showField}
 		>
 			{showInputField ? (
-				<TextInputField value={name ?? ''} setValue={renameStep} onBlur={hideField} onKeyDown={onKeyDown} />
+				<TextInputField
+					id={undefined}
+					value={name ?? ''}
+					setValue={renameStep}
+					onBlur={hideField}
+					onKeyDown={onKeyDown}
+				/>
 			) : (
 				displayText
 			)}

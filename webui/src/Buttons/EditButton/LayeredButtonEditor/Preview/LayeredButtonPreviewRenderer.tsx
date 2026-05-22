@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useRef, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -64,6 +64,8 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		// setAspectRatio('1:1')
 	}
 
+	const aspectRatioFieldId = useId()
+
 	return (
 		<>
 			<div className="grow flex align-items-center justify-content-center">
@@ -78,8 +80,9 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 				/>
 			</div>
 			<div>
-				<FormLabel>Preview Aspect Ratio</FormLabel>
+				<FormLabel htmlFor={aspectRatioFieldId}>Preview Aspect Ratio</FormLabel>
 				<DropdownInputField
+					htmlName={aspectRatioFieldId}
 					allowCustom
 					choices={ASPECT_RATIO_OPTIONS}
 					value={aspectRatio}

@@ -124,8 +124,9 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			features={features}
 			disableAutoExpression={field.disableAutoExpression}
 		>
-			{(elementProp, setValueFromForm) => (
+			{(elementProp, setValueFromForm, inputId) => (
 				<OptionsInputControl
+					inputId={inputId}
 					allowInternalFields={true}
 					isLocatedInGrid={false}
 					entityType={EntityModelType.Feedback}

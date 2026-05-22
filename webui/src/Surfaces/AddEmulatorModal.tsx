@@ -1,7 +1,7 @@
 import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
@@ -68,6 +68,11 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 		[form]
 	)
 
+	const idFieldId = useId()
+	const nameFieldId = useId()
+	const rowsFieldId = useId()
+	const columnsFieldId = useId()
+
 	return (
 		<CModalExt visible={show} onClose={doClose} onClosed={onClosed}>
 			<CModalHeader closeButton>
@@ -94,7 +99,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 							name="name"
 							children={(field) => (
 								<>
-									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Name
 										<InlineHelpIcon className="ms-1">
 											Display name for the emulator. This can be changed later
@@ -102,6 +107,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
+											id={nameFieldId}
 											type="text"
 											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
@@ -127,7 +133,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 							}}
 							children={(field) => (
 								<>
-									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={idFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Id
 										<InlineHelpIcon className="ms-1">
 											Id for the emulator, this is used in the url and internally. This cannot be changed once set.
@@ -135,6 +141,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<CFormInput
+											id={idFieldId}
 											type="text"
 											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 											value={field.state.value}
@@ -164,9 +171,12 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 							}}
 							children={(field) => (
 								<>
-									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Rows</FormLabel>
+									<FormLabel htmlFor={rowsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+										Rows
+									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<NumberInputField
+											id={rowsFieldId}
 											min={1}
 											value={field.state.value}
 											setValue={field.handleChange}
@@ -196,9 +206,12 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 							}}
 							children={(field) => (
 								<>
-									<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Columns</FormLabel>
+									<FormLabel htmlFor={columnsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+										Columns
+									</FormLabel>
 									<CCol className={`fieldtype-textinput`} sm={8}>
 										<NumberInputField
+											id={columnsFieldId}
 											min={1}
 											value={field.state.value}
 											setValue={field.handleChange}

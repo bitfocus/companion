@@ -21,6 +21,7 @@ const meta = {
 	component: DropdownInputField,
 	decorators: [withPortal],
 	args: {
+		htmlName: undefined,
 		choices,
 		value: 'apple',
 		setValue: () => {},

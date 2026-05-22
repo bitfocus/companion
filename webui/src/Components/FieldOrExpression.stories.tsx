@@ -11,6 +11,7 @@ const meta = {
 	component: FieldOrExpression,
 	decorators: [withMockStore],
 	args: {
+		inputId: undefined,
 		localVariablesStore: null,
 		value: { isExpression: false, value: 'hello' } satisfies ExpressionOrValue<JsonValue | undefined>,
 		setValue: () => {},
@@ -27,6 +28,7 @@ const meta = {
 					value={stringifyVariableValue(args.value.value) ?? ''}
 					setValue={() => {}}
 					disabled={args.disabled}
+					id={args.inputId}
 				/>
 			</FieldOrExpression>
 		)

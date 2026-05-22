@@ -9,6 +9,7 @@ const SAMPLE_PNG =
 const meta = {
 	component: PngImageInputField,
 	args: {
+		id: undefined,
 		value: null,
 		setValue: () => {},
 		allowNonPng: true,

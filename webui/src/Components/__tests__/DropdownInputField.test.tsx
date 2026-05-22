@@ -43,6 +43,7 @@ function ControlledDropdown({
 			<DropdownInputField
 				choices={CHOICES}
 				{...rest}
+				htmlName={undefined}
 				value={value}
 				setValue={(v) => {
 					setValue(v)
@@ -511,6 +512,7 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 					disableEditingCustom={false}
 					value={1}
 					setValue={setValue}
+					htmlName={undefined}
 				/>
 			</MenuPortalContext.Provider>
 		)
@@ -550,6 +552,7 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 					disableEditingCustom={false}
 					value={1}
 					setValue={setValue}
+					htmlName={undefined}
 				/>
 			</MenuPortalContext.Provider>
 		)

@@ -11,6 +11,7 @@ import { Button } from './Button'
 import { ExpressionInputField } from './ExpressionInputField'
 
 interface FieldOrExpressionProps {
+	inputId: string | undefined
 	localVariablesStore: LocalVariablesStore | null
 	value: ExpressionOrValue<JsonValue | undefined>
 	setValue: (value: ExpressionOrValue<JsonValue | undefined>) => void
@@ -22,6 +23,7 @@ interface FieldOrExpressionProps {
 	children: React.ReactNode
 }
 export const FieldOrExpression = observer(function FieldOrExpression({
+	inputId,
 	localVariablesStore,
 	value,
 	setValue,
@@ -67,6 +69,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 			<div className="expression-field">
 				{value.isExpression ? (
 					<ExpressionInputField
+						id={inputId}
 						setValue={setExpression}
 						value={stringifyVariableValue(value.value) ?? ''}
 						localVariables={localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)}

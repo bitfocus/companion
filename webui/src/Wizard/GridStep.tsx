@@ -1,5 +1,5 @@
 import { CCol, CRow } from '@coreui/react'
-import { useCallback, useState } from 'react'
+import { useCallback, useId, useState } from 'react'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { FormLabel } from '~/Components/Form'
 import { NumberInputField } from '~/Components/NumberInputField'
@@ -45,6 +45,9 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 		[setValue, totalColumns]
 	)
 
+	const rowFieldId = useId()
+	const columnFieldId = useId()
+
 	return (
 		<CRow>
 			<CCol sm={12}>
@@ -60,19 +63,19 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				</p>
 			</CCol>
 
-			<FormLabel htmlFor="colFormRows" className="col-sm-4 col-form-label col-form-label-sm mb-2">
+			<FormLabel htmlFor={rowFieldId} className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Rows
 			</FormLabel>
 			<CCol sm={5} className="mb-2">
-				<NumberInputField id="colFormRows" value={totalRows} min={0} step={1} setValue={setMaxRow} />
+				<NumberInputField id={rowFieldId} value={totalRows} min={0} step={1} setValue={setMaxRow} />
 			</CCol>
 			<CCol sm={3}></CCol>
 
-			<FormLabel htmlFor="colFormCols" className="col-sm-4 col-form-label col-form-label-sm mb-2">
+			<FormLabel htmlFor={columnFieldId} className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Columns
 			</FormLabel>
 			<CCol sm={5} className="mb-2">
-				<NumberInputField id="colFormCols" value={totalColumns} min={0} step={1} setValue={setMaxColumn} />
+				<NumberInputField id={columnFieldId} value={totalColumns} min={0} step={1} setValue={setMaxColumn} />
 			</CCol>
 			<CCol sm={3}></CCol>
 

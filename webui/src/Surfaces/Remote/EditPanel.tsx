@@ -2,7 +2,7 @@ import { CCol, CFormInput, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
@@ -90,6 +90,8 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 		doClose()
 	}, [form, doClose])
 
+	const nameFieldId = useId()
+
 	return (
 		<Form
 			className="secondary-panel-simple-body d-flex flex-column pb-0"
@@ -119,9 +121,12 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						}}
 						children={(field) => (
 							<>
-								<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</FormLabel>
+								<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+									Name
+								</FormLabel>
 								<CCol className="fieldtype-textinput" sm={8}>
 									<CFormInput
+										id={nameFieldId}
 										type="text"
 										style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 										value={field.state.value}
@@ -138,7 +143,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					<FormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Integration</FormLabel>
+					<FormLabel htmlFor={undefined} className="col-sm-4 col-form-label col-form-label-sm">
+						Surface Integration
+					</FormLabel>
 					<CCol sm={8}>
 						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
 					</CCol>

@@ -42,7 +42,13 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 					online: regionState.connected,
 				})}
 			>
-				<SwitchInputField value={!!regionState.enabled} setValue={cloudSetStateEnabled} disabled={hideDisabled} small />{' '}
+				<SwitchInputField
+					id={undefined}
+					value={!!regionState.enabled}
+					setValue={cloudSetStateEnabled}
+					disabled={hideDisabled}
+					small
+				/>{' '}
 				{regionState.name} {regionState.pingResults > -1 ? `(${regionState.pingResults}ms)` : ''}
 			</p>
 

@@ -9,7 +9,7 @@ import { useDropdownChoicesForSelect, type DropdownChoicesOrGroups } from './Dro
 import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface SimpleDropdownInputFieldProps {
-	id?: string
+	id: string | undefined
 	className?: string
 	choices: DropdownChoicesOrGroups | ReadonlyDeep<DropdownChoicesOrGroups>
 	tooltip?: string

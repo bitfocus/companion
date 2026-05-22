@@ -22,6 +22,7 @@ const meta = {
 	component: MultiDropdownInputField,
 	decorators: [withPortal],
 	args: {
+		htmlName: undefined,
 		choices,
 		value: ['mon'],
 		setValue: () => {},

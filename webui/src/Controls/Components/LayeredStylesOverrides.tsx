@@ -273,6 +273,8 @@ const PropertyValueInput = observer(function PropertyValueInput({
 		[row, updateRow]
 	)
 
+	const inputId = undefined
+
 	// If no property is selected, return null
 	if (!selectedProperty) {
 		return null
@@ -283,6 +285,7 @@ const PropertyValueInput = observer(function PropertyValueInput({
 		case FeedbackEntitySubType.Advanced:
 			return (
 				<DropdownInputField
+					htmlName={inputId}
 					choices={ButtonStylePropertiesWithBuffer}
 					value={row.override.value as DropdownChoiceId}
 					setValue={(value) =>
@@ -294,6 +297,7 @@ const PropertyValueInput = observer(function PropertyValueInput({
 			// For boolean feedbacks, show a dropdown with "true" and "false"
 			return (
 				<FieldOrExpression
+					inputId={inputId}
 					value={row.override}
 					setValue={setOverride}
 					localVariablesStore={localVariablesStore}
@@ -302,6 +306,7 @@ const PropertyValueInput = observer(function PropertyValueInput({
 					disabled={false}
 				>
 					<OptionsInputControl
+						inputId={inputId}
 						allowInternalFields={true}
 						isLocatedInGrid={false}
 						entityType={EntityModelType.Feedback}
