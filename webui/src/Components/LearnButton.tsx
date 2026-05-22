@@ -1,9 +1,9 @@
-import { CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { Button } from './Button'
 
 interface LearnButtonProps {
 	id: string
@@ -17,7 +17,7 @@ export const LearnButton = observer(function LearnButton({ id, disabled, doLearn
 	const isActive = rootAppStore.activeLearns.has(id)
 
 	return (
-		<CButton
+		<Button
 			disabled={isActive || disabled}
 			color="info"
 			size="sm"
@@ -25,6 +25,6 @@ export const LearnButton = observer(function LearnButton({ id, disabled, doLearn
 			title="Capture the current values from the device"
 		>
 			Learn values {isActive && <FontAwesomeIcon icon={faSync} spin />}
-		</CButton>
+		</Button>
 	)
 })

@@ -1,4 +1,4 @@
-import { CButton, CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput, CInputGroup } from '@coreui/react'
 import { faCopy, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -8,6 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { Button } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
@@ -99,9 +100,9 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 					value={filter}
 					style={{ fontSize: '1.2em' }}
 				/>
-				<CButton color="danger" onClick={clearFilter}>
+				<Button color="primary" onClick={clearFilter} aria-label="Clear search filter" title="Clear search filter">
 					<FontAwesomeIcon icon={faTimes} />
-				</CButton>
+				</Button>
 			</CInputGroup>
 			<p className="variables-table-count">
 				{filter ? (
@@ -191,9 +192,9 @@ const VariablesTableRow = observer(function VariablesTableRow({
 							{variableId}
 						</span>
 						<CopyToClipboard text={variableId} onCopy={onCopied}>
-							<CButton size="sm" title="Copy variable name">
+							<Button size="sm" title="Copy variable name">
 								<FontAwesomeIcon icon={faCopy} color="#d50215" />
-							</CButton>
+							</Button>
 						</CopyToClipboard>
 					</div>
 					<div className="autowrap" title={variable.description}>

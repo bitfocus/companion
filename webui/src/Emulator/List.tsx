@@ -1,10 +1,11 @@
-import { CButton, CCol, CContainer, CRow } from '@coreui/react'
+import { CCol, CContainer, CRow } from '@coreui/react'
 import { faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { StaticAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC'
@@ -43,7 +44,7 @@ export const EmulatorList = observer(function EmulatorList() {
 						<CRow>
 							{emulatorList.data.map((surface) => (
 								<CCol sm={12} md={6} lg={4} key={surface.id} className="mb-4">
-									<CButton
+									<Button
 										color="dark"
 										className="w-100 d-flex flex-column align-items-center justify-content-center emulator-button"
 										onClick={() =>
@@ -54,7 +55,7 @@ export const EmulatorList = observer(function EmulatorList() {
 										}
 									>
 										<div className="mt-2">{surface.name || 'Emulator'}</div>
-									</CButton>
+									</Button>
 								</CCol>
 							))}
 

@@ -1,10 +1,10 @@
-import { CButton } from '@coreui/react'
 import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import type { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { Button } from '~/Components/Button'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -80,12 +80,12 @@ export function EditActionsRelease({
 					key={id}
 					heading={`${ident} actions`}
 					headingActions={[
-						<CButton key="rename" color="white" title="Configure" size="sm" onClick={() => configureSet(id)}>
+						<Button key="rename" title="Configure" size="sm" onClick={() => configureSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
-						</CButton>,
-						<CButton key="delete" color="white" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
+						</Button>,
+						<Button key="delete" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
 							<FontAwesomeIcon icon={faTrash} />
-						</CButton>,
+						</Button>,
 					]}
 					controlId={controlId}
 					location={location}

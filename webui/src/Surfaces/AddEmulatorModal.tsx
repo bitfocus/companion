@@ -1,19 +1,10 @@
-import {
-	CButton,
-	CCol,
-	CForm,
-	CFormInput,
-	CFormLabel,
-	CModalBody,
-	CModalFooter,
-	CModalHeader,
-	CRow,
-} from '@coreui/react'
+import { CCol, CForm, CFormInput, CFormLabel, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button'
 import { CModalExt } from '~/Components/CModalExt.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -229,23 +220,13 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 						selector={(state) => [state.canSubmit, state.isSubmitting]}
 						children={([canSubmit, isSubmitting]) => (
 							<>
-								<CButton color="secondary" onClick={doClose} disabled={isSubmitting}>
+								<Button color="secondary" onClick={doClose} disabled={isSubmitting}>
 									Cancel
-								</CButton>
+								</Button>
 
-								<CButton
-									color="primary"
-									className="me-md-1"
-									disabled={!canSubmit || isSubmitting}
-									type="submit"
-									onClick={() => {
-										form.handleSubmit().catch((err) => {
-											console.error('Add emulator failed', err)
-										})
-									}}
-								>
+								<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
 									Add {isSubmitting ? '...' : ''}
-								</CButton>
+								</Button>
 							</>
 						)}
 					/>

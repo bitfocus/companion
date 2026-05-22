@@ -1,9 +1,10 @@
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -103,17 +104,11 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 								<th style={{ textAlign: 'center' }}>Number</th>
 								<th>Name</th>
 								<th>
-									<CButtonGroup style={{ width: '100%' }}>
-										<CButton
-											color="warning"
-											size="sm"
-											onClick={doInsertPage}
-											title="Insert page at start"
-											data-page={1}
-										>
+									<ButtonGroup className="w-full">
+										<Button color="warning" size="sm" onClick={doInsertPage} title="Insert page at start" data-page={1}>
 											<FontAwesomeIcon icon={faPlus} />
-										</CButton>
-									</CButtonGroup>
+										</Button>
+									</ButtonGroup>
 								</th>
 							</tr>
 						</thead>
@@ -240,11 +235,11 @@ const PageListRow = observer(function PageListRow({
 				<TextInputField value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
 			</td>
 			<td style={{ width: 100, textAlign: 'right' }}>
-				<CButtonGroup>
-					<CButton color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
+				<ButtonGroup>
+					<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
 						<FontAwesomeIcon icon={faShareFromSquare} />
-					</CButton>
-					{/* <CButton
+					</Button>
+					{/* <Button
 						TODO: for future use, once the modal has more properties
 						color="info"
 						size="sm"
@@ -254,18 +249,12 @@ const PageListRow = observer(function PageListRow({
 						data-page-info={JSON.stringify(info)}
 					>
 						<FontAwesomeIcon icon={faPencil} />
-					</CButton> */}
-					<CButton
-						color="warning"
-						size="sm"
-						onClick={doInsertPage}
-						title="Insert page after"
-						data-page={pageNumber + 1}
-					>
+					</Button> */}
+					<Button color="warning" size="sm" onClick={doInsertPage} title="Insert page after" data-page={pageNumber + 1}>
 						<FontAwesomeIcon icon={faPlus} />
-					</CButton>
+					</Button>
 
-					<CButton
+					<Button
 						color="primary"
 						size="sm"
 						onClick={doDeletePage}
@@ -275,8 +264,8 @@ const PageListRow = observer(function PageListRow({
 						disabled={pageCount <= 1}
 					>
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-				</CButtonGroup>
+					</Button>
+				</ButtonGroup>
 			</td>
 		</tr>
 	)

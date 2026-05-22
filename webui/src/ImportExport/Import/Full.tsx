@@ -1,4 +1,4 @@
-import { CButton, CCallout } from '@coreui/react'
+import { CCallout } from '@coreui/react'
 import {
 	faCircleInfo,
 	faClock,
@@ -19,6 +19,7 @@ import type {
 } from '@companion-app/shared/Model/ImportExport.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TabArea } from '~/Components/TabArea.js'
@@ -209,9 +210,9 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 					It is <strong>highly recommended</strong> to export the current system configuration before performing a full
 					import.
 				</p>
-				<CButton color="warning" href={makeAbsolutePath('/int/export/full')} target="_blank">
+				<LinkButtonExternal color="warning" href={makeAbsolutePath('/int/export/full')}>
 					<FontAwesomeIcon icon={faDownload} /> Export Current Configuration
-				</CButton>
+				</LinkButtonExternal>
 			</CCallout>
 			<h5>Components</h5>
 			<p>
@@ -368,7 +369,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
 								return (
 									<>
-										<CButton
+										<Button
 											color="success"
 											type="submit"
 											disabled={!anythingEnabled}
@@ -379,7 +380,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 											}}
 										>
 											<FontAwesomeIcon icon={faFileImport} /> Import Preserving Unselected
-										</CButton>
+										</Button>
 									</>
 								)
 							}}
@@ -398,7 +399,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 							{([values]) => {
 								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
 								return (
-									<CButton
+									<Button
 										color="primary"
 										type="submit"
 										disabled={!anythingEnabled}
@@ -410,7 +411,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 										}}
 									>
 										<FontAwesomeIcon icon={faFileImport} /> Full Reset & Import
-									</CButton>
+									</Button>
 								)
 							}}
 						</form.Subscribe>

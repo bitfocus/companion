@@ -1,6 +1,7 @@
-import { CButton, CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
+import { Button } from '~/Components/Button'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -113,12 +114,12 @@ export const ConfirmExportModal = observer(
 						</CForm>
 					</CModalBody>
 					<CModalFooter>
-						<CButton color="secondary" onClick={doClose}>
+						<Button color="secondary" onClick={doClose}>
 							Cancel
-						</CButton>
-						<CButton ref={buttonRef} color="primary" onClick={doAction}>
+						</Button>
+						<Button ref={buttonRef} color="primary" onClick={doAction}>
 							Export
-						</CButton>
+						</Button>
 					</CModalFooter>
 				</MenuPortalContext.Provider>
 			</CModal>

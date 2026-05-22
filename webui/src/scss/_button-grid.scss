@@ -98,13 +98,6 @@
 	border-radius: 8px;
 	// min-height: 250px;  instead, set min-height in tsx to match button-sizes.
 }
-.button-grid-header {
-	.btn-right {
-		float: right;
-		// margin-top: 10px;
-		margin-left: 3px;
-	}
-}
 
 .button-infinite-grid {
 	height: 100%; // needed to get the scrollbar.

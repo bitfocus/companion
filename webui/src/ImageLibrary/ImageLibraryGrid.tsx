@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CFormInput } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import fuzzysort from 'fuzzysort'
@@ -6,6 +6,7 @@ import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import type { CollectionsNestingTableItem } from '~/Components/CollectionsNestingTable/Types.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -143,15 +144,15 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 				<div className="image-library-controls">
 					<div className="d-flex gap-2 mb-3">
-						<CButtonGroup>
-							<CButton color="primary" size="sm" onClick={handleImportFiles}>
+						<ButtonGroup>
+							<Button color="primary" size="sm" onClick={handleImportFiles}>
 								<FontAwesomeIcon icon={faPlus} /> Import Images
-							</CButton>
-							<CButton color="primary" size="sm" onClick={handleCreateNew}>
+							</Button>
+							<Button color="primary" size="sm" onClick={handleCreateNew}>
 								<FontAwesomeIcon icon={faPlus} /> Add Placeholder
-							</CButton>
+							</Button>
 							<CreateCollectionButton />
-						</CButtonGroup>
+						</ButtonGroup>
 					</div>
 
 					<CFormInput
@@ -199,8 +200,8 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<CButton color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="info" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
-		</CButton>
+		</Button>
 	)
 }

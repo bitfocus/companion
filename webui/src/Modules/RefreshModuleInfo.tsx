@@ -1,9 +1,9 @@
-import { CButton } from '@coreui/react'
 import { faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -30,17 +30,17 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 
 	if (refreshProgress === 1) {
 		return (
-			<CButton color="primary" onClick={doRefreshModules}>
+			<Button color="primary" onClick={doRefreshModules}>
 				<FontAwesomeIcon icon={faSync} />
 				&nbsp;Refresh module info
-			</CButton>
+			</Button>
 		)
 	} else {
 		return (
-			<CButton color="primary" disabled>
+			<Button color="primary" disabled>
 				<FontAwesomeIcon icon={faSync} spin={true} />
 				&nbsp;Refreshing module info {Math.round(refreshProgress * 100)}%
-			</CButton>
+			</Button>
 		)
 	}
 })

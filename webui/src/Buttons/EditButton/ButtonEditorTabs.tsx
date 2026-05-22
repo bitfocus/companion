@@ -1,4 +1,3 @@
-import { CButton } from '@coreui/react'
 import { faClone, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -8,6 +7,7 @@ import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -114,12 +114,12 @@ export function ButtonEditorTabs({
 
 						{stepKeys.length === 1 && (
 							<div className="tab-end-area align-self-center">
-								<CButton title="Add step" size="sm" onClick={service.appendStep}>
+								<Button title="Add step" size="sm" onClick={service.appendStep}>
 									<FontAwesomeIcon icon={faPlus} />
-								</CButton>
-								<CButton title="Duplicate step" size="sm" onClick={() => service.duplicateStep(stepKeys[0])}>
+								</Button>
+								<Button title="Duplicate step" size="sm" onClick={() => service.duplicateStep(stepKeys[0])}>
 									<FontAwesomeIcon icon={faClone} />
-								</CButton>
+								</Button>
 							</div>
 						)}
 					</TabArea.List>

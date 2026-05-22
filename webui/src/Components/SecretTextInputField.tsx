@@ -1,8 +1,9 @@
-import { CButton, CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput, CInputGroup } from '@coreui/react'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { Button } from './Button'
 
 interface SecretTextInputFieldProps {
 	tooltip?: string
@@ -63,13 +64,14 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 					onFocus={focusStoreValue}
 					onBlur={blurClearValue}
 				/>
-				<CButton
+				<Button
 					color="secondary"
 					title={showSecretValue ? 'Hide secret' : 'Show secret'}
+					aria-label={showSecretValue ? 'Hide secret value' : 'Show secret value'}
 					onClick={toggleShowSecretValue}
 				>
 					<FontAwesomeIcon icon={showSecretValue ? faEyeSlash : faEye} />
-				</CButton>
+				</Button>
 			</CInputGroup>
 		</>
 	)

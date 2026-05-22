@@ -1,4 +1,4 @@
-import { CButton, CCol, CContainer, CForm, CFormInput, CProgress, CRow } from '@coreui/react'
+import { CCol, CContainer, CForm, CFormInput, CProgress, CRow } from '@coreui/react'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -10,6 +10,7 @@ import { useIdleTimer } from 'react-idle-timer'
 import { PuffLoader } from 'react-spinners'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { Button } from './Components/Button.js'
 import { ContextData } from './ContextData.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
 import { MyHeader } from './Layout/Header.js'
@@ -339,9 +340,9 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 								invalid={showError}
 								readOnly={!userConfig.properties}
 							/>
-							<CButton type="submit" color="primary">
+							<Button type="submit" color="primary">
 								Unlock
-							</CButton>
+							</Button>
 						</div>
 					</CForm>
 				</CCol>

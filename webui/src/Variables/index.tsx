@@ -1,10 +1,11 @@
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link, useNavigate, useParams } from '@tanstack/react-router'
+import { useNavigate, useParams } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { memo, useCallback, useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import {
 	useConnectionLeafTree,
@@ -84,7 +85,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		<CRow>
 			<CCol xs={12} className="flex-column-layout">
 				<div className="fixed-header">
-					<h4 className="btn-inline">
+					<h4 className="button-inline">
 						Variables
 						<ContextHelpButton action="/user-guide/config/variables" />
 					</h4>
@@ -96,17 +97,17 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 
 				<div className="scrollable-content">
 					<div className="variables-category-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-						<CButton color="info" as={Link} to="/variables/custom" className="mb-3">
+						<LinkButton color="info" to="/variables/custom" className="mb-3">
 							<h6 className="mb-0 py-1">
 								<FontAwesomeIcon icon={faDollarSign} className="me-1" />
 								Custom Variables
 							</h6>
-						</CButton>
-						<CButton color="info" as={Link} to="/variables/expression" className="mb-3">
+						</LinkButton>
+						<LinkButton color="info" to="/variables/expression" className="mb-3">
 							<h6 className="mb-0 py-1">
 								<FontAwesomeIcon icon={faSquareRootVariable} className="me-1" /> Expression Variables
 							</h6>
-						</CButton>
+						</LinkButton>
 					</div>
 
 					<CollapsibleTree
@@ -135,15 +136,15 @@ export function VariablesListPage(): React.JSX.Element {
 		<div className="variables-panel">
 			<div>
 				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
-				<CButtonGroup size="sm">
-					<CButton color="primary" as={Link} to="/variables">
+				<ButtonGroup>
+					<LinkButton color="primary" size="sm" to="/variables">
 						<FontAwesomeIcon icon={faArrowLeft} />
 						&nbsp; Go back
-					</CButton>
-					<CButton color="secondary" disabled>
+					</LinkButton>
+					<Button color="secondary" size="sm" disabled>
 						{label}
-					</CButton>
-				</CButtonGroup>
+					</Button>
+				</ButtonGroup>
 			</div>
 
 			<VariablesTable label={label} />

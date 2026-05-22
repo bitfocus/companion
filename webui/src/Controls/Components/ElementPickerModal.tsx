@@ -1,9 +1,10 @@
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
+import { Button } from '~/Components/Button.js'
 import { ElementPicker } from './ElementPicker.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
@@ -71,12 +72,12 @@ export function ElementPickerModal({
 				/>
 			</CModalBody>
 			<CModalFooter>
-				<CButton color="secondary" onClick={handleClose}>
+				<Button color="secondary" onClick={handleClose}>
 					<FontAwesomeIcon icon={faTimes} /> Cancel
-				</CButton>
-				<CButton color="primary" onClick={handleSave} disabled={!canSave}>
+				</Button>
+				<Button color="primary" onClick={handleSave} disabled={!canSave}>
 					<FontAwesomeIcon icon={faCheck} /> Save
-				</CButton>
+				</Button>
 			</CModalFooter>
 		</CModal>
 	)

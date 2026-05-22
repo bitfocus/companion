@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -8,6 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
@@ -56,7 +57,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
 							<div>
-								<h4 className="btn-inline">
+								<h4 className="button-inline">
 									Settings - Backups
 									<ContextHelpButton action="/user-guide/config/settings#backups">
 										Companion can back itself up on a schedule to multiple directories if desired. These backups can be
@@ -68,11 +69,11 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 						</div>
 
 						<div className="mb-2">
-							<CButtonGroup>
-								<CButton color="primary" onClick={doAddNew} size="sm">
+							<ButtonGroup>
+								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
-								</CButton>
-							</CButtonGroup>
+								</Button>
+							</ButtonGroup>
 						</div>
 					</div>
 
@@ -237,17 +238,17 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 				{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}
 			</td>
 			<td className="action-buttons">
-				<CButtonGroup className="ms-2">
+				<ButtonGroup className="ms-2">
 					<SwitchInputField
 						value={rule.enabled}
 						setValue={doEnableDisable}
 						tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
 					/>
 
-					<CButton color="gray" onClick={doDelete} title="Delete">
+					<Button onClick={doDelete} title="Delete">
 						<FontAwesomeIcon icon={faTrash} />
-					</CButton>
-				</CButtonGroup>
+					</Button>
+				</ButtonGroup>
 			</td>
 		</tr>
 	)

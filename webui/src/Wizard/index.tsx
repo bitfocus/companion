@@ -1,8 +1,9 @@
-import { CButton, CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CForm, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { toJS } from 'mobx'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -132,23 +133,23 @@ export function WizardModal(): React.JSX.Element {
 	switch (currentStep) {
 		case applyStep:
 			nextButton = (
-				<CButton color="primary" onClick={doSave}>
+				<Button color="primary" onClick={doSave}>
 					Apply
-				</CButton>
+				</Button>
 			)
 			break
 		case maxSteps:
 			nextButton = (
-				<CButton color="primary" onClick={doClose}>
+				<Button color="primary" onClick={doClose}>
 					Finish
-				</CButton>
+				</Button>
 			)
 			break
 		default:
 			nextButton = (
-				<CButton color="primary" onClick={doNextStep}>
+				<Button color="primary" onClick={doNextStep}>
 					Next
-				</CButton>
+				</Button>
 			)
 	}
 
@@ -202,13 +203,13 @@ export function WizardModal(): React.JSX.Element {
 				</CModalBody>
 				<CModalFooter>
 					{currentStep <= applyStep && (
-						<CButton color="secondary" onClick={doClose}>
+						<Button color="secondary" onClick={doClose}>
 							Cancel
-						</CButton>
+						</Button>
 					)}
-					<CButton color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+					<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
 						Previous
-					</CButton>
+					</Button>
 					{nextButton}
 				</CModalFooter>
 			</CForm>

@@ -1,4 +1,3 @@
-import { CButton } from '@coreui/react'
 import { faFilter, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -8,6 +7,7 @@ import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { Button } from './Button'
 import { ExpressionInputField } from './ExpressionInputField'
 
 interface FieldOrExpressionProps {
@@ -77,15 +77,16 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 				)}
 			</div>
 			<div className="expression-toggle-button">
-				<CButton
+				<Button
 					color="info"
 					variant="outline"
 					onClick={toggleExpression}
 					title={value.isExpression ? 'Expression mode' : 'Value mode'}
+					aria-label={value.isExpression ? 'Switch to value mode' : 'Switch to expression mode'}
 					disabled={disabled}
 				>
 					<FontAwesomeIcon icon={value.isExpression ? faSquareRootVariable : faFilter} />
-				</CButton>
+				</Button>
 			</div>
 		</div>
 	)

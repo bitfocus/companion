@@ -1,4 +1,3 @@
-import { CButton, CButtonGroup } from '@coreui/react'
 import classnames from 'classnames'
 import {
 	AlignHorizontalJustifyCenter,
@@ -10,6 +9,7 @@ import {
 } from 'lucide-react'
 import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
 import type { CompanionAlignment } from '@companion-module/base'
+import { Button, ButtonGroup } from './Button'
 
 interface AlignmentInputFieldProps {
 	value: CompanionAlignment
@@ -42,7 +42,7 @@ export function HorizontalAlignmentInputField({
 	disabled = false,
 }: SplitAlignmentInputFieldProps): React.JSX.Element {
 	return (
-		<CButtonGroup>
+		<ButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'left'} title="Left" disabled={disabled}>
 				<AlignHorizontalJustifyStart size="1.3rem" />
 			</AlignmentButton>
@@ -52,7 +52,7 @@ export function HorizontalAlignmentInputField({
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'right'} title="Right" disabled={disabled}>
 				<AlignHorizontalJustifyEnd size="1.3rem" />
 			</AlignmentButton>
-		</CButtonGroup>
+		</ButtonGroup>
 	)
 }
 
@@ -62,7 +62,7 @@ export function VerticalAlignmentInputField({
 	disabled = false,
 }: SplitAlignmentInputFieldProps): React.JSX.Element {
 	return (
-		<CButtonGroup>
+		<ButtonGroup>
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'top'} title="Top" disabled={disabled}>
 				<AlignVerticalJustifyStart size="1.3rem" />
 			</AlignmentButton>
@@ -72,7 +72,7 @@ export function VerticalAlignmentInputField({
 			<AlignmentButton value={value} setValue={setValue} buttonValue={'bottom'} title="Bottom" disabled={disabled}>
 				<AlignVerticalJustifyEnd size="1.3rem" />
 			</AlignmentButton>
-		</CButtonGroup>
+		</ButtonGroup>
 	)
 }
 
@@ -93,7 +93,7 @@ function AlignmentButton({
 	children,
 }: React.PropsWithChildren<AlignmentButtonProps>) {
 	return (
-		<CButton
+		<Button
 			color={value === buttonValue ? 'primary' : 'secondary'}
 			onClick={() => setValue(buttonValue)}
 			title={title}
@@ -101,6 +101,6 @@ function AlignmentButton({
 			disabled={disabled}
 		>
 			{children}
-		</CButton>
+		</Button>
 	)
 }

@@ -118,7 +118,7 @@
 			justify-content: flex-end;
 			white-space: nowrap;
 
-			.btn {
+			.button {
 				text-transform: uppercase;
 				padding: 4px;
 
@@ -127,7 +127,7 @@
 				}
 			}
 
-			.btn-primary.disabled {
+			.button-primary.disabled {
 				opacity: 0.5;
 			}
 		}

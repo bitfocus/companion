@@ -1,4 +1,4 @@
-import { CButton, CButtonGroup, CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,6 +6,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
@@ -146,20 +147,11 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 
 	return (
 		<>
-			<div>
-				<CButton
-					color="light"
-					style={{
-						float: 'right',
-						marginTop: 10,
-					}}
-					onClick={resetPosition}
-				>
+			<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
+				<Button color="light" onClick={resetPosition}>
 					<FontAwesomeIcon icon={faHome} /> Home Position
-				</CButton>
-
-				<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} />
-			</div>
+				</Button>
+			</ButtonGridHeader>
 			<div className="buttongrid" ref={isInViewRef}>
 				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
@@ -197,24 +189,24 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							/>
 						</CCol>
 						<CCol className="py-1" sm={10} xs={9}>
-							<CButtonGroup>
-								<CButton
+							<ButtonGroup>
+								<Button
 									color="primary"
 									title="Replace all the actions on the trigger"
 									disabled={!selectedControl || !selectedSet}
 									onClick={replaceActions}
 								>
 									Replace
-								</CButton>
-								<CButton
+								</Button>
+								<Button
 									color="info"
 									title="Append to the existing actions"
 									disabled={!selectedControl || !selectedSet}
 									onClick={appendActions}
 								>
 									Append
-								</CButton>
-							</CButtonGroup>
+								</Button>
+							</ButtonGroup>
 						</CCol>
 					</CRow>
 				</CForm>
