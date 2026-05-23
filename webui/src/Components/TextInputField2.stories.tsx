@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { useArgs } from 'storybook/preview-api'
 import { withMockStore } from '../../.storybook/mockRootAppStore'
 import { MenuPortalContext } from './MenuPortalContext'
-import { TextInputField } from './TextInputField'
+import { TextInputField } from './TextInputField2'
 
 type TextInputFieldProps = React.ComponentProps<typeof TextInputField>
 

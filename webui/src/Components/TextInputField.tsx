@@ -18,7 +18,7 @@ interface TextInputFieldProps {
 	tooltip?: string
 	placeholder?: string
 	value: string
-	style?: React.CSSProperties
+	className?: string
 	setValue: (value: string) => void
 	checkValid?: (valid: string) => boolean
 	disabled?: boolean
@@ -34,7 +34,7 @@ export const TextInputField = observer(function TextInputField({
 	tooltip,
 	placeholder,
 	value,
-	style,
+	className,
 	setValue,
 	checkValid,
 	disabled,
@@ -71,8 +71,8 @@ export const TextInputField = observer(function TextInputField({
 	const showValue = (tmpValue ?? value ?? '').toString()
 
 	const extraStyle = useMemo(
-		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined, ...style }),
-		[checkValid, showValue, style]
+		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined }),
+		[checkValid, showValue]
 	)
 
 	// Render the input
@@ -82,6 +82,7 @@ export const TextInputField = observer(function TextInputField({
 				<>
 					<VariablesSelect
 						showValue={showValue}
+						className={className}
 						style={extraStyle}
 						localVariables={localVariables}
 						storeValue={storeValue}
@@ -99,6 +100,7 @@ export const TextInputField = observer(function TextInputField({
 					disabled={disabled}
 					value={showValue}
 					style={extraStyle}
+					className={className}
 					title={tooltip}
 					onChange={doOnChange}
 					onFocus={focusStoreValue}
@@ -114,6 +116,7 @@ export const TextInputField = observer(function TextInputField({
 					disabled={disabled}
 					value={showValue}
 					style={extraStyle}
+					className={className}
 					title={tooltip}
 					onChange={doOnChange}
 					onFocus={focusStoreValue}
@@ -159,6 +162,7 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 
 interface VariablesSelectProps {
 	showValue: string
+	className?: string
 	style: React.CSSProperties
 	localVariables: DropdownChoiceInt[] | undefined
 	storeValue: (value: string) => void
@@ -173,6 +177,7 @@ interface VariablesSelectProps {
 
 const VariablesSelect = observer(function VariablesSelect({
 	showValue,
+	className,
 	style,
 	localVariables,
 	storeValue,
@@ -246,6 +251,7 @@ const VariablesSelect = observer(function VariablesSelect({
 			value: showValue,
 			setValue: storeValue,
 			setCursorPosition: setCursorPosition,
+			className,
 			extraStyle: style,
 			forceHideSuggestions: setIsForceHidden,
 			focusStoreValue,
@@ -258,6 +264,7 @@ const VariablesSelect = observer(function VariablesSelect({
 			showValue,
 			storeValue,
 			setCursorPosition,
+			className,
 			style,
 			setIsForceHidden,
 			focusStoreValue,
@@ -299,6 +306,7 @@ interface VariablesSelectContextType {
 	value: string
 	setValue: (value: string) => void
 	setCursorPosition: (pos: number | null) => void
+	className: string | undefined
 	extraStyle: React.CSSProperties
 	forceHideSuggestions: (hidden: boolean) => void
 	focusStoreValue: () => void
@@ -312,6 +320,7 @@ const VariablesSelectContext = createContext<VariablesSelectContextType>({
 	value: '',
 	setValue: (_value: string) => {},
 	setCursorPosition: (_pos: number | null) => {},
+	className: '',
 	extraStyle: {},
 	forceHideSuggestions: (_hidden: boolean) => {},
 	focusStoreValue: () => {},
@@ -410,6 +419,7 @@ const CustomValueContainerTextInput = memo((props: ValueContainerProps<DropdownC
 			<CFormInput
 				ref={context.inputRef as React.RefObject<HTMLInputElement>}
 				type="text"
+				className={context.className}
 				style={context.extraStyle}
 				title={context.title}
 				value={context.value}
