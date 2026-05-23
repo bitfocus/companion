@@ -41,7 +41,7 @@ window.addEventListener('beforeunload', () => {
 
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
-		loggerLink(),
+		...(import.meta.env.DEV ? [loggerLink()] : []), // Enable logger in debug
 		wsLink({
 			client: trpcWsClient,
 		}),
