@@ -22,21 +22,27 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 	const saveMutation = useMutation(trpc.surfaces.outbound.discovery.setupSatellite.mutationOptions())
 	const saveMutationAsync = saveMutation.mutateAsync
 
-	const doAction = useCallback(() => {
-		if (!data || !selectedAddress) return
+	const doAction = useCallback(
+		(e: React.FormEvent) => {
+			e.preventDefault()
+			e.stopPropagation()
 
-		saveMutationAsync({
-			satelliteInfo: data,
-			companionAddress: selectedAddress,
-		}).then(
-			() => {
-				setShow(false)
-			},
-			(e) => {
-				console.error('Failed to setup satellite: ', e)
-			}
-		)
-	}, [saveMutationAsync, data, selectedAddress])
+			if (!data || !selectedAddress) return
+
+			saveMutationAsync({
+				satelliteInfo: data,
+				companionAddress: selectedAddress,
+			}).then(
+				() => {
+					setShow(false)
+				},
+				(e) => {
+					console.error('Failed to setup satellite: ', e)
+				}
+			)
+		},
+		[saveMutationAsync, data, selectedAddress]
+	)
 
 	const externalAddressesQuery = useQuery(
 		trpc.surfaces.outbound.discovery.externalAddresses.queryOptions(undefined, {

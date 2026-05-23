@@ -186,7 +186,7 @@ function ModalHeader({ className, children, closeButton, ...props }: ModalHeader
 	return (
 		<div className={classNames('modal2-header', className)} {...props}>
 			{children}
-			{closeButton && <Dialog.Close className="btn btn-close" tabIndex={-1} />}
+			{closeButton && <Dialog.Close className="btn btn-close" aria-label="Close modal" tabIndex={-1} />}
 		</div>
 	)
 }

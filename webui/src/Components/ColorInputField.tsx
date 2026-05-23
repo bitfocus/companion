@@ -154,6 +154,15 @@ export function ColorInputField<T extends 'string' | 'number'>({
 					onClick={handleClick}
 					ref={setReferenceElement}
 					role="button"
+					tabIndex={0}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault()
+							handleClick()
+						}
+					}}
+					aria-expanded={displayPicker}
+					aria-haspopup="dialog"
 					aria-label="Color picker"
 				>
 					<div style={styles.color} />

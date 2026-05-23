@@ -18,7 +18,7 @@ interface ExpressionInputFieldProps {
 }
 
 export const ExpressionInputField = observer(function ExpressionInputField({
-	// id,
+	id,
 	value,
 	setValue,
 	disabled,
@@ -81,6 +81,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	// Render the input
 	return (
 		<div
+			id={id}
 			className={classNames('expression-editor-container', {
 				'syntax-error': !isValid,
 			})}

@@ -1,4 +1,4 @@
-import { CCol, CCollapse } from '@coreui/react'
+import { CCol, CCollapse, CRow } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -120,124 +120,115 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 						<Modal.Header closeButton>
 							<Modal.Title>Change Module Version</Modal.Title>
 						</Modal.Header>
-						<Modal.Body>
-							<Form
-								className="row g-sm-2"
-								onSubmit={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									form.handleSubmit().catch((err) => {
-										console.error('Error submitting form', err)
-									})
-								}}
-							>
-								<CCol sm={12}>
-									<StaticAlert color="warning" className="mb-3">
-										Be careful when downgrading the module version. Some features may not be available in older
-										versions.
-									</StaticAlert>
-									{!!saveError && (
-										<StaticAlert color="danger" className="mb-3">
-											Save failed: {saveError}
+						<Form
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								form.handleSubmit().catch((err) => {
+									console.error('Error submitting form', err)
+								})
+							}}
+						>
+							<Modal.Body>
+								<CRow className="g-sm-2">
+									<CCol sm={12}>
+										<StaticAlert color="warning" className="mb-3">
+											Be careful when downgrading the module version. Some features may not be available in older
+											versions.
 										</StaticAlert>
-									)}
-								</CCol>
+										{!!saveError && (
+											<StaticAlert color="danger" className="mb-3">
+												Save failed: {saveError}
+											</StaticAlert>
+										)}
+									</CCol>
 
-								<form.Subscribe
-									selector={(state) => [state.values.moduleId, advancedMode] as const}
-									children={([selectedModuleId, isAdvanced]) => {
-										// In advanced mode, use the selected module from the form. In simple mode, lock to the original module.
-										const effectiveModuleId = isAdvanced ? selectedModuleId : originalModuleIdRef.current
+									<form.Subscribe
+										selector={(state) => [state.values.moduleId, advancedMode] as const}
+										children={([selectedModuleId, isAdvanced]) => {
+											// In advanced mode, use the selected module from the form. In simple mode, lock to the original module.
+											const effectiveModuleId = isAdvanced ? selectedModuleId : originalModuleIdRef.current
 
-										return (
+											return (
+												<form.Field
+													name="versionId"
+													children={(field) => (
+														<>
+															<FormLabel htmlFor={versionFieldId} className="col-sm-3 col-form-label col-form-label-sm">
+																Version
+																{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
+																	<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
+																)}
+															</FormLabel>
+															<CCol sm={9}>
+																<SelectedVersionDropdown
+																	moduleType={service.moduleType}
+																	moduleId={effectiveModuleId}
+																	htmlName={versionFieldId}
+																	value={field.state.value}
+																	onChange={field.handleChange}
+																	onBlur={field.handleBlur}
+																/>
+															</CCol>
+														</>
+													)}
+												/>
+											)
+										}}
+									/>
+
+									<CCol sm={12} className="mt-3 mb-2">
+										<hr className="my-2" />
+										<Button color="link" size="sm" onClick={toggleAdvancedMode} className="p-0 text-decoration-none">
+											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
+											Advanced Options
+										</Button>
+									</CCol>
+
+									<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
+										<CCol sm={12}>
+											<StaticAlert color="danger" className="mt-0 mb-3">
+												{changeModuleDangerMessage}
+											</StaticAlert>
+										</CCol>
+
+										<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
+											Module
+										</FormLabel>
+										<CCol sm={9}>
 											<form.Field
-												name="versionId"
+												name="moduleId"
 												children={(field) => (
-													<>
-														<FormLabel htmlFor={versionFieldId} className="col-sm-3 col-form-label col-form-label-sm">
-															Version
-															{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
-																<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
-															)}
-														</FormLabel>
-														<CCol sm={9}>
-															<SelectedVersionDropdown
-																moduleType={service.moduleType}
-																moduleId={effectiveModuleId}
-																htmlName={versionFieldId}
-																value={field.state.value}
-																onChange={field.handleChange}
-																onBlur={field.handleBlur}
-															/>
-														</CCol>
-													</>
+													<SelectedModuleDropdown
+														moduleType={service.moduleType}
+														htmlName={moduleFieldId}
+														value={field.state.value}
+														onChange={(val) => {
+															field.handleChange(val)
+															form.setFieldValue('versionId', null)
+														}}
+														onBlur={field.handleBlur}
+													/>
 												)}
 											/>
-										)
-									}}
+										</CCol>
+									</CCollapse>
+								</CRow>
+							</Modal.Body>
+							<Modal.Footer>
+								<form.Subscribe
+									selector={(state) => [state.canSubmit, state.isSubmitting]}
+									children={([canSubmit, isSubmitting]) => (
+										<>
+											<Modal.Close disabled={isSubmitting}>Cancel</Modal.Close>
+											<Button ref={buttonRef} color="primary" type="submit" disabled={!canSubmit}>
+												Save {isSubmitting ? '...' : ''}
+											</Button>
+										</>
+									)}
 								/>
-
-								<CCol sm={12} className="mt-3 mb-2">
-									<hr className="my-2" />
-									<Button color="link" size="sm" onClick={toggleAdvancedMode} className="p-0 text-decoration-none">
-										<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
-										Advanced Options
-									</Button>
-								</CCol>
-
-								<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
-									<CCol sm={12}>
-										<StaticAlert color="danger" className="mt-0 mb-3">
-											{changeModuleDangerMessage}
-										</StaticAlert>
-									</CCol>
-
-									<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
-										Module
-									</FormLabel>
-									<CCol sm={9}>
-										<form.Field
-											name="moduleId"
-											children={(field) => (
-												<SelectedModuleDropdown
-													moduleType={service.moduleType}
-													htmlName={moduleFieldId}
-													value={field.state.value}
-													onChange={(val) => {
-														field.handleChange(val)
-														form.setFieldValue('versionId', null)
-													}}
-													onBlur={field.handleBlur}
-												/>
-											)}
-										/>
-									</CCol>
-								</CCollapse>
-							</Form>
-						</Modal.Body>
-						<Modal.Footer>
-							<form.Subscribe
-								selector={(state) => [state.canSubmit, state.isSubmitting]}
-								children={([canSubmit, isSubmitting]) => (
-									<>
-										<Modal.Close disabled={!canSubmit}>Cancel</Modal.Close>
-										<Button
-											ref={buttonRef}
-											color="primary"
-											type="submit"
-											disabled={!canSubmit}
-											onClick={() => {
-												form.handleSubmit().catch((err) => {
-													console.error('Error submitting form', err)
-												})
-											}}
-										>
-											Save {isSubmitting ? '...' : ''}
-										</Button>
-									</>
-								)}
-							/>
-						</Modal.Footer>
+							</Modal.Footer>
+						</Form>
 					</Modal.Popup>
 				</Modal.Viewport>
 			</Modal.Portal>

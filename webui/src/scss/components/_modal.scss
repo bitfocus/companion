@@ -118,6 +118,17 @@
 	animation: modal2-static-pulse 0.3s ease-out;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.modal2-backdrop,
+	.modal2-dialog {
+		transition: none;
+	}
+
+	.modal2-static-pulse {
+		animation: none;
+	}
+}
+
 // ─── Title ────────────────────────────────────────────────────────────────────
 
 .modal2-title {

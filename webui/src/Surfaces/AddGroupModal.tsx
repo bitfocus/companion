@@ -121,7 +121,6 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 										name="id"
 										validators={{
 											onChange: ({ value }) => {
-												console.log('')
 												if (!isSurfaceGroupIdValid(value))
 													return 'Id must be alphanumeric and can contain underscores and dashes'
 												if (!value) return 'Id cannot be empty'

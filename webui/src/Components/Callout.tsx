@@ -15,7 +15,7 @@ export interface CalloutProps extends HTMLAttributes<HTMLDivElement> {
 export const Callout = forwardRef<HTMLDivElement, CalloutProps>(
 	({ children, className, color = 'primary', ...rest }, ref) => {
 		return (
-			<div className={classNames('callout2-element', `callout2-${color}`, className)} role="alert" {...rest} ref={ref}>
+			<div className={classNames('callout2-element', `callout2-${color}`, className)} {...rest} ref={ref}>
 				{children}
 			</div>
 		)

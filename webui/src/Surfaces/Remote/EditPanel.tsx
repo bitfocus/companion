@@ -91,6 +91,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 	}, [form, doClose])
 
 	const nameFieldId = useId()
+	const integrationFieldId = useId()
 
 	return (
 		<Form
@@ -143,11 +144,11 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					<FormLabel htmlFor={undefined} className="col-sm-4 col-form-label col-form-label-sm">
+					<FormLabel htmlFor={integrationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 						Surface Integration
 					</FormLabel>
 					<CCol sm={8}>
-						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
+						<CFormText id={integrationFieldId}>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
 					</CCol>
 
 					{instanceInfo?.remoteConfigFields?.map((fieldDef) => {

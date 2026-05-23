@@ -210,9 +210,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<Form className="row mb-3">
-				<FormLabel htmlFor={undefined} className="col-sm-4 col-form-label col-form-label-sm">
-					Name
-				</FormLabel>
+				<div className="form-label col-sm-4 col-form-label col-form-label-sm">Name</div>
 				<CCol sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
 						<span className="font-monospace">{imageInfo.name}</span>

@@ -66,9 +66,9 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 				const status = await resetConfigMutation.mutateAsync({ config: value })
 				if (status !== 'ok') {
 					notifier.show(`Reset failed`, `An unspecified error occurred during the reset. Please try again.`, 10000)
+				} else {
+					doClose()
 				}
-
-				doClose()
 			} catch (e) {
 				notifier.show(`Reset failed`, 'An error occurred: ' + e, 10000)
 			}
@@ -131,16 +131,7 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 				<form.Subscribe
 					selector={(state) => [state.canSubmit, state.isSubmitting]}
 					children={([canSubmit, isSubmitting]) => (
-						<Button
-							ref={buttonRef}
-							color="primary"
-							disabled={!canSubmit || isSubmitting}
-							onClick={() => {
-								form.handleSubmit().catch((err) => {
-									console.error('Form submission error', err)
-								})
-							}}
-						>
+						<Button ref={buttonRef} color="primary" type="submit" disabled={!canSubmit || isSubmitting}>
 							Apply {isSubmitting ? '...' : ''}
 						</Button>
 					)}
@@ -467,18 +458,21 @@ const ResetApplyStep = withForm({
 						changes.push(<li key="userconfig">All settings, including enabled remote control services.</li>)
 					}
 
-					if (changes.length === 0) {
-						changes.push(<li key="no-change">No changes to the configuration will be made.</li>)
-					}
-
 					return (
 						<div>
 							<h5>Review Changes</h5>
 							<p>The following data will be reset:</p>
-							<ul>{changes}</ul>
+
 							{changes.length > 0 ? (
-								<StaticAlert color="danger">Proceeding will permanently clear the above data.</StaticAlert>
-							) : null}
+								<>
+									<ul>{changes}</ul>
+									<StaticAlert color="danger">Proceeding will permanently clear the above data.</StaticAlert>
+								</>
+							) : (
+								<ul>
+									<li>No changes to the configuration will be made.</li>
+								</ul>
+							)}
 						</div>
 					)
 				}}

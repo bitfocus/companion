@@ -62,10 +62,13 @@ export const GridSizeModal = observer(function GridSizeModal() {
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 	const doAction = useCallback(
 		(e: React.FormEvent) => {
-			if (e) e.preventDefault()
+			e.preventDefault()
+			e.stopPropagation()
+
+			if (!newGridSize || newGridSize.minRow > newGridSize.maxRow || newGridSize.minColumn > newGridSize.maxColumn)
+				return
 
 			setShow(false)
-			if (!newGridSize) return // this should be impossible in the callback!
 
 			setConfigKeyMutation.mutate({ key: 'gridSize', value: newGridSize })
 		},
@@ -131,7 +134,11 @@ export const GridSizeModal = observer(function GridSizeModal() {
 		)
 	}, [])
 
+	const isInvalidRange =
+		!!newGridSize && (newGridSize.minRow > newGridSize.maxRow || newGridSize.minColumn > newGridSize.maxColumn)
+
 	const isReducingSize =
+		!isInvalidRange &&
 		newGridSize &&
 		userConfig?.properties?.gridSize &&
 		(newGridSize.minColumn > userConfig.properties.gridSize.minColumn ||
@@ -218,6 +225,11 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</CCol>
 							</Form>
+							{isInvalidRange && (
+								<StaticAlert color="danger" className="mb-0 mt-2">
+									Min Row must be ≤ Max Row and Min Column must be ≤ Max Column.
+								</StaticAlert>
+							)}
 							{isReducingSize && (
 								<StaticAlert color="danger" className="mb-0 mt-2">
 									By reducing the grid size, any buttons outside of the new boundaries will be deleted.
@@ -226,7 +238,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 						</Modal.Body>
 						<Modal.Footer>
 							<Modal.Close>Cancel</Modal.Close>
-							<Button ref={buttonRef} color="primary" onClick={doAction}>
+							<Button ref={buttonRef} color="primary" onClick={doAction} disabled={isInvalidRange}>
 								Save
 							</Button>
 						</Modal.Footer>

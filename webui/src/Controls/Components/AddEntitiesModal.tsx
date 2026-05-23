@@ -1,4 +1,3 @@
-import { CFormInput } from '@coreui/react'
 import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
@@ -15,6 +14,7 @@ import {
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import { Modal } from '~/Components/Modal'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Controls/Components/useConnectionTreeNodes.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
@@ -128,9 +128,9 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 					sortKey: String(info.sortKey ?? info.label),
 					description: info.description,
 				})
-
-				leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
 			}
+
+			leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
 			return leaves
 		},
 		[definitions.connections, feedbackListType]
@@ -202,7 +202,13 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 
 	return (
 		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Trigger color="primary" className="rounded-start-0" disabled={disabled}>
+			<Modal.Trigger
+				color="primary"
+				className="rounded-start-0"
+				disabled={disabled}
+				aria-label={`Browse ${capitalize(entityTypeLabel)}s`}
+				title={`Browse ${capitalize(entityTypeLabel)}s`}
+			>
 				<FontAwesomeIcon icon={faFolderOpen} />
 			</Modal.Trigger>
 
@@ -214,13 +220,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 							<Modal.Title>Browse {capitalize(entityTypeLabel)}s</Modal.Title>
 						</Modal.Header>
 						<Modal.Header>
-							<CFormInput
-								type="text"
-								placeholder="Search ..."
-								onChange={(e) => setFilter(e.currentTarget.value)}
-								value={filter}
-								style={{ fontSize: '1.2em' }}
-							/>
+							<SearchBox filter={filter} setFilter={setFilter} />
 						</Modal.Header>
 						<Modal.Body>
 							<EntityTypeLabelContext.Provider value={entityTypeLabel}>

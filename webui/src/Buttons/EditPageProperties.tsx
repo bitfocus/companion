@@ -26,7 +26,8 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 
 		const doAction = useCallback(
 			(e: React.FormEvent) => {
-				if (e) e.preventDefault()
+				e.preventDefault()
+				e.stopPropagation()
 
 				setShow(false)
 
