@@ -27,14 +27,13 @@ import {
 	type InstanceConfig,
 } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import type { ModuleManifestOldExt } from '@companion-app/shared/Model/ModuleManifest.js'
+import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
 import type {
 	ClientSurfaceInstanceConfig,
 	ClientSurfaceInstancesUpdate,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Complete } from '@companion-module/base'
-import type { ModuleManifest } from '@companion-module/base/manifest'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataCache } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
@@ -531,7 +530,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#configStore.getIdFromLabel(moduleType, label)
 	}
 
-	getManifestForConnection(id: string): ModuleManifest | ModuleManifestOldExt | undefined {
+	getManifestForConnection(id: string): ModuleManifestExt | undefined {
 		const config = this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
 		if (!config) return undefined
 

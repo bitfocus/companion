@@ -920,7 +920,7 @@ if (!lock) {
 			let crashTimeout = null
 
 			// Find the node binary
-			const nodejsBasePath = path.join(companionRootPath, 'node-runtimes', 'node22')
+			const nodejsBasePath = path.join(companionRootPath, 'node-runtimes', 'node26')
 			const nodeBinPath = [
 				path.join(nodejsBasePath, 'bin/node'),
 				path.join(nodejsBasePath, 'node'),

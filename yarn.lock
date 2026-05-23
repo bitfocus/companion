@@ -1912,19 +1912,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.1.0-0-nightly-main-20260501-215220-309fb87":
-  version: 2.1.0-0-nightly-main-20260501-215220-309fb87
-  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260501-215220-309fb87"
+"@companion-module/base@npm:2.1.0-0-nightly-main-20260523-214159-95c00ff":
+  version: 2.1.0-0-nightly-main-20260523-214159-95c00ff
+  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260523-214159-95c00ff"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/77f736adc15e4e3f35364b89a3734dd45ac3f2955b0f65d36c9ae5542a8a9f09d8e5a1240cdbc9b4a4bb261bf4b10aa86e9c6e5cf3520a0625c2caab53f897e5
+  checksum: 10c0/5e88171b8baedafd6a2a670deac43a3534de24c3c755eee31b123f1976c73f941c38999b34491dfe2e6a3b7768e0d4a9aec4e88f90cbe538c3ee16b30bd0a64c
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.3-nightly-main-20260501-214239-60000e7":
-  version: 1.0.3-nightly-main-20260501-214239-60000e7
-  resolution: "@companion-module/host@npm:1.0.3-nightly-main-20260501-214239-60000e7"
+"@companion-module/host@npm:1.0.3-nightly-main-20260523-215208-95c00ff":
+  version: 1.0.3-nightly-main-20260523-215208-95c00ff
+  resolution: "@companion-module/host@npm:1.0.3-nightly-main-20260523-215208-95c00ff"
   dependencies:
     "@companion-module/base": "npm:~2.1.0-0"
     debounce-fn: "npm:^6.0.0"
@@ -1932,7 +1932,7 @@ __metadata:
     semver: "npm:^7.7.4"
     tslib: "npm:^2.8.1"
     zod: "npm:^4.3.6"
-  checksum: 10c0/37a19995ecca811f07923dece7fb8d9890ac3e802004ffdf28b76e3aeed5209ac8fbaaed85acfcacf9da5a7a202169aed0297df6158e6e767f97b8e9587c79ad
+  checksum: 10c0/6f7caedd78aa45472155f4af70b5535bc30f36368e4e0b3497f85dd2935e292febb7cc9a1613bdd98c07b32c145079a9c42530f41ef69ac940d99d75057abed3
   languageName: node
   linkType: hard
 
