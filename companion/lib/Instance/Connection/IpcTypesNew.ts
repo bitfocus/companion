@@ -90,7 +90,7 @@ export interface HostToModuleEventsNew {
 	 */
 	upgradeFeedbacks: (msg: UpgradeFeedbacksMessage) => UpgradeFeedbacksResponse
 	/** Execute an action */
-	executeAction: (msg: ExecuteActionMessage) => ExecuteActionResponseMessage | undefined // This is only returned since 1.14.0
+	executeAction: (msg: ExecuteActionMessage) => ExecuteActionResponseMessage
 	/** Get the config fields for this connection */
 	getConfigFields: (msg: GetConfigFieldsMessage) => GetConfigFieldsResponseMessage
 	/** Handle an incoming HTTP request */

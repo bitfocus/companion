@@ -404,7 +404,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 				surfaceId: extras?.surfaceId,
 			})
-			if (result && !result.success) {
+			if (!result.success) {
 				const message = result.errorMessage || 'Unknown error'
 				this.logger.warn(`Error executing action: ${message}`)
 				this.#sendToModuleLog('error', `Error executing action: ${message}`)
