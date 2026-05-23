@@ -1,8 +1,8 @@
-import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
-import { CModalExt } from '~/Components/CModalExt.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 
@@ -22,16 +22,8 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 
 		const inputRef = useRef<HTMLInputElement>(null)
 
-		const inputFocus = () => {
-			if (inputRef.current) {
-				inputRef.current.focus()
-			}
-		}
-
 		const setNameMutation = useMutationExt(trpc.pages.setName.mutationOptions())
 
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setPageNumber(null), [])
 		const doAction = useCallback(
 			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
@@ -59,53 +51,62 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 					setName(pageInfo?.name ?? null)
 					setPageNumber(pageNumber)
 					setShow(true)
-
-					// Focus the text area
-					setTimeout(inputFocus, 50)
 				},
 			}),
 			[]
 		)
+
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) {
+				setPageNumber(null)
+				setName(null)
+			}
+		}, [])
 
 		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 			setName(e.target.value)
 		}, [])
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={inputFocus}>
-				<CModalHeader closeButton>
-					<h5>Configure Page {pageNumber}</h5>
-				</CModalHeader>
-				<CModalBody>
-					<Form onSubmit={doAction}>
-						{includeName && (
-							<CRow className="mb-3">
-								<FormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
-									Name
-								</FormLabel>
-								<CCol sm={9}>
-									<CFormInput
-										ref={inputRef}
-										name="colFormName"
-										type="text"
-										value={pageName || ''}
-										onChange={onNameChange}
-									/>
-								</CCol>
-							</CRow>
-						)}
-						{/* TODO: more fields should be added here */}
-					</Form>
-				</CModalBody>
-				<CModalFooter>
-					<Button color="secondary" onClick={doClose}>
-						Cancel
-					</Button>
-					<Button color="primary" onClick={doAction}>
-						Save
-					</Button>
-				</CModalFooter>
-			</CModalExt>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup initialFocus={inputRef}>
+							<Modal.Header closeButton>
+								<Modal.Title>Configure Page {pageNumber}</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<Form onSubmit={doAction}>
+									{includeName && (
+										<CRow className="mb-3">
+											<FormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+												Name
+											</FormLabel>
+											<CCol sm={9}>
+												<CFormInput
+													ref={inputRef}
+													name="colFormName"
+													type="text"
+													value={pageName || ''}
+													onChange={onNameChange}
+												/>
+											</CCol>
+										</CRow>
+									)}
+									{/* TODO: more fields should be added here */}
+								</Form>
+							</Modal.Body>
+							<Modal.Footer>
+								<Modal.Close>Cancel</Modal.Close>
+								<Button color="primary" onClick={doAction}>
+									Save
+								</Button>
+							</Modal.Footer>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	}
 )

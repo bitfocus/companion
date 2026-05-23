@@ -95,8 +95,8 @@
 }
 
 .variables-table-modal-body {
-	// move padding of the viewport to the filter so that the header sticks to the top w/o a gap
-	padding-top: 0;
+	// reduce padding above the filter
+	padding-top: 0.5rem;
 
 	.variables-table-filter {
 		padding-top: var(--cui-modal-padding);

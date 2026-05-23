@@ -1,10 +1,8 @@
-import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { FeedbackEntityStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { Button } from '~/Components/Button.js'
+import { Modal } from '~/Components/Modal.js'
 import { ElementPicker } from './ElementPicker.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
@@ -41,12 +39,19 @@ export function ElementPickerModal({
 		}
 	}, [selectedElementId2, selectedProperty2, currentOverride, onSave])
 
-	const handleClose = useCallback(() => {
-		// Clear values when canceling
-		setSelectedElementId(null)
-		setSelectedProperty(null)
-		onClose()
-	}, [onClose])
+	const onOpenChange = useCallback(
+		(open: boolean) => {
+			if (!open) onClose()
+		},
+		[onClose]
+	)
+	const onOpenChangeComplete = useCallback((open: boolean) => {
+		if (!open) {
+			// Clear values when canceling
+			setSelectedElementId(null)
+			setSelectedProperty(null)
+		}
+	}, [])
 
 	const handleElementSelect = useCallback((elementId: string) => setSelectedElementId(elementId), [])
 
@@ -57,28 +62,34 @@ export function ElementPickerModal({
 	const canSave = !!selectedElement && !!selectedSchema?.find((p) => p.id === selectedProperty2)
 
 	return (
-		<CModal visible={isOpen} onClose={handleClose} size="lg" className="layered-style-element-picker-modal">
-			<CModalHeader>
-				<CModalTitle>Select Override Element and Property</CModalTitle>
-			</CModalHeader>
-			<CModalBody>
-				<ElementPicker
-					selectedElementId={selectedElementId2}
-					selectedSchema={selectedSchema}
-					selectedProperties={selectedProperty2 ? [selectedProperty2] : []}
-					onElementSelect={handleElementSelect}
-					onPropertySelect={handlePropertySelect}
-					allowMultipleProperties={false}
-				/>
-			</CModalBody>
-			<CModalFooter>
-				<Button color="secondary" onClick={handleClose}>
-					<FontAwesomeIcon icon={faTimes} /> Cancel
-				</Button>
-				<Button color="primary" onClick={handleSave} disabled={!canSave}>
-					<FontAwesomeIcon icon={faCheck} /> Save
-				</Button>
-			</CModalFooter>
-		</CModal>
+		<Modal.Root open={isOpen} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup size="lg" className="layered-style-element-picker-modal">
+						<Modal.Header closeButton>
+							<Modal.Title>Select Override Element and Property</Modal.Title>
+						</Modal.Header>
+						<Modal.Body>
+							<ElementPicker
+								selectedElementId={selectedElementId2}
+								selectedSchema={selectedSchema}
+								selectedProperties={selectedProperty2 ? [selectedProperty2] : []}
+								onElementSelect={handleElementSelect}
+								onPropertySelect={handlePropertySelect}
+								allowMultipleProperties={false}
+							/>
+						</Modal.Body>
+						<Modal.Footer>
+							<Modal.Close>Cancel</Modal.Close>
+
+							<Button color="primary" onClick={handleSave} disabled={!canSave}>
+								Save
+							</Button>
+						</Modal.Footer>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
 	)
 }

@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CCol, CFormInput } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,9 +7,9 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { CModalExt } from '~/Components/CModalExt.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Modal } from '~/Components/Modal.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -40,11 +40,12 @@ export const AddInstanceModal = observer(
 
 		const isModuleOnStore = !!moduleInfo && !!modules.getStoreInfo(moduleInfo.moduleType, moduleInfo.moduleId)
 
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {
-			setModuleInfo(null)
-			setSelectedVersion(null)
-			setInstanceLabel('')
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) {
+				setModuleInfo(null)
+				setSelectedVersion(null)
+				setInstanceLabel('')
+			}
 		}, [])
 
 		const doAction = () => {
@@ -134,105 +135,108 @@ export const AddInstanceModal = observer(
 		}, [helpViewer, moduleInfo?.moduleType, moduleInfo?.moduleId, selectedVersionInfo])
 
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} scrollable={true}>
-				{moduleInfo && (
-					<>
-						<CModalHeader closeButton>
-							<h5>Add {moduleInfo.product}</h5>
-						</CModalHeader>
-						<CModalBody>
-							{service.moduleType === ModuleInstanceType.Connection && (
-								<p>
-									It is now possible to load install different versions of modules without updating Companion. Once you
-									have installed different versions of a module, you can choose which one to use for a new connection
-									here.
-								</p>
-							)}
-							<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
-								<FormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
-									Label&nbsp;
-								</FormLabel>
-								<CCol sm={8}>
-									<CFormInput
-										name="colFormLabel"
-										value={instanceLabel}
-										onChange={(e) => setInstanceLabel(e.currentTarget.value)}
-									/>
-								</CCol>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup scrollable>
+							<Modal.Header closeButton>
+								<Modal.Title>Add {moduleInfo?.product}</Modal.Title>
+							</Modal.Header>
+							{moduleInfo && (
+								<Modal.Body>
+									{service.moduleType === ModuleInstanceType.Connection && (
+										<p>
+											It is now possible to load install different versions of modules without updating Companion. Once
+											you have installed different versions of a module, you can choose which one to use for a new
+											connection here.
+										</p>
+									)}
+									<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+										<FormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
+											Label&nbsp;
+										</FormLabel>
+										<CCol sm={8}>
+											<CFormInput
+												name="colFormLabel"
+												value={instanceLabel}
+												onChange={(e) => setInstanceLabel(e.currentTarget.value)}
+											/>
+										</CCol>
 
-								<FormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
-									<div className="flex">
-										<span className="grow">Module Version&nbsp;</span>
-										{moduleInfo && selectedVersionInfo && (
-											<div className="float_right" onClick={showHelpClick}>
-												<FontAwesomeIcon icon={faQuestionCircle} />
+										<FormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
+											<div className="flex">
+												<span className="grow">Module Version&nbsp;</span>
+												{moduleInfo && selectedVersionInfo && (
+													<div className="float_right" onClick={showHelpClick}>
+														<FontAwesomeIcon icon={faQuestionCircle} />
+													</div>
+												)}
+												{isModuleOnStore && (
+													<ModuleVersionsRefresh moduleType={moduleInfo.moduleType} moduleId={moduleInfo.moduleId} />
+												)}
 											</div>
-										)}
-										{isModuleOnStore && (
-											<ModuleVersionsRefresh moduleType={moduleInfo.moduleType} moduleId={moduleInfo.moduleId} />
-										)}
-									</div>
-								</FormLabel>
-								<CCol sm={8}>
-									<SimpleDropdownInputField
-										id="colFormVersion"
-										value={selectedVersion as string}
-										setValue={(value) => setSelectedVersion(value as string)}
-										noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
-										choices={versionChoices}
-									/>
-								</CCol>
-								<CCol sm={{ span: 8, offset: 4 }} className="mt-0">
-									<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>
-								</CCol>
+										</FormLabel>
+										<CCol sm={8}>
+											<SimpleDropdownInputField
+												id="colFormVersion"
+												value={selectedVersion as string}
+												setValue={(value) => setSelectedVersion(value as string)}
+												noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
+												choices={versionChoices}
+											/>
+										</CCol>
+										<CCol sm={{ span: 8, offset: 4 }} className="mt-0">
+											<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>
+										</CCol>
 
-								{hasIncompatibleNewerVersion && (
-									<CCol xs={12}>
-										<StaticAlert color="warning" className="mt-2 mb-0">
-											There is a newer version of this module on the store, but it requires a newer version of
-											Companion.
-										</StaticAlert>
-									</CCol>
-								)}
-							</Form>
+										{hasIncompatibleNewerVersion && (
+											<CCol xs={12}>
+												<StaticAlert color="warning" className="mt-2 mb-0">
+													There is a newer version of this module on the store, but it requires a newer version of
+													Companion.
+												</StaticAlert>
+											</CCol>
+										)}
+									</Form>
 
-							{selectedVersionIsLegacy && (
-								<>
-									<hr />
-									<StaticAlert color="warning">
-										<p>
-											This module has not been verified to be compatible with this version of companion. It may be buggy
-											or broken.
-										</p>
-										<p>
-											If this module is broken, please let the module author know on{' '}
-											{moduleInfo.bugUrl ? (
-												<a target="_blank" rel="noreferrer" href={moduleInfo.bugUrl}>
-													Github
-												</a>
-											) : (
-												'Github'
-											)}
-										</p>
-									</StaticAlert>
-								</>
+									{selectedVersionIsLegacy && (
+										<>
+											<hr />
+											<StaticAlert color="warning">
+												<p>
+													This module has not been verified to be compatible with this version of companion. It may be
+													buggy or broken.
+												</p>
+												<p>
+													If this module is broken, please let the module author know on{' '}
+													{moduleInfo.bugUrl ? (
+														<a target="_blank" rel="noreferrer" href={moduleInfo.bugUrl}>
+															Github
+														</a>
+													) : (
+														'Github'
+													)}
+												</p>
+											</StaticAlert>
+										</>
+									)}
+								</Modal.Body>
 							)}
-						</CModalBody>
-						<CModalFooter>
-							<Button color="secondary" onClick={doClose}>
-								Cancel
-							</Button>
-							<Button
-								color="primary"
-								onClick={doAction}
-								disabled={!moduleInfo || !instanceLabel || !selectedVersion || !versionChoices.length}
-							>
-								Add
-							</Button>
-						</CModalFooter>
-					</>
-				)}
-			</CModalExt>
+							<Modal.Footer>
+								<Modal.Close>Cancel</Modal.Close>
+								<Button
+									color="primary"
+									onClick={doAction}
+									disabled={!moduleInfo || !instanceLabel || !selectedVersion || !versionChoices.length}
+								>
+									Add
+								</Button>
+							</Modal.Footer>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	})
 )

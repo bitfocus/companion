@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { FormLabel } from '~/Components/Form.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface PropertyListItemProps {
@@ -101,7 +102,7 @@ export function ElementPicker({
 	return (
 		<>
 			<div className="element-modal-col">
-				<label className="form-label">Element</label>
+				<FormLabel htmlFor={undefined}>Element</FormLabel>
 				<div className="element-picker-list border rounded">
 					{styleStore.elements
 						.map((element) => (
@@ -118,7 +119,9 @@ export function ElementPicker({
 			</div>
 
 			<div className="element-modal-col">
-				<label className="form-label">{allowMultipleProperties ? 'Properties (select multiple)' : 'Property'}</label>
+				<FormLabel htmlFor={undefined}>
+					{allowMultipleProperties ? 'Properties (select multiple)' : 'Property'}
+				</FormLabel>
 				<div className="element-picker-list border rounded">
 					{!selectedElementId && <div className="text-muted text-center p-3">Select an element first</div>}
 					{selectedElementId && (!selectedSchema || selectedSchema.length === 0) && (

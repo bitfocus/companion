@@ -1,4 +1,4 @@
-import { faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
@@ -41,7 +41,6 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 	localVariablesStore,
 }: LayeredStylesOverridesProps) {
 	const { styleStore } = useLayeredStyleElementsContext()
-	const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
 	// Create a flat list of element IDs in their visual order (depth-first traversal)
 	const elementOrderMap = useComputed(() => {
@@ -109,8 +108,6 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				}
 				service.replaceStyleOverride(newOverride)
 			})
-
-			setIsAddModalOpen(false)
 		},
 		[service]
 	)
@@ -130,9 +127,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 						<th>Element & Property</th>
 						<th>Value</th>
 						<th className="fit">
-							<Button size="sm" title="Add override" onClick={() => setIsAddModalOpen(true)} className="py-0">
-								<FontAwesomeIcon icon={faPlus} />
-							</Button>
+							<AddElementPickerModal onSave={handleAddModalSave} />
 						</th>
 					</tr>
 				</thead>
@@ -156,12 +151,6 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 					))}
 				</tbody>
 			</table>
-
-			<AddElementPickerModal
-				isOpen={isAddModalOpen}
-				onClose={() => setIsAddModalOpen(false)}
-				onSave={handleAddModalSave}
-			/>
 		</>
 	)
 })

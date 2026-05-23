@@ -1,17 +1,10 @@
-.action-recorder-finish-panel {
-	display: grid;
-	grid-template-rows: auto minmax(200px, 1fr) auto;
-	flex: 1 1 auto; // fill .modal-content as a flex child
-	min-height: 0;
+.action-recorder-finish-button-grid {
+	grid-template-rows: auto minmax(200px, 1fr) min-content;
+	height: 100%;
 
-	.action-recorder-finish-button-grid {
-		grid-template-rows: auto minmax(200px, 1fr) min-content;
-		height: 100%;
+	padding-bottom: 0;
 
-		padding-bottom: 0;
-
-		&.active {
-			display: grid;
-		}
+	&.active {
+		display: grid;
 	}
 }

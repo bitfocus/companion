@@ -1,12 +1,10 @@
-import { CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from 'react'
 import type { ClientDiscoveredSurfaceInfoSatellite } from '@companion-app/shared/Model/Surfaces.js'
 import { Button } from '~/Components/Button.js'
-import { CModalExt } from '~/Components/CModalExt.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { Form, FormLabel } from '~/Components/Form.js'
-import { MenuPortalContext } from '~/Components/MenuPortalContext'
+import { Modal } from '~/Components/Modal'
 import { LoadingBar } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC'
 
@@ -21,24 +19,11 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
-	const buttonFocus = () => {
-		if (buttonRef.current) {
-			buttonRef.current.focus()
-		}
-	}
-
 	const saveMutation = useMutation(trpc.surfaces.outbound.discovery.setupSatellite.mutationOptions())
 	const saveMutationAsync = saveMutation.mutateAsync
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => {
-		setData(null)
-	}, [])
 	const doAction = useCallback(() => {
 		if (!data || !selectedAddress) return
-
-		// setData(null)
-		// setShow(false)
 
 		saveMutationAsync({
 			satelliteInfo: data,
@@ -72,61 +57,63 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 				refetchExternalAddresses().catch((e) => {
 					console.error('Failed to refetch external addresses: ', e)
 				})
-
-				// Focus the button asap. It also gets focused once the open is complete
-				setTimeout(buttonFocus, 50)
 			},
 		}),
 		[refetchExternalAddresses]
 	)
 
-	const [modalRef, setModalRef] = useState<HTMLElement | null>(null)
+	const onOpenChangeComplete = useCallback((open: boolean) => {
+		if (!open) setData(null)
+	}, [])
 
 	const companionAddressFieldId = useId()
 
 	return (
-		<CModalExt ref={setModalRef} visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-			<MenuPortalContext.Provider value={modalRef}>
-				<CModalHeader closeButton>
-					<h5>Setup Companion Satellite</h5>
-				</CModalHeader>
-				<CModalBody>
-					<Form onSubmit={doAction}>
-						<p>This will configure the selected Companion Satellite installation to connect to Companion</p>
+		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup initialFocus={buttonRef}>
+						<Modal.Header closeButton>
+							<Modal.Title>Setup Companion Satellite</Modal.Title>
+						</Modal.Header>
+						<Modal.Body>
+							<Form onSubmit={doAction}>
+								<p>This will configure the selected Companion Satellite installation to connect to Companion</p>
 
-						{!externalAddressesQuery.data ? (
-							// TODO - show error?
-							<LoadingBar />
-						) : (
-							<>
-								<FormLabel htmlFor={companionAddressFieldId}>Companion Address</FormLabel>
-								<DropdownInputField
-									htmlName={companionAddressFieldId}
-									choices={externalAddressesQuery.data?.addresses}
-									value={selectedAddress ?? ''}
-									setValue={(selected) => setSelectedAddress(selected?.toString() ?? '')}
-									allowCustom={true}
-									disabled={saveMutation.isPending}
-								/>
-								<p>Select the address of Companion that satellite should connect to</p>
-							</>
-						)}
-					</Form>
-				</CModalBody>
-				<CModalFooter>
-					<Button color="secondary" onClick={doClose}>
-						Cancel
-					</Button>
-					<Button
-						ref={buttonRef}
-						color="primary"
-						onClick={doAction}
-						disabled={!externalAddressesQuery.data || !selectedAddress || saveMutation.isPending}
-					>
-						Setup
-					</Button>
-				</CModalFooter>
-			</MenuPortalContext.Provider>
-		</CModalExt>
+								{!externalAddressesQuery.data ? (
+									// TODO - show error?
+									<LoadingBar />
+								) : (
+									<>
+										<FormLabel htmlFor={companionAddressFieldId}>Companion Address</FormLabel>
+										<DropdownInputField
+											htmlName={companionAddressFieldId}
+											choices={externalAddressesQuery.data?.addresses}
+											value={selectedAddress ?? ''}
+											setValue={(selected) => setSelectedAddress(selected?.toString() ?? '')}
+											allowCustom={true}
+											disabled={saveMutation.isPending}
+										/>
+										<p>Select the address of Companion that satellite should connect to</p>
+									</>
+								)}
+							</Form>
+						</Modal.Body>
+						<Modal.Footer>
+							<Modal.Close>Cancel</Modal.Close>
+							<Button
+								ref={buttonRef}
+								color="primary"
+								onClick={doAction}
+								disabled={!externalAddressesQuery.data || !selectedAddress || saveMutation.isPending}
+							>
+								Setup
+							</Button>
+						</Modal.Footer>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
 	)
 })

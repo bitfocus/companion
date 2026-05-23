@@ -1,7 +1,6 @@
-import { CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
-import { CModalExt } from './CModalExt.js'
+import { Modal } from './Modal.js'
 
 export interface GenericConfirmModalRef {
 	show(title: string, message: string | string[] | null, buttonLabel: string, completeCallback: () => void): void
@@ -25,14 +24,6 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 
 		const buttonRef = useRef<HTMLButtonElement>(null)
 
-		const buttonFocus = () => {
-			if (buttonRef.current) {
-				buttonRef.current.focus()
-			}
-		}
-
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setData(null), [])
 		const doAction = useCallback(() => {
 			setShow(false)
 
@@ -47,9 +38,6 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 				show(title, message, buttonLabel, completeCallback) {
 					setData({ title, message, buttonLabel, completeCallback })
 					setShow(true)
-
-					// Focus the button asap. It also gets focused once the open is complete
-					setTimeout(buttonFocus, 50)
 				},
 			}),
 			[]
@@ -64,21 +52,30 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 			}
 		}
 
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) setData(null)
+		}, [])
+
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus} transition={false}>
-				<CModalHeader closeButton>
-					<h5>{data?.title}</h5>
-				</CModalHeader>
-				<CModalBody>{content}</CModalBody>
-				<CModalFooter>
-					<Button color="secondary" onClick={doClose}>
-						Cancel
-					</Button>
-					<Button ref={buttonRef} color="primary" onClick={doAction} autoFocus>
-						{data?.buttonLabel}
-					</Button>
-				</CModalFooter>
-			</CModalExt>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup initialFocus={buttonRef}>
+							<Modal.Header closeButton>
+								<Modal.Title>{data?.title}</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>{content}</Modal.Body>
+							<Modal.Footer>
+								<Modal.Close>Cancel</Modal.Close>
+								<Button ref={buttonRef} color="primary" onClick={doAction} autoFocus>
+									{data?.buttonLabel}
+								</Button>
+							</Modal.Footer>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	}
 )

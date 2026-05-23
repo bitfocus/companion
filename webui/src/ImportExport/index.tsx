@@ -1,20 +1,19 @@
-import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button.js'
 import { Callout } from '~/Components/Callout.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ExportWizardModal, type ExportWizardModalRef } from './Export.js'
+import { ExportWizardModal } from './Export.js'
 import { ImportWizard } from './Import/index.js'
-import { ResetWizardModal, type ResetWizardModalRef } from './Reset.js'
+import { ResetWizardModal } from './Reset.js'
 
 const NOTIFICATION_ID_IMPORT = 'import_config_file'
 
@@ -22,11 +21,6 @@ export const ImportExportPage = observer(function ImportExport() {
 	const { notifier, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
-
-	const resetRef = useRef<ResetWizardModalRef>(null)
-	const exportRef = useRef<ExportWizardModalRef>(null)
-	const doReset = useCallback(() => resetRef.current?.show(), [])
-	const doExport = useCallback(() => exportRef.current?.show(), [])
 
 	const abortImportMutation = useMutationExt(trpc.importExport.abort.mutationOptions())
 
@@ -173,9 +167,6 @@ export const ImportExportPage = observer(function ImportExport() {
 
 	return (
 		<div>
-			<ResetWizardModal ref={resetRef} />
-			<ExportWizardModal ref={exportRef} />
-
 			<h4 className="button-inline">
 				Import / Export Configuration
 				<ContextHelpButton action="/user-guide/config/import-export" />
@@ -185,10 +176,7 @@ export const ImportExportPage = observer(function ImportExport() {
 			<Callout color="success">
 				<h5>Export</h5>
 				<p>Download a file containing all connections and button pages.</p>
-				<Button color="success" onClick={doExport}>
-					<FontAwesomeIcon icon={faDownload} style={{ marginRight: 7, marginLeft: -2 }} />
-					Export configuration
-				</Button>
+				<ExportWizardModal />
 			</Callout>
 
 			<Callout color="warning">
@@ -208,7 +196,7 @@ export const ImportExportPage = observer(function ImportExport() {
 							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
 							<label className="button button-warning button-file">
-								<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
+								<FontAwesomeIcon icon={faFileImport} className="me-2" />
 								Import configuration
 								<input
 									type="file"
@@ -226,10 +214,7 @@ export const ImportExportPage = observer(function ImportExport() {
 				<h5>Reset</h5>
 				<p>This will clear all connections, triggers and/or buttons.</p>
 				<div>
-					<Button color="danger" onClick={doReset}>
-						<FontAwesomeIcon icon={faTrashAlt} style={{ marginRight: 7, marginLeft: -1 }} />
-						Reset configuration
-					</Button>
+					<ResetWizardModal />
 				</div>
 			</Callout>
 		</div>

@@ -1,13 +1,12 @@
-import { CCol, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Modal } from '~/Components/Modal'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InlineHelpIcon } from './InlineHelp.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
 import { SwitchInputField } from './SwitchInputField.js'
 import { TextInputField } from './TextInputField.js'
 
@@ -16,7 +15,7 @@ export interface ConfirmExportModalRef {
 }
 
 interface ConfirmExportModalProps {
-	title?: string
+	title: string
 }
 
 export const ConfirmExportModal = observer(
@@ -31,22 +30,6 @@ export const ConfirmExportModal = observer(
 
 		const buttonRef = useRef<HTMLButtonElement>(null)
 
-		const buttonFocus = () => {
-			setTimeout(() => {
-				if (buttonRef.current) {
-					buttonRef.current.focus()
-				}
-			}, 500)
-		}
-
-		const doClose = useCallback(() => {
-			setShow(false)
-
-			// Delay clearing the data so the modal can animate out
-			setTimeout(() => {
-				setData(null)
-			}, 1500)
-		}, [])
 		const doAction = useCallback(() => {
 			setData(null)
 			setShow(false)
@@ -72,62 +55,67 @@ export const ConfirmExportModal = observer(
 					// Reset to default filename each time modal is opened
 					setFilename(String(defaultExportFilename))
 					setIncludeSecrets(true)
-
-					// Focus the button asap. It also gets focused once the open is complete
-					setTimeout(buttonFocus, 50)
 				},
 			}),
 			[defaultExportFilename]
 		)
 
-		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
-
 		const exportFormatId = useId()
 		const exportNameId = useId()
 		const exportSecretsId = useId()
 
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			// Clear data
+			if (!open) setData(null)
+		}, [])
+
 		return (
-			<CModal ref={setModalRef} visible={show} onClose={doClose} onShow={buttonFocus}>
-				<MenuPortalContext.Provider value={modalRef}>
-					<CModalHeader closeButton>
-						<h5>{props.title}</h5>
-					</CModalHeader>
-					<CModalBody>
-						<Form className="row g-3" onSubmit={doAction}>
-							<FormLabel htmlFor={exportFormatId} className="col-sm-4 col-form-label col-form-label-sm">
-								File format
-							</FormLabel>
-							<CCol sm={8}>
-								<SelectExportFormat id={exportFormatId} value={format} setValue={setFormat} />
-							</CCol>
-							<FormLabel htmlFor={exportNameId} className="col-sm-4 col-form-label col-form-label-sm">
-								File name
-							</FormLabel>
-							<CCol sm={8}>
-								<TextInputField id={exportNameId} value={filename} setValue={setFilename} useVariables={true} />
-							</CCol>
-							<FormLabel htmlFor={exportSecretsId} className="col-sm-4 col-form-label col-form-label-sm">
-								Include secrets
-								<InlineHelpIcon className="ms-1">
-									Some connections have secret values that can be omitted from the export. Not all modules are
-									compatible with this
-								</InlineHelpIcon>
-							</FormLabel>
-							<CCol sm={8} className="d-flex align-items-center">
-								<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
-							</CCol>
-						</Form>
-					</CModalBody>
-					<CModalFooter>
-						<Button color="secondary" onClick={doClose}>
-							Cancel
-						</Button>
-						<Button ref={buttonRef} color="primary" onClick={doAction}>
-							Export
-						</Button>
-					</CModalFooter>
-				</MenuPortalContext.Provider>
-			</CModal>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup initialFocus={buttonRef}>
+							<Modal.Header closeButton>
+								<Modal.Title>{props.title}</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<Form className="row g-3" onSubmit={doAction}>
+									<FormLabel htmlFor={exportFormatId} className="col-sm-4 col-form-label col-form-label-sm">
+										File format
+									</FormLabel>
+									<div className="col-sm-8">
+										<SelectExportFormat id={exportFormatId} value={format} setValue={setFormat} />
+									</div>
+
+									<FormLabel htmlFor={exportNameId} className="col-sm-4 col-form-label col-form-label-sm">
+										File name
+									</FormLabel>
+									<div className="col-sm-8">
+										<TextInputField id={exportNameId} value={filename} setValue={setFilename} useVariables={true} />
+									</div>
+
+									<FormLabel htmlFor={exportSecretsId} className="col-sm-4 col-form-label col-form-label-sm">
+										Include secrets
+										<InlineHelpIcon className="ms-1">
+											Some connections have secret values that can be omitted from the export. Not all modules are
+											compatible with this
+										</InlineHelpIcon>
+									</FormLabel>
+									<div className="col-sm-8 d-flex align-items-center">
+										<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
+									</div>
+								</Form>
+							</Modal.Body>
+							<Modal.Footer>
+								<Modal.Close>Cancel</Modal.Close>
+								<Button ref={buttonRef} color="primary" onClick={doAction}>
+									Export
+								</Button>
+							</Modal.Footer>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	})
 )

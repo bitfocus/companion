@@ -1,5 +1,5 @@
 import { CCol } from '@coreui/react'
-import { faCopy, faDownload, faEdit, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useRef, useState } from 'react'
@@ -28,7 +28,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 }: ImageLibraryEditorProps) {
 	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
-	const [showNameEditModal, setShowNameEditModal] = useState(false)
 	const [isDragOver, setIsDragOver] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -118,10 +117,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 	const handleImageNameChanged = useCallback(
 		(oldName: string, newName: string) => {
-			setShowNameEditModal(false)
-			if (onImageNameChanged) {
-				onImageNameChanged(oldName, newName)
-			}
+			onImageNameChanged?.(oldName, newName)
 		},
 		[onImageNameChanged]
 	)
@@ -188,14 +184,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		<div className="image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<ImageNameEditModal
-				visible={showNameEditModal}
-				onClose={() => setShowNameEditModal(false)}
-				imageName={selectedImageName}
-				currentName={imageInfo.name}
-				onNameChanged={handleImageNameChanged}
-			/>
-
 			<div className="mb-3">
 				<div className="d-flex flex-wrap gap-2">
 					<Button color="danger" onClick={handleDelete} title="Delete Image">
@@ -234,9 +222,12 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 							</Button>
 						</CopyToClipboard>
 					</div>
-					<Button color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image name">
-						<FontAwesomeIcon icon={faEdit} />
-					</Button>
+
+					<ImageNameEditModal
+						imageName={selectedImageName}
+						currentName={imageInfo.name}
+						onNameChanged={handleImageNameChanged}
+					/>
 				</CCol>
 			</Form>
 			<Form className="row mb-3">

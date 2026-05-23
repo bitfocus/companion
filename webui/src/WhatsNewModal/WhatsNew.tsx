@@ -1,11 +1,10 @@
-import { CModalBody, CModalHeader } from '@coreui/react'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import semver from 'semver'
 import { useLocalStorage } from 'usehooks-ts'
 import { StaticAlert } from '~/Components/Alert.js'
-import { CModalExt } from '~/Components/CModalExt.js'
+import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { MyErrorBoundary } from '../Resources/Error.js'
@@ -64,7 +63,6 @@ export const WhatsNewModal = observer(
 
 		const selectedPage = selectedVersion && pages?.find((page) => page.file === selectedVersion)
 
-		const doClose = useCallback(() => setShow(false), [])
 		const onClosed = useCallback(() => {
 			if (latestPage) {
 				setStoredLatest(latestPage.version)
@@ -82,37 +80,50 @@ export const WhatsNewModal = observer(
 		)
 
 		return (
-			<CModalExt scrollable visible={show} onClose={doClose} onClosed={onClosed} size="lg" className="modal-whatsnew">
-				<CModalHeader closeButton>
-					<h5>What's New in Companion</h5>
-				</CModalHeader>
-				<CModalBody>
-					{isPending && <div className="p-3">Loading...</div>}
-					{error && (
-						<StaticAlert color="danger">
-							Failed to load What's New content: {error instanceof Error ? error.message : 'Unknown error'}
-						</StaticAlert>
-					)}
-					{pages && pages.length > 0 && (
-						<TabArea.Root value={selectedVersion} onValueChange={setSelectedVersion}>
-							<TabArea.List>
-								{pages.map((page) => (
-									<TabArea.Tab key={page.version} value={page.file}>
-										{page.label}
-									</TabArea.Tab>
-								))}
-							</TabArea.List>
-							{selectedPage && (
-								<TabArea.Panel value={selectedPage.file}>
-									<MyErrorBoundary>
-										<DocsContent file={selectedPage.file} />
-									</MyErrorBoundary>
-								</TabArea.Panel>
-							)}
-						</TabArea.Root>
-					)}
-				</CModalBody>
-			</CModalExt>
+			<Modal.Root
+				open={show}
+				onOpenChange={setShow}
+				onOpenChangeComplete={(open) => {
+					if (!open) onClosed()
+				}}
+			>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup size="lg" scrollable className="modal-whatsnew">
+							<Modal.Header closeButton>
+								<Modal.Title>What's New in Companion</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								{isPending && <div className="p-3">Loading...</div>}
+								{error && (
+									<StaticAlert color="danger">
+										Failed to load What's New content: {error instanceof Error ? error.message : 'Unknown error'}
+									</StaticAlert>
+								)}
+								{pages && pages.length > 0 && (
+									<TabArea.Root value={selectedVersion} onValueChange={setSelectedVersion}>
+										<TabArea.List>
+											{pages.map((page) => (
+												<TabArea.Tab key={page.version} value={page.file}>
+													{page.label}
+												</TabArea.Tab>
+											))}
+										</TabArea.List>
+										{selectedPage && (
+											<TabArea.Panel value={selectedPage.file}>
+												<MyErrorBoundary>
+													<DocsContent file={selectedPage.file} />
+												</MyErrorBoundary>
+											</TabArea.Panel>
+										)}
+									</TabArea.Root>
+								)}
+							</Modal.Body>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	})
 )

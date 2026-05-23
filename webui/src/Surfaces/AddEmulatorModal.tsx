@@ -1,13 +1,13 @@
-import { CCol, CFormInput, CModalBody, CModalFooter, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CFormInput, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
 import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
-import { CModalExt } from '~/Components/CModalExt.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -50,12 +50,6 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 		},
 	})
 
-	const doClose = useCallback(() => setShow(false), [])
-	const onClosed = useCallback(() => {
-		form.reset()
-		setSaveError(null)
-	}, [form])
-
 	useImperativeHandle(
 		ref,
 		() => ({
@@ -68,184 +62,201 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 		[form]
 	)
 
+	const onOpenChangeComplete = useCallback(
+		(open: boolean) => {
+			if (!open) {
+				form.reset()
+				setSaveError(null)
+			}
+		},
+		[form]
+	)
+
 	const idFieldId = useId()
 	const nameFieldId = useId()
 	const rowsFieldId = useId()
 	const columnsFieldId = useId()
 
 	return (
-		<CModalExt visible={show} onClose={doClose} onClosed={onClosed}>
-			<CModalHeader closeButton>
-				<h5>Add Emulator</h5>
-			</CModalHeader>
-			<Form
-				onSubmit={(e) => {
-					e.preventDefault()
-					e.stopPropagation()
-					form.handleSubmit().catch((err) => {
-						console.error('Add emulator failed', err)
-					})
-				}}
-			>
-				<CModalBody>
-					<CRow className="g-sm-2">
-						{saveError && (
-							<CCol className={`fieldtype-textinput`} sm={12}>
-								<StaticAlert color="danger">{saveError}</StaticAlert>
-							</CCol>
-						)}
-
-						<form.Field
-							name="name"
-							children={(field) => (
-								<>
-									<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
-										Name
-										<InlineHelpIcon className="ms-1">
-											Display name for the emulator. This can be changed later
-										</InlineHelpIcon>
-									</FormLabel>
-									<CCol className={`fieldtype-textinput`} sm={8}>
-										<CFormInput
-											id={nameFieldId}
-											type="text"
-											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
-											value={field.state.value}
-											onChange={(e) => field.handleChange(e.target.value)}
-											onBlur={field.handleBlur}
-										/>
-									</CCol>
-								</>
-							)}
-						/>
-
-						<form.Field
-							name="baseId"
-							validators={{
-								onChange: ({ value }) => {
-									if (!isEmulatorIdValid(value)) return 'Id must be alphanumeric and can contain underscores and dashes'
-									if (!value) return 'Id cannot be empty'
-									for (const group of surfaces.store.values()) {
-										if (group.surfaces.find((s) => s.id === `emulator:${value}`)) return 'Id already exists'
-									}
-									return undefined
-								},
+		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup>
+						<Modal.Header closeButton>
+							<Modal.Title>Add Emulator</Modal.Title>
+						</Modal.Header>
+						<Form
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								form.handleSubmit().catch((err) => {
+									console.error('Add emulator failed', err)
+								})
 							}}
-							children={(field) => (
-								<>
-									<FormLabel htmlFor={idFieldId} className="col-sm-4 col-form-label col-form-label-sm">
-										Id
-										<InlineHelpIcon className="ms-1">
-											Id for the emulator, this is used in the url and internally. This cannot be changed once set.
-										</InlineHelpIcon>
-									</FormLabel>
-									<CCol className={`fieldtype-textinput`} sm={8}>
-										<CFormInput
-											id={idFieldId}
-											type="text"
-											style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
-											value={field.state.value}
-											onChange={(e) => field.handleChange(e.target.value)}
-											onBlur={field.handleBlur}
-										/>
-										{field.state.meta.errors.length > 0 && (
-											<StaticAlert color="warning" className="mt-2">
-												{field.state.meta.errors}
-											</StaticAlert>
-										)}
-									</CCol>
-								</>
-							)}
-						/>
+						>
+							<Modal.Body>
+								<CRow className="g-sm-2">
+									{saveError && (
+										<CCol className={`fieldtype-textinput`} sm={12}>
+											<StaticAlert color="danger">{saveError}</StaticAlert>
+										</CCol>
+									)}
 
-						<form.Field
-							name="rows"
-							validators={{
-								onChange: ({ value }) => {
-									const n = Number(value)
-									if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
-										return 'Rows must be a positive integer'
-									}
-									return undefined
-								},
-							}}
-							children={(field) => (
-								<>
-									<FormLabel htmlFor={rowsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
-										Rows
-									</FormLabel>
-									<CCol className={`fieldtype-textinput`} sm={8}>
-										<NumberInputField
-											id={rowsFieldId}
-											min={1}
-											value={field.state.value}
-											setValue={field.handleChange}
-											onBlur={field.handleBlur}
-											checkValid={field.state.meta.errors.length === 0}
-										/>
-										{field.state.meta.errors.length > 0 && (
-											<StaticAlert color="warning" className="mt-2">
-												{field.state.meta.errors}
-											</StaticAlert>
+									<form.Field
+										name="name"
+										children={(field) => (
+											<>
+												<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+													Name
+													<InlineHelpIcon className="ms-1">
+														Display name for the emulator. This can be changed later
+													</InlineHelpIcon>
+												</FormLabel>
+												<CCol className={`fieldtype-textinput`} sm={8}>
+													<CFormInput
+														id={nameFieldId}
+														type="text"
+														style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
+														value={field.state.value}
+														onChange={(e) => field.handleChange(e.target.value)}
+														onBlur={field.handleBlur}
+													/>
+												</CCol>
+											</>
 										)}
-									</CCol>
-								</>
-							)}
-						/>
+									/>
 
-						<form.Field
-							name="columns"
-							validators={{
-								onChange: ({ value }) => {
-									const n = Number(value)
-									if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
-										return 'Columns must be a positive integer'
-									}
-									return undefined
-								},
-							}}
-							children={(field) => (
-								<>
-									<FormLabel htmlFor={columnsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
-										Columns
-									</FormLabel>
-									<CCol className={`fieldtype-textinput`} sm={8}>
-										<NumberInputField
-											id={columnsFieldId}
-											min={1}
-											value={field.state.value}
-											setValue={field.handleChange}
-											onBlur={field.handleBlur}
-											checkValid={field.state.meta.errors.length === 0}
-										/>
-										{field.state.meta.errors.length > 0 && (
-											<StaticAlert color="warning" className="mt-2">
-												{field.state.meta.errors}
-											</StaticAlert>
+									<form.Field
+										name="baseId"
+										validators={{
+											onChange: ({ value }) => {
+												if (!isEmulatorIdValid(value))
+													return 'Id must be alphanumeric and can contain underscores and dashes'
+												if (!value) return 'Id cannot be empty'
+												for (const group of surfaces.store.values()) {
+													if (group.surfaces.find((s) => s.id === `emulator:${value}`)) return 'Id already exists'
+												}
+												return undefined
+											},
+										}}
+										children={(field) => (
+											<>
+												<FormLabel htmlFor={idFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+													Id
+													<InlineHelpIcon className="ms-1">
+														Id for the emulator, this is used in the url and internally. This cannot be changed once
+														set.
+													</InlineHelpIcon>
+												</FormLabel>
+												<CCol className={`fieldtype-textinput`} sm={8}>
+													<CFormInput
+														id={idFieldId}
+														type="text"
+														style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
+														value={field.state.value}
+														onChange={(e) => field.handleChange(e.target.value)}
+														onBlur={field.handleBlur}
+													/>
+													{field.state.meta.errors.length > 0 && (
+														<StaticAlert color="warning" className="mt-2">
+															{field.state.meta.errors}
+														</StaticAlert>
+													)}
+												</CCol>
+											</>
 										)}
-									</CCol>
-								</>
-							)}
-						/>
-					</CRow>
-				</CModalBody>
-				<CModalFooter>
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-						children={([canSubmit, isSubmitting]) => (
-							<>
-								<Button color="secondary" onClick={doClose} disabled={isSubmitting}>
-									Cancel
-								</Button>
+									/>
 
-								<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
-									Add {isSubmitting ? '...' : ''}
-								</Button>
-							</>
-						)}
-					/>
-				</CModalFooter>
-			</Form>
-		</CModalExt>
+									<form.Field
+										name="rows"
+										validators={{
+											onChange: ({ value }) => {
+												const n = Number(value)
+												if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
+													return 'Rows must be a positive integer'
+												}
+												return undefined
+											},
+										}}
+										children={(field) => (
+											<>
+												<FormLabel htmlFor={rowsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+													Rows
+												</FormLabel>
+												<CCol className={`fieldtype-textinput`} sm={8}>
+													<NumberInputField
+														id={rowsFieldId}
+														min={1}
+														value={field.state.value}
+														setValue={field.handleChange}
+														onBlur={field.handleBlur}
+														checkValid={field.state.meta.errors.length === 0}
+													/>
+													{field.state.meta.errors.length > 0 && (
+														<StaticAlert color="warning" className="mt-2">
+															{field.state.meta.errors}
+														</StaticAlert>
+													)}
+												</CCol>
+											</>
+										)}
+									/>
+
+									<form.Field
+										name="columns"
+										validators={{
+											onChange: ({ value }) => {
+												const n = Number(value)
+												if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) {
+													return 'Columns must be a positive integer'
+												}
+												return undefined
+											},
+										}}
+										children={(field) => (
+											<>
+												<FormLabel htmlFor={columnsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+													Columns
+												</FormLabel>
+												<CCol className={`fieldtype-textinput`} sm={8}>
+													<NumberInputField
+														id={columnsFieldId}
+														min={1}
+														value={field.state.value}
+														setValue={field.handleChange}
+														onBlur={field.handleBlur}
+														checkValid={field.state.meta.errors.length === 0}
+													/>
+													{field.state.meta.errors.length > 0 && (
+														<StaticAlert color="warning" className="mt-2">
+															{field.state.meta.errors}
+														</StaticAlert>
+													)}
+												</CCol>
+											</>
+										)}
+									/>
+								</CRow>
+							</Modal.Body>
+							<Modal.Footer>
+								<form.Subscribe
+									selector={(state) => [state.canSubmit, state.isSubmitting]}
+									children={([canSubmit, isSubmitting]) => (
+										<>
+											<Modal.Close disabled={isSubmitting}>Cancel</Modal.Close>
+
+											<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
+												Add {isSubmitting ? '...' : ''}
+											</Button>
+										</>
+									)}
+								/>
+							</Modal.Footer>
+						</Form>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
 	)
 })

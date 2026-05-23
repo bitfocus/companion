@@ -1,6 +1,6 @@
-import { CCol, CModalBody, CModalHeader, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
-import { CModalExt } from '~/Components/CModalExt.js'
+import { Modal } from '~/Components/Modal'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 
 export interface ConnectionVariablesModalRef {
@@ -11,9 +11,6 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 	function ConnectionVariablesModal(_props, ref) {
 		const [connectionLabel, setConnectionLabel] = useState<string | null>(null)
 		const [show, setShow] = useState(false)
-
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setConnectionLabel(null), [])
 
 		useImperativeHandle(
 			ref,
@@ -26,17 +23,30 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 			[]
 		)
 
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) {
+				setConnectionLabel(null)
+			}
+		}, [])
+
 		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="xl">
-				<CModalHeader closeButton>
-					<h5>Variables for {connectionLabel}</h5>
-				</CModalHeader>
-				<CModalBody className="variables-table-modal-body">
-					<CRow>
-						<CCol lg={12}>{connectionLabel && <VariablesTable label={connectionLabel} />}</CCol>
-					</CRow>
-				</CModalBody>
-			</CModalExt>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup size="xl" scrollable>
+							<Modal.Header closeButton>
+								<Modal.Title>Variables for {connectionLabel}</Modal.Title>
+							</Modal.Header>
+							<Modal.Body className="variables-table-modal-body">
+								<CRow>
+									<CCol lg={12}>{connectionLabel && <VariablesTable label={connectionLabel} />}</CCol>
+								</CRow>
+							</Modal.Body>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	}
 )

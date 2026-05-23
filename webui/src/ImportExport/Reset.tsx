@@ -1,23 +1,18 @@
-import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
-import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import type { ClientImportOrResetSelection, ResetType } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
-import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
+import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-
-export interface ResetWizardModalRef {
-	show(): void
-}
 
 const defaultFullResetConfig: ClientImportOrResetSelection = {
 	connections: 'reset',
@@ -52,169 +47,184 @@ const { useAppForm, withForm } = createFormHook({
 	formContext,
 })
 
-export const ResetWizardModal = observer(
-	forwardRef<ResetWizardModalRef>(function ResetWizardModal(_props, ref) {
-		const { notifier } = useContext(RootAppStoreContext)
+export const ResetWizardModal = observer(function ResetWizardModal() {
+	const { notifier } = useContext(RootAppStoreContext)
 
-		const [currentStep, setCurrentStep] = useState(1)
-		const maxSteps = 3
-		const applyStep = 3
-		const [show, setShow] = useState(false)
-		const [modalRef, setModalRef] = useState<HTMLDivElement | null>(null)
+	const [currentStep, setCurrentStep] = useState(1)
+	const maxSteps = 3
+	const applyStep = 3
+	const [show, setShow] = useState(false)
 
-		const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
+	const resetConfigMutation = useMutationExt(trpc.importExport.resetConfiguration.mutationOptions())
 
-		const form = useAppForm({
-			...resetFormOpts,
-			onSubmit: async ({ value }) => {
-				setCurrentStep(maxSteps) // Move to completion step
+	const form = useAppForm({
+		...resetFormOpts,
+		onSubmit: async ({ value }) => {
+			setCurrentStep(maxSteps) // Move to completion step
 
-				try {
-					const status = await resetConfigMutation.mutateAsync({ config: value })
-					if (status !== 'ok') {
-						notifier.show(`Reset failed`, `An unspecified error occurred during the reset. Please try again.`, 10000)
-					}
-
-					doClose()
-				} catch (e) {
-					notifier.show(`Reset failed`, 'An error occurred: ' + e, 10000)
+			try {
+				const status = await resetConfigMutation.mutateAsync({ config: value })
+				if (status !== 'ok') {
+					notifier.show(`Reset failed`, `An unspecified error occurred during the reset. Please try again.`, 10000)
 				}
-			},
-		})
 
-		const doClose = useCallback(() => {
-			setShow(false)
-			form.reset()
-			setCurrentStep(1)
-		}, [form])
+				doClose()
+			} catch (e) {
+				notifier.show(`Reset failed`, 'An error occurred: ' + e, 10000)
+			}
+		},
+	})
 
-		const doNextStep = useCallback(() => {
-			let newStep = currentStep
-			// Make sure step is set to something reasonable
-			if (newStep >= maxSteps - 1) {
-				newStep = maxSteps
-			} else {
-				newStep = newStep + 1
+	const onOpenChange = useCallback(
+		(open: boolean) => {
+			if (open) {
+				form.reset()
+				setCurrentStep(1)
 			}
 
-			setCurrentStep(newStep)
-		}, [currentStep, maxSteps])
+			setShow(open)
+		},
+		[form]
+	)
+	const doClose = useCallback(() => onOpenChange(false), [onOpenChange])
 
-		const doPrevStep = useCallback(() => {
-			let newStep = currentStep
-			if (newStep <= 1) {
-				newStep = 1
-			} else {
-				newStep = newStep - 1
+	const onOpenChangeComplete = useCallback(
+		(open: boolean) => {
+			// Clear form and reset step when modal is closed
+			if (!open) {
+				form.reset()
+				setCurrentStep(1)
 			}
+		},
+		[form]
+	)
 
-			setCurrentStep(newStep)
-		}, [currentStep])
-
-		useImperativeHandle(
-			ref,
-			() => ({
-				show() {
-					form.reset()
-					setCurrentStep(1)
-					setShow(true)
-				},
-			}),
-			[form]
-		)
-
-		let nextButton
-		switch (currentStep) {
-			case applyStep:
-				nextButton = (
-					<form.Subscribe
-						selector={(state) => [state.canSubmit, state.isSubmitting]}
-						children={([canSubmit, isSubmitting]) => (
-							<Button
-								color="primary"
-								disabled={!canSubmit || isSubmitting}
-								onClick={() => {
-									form.handleSubmit().catch((err) => {
-										console.error('Form submission error', err)
-									})
-								}}
-							>
-								Apply {isSubmitting ? '...' : ''}
-							</Button>
-						)}
-					/>
-				)
-				break
-			case maxSteps:
-				nextButton = (
-					<Button color="primary" onClick={doClose}>
-						Finish
-					</Button>
-				)
-				break
-			default:
-				nextButton = (
-					<Button color="primary" onClick={doNextStep}>
-						Next
-					</Button>
-				)
+	const doNextStep = useCallback(() => {
+		let newStep = currentStep
+		// Make sure step is set to something reasonable
+		if (newStep >= maxSteps - 1) {
+			newStep = maxSteps
+		} else {
+			newStep = newStep + 1
 		}
 
-		let modalBody
-		switch (currentStep) {
-			case 1:
-				modalBody = <ResetBeginStep />
-				break
-			case 2:
-				modalBody = <ResetOptionsStep form={form} />
-				break
-			case 3:
-				modalBody = <ResetApplyStep form={form} />
-				break
-			default:
+		setCurrentStep(newStep)
+	}, [currentStep, maxSteps])
+
+	const doPrevStep = useCallback(() => {
+		let newStep = currentStep
+		if (newStep <= 1) {
+			newStep = 1
+		} else {
+			newStep = newStep - 1
 		}
 
-		return (
-			<CModal ref={setModalRef} visible={show} onClose={doClose} className={'wizard'} backdrop="static">
-				<MenuPortalContext.Provider value={modalRef}>
-					<form.AppForm>
-						<Form
-							className={'flex-form'}
-							onSubmit={(e) => {
-								e.preventDefault()
-								e.stopPropagation()
+		setCurrentStep(newStep)
+	}, [currentStep])
+
+	const buttonRef = useRef<HTMLButtonElement>(null)
+
+	let nextButton
+	switch (currentStep) {
+		case applyStep:
+			nextButton = (
+				<form.Subscribe
+					selector={(state) => [state.canSubmit, state.isSubmitting]}
+					children={([canSubmit, isSubmitting]) => (
+						<Button
+							ref={buttonRef}
+							color="primary"
+							disabled={!canSubmit || isSubmitting}
+							onClick={() => {
 								form.handleSubmit().catch((err) => {
 									console.error('Form submission error', err)
 								})
 							}}
 						>
-							<CModalHeader>
-								<h2>
-									<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
-									Reset Configuration
-								</h2>
-							</CModalHeader>
-							<CModalBody>{modalBody}</CModalBody>
-							<CModalFooter>
-								{currentStep <= applyStep && (
-									<>
-										<Button color="secondary" onClick={doClose}>
-											Cancel
-										</Button>
-										<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-											Back
-										</Button>
-									</>
-								)}
-								{nextButton}
-							</CModalFooter>
-						</Form>
-					</form.AppForm>
-				</MenuPortalContext.Provider>
-			</CModal>
-		)
-	})
-)
+							Apply {isSubmitting ? '...' : ''}
+						</Button>
+					)}
+				/>
+			)
+			break
+		case maxSteps:
+			nextButton = (
+				<Button ref={buttonRef} color="primary" onClick={doClose}>
+					Finish
+				</Button>
+			)
+			break
+		default:
+			nextButton = (
+				<Button ref={buttonRef} color="primary" onClick={doNextStep}>
+					Next
+				</Button>
+			)
+	}
+
+	let modalBody
+	switch (currentStep) {
+		case 1:
+			modalBody = <ResetBeginStep />
+			break
+		case 2:
+			modalBody = <ResetOptionsStep form={form} />
+			break
+		case 3:
+			modalBody = <ResetApplyStep form={form} />
+			break
+		default:
+	}
+
+	return (
+		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete} disableDismiss>
+			<Modal.Trigger color="danger">
+				<FontAwesomeIcon icon={faTrashAlt} className="me-2" />
+				Reset configuration
+			</Modal.Trigger>
+
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup initialFocus={buttonRef}>
+						<Modal.Header closeButton>
+							<Modal.Title>
+								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
+								Reset Configuration
+							</Modal.Title>
+						</Modal.Header>
+
+						<form.AppForm>
+							<Form
+								className={'flex-form'}
+								onSubmit={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+									form.handleSubmit().catch((err) => {
+										console.error('Form submission error', err)
+									})
+								}}
+							>
+								<Modal.Body>{modalBody}</Modal.Body>
+								<Modal.Footer>
+									{currentStep <= applyStep && (
+										<>
+											<Modal.Close>Cancel</Modal.Close>
+											<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+												Back
+											</Button>
+										</>
+									)}
+									{nextButton}
+								</Modal.Footer>
+							</Form>
+						</form.AppForm>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
+	)
+})
 
 function ResetBeginStep() {
 	return (

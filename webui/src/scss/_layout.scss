@@ -587,10 +587,6 @@ form.row > * {
 	}
 }
 
-$panel-header-bg: #dee2e5; // Darker gray background
-$panel-header-border-color: #dee2e6; // Subtle border
-$panel-header-color: #343a40; // title text -  Darker (?) text for better contrast
-$panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 .panel-close-button {
 	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
 	border: none;
@@ -603,14 +599,6 @@ $panel-header-button-color: color.adjust($panel-header-color, $lightness: +10%);
 		width: 1.25em;
 		margin: 2px;
 	}
-}
-
-// apply a similar effect to CModal close buttons:
-.modal-header .btn-close {
-	// CUI's "X" svg does not change with the "color" prop, so we use filter: invert() to make it white.
-	// First, invert the background color so the CSS invert returns it to the desired value while inverting the foreground
-	background-color: color.invert(color.adjust($panel-header-button-color, $lightness: -50%));
-	filter: invert(1) drop-shadow(2px 2px 4px rgb(0 0 0 / 25%));
 }
 
 // format context-help-buttons. Everything but size can be globally applied.
@@ -838,26 +826,6 @@ hr.slim {
 
 .text-right {
 	text-align: right;
-}
-
-// used only in RecorderSessionFinishModal
-.modal-full-height {
-	.modal-dialog {
-		min-height: 500px; // if the window gets too small fall back to scrolling the window
-	}
-
-	.modal-content {
-		height: 100%;
-	}
-
-	.modal-body {
-		overflow: hidden; // ← clip at body level, don't scroll
-
-		.default-scroll {
-			overflow: auto;
-			min-height: 0;
-		}
-	}
 }
 
 .compact {

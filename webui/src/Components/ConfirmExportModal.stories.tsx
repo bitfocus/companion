@@ -19,18 +19,6 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
-	render: function Render(args) {
-		const ref = useRef<ConfirmExportModalRef | null>(null)
-		return (
-			<>
-				<button onClick={() => ref.current?.show('/api/export/config')}>Open Export Modal</button>
-				<ConfirmExportModal {...args} ref={ref} />
-			</>
-		)
-	},
-}
-
-export const WithTitle: Story = {
 	args: { title: 'Export Page Configuration' },
 	render: function Render(args) {
 		const ref = useRef<ConfirmExportModalRef | null>(null)

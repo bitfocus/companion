@@ -1,0 +1,268 @@
+@use '../variables' as *;
+@use 'sass:color';
+
+// ─── Variables ────────────────────────────────────────────────────────────────
+//
+// Mapped from CoreUI's --cui-modal-* to --modal2-* with the same defaults.
+// Parts that have no current usage are commented out below each section.
+
+.modal2-viewport,
+.modal2-backdrop,
+.modal2-dialog {
+	--modal2-zindex: 1055;
+	--modal2-width: 500px;
+	--modal2-padding: 1rem;
+	--modal2-margin: 0.5rem;
+	--modal2-top-margin: 4vh;
+	--modal2-color: var(--cui-body-color);
+	--modal2-bg: var(--cui-modal-bg, #fff);
+	--modal2-border-color: var(--cui-border-color-translucent);
+	--modal2-border-width: var(--cui-border-width, 1px);
+	--modal2-border-radius: var(--cui-border-radius-lg, 0.5rem);
+	--modal2-box-shadow: var(--cui-box-shadow-sm);
+	--modal2-inner-border-radius: calc(var(--modal2-border-radius) - var(--modal2-border-width));
+	--modal2-header-padding-x: 1rem;
+	--modal2-header-padding-y: 1rem;
+	--modal2-header-padding: var(--modal2-header-padding-y) var(--modal2-header-padding-x);
+	--modal2-header-border-color: var(--cui-border-color);
+	--modal2-header-border-width: var(--cui-border-width, 1px);
+	--modal2-title-line-height: 1.5;
+	--modal2-footer-gap: 0.5rem;
+	--modal2-footer-bg: transparent;
+	--modal2-footer-border-color: var(--cui-border-color);
+	--modal2-footer-border-width: var(--cui-border-width, 1px);
+	--modal2-backdrop-bg: #080a0c;
+	--modal2-backdrop-opacity: 0.5;
+	--modal2-transition-duration: 0.2s;
+}
+
+// ─── Backdrop ─────────────────────────────────────────────────────────────────
+
+.modal2-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: var(--modal2-zindex);
+	background-color: var(--modal2-backdrop-bg);
+	opacity: var(--modal2-backdrop-opacity);
+	transition: opacity var(--modal2-transition-duration) ease;
+
+	&[data-starting-style] {
+		opacity: 0;
+	}
+
+	&[data-ending-style] {
+		opacity: 0;
+	}
+}
+
+// ─── Viewport ─────────────────────────────────────────────────────────────────
+
+.modal2-viewport {
+	position: fixed;
+	inset: 0;
+	z-index: var(--modal2-zindex);
+	overflow-x: hidden;
+	overflow-y: auto;
+	outline: 0;
+}
+
+// ─── Dialog (popup) ───────────────────────────────────────────────────────────
+//
+// Base UI combines .modal-dialog + .modal-content into one element (Dialog.Popup).
+// Positioning/margin is handled by .modal2-viewport.
+
+.modal2-dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	max-width: var(--modal2-width);
+	margin: var(--modal2-top-margin) auto 0 auto;
+	color: var(--modal2-color);
+	background-color: var(--modal2-bg);
+	background-clip: padding-box;
+	border: var(--modal2-border-width) solid var(--modal2-border-color);
+	border-radius: var(--modal2-border-radius);
+	box-shadow: var(--modal2-box-shadow);
+	outline: 0;
+	transition:
+		opacity var(--modal2-transition-duration) ease,
+		transform var(--modal2-transition-duration) ease;
+
+	&[data-starting-style] {
+		opacity: 0;
+		transform: translateY(-50px);
+	}
+
+	&[data-ending-style] {
+		opacity: 0;
+		transform: translateY(-50px);
+	}
+}
+
+// ─── Static pulse animation ───────────────────────────────────────────────────
+
+@keyframes modal2-static-pulse {
+	0% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.02);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+
+.modal2-static-pulse {
+	animation: modal2-static-pulse 0.3s ease-out;
+}
+
+// ─── Title ────────────────────────────────────────────────────────────────────
+
+.modal2-title {
+	margin-bottom: 0;
+	line-height: var(--modal2-title-line-height);
+	font-size: 1.25rem;
+	font-weight: bold;
+	display: flex;
+	align-items: center;
+}
+
+// ─── Description ─────────────────────────────────────────────────────────────
+
+.modal2-description {
+	position: relative;
+	flex: 1 1 auto;
+	padding: var(--modal2-padding);
+}
+
+// ─── Responsive width overrides ─────────────────────────────────────────────
+
+@media (min-width: 576px) {
+	.modal2-dialog {
+		--modal2-box-shadow: var(--cui-box-shadow);
+	}
+
+	.modal2-sm {
+		--modal2-width: 300px;
+	}
+}
+
+@media (min-width: 992px) {
+	.modal2-lg,
+	.modal2-xl {
+		--modal2-width: 800px;
+	}
+}
+
+@media (min-width: 1200px) {
+	.modal2-xl {
+		--modal2-width: 1140px;
+	}
+}
+
+// ─── Fullscreen variants (not yet needed) ───────────────────────────────────
+
+// .modal2-fullscreen {
+//     .modal2-dialog {
+//         width: 100vw;
+//         max-width: none;
+//         height: 100%;
+//         margin: 0;
+//         border: 0;
+//         border-radius: 0;
+//     }
+// }
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+
+.modal2-header {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	padding: var(--modal2-header-padding);
+	border-bottom: var(--modal2-header-border-width) solid var(--modal2-header-border-color);
+	border-top-left-radius: var(--modal2-inner-border-radius);
+	border-top-right-radius: var(--modal2-inner-border-radius);
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5 {
+		margin: 0;
+	}
+
+	.btn-close {
+		padding: calc(var(--modal2-header-padding-y) * 0.5) calc(var(--modal2-header-padding-x) * 0.5);
+		margin-inline-start: auto;
+		margin-top: calc(-0.5 * var(--modal2-header-padding-y));
+		margin-bottom: calc(-0.5 * var(--modal2-header-padding-y));
+
+		// CUI's "X" svg does not change with the "color" prop, so we use filter: invert() to make it white.
+		// First, invert the background color so the CSS invert returns it to the desired value while inverting the foreground
+		background-color: color.invert(color.adjust($panel-header-button-color, $lightness: -50%));
+		filter: invert(1) drop-shadow(2px 2px 4px rgb(0 0 0 / 25%));
+	}
+}
+
+// ─── Body ─────────────────────────────────────────────────────────────────────
+
+.modal2-body {
+	position: relative;
+	flex: 1 1 auto;
+	padding: var(--modal2-padding);
+
+	img {
+		// Cap images in modals to be the width of the modal
+		max-width: 100%;
+	}
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.modal2-footer {
+	display: flex;
+	flex-shrink: 0;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	padding: calc(var(--modal2-padding) - var(--modal2-footer-gap) * 0.5);
+	background-color: var(--modal2-footer-bg);
+	border-top: var(--modal2-footer-border-width) solid var(--modal2-footer-border-color);
+	border-bottom-right-radius: var(--modal2-inner-border-radius);
+	border-bottom-left-radius: var(--modal2-inner-border-radius);
+
+	> * {
+		margin: calc(var(--modal2-footer-gap) * 0.5);
+	}
+}
+
+// ─── Scrollable dialog (body scrolls, header/footer stay fixed) ─────────────
+
+.modal2-dialog.modal2-dialog-scrollable {
+	max-height: calc(100vh - var(--modal2-top-margin) - var(--modal2-margin));
+	overflow: hidden;
+
+	.modal2-body {
+		overflow-y: auto;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+}
+
+// ─── Full-height dialog ─────────────────
+
+.modal-full-height {
+	min-height: 500px; // if the window gets too small fall back to scrolling the window
+
+	.modal2-body {
+		overflow: hidden; // ← clip at body level, don't scroll
+
+		.default-scroll {
+			overflow: auto;
+			min-height: 0;
+		}
+	}
+}

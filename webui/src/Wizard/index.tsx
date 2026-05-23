@@ -1,10 +1,10 @@
-import { CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 import { toJS } from 'mobx'
-import { useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
+import { Modal } from '~/Components/Modal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -49,15 +49,20 @@ export function WizardModal(): React.JSX.Element {
 	}, [userConfig])
 
 	const [show, setShow] = useState(false)
+	const doClose = useCallback(() => setShow(false), [])
 
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 	const setConfigKeysMutation = useMutationExt(trpc.userConfig.setConfigKeys.mutationOptions())
 
-	const doClose = useCallback(() => {
-		setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
-		setShow(false)
-		setClear(true)
-	}, [setConfigKeyMutation])
+	const onOpenChangeComplete = useCallback(
+		(open: boolean) => {
+			if (!open) {
+				setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
+				setClear(true)
+			}
+		},
+		[setConfigKeyMutation]
+	)
 
 	const doNextStep = useCallback(() => {
 		setCurrentStep((currentStep) => {
@@ -130,90 +135,99 @@ export function WizardModal(): React.JSX.Element {
 		}
 	}, [showWizardEvent, clear, getConfig])
 
+	const buttonRef = useRef<HTMLButtonElement>(null)
+
 	let nextButton
 	switch (currentStep) {
 		case applyStep:
 			nextButton = (
-				<Button color="primary" onClick={doSave}>
+				<Button ref={buttonRef} color="primary" onClick={doSave}>
 					Apply
 				</Button>
 			)
 			break
 		case maxSteps:
 			nextButton = (
-				<Button color="primary" onClick={doClose}>
+				<Button ref={buttonRef} color="primary" onClick={doClose}>
 					Finish
 				</Button>
 			)
 			break
 		default:
 			nextButton = (
-				<Button color="primary" onClick={doNextStep}>
+				<Button ref={buttonRef} color="primary" onClick={doNextStep}>
 					Next
 				</Button>
 			)
 	}
 
 	return (
-		<CModal visible={show} onClose={doClose} className={'wizard'}>
-			<Form onSubmit={doSave} className={'flex-form'}>
-				<CModalHeader>
-					<h2>
-						<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
-						Welcome to Companion
-					</h2>
-				</CModalHeader>
-				<CModalBody>
-					{error ? <StaticAlert color="danger">{error}</StaticAlert> : ''}
-					{currentStep === 1 && newConfig && !error ? <BeginStep allowGrid={allowGridStep} /> : ''}
-					{currentStep === 2 && newConfig && !error ? <SurfacesStep config={newConfig} setValue={setValue} /> : ''}
-					{currentStep === 3 && allowGridStep === 1 && newConfig && !error ? (
-						<GridStep
-							rows={newConfig.gridSize.maxRow + 1}
-							columns={newConfig.gridSize.maxColumn + 1}
-							setValue={setValue}
-						/>
-					) : (
-						''
-					)}
-					{currentStep === 3 + allowGridStep && newConfig && !error ? (
-						<ServicesStep config={newConfig} setValue={setValue} />
-					) : (
-						''
-					)}
-					{currentStep === 4 + allowGridStep && newConfig && !error ? (
-						<DataCollectionStep config={newConfig} setValue={setValue} />
-					) : (
-						''
-					)}
-					{currentStep === 5 + allowGridStep && newConfig && !error ? (
-						<PasswordStep config={newConfig} setValue={setValue} />
-					) : (
-						''
-					)}
-					{currentStep === applyStep && newConfig && oldConfig && !error ? (
-						<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
-					) : (
-						''
-					)}
-					{currentStep === maxSteps && newConfig && startConfig && !error ? (
-						<FinishStep oldConfig={startConfig} newConfig={newConfig} />
-					) : (
-						''
-					)}
-				</CModalBody>
-				<CModalFooter>
-					{currentStep <= applyStep && (
-						<Button color="secondary" onClick={doClose}>
-							Cancel
-						</Button>
-					)}
-					<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-						Previous
-					</Button>
-					{nextButton}
-				</CModalFooter>
-			</Form>
-		</CModal>
+		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup initialFocus={buttonRef}>
+						<Modal.Header closeButton>
+							<Modal.Title>
+								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
+								Welcome to Companion
+							</Modal.Title>
+						</Modal.Header>
+						<Form onSubmit={doSave} className="flex-form">
+							<Modal.Body>
+								{error ? <StaticAlert color="danger">{error}</StaticAlert> : ''}
+								{currentStep === 1 && newConfig && !error ? <BeginStep allowGrid={allowGridStep} /> : ''}
+								{currentStep === 2 && newConfig && !error ? (
+									<SurfacesStep config={newConfig} setValue={setValue} />
+								) : (
+									''
+								)}
+								{currentStep === 3 && allowGridStep === 1 && newConfig && !error ? (
+									<GridStep
+										rows={newConfig.gridSize.maxRow + 1}
+										columns={newConfig.gridSize.maxColumn + 1}
+										setValue={setValue}
+									/>
+								) : (
+									''
+								)}
+								{currentStep === 3 + allowGridStep && newConfig && !error ? (
+									<ServicesStep config={newConfig} setValue={setValue} />
+								) : (
+									''
+								)}
+								{currentStep === 4 + allowGridStep && newConfig && !error ? (
+									<DataCollectionStep config={newConfig} setValue={setValue} />
+								) : (
+									''
+								)}
+								{currentStep === 5 + allowGridStep && newConfig && !error ? (
+									<PasswordStep config={newConfig} setValue={setValue} />
+								) : (
+									''
+								)}
+								{currentStep === applyStep && newConfig && oldConfig && !error ? (
+									<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
+								) : (
+									''
+								)}
+								{currentStep === maxSteps && newConfig && startConfig && !error ? (
+									<FinishStep oldConfig={startConfig} newConfig={newConfig} />
+								) : (
+									''
+								)}
+							</Modal.Body>
+							<Modal.Footer>
+								{currentStep <= applyStep && <Modal.Close>Cancel</Modal.Close>}
+								<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+									Previous
+								</Button>
+								{nextButton}
+							</Modal.Footer>
+						</Form>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
 	)
 }
