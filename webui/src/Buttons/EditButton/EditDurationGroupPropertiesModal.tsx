@@ -1,5 +1,5 @@
 import { CCol } from '@coreui/react'
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
@@ -56,6 +56,9 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 			if (!open) setData(null)
 		}, [])
 
+		const pressDurationFieldId = useId()
+		const whileHeldFieldId = useId()
+
 		return (
 			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 				<Modal.Portal>
@@ -67,12 +70,12 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							</Modal.Header>
 							<Modal.Body>
 								<Form className="row g-sm-2" onSubmit={doAction}>
-									<FormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={pressDurationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Press duration
 									</FormLabel>
 									<CCol sm={8}>
 										<NumberInputField
-											id="colFormPressDuration"
+											id={pressDurationFieldId}
 											value={newDurationValue ?? undefined}
 											min={1}
 											step={1}
@@ -81,12 +84,12 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 										/>
 									</CCol>
 
-									<FormLabel htmlFor="colFormExecuteWhileHeld" className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={whileHeldFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Execute while held
 									</FormLabel>
 									<CCol sm={8}>
 										<SwitchInputField
-											id="colFormExecuteWhileHeld"
+											id={whileHeldFieldId}
 											value={!!newWhileHeldValue}
 											setValue={setNewWhileHeldValue}
 										/>

@@ -3,7 +3,7 @@ import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useContext, useId, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert'
@@ -104,6 +104,9 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 		})
 	}, [form, currentVersionId])
 
+	const versionFieldId = useId()
+	const moduleFieldId = useId()
+
 	return (
 		<Modal.Root open={show} onOpenChange={doShow} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Trigger id={id} color="light" size="sm" title="Change module version" aria-label="Change module version">
@@ -151,7 +154,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 												name="versionId"
 												children={(field) => (
 													<>
-														<FormLabel htmlFor={field.name} className="col-sm-3 col-form-label col-form-label-sm">
+														<FormLabel htmlFor={versionFieldId} className="col-sm-3 col-form-label col-form-label-sm">
 															Version
 															{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
 																<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
@@ -161,7 +164,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 															<SelectedVersionDropdown
 																moduleType={service.moduleType}
 																moduleId={effectiveModuleId}
-																htmlName={field.name}
+																htmlName={versionFieldId}
 																value={field.state.value}
 																onChange={field.handleChange}
 																onBlur={field.handleBlur}
@@ -189,7 +192,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										</StaticAlert>
 									</CCol>
 
-									<FormLabel htmlFor="moduleId" className="col-sm-3 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
 										Module
 									</FormLabel>
 									<CCol sm={9}>
@@ -198,7 +201,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 											children={(field) => (
 												<SelectedModuleDropdown
 													moduleType={service.moduleType}
-													htmlName={field.name}
+													htmlName={moduleFieldId}
 													value={field.state.value}
 													onChange={(val) => {
 														field.handleChange(val)

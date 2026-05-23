@@ -2,7 +2,7 @@ import { CCol, CFormInput } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useEffect, useId, useImperativeHandle, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { StaticAlert } from '~/Components/Alert.js'
@@ -134,6 +134,9 @@ export const AddInstanceModal = observer(
 			)
 		}, [helpViewer, moduleInfo?.moduleType, moduleInfo?.moduleId, selectedVersionInfo])
 
+		const labelFieldId = useId()
+		const versionFieldId = useId()
+
 		return (
 			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 				<Modal.Portal>
@@ -153,18 +156,18 @@ export const AddInstanceModal = observer(
 										</p>
 									)}
 									<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
-										<FormLabel htmlFor="colFormLabel" className="col-sm-4 col-form-label col-form-label-sm">
+										<FormLabel htmlFor={labelFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 											Label&nbsp;
 										</FormLabel>
 										<CCol sm={8}>
 											<CFormInput
-												name="colFormLabel"
+												id={labelFieldId}
 												value={instanceLabel}
 												onChange={(e) => setInstanceLabel(e.currentTarget.value)}
 											/>
 										</CCol>
 
-										<FormLabel htmlFor="colFormVersion" className="col-sm-4 col-form-label col-form-label-sm pe-0">
+										<FormLabel htmlFor={versionFieldId} className="col-sm-4 col-form-label col-form-label-sm pe-0">
 											<div className="flex">
 												<span className="grow">Module Version&nbsp;</span>
 												{moduleInfo && selectedVersionInfo && (
@@ -179,7 +182,7 @@ export const AddInstanceModal = observer(
 										</FormLabel>
 										<CCol sm={8}>
 											<SimpleDropdownInputField
-												id="colFormVersion"
+												id={versionFieldId}
 												value={selectedVersion as string}
 												setValue={(value) => setSelectedVersion(value as string)}
 												noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}

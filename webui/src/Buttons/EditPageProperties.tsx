@@ -1,5 +1,5 @@
 import { CCol, CFormInput, CRow } from '@coreui/react'
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
@@ -67,6 +67,8 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 			setName(e.target.value)
 		}, [])
 
+		const nameFieldId = useId()
+
 		return (
 			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 				<Modal.Portal>
@@ -80,13 +82,13 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 								<Form onSubmit={doAction}>
 									{includeName && (
 										<CRow className="mb-3">
-											<FormLabel htmlFor="colFormName" className="col-sm-3 col-form-label col-form-label-sm">
+											<FormLabel htmlFor={nameFieldId} className="col-sm-3 col-form-label col-form-label-sm">
 												Name
 											</FormLabel>
 											<CCol sm={9}>
 												<CFormInput
 													ref={inputRef}
-													name="colFormName"
+													id={nameFieldId}
 													type="text"
 													value={pageName || ''}
 													onChange={onNameChange}
