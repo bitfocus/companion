@@ -194,6 +194,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 					setValue={panelStore.setLabelValue}
 					checkValid={panelStore.checkLabelIsValid}
 					value={panelStore.labelValue}
+					immediateValue
 				/>
 			</CCol>
 		</>

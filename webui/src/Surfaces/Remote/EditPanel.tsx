@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CFormText } from '@coreui/react'
+import { CCol, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -9,6 +9,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { TextInputField } from '~/Components/TextInputField'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -126,13 +127,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 									Name
 								</FormLabel>
 								<CCol className="fieldtype-textinput" sm={8}>
-									<CFormInput
+									<TextInputField
 										id={nameFieldId}
-										type="text"
-										style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 										value={field.state.value}
-										onChange={(e) => field.handleChange(e.target.value)}
+										setValue={field.handleChange}
+										checkValid={field.state.meta.errors.length === 0}
 										onBlur={field.handleBlur}
+										immediateValue
 									/>
 									{field.state.meta.errors.length > 0 && (
 										<StaticAlert color="warning" className="mt-2">

@@ -48,6 +48,7 @@ export function InstanceEditField({
 					checkValid={checkValid}
 					multiline={definition.multiline}
 					placeholder={definition.placeholder}
+					immediateValue
 				/>
 			)
 		case 'number':
@@ -61,6 +62,7 @@ export function InstanceEditField({
 					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
+					immediateValue
 				/>
 			)
 		case 'checkbox':

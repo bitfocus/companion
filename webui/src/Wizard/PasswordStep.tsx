@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -6,6 +6,7 @@ import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { FormLabel } from '~/Components/Form'
 import { NumberInputField } from '~/Components/NumberInputField'
+import { SecretTextInputField } from '~/Components/SecretTextInputField'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>
@@ -41,11 +42,11 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 						Password
 					</FormLabel>
 					<CCol sm={5} className="mb-2">
-						<CFormInput
+						<SecretTextInputField
 							id={passwordFieldId}
-							type="text"
-							value={config.admin_password}
-							onChange={(e) => setValue('admin_password', e.currentTarget.value)}
+							value={config.admin_password || ''}
+							setValue={(val) => setValue('admin_password', val)}
+							immediateValue
 						/>
 					</CCol>
 					<CCol sm={2}></CCol>
@@ -60,6 +61,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 							min={0}
 							step={1}
 							setValue={(val) => setValue('admin_timeout', val)}
+							immediateValue
 						/>
 						<span className="text-muted">(minutes, 0 for none)</span>
 					</CCol>

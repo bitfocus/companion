@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
@@ -9,6 +9,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField.js'
+import { TextInputField } from '~/Components/TextInputField'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -114,13 +115,13 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<CFormInput
+													<TextInputField
 														id={nameFieldId}
-														type="text"
-														style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 														value={field.state.value}
-														onChange={(e) => field.handleChange(e.target.value)}
+														setValue={field.handleChange}
+														checkValid={field.state.meta.errors.length === 0}
 														onBlur={field.handleBlur}
+														immediateValue
 													/>
 												</CCol>
 											</>
@@ -150,14 +151,15 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<CFormInput
+													<TextInputField
 														id={idFieldId}
-														type="text"
-														style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 														value={field.state.value}
-														onChange={(e) => field.handleChange(e.target.value)}
+														setValue={field.handleChange}
+														checkValid={field.state.meta.errors.length === 0}
 														onBlur={field.handleBlur}
+														immediateValue
 													/>
+
 													{field.state.meta.errors.length > 0 && (
 														<StaticAlert color="warning" className="mt-2">
 															{field.state.meta.errors}
@@ -192,6 +194,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														setValue={field.handleChange}
 														onBlur={field.handleBlur}
 														checkValid={field.state.meta.errors.length === 0}
+														immediateValue
 													/>
 													{field.state.meta.errors.length > 0 && (
 														<StaticAlert color="warning" className="mt-2">
@@ -227,6 +230,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														setValue={field.handleChange}
 														onBlur={field.handleBlur}
 														checkValid={field.state.meta.errors.length === 0}
+														immediateValue
 													/>
 													{field.state.meta.errors.length > 0 && (
 														<StaticAlert color="warning" className="mt-2">

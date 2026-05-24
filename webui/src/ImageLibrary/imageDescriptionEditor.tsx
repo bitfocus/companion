@@ -35,6 +35,7 @@ export const ImageDescriptionEditor = observer(function ImageDescriptionEditor({
 			value={localValue}
 			setValue={setLocalValue}
 			onBlur={commitToServer}
+			immediateValue
 			placeholder="Enter image description..."
 		/>
 	)

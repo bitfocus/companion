@@ -20,6 +20,7 @@ interface NumberInputFieldProps {
 	showMinAsNegativeInfinity?: boolean
 	// When true, show the max value as a visual ∞ when value >= max
 	showMaxAsPositiveInfinity?: boolean
+	immediateValue?: boolean
 }
 
 export function NumberInputField({
@@ -36,23 +37,32 @@ export function NumberInputField({
 	checkValid,
 	showMinAsNegativeInfinity,
 	showMaxAsPositiveInfinity,
+	immediateValue,
 }: NumberInputFieldProps): React.JSX.Element {
 	const [tmpValue, setTmpValue] = useState<number | string | null>(null)
 
 	const onChangeValue = useCallback(
 		(value: number | null) => {
 			if (value !== null && !isNaN(value)) {
-				setTmpValue(value)
+				if (!immediateValue) setTmpValue(value)
 				setValue(value)
 			}
 		},
-		[setValue]
+		[immediateValue, setValue]
+	)
+
+	const handleBlur = useCallback(
+		(e: React.FocusEvent<HTMLElement>) => {
+			setTmpValue(null)
+			onBlur?.(e)
+		},
+		[onBlur]
 	)
 
 	// Compute whether we should visually show -∞ or ∞.
-	const numericEffective = Number(tmpValue ?? value ?? 0)
+	const numericEffective = Number((immediateValue ? null : tmpValue) ?? value ?? 0)
 	// Only show infinity overlays when the user has explicitly set a value.
-	const hasExplicitValue = tmpValue !== null || value !== undefined
+	const hasExplicitValue = (!immediateValue && tmpValue !== null) || value !== undefined
 	let showOverlayValue: string | null = null
 	if (
 		hasExplicitValue &&
@@ -78,9 +88,9 @@ export function NumberInputField({
 		<NumberField.Root
 			id={id}
 			disabled={disabled}
-			value={Number(tmpValue ?? value ?? 0)}
+			value={numericEffective}
 			onValueChange={onChangeValue}
-			onBlur={onBlur}
+			onBlur={handleBlur}
 			min={min}
 			max={max}
 			step={step ?? 'any'}
@@ -113,13 +123,15 @@ export function NumberInputField({
 				<div>
 					<Slider.Root
 						disabled={disabled}
-						value={Number(tmpValue ?? value ?? 0)}
+						value={numericEffective}
 						min={min}
 						max={max}
 						step={step}
 						title={tooltip}
 						onValueChange={onChangeValue}
-						onFocus={() => setTmpValue(value ?? '')}
+						onFocus={() => {
+							if (!immediateValue) setTmpValue(value ?? '')
+						}}
 						onValueCommitted={() => setTmpValue(null)}
 						thumbAlignment="edge"
 					>

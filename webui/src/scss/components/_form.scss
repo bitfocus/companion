@@ -91,7 +91,8 @@
 		z-index: 5;
 	}
 
-	> :not(:last-child) {
+	> :not(:last-child),
+	.input-group-borders {
 		--border-right-radius: 0;
 		border-top-right-radius: 0;
 		border-bottom-right-radius: 0;
@@ -100,7 +101,8 @@
 			border-right: 0;
 		}
 	}
-	> :not(:first-child) {
+	> :not(:first-child),
+	.input-group-borders {
 		--border-left-radius: 0;
 		border-top-left-radius: 0;
 		border-bottom-left-radius: 0;

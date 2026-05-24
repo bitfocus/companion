@@ -45,6 +45,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 							id={tcpListenPortId}
 							value={config.tcp_listen_port}
 							setValue={(value) => setValue('tcp_listen_port', value)}
+							immediateValue
 						/>
 					</CCol>
 					<CCol sm={2}></CCol>
@@ -68,6 +69,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 							id={udpListenPortId}
 							value={config.udp_listen_port}
 							setValue={(value) => setValue('udp_listen_port', value)}
+							immediateValue
 						/>
 					</CCol>
 					<CCol sm={2}></CCol>
@@ -91,6 +93,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 							id={oscListenPortId}
 							value={config.osc_listen_port}
 							setValue={(value) => setValue('osc_listen_port', value)}
+							immediateValue
 						/>
 					</CCol>
 					<CCol sm={2}></CCol>
@@ -131,6 +134,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 							setValue={(value) => setValue('artnet_universe', value)}
 							min={0}
 							max={20055}
+							immediateValue
 						/>
 					</CCol>
 					<CCol sm={2}></CCol>
@@ -145,6 +149,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 							setValue={(value) => setValue('artnet_channel', value)}
 							min={1}
 							max={509}
+							immediateValue
 						/>
 					</CCol>
 					<CCol sm={2}></CCol>

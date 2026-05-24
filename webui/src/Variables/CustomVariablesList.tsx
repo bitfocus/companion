@@ -1,4 +1,3 @@
-import { CFormInput } from '@coreui/react'
 import {
 	faArrowLeft,
 	faCompressArrowsAlt,
@@ -24,6 +23,7 @@ import { Form, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
+import { TextInputField } from '~/Components/TextInputField'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -231,11 +231,12 @@ function AddVariablePanel() {
 	return (
 		<Form onSubmit={doCreateNew}>
 			<InputGroup>
-				<CFormInput
-					type="text"
+				<TextInputField
+					id={undefined}
+					setValue={setNewName}
 					value={newName}
-					onChange={(e) => setNewName(e.currentTarget.value)}
 					placeholder="variableName"
+					immediateValue
 				/>
 				<Button color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 					Add

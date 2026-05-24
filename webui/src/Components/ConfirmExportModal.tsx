@@ -91,7 +91,13 @@ export const ConfirmExportModal = observer(
 										File name
 									</FormLabel>
 									<div className="col-sm-8">
-										<TextInputField id={exportNameId} value={filename} setValue={setFilename} useVariables={true} />
+										<TextInputField
+											id={exportNameId}
+											value={filename}
+											setValue={setFilename}
+											useVariables
+											immediateValue
+										/>
 									</div>
 
 									<FormLabel htmlFor={exportSecretsId} className="col-sm-4 col-form-label col-form-label-sm">

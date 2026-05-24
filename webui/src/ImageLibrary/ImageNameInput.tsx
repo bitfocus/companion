@@ -65,6 +65,7 @@ export function ImageNameInput({
 						tooltip={tooltip}
 						checkValid={isLabelValid}
 						disabled={disabled}
+						immediateValue
 					/>
 				</div>
 			</div>

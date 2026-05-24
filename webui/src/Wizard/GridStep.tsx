@@ -67,7 +67,7 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				Rows
 			</FormLabel>
 			<CCol sm={5} className="mb-2">
-				<NumberInputField id={rowFieldId} value={totalRows} min={0} step={1} setValue={setMaxRow} />
+				<NumberInputField id={rowFieldId} value={totalRows} min={0} step={1} setValue={setMaxRow} immediateValue />
 			</CCol>
 			<CCol sm={3}></CCol>
 
@@ -75,7 +75,14 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				Columns
 			</FormLabel>
 			<CCol sm={5} className="mb-2">
-				<NumberInputField id={columnFieldId} value={totalColumns} min={0} step={1} setValue={setMaxColumn} />
+				<NumberInputField
+					id={columnFieldId}
+					value={totalColumns}
+					min={0}
+					step={1}
+					setValue={setMaxColumn}
+					immediateValue
+				/>
 			</CCol>
 			<CCol sm={3}></CCol>
 

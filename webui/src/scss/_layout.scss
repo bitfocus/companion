@@ -225,13 +225,6 @@ form.row > * {
 	}
 }
 
-.login-form {
-	display: grid;
-	grid-auto-flow: column;
-	grid-template-columns: 1fr auto;
-	column-gap: 0.5rem;
-}
-
 .tab-content {
 	background-color: #fff;
 	border-bottom-right-radius: 8px;

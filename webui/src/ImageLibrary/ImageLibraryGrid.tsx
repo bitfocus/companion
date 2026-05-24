@@ -1,4 +1,3 @@
-import { CFormInput } from '@coreui/react'
 import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import fuzzysort from 'fuzzysort'
@@ -11,6 +10,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import type { CollectionsNestingTableItem } from '~/Components/CollectionsNestingTable/Types.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util'
@@ -135,7 +135,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ImageAddModal ref={addModalRef} onImageCreated={onSelectImage} />
 
-			<div className="image-library-header">
+			<div className="image-library-header pb-2">
 				<h4>Image Library</h4>
 				<p>
 					Here you can store images to be reused in your buttons. They get exposed as variables, and can be used
@@ -143,7 +143,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				</p>
 
 				<div className="image-library-controls">
-					<div className="d-flex gap-2 mb-3">
+					<div className="d-flex gap-2 mb-2">
 						<ButtonGroup>
 							<Button color="primary" size="sm" onClick={handleImportFiles}>
 								<FontAwesomeIcon icon={faPlus} /> Import Images
@@ -155,13 +155,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 						</ButtonGroup>
 					</div>
 
-					<CFormInput
-						type="text"
-						aria-label="Search images"
-						placeholder="Search images..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-					/>
+					<SearchBox placeholder="Search images..." filter={searchQuery} setFilter={setSearchQuery} />
 				</div>
 			</div>
 

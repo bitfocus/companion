@@ -14,7 +14,7 @@ interface TextInputFieldProps {
 	value: string
 	className?: string
 	setValue: (value: string) => void
-	checkValid?: (valid: string) => boolean
+	checkValid?: boolean | ((value: string) => boolean)
 	disabled?: boolean
 	useVariables?: boolean
 	localVariables?: DropdownChoiceInt[]
@@ -22,6 +22,10 @@ interface TextInputFieldProps {
 	autoFocus?: boolean
 	onBlur?: () => void
 	onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLTextAreaElement>) => void
+	/**
+	 * If the value is written to local storage, set this to opt out of the internal temporary focus value
+	 */
+	immediateValue?: boolean
 }
 
 const EMPTY_VARIABLE_DEFS: never[] = []
@@ -41,6 +45,7 @@ export const TextInputField = observer(function TextInputField({
 	autoFocus,
 	onBlur,
 	onKeyDown: onKeyDownProp,
+	immediateValue,
 }: TextInputFieldProps) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 
@@ -53,10 +58,10 @@ export const TextInputField = observer(function TextInputField({
 
 	const storeValue = useCallback(
 		(val: string) => {
-			setTmpValue(val)
+			if (!immediateValue) setTmpValue(val)
 			setValue(val)
 		},
-		[setValue]
+		[immediateValue, setValue]
 	)
 
 	const doOnChange = useCallback(
@@ -67,8 +72,8 @@ export const TextInputField = observer(function TextInputField({
 		[storeValue]
 	)
 
-	const showValue = (tmpValue ?? value ?? '').toString()
-	const valueIsInvalid = !!checkValid && !checkValid(showValue)
+	const showValue = ((immediateValue ? null : tmpValue) ?? value ?? '').toString()
+	const valueIsInvalid = typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(showValue)
 
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(useVariables ? showValue : '', cursorPosition)
 
@@ -168,11 +173,11 @@ export const TextInputField = observer(function TextInputField({
 			title={tooltip}
 			onChange={doOnChange}
 			onFocus={(e) => {
-				setTmpValue(currentValueRef.current ?? '')
+				if (!immediateValue) setTmpValue(currentValueRef.current ?? '')
 				setCursorPosition(e.currentTarget.selectionStart)
 			}}
 			onBlur={() => {
-				setTmpValue(null)
+				if (!immediateValue) setTmpValue(null)
 				setCursorPosition(null)
 				onBlur?.()
 			}}
