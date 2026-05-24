@@ -1,4 +1,3 @@
-import classnames from 'classnames'
 import {
 	AlignHorizontalJustifyCenter,
 	AlignHorizontalJustifyEnd,
@@ -7,28 +6,7 @@ import {
 	AlignVerticalJustifyEnd,
 	AlignVerticalJustifyStart,
 } from 'lucide-react'
-import { ALIGNMENT_OPTIONS } from '@companion-app/shared/Model/Alignment.js'
-import type { CompanionAlignment } from '@companion-module/base'
 import { Button, ButtonGroup } from './Button'
-
-interface AlignmentInputFieldProps {
-	value: CompanionAlignment
-	setValue: (value: CompanionAlignment) => void
-}
-
-export function AlignmentInputField({ value, setValue }: AlignmentInputFieldProps): React.JSX.Element {
-	return (
-		<div className="alignmentinput">
-			{ALIGNMENT_OPTIONS.map((align) => {
-				return (
-					<div key={align} className={classnames({ selected: align === value })} onClick={() => setValue(align)}>
-						&nbsp;
-					</div>
-				)
-			})}
-		</div>
-	)
-}
 
 interface SplitAlignmentInputFieldProps {
 	id: string | undefined

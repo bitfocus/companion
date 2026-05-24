@@ -125,13 +125,19 @@ export function PNGInputField({
 	return (
 		<Button
 			color="primary"
-			className="pnginputfield"
 			onClick={onClick}
 			disabled={!apiIsSupported || disabled}
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
-			<CFormInput id={id} type="file" ref={inputRef} onChange={onChange} disabled={!apiIsSupported || disabled} />
+			<CFormInput
+				id={id}
+				className="d-none"
+				type="file"
+				ref={inputRef}
+				onChange={onChange}
+				disabled={!apiIsSupported || disabled}
+			/>
 		</Button>
 	)
 }
