@@ -1,9 +1,9 @@
-import { CDropdown, CDropdownMenu, CDropdownToggle, CFormRange, CLink } from '@coreui/react'
+import { CDropdown, CDropdownMenu, CDropdownToggle, CLink } from '@coreui/react'
 import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Button } from '~/Components/Button.js'
 import { InputGroup, InputGroupText } from '~/Components/Form.js'
-import { NumberInputField } from '~/Components/NumberInputField.js'
+import { NumberInputField, SliderInputField } from '~/Components/NumberInputField.js'
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type GridZoomController } from './GridZoom.js'
 
 export interface ButtonGridZoomControlProps {
@@ -27,14 +27,14 @@ export function ButtonGridZoomControl({
 					<Button onClick={() => gridZoomController.zoomOut()}>
 						<FontAwesomeIcon icon={faMinus} />
 					</Button>
-					<CFormRange
-						name="scale"
+					<SliderInputField
+						className="w-full align-self-center"
 						min={ZOOM_MIN}
 						max={ZOOM_MAX}
 						step={ZOOM_STEP}
-						title="Scale"
+						tooltip="Scale"
 						value={gridZoomValue}
-						onChange={(e) => gridZoomController.setZoom(parseInt(e.currentTarget.value))}
+						setValue={(val) => gridZoomController.setZoom(val)}
 					/>
 					<Button onClick={() => gridZoomController.zoomIn()}>
 						<FontAwesomeIcon icon={faPlus} />

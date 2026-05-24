@@ -4,13 +4,12 @@
 @use '@coreui/coreui/scss/coreui'; // note this is not strictly necessary, since it's forwarded by _variables, above.
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
-@use 'scss/react-time-picker';
-@use 'scss/react-date-picker';
 
 @use 'scss/components/alert';
 @use 'scss/components/button';
 @use 'scss/components/callout';
 @use 'scss/components/checkbox-field';
+@use 'scss/components/date-picker';
 @use 'scss/components/dropdown-field';
 @use 'scss/components/form';
 @use 'scss/components/modal';
@@ -19,6 +18,7 @@
 @use 'scss/components/switch-field';
 @use 'scss/components/tab-area';
 @use 'scss/components/text-field';
+@use 'scss/components/time-picker';
 
 @use 'scss/layout';
 @use 'scss/common';

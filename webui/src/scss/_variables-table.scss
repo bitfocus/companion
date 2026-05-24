@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/coreui';
+@use '@coreui/coreui/scss/mixins/breakpoints';
 
 .variables-panel {
 	margin-right: -0.5rem;
@@ -75,13 +75,13 @@
 			display: grid;
 			grid-template-columns: 0.25fr 1fr;
 
-			@include coreui.media-breakpoint-up(sm) {
+			@include breakpoints.media-breakpoint-up('sm') {
 				.align-right {
 					text-align: right;
 					align-self: center;
 				}
 			}
-			@include coreui.media-breakpoint-down(sm) {
+			@include breakpoints.media-breakpoint-down('sm') {
 				.align-right {
 					margin-bottom: 0;
 				}

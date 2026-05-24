@@ -121,31 +121,72 @@ export function NumberInputField({
 			<div className="d-grid grid-col">
 				<div>{input}</div>
 				<div>
-					<Slider.Root
+					<SliderInputField
 						disabled={disabled}
 						value={numericEffective}
 						min={min}
 						max={max}
 						step={step}
-						title={tooltip}
-						onValueChange={onChangeValue}
+						tooltip={tooltip}
+						setValue={onChangeValue}
 						onFocus={() => {
 							if (!immediateValue) setTmpValue(value ?? '')
 						}}
 						onValueCommitted={() => setTmpValue(null)}
-						thumbAlignment="edge"
-					>
-						<Slider.Control className="number-range">
-							<Slider.Track className="number-range-track">
-								<Slider.Indicator className="number-range-indicator" />
-								<Slider.Thumb aria-label="Value" className="number-range-thumb" />
-							</Slider.Track>
-						</Slider.Control>
-					</Slider.Root>
+					/>
 				</div>
 			</div>
 		)
 	} else {
 		return input
 	}
+}
+
+interface SliderInputFieldProps {
+	value: number
+	setValue: (value: number) => void
+	min?: number
+	max?: number
+	step?: number
+	disabled?: boolean
+	tooltip?: string
+	className?: string
+	onFocus?: () => void
+	onValueCommitted?: (value: number) => void
+}
+
+export function SliderInputField({
+	value,
+	setValue,
+	min,
+	max,
+	step,
+	disabled,
+	tooltip,
+	className,
+	onFocus,
+	onValueCommitted,
+}: SliderInputFieldProps): React.JSX.Element {
+	return (
+		<Slider.Root
+			disabled={disabled}
+			value={value}
+			min={min}
+			max={max}
+			step={step}
+			title={tooltip}
+			onValueChange={setValue}
+			onFocus={onFocus}
+			onValueCommitted={onValueCommitted}
+			thumbAlignment="edge"
+			className={className}
+		>
+			<Slider.Control className="number-range">
+				<Slider.Track className="number-range-track">
+					<Slider.Indicator className="number-range-indicator" />
+					<Slider.Thumb aria-label="Value" className="number-range-thumb" />
+				</Slider.Track>
+			</Slider.Control>
+		</Slider.Root>
+	)
 }

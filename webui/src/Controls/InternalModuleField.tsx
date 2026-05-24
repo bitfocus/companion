@@ -1,16 +1,16 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
-import DatePicker from 'react-date-picker'
-import TimePicker from 'react-time-picker'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
 import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Components/AlignmentInputField.js'
+import { DateInputField } from '~/Components/DateInputField.js'
 import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { PngImageInputField } from '~/Components/PngImageInputField.js'
+import { TimeInputField } from '~/Components/TimeInputField.js'
 import { VariablePickerField } from '~/Components/VariablePickerField.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 import { useComputed } from '~/Resources/util.js'
@@ -102,9 +102,9 @@ export function InternalModuleField(
 		case 'internal:connection_collection':
 			return <InternalConnectionCollectionDropdown id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:time':
-			return <InternalTimePicker id={id} disabled={readonly} value={value} setValue={setValue} />
+			return <TimeInputField id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:date':
-			return <InternalDatePicker id={id} disabled={readonly} value={value} setValue={setValue} />
+			return <DateInputField id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:horizontal-alignment':
 			return <HorizontalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:vertical-alignment':
@@ -575,60 +575,6 @@ const InternalConnectionCollectionDropdown = observer(function InternalConnectio
 
 	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })
-
-interface InternalTimePickerProps {
-	id: string | undefined
-	value: any
-	setValue: (value: any) => void
-	disabled: boolean
-}
-
-function InternalTimePicker({ id, value, setValue, disabled }: InternalTimePickerProps) {
-	return (
-		<>
-			<TimePicker
-				id={id}
-				disabled={disabled}
-				format="HH:mm:ss"
-				maxDetail="second"
-				required
-				value={value}
-				onChange={setValue}
-				className={''}
-				openClockOnFocus={false}
-			/>
-		</>
-	)
-}
-
-interface InternalDatePickerProps {
-	id: string | undefined
-	value: any
-	setValue: (value: any) => void
-	disabled: boolean
-}
-
-function InternalDatePicker({ id, value, setValue, disabled }: InternalDatePickerProps) {
-	return (
-		<>
-			<DatePicker
-				id={id}
-				disabled={disabled}
-				format="yyyy-M-dd"
-				minDate={new Date()}
-				required
-				value={value}
-				onChange={setValue}
-				className={''}
-				showLeadingZeros={true}
-				calendarIcon={null}
-				yearPlaceholder="yyyy"
-				monthPlaceholder="mm"
-				dayPlaceholder="dd"
-			/>
-		</>
-	)
-}
 
 function useCollectionChoices(listStore: GenericCollectionsStore<any>): DropdownChoice[] {
 	return useComputed(() => {
