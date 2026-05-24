@@ -102,7 +102,7 @@ export const OscProtocol = observer(function OscProtocol() {
 			</p>
 
 			<p>
-				Press row 0, column 5 on page 1 down and hold
+				Press the button at row 0, column 5 on page 1 and release immediately
 				<br />
 				<code>/location/1/0/5/press</code>
 			</p>
