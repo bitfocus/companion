@@ -10,7 +10,7 @@ import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleMod
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
@@ -78,7 +78,7 @@ const FieldElementNameInput = observer(function FieldElementNameInput({
 		[setElementNameMutation, controlId, elementProps.id]
 	)
 
-	return <TextInputField id={inputId} setValue={setName} value={elementProps.name ?? ''} />
+	return <TextInputFieldSimple id={inputId} setValue={setName} value={elementProps.name ?? ''} />
 })
 
 const FieldElementUsageInput = observer(function FieldElementUsageInput({

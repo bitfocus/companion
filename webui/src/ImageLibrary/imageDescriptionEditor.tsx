@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useState } from 'react'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface ImageDescriptionEditorProps {
@@ -30,7 +30,7 @@ export const ImageDescriptionEditor = observer(function ImageDescriptionEditor({
 	}, [setDescriptionMutation, imageName, localValue])
 
 	return (
-		<TextInputField
+		<TextInputFieldSimple
 			id={id}
 			value={localValue}
 			setValue={setLocalValue}

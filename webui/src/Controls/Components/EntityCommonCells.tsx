@@ -28,7 +28,7 @@ import { trpc } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { TextInputField } from '../../Components/TextInputField.js'
+import { TextInputFieldSimple } from '../../Components/TextInputField.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { OptionsInputField } from '../OptionsInputField.js'
@@ -104,7 +104,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									</CopyToClipboard>
 								</FormLabel>
 								<CCol sm={8}>
-									<TextInputField
+									<TextInputFieldSimple
 										id={variableNameId}
 										value={entity.variableName ?? ''}
 										setValue={service.setVariableName}
@@ -221,7 +221,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 			</FormLabel>
 			<CCol sm={8}>
 				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
-					<TextInputField
+					<TextInputFieldSimple
 						id={invertFieldId}
 						disabled={!entity.variableName || readonly}
 						value={

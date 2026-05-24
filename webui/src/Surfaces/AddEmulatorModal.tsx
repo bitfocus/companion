@@ -9,7 +9,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField.js'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -115,7 +115,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<TextInputField
+													<TextInputFieldSimple
 														id={nameFieldId}
 														value={field.state.value}
 														setValue={field.handleChange}
@@ -151,7 +151,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<TextInputField
+													<TextInputFieldSimple
 														id={idFieldId}
 														value={field.state.value}
 														setValue={field.handleChange}

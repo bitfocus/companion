@@ -23,7 +23,7 @@ import { Form, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -231,7 +231,7 @@ function AddVariablePanel() {
 	return (
 		<Form onSubmit={doCreateNew}>
 			<InputGroup>
-				<TextInputField
+				<TextInputFieldSimple
 					id={undefined}
 					setValue={setNewName}
 					value={newName}

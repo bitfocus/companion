@@ -17,7 +17,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
 import { AddEntityPanel } from '~/Controls/Components/AddEntityPanel.js'
 import { EntityManageChildGroups } from '~/Controls/Components/EntityChildGroup'
@@ -140,14 +140,19 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					</InlineHelpIcon>
 				</FormLabel>
 				<CCol xs={8}>
-					<TextInputField id={nameFieldId} setValue={setName} value={options.variableName} checkValid={isLabelValid} />
+					<TextInputFieldSimple
+						id={nameFieldId}
+						setValue={setName}
+						value={options.variableName}
+						checkValid={isLabelValid}
+					/>
 				</CCol>
 
 				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Description
 				</FormLabel>
 				<CCol xs={8}>
-					<TextInputField id={descriptionFieldId} setValue={setDescription} value={options.description} />
+					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
 				</CCol>
 			</Form>
 		</CCol>

@@ -8,7 +8,7 @@ import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -105,7 +105,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<TextInputField
+													<TextInputFieldSimple
 														id={nameFieldId}
 														value={field.state.value}
 														setValue={field.handleChange}
@@ -138,7 +138,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<TextInputField
+													<TextInputFieldSimple
 														id={idFieldId}
 														value={field.state.value}
 														setValue={field.handleChange}

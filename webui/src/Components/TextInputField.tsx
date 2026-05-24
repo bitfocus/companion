@@ -7,7 +7,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
 import { VariableSuggestionPopup } from './DropdownInputField/Popup.js'
 
-interface TextInputFieldProps {
+interface TextInputFieldSimpleProps {
 	id: string | undefined
 	tooltip?: string
 	placeholder?: string
@@ -16,8 +16,10 @@ interface TextInputFieldProps {
 	setValue: (value: string) => void
 	checkValid?: boolean | ((value: string) => boolean)
 	disabled?: boolean
-	useVariables?: boolean
-	localVariables?: DropdownChoiceInt[]
+	/**
+	 * When provided, enables the variable suggestion popup with these options.
+	 */
+	variableOptions?: DropdownChoice[]
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
@@ -28,9 +30,14 @@ interface TextInputFieldProps {
 	immediateValue?: boolean
 }
 
+interface TextInputFieldProps extends Omit<TextInputFieldSimpleProps, 'variableOptions'> {
+	useVariables?: boolean
+	localVariables?: DropdownChoiceInt[]
+}
+
 const EMPTY_VARIABLE_DEFS: never[] = []
 
-export const TextInputField = observer(function TextInputField({
+export function TextInputFieldSimple({
 	id,
 	tooltip,
 	placeholder,
@@ -39,15 +46,14 @@ export const TextInputField = observer(function TextInputField({
 	setValue,
 	checkValid,
 	disabled,
-	useVariables,
-	localVariables,
+	variableOptions,
 	multiline,
 	autoFocus,
 	onBlur,
 	onKeyDown: onKeyDownProp,
 	immediateValue,
-}: TextInputFieldProps) {
-	const { variablesStore } = useContext(RootAppStoreContext)
+}: TextInputFieldSimpleProps): React.JSX.Element {
+	const useVariables = !!variableOptions
 
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
@@ -77,23 +83,7 @@ export const TextInputField = observer(function TextInputField({
 
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(useVariables ? showValue : '', cursorPosition)
 
-	const baseVariableDefinitions = useVariables ? variablesStore.allVariableDefinitions.get() : EMPTY_VARIABLE_DEFS
-	const options = useMemo((): DropdownChoice[] => {
-		if (!useVariables) return []
-		const suggestions: DropdownChoice[] = []
-		for (const variable of baseVariableDefinitions) {
-			suggestions.push({
-				id: `${variable.connectionLabel}:${variable.name}`,
-				label: variable.description,
-			})
-		}
-		if (localVariables) {
-			for (const v of localVariables) {
-				suggestions.push({ id: v.value, label: v.label })
-			}
-		}
-		return suggestions
-	}, [useVariables, baseVariableDefinitions, localVariables])
+	const options = variableOptions ?? EMPTY_VARIABLE_DEFS
 
 	const filteredItems = useMemo(
 		() =>
@@ -204,6 +194,34 @@ export const TextInputField = observer(function TextInputField({
 			/>
 		</div>
 	)
+}
+
+export const TextInputField = observer(function TextInputField({
+	useVariables,
+	localVariables,
+	...rest
+}: TextInputFieldProps) {
+	const { variablesStore } = useContext(RootAppStoreContext)
+
+	const baseVariableDefinitions = useVariables ? variablesStore.allVariableDefinitions.get() : EMPTY_VARIABLE_DEFS
+	const variableOptions = useMemo((): DropdownChoice[] | undefined => {
+		if (!useVariables) return undefined
+		const suggestions: DropdownChoice[] = []
+		for (const variable of baseVariableDefinitions) {
+			suggestions.push({
+				id: `${variable.connectionLabel}:${variable.name}`,
+				label: variable.description,
+			})
+		}
+		if (localVariables) {
+			for (const v of localVariables) {
+				suggestions.push({ id: v.value, label: v.label })
+			}
+		}
+		return suggestions
+	}, [useVariables, baseVariableDefinitions, localVariables])
+
+	return <TextInputFieldSimple {...rest} variableOptions={variableOptions} />
 })
 
 function useIsPickerOpen(showValue: string, cursorPosition: number | null) {

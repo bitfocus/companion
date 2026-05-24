@@ -92,7 +92,7 @@
 	}
 
 	> :not(:last-child),
-	.input-group-borders {
+	> :not(:last-child) .input-group-borders {
 		--border-right-radius: 0;
 		border-top-right-radius: 0;
 		border-bottom-right-radius: 0;
@@ -102,7 +102,7 @@
 		}
 	}
 	> :not(:first-child),
-	.input-group-borders {
+	> :not(:first-child) .input-group-borders {
 		--border-left-radius: 0;
 		border-top-left-radius: 0;
 		border-bottom-left-radius: 0;

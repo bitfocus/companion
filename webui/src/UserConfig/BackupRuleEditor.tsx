@@ -10,7 +10,7 @@ import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.
 import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
-import { TextInputField } from '../Components/TextInputField.js'
+import { TextInputField, TextInputFieldSimple } from '../Components/TextInputField.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { backupTypes } from './BackupConstants.js'
 
@@ -130,7 +130,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<InputGroup>
-					<TextInputField id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
+					<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
 					<Button color="warning" onClick={runNow}>
 						Run Now
 					</Button>
@@ -141,7 +141,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				Cron Schedule
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<TextInputField id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
+				<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
 			</CCol>
 			<CCol className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
 				<small className="form-text text-muted">
@@ -177,7 +177,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				Backup Path
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<TextInputField
+				<TextInputFieldSimple
 					id={backupPathFieldId}
 					value={rule.backupPath}
 					setValue={(value) => updateField('backupPath', value)}

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
 import { Button } from '~/Components/Button'
-import { TextInputField } from '../TextInputField.js'
+import { TextInputFieldSimple } from '../TextInputField.js'
 import { CollectionsNestingTableCollectionRowWrapper } from './CollectionsNestingTableRowWrappers.js'
 import type { CollectionsNestingTableCollection, NestingCollectionsApi } from './Types.js'
 
@@ -75,7 +75,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 			<div className="d-flex align-items-center justify-content-between" onClick={toggleExpanded2}>
 				<div className="d-flex align-items-center flex-grow-1">
 					{isEditing ? (
-						<TextInputField
+						<TextInputFieldSimple
 							id={undefined}
 							value={collection.label ?? ''}
 							placeholder={`Give this collection a name`}

@@ -1,10 +1,12 @@
-import { CCol, CFormInput, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { memo, useId, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { SecretTextInputField } from '~/Components/SecretTextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 interface CloudUserPassProps {
@@ -45,18 +47,13 @@ export const CloudUserPass = memo(function CloudUserPass({
 			<CRow>
 				<CCol sm={6}>
 					<FormLabel htmlFor={emailFieldId}>Email address</FormLabel>
-					<CFormInput id={emailFieldId} type="text" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
+					<TextInputFieldSimple id={emailFieldId} value={email} setValue={setEmail} immediateValue />
 				</CCol>
 				<CCol sm={6}></CCol>
 
 				<CCol sm={6}>
 					<FormLabel htmlFor={passwordFieldId}>Password</FormLabel>
-					<CFormInput
-						id={passwordFieldId}
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.currentTarget.value)}
-					/>
+					<SecretTextInputField id={passwordFieldId} value={password} setValue={setPassword} immediateValue />
 				</CCol>
 				<CCol sm={6}></CCol>
 

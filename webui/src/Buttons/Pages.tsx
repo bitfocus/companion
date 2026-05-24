@@ -6,7 +6,7 @@ import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -232,7 +232,7 @@ const PageListRow = observer(function PageListRow({
 			</td>
 			<td style={{ width: 80, textAlign: 'center', fontWeight: 'bold' }}>{pageNumber}</td>
 			<td>
-				<TextInputField id={undefined} value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
+				<TextInputFieldSimple id={undefined} value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
 			</td>
 			<td style={{ width: 100, textAlign: 'right' }}>
 				<ButtonGroup>

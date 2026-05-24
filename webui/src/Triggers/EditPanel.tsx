@@ -8,7 +8,7 @@ import { Button } from '~/Components/Button'
 import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -172,7 +172,7 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 					<FormLabel htmlFor={nameFieldId}>Name</FormLabel>
 					<br />
 					<InputGroup>
-						<TextInputField id={nameFieldId} setValue={setName} value={options.name} />
+						<TextInputFieldSimple id={nameFieldId} setValue={setName} value={options.name} />
 						<TestActionsButton controlId={controlId} hidden={!options} />
 					</InputGroup>
 				</CCol>

@@ -1,4 +1,4 @@
-import { CCol, CFormText } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -9,7 +9,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -127,7 +127,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 									Name
 								</FormLabel>
 								<CCol className="fieldtype-textinput" sm={8}>
-									<TextInputField
+									<TextInputFieldSimple
 										id={nameFieldId}
 										value={field.state.value}
 										setValue={field.handleChange}
@@ -148,8 +148,8 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					<FormLabel htmlFor={integrationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 						Surface Integration
 					</FormLabel>
-					<CCol sm={8}>
-						<CFormText id={integrationFieldId}>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
+					<CCol sm={8} className="flex px-2">
+						<span className="text-muted align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</CCol>
 
 					{instanceInfo?.remoteConfigFields?.map((fieldDef) => {

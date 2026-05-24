@@ -1,4 +1,5 @@
-import { CFormInput } from '@coreui/react'
+import { Input } from '@base-ui/react'
+import classNames from 'classnames'
 import JSON5 from 'json5'
 import { useEffect, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -138,14 +139,17 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 				>
 					{buttonProps.label}
 				</Button>
-				<CFormInput
+
+				<Input
 					id={id}
+					type="text"
+					className={classNames('text-input-field no-focus', { 'invalid-value': !isValueValid })}
+					// render={multiline ? <textarea rows={2} /> : undefined}
+					disabled={disabled}
 					value={localValue}
 					onChange={(e) => handleInputChange(e.target.value)}
-					style={{ outline: 'none', boxShadow: 'none', color: !isValueValid ? 'red' : undefined }}
 					onFocus={handleFocus}
 					onBlur={() => {}} // Prevent input blur from ending editing (handled by group)
-					disabled={disabled}
 				/>
 			</InputGroup>
 		</div>

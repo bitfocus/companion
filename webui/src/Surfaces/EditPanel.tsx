@@ -17,7 +17,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState'
 import { SwitchInputField } from '~/Components/SwitchInputField'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -353,7 +353,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							Surface Name
 						</FormLabel>
 						<CCol sm={8}>
-							<TextInputField
+							<TextInputFieldSimple
 								id={nameFieldId}
 								value={surfaceInfo.name}
 								setValue={(name) => updateName(surfaceInfo.id, name)}
@@ -394,7 +394,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 									Group Name
 								</FormLabel>
 								<CCol sm={8}>
-									<TextInputField
+									<TextInputFieldSimple
 										id={groupNameFieldId}
 										value={groupInfo.displayName}
 										setValue={(name) => updateName(groupInfo.id, name)}
