@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
-import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -12,7 +11,6 @@ interface AddEventDropdownProps {
 	onSelect: (value: DropdownChoiceId) => void
 }
 export const AddEventDropdown = observer(function AddEventDropdown({ onSelect }: AddEventDropdownProps) {
-	const menuPortal = useContext(MenuPortalContext)
 	const { eventDefinitions } = useContext(RootAppStoreContext)
 
 	const options = useComputed(() => {
@@ -63,7 +61,7 @@ export const AddEventDropdown = observer(function AddEventDropdown({ onSelect }:
 						<ChevronDownIcon className="dropdown-field-icon" />
 					</Combobox.Trigger>
 				</Combobox.InputGroup>
-				<DropdownInputPopup menuPortal={menuPortal ?? undefined} noOptionsMessage="No events found" />
+				<DropdownInputPopup noOptionsMessage="No events found" />
 			</Combobox.Root>
 		</div>
 	)

@@ -9,7 +9,6 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { FeedbackEntitySubType, type EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
-import { MenuPortalContext } from '~/Components/MenuPortalContext'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
@@ -40,7 +39,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	disabled,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
-	const menuPortal = useContext(MenuPortalContext)
 
 	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 	const recentlyUsedStore = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
@@ -200,7 +198,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 					</Combobox.Trigger>
 				</Combobox.InputGroup>
 				<DropdownInputPopup
-					menuPortal={menuPortal ?? undefined}
 					noOptionsMessage={inputValue ? `No ${entityTypeLabel}s found` : `No recently used ${entityTypeLabel}s`}
 				/>
 			</Combobox.Root>

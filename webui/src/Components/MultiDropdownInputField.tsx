@@ -3,14 +3,13 @@ import classNames from 'classnames'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon, XIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
 import { useFuzzyChoices, type FuzzyChoice, type FuzzyGroup } from '~/Components/DropdownInputField/useFuzzyChoices.js'
 import { useComputed } from '~/Resources/util.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import type { DropdownChoicesOrGroups } from './DropdownChoices.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
 import { useRegex } from './useRegex.js'
 
 interface MultiDropdownInputFieldProps {
@@ -46,8 +45,6 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	disabled,
 	onBlur,
 }: MultiDropdownInputFieldProps) {
-	const menuPortal = useContext(MenuPortalContext)
-
 	if (value === undefined) value = []
 
 	// Convert DropdownChoicesOrGroups -> base-ui Combobox format (choices may be mobx proxies)
@@ -204,7 +201,6 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 				</Combobox.InputGroup>
 
 				<DropdownInputPopup
-					menuPortal={menuPortal ?? undefined}
 					noOptionsMessage={allowCustom ? 'Begin typing to use a custom value' : undefined}
 					showIndicator
 					disableUnselected={isMaxReached}

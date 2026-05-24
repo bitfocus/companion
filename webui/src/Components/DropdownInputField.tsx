@@ -3,13 +3,12 @@ import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observable, runInAction } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
 import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
 import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
@@ -43,8 +42,6 @@ export const DropdownInputField = observer(function DropdownInputField({
 	checkValid,
 	searchLabelsOnly = true,
 }: DropdownInputFieldProps): React.JSX.Element {
-	const menuPortal = useContext(MenuPortalContext)
-
 	const { allItems, flatItems } = useFuzzyChoices(choices, searchLabelsOnly)
 
 	// The popup doesn't handle groups when virtualised, so detect if there are any groups
@@ -211,7 +208,6 @@ export const DropdownInputField = observer(function DropdownInputField({
 				</Combobox.InputGroup>
 
 				<DropdownInputPopup
-					menuPortal={menuPortal ?? undefined}
 					noOptionsMessage={allowCustom ? 'Begin typing to use a custom value' : undefined}
 					showIndicator={!!allowCustom}
 					virtualized={!hasGroups}

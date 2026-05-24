@@ -1,8 +1,10 @@
 import { Combobox } from '@base-ui/react/combobox'
+import { Popover } from '@base-ui/react/popover'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { CheckIcon, PlusIcon } from 'lucide-react'
-import React, { useCallback, useRef, type Ref } from 'react'
+import React, { useCallback, useContext, useRef, type Ref } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
+import { MenuPortalContext } from '../MenuPortalContext'
 
 export interface DropdownGroupBase {
 	id: string
@@ -14,7 +16,6 @@ export interface DropdownGroupBase {
 export type DropdownChoiceWithMeta = DropdownChoice & { plusIndicator?: boolean }
 
 export interface DropdownInputPopupProps {
-	menuPortal: HTMLElement | undefined
 	noOptionsMessage?: string
 	showIndicator?: boolean
 	/** When true, unselected items show a not-allowed cursor (selection is rejected by onValueChange). */
@@ -26,13 +27,14 @@ export interface DropdownInputPopupProps {
 }
 
 export function DropdownInputPopup({
-	menuPortal,
 	noOptionsMessage,
 	showIndicator,
 	disableUnselected,
 	virtualized,
 	fancyFormat,
 }: DropdownInputPopupProps): React.JSX.Element {
+	const menuPortal = useContext(MenuPortalContext)
+
 	const renderItem = (item: DropdownChoiceWithMeta) => (
 		<Combobox.Item
 			key={item.id}
@@ -60,7 +62,7 @@ export function DropdownInputPopup({
 	)
 
 	return (
-		<Combobox.Portal container={menuPortal}>
+		<Combobox.Portal container={menuPortal ?? undefined}>
 			<Combobox.Positioner className="dropdown-field-positioner" sideOffset={8}>
 				<Combobox.Popup className="dropdown-field-popup">
 					<Combobox.Empty>
@@ -154,14 +156,18 @@ const VirtualComboboxItem = React.memo(function VirtualComboboxItem({
 	)
 })
 
-function VirtualizedComboboxList({
-	showIndicator,
-	fancyFormat,
-}: {
-	showIndicator?: boolean
-	fancyFormat?: boolean
-}): React.JSX.Element | null {
-	const filteredItems = Combobox.useFilteredItems<DropdownChoiceWithMeta>()
+interface VirtualizedListProps<T> {
+	items: T[]
+	renderItem: (
+		item: T,
+		index: number,
+		start: number,
+		totalCount: number,
+		measureElement: (el: Element | null) => void
+	) => React.ReactNode
+}
+
+function VirtualizedList<T>({ items, renderItem }: VirtualizedListProps<T>): React.JSX.Element | null {
 	const scrollElementRef = useRef<HTMLDivElement | null>(null)
 
 	const getScrollElement = useCallback(() => scrollElementRef.current, [])
@@ -169,7 +175,7 @@ function VirtualizedComboboxList({
 
 	// eslint-disable-next-line react-hooks/incompatible-library
 	const virtualizer = useVirtualizer({
-		count: filteredItems.length,
+		count: items.length,
 		getScrollElement,
 		estimateSize,
 		overscan: 20,
@@ -189,7 +195,7 @@ function VirtualizedComboboxList({
 
 	const totalSize = virtualizer.getTotalSize()
 
-	if (!filteredItems.length) return null
+	if (!items.length) return null
 
 	return (
 		<div
@@ -200,22 +206,112 @@ function VirtualizedComboboxList({
 		>
 			<div role="presentation" style={{ height: totalSize, width: '100%', position: 'relative' }}>
 				{virtualizer.getVirtualItems().map((virtualRow) => {
-					const item = filteredItems[virtualRow.index]
+					const item = items[virtualRow.index]
 					if (!item) return null
 					return (
-						<VirtualComboboxItem
-							key={virtualRow.key}
-							item={item}
-							index={virtualRow.index}
-							start={virtualRow.start}
-							totalCount={filteredItems.length}
-							measureElement={virtualizer.measureElement}
-							showIndicator={showIndicator}
-							fancyFormat={fancyFormat}
-						/>
+						<React.Fragment key={virtualRow.key}>
+							{renderItem(item, virtualRow.index, virtualRow.start, items.length, virtualizer.measureElement)}
+						</React.Fragment>
 					)
 				})}
 			</div>
 		</div>
+	)
+}
+
+function VirtualizedComboboxList({
+	showIndicator,
+	fancyFormat,
+}: {
+	showIndicator?: boolean
+	fancyFormat?: boolean
+}): React.JSX.Element | null {
+	const filteredItems = Combobox.useFilteredItems<DropdownChoiceWithMeta>()
+
+	return (
+		<VirtualizedList
+			items={filteredItems}
+			renderItem={(item, index, start, totalCount, measureElement) => (
+				<VirtualComboboxItem
+					item={item}
+					index={index}
+					start={start}
+					totalCount={totalCount}
+					measureElement={measureElement}
+					showIndicator={showIndicator}
+					fancyFormat={fancyFormat}
+				/>
+			)}
+		/>
+	)
+}
+
+export interface VariableSuggestionPopupProps {
+	open: boolean
+	anchorRef: React.RefObject<HTMLElement | null>
+	items: DropdownChoice[]
+	focusedIndex: number
+	onSelect: (item: DropdownChoice) => void
+}
+
+export function VariableSuggestionPopup({
+	open,
+	anchorRef,
+	items,
+	focusedIndex,
+	onSelect,
+}: VariableSuggestionPopupProps): React.JSX.Element {
+	const menuPortal = useContext(MenuPortalContext)
+
+	return (
+		<Popover.Root
+			open={open}
+			onOpenChange={() => {
+				// All state changes are controlled by the parent via the `open` prop
+			}}
+		>
+			<Popover.Portal container={menuPortal ?? undefined}>
+				<Popover.Positioner anchor={anchorRef} sideOffset={8} className="dropdown-field-positioner">
+					<Popover.Popup className="dropdown-field-popup" initialFocus={false} finalFocus={false}>
+						{items.length === 0 ? (
+							<div className="dropdown-field-empty">No variables found.</div>
+						) : (
+							<div className="dropdown-field-list dropdown-field-list--virtualized">
+								<VirtualizedList
+									items={items}
+									renderItem={(item, index, start, totalCount, measureElement) => (
+										<div
+											role="option"
+											data-index={index}
+											ref={(el) => measureElement(el)}
+											aria-setsize={totalCount}
+											aria-posinset={index + 1}
+											data-highlighted={index === focusedIndex ? '' : undefined}
+											className="dropdown-field-item variable-dropdown-option"
+											style={{
+												position: 'absolute',
+												top: 0,
+												left: 0,
+												width: '100%',
+												transform: `translateY(${start}px)`,
+											}}
+											onMouseDown={(e) => {
+												e.preventDefault()
+												onSelect(item)
+											}}
+										>
+											<div className="dropdown-field-item-content">
+												<span className="var-name">{String(item.id)}</span>
+												<span className="var-label">{item.label}</span>
+											</div>
+										</div>
+									)}
+								/>
+							</div>
+						)}
+					</Popover.Popup>
+				</Popover.Positioner>
+			</Popover.Portal>
+		</Popover.Root>
 	)
 }

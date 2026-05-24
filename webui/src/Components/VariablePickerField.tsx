@@ -2,13 +2,12 @@ import { Combobox } from '@base-ui/react/combobox'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
 import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
 import { useRegex } from './useRegex.js'
 
 interface VariablePickerFieldProps {
@@ -38,8 +37,6 @@ export const VariablePickerField = observer(function VariablePickerField({
 	disabled,
 	onPasteIntercept,
 }: VariablePickerFieldProps): React.JSX.Element {
-	const menuPortal = useContext(MenuPortalContext)
-
 	// Always search both label and id for variable pickers
 	const { allItems, flatItems } = useFuzzyChoices(choices, false)
 
@@ -177,7 +174,6 @@ export const VariablePickerField = observer(function VariablePickerField({
 				</Combobox.InputGroup>
 
 				<DropdownInputPopup
-					menuPortal={menuPortal ?? undefined}
 					noOptionsMessage={allowCustom ? 'Begin typing to use a custom value' : undefined}
 					showIndicator={!!allowCustom}
 					fancyFormat={true}

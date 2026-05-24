@@ -9,7 +9,6 @@ import { useCallback, useContext, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
-import { MenuPortalContext } from '~/Components/MenuPortalContext.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy'
@@ -70,8 +69,6 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 	pageOptions,
 	children,
 }: React.PropsWithChildren<PageNumberPickerProps>) {
-	const menuPortal = useContext(MenuPortalContext)
-
 	const inputChange = useCallback(
 		(val: number | null) => {
 			if (val !== null && setPage && !isNaN(val)) {
@@ -126,7 +123,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 								<ChevronDownIcon className="dropdown-field-icon" />
 							</Combobox.Trigger>
 						</Combobox.InputGroup>
-						<DropdownInputPopup menuPortal={menuPortal ?? undefined} />
+						<DropdownInputPopup />
 					</Combobox.Root>
 				</div>
 				<Button color="dark" hidden={!changePage} onClick={nextPage}>
