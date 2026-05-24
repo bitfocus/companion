@@ -39,7 +39,7 @@ Remote triggering can be done by sending OSC commands to port `12321` (the port 
 
 ## Examples
 
-Press row 0, column 5 on page 1 down and hold  
+Press the button at row 0, column 5 on page 1 and release immediately  
 `/location/1/0/5/press`
 
 Change button background color of row 0, column 5 on page 1 to red  
