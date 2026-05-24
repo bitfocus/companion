@@ -141,7 +141,7 @@ export const TextInputField = observer(function TextInputField({
 				setIsForceHidden(true)
 			} else if (isPickerOpen && e.code === 'ArrowDown') {
 				e.preventDefault()
-				setFocusedIndex((i) => Math.min(i + 1, filteredItems.length - 1))
+				if (filteredItems.length > 0) setFocusedIndex((i) => Math.min(i + 1, filteredItems.length - 1))
 			} else if (isPickerOpen && e.code === 'ArrowUp') {
 				e.preventDefault()
 				setFocusedIndex((i) => Math.max(i - 1, 0))
@@ -217,12 +217,11 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 		if (searchValue.length === 0) searchValue = ' '
 	}
 
-	const previousIsPickerOpen = useRef(false)
-	if (isPickerOpen !== previousIsPickerOpen.current) {
+	useEffect(() => {
 		// Clear the force hidden after a short delay (it doesn't work to call it directly)
-		setTimeout(() => setIsForceHidden(false), 1)
-	}
-	previousIsPickerOpen.current = isPickerOpen
+		const id = setTimeout(() => setIsForceHidden(false), 1)
+		return () => clearTimeout(id)
+	}, [isPickerOpen])
 
 	return {
 		searchValue,
