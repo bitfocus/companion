@@ -250,6 +250,7 @@
 }
 
 .dropdown-field-positioner {
+	// Ensure variable dropdowns appear above other UI elements
 	z-index: 1200;
 	width: var(--anchor-width);
 

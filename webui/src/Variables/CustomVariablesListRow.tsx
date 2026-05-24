@@ -119,7 +119,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 									id={descriptionFieldId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
-									style={{ marginBottom: '0.5rem' }}
+									className="mb-2"
 								/>
 							</CCol>
 

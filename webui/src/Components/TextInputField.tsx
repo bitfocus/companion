@@ -1,24 +1,18 @@
-import { CFormInput, CFormTextarea } from '@coreui/react'
+import { Input } from '@base-ui/react'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { createContext, memo, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import Select, {
-	createFilter,
-	components as SelectComponents,
-	type ControlProps,
-	type ValueContainerProps,
-} from 'react-select'
-import { WindowedMenuList } from '~/Components/WindowedSelect/MenuList.js'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
-import { CustomOption } from './DropDownInputFancy.js'
-import { MenuPortalContext } from './MenuPortalContext.js'
+import { VariableSuggestionPopup } from './DropdownInputField/Popup.js'
 
 interface TextInputFieldProps {
-	id: string | undefined // TODO - use this!
+	id: string | undefined
 	tooltip?: string
 	placeholder?: string
 	value: string
-	style?: React.CSSProperties
+	className?: string
 	setValue: (value: string) => void
 	checkValid?: (valid: string) => boolean
 	disabled?: boolean
@@ -30,11 +24,14 @@ interface TextInputFieldProps {
 	onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLTextAreaElement>) => void
 }
 
+const EMPTY_VARIABLE_DEFS: never[] = []
+
 export const TextInputField = observer(function TextInputField({
+	id,
 	tooltip,
 	placeholder,
 	value,
-	style,
+	className,
 	setValue,
 	checkValid,
 	disabled,
@@ -43,87 +40,164 @@ export const TextInputField = observer(function TextInputField({
 	multiline,
 	autoFocus,
 	onBlur,
-	onKeyDown,
+	onKeyDown: onKeyDownProp,
 }: TextInputFieldProps) {
-	const [tmpValue, setTmpValue] = useState<string | null>(null)
+	const { variablesStore } = useContext(RootAppStoreContext)
 
-	const storeValue = useCallback(
-		(value: string) => {
-			setTmpValue(value)
-			setValue(value)
-		},
-		[setValue]
-	)
-	const doOnChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.FormEvent<HTMLInputElement>) =>
-			storeValue(e.currentTarget.value),
-		[storeValue]
-	)
+	const [tmpValue, setTmpValue] = useState<string | null>(null)
+	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
+	const [focusedIndex, setFocusedIndex] = useState(0)
 
 	const currentValueRef = useRef<string>()
 	currentValueRef.current = value ?? ''
-	const focusStoreValue = useCallback(() => setTmpValue(currentValueRef.current ?? ''), [])
-	const blurClearValue = useCallback(() => {
-		setTmpValue(null)
-		onBlur?.()
-	}, [onBlur])
 
-	const showValue = (tmpValue ?? value ?? '').toString()
-
-	const extraStyle = useMemo(
-		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined, ...style }),
-		[checkValid, showValue, style]
+	const storeValue = useCallback(
+		(val: string) => {
+			setTmpValue(val)
+			setValue(val)
+		},
+		[setValue]
 	)
 
-	// Render the input
+	const doOnChange = useCallback(
+		(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | React.FormEvent<HTMLInputElement>) => {
+			storeValue(e.currentTarget.value)
+			setCursorPosition(e.currentTarget.selectionStart)
+		},
+		[storeValue]
+	)
+
+	const showValue = (tmpValue ?? value ?? '').toString()
+	const valueIsInvalid = !!checkValid && !checkValid(showValue)
+
+	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(useVariables ? showValue : '', cursorPosition)
+
+	const baseVariableDefinitions = useVariables ? variablesStore.allVariableDefinitions.get() : EMPTY_VARIABLE_DEFS
+	const options = useMemo((): DropdownChoice[] => {
+		if (!useVariables) return []
+		const suggestions: DropdownChoice[] = []
+		for (const variable of baseVariableDefinitions) {
+			suggestions.push({
+				id: `${variable.connectionLabel}:${variable.name}`,
+				label: variable.description,
+			})
+		}
+		if (localVariables) {
+			for (const v of localVariables) {
+				suggestions.push({ id: v.value, label: v.label })
+			}
+		}
+		return suggestions
+	}, [useVariables, baseVariableDefinitions, localVariables])
+
+	const filteredItems = useMemo(
+		() =>
+			searchValue.trim() === ''
+				? options
+				: options.filter(
+						(opt) =>
+							String(opt.id).toLowerCase().includes(searchValue.toLowerCase()) ||
+							opt.label.toLowerCase().includes(searchValue.toLowerCase())
+					),
+		[options, searchValue]
+	)
+
+	useEffect(() => {
+		setFocusedIndex(0)
+	}, [searchValue])
+
+	const valueRef = useRef<string>()
+	valueRef.current = showValue
+
+	const cursorPositionRef = useRef<number | null>()
+	cursorPositionRef.current = cursorPosition
+
+	const inputRef = useRef<HTMLInputElement | null>(null)
+	const wrapperRef = useRef<HTMLDivElement | null>(null)
+
+	const onVariableSelect = useCallback(
+		(variable: DropdownChoice) => {
+			const oldValue = valueRef.current
+			if (!oldValue) return
+
+			if (cursorPositionRef.current == null) return
+
+			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
+			if (openIndex === -1) return
+
+			storeValue(oldValue.slice(0, openIndex) + `$(${variable.id})` + oldValue.slice(cursorPositionRef.current))
+
+			const newSelection = openIndex + String(variable.id).length + 3
+			setTimeout(() => {
+				if (inputRef.current) inputRef.current.setSelectionRange(newSelection, newSelection)
+			}, 0)
+		},
+		[storeValue]
+	)
+
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
+			if (e.code === 'Escape' && isPickerOpen) {
+				setIsForceHidden(true)
+			} else if (isPickerOpen && e.code === 'ArrowDown') {
+				e.preventDefault()
+				if (filteredItems.length > 0) setFocusedIndex((i) => Math.min(i + 1, filteredItems.length - 1))
+			} else if (isPickerOpen && e.code === 'ArrowUp') {
+				e.preventDefault()
+				setFocusedIndex((i) => Math.max(i - 1, 0))
+			} else if (isPickerOpen && e.code === 'Enter' && filteredItems[focusedIndex]) {
+				e.preventDefault()
+				onVariableSelect(filteredItems[focusedIndex])
+			} else {
+				onKeyDownProp?.(e)
+			}
+			setCursorPosition(e.currentTarget.selectionStart)
+		},
+		[isPickerOpen, filteredItems, focusedIndex, onVariableSelect, setIsForceHidden, onKeyDownProp]
+	)
+
+	const input = (
+		<Input
+			id={id}
+			ref={inputRef}
+			type="text"
+			className={classNames('text-input-field', { 'invalid-value': valueIsInvalid }, className)}
+			render={multiline ? <textarea rows={2} /> : undefined}
+			disabled={disabled}
+			value={showValue}
+			title={tooltip}
+			onChange={doOnChange}
+			onFocus={(e) => {
+				setTmpValue(currentValueRef.current ?? '')
+				setCursorPosition(e.currentTarget.selectionStart)
+			}}
+			onBlur={() => {
+				setTmpValue(null)
+				setCursorPosition(null)
+				onBlur?.()
+			}}
+			onKeyDown={handleKeyDown}
+			onSelect={(e) => {
+				setCursorPosition(e.currentTarget.selectionStart)
+			}}
+			placeholder={placeholder}
+			autoFocus={autoFocus}
+		/>
+	)
+
+	if (!useVariables) return input
+
 	return (
-		<>
-			{useVariables ? (
-				<>
-					<VariablesSelect
-						showValue={showValue}
-						style={extraStyle}
-						localVariables={localVariables}
-						storeValue={storeValue}
-						focusStoreValue={focusStoreValue}
-						blurClearValue={blurClearValue}
-						placeholder={placeholder}
-						title={tooltip}
-						disabled={disabled}
-						multiline={multiline}
-						autoFocus={autoFocus}
-					/>
-				</>
-			) : multiline ? (
-				<CFormTextarea
-					disabled={disabled}
-					value={showValue}
-					style={extraStyle}
-					title={tooltip}
-					onChange={doOnChange}
-					onFocus={focusStoreValue}
-					onBlur={blurClearValue}
-					onKeyDown={onKeyDown}
-					placeholder={placeholder}
-					autoFocus={autoFocus}
-					rows={2}
-				/>
-			) : (
-				<CFormInput
-					type="text"
-					disabled={disabled}
-					value={showValue}
-					style={extraStyle}
-					title={tooltip}
-					onChange={doOnChange}
-					onFocus={focusStoreValue}
-					onBlur={blurClearValue}
-					onKeyDown={onKeyDown}
-					placeholder={placeholder}
-					autoFocus={autoFocus}
-				/>
-			)}
-		</>
+		<div ref={wrapperRef}>
+			{input}
+			<VariableSuggestionPopup
+				open={isPickerOpen}
+				anchorRef={wrapperRef}
+				items={filteredItems}
+				focusedIndex={focusedIndex}
+				onSelect={onVariableSelect}
+			/>
+		</div>
 	)
 })
 
@@ -143,331 +217,17 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 		if (searchValue.length === 0) searchValue = ' '
 	}
 
-	const previousIsPickerOpen = useRef(false)
-	if (isPickerOpen !== previousIsPickerOpen.current) {
+	useEffect(() => {
 		// Clear the force hidden after a short delay (it doesn't work to call it directly)
-		setTimeout(() => setIsForceHidden(false), 1)
-	}
-	previousIsPickerOpen.current = isPickerOpen
+		const id = setTimeout(() => setIsForceHidden(false), 1)
+		return () => clearTimeout(id)
+	}, [isPickerOpen])
 
 	return {
 		searchValue,
 		isPickerOpen: !isForceHidden && isPickerOpen,
 		setIsForceHidden,
 	}
-}
-
-interface VariablesSelectProps {
-	showValue: string
-	style: React.CSSProperties
-	localVariables: DropdownChoiceInt[] | undefined
-	storeValue: (value: string) => void
-	focusStoreValue: () => void
-	blurClearValue: () => void
-	placeholder: string | undefined
-	title: string | undefined
-	disabled: boolean | undefined
-	multiline: boolean | undefined
-	autoFocus: boolean | undefined
-}
-
-const VariablesSelect = observer(function VariablesSelect({
-	showValue,
-	style,
-	localVariables,
-	storeValue,
-	focusStoreValue,
-	blurClearValue,
-	placeholder,
-	title,
-	disabled,
-	multiline,
-	autoFocus,
-}: Readonly<VariablesSelectProps>) {
-	const { variablesStore } = useContext(RootAppStoreContext)
-	const menuPortal = useContext(MenuPortalContext)
-
-	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
-	const options = useMemo(() => {
-		// Update the suggestions list in tribute whenever anything changes
-		const suggestions: DropdownChoiceInt[] = []
-		for (const variable of baseVariableDefinitions) {
-			suggestions.push({
-				value: `${variable.connectionLabel}:${variable.name}`,
-				label: variable.description,
-			})
-		}
-
-		if (localVariables) suggestions.push(...localVariables)
-
-		return suggestions
-	}, [baseVariableDefinitions, localVariables])
-
-	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
-	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(showValue, cursorPosition)
-
-	const valueRef = useRef<string>()
-	valueRef.current = showValue
-
-	const cursorPositionRef = useRef<number | null>()
-	cursorPositionRef.current = cursorPosition
-
-	const inputRef = useRef<HTMLInputElement | null>(null)
-
-	const onVariableSelect = useCallback(
-		(variable: DropdownChoiceInt | null) => {
-			const oldValue = valueRef.current
-			if (!variable || !oldValue) return
-
-			if (cursorPositionRef.current == null) return // Nothing selected
-
-			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
-			if (openIndex === -1) return
-
-			// Propagate the new value
-			storeValue(oldValue.slice(0, openIndex) + `$(${variable.value})` + oldValue.slice(cursorPositionRef.current))
-
-			// This doesn't work properly, it causes the cursor to get a bit confused on where it is but avoids the glitch of setSelectionRange
-			// if (inputRef.current)
-			// 	inputRef.current.setRangeText(`$(${variable.value})`, openIndex, cursorPositionRef.current, 'end')
-
-			// Update the selection after mutating the value. This needs to be deferred, although this causes a 'glitch' in the drawing
-			// It needs to be delayed, so that react can re-render first
-			const newSelection = openIndex + String(variable.value).length + 3
-			setTimeout(() => {
-				if (inputRef.current) inputRef.current.setSelectionRange(newSelection, newSelection)
-			}, 0)
-		},
-		[storeValue]
-	)
-
-	const selectContext = useMemo<VariablesSelectContextType>(
-		() => ({
-			value: showValue,
-			setValue: storeValue,
-			setCursorPosition: setCursorPosition,
-			extraStyle: style,
-			forceHideSuggestions: setIsForceHidden,
-			focusStoreValue,
-			blurClearValue,
-			title,
-			placeholder,
-			inputRef,
-		}),
-		[
-			showValue,
-			storeValue,
-			setCursorPosition,
-			style,
-			setIsForceHidden,
-			focusStoreValue,
-			blurClearValue,
-			title,
-			placeholder,
-			inputRef,
-		]
-	)
-
-	return (
-		<VariablesSelectContext.Provider value={selectContext}>
-			<Select
-				className="variable-select-root"
-				classNamePrefix="variable-select-root"
-				menuPortalTarget={menuPortal || document.body}
-				menuShouldBlockScroll={!!menuPortal} // The dropdown doesn't follow scroll when in a modal
-				menuPosition="fixed"
-				menuPlacement="auto"
-				isSearchable
-				isMulti={false}
-				isDisabled={disabled}
-				options={options}
-				value={null}
-				inputValue={searchValue}
-				onChange={onVariableSelect}
-				menuIsOpen={isPickerOpen}
-				components={multiline ? CustomMultilineSelectComponents : CustomSelectComponents}
-				backspaceRemovesValue={false}
-				filterOption={createFilter({ ignoreAccents: false })}
-				openMenuOnArrows={false}
-				autoFocus={autoFocus}
-			/>
-		</VariablesSelectContext.Provider>
-	)
-})
-
-interface VariablesSelectContextType {
-	value: string
-	setValue: (value: string) => void
-	setCursorPosition: (pos: number | null) => void
-	extraStyle: React.CSSProperties
-	forceHideSuggestions: (hidden: boolean) => void
-	focusStoreValue: () => void
-	blurClearValue: () => void
-	title?: string
-	placeholder?: string
-	inputRef: React.MutableRefObject<HTMLInputElement | HTMLTextAreaElement | null>
-}
-
-const VariablesSelectContext = createContext<VariablesSelectContextType>({
-	value: '',
-	setValue: (_value: string) => {},
-	setCursorPosition: (_pos: number | null) => {},
-	extraStyle: {},
-	forceHideSuggestions: (_hidden: boolean) => {},
-	focusStoreValue: () => {},
-	blurClearValue: () => {},
-	title: undefined as string | undefined,
-	placeholder: undefined as string | undefined,
-	inputRef: { current: null },
-})
-
-const EmptyComponent = () => null
-
-const CustomControl = memo((props: ControlProps<DropdownChoiceInt>) => {
-	return (
-		<SelectComponents.Control {...props} className={(props.className ?? '') + ' variables-text-input'}>
-			{props.children}
-		</SelectComponents.Control>
-	)
-})
-
-function useValueContainerCallbacks() {
-	const context = useContext(VariablesSelectContext)
-
-	const checkCursor = useCallback(
-		(
-			e:
-				| React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
-				| React.MouseEvent<HTMLInputElement | HTMLTextAreaElement>
-				| React.TouchEvent<HTMLInputElement | HTMLTextAreaElement>
-				| React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>
-				| React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
-				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
-		) => {
-			const target = e.currentTarget
-
-			if (document.activeElement !== target) {
-				context.setCursorPosition(null)
-			} else {
-				context.setCursorPosition(target.selectionStart)
-			}
-		},
-		[context]
-	)
-
-	const onFocus = useCallback(
-		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-			context.focusStoreValue()
-
-			checkCursor(e)
-		},
-		[context, checkCursor]
-	)
-	const onBlur = useCallback(
-		(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-			context.blurClearValue()
-
-			checkCursor(e)
-			context.forceHideSuggestions(false)
-		},
-		[context, checkCursor]
-	)
-	const onKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-			if (e.code === 'Escape') {
-				context.forceHideSuggestions(true)
-			} else {
-				checkCursor(e)
-			}
-		},
-		[context, checkCursor]
-	)
-
-	const doOnChange = useCallback(
-		(
-			e:
-				| React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-				| React.FormEvent<HTMLInputElement | HTMLTextAreaElement>
-		) => context.setValue(e.currentTarget.value),
-		[context]
-	)
-
-	return {
-		context,
-		checkCursor,
-		onFocus,
-		onBlur,
-		onKeyDown,
-		doOnChange,
-	}
-}
-
-const CustomValueContainerTextInput = memo((props: ValueContainerProps<DropdownChoiceInt>) => {
-	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
-
-	return (
-		<SelectComponents.ValueContainer {...props} isDisabled>
-			<CFormInput
-				ref={context.inputRef as React.RefObject<HTMLInputElement>}
-				type="text"
-				style={context.extraStyle}
-				title={context.title}
-				value={context.value}
-				onChange={doOnChange}
-				onFocus={onFocus}
-				onBlur={onBlur}
-				placeholder={context.placeholder}
-				onKeyUp={checkCursor}
-				onKeyDown={onKeyDown}
-				onMouseDown={checkCursor}
-				onTouchStart={checkCursor}
-				onInput={checkCursor}
-				onPaste={checkCursor}
-				onCut={checkCursor}
-				onSelect={checkCursor}
-			/>
-		</SelectComponents.ValueContainer>
-	)
-})
-
-const CustomValueContainerTextarea = memo((props: ValueContainerProps<DropdownChoiceInt>) => {
-	const { context, checkCursor, onFocus, onBlur, onKeyDown, doOnChange } = useValueContainerCallbacks()
-
-	return (
-		<SelectComponents.ValueContainer {...props} isDisabled>
-			<CFormTextarea
-				ref={context.inputRef as React.RefObject<HTMLTextAreaElement>}
-				style={context.extraStyle}
-				title={context.title}
-				value={context.value}
-				onChange={doOnChange}
-				onFocus={onFocus}
-				onBlur={onBlur}
-				placeholder={context.placeholder}
-				onKeyUp={checkCursor}
-				onKeyDown={onKeyDown}
-				onMouseDown={checkCursor}
-				onTouchStart={checkCursor}
-				onInput={checkCursor}
-				onPaste={checkCursor}
-				onCut={checkCursor}
-				onSelect={checkCursor}
-			/>
-		</SelectComponents.ValueContainer>
-	)
-})
-
-const CustomSelectComponents = {
-	Option: CustomOption,
-	ValueContainer: CustomValueContainerTextInput,
-	Control: CustomControl,
-	IndicatorsContainer: EmptyComponent,
-	MenuList: WindowedMenuList,
-}
-
-const CustomMultilineSelectComponents = {
-	...CustomSelectComponents,
-	ValueContainer: CustomValueContainerTextarea,
 }
 
 function FindVariableStartIndexFromCursor(text: string, cursor: number): number {

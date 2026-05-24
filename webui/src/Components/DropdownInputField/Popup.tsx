@@ -272,7 +272,12 @@ export function VariableSuggestionPopup({
 		>
 			<Popover.Portal container={menuPortal ?? undefined}>
 				<Popover.Positioner anchor={anchorRef} sideOffset={8} className="dropdown-field-positioner">
-					<Popover.Popup className="dropdown-field-popup" initialFocus={false} finalFocus={false}>
+					<Popover.Popup
+						className="dropdown-field-popup"
+						initialFocus={false}
+						finalFocus={false}
+						onMouseDown={(e) => e.preventDefault()}
+					>
 						{items.length === 0 ? (
 							<div className="dropdown-field-empty">No variables found.</div>
 						) : (
