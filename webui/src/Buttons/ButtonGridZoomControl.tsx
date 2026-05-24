@@ -1,15 +1,8 @@
-import {
-	CDropdown,
-	CDropdownMenu,
-	CDropdownToggle,
-	CFormRange,
-	CInputGroup,
-	CInputGroupText,
-	CLink,
-} from '@coreui/react'
+import { CDropdown, CDropdownMenu, CDropdownToggle, CFormRange, CLink } from '@coreui/react'
 import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Button } from '~/Components/Button.js'
+import { InputGroup, InputGroupText } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type GridZoomController } from './GridZoom.js'
 
@@ -30,7 +23,7 @@ export function ButtonGridZoomControl({
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
 			</CDropdownToggle>
 			<CDropdownMenu>
-				<CInputGroup>
+				<InputGroup>
 					<Button onClick={() => gridZoomController.zoomOut()}>
 						<FontAwesomeIcon icon={faMinus} />
 					</Button>
@@ -46,8 +39,8 @@ export function ButtonGridZoomControl({
 					<Button onClick={() => gridZoomController.zoomIn()}>
 						<FontAwesomeIcon icon={faPlus} />
 					</Button>
-				</CInputGroup>
-				<CInputGroup className="dropdown-item-padding">
+				</InputGroup>
+				<InputGroup className="py-2 px-2">
 					<NumberInputField
 						id={undefined}
 						value={gridZoomValue}
@@ -55,8 +48,8 @@ export function ButtonGridZoomControl({
 						min={ZOOM_MIN}
 						max={ZOOM_MAX}
 					/>
-					<CInputGroupText>%</CInputGroupText>
-				</CInputGroup>
+					<InputGroupText>%</InputGroupText>
+				</InputGroup>
 				<CLink className="dropdown-item" onClick={gridZoomController.zoomReset}>
 					Scale to 100%
 				</CLink>

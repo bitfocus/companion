@@ -1,4 +1,4 @@
-import { CCol, CInputGroup } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,7 +7,7 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form, FormLabel } from '~/Components/Form.js'
+import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField } from '../Components/TextInputField.js'
@@ -129,12 +129,12 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				Rule Name
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CInputGroup>
+				<InputGroup>
 					<TextInputField id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
 					<Button color="warning" onClick={runNow}>
 						Run Now
 					</Button>
-				</CInputGroup>
+				</InputGroup>
 			</CCol>
 
 			<FormLabel htmlFor={cronFieldId} className="col-sm-4 col-form-label col-form-label-sm">

@@ -1,15 +1,18 @@
-import { CFormInput, CInputGroup } from '@coreui/react'
+import { Input } from '@base-ui/react'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import { Button } from '~/Components/Button'
+import { InputGroup } from '~/Components/Form'
 
 export interface SearchBoxProps {
+	className?: string
+	placeholder?: string
 	filter: string
 	setFilter: (filter: string) => void
 }
 
-export function SearchBox({ filter, setFilter }: SearchBoxProps): React.JSX.Element {
+export function SearchBox({ className, placeholder, filter, setFilter }: SearchBoxProps): React.JSX.Element {
 	const updateFilter = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value),
 		[setFilter]
@@ -17,18 +20,18 @@ export function SearchBox({ filter, setFilter }: SearchBoxProps): React.JSX.Elem
 	const clearFilter = useCallback(() => setFilter(''), [setFilter])
 
 	return (
-		<CInputGroup className="searchbox">
-			<CFormInput
+		<InputGroup className={className}>
+			<Input
 				type="text"
-				placeholder="Search ..."
+				className="text-input-field"
+				placeholder={placeholder || 'Search ...'}
 				onChange={updateFilter}
 				value={filter}
-				style={{ fontSize: '1.2em' }}
 				aria-label="Search"
 			/>
 			<Button color="primary" onClick={clearFilter} aria-label="Clear search filter" title="Clear search filter">
 				<FontAwesomeIcon icon={faTimes} />
 			</Button>
-		</CInputGroup>
+		</InputGroup>
 	)
 }

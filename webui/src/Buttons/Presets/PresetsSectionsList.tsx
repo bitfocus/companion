@@ -130,7 +130,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 						</Button>
 					</ButtonGroup>
 				</div>
-				<SearchBox filter={searchQuery} setFilter={setSearchQuery} />
+				<SearchBox filter={searchQuery} setFilter={setSearchQuery} className="mb-2" />
 				{allSections.length === 0 ? (
 					<StaticAlert color="primary">Connection has no presets.</StaticAlert>
 				) : visibleSections.length === 0 && searchQuery ? (

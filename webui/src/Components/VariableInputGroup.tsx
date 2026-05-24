@@ -1,8 +1,9 @@
-import { CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import JSON5 from 'json5'
 import { useEffect, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import { Button } from '~/Components/Button.js'
+import { InputGroup } from './Form.js'
 import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariableInputGroupProps {
@@ -114,7 +115,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 				width: '100%',
 			}}
 		>
-			<CInputGroup
+			<InputGroup
 				ref={groupRef}
 				tabIndex={0}
 				onFocus={handleFocus}
@@ -146,7 +147,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 					onBlur={() => {}} // Prevent input blur from ending editing (handled by group)
 					disabled={disabled}
 				/>
-			</CInputGroup>
+			</InputGroup>
 		</div>
 	)
 }

@@ -166,7 +166,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>
 
-						<SearchBox filter={filter} setFilter={setFilter} />
+						<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
 					</div>
 				</div>
 				<div id="connection_add_search_results">

@@ -1,14 +1,5 @@
-import { CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
-import {
-	faAdd,
-	faArrowLeft,
-	faClone,
-	faCopy,
-	faLayerGroup,
-	faList,
-	faTimes,
-	faTrash,
-} from '@fortawesome/free-solid-svg-icons'
+import { CCol, CRow } from '@coreui/react'
+import { faAdd, faArrowLeft, faClone, faCopy, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -23,6 +14,7 @@ import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -81,8 +73,6 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 	}, [expressionVariablesList.expressionVariables])
 
 	const [filter, setFilter] = useState('')
-	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
 	let filterRegexp: RegExp | null = null
 	if (filter) {
@@ -149,18 +139,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						<CreateCollectionButton />
 					</ButtonGroup>
 
-					<CInputGroup className="variables-table-filter mt-2">
-						<CFormInput
-							type="text"
-							placeholder="Filter ..."
-							onChange={updateFilter}
-							value={filter}
-							style={{ fontSize: '1.2em' }}
-						/>
-						<Button color="primary" onClick={clearFilter} aria-label="Clear search filter" title="Clear search filter">
-							<FontAwesomeIcon icon={faTimes} />
-						</Button>
-					</CInputGroup>
+					<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
 				</div>
 
 				<PanelCollapseHelperProvider

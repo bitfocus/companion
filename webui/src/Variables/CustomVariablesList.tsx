@@ -1,11 +1,10 @@
-import { CFormInput, CInputGroup } from '@coreui/react'
+import { CFormInput } from '@coreui/react'
 import {
 	faArrowLeft,
 	faCompressArrowsAlt,
 	faExpandArrowsAlt,
 	faLayerGroup,
 	faList,
-	faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -21,9 +20,10 @@ import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types'
-import { Form } from '~/Components/Form.js'
+import { Form, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -53,8 +53,6 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	)
 
 	const [filter, setFilter] = useState('')
-	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
 	let filterRegexp: RegExp | null = null
 	if (filter) {
@@ -118,18 +116,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 					</ButtonGroup>
 				</div>
 
-				<CInputGroup className="variables-table-filter">
-					<CFormInput
-						type="text"
-						placeholder="Filter ..."
-						onChange={updateFilter}
-						value={filter}
-						style={{ fontSize: '1.2em' }}
-					/>
-					<Button color="primary" onClick={clearFilter} aria-label="Clear search filter" title="Clear search filter">
-						<FontAwesomeIcon icon={faTimes} />
-					</Button>
-				</CInputGroup>
+				<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
 
 				<div className="variables-table-scroller ">
 					<CustomVariablesTableContextProvider
@@ -243,7 +230,7 @@ function AddVariablePanel() {
 
 	return (
 		<Form onSubmit={doCreateNew}>
-			<CInputGroup>
+			<InputGroup>
 				<CFormInput
 					type="text"
 					value={newName}
@@ -253,7 +240,7 @@ function AddVariablePanel() {
 				<Button color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
 					Add
 				</Button>
-			</CInputGroup>
+			</InputGroup>
 		</Form>
 	)
 }

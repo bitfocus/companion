@@ -11,10 +11,6 @@
 	display: flex;
 	flex-direction: column;
 
-	.variables-table-filter {
-		margin-top: 1rem;
-	}
-
 	.variables-table-scroller {
 		flex: 1;
 		min-height: 0;
@@ -96,19 +92,11 @@
 
 .variables-table-modal-body {
 	// reduce padding above the filter
-	padding-top: 0.5rem;
-
-	.variables-table-filter {
-		padding-top: var(--cui-modal-padding);
-	}
+	padding-top: 0.25rem;
 
 	.variables-table-scroller {
 		max-height: calc(90vh - 10rem);
 	}
-}
-
-.variables-table-filter {
-	margin: 0 0 0.4rem 0;
 }
 
 .variables-table-count {

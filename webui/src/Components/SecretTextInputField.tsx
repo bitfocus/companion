@@ -1,15 +1,18 @@
-import { CFormInput, CInputGroup } from '@coreui/react'
+import { Input } from '@base-ui/react'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Button } from './Button'
+import { InputGroup } from './Form'
 
 interface SecretTextInputFieldProps {
 	id: string | undefined
 	tooltip?: string
 	value: string
-	style?: React.CSSProperties
+	className?: string
+	inputClassName?: string
 	setValue: (value: string) => void
 	checkValid?: (value: string) => boolean
 }
@@ -18,7 +21,8 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 	id,
 	tooltip,
 	value,
-	style,
+	className,
+	inputClassName,
 	setValue,
 	checkValid,
 }: SecretTextInputFieldProps) {
@@ -48,34 +52,32 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 
 	const showValue = (tmpValue ?? value ?? '').toString()
 
-	const extraStyle = useMemo(
-		() => ({ color: !!checkValid && !checkValid(showValue) ? 'red' : undefined, ...style }),
-		[checkValid, showValue, style]
-	)
-
-	// Render the input
 	return (
-		<>
-			<CInputGroup>
-				<CFormInput
-					id={id}
-					type={showSecretValue ? 'text' : 'password'}
-					value={showValue}
-					style={extraStyle}
-					title={tooltip}
-					onChange={doOnChange}
-					onFocus={focusStoreValue}
-					onBlur={blurClearValue}
-				/>
-				<Button
-					color="secondary"
-					title={showSecretValue ? 'Hide secret' : 'Show secret'}
-					aria-label={showSecretValue ? 'Hide secret value' : 'Show secret value'}
-					onClick={toggleShowSecretValue}
-				>
-					<FontAwesomeIcon icon={showSecretValue ? faEyeSlash : faEye} />
-				</Button>
-			</CInputGroup>
-		</>
+		<InputGroup className={className}>
+			<Input
+				id={id}
+				type={showSecretValue ? 'text' : 'password'}
+				className={classNames(
+					'text-input-field',
+					{
+						'invalid-value': !!checkValid && !checkValid(showValue),
+					},
+					inputClassName
+				)}
+				value={showValue}
+				title={tooltip}
+				onChange={doOnChange}
+				onFocus={focusStoreValue}
+				onBlur={blurClearValue}
+			/>
+			<Button
+				color="secondary"
+				title={showSecretValue ? 'Hide secret' : 'Show secret'}
+				aria-label={showSecretValue ? 'Hide secret value' : 'Show secret value'}
+				onClick={toggleShowSecretValue}
+			>
+				<FontAwesomeIcon icon={showSecretValue ? faEyeSlash : faEye} />
+			</Button>
+		</InputGroup>
 	)
 })

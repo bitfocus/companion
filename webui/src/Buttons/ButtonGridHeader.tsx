@@ -1,5 +1,4 @@
 import { Combobox } from '@base-ui/react/combobox'
-import { CInputGroup } from '@coreui/react'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
@@ -9,6 +8,7 @@ import { useCallback, useContext, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
+import { InputGroup } from '~/Components/Form'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy'
@@ -99,7 +99,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 
 	return (
 		<div className="button-grid-header">
-			<CInputGroup>
+			<InputGroup>
 				<Button color="dark" hidden={!changePage} onClick={prevPage}>
 					<FontAwesomeIcon icon={faChevronLeft} />
 				</Button>
@@ -129,7 +129,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 				<Button color="dark" hidden={!changePage} onClick={nextPage}>
 					<FontAwesomeIcon icon={faChevronRight} />
 				</Button>
-			</CInputGroup>
+			</InputGroup>
 			<div className="right-buttons">{children}</div>
 		</div>
 	)
