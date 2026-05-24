@@ -1,7 +1,11 @@
-import type { GroupBase, OptionsOrGroups } from 'react-select'
 import type { Writable } from 'type-fest'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { useComputed } from '~/Resources/util'
+
+export interface GroupBase<Option> {
+	readonly options: readonly Option[]
+	readonly label?: string
+}
 
 export interface DropdownChoiceGroup {
 	label: string
@@ -19,7 +23,7 @@ export interface DropdownChoiceInt {
 	label: string
 }
 
-export type OptionsOrGroupsInt = OptionsOrGroups<DropdownChoiceInt, GroupBase<DropdownChoiceInt>>
+export type OptionsOrGroupsInt = readonly (DropdownChoiceInt | GroupBase<DropdownChoiceInt>)[]
 
 export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 	options: OptionsOrGroupsInt
