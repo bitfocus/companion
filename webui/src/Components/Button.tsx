@@ -151,6 +151,8 @@ export function LinkButtonExternal({
 }
 
 export interface ButtonGroupProps {
+	id?: string
+
 	/**
 	 * A string of all className you want applied to the base component.
 	 */
@@ -162,12 +164,13 @@ export interface ButtonGroupProps {
 }
 
 export function ButtonGroup({
+	id,
 	className,
 	vertical,
 	children,
 }: React.PropsWithChildren<ButtonGroupProps>): React.JSX.Element {
 	return (
-		<div className={classNames(vertical ? 'button-group-vertical' : 'button-group', className)} role="group">
+		<div id={id} className={classNames(vertical ? 'button-group-vertical' : 'button-group', className)} role="group">
 			{children}
 		</div>
 	)

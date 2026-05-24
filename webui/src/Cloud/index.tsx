@@ -1,9 +1,11 @@
-import { CCallout, CCard, CCardBody, CCardHeader, CCol, CFormInput, CFormLabel, CListGroup } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CFormInput, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { memo, useState } from 'react'
+import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
+import { Callout } from '~/Components/Callout.js'
+import { FormLabel } from '~/Components/Form.js'
 import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -114,10 +116,12 @@ interface AuthStateProps {
 function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps) {
 	const logoutMutation = useMutationExt(trpc.cloud.logout.mutationOptions())
 
+	const userId = useId()
+
 	return (
 		<CCol sm={6} className="cloud-auth-state">
-			<CFormLabel>Logged in as</CFormLabel>
-			<CFormInput readOnly type="text" value={authenticatedAs} />
+			<FormLabel htmlFor={userId}>Logged in as</FormLabel>
+			<CFormInput id={userId} readOnly type="text" value={authenticatedAs} />
 			{!cloudActive && (
 				<div className="my-3">
 					<Button
@@ -164,7 +168,7 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 
 				<CCardBody>
 					{cloudActive && (
-						<CCallout color={'info'}>Companion Cloud is currently activated. Deactivate to change regions.</CCallout>
+						<Callout color="info">Companion Cloud is currently activated. Deactivate to change regions.</Callout>
 					)}
 
 					<SwitchInputFieldWithLabel

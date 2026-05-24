@@ -1,10 +1,11 @@
-import { CCol, CForm, CFormLabel, CInputGroup } from '@coreui/react'
-import { useCallback, useRef } from 'react'
+import { CCol, CInputGroup } from '@coreui/react'
+import { useCallback, useId, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -162,18 +163,20 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 
 	const setName = useCallback((val: string) => setValueInner('name', val), [setValueInner])
 
+	const nameFieldId = useId()
+
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
+			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<CCol xs={12}>
-					<CFormLabel>Name</CFormLabel>
+					<FormLabel htmlFor={nameFieldId}>Name</FormLabel>
 					<br />
 					<CInputGroup>
-						<TextInputField setValue={setName} value={options.name} />
+						<TextInputField id={nameFieldId} setValue={setName} value={options.name} />
 						<TestActionsButton controlId={controlId} hidden={!options} />
 					</CInputGroup>
 				</CCol>
-			</CForm>
+			</Form>
 		</CCol>
 	)
 }

@@ -1,9 +1,9 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useId } from 'react'
 import CopyToClipboard from 'react-copy-to-clipboard'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
@@ -17,6 +17,7 @@ import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@co
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -76,6 +77,8 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 		notifier.show(`Copied`, 'Copied to clipboard', 3000)
 	}, [notifier])
 
+	const variableNameId = useId()
+
 	return (
 		<>
 			<div className="entity-cells-wrapper">
@@ -85,11 +88,11 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					</div>
 				)}
 
-				<CForm className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
+				<Form className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
 					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
-								<CFormLabel htmlFor="colFormVariableName" className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={variableNameId} className="col-sm-4 col-form-label col-form-label-sm">
 									Variable name
 									<InlineHelpIcon className="ms-1">
 										The name to give this value as a {localVariablePrefix} variable
@@ -99,9 +102,10 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 											<FontAwesomeIcon icon={faCopy} color="#d50215" />
 										</Button>
 									</CopyToClipboard>
-								</CFormLabel>
+								</FormLabel>
 								<CCol sm={8}>
 									<TextInputField
+										id={variableNameId}
 										value={entity.variableName ?? ''}
 										setValue={service.setVariableName}
 										checkValid={(str) => str === '' || isLabelValid(str)}
@@ -187,7 +191,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								localVariablesStore={localVariablesStore}
 							/>
 						)}
-				</CForm>
+				</Form>
 			</div>
 		</>
 	)
@@ -206,16 +210,19 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 	readonly: boolean
 	service: IEntityEditorActionService
 }) {
+	const invertFieldId = useId()
+
 	if (!localVariablesStore || entity.type !== EntityModelType.Feedback) return null
 
 	return (
 		<MyErrorBoundary>
-			<CFormLabel htmlFor="colFormInvert" className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={invertFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 				Current Value
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
 					<TextInputField
+						id={invertFieldId}
 						disabled={!entity.variableName || readonly}
 						value={
 							stringifyVariableValue(

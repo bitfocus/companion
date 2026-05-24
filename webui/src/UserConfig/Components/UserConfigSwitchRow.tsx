@@ -34,6 +34,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 			<td>
 				<div className="float-right">
 					<SwitchInputField
+						id={undefined} // Future: set this for better accessibility
 						value={invertIfNeeded(!!userConfig.config[field])}
 						setValue={(val) => userConfig.setValue(field, invertIfNeeded(val))}
 					/>

@@ -1,10 +1,11 @@
-import { CCol, CForm, CFormInput, CRow } from '@coreui/react'
+import { CCol, CFormInput, CRow } from '@coreui/react'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { Form } from '~/Components/Form.js'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 
 interface ConfigurePanelProps {
@@ -35,7 +36,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 						<FontAwesomeIcon icon={faCog} />
 					</Button>
 				</h3>
-				<CForm onSubmit={PreventDefaultHandler}>
+				<Form onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={6} xs={12}>
 							<CFormInput
@@ -109,7 +110,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 							/>
 						</CCol>
 					</CRow>
-				</CForm>
+				</Form>
 			</CCol>
 		</CRow>
 	) : (

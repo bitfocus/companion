@@ -1,7 +1,8 @@
-import { CCol, CForm, CFormLabel, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { CCol } from '@coreui/react'
+import { forwardRef, useCallback, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
-import { CModalExt } from '~/Components/CModalExt.js'
+import { Form, FormLabel } from '~/Components/Form.js'
+import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 
@@ -21,12 +22,6 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 
 		const buttonRef = useRef<HTMLButtonElement>(null)
 
-		const buttonFocus = () => {
-			buttonRef.current?.focus()
-		}
-
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setData(null), [])
 		const doAction = useCallback(
 			(e: React.FormEvent) => {
 				if (e) e.preventDefault()
@@ -52,56 +47,65 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 					setNewWhileHeldValue(whileHeld)
 					setData([duration, completeCallback])
 					setShow(true)
-
-					// Focus the button asap. It also gets focused once the open is complete
-					setTimeout(buttonFocus, 50)
 				},
 			}),
 			[]
 		)
 
-		return (
-			<CModalExt visible={show} onClose={doClose} onClosed={onClosed} onOpened={buttonFocus}>
-				<CModalHeader closeButton>
-					<h5>Change delay group properties</h5>
-				</CModalHeader>
-				<CModalBody>
-					<CForm className="row g-sm-2" onSubmit={doAction}>
-						<CFormLabel htmlFor="colFormPressDuration" className="col-sm-4 col-form-label col-form-label-sm">
-							Press duration
-						</CFormLabel>
-						<CCol sm={8}>
-							<NumberInputField
-								id="colFormPressDuration"
-								value={newDurationValue ?? undefined}
-								min={1}
-								step={1}
-								checkValid={newDurationValue !== null && newDurationValue > 0}
-								setValue={setNewDurationValue}
-							/>
-						</CCol>
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) setData(null)
+		}, [])
 
-						<CFormLabel htmlFor="colFormExecuteWhileHeld" className="col-sm-4 col-form-label col-form-label-sm">
-							Execute while held
-						</CFormLabel>
-						<CCol sm={8}>
-							<SwitchInputField
-								id="colFormExecuteWhileHeld"
-								value={!!newWhileHeldValue}
-								setValue={setNewWhileHeldValue}
-							/>
-						</CCol>
-					</CForm>
-				</CModalBody>
-				<CModalFooter>
-					<Button color="secondary" onClick={doClose}>
-						Cancel
-					</Button>
-					<Button ref={buttonRef} color="primary" onClick={doAction}>
-						Save
-					</Button>
-				</CModalFooter>
-			</CModalExt>
+		const pressDurationFieldId = useId()
+		const whileHeldFieldId = useId()
+
+		return (
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup initialFocus={buttonRef}>
+							<Modal.Header closeButton>
+								<Modal.Title>Change delay group properties</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<Form className="row g-sm-2" onSubmit={doAction}>
+									<FormLabel htmlFor={pressDurationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+										Press duration
+									</FormLabel>
+									<CCol sm={8}>
+										<NumberInputField
+											id={pressDurationFieldId}
+											value={newDurationValue ?? undefined}
+											min={1}
+											step={1}
+											checkValid={newDurationValue !== null && newDurationValue > 0}
+											setValue={setNewDurationValue}
+										/>
+									</CCol>
+
+									<FormLabel htmlFor={whileHeldFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+										Execute while held
+									</FormLabel>
+									<CCol sm={8}>
+										<SwitchInputField
+											id={whileHeldFieldId}
+											value={!!newWhileHeldValue}
+											setValue={setNewWhileHeldValue}
+										/>
+									</CCol>
+								</Form>
+							</Modal.Body>
+							<Modal.Footer>
+								<Modal.Close>Cancel</Modal.Close>
+								<Button ref={buttonRef} color="primary" onClick={doAction}>
+									Save
+								</Button>
+							</Modal.Footer>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	}
 )

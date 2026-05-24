@@ -5,7 +5,7 @@ import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
 interface NumberInputFieldProps {
-	id?: string
+	id: string | undefined
 	min?: number
 	max?: number
 	step?: number

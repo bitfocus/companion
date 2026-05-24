@@ -8,7 +8,7 @@
 	font-size: 1.05em;
 	--collapsible-tree-nesting-level: 0;
 
-	.modal-content & {
+	.modal2-content & {
 		// fix color in the Browse Actions/Feedbacks window (AddEntitiesModal) or any modal
 		// override default --cui-modal-color = rgb(37 43 54 /0.95)
 		// unfortunately, we can't simply override that variable here because it sets "color:" on .modal, so we have to override color itself.

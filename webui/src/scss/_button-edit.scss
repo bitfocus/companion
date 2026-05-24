@@ -38,52 +38,6 @@
 	}
 }
 
-.form-label .feature-icons {
-	white-space: nowrap;
-
-	background-color: #ddd;
-	border-radius: 100px; // as much as possible
-
-	margin-left: 3px;
-
-	padding-left: 3px;
-	padding-right: 3px;
-
-	svg {
-		margin-left: 1px;
-		margin-right: 1px;
-
-		font-size: 0.8rem;
-	}
-}
-
-.flex-form {
-	& > div:not(.button-group) {
-		// column
-		margin-bottom: 10px;
-	}
-
-	label {
-		justify-content: left;
-		font-weight: bold;
-		font-size: 0.95em;
-		margin-bottom: 0.15rem;
-
-		svg {
-			margin-left: 5px;
-		}
-	}
-
-	.png-browse {
-		display: block;
-		white-space: nowrap;
-	}
-}
-
-.flex-form-row {
-	margin: 0;
-}
-
 .entity-list,
 .entity-list-drag-layer {
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)
@@ -478,13 +432,13 @@
 }
 
 .layered-style-element-picker-modal {
-	.modal-content {
+	.modal2-content {
 		// height: 65vh;
 		overflow: hidden;
 		max-height: 55vh;
 	}
 
-	.modal-body {
+	.modal2-body {
 		overflow-y: hidden;
 		max-height: 100%;
 

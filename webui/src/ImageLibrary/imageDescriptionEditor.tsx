@@ -10,6 +10,7 @@ interface ImageDescriptionEditorProps {
 }
 
 export const ImageDescriptionEditor = observer(function ImageDescriptionEditor({
+	id,
 	imageName,
 	currentName,
 }: ImageDescriptionEditorProps) {
@@ -30,7 +31,7 @@ export const ImageDescriptionEditor = observer(function ImageDescriptionEditor({
 
 	return (
 		<TextInputField
-			// id={id}
+			id={id}
 			value={localValue}
 			setValue={setLocalValue}
 			onBlur={commitToServer}

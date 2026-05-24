@@ -1,10 +1,10 @@
-import { CCallout } from '@coreui/react'
 import { faArrowRight, faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { createContext, memo, useCallback, useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { Callout } from '~/Components/Callout'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import {
 	useConnectionLeafTree,
@@ -121,10 +121,10 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 					/>
 				)}
 
-				<CCallout color="warning">
+				<Callout color="warning">
 					Not every module provides presets, and you can do a lot more by editing the actions and feedbacks on a button
 					manually.
-				</CCallout>
+				</Callout>
 			</div>
 		</PresetsStoreContext.Provider>
 	)

@@ -1,23 +1,21 @@
-import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import { faEdit } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
+import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
 
 interface ImageNameEditModalProps {
-	visible: boolean
-	onClose: () => void
 	imageName: string
 	currentName: string
-	onNameChanged?: (oldName: string, newName: string) => void
+	onNameChanged: (oldName: string, newName: string) => void
 }
 
 export const ImageNameEditModal = observer(function ImageNameEditModal({
-	visible,
-	onClose,
 	imageName,
 	currentName,
 	onNameChanged,
@@ -25,6 +23,7 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 	const [localValue, setLocalValue] = useState(currentName)
 	const [isSaving, setIsSaving] = useState(false)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
+	const [visible, setVisible] = useState(false)
 
 	// Reset state when modal opens
 	useEffect(() => {
@@ -44,7 +43,7 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 
 		if (localValue === currentName) {
 			// No change, just close
-			onClose()
+			setVisible(false)
 			return
 		}
 
@@ -61,7 +60,7 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 					if (onNameChanged && newName !== currentName) {
 						onNameChanged(currentName, newName)
 					}
-					onClose()
+					setVisible(false)
 				}
 			})
 			.catch((err) => {
@@ -76,13 +75,17 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 			.finally(() => {
 				setIsSaving(false)
 			})
-	}, [setNameMutation, imageName, currentName, localValue, onNameChanged, onClose])
+	}, [setNameMutation, imageName, currentName, localValue, onNameChanged, setVisible])
 
-	const handleCancel = useCallback(() => {
-		setLocalValue(currentName)
-		setErrorMessage(null)
-		onClose()
-	}, [currentName, onClose])
+	const onOpenChangeComplete = useCallback(
+		(open: boolean) => {
+			if (!open) {
+				setLocalValue(currentName)
+				setErrorMessage(null)
+			}
+		},
+		[currentName]
+	)
 
 	const handleValueChange = useCallback((newValue: string) => {
 		setLocalValue(newValue)
@@ -99,28 +102,36 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 	)
 
 	return (
-		<CModal visible={visible} onClose={handleCancel} backdrop="static">
-			<CModalHeader>
-				<CModalTitle>Edit Image name</CModalTitle>
-			</CModalHeader>
-			<CModalBody>
-				<ImageNameInput
-					value={localValue}
-					onChange={handleValueChange}
-					disabled={isSaving}
-					errorMessage={errorMessage}
-					showWarning={true}
-					warningText={warningText}
-				/>
-			</CModalBody>
-			<CModalFooter>
-				<Button type="button" color="secondary" onClick={handleCancel} disabled={isSaving}>
-					Cancel
-				</Button>
-				<Button color="primary" onClick={handleSave} disabled={!canSave || isSaving}>
-					{isSaving ? 'Saving...' : 'Save'}
-				</Button>
-			</CModalFooter>
-		</CModal>
+		<Modal.Root open={visible} onOpenChange={setVisible} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Trigger color="secondary" size="sm" title="Edit Image name">
+				<FontAwesomeIcon icon={faEdit} />
+			</Modal.Trigger>
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup>
+						<Modal.Header closeButton>
+							<Modal.Title>Edit Image name</Modal.Title>
+						</Modal.Header>
+						<Modal.Body>
+							<ImageNameInput
+								value={localValue}
+								onChange={handleValueChange}
+								disabled={isSaving}
+								errorMessage={errorMessage}
+								showWarning={true}
+								warningText={warningText}
+							/>
+						</Modal.Body>
+						<Modal.Footer>
+							<Modal.Close disabled={isSaving}>Cancel</Modal.Close>
+							<Button color="primary" onClick={handleSave} disabled={!canSave || isSaving}>
+								{isSaving ? 'Saving...' : 'Save'}
+							</Button>
+						</Modal.Footer>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
 	)
 })

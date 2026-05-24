@@ -1,4 +1,3 @@
-import { CModalBody, CModalHeader } from '@coreui/react'
 import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { observer } from 'mobx-react-lite'
@@ -6,7 +5,7 @@ import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useS
 import sanitizeHtml from 'sanitize-html'
 import semver from 'semver'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { CModalExt } from '~/Components/CModalExt.js'
+import { Modal } from '~/Components/Modal'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -28,9 +27,6 @@ export const HelpModal = observer(
 
 		const [show, setShow] = useState(false)
 		const [content, setContent] = useState<HelpDisplayInfo | null>(null)
-
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => setContent(null), [])
 
 		useImperativeHandle(
 			ref,
@@ -72,6 +68,12 @@ export const HelpModal = observer(
 			[]
 		)
 
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) {
+				setContent(null)
+			}
+		}, [])
+
 		const contentBaseUrl = content?.baseUrl
 		const marked = useMemo(() => {
 			const marked = new Marked()
@@ -96,16 +98,23 @@ export const HelpModal = observer(
 		const moduleInfo = content && modules.getModuleInfo(content.moduleType, content.moduleId)
 
 		return (
-			<CModalExt scrollable visible={show} onClose={doClose} onClosed={onClosed} size="lg">
-				<CModalHeader closeButton>
-					<h5>
-						Help for {moduleInfo?.display?.name || content?.moduleId} {content?.versionDisplayName ?? ''}
-					</h5>
-				</CModalHeader>
-				<CModalBody>
-					<div dangerouslySetInnerHTML={html} />
-				</CModalBody>
-			</CModalExt>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup size="lg" scrollable>
+							<Modal.Header closeButton>
+								<Modal.Title>
+									Help for {moduleInfo?.display?.name || content?.moduleId} {content?.versionDisplayName ?? ''}
+								</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<div dangerouslySetInnerHTML={html} />
+							</Modal.Body>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	})
 )

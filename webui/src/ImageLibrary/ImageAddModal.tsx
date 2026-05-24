@@ -1,9 +1,9 @@
-import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
+import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
 
@@ -84,10 +84,12 @@ export const ImageAddModal = observer(
 				})
 		}, [createMutation, localValue, onImageCreated])
 
-		const handleCancel = useCallback(() => {
-			setLocalValue('')
-			setErrorMessage(null)
-			setVisible(false)
+		const onOpenChangeComplete = useCallback((open: boolean) => {
+			if (!open) {
+				setLocalValue('')
+				setErrorMessage(null)
+				setVisible(false)
+			}
 		}, [])
 
 		const handleValueChange = useCallback((newValue: string) => {
@@ -106,28 +108,33 @@ export const ImageAddModal = observer(
 		)
 
 		return (
-			<CModal visible={visible} onClose={handleCancel} backdrop="static">
-				<CModalHeader>
-					<CModalTitle>Add New Image</CModalTitle>
-				</CModalHeader>
-				<CModalBody>
-					<ImageNameInput
-						value={localValue}
-						onChange={handleValueChange}
-						disabled={isCreating}
-						errorMessage={errorMessage}
-						helpText={helpText}
-					/>
-				</CModalBody>
-				<CModalFooter>
-					<Button type="button" color="secondary" onClick={handleCancel} disabled={isCreating}>
-						Cancel
-					</Button>
-					<Button color="primary" onClick={handleCreate} disabled={!canCreate || isCreating}>
-						{isCreating ? 'Creating...' : 'Create'}
-					</Button>
-				</CModalFooter>
-			</CModal>
+			<Modal.Root open={visible} onOpenChange={setVisible} onOpenChangeComplete={onOpenChangeComplete}>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup>
+							<Modal.Header closeButton>
+								<Modal.Title>Add New Image</Modal.Title>
+							</Modal.Header>
+							<Modal.Body>
+								<ImageNameInput
+									value={localValue}
+									onChange={handleValueChange}
+									disabled={isCreating}
+									errorMessage={errorMessage}
+									helpText={helpText}
+								/>
+							</Modal.Body>
+							<Modal.Footer>
+								<Modal.Close disabled={isCreating}>Cancel</Modal.Close>
+								<Button color="primary" onClick={handleCreate} disabled={!canCreate || isCreating}>
+									{isCreating ? 'Creating...' : 'Create'}
+								</Button>
+							</Modal.Footer>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
 		)
 	})
 )

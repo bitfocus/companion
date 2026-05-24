@@ -64,6 +64,6 @@
 }
 
 // When a checkbox is disabled, also visually indicate that the label is disabled by reducing its opacity
-.checkbox-field[data-disabled] ~ .form-label {
+.checkbox-field[data-disabled] ~ .form-label2 {
 	opacity: 0.5;
 }

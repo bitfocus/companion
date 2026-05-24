@@ -24,6 +24,7 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 			<td style={{ width: '100%' }}>{label}</td>
 			<td>
 				<SwitchInputField
+					id={undefined} // Future: set this for better accessibility
 					value={userConfig.config[field] === activeValue}
 					setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
 				/>

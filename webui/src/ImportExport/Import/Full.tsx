@@ -1,4 +1,3 @@
-import { CCallout } from '@coreui/react'
 import {
 	faCircleInfo,
 	faClock,
@@ -20,7 +19,9 @@ import type {
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button, LinkButtonExternal } from '~/Components/Button.js'
+import { Callout } from '~/Components/Callout.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
+import { Form } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -202,7 +203,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				<FontAwesomeIcon icon={faCircleInfo} /> Want to import specific buttons or triggers instead? Use the{' '}
 				<strong>Buttons</strong> or <strong>Triggers</strong> tabs at the top.
 			</StaticAlert>
-			<CCallout color="warning">
+			<Callout color="warning">
 				<h5>
 					<FontAwesomeIcon icon={faWarning} /> Before You Proceed
 				</h5>
@@ -213,7 +214,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				<LinkButtonExternal color="warning" href={makeAbsolutePath('/int/export/full')}>
 					<FontAwesomeIcon icon={faDownload} /> Export Current Configuration
 				</LinkButtonExternal>
-			</CCallout>
+			</Callout>
 			<h5>Components</h5>
 			<p>
 				Select the components you want to import. This will{' '}
@@ -221,7 +222,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			</p>
 
 			<form.AppForm>
-				<form
+				<Form
 					className={'flex-form'}
 					onSubmit={(e) => {
 						e.preventDefault()
@@ -358,7 +359,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						import any actions and feedbacks.
 					</StaticAlert>
 
-					<CCallout color="success">
+					<Callout color="success">
 						<h5>Import, Resetting only Selected Components</h5>
 						<p>
 							This option resets <strong>only</strong> the selected components before importing them.
@@ -385,8 +386,8 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								)
 							}}
 						</form.Subscribe>
-					</CCallout>
-					<CCallout color="danger">
+					</Callout>
+					<Callout color="danger">
 						<h5>Full Reset & Import</h5>
 						<p>
 							This option will reset <strong>all</strong> components, including <a href="settings">Settings</a>, before
@@ -415,8 +416,8 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								)
 							}}
 						</form.Subscribe>
-					</CCallout>
-				</form>
+					</Callout>
+				</Form>
 			</form.AppForm>
 		</>
 	)

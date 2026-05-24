@@ -9,8 +9,11 @@
 
 @use 'scss/components/alert';
 @use 'scss/components/button';
+@use 'scss/components/callout';
 @use 'scss/components/checkbox-field';
 @use 'scss/components/dropdown-field';
+@use 'scss/components/form';
+@use 'scss/components/modal';
 @use 'scss/components/number-field';
 @use 'scss/components/number-range';
 @use 'scss/components/switch-field';
@@ -94,11 +97,6 @@ body {
 	.text-muted {
 		color: #ccc !important;
 	}
-}
-
-.modal-body img {
-	// Cap images in modals to be the width of the modal
-	max-width: 100%;
 }
 
 .unstable-warning {

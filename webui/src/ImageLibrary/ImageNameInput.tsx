@@ -1,7 +1,7 @@
-import { CFormLabel } from '@coreui/react'
 import React, { useId } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
+import { FormLabel } from '~/Components/Form.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 
 interface ImageNameInputProps {
@@ -53,12 +53,12 @@ export function ImageNameInput({
 			)}
 
 			<div className="mb-3 row">
-				<CFormLabel htmlFor={labelInputId} className="col-sm-3 col-form-label">
+				<FormLabel htmlFor={labelInputId} className="col-sm-3 col-form-label">
 					Image name
-				</CFormLabel>
+				</FormLabel>
 				<div className="col-sm-9">
 					<TextInputField
-						// id={labelInputId}
+						id={labelInputId}
 						value={value}
 						setValue={onChange}
 						placeholder={placeholder}

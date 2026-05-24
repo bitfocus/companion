@@ -1,12 +1,13 @@
-import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useId } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputField } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
@@ -38,6 +39,11 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 	const isCollapsed = panelCollapseHelper.isPanelCollapsed(null, info.id)
 
 	const value = customVariableValues.get(info.id)
+
+	const persistFieldId = useId()
+	const descriptionFieldId = useId()
+	const currentValueFieldId = useId()
+	const startupValueFieldId = useId()
 
 	return (
 		<div className="editor-grid">
@@ -79,14 +85,14 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 				</>
 			) : (
 				<>
-					<CForm onSubmit={PreventDefaultHandler} className="cell-fields">
+					<Form onSubmit={PreventDefaultHandler} className="cell-fields">
 						<div>
-							<CFormLabel>
+							<FormLabel htmlFor={persistFieldId}>
 								Persist value
 								<InlineHelpIcon className="ms-1">
 									If enabled, variable value will be saved and restored when Companion restarts.
 								</InlineHelpIcon>
-							</CFormLabel>
+							</FormLabel>
 							<div
 								style={{
 									display: 'inline-flex',
@@ -98,35 +104,43 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								}}
 							>
 								<CheckboxInputField
+									id={persistFieldId}
 									value={info.persistCurrentValue}
 									setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
 								/>
 							</div>
 						</div>
 						<CRow>
-							<CFormLabel htmlFor="colFormDescription" className="col-sm-3 align-right">
+							<FormLabel htmlFor={descriptionFieldId} className="col-sm-3 align-right">
 								Description:
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={9}>
 								<TextInputField
+									id={descriptionFieldId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
 									style={{ marginBottom: '0.5rem' }}
 								/>
 							</CCol>
 
-							<CFormLabel htmlFor="colFormCurrentValue" className="col-sm-3 align-right">
+							<FormLabel htmlFor={currentValueFieldId} className="col-sm-3 align-right">
 								Current value:
-							</CFormLabel>
-							<CCol sm={9}>
-								<VariableInputGroup value={value} name={info.id} setCurrentValue={customVariablesApi.setCurrentValue} />
-							</CCol>
-
-							<CFormLabel htmlFor="colFormStartupValue" className="col-sm-3 align-right">
-								Startup value:
-							</CFormLabel>
+							</FormLabel>
 							<CCol sm={9}>
 								<VariableInputGroup
+									id={currentValueFieldId}
+									value={value}
+									name={info.id}
+									setCurrentValue={customVariablesApi.setCurrentValue}
+								/>
+							</CCol>
+
+							<FormLabel htmlFor={startupValueFieldId} className="col-sm-3 align-right">
+								Startup value:
+							</FormLabel>
+							<CCol sm={9}>
+								<VariableInputGroup
+									id={startupValueFieldId}
 									disabled={!!info.persistCurrentValue}
 									value={info.defaultValue}
 									name={info.id}
@@ -134,7 +148,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								/>
 							</CCol>
 						</CRow>
-					</CForm>
+					</Form>
 				</>
 			)}
 		</div>

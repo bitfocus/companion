@@ -233,6 +233,7 @@ function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollecti
 	return (
 		<div className="ms-1">
 			<SwitchInputField
+				id={undefined}
 				value={collection.metaData.enabled}
 				setValue={setEnabled}
 				tooltip={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}
@@ -316,6 +317,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 			<div className="action-buttons w-auto">
 				<ButtonGroup className="ms-1">
 					<SwitchInputField
+						id={undefined}
 						value={item.enabled}
 						setValue={doEnableDisable}
 						tooltip={

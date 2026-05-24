@@ -1,6 +1,6 @@
-import { CCol, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -8,6 +8,7 @@ import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
+import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -48,6 +49,8 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	)
 	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])
 
+	const inputId = useId()
+
 	let control: JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined
 
@@ -56,6 +59,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 		case 'textinput':
 			control = (
 				<TextInputField
+					id={inputId}
 					value={stringifyVariableValue(value) ?? ''}
 					placeholder={definition.placeholder}
 					multiline={definition.multiline}
@@ -73,6 +77,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 			control = (
 				<ExpressionInputField
+					id={inputId}
 					value={stringifyVariableValue(value) ?? ''}
 					localVariables={SurfaceLocalVariables}
 					setValue={setValue2}
@@ -83,6 +88,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 		case 'number':
 			control = (
 				<NumberInputField
+					id={inputId}
 					min={definition.min}
 					max={definition.max}
 					step={definition.step}
@@ -98,13 +104,14 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 		case 'checkbox':
 			control = (
 				<div style={{ marginRight: 40, marginTop: 2 }}>
-					<SwitchInputField value={!!value} setValue={setValue2} tooltip={definition.tooltip} />
+					<SwitchInputField id={inputId} value={!!value} setValue={setValue2} tooltip={definition.tooltip} />
 				</div>
 			)
 			break
 		case 'dropdown':
 			control = (
 				<DropdownInputField
+					htmlName={inputId}
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					regex={definition.regex}
@@ -115,7 +122,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			)
 			break
 		case 'custom-variable':
-			control = <InternalCustomVariableDropdown value={value} setValue={setValue2} includeNone={true} />
+			control = <InternalCustomVariableDropdown id={inputId} value={value} setValue={setValue2} includeNone={true} />
 			break
 		default:
 			control = <p>Unknown field "{fieldType}"</p>
@@ -124,11 +131,11 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={inputId} className="col-sm-4 col-form-label col-form-label-sm">
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8}>
 				{control}
 				{definition.description && <div className="form-text">{definition.description}</div>}

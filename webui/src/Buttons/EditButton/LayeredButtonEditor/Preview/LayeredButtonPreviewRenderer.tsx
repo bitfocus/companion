@@ -1,7 +1,6 @@
-import { CFormLabel } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useRef, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -11,6 +10,7 @@ import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { FormLabel } from '~/Components/Form'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
@@ -64,6 +64,8 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		// setAspectRatio('1:1')
 	}
 
+	const aspectRatioFieldId = useId()
+
 	return (
 		<>
 			<div className="grow flex align-items-center justify-content-center">
@@ -78,8 +80,9 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 				/>
 			</div>
 			<div>
-				<CFormLabel>Preview Aspect Ratio</CFormLabel>
+				<FormLabel htmlFor={aspectRatioFieldId}>Preview Aspect Ratio</FormLabel>
 				<DropdownInputField
+					htmlName={aspectRatioFieldId}
 					allowCustom
 					choices={ASPECT_RATIO_OPTIONS}
 					value={aspectRatio}

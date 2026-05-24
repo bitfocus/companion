@@ -13,6 +13,7 @@ const meta = {
 	component: ColorInputField<'number'>,
 	decorators: [withPortal],
 	args: {
+		id: undefined,
 		value: 0x000000,
 		returnType: 'number',
 		setValue: () => {},

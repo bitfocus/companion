@@ -6,6 +6,7 @@ import { DismissableAlert } from './Alert.js'
 import { PNGInputField } from './PNGInputField.js'
 
 interface PngImageInputFieldProps {
+	id: string | undefined
 	value: string | null
 	setValue: (value: string | null) => void
 	disabled?: boolean
@@ -15,6 +16,7 @@ interface PngImageInputFieldProps {
 }
 
 export function PngImageInputField({
+	id,
 	value,
 	setValue,
 	disabled,
@@ -39,8 +41,9 @@ export function PngImageInputField({
 
 	return (
 		<>
-			<ButtonGroup className="png-browse">
+			<ButtonGroup className="d-block">
 				<PNGInputField
+					id={id}
 					onSelect={setImageDataAndClearError}
 					onError={setImageLoadError}
 					min={min}

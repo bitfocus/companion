@@ -5,6 +5,7 @@ import { CheckboxInputField, CheckboxInputFieldWithLabel } from './CheckboxInput
 const meta = {
 	component: CheckboxInputField,
 	args: {
+		id: undefined,
 		value: false,
 		setValue: () => {},
 		tooltip: '',

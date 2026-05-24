@@ -1,7 +1,8 @@
-import { CCallout, CCol } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { Callout } from '~/Components/Callout'
 import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
 import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -34,7 +35,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 					feedbackListType={null}
 				/>
 			</EntityEditorContextProvider>
-			{sessionInfo.actions.length === 0 ? <CCallout color="info">No actions have been recorded</CCallout> : ''}
+			{sessionInfo.actions.length === 0 ? <Callout color="info">No actions have been recorded</Callout> : ''}
 		</CCol>
 	)
 })

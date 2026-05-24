@@ -12,6 +12,7 @@ import { MenuPortalContext } from './MenuPortalContext.js'
 import { useRegex } from './useRegex.js'
 
 interface VariablePickerFieldProps {
+	htmlName: string | undefined
 	className?: string
 	choices: DropdownChoicesOrGroups
 	allowCustom?: boolean
@@ -27,6 +28,7 @@ interface VariablePickerFieldProps {
  * This means it displays in a "fancy" way with both variable id and label, and searches both fields as well.
  */
 export const VariablePickerField = observer(function VariablePickerField({
+	htmlName,
 	className,
 	choices,
 	allowCustom,
@@ -167,6 +169,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 						onFocus={onInputFocus}
 						onBlur={onInputBlur}
 						onPaste={onPaste}
+						name={htmlName}
 					/>
 					<Combobox.Trigger className="dropdown-field-trigger" ref={triggerRef}>
 						<ChevronDownIcon className="dropdown-field-icon" />

@@ -1,0 +1,46 @@
+.flex-form {
+	& > div:not(.button-group) {
+		// column
+		margin-bottom: 10px;
+	}
+
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 0.95em;
+		margin-bottom: 0.15rem;
+
+		svg {
+			margin-left: 5px;
+		}
+	}
+}
+
+.form-label2 {
+	margin-bottom: 0.5rem;
+	font-weight: bold;
+	align-content: center;
+
+	&.disabled {
+		color: #ccc;
+	}
+
+	.feature-icons {
+		white-space: nowrap;
+
+		background-color: #ddd;
+		border-radius: 100px; // as much as possible
+
+		margin-left: 3px;
+
+		padding-left: 3px;
+		padding-right: 3px;
+
+		svg {
+			margin-left: 1px;
+			margin-right: 1px;
+
+			font-size: 0.8rem;
+		}
+	}
+}

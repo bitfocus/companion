@@ -32,6 +32,7 @@ function renderField(opts: RenderOptions = {}) {
 	const utils = render(
 		<MenuPortalContext.Provider value={document.body}>
 			<ColorInputField
+				id={undefined}
 				returnType={opts.returnType ?? 'number'}
 				value={(opts.value ?? 0xff0000) as never}
 				setValue={setValue as never}

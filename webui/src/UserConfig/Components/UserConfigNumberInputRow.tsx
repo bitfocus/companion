@@ -24,6 +24,7 @@ export const UserConfigNumberInputRow = observer(function UserConfigNumberInputR
 			<td>{label}</td>
 			<td>
 				<NumberInputField
+					id={undefined} // Future: set this for better accessibility
 					value={Number(userConfig.config[field])}
 					min={min}
 					max={max}

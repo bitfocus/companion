@@ -7,6 +7,7 @@ const meta = {
 	component: ExpressionInputField,
 	decorators: [withMockStore],
 	args: {
+		id: undefined,
 		value: '',
 		setValue: () => {},
 	},

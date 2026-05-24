@@ -76,6 +76,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 
 			<div className="flex align-items-center ps-2">
 				<SwitchInputField
+					id={undefined}
 					// disabled={!moduleInfo || !moduleVersion}
 					value={isEnabled}
 					setValue={doToggleEnabled}

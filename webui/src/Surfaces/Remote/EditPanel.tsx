@@ -1,13 +1,14 @@
-import { CCol, CFormInput, CFormLabel, CFormText } from '@coreui/react'
+import { CCol, CFormInput, CFormText } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -89,8 +90,11 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 		doClose()
 	}, [form, doClose])
 
+	const nameFieldId = useId()
+	const integrationFieldId = useId()
+
 	return (
-		<form
+		<Form
 			className="secondary-panel-simple-body d-flex flex-column pb-0"
 			onSubmit={(e) => {
 				e.preventDefault()
@@ -118,9 +122,12 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						}}
 						children={(field) => (
 							<>
-								<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</CFormLabel>
+								<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+									Name
+								</FormLabel>
 								<CCol className="fieldtype-textinput" sm={8}>
 									<CFormInput
+										id={nameFieldId}
 										type="text"
 										style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 										value={field.state.value}
@@ -137,9 +144,11 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Surface Integration</CFormLabel>
+					<FormLabel htmlFor={integrationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						Surface Integration
+					</FormLabel>
 					<CCol sm={8}>
-						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
+						<CFormText id={integrationFieldId}>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
 					</CCol>
 
 					{instanceInfo?.remoteConfigFields?.map((fieldDef) => {
@@ -198,6 +207,6 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					</div>
 				)}
 			/>
-		</form>
+		</Form>
 	)
 })

@@ -24,6 +24,7 @@ export function SearchBox({ filter, setFilter }: SearchBoxProps): React.JSX.Elem
 				onChange={updateFilter}
 				value={filter}
 				style={{ fontSize: '1.2em' }}
+				aria-label="Search"
 			/>
 			<Button color="primary" onClick={clearFilter} aria-label="Clear search filter" title="Clear search filter">
 				<FontAwesomeIcon icon={faTimes} />

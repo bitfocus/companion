@@ -26,27 +26,27 @@ export const BottomRight: Story = { args: { value: 'right:bottom' as CompanionAl
 export const HorizontalAlignment: Story = {
 	render: function Render() {
 		const [value, setValue] = useState('center')
-		return <HorizontalAlignmentInputField value={value} setValue={setValue} />
+		return <HorizontalAlignmentInputField id={undefined} value={value} setValue={setValue} />
 	},
 }
 
 export const HorizontalAlignmentDisabled: Story = {
 	render: function Render() {
 		const [value, setValue] = useState('center')
-		return <HorizontalAlignmentInputField value={value} setValue={setValue} disabled />
+		return <HorizontalAlignmentInputField id={undefined} value={value} setValue={setValue} disabled />
 	},
 }
 
 export const VerticalAlignment: Story = {
 	render: function Render() {
 		const [value, setValue] = useState('center')
-		return <VerticalAlignmentInputField value={value} setValue={setValue} />
+		return <VerticalAlignmentInputField id={undefined} value={value} setValue={setValue} />
 	},
 }
 
 export const VerticalAlignmentDisabled: Story = {
 	render: function Render() {
 		const [value, setValue] = useState('center')
-		return <VerticalAlignmentInputField value={value} setValue={setValue} disabled />
+		return <VerticalAlignmentInputField id={undefined} value={value} setValue={setValue} disabled />
 	},
 }

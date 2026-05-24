@@ -187,6 +187,7 @@ function SurfaceInstancesGroupHeaderContent({ collection }: { collection: Surfac
 	return (
 		<div className="ms-1">
 			<SwitchInputField
+				id={undefined}
 				value={collection.metaData.enabled}
 				setValue={setEnabled}
 				tooltip={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}

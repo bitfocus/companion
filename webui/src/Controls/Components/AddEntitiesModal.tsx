@@ -1,21 +1,20 @@
-import { CFormInput, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
-import { faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
 import { capitalize } from 'lodash-es'
 import { observer } from 'mobx-react-lite'
-import { createContext, forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { Button } from '~/Components/Button.js'
-import { CModalExt } from '~/Components/CModalExt.js'
 import {
 	CollapsibleTree,
 	type CollapsibleTreeHeaderProps,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { Modal } from '~/Components/Modal'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Controls/Components/useConnectionTreeNodes.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
@@ -52,12 +51,9 @@ interface AddEntitiesModalProps {
 	feedbackListType: FeedbackEntitySubType | null
 	entityType: EntityModelType
 	entityTypeLabel: string
+	disabled: boolean
 }
 const EntityTypeLabelContext = createContext<string>('')
-
-export interface AddEntitiesModalRef {
-	show(): void
-}
 
 interface EntityLeafItem {
 	key: string
@@ -84,173 +80,168 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 	)
 })
 
-export const AddEntitiesModal = observer(
-	forwardRef<AddEntitiesModalRef, AddEntitiesModalProps>(function AddFeedbacksModal(
-		{ addEntity, feedbackListType, entityType, entityTypeLabel },
-		ref
-	) {
-		const { entityDefinitions } = useContext(RootAppStoreContext)
+export const AddEntitiesModal = observer(function AddEntitiesModal({
+	addEntity,
+	feedbackListType,
+	entityType,
+	entityTypeLabel,
+	disabled,
+}: AddEntitiesModalProps) {
+	const { entityDefinitions } = useContext(RootAppStoreContext)
 
-		const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
-		const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
+	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
+	const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
-		const [show, setShow] = useState(false)
-		const [filter, setFilter] = useState('')
+	const [show, setShow] = useState(false)
+	const [filter, setFilter] = useState('')
 
-		const doClose = useCallback(() => setShow(false), [])
-		const onClosed = useCallback(() => {
-			setFilter('')
-		}, [])
+	const onOpenChangeComplete = useCallback(() => {
+		setFilter('')
+	}, [])
 
-		useImperativeHandle(
-			ref,
-			() => ({
-				show() {
-					setShow(true)
-					setFilter('')
-				},
-			}),
-			[]
-		)
+	const addAndTrackRecentUsage = useCallback(
+		(connectionAndDefinitionId: string) => {
+			recentlyUsed.trackId(connectionAndDefinitionId)
 
-		const addAndTrackRecentUsage = useCallback(
-			(connectionAndDefinitionId: string) => {
-				recentlyUsed.trackId(connectionAndDefinitionId)
+			const [connectionId, definitionId] = connectionAndDefinitionId.split(':', 2)
+			addEntity(connectionId, definitionId)
+		},
+		[recentlyUsed, addEntity]
+	)
 
-				const [connectionId, definitionId] = connectionAndDefinitionId.split(':', 2)
-				addEntity(connectionId, definitionId)
-			},
-			[recentlyUsed, addEntity]
-		)
-
-		// Filter to only connections that have entity definitions matching our entity type + feedback filter
-		const getEntityLeaves = useCallback(
-			(connectionId: string, connectionInfo: ClientConnectionConfig): EntityLeafItem[] => {
-				const items = definitions.connections.get(connectionId)
-				if (!items || items.size === 0) return []
-
-				const leaves: EntityLeafItem[] = []
-				for (const [id, info] of items.entries()) {
-					if (!info || !info.label) continue
-					if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
-
-					leaves.push({
-						key: `${connectionId}:${id}`,
-						fullId: `${connectionId}:${id}`,
-						label: info.label,
-						searchLabel: `${connectionInfo.label}: ${info.label}`,
-						sortKey: String(info.sortKey ?? info.label),
-						description: info.description,
-					})
-
-					leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
-				}
-				return leaves
-			},
-			[definitions.connections, feedbackListType]
-		)
-
-		const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
-
-		// Build internal connection node if it has matching entities
-		const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
-			const internalItems = definitions.connections.get('internal')
-			if (!internalItems || internalItems.size === 0) return null
+	// Filter to only connections that have entity definitions matching our entity type + feedback filter
+	const getEntityLeaves = useCallback(
+		(connectionId: string, connectionInfo: ClientConnectionConfig): EntityLeafItem[] => {
+			const items = definitions.connections.get(connectionId)
+			if (!items || items.size === 0) return []
 
 			const leaves: EntityLeafItem[] = []
-			for (const [id, info] of internalItems.entries()) {
+			for (const [id, info] of items.entries()) {
 				if (!info || !info.label) continue
 				if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
+
 				leaves.push({
-					key: `internal:${id}`,
-					fullId: `internal:${id}`,
+					key: `${connectionId}:${id}`,
+					fullId: `${connectionId}:${id}`,
 					label: info.label,
-					searchLabel: `internal: ${info.label}`,
-					sortKey: info.sortKey ?? info.label,
+					searchLabel: `${connectionInfo.label}: ${info.label}`,
+					sortKey: String(info.sortKey ?? info.label),
 					description: info.description,
 				})
 			}
 
-			if (leaves.length === 0) return null
+			leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
+			return leaves
+		},
+		[definitions.connections, feedbackListType]
+	)
 
+	const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
+
+	// Build internal connection node if it has matching entities
+	const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
+		const internalItems = definitions.connections.get('internal')
+		if (!internalItems || internalItems.size === 0) return null
+
+		const leaves: EntityLeafItem[] = []
+		for (const [id, info] of internalItems.entries()) {
+			if (!info || !info.label) continue
+			if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
+			leaves.push({
+				key: `internal:${id}`,
+				fullId: `internal:${id}`,
+				label: info.label,
+				searchLabel: `internal: ${info.label}`,
+				sortKey: info.sortKey ?? info.label,
+				description: info.description,
+			})
+		}
+
+		if (leaves.length === 0) return null
+
+		return {
+			id: 'connection:internal',
+			children: [],
+			leaves,
+			metadata: {
+				type: 'connection',
+				connectionId: 'internal',
+				connectionLabel: 'Internal',
+				moduleDisplayName: undefined,
+			},
+		}
+	}, [definitions.connections, feedbackListType])
+
+	// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
+	const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
+	const collapseHelper = usePanelCollapseHelper(null, [], defaultCollapsedFn)
+
+	// When filtering, apply fuzzy search to leaf items in each node
+	const filteredNodes = useComputed(() => {
+		const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
+
+		const res = !filter ? { nodes: rawNodes, ungroupedNodes } : filterTreeNodes(filter, rawNodes, ungroupedNodes)
+
+		// If there are no collections visible, merge ungrouped nodes into the main list
+		// This hides the "Ungrouped Connections" header
+		const hasCollections = res.nodes.some((n) => n.metadata.type === 'collection')
+		if (!hasCollections && res.ungroupedNodes.length > 0) {
 			return {
-				id: 'connection:internal',
-				children: [],
-				leaves,
-				metadata: {
-					type: 'connection',
-					connectionId: 'internal',
-					connectionLabel: 'Internal',
-					moduleDisplayName: undefined,
-				},
+				nodes: [...res.nodes, ...res.ungroupedNodes],
+				ungroupedNodes: [],
 			}
-		}, [definitions.connections, feedbackListType])
+		}
 
-		// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
-		const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
-		const collapseHelper = usePanelCollapseHelper(null, [], defaultCollapsedFn)
+		return res
+	}, [filter, nodes, ungroupedNodes, internalNode])
 
-		// When filtering, apply fuzzy search to leaf items in each node
-		const filteredNodes = useComputed(() => {
-			const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
+	const noResultsContent = useMemo(
+		() => <NonIdealState icon={faSearch} text={`No ${entityTypeLabel}s match your search.`} />,
+		[entityTypeLabel]
+	)
 
-			const res = !filter ? { nodes: rawNodes, ungroupedNodes } : filterTreeNodes(filter, rawNodes, ungroupedNodes)
+	return (
+		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Trigger
+				color="primary"
+				className="rounded-start-0"
+				disabled={disabled}
+				aria-label={`Browse ${capitalize(entityTypeLabel)}s`}
+				title={`Browse ${capitalize(entityTypeLabel)}s`}
+			>
+				<FontAwesomeIcon icon={faFolderOpen} />
+			</Modal.Trigger>
 
-			// If there are no collections visible, merge ungrouped nodes into the main list
-			// This hides the "Ungrouped Connections" header
-			const hasCollections = res.nodes.some((n) => n.metadata.type === 'collection')
-			if (!hasCollections && res.ungroupedNodes.length > 0) {
-				return {
-					nodes: [...res.nodes, ...res.ungroupedNodes],
-					ungroupedNodes: [],
-				}
-			}
-
-			return res
-		}, [filter, nodes, ungroupedNodes, internalNode])
-
-		const noResultsContent = useMemo(
-			() => <NonIdealState icon={faSearch} text={`No ${entityTypeLabel}s match your search.`} />,
-			[entityTypeLabel]
-		)
-
-		return (
-			<EntityTypeLabelContext.Provider value={entityTypeLabel}>
-				<CModalExt visible={show} onClose={doClose} onClosed={onClosed} size="lg" scrollable={true}>
-					<CModalHeader closeButton>
-						<h5>Browse {capitalize(entityTypeLabel)}s</h5>
-					</CModalHeader>
-					<CModalHeader closeButton={false}>
-						<CFormInput
-							type="text"
-							placeholder="Search ..."
-							onChange={(e) => setFilter(e.currentTarget.value)}
-							value={filter}
-							style={{ fontSize: '1.2em' }}
-						/>
-					</CModalHeader>
-					<CModalBody>
-						<CollapsibleTree
-							nodes={filteredNodes.nodes}
-							ungroupedNodes={filteredNodes.ungroupedNodes}
-							ungroupedLabel="Ungrouped Connections"
-							collapseHelper={filter ? null : collapseHelper}
-							HeaderComponent={AddEntityGroupHeader}
-							LeafComponent={AddEntityLeaf}
-							onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
-							noContent={filter ? noResultsContent : undefined}
-						/>
-					</CModalBody>
-					<CModalFooter>
-						<Button color="secondary" onClick={doClose}>
-							Done
-						</Button>
-					</CModalFooter>
-				</CModalExt>
-			</EntityTypeLabelContext.Provider>
-		)
-	})
-)
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup size="lg" scrollable>
+						<Modal.Header closeButton>
+							<Modal.Title>Browse {capitalize(entityTypeLabel)}s</Modal.Title>
+						</Modal.Header>
+						<Modal.Header>
+							<SearchBox filter={filter} setFilter={setFilter} />
+						</Modal.Header>
+						<Modal.Body>
+							<EntityTypeLabelContext.Provider value={entityTypeLabel}>
+								<CollapsibleTree
+									nodes={filteredNodes.nodes}
+									ungroupedNodes={filteredNodes.ungroupedNodes}
+									ungroupedLabel="Ungrouped Connections"
+									collapseHelper={filter ? null : collapseHelper}
+									HeaderComponent={AddEntityGroupHeader}
+									LeafComponent={AddEntityLeaf}
+									onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
+									noContent={filter ? noResultsContent : undefined}
+								/>
+							</EntityTypeLabelContext.Provider>
+						</Modal.Body>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
+	)
+})
 
 /**
  * Filter tree nodes by applying fuzzy search to leaf items.

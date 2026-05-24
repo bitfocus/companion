@@ -6,6 +6,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { Button } from './Button'
 
 interface SecretTextInputFieldProps {
+	id: string | undefined
 	tooltip?: string
 	value: string
 	style?: React.CSSProperties
@@ -14,6 +15,7 @@ interface SecretTextInputFieldProps {
 }
 
 export const SecretTextInputField = observer(function SecretTextInputField({
+	id,
 	tooltip,
 	value,
 	style,
@@ -56,6 +58,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 		<>
 			<CInputGroup>
 				<CFormInput
+					id={id}
 					type={showSecretValue ? 'text' : 'password'}
 					value={showValue}
 					style={extraStyle}

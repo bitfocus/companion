@@ -76,6 +76,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 				<div className="d-flex align-items-center flex-grow-1">
 					{isEditing ? (
 						<TextInputField
+							id={undefined}
 							value={collection.label ?? ''}
 							placeholder={`Give this collection a name`}
 							setValue={handleSetName}

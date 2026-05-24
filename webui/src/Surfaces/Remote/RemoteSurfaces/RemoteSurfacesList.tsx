@@ -131,6 +131,7 @@ function RemoteSurfacesGroupHeaderContent({ collection }: { collection: Outbound
 	return (
 		<div className="ms-1">
 			<SwitchInputField
+				id={undefined}
 				value={collection.metaData.enabled}
 				setValue={setEnabled}
 				tooltip={collection.metaData.enabled ? 'Disable collection' : 'Enable collection'}

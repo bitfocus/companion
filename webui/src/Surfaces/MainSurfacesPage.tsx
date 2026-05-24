@@ -1,4 +1,4 @@
-import { CCallout, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Callout } from '~/Components/Callout'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -146,13 +147,13 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 				<KnownSurfacesTable selectedItemId={selectedSurfaceId} selectItem={selectKnownSurface} />
 
 				<div className="fixed-header">
-					<CCallout color="info">
+					<Callout color="info">
 						Did you know, you can connect a Streamdeck from another computer or Raspberry Pi with{' '}
 						<a target="_blank" rel="noreferrer" href="https://l.companion.free/q/YH8dZkH1Q">
 							Companion Satellite
 						</a>
 						?
-					</CCallout>
+					</Callout>
 				</div>
 			</CCol>
 

@@ -1,11 +1,12 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
-import { faCopy, faDownload, faEdit, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { CCol } from '@coreui/react'
+import { faCopy, faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useRef, useState } from 'react'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -27,7 +28,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 }: ImageLibraryEditorProps) {
 	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
-	const [showNameEditModal, setShowNameEditModal] = useState(false)
 	const [isDragOver, setIsDragOver] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -117,10 +117,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 	const handleImageNameChanged = useCallback(
 		(oldName: string, newName: string) => {
-			setShowNameEditModal(false)
-			if (onImageNameChanged) {
-				onImageNameChanged(oldName, newName)
-			}
+			onImageNameChanged?.(oldName, newName)
 		},
 		[onImageNameChanged]
 	)
@@ -187,14 +184,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		<div className="image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<ImageNameEditModal
-				visible={showNameEditModal}
-				onClose={() => setShowNameEditModal(false)}
-				imageName={selectedImageName}
-				currentName={imageInfo.name}
-				onNameChanged={handleImageNameChanged}
-			/>
-
 			<div className="mb-3">
 				<div className="d-flex flex-wrap gap-2">
 					<Button color="danger" onClick={handleDelete} title="Delete Image">
@@ -220,8 +209,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				/>
 			</div>
 
-			<CForm className="row mb-3">
-				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Name</CFormLabel>
+			<Form className="row mb-3">
+				<div className="form-label col-sm-4 col-form-label col-form-label-sm">Name</div>
 				<CCol sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
 						<span className="font-monospace">{imageInfo.name}</span>
@@ -231,15 +220,18 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 							</Button>
 						</CopyToClipboard>
 					</div>
-					<Button color="secondary" size="sm" onClick={() => setShowNameEditModal(true)} title="Edit Image name">
-						<FontAwesomeIcon icon={faEdit} />
-					</Button>
+
+					<ImageNameEditModal
+						imageName={selectedImageName}
+						currentName={imageInfo.name}
+						onNameChanged={handleImageNameChanged}
+					/>
 				</CCol>
-			</CForm>
-			<CForm className="row mb-3">
-				<CFormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			</Form>
+			<Form className="row mb-3">
+				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Description
-				</CFormLabel>
+				</FormLabel>
 				<CCol sm={8}>
 					<ImageDescriptionEditor
 						id={descriptionFieldId}
@@ -247,7 +239,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						currentName={imageInfo.description}
 					/>
 				</CCol>
-			</CForm>
+			</Form>
 
 			<div
 				className={`image-preview-full ${isDragOver ? 'drag-over' : ''}`}

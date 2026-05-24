@@ -14,6 +14,7 @@ import { CustomOption } from './DropDownInputFancy.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
 interface TextInputFieldProps {
+	id: string | undefined // TODO - use this!
 	tooltip?: string
 	placeholder?: string
 	value: string

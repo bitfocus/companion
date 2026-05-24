@@ -1,22 +1,22 @@
-import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useState } from 'react'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { Button } from '~/Components/Button.js'
+import { Modal } from '~/Components/Modal.js'
 import { ElementPicker } from './ElementPicker.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface AddElementPickerModalProps {
-	isOpen: boolean
-	onClose: () => void
 	onSave: (elementId: string, properties: string[]) => void
 }
 
-export function AddElementPickerModal({ isOpen, onClose, onSave }: AddElementPickerModalProps): React.JSX.Element {
+export function AddElementPickerModal({ onSave }: AddElementPickerModalProps): React.JSX.Element {
 	const { styleStore } = useLayeredStyleElementsContext()
 	const [selectedElementId, setSelectedElementId] = useState<string | null>(null)
 	const [selectedProperties, setSelectedProperties] = useState<string[]>([])
+
+	const [isOpen, setIsOpen] = useState(false)
 
 	const selectedElement = selectedElementId ? styleStore.findElementById(selectedElementId) : null
 	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
@@ -25,14 +25,17 @@ export function AddElementPickerModal({ isOpen, onClose, onSave }: AddElementPic
 		if (selectedElementId && selectedProperties.length > 0) {
 			onSave(selectedElementId, selectedProperties)
 		}
+
+		setIsOpen(false)
 	}, [selectedElementId, selectedProperties, onSave])
 
-	const handleClose = useCallback(() => {
-		// Clear values when canceling
-		setSelectedElementId(null)
-		setSelectedProperties([])
-		onClose()
-	}, [onClose])
+	const onOpenChangeComplete = useCallback((open: boolean) => {
+		if (!open) {
+			// Clear values when canceling
+			setSelectedElementId(null)
+			setSelectedProperties([])
+		}
+	}, [])
 
 	const handleElementSelect = useCallback((elementId: string) => {
 		setSelectedElementId(elementId)
@@ -56,28 +59,38 @@ export function AddElementPickerModal({ isOpen, onClose, onSave }: AddElementPic
 		!!selectedElement && selectedProperties.filter((propId) => selectedSchema?.find((p) => p.id === propId)).length > 0
 
 	return (
-		<CModal visible={isOpen} onClose={handleClose} size="lg" className="layered-style-element-picker-modal">
-			<CModalHeader>
-				<CModalTitle>Add Element Properties</CModalTitle>
-			</CModalHeader>
-			<CModalBody>
-				<ElementPicker
-					selectedElementId={selectedElementId}
-					selectedSchema={selectedSchema}
-					selectedProperties={selectedProperties}
-					onElementSelect={handleElementSelect}
-					onPropertySelect={handlePropertySelect}
-					allowMultipleProperties={true}
-				/>
-			</CModalBody>
-			<CModalFooter>
-				<Button color="secondary" onClick={handleClose}>
-					<FontAwesomeIcon icon={faTimes} /> Cancel
-				</Button>
-				<Button color="primary" onClick={handleSave} disabled={!canSave}>
-					<FontAwesomeIcon icon={faCheck} /> Add Properties
-				</Button>
-			</CModalFooter>
-		</CModal>
+		<Modal.Root open={isOpen} onOpenChange={setIsOpen} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Trigger size="sm" title="Add override" className="py-0" color={null}>
+				<FontAwesomeIcon icon={faPlus} />
+			</Modal.Trigger>
+
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup size="lg" className="layered-style-element-picker-modal">
+						<Modal.Header closeButton>
+							<Modal.Title>Add Element Properties</Modal.Title>
+						</Modal.Header>
+						<Modal.Body>
+							<ElementPicker
+								selectedElementId={selectedElementId}
+								selectedSchema={selectedSchema}
+								selectedProperties={selectedProperties}
+								onElementSelect={handleElementSelect}
+								onPropertySelect={handlePropertySelect}
+								allowMultipleProperties={true}
+							/>
+						</Modal.Body>
+						<Modal.Footer>
+							<Modal.Close>Cancel</Modal.Close>
+
+							<Button color="primary" onClick={handleSave} disabled={!canSave}>
+								Add Properties
+							</Button>
+						</Modal.Footer>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
 	)
 }

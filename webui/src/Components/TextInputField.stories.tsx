@@ -7,6 +7,7 @@ import { TextInputField } from './TextInputField'
 const meta = {
 	component: TextInputField,
 	args: {
+		id: undefined,
 		value: '',
 		setValue: () => {},
 		tooltip: '',

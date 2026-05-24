@@ -20,6 +20,7 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 				<td>
 					<div className="float-right">
 						<SwitchInputField
+							id={undefined}
 							value={window.localStorage.getItem('test_touch_backend') === '1'}
 							setValue={(val) => {
 								window.localStorage.setItem('test_touch_backend', val ? '1' : '0')
@@ -35,6 +36,7 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 				<td>
 					<div className="float-right">
 						<SwitchInputField
+							id={undefined}
 							value={window.localStorage.getItem('show_companion_cloud') === '1'}
 							setValue={(val) => {
 								window.localStorage.setItem('show_companion_cloud', val ? '1' : '0')

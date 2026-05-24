@@ -1,9 +1,9 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef } from 'react'
+import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
@@ -13,6 +13,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { StaticAlert } from '~/Components/Alert'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -126,24 +127,29 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	const setName = useCallback((val: string) => setValueInner('variableName', val), [setValueInner])
 	const setDescription = useCallback((val: string) => setValueInner('description', val), [setValueInner])
 
+	const nameFieldId = useId()
+	const descriptionFieldId = useId()
+
 	return (
 		<CCol sm={12} className="p-0">
-			<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
-				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+				<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Name
 					<InlineHelpIcon className="ms-1">
 						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
 					</InlineHelpIcon>
-				</CFormLabel>
+				</FormLabel>
 				<CCol xs={8}>
-					<TextInputField setValue={setName} value={options.variableName} checkValid={isLabelValid} />
+					<TextInputField id={nameFieldId} setValue={setName} value={options.variableName} checkValid={isLabelValid} />
 				</CCol>
 
-				<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Description</CFormLabel>
+				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+					Description
+				</FormLabel>
 				<CCol xs={8}>
-					<TextInputField setValue={setDescription} value={options.description} />
+					<TextInputField id={descriptionFieldId} setValue={setDescription} value={options.description} />
 				</CCol>
-			</CForm>
+			</Form>
 		</CCol>
 	)
 }
@@ -224,8 +230,10 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 	return (
 		<>
 			<CCol sm={12} className="p-0">
-				<CForm onSubmit={PreventDefaultHandler} className="row flex-form">
-					<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Current Value</CFormLabel>
+				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+					<FormLabel htmlFor={undefined} className="col-sm-4 col-form-label col-form-label-sm">
+						Current Value
+					</FormLabel>
 					<CCol xs={8}>
 						{expressionVariableDefinition?.isActive ? (
 							<ExpressionVariableCurrentValue name={expressionVariableDefinition.variableName} />
@@ -233,7 +241,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
 						)}
 					</CCol>
-				</CForm>
+				</Form>
 			</CCol>
 
 			<div className="editor-grid">

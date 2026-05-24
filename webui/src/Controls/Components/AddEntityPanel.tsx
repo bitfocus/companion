@@ -1,11 +1,8 @@
-import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
-import { Button } from '~/Components/Button.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import { AddEntitiesModal, type AddEntitiesModalRef } from './AddEntitiesModal.js'
+import { AddEntitiesModal } from './AddEntitiesModal.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
 
@@ -23,9 +20,6 @@ export function AddEntityPanel({
 	entityTypeLabel,
 }: AddEntityPanelProps): React.JSX.Element {
 	const { serviceFactory, readonly } = useEntityEditorContext()
-
-	const addEntitiesRef = useRef<AddEntitiesModalRef>(null)
-	const showAddModal = useCallback(() => addEntitiesRef.current?.show(), [])
 
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
@@ -55,17 +49,14 @@ export function AddEntityPanel({
 				feedbackListType={feedbackListType}
 				disabled={readonly}
 			/>
-			<Button color="primary" onClick={showAddModal} className="rounded-start-0" disabled={readonly}>
-				<FontAwesomeIcon icon={faFolderOpen} />
-			</Button>
 
 			<MyErrorBoundary>
 				<AddEntitiesModal
-					ref={addEntitiesRef}
 					addEntity={addEntity}
 					entityType={entityType}
 					feedbackListType={feedbackListType}
 					entityTypeLabel={entityTypeLabel}
+					disabled={readonly}
 				/>
 			</MyErrorBoundary>
 		</div>

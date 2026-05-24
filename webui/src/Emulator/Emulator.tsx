@@ -1,4 +1,4 @@
-import { CCol, CForm, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faCancel, faExpand, faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -7,6 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
 import type { EmulatorConfig } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button.js'
+import { Form } from '~/Components/Form.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -96,7 +97,7 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 	return show && config.emulator_prompt_fullscreen && !fullscreen ? (
 		<CRow className="configure">
 			<CCol sm={12}>
-				<CForm onSubmit={PreventDefaultHandler}>
+				<Form onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol xs={12}>
 							<Button
@@ -111,7 +112,7 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 							</Button>
 						</CCol>
 					</CRow>
-				</CForm>
+				</Form>
 			</CCol>
 		</CRow>
 	) : null

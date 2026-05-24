@@ -101,7 +101,7 @@ export function ElementPicker({
 	return (
 		<>
 			<div className="element-modal-col">
-				<label className="form-label">Element</label>
+				<div className="form-label">Element</div>
 				<div className="element-picker-list border rounded">
 					{styleStore.elements
 						.map((element) => (
@@ -118,7 +118,7 @@ export function ElementPicker({
 			</div>
 
 			<div className="element-modal-col">
-				<label className="form-label">{allowMultipleProperties ? 'Properties (select multiple)' : 'Property'}</label>
+				<div className="form-label">{allowMultipleProperties ? 'Properties (select multiple)' : 'Property'}</div>
 				<div className="element-picker-list border rounded">
 					{!selectedElementId && <div className="text-muted text-center p-3">Select an element first</div>}
 					{selectedElementId && (!selectedSchema || selectedSchema.length === 0) && (

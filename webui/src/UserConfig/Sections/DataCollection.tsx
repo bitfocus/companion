@@ -1,14 +1,10 @@
 import { observer } from 'mobx-react-lite'
-import { useState } from 'react'
-import { Button } from '~/Components/Button.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UsageDataModal } from '../UsageDataModal.js'
 
 export const DataCollectionConfig = observer(function DataCollectionConfig(props: UserConfigProps) {
-	const [showModal, setShowModal] = useState(false)
-
 	return (
 		<>
 			<UserConfigHeadingRow label="Data Collection" />
@@ -34,15 +30,10 @@ export const DataCollectionConfig = observer(function DataCollectionConfig(props
 
 			<tr>
 				<td>View data being collected</td>
-				<td className="text-end">
-					<Button color="primary" size="sm" onClick={() => setShowModal(true)} className="uc-button">
-						View Data
-					</Button>
+				<td className="text-start" colSpan={2}>
+					<UsageDataModal />
 				</td>
-				<td></td>
 			</tr>
-
-			<UsageDataModal show={showModal} onHide={() => setShowModal(false)} />
 		</>
 	)
 })

@@ -1,9 +1,9 @@
-import { CCol, CFormLabel, CInputGroupText } from '@coreui/react'
+import { CCol, CInputGroupText } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -19,6 +19,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -84,8 +85,11 @@ export const OptionsInputField = observer(function OptionsInputField({
 		[option.id, setValue, isExpression]
 	)
 
+	const inputId = useId()
+
 	let control = (
 		<OptionsInputControl
+			inputId={inputId}
 			allowInternalFields={allowInternalFields}
 			isLocatedInGrid={isLocatedInGrid}
 			entityType={entityType}
@@ -103,6 +107,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 		control = (
 			<FieldOrExpression
+				inputId={inputId}
 				localVariablesStore={localVariablesStore}
 				value={rawExpressionValue}
 				setValue={(val) => setValue(option.id, val)}
@@ -125,8 +130,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	return (
 		<>
-			<CFormLabel
-				htmlFor="colFormConnection"
+			<FormLabel
+				htmlFor={inputId}
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
 				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
@@ -137,7 +142,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 						fieldDefinition={option}
 					/>
 				)}
-			</CFormLabel>
+			</FormLabel>
 			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
 				{description && <div className="form-text">{description}</div>}
@@ -147,6 +152,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 })
 
 interface OptionsInputControlProps {
+	inputId: string | undefined
 	allowInternalFields: boolean
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
@@ -159,6 +165,7 @@ interface OptionsInputControlProps {
 }
 
 export const OptionsInputControl = observer(function OptionsInputControl({
+	inputId,
 	allowInternalFields,
 	isLocatedInGrid,
 	entityType,
@@ -185,6 +192,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 			return (
 				<TextInputField
+					id={inputId}
 					value={value as any}
 					placeholder={option.placeholder}
 					useVariables={features?.variables ?? false}
@@ -201,6 +209,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 			return (
 				<ExpressionInputField
+					id={inputId}
 					value={value as any}
 					localVariables={localVariables}
 					disabled={readonly}
@@ -211,6 +220,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'dropdown': {
 			return (
 				<DropdownInputField
+					htmlName={inputId}
 					value={value as any}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -224,6 +234,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'multidropdown': {
 			return (
 				<MultiDropdownInputField
+					htmlName={inputId}
 					value={value as any}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
@@ -239,14 +250,23 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		}
 		case 'checkbox': {
 			if (option.displayToggle) {
-				return <SwitchInputField value={!!value} setValue={setValue} tooltip={option.tooltip} disabled={readonly} />
+				return (
+					<SwitchInputField
+						id={inputId}
+						value={!!value}
+						setValue={setValue}
+						tooltip={option.tooltip}
+						disabled={readonly}
+					/>
+				)
 			} else {
-				return <CheckboxInputField value={value as any} disabled={readonly} setValue={setValue} />
+				return <CheckboxInputField id={inputId} value={value as any} disabled={readonly} setValue={setValue} />
 			}
 		}
 		case 'colorpicker': {
 			return (
 				<ColorInputField
+					id={inputId}
 					value={value as any}
 					disabled={readonly}
 					setValue={setValue}
@@ -259,6 +279,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 		case 'number': {
 			return (
 				<NumberInputField
+					id={inputId}
 					value={value as any}
 					min={option.min}
 					max={option.max}
@@ -273,12 +294,18 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			)
 		}
 		case 'static-text': {
-			return <StaticTextFieldText {...option} />
+			return <StaticTextFieldText {...option} id={inputId} />
 		}
 		case 'custom-variable': {
 			if (entityType === EntityModelType.Action) {
 				return (
-					<InternalCustomVariableDropdown disabled={!!readonly} value={value} setValue={setValue} includeNone={true} />
+					<InternalCustomVariableDropdown
+						id={inputId}
+						disabled={!!readonly}
+						value={value}
+						setValue={setValue}
+						includeNone={true}
+					/>
 				)
 			}
 			break
@@ -291,6 +318,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (allowInternalFields) {
 				const internalControl = InternalModuleField(
+					inputId,
 					option,
 					isLocatedInGrid,
 					localVariablesStore,

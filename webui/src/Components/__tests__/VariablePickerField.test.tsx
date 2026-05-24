@@ -34,6 +34,7 @@ function ControlledPicker({
 	return (
 		<MenuPortalContext.Provider value={document.body}>
 			<VariablePickerField
+				htmlName={undefined}
 				choices={CHOICES}
 				{...rest}
 				value={value}
@@ -366,6 +367,7 @@ describe('onPasteIntercept', () => {
 		render(
 			<MenuPortalContext.Provider value={document.body}>
 				<VariablePickerField
+					htmlName={undefined}
 					choices={CHOICES}
 					value="connection:var_a"
 					setValue={setValue}
@@ -388,6 +390,7 @@ describe('onPasteIntercept', () => {
 		render(
 			<MenuPortalContext.Provider value={document.body}>
 				<VariablePickerField
+					htmlName={undefined}
 					choices={CHOICES}
 					value="connection:var_a"
 					setValue={vi.fn()}
@@ -418,7 +421,7 @@ describe('VariablePickerField — fancy format', () => {
 		const user = userEvent.setup()
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<VariablePickerField choices={fancyChoices} value="internal:time_hms" setValue={vi.fn()} />
+				<VariablePickerField htmlName={undefined} choices={fancyChoices} value="internal:time_hms" setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		await user.click(screen.getByRole('button'))
@@ -431,7 +434,7 @@ describe('VariablePickerField — fancy format', () => {
 		const user = userEvent.setup()
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<VariablePickerField choices={fancyChoices} value="internal:time_hms" setValue={vi.fn()} />
+				<VariablePickerField htmlName={undefined} choices={fancyChoices} value="internal:time_hms" setValue={vi.fn()} />
 			</MenuPortalContext.Provider>
 		)
 		const input = screen.getByRole('combobox')

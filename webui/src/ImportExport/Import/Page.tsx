@@ -1,4 +1,4 @@
-import { CCallout, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
@@ -19,6 +19,7 @@ import {
 } from '~/Buttons/ButtonInfiniteGrid.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
 import { Button } from '~/Components/Button'
+import { Callout } from '~/Components/Callout'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -199,7 +200,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 			<MyErrorBoundary>
 				<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 			</MyErrorBoundary>
-			<CCallout color={pageNumber == -1 ? 'success' : 'warning'}>
+			<Callout color={pageNumber == -1 ? 'success' : 'warning'}>
 				<h5>Import Buttons to Page</h5>
 				<p>
 					Clicking the button below will
@@ -212,7 +213,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 					<FontAwesomeIcon icon={pageNumber == -1 ? faFileCirclePlus : faFileCircleExclamation} />
 					{pageNumber == -1 ? ' Import to new page' : ` Replace page ${pageNumber} with imported page`}
 				</Button>
-			</CCallout>
+			</Callout>
 		</>
 	)
 })
@@ -313,7 +314,12 @@ const ImportRemapRow = observer(function ImportRemapRow({
 	return (
 		<tr>
 			<td>
-				<SimpleDropdownInputField value={connectionRemap[id] ?? ''} setValue={onChange} choices={selectOptions} />
+				<SimpleDropdownInputField
+					id={undefined} // TODO - link up with a label
+					value={connectionRemap[id] ?? ''}
+					setValue={onChange}
+					choices={selectOptions}
+				/>
 			</td>
 			<td>{moduleManifest?.name ?? `Unknown module (${connection.moduleId})`}</td>
 			<td>{connection.label}</td>

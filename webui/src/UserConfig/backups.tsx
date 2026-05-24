@@ -240,6 +240,7 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 			<td className="action-buttons">
 				<ButtonGroup className="ms-2">
 					<SwitchInputField
+						id={undefined}
 						value={rule.enabled}
 						setValue={doEnableDisable}
 						tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}

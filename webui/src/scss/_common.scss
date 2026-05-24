@@ -181,35 +181,6 @@ code {
 	color: #111;
 }
 
-.modal {
-	.modal-dialog {
-		// margin 0 (vertical) prevents the scrollbar on the window (override the CUI default)
-		--cui-modal-margin: 0; // just to be safe. We override the two places it appears to be used here:
-		--top-margin: 4vh;
-		height: calc(100% - var(--top-margin));
-		margin: var(--top-margin) auto 0 auto;
-
-		&.modal-dialog-scrollable {
-			min-height: 15rem; // if the window gets too small fall back to scrolling the window
-		}
-
-		.modal-content {
-			// this one controls the bottom margin correctly.
-			max-height: calc(100% - 0.5rem);
-		}
-	}
-
-	.modal-header {
-		h1,
-		h2,
-		h3,
-		h4,
-		h5 {
-			margin: 0;
-		}
-	}
-}
-
 .markdown {
 	video {
 		width: 100%;
@@ -232,12 +203,6 @@ code {
 	color: #777;
 	text-align: center;
 	padding: 30px !important;
-}
-
-.form-check-label,
-.form-label {
-	font-weight: bold;
-	align-content: center;
 }
 
 .flex {
@@ -290,10 +255,6 @@ code {
 
 .float-right {
 	float: right;
-}
-
-.form-check-label {
-	margin-left: 0.25rem;
 }
 
 table .td-reorder {

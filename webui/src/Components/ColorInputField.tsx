@@ -64,6 +64,7 @@ const toReturnType = <T extends 'string' | 'number'>(
 type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : number
 
 interface ColorInputFieldProps<T extends 'string' | 'number'> {
+	id: string | undefined
 	value: AsType<T>
 	setValue: (value: AsType<T>) => void
 	disabled?: boolean
@@ -73,6 +74,7 @@ interface ColorInputFieldProps<T extends 'string' | 'number'> {
 }
 
 export function ColorInputField<T extends 'string' | 'number'>({
+	id,
 	value,
 	setValue,
 	// disabled,
@@ -146,7 +148,23 @@ export function ColorInputField<T extends 'string' | 'number'>({
 	return (
 		<>
 			<div style={{ lineHeight: 0 }}>
-				<div style={styles.swatch} onClick={handleClick} ref={setReferenceElement}>
+				<div
+					id={id}
+					style={styles.swatch}
+					onClick={handleClick}
+					ref={setReferenceElement}
+					role="button"
+					tabIndex={0}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault()
+							handleClick()
+						}
+					}}
+					aria-expanded={displayPicker}
+					aria-haspopup="dialog"
+					aria-label="Color picker"
+				>
 					<div style={styles.color} />
 				</div>
 				{displayPicker &&

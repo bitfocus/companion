@@ -1,10 +1,10 @@
-import { CCol, CForm, CFormLabel } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -12,6 +12,7 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
@@ -93,7 +94,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 	return (
 		<>
-			<CForm
+			<Form
 				className="secondary-panel-simple-body d-flex flex-column pb-0"
 				onSubmit={(e) => {
 					e.preventDefault()
@@ -161,7 +162,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 					instanceShouldBeRunning={instanceShouldBeRunning}
 					isSaving={isSaving.get()}
 				/>
-			</CForm>
+			</Form>
 		</>
 	)
 })
@@ -180,11 +181,16 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 }: {
 	panelStore: InstanceEditPanelStore<TConfig>
 }): React.JSX.Element {
+	const labelId = useId()
+
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Label</CFormLabel>
+			<FormLabel htmlFor={labelId} className="col-sm-4 col-form-label col-form-label-sm">
+				Label
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<TextInputField
+					id={labelId}
 					setValue={panelStore.setLabelValue}
 					checkValid={panelStore.checkLabelIsValid}
 					value={panelStore.labelValue}
@@ -205,16 +211,21 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 	moduleInfo: ClientModuleInfo | undefined
 	changeModuleDangerMessage: React.ReactNode
 }): React.JSX.Element {
+	const moduleVersionId = useId()
+
 	const moduleVersion = getModuleVersionInfo(moduleInfo, panelStore.instanceInfo.moduleVersionId)
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Module Version</CFormLabel>
+			<FormLabel htmlFor={moduleVersionId} className="col-sm-4 col-form-label col-form-label-sm">
+				Module Version
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<div className="d-flex align-items-center gap-2">
 					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
 					<InstanceVersionChangeButton
+						id={moduleVersionId}
 						service={panelStore.service}
 						currentModuleId={panelStore.instanceInfo.moduleId}
 						currentVersionId={panelStore.instanceInfo.moduleVersionId}
@@ -235,14 +246,19 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	panelStore: InstanceEditPanelStore<TConfig>
 	cannotEnableReason?: string | null
 }): React.JSX.Element {
+	const enabledId = useId()
+
 	const isEnabled = panelStore.enabled
 	const canToggle = !cannotEnableReason || isEnabled
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">Enabled</CFormLabel>
+			<FormLabel htmlFor={enabledId} className="col-sm-4 col-form-label col-form-label-sm">
+				Enabled
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SwitchInputField
+					id={enabledId}
 					value={isEnabled}
 					setValue={panelStore.setEnabled}
 					disabled={!canToggle}
@@ -268,17 +284,19 @@ const UpdatePolicyOptions: DropdownChoice[] = [
 const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField<
 	TConfig extends ClientInstanceConfigBase,
 >({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
+	const updatePolicyId = useId()
+
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={updatePolicyId} className="col-sm-4 col-form-label col-form-label-sm">
 				Update Policy
 				<InlineHelpIcon className="ms-1">
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
 				</InlineHelpIcon>
-			</CFormLabel>
+			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
 				<SimpleDropdownInputField
-					id="colFormUpdatePolicy"
+					id={updatePolicyId}
 					value={panelStore.updatePolicy}
 					setValue={(value) => panelStore.setUpdatePolicy(value as InstanceVersionUpdatePolicy)}
 					choices={UpdatePolicyOptions}
@@ -293,6 +311,8 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 }: {
 	panelStore: InstanceEditPanelStore<TConfig>
 }): React.JSX.Element {
+	const idPrefix = useId()
+
 	const configData = panelStore.configAndSecrets
 
 	if (!configData) {
@@ -314,22 +334,27 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
 
+				const inputId = `${idPrefix}_${fieldInfo.id}`
+
 				const isSecret = isConfigFieldSecret(fieldInfo)
 				return (
 					<InstanceFormRow
 						key={fieldInfo.id}
+						inputId={inputId}
 						fieldInfo={fieldInfo}
 						isVisible={isVisible}
 						useNewLayout={configData.useNewLayout}
 					>
 						{isSecret ? (
 							<InstanceSecretField
+								inputId={inputId}
 								definition={fieldInfo}
 								value={configData.secrets[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
 							/>
 						) : (
 							<InstanceEditField
+								inputId={inputId}
 								definition={fieldInfo}
 								value={configData.config[fieldInfo.id]}
 								setValue={(value) => panelStore.setConfigValue(fieldInfo.id, value)}
@@ -392,12 +417,14 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 })
 
 interface InstanceFormRowProps {
+	inputId: string
 	fieldInfo: SomeCompanionInputField
 	isVisible: boolean
 	useNewLayout: boolean
 }
 
 const InstanceFormRow = observer(function InstanceFormRow({
+	inputId,
 	fieldInfo,
 	isVisible,
 	useNewLayout,
@@ -413,8 +440,8 @@ const InstanceFormRow = observer(function InstanceFormRow({
 			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
 				return (
 					<CCol sm={12}>
-						{fieldInfo.label ? <CFormLabel>{fieldInfo.label}</CFormLabel> : ''}
-						<StaticTextFieldText {...fieldInfo} allowImages />
+						{fieldInfo.label ? <FormLabel htmlFor={inputId}>{fieldInfo.label}</FormLabel> : ''}
+						<StaticTextFieldText {...fieldInfo} id={inputId} allowImages />
 					</CCol>
 				)
 			}
@@ -422,12 +449,13 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 		return (
 			<React.Fragment>
-				<CFormLabel
+				<FormLabel
+					htmlFor={inputId}
 					className="col-sm-4 col-form-label col-form-label-sm"
 					style={{ display: !isVisible ? 'none' : undefined }}
 				>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
-				</CFormLabel>
+				</FormLabel>
 				<CCol sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
 					{children}
 				</CCol>
@@ -443,9 +471,9 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
 			>
-				<CFormLabel>
+				<FormLabel htmlFor={inputId}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
-				</CFormLabel>
+				</FormLabel>
 
 				{children}
 			</CCol>

@@ -1,13 +1,15 @@
-import { CCol, CForm, CFormLabel, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { FormLabel } from '~/Components/Form'
+import { Form } from '~/Components/Form.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -145,6 +147,9 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 		gridRef.current?.resetPosition()
 	}, [gridRef])
 
+	const stepInputId = useId()
+	const setInputId = useId()
+
 	return (
 		<>
 			<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
@@ -166,12 +171,13 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 				)}
 			</div>
 			<div>
-				<CForm className="flex-form" onSubmit={PreventDefaultHandler}>
+				<Form className="flex-form" onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
-							<CFormLabel>Step</CFormLabel>
+							<FormLabel htmlFor={stepInputId}>Step</FormLabel>
 
 							<SimpleDropdownInputField
+								id={stepInputId}
 								choices={actionStepOptions}
 								value={selectedStep ?? ''}
 								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
@@ -179,9 +185,10 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							/>
 						</CCol>
 						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-							<CFormLabel>Action Group</CFormLabel>
+							<FormLabel htmlFor={setInputId}>Action Group</FormLabel>
 
 							<SimpleDropdownInputField
+								id={setInputId}
 								choices={actionSetOptions}
 								value={selectedSet ?? ''}
 								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
@@ -209,7 +216,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 							</ButtonGroup>
 						</CCol>
 					</CRow>
-				</CForm>
+				</Form>
 			</div>
 		</>
 	)
