@@ -161,7 +161,7 @@ export const TextInputField = observer(function TextInputField({
 			id={id}
 			ref={inputRef}
 			type="text"
-			className={classNames('form-control', 'text-input-field', { 'invalid-value': valueIsInvalid }, className)}
+			className={classNames('text-input-field', { 'invalid-value': valueIsInvalid }, className)}
 			render={multiline ? <textarea rows={2} /> : undefined}
 			disabled={disabled}
 			value={showValue}
@@ -188,7 +188,7 @@ export const TextInputField = observer(function TextInputField({
 	if (!useVariables) return input
 
 	return (
-		<div ref={wrapperRef} className="variable-select-root">
+		<div ref={wrapperRef}>
 			{input}
 			<VariableSuggestionPopup
 				open={isPickerOpen}

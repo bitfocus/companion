@@ -1,5 +1,18 @@
+@use '../variables' as *;
+@use '../common'; // updates .form-control background-color (rearranging the @use lines in App.scss doesn't work)
+
 .text-input-field {
-	// TODO - future
+	// Future: replace this with css we control
+	@extend .form-control;
+
+	&:focus {
+		// Dont change background color on focus
+		background-color: inherit;
+	}
+
+	&:read-only {
+		background-color: #eeeeee;
+	}
 
 	&.invalid-value {
 		color: red;

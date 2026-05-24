@@ -51,8 +51,15 @@ function WithEventLog(props: TextInputFieldProps): React.JSX.Element {
 	)
 }
 
+const withMenuPortalDecorator: Decorator = (Story) => (
+	<MenuPortalContext.Provider value={document.body}>
+		<Story />
+	</MenuPortalContext.Provider>
+)
+
 const meta = {
 	component: TextInputField,
+	decorators: [withMockStore, withMenuPortalDecorator],
 	args: {
 		id: undefined,
 		value: '',
@@ -90,21 +97,11 @@ export const Disabled: Story = {
 	args: { value: 'Read-only text', disabled: true },
 }
 
-const withMenuPortalDecorator: Decorator = (Story) => (
-	<MenuPortalContext.Provider value={document.body}>
-		<Story />
-	</MenuPortalContext.Provider>
-)
-
-const withVariablesDecorators: Decorator[] = [withMockStore, withMenuPortalDecorator]
-
 export const WithVariables: Story = {
-	decorators: withVariablesDecorators,
 	args: { useVariables: true, value: '$(internal:time_hms)' },
 }
 
 export const WithVariablesAndLocalVars: Story = {
-	decorators: withVariablesDecorators,
 	args: {
 		useVariables: true,
 		value: '$(local:pressed)',
@@ -116,7 +113,6 @@ export const WithVariablesAndLocalVars: Story = {
 }
 
 export const MultilineWithVariables: Story = {
-	decorators: withVariablesDecorators,
 	args: {
 		useVariables: true,
 		multiline: true,
