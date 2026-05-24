@@ -40,6 +40,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "bowser": "^2.14.1",
     "classnames": "^2.5.1",
+    "copy-to-clipboard": "^4.0.2",
     "crypto-js": "^4.2.0",
     "csv-stringify": "^6.7.0",
     "dayjs": "^1.11.20",

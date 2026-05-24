@@ -1,0 +1,66 @@
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+
+.tooltip2-positioner {
+	z-index: 1080; // above everything
+	pointer-events: none;
+}
+
+.tooltip2-popup {
+	pointer-events: none;
+	position: relative;
+	overflow: visible;
+	background-color: var(--cui-body-color);
+	color: #fff;
+	padding: 1rem 1.25rem;
+	border-radius: 0.375rem;
+	font-size: 0.875rem;
+	white-space: nowrap;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+	&.tooltip2-popup--no-padding {
+		padding: 0.35rem 0.65rem;
+	}
+
+	&.tooltip2-popup--md {
+		width: max-content;
+		max-width: 300px;
+		white-space: normal;
+	}
+
+	&.tooltip2-popup--lg {
+		width: max-content;
+		max-width: 500px;
+		white-space: normal;
+	}
+
+	.tooltip2-arrow {
+		position: absolute;
+		width: 0;
+		height: 0;
+		border-style: solid;
+
+		&[data-side='bottom'] {
+			top: -7px; // 3px overlap into body to guarantee no gap
+			border-width: 0 10px 10px;
+			border-color: transparent transparent var(--cui-body-color) transparent;
+		}
+
+		&[data-side='top'] {
+			bottom: -7px;
+			border-width: 10px 10px 0;
+			border-color: var(--cui-body-color) transparent transparent transparent;
+		}
+
+		&[data-side='right'] {
+			left: -7px;
+			border-width: 10px 10px 10px 0;
+			border-color: transparent var(--cui-body-color) transparent transparent;
+		}
+
+		&[data-side='left'] {
+			right: -7px;
+			border-width: 10px 0 10px 10px;
+			border-color: transparent transparent transparent var(--cui-body-color);
+		}
+	}
+}

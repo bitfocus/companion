@@ -2,8 +2,7 @@ import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
-import { Button } from '~/Components/Button.js'
-import { Tuck } from '~/Components/Tuck.js'
+import { Popover } from '~/Components/Popover.js'
 import { InstancesListTableRow } from '~/Instances/List/InstancesListTableRow.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -63,18 +62,14 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			instance={connection}
 			instanceStatus={connection.status}
 			extraMenuItems={
-				<Button
-					onMouseDown={doShowVariables}
+				<Popover.Item
+					onClick={doShowVariables}
 					title="Variables"
-					color="secondary"
 					disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
-					className="text-start"
 				>
-					<Tuck>
-						<FontAwesomeIcon icon={faDollarSign} />
-					</Tuck>
+					<FontAwesomeIcon icon={faDollarSign} className="me-2" />
 					Variables
-				</Button>
+				</Popover.Item>
 			}
 			labelStr="connection"
 			doDelete={doDelete}

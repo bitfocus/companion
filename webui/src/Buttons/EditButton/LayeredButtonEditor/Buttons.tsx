@@ -1,4 +1,4 @@
-import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CPopover } from '@coreui/react'
+import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
 	faCircle,
@@ -17,9 +17,9 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Tuck } from '~/Components/Tuck.js'
+import { Popover } from '~/Components/Popover'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from './StyleStore.js'
@@ -81,18 +81,14 @@ export function AddElementDropdownButton({
 	controlId: string
 }): React.JSX.Element {
 	return (
-		<CPopover
-			content={<AddElementDropdownPopoverContent styleStore={styleStore} controlId={controlId} />}
-			trigger="focus"
-			animation={false}
-			placement="bottom"
-			style={{ backgroundColor: 'white' }}
-			className="add-layered-element-popover"
-		>
-			<Button size="sm" title="Add element">
+		<Popover.Root>
+			<Popover.Trigger size="sm" title="Add element" color={null}>
 				<FontAwesomeIcon icon={faPlus} />
-			</Button>
-		</CPopover>
+			</Popover.Trigger>
+			<Popover.Popup side="left" arrow align="center">
+				<AddElementDropdownPopoverContent styleStore={styleStore} controlId={controlId} />
+			</Popover.Popup>
+		</Popover.Root>
 	)
 }
 
@@ -124,12 +120,10 @@ function AddElementDropdownPopoverButton({
 	}, [addElementMutation, controlId, elementType, styleStore])
 
 	return (
-		<Button onMouseDown={addCallback} color="secondary" title={`Add ${label}`} className="text-start">
-			<Tuck>
-				<FontAwesomeIcon icon={icon} />
-			</Tuck>
+		<Popover.Item onClick={addCallback} title={`Add ${label}`}>
+			<FontAwesomeIcon icon={icon} className="me-2" />
 			{label}
-		</Button>
+		</Popover.Item>
 	)
 }
 
@@ -165,18 +159,16 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 			<CAccordionItem itemKey={group.connectionId}>
 				<CAccordionHeader onMouseDown={toggleOpen}>{group.connectionLabel}</CAccordionHeader>
 				<CAccordionBody>
-					<ButtonGroup vertical>
-						{group.elements.map(({ elementId, definition }) => (
-							<AddElementDropdownPopoverButton
-								key={`${group.connectionId};${elementId}`}
-								styleStore={styleStore}
-								controlId={controlId}
-								elementType={`${group.connectionId};${elementId}`}
-								label={definition.name}
-								icon={faCube}
-							/>
-						))}
-					</ButtonGroup>
+					{group.elements.map(({ elementId, definition }) => (
+						<AddElementDropdownPopoverButton
+							key={`${group.connectionId};${elementId}`}
+							styleStore={styleStore}
+							controlId={controlId}
+							elementType={`${group.connectionId};${elementId}`}
+							label={definition.name}
+							icon={faCube}
+						/>
+					))}
 				</CAccordionBody>
 			</CAccordionItem>
 		</CAccordion>
@@ -216,51 +208,48 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 
 	return (
 		<>
-			{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-			<ButtonGroup vertical>
-				<AddElementDropdownPopoverButton
-					styleStore={styleStore}
-					controlId={controlId}
-					elementType="group"
-					label="Group"
-					icon={faLayerGroup}
-				/>
-				<AddElementDropdownPopoverButton
-					styleStore={styleStore}
-					controlId={controlId}
-					elementType="text"
-					label="Text"
-					icon={faT}
-				/>
-				<AddElementDropdownPopoverButton
-					styleStore={styleStore}
-					controlId={controlId}
-					elementType="image"
-					label="Image"
-					icon={faImage}
-				/>
-				<AddElementDropdownPopoverButton
-					styleStore={styleStore}
-					controlId={controlId}
-					elementType="box"
-					label="Box"
-					icon={faSquare}
-				/>
-				<AddElementDropdownPopoverButton
-					styleStore={styleStore}
-					controlId={controlId}
-					elementType="line"
-					label="Line"
-					icon={faMinus}
-				/>
-				<AddElementDropdownPopoverButton
-					styleStore={styleStore}
-					controlId={controlId}
-					elementType="circle"
-					label="Circle"
-					icon={faCircle}
-				/>
-			</ButtonGroup>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="group"
+				label="Group"
+				icon={faLayerGroup}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="text"
+				label="Text"
+				icon={faT}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="image"
+				label="Image"
+				icon={faImage}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="box"
+				label="Box"
+				icon={faSquare}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="line"
+				label="Line"
+				icon={faMinus}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="circle"
+				label="Circle"
+				icon={faCircle}
+			/>
 
 			{/* Composite Elements grouped by connection */}
 			{compositeGroups.map((group) => (
