@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import { CCol, CFormLabel, CFormText, CButton, CAlert, CFormInput } from '@coreui/react'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { observer } from 'mobx-react-lite'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useNavigate } from '@tanstack/react-router'
@@ -11,6 +11,8 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { JsonValue } from 'type-fest'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton } from '~/Layout/PanelIcons'
+import classNames from 'classnames'
+import { usePlainOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible'
 
 interface SurfaceEditPanelProps {
 	remoteInfo: OutboundSurfaceInfo
@@ -140,34 +142,47 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						<CFormText>{instanceInfo?.label ?? remoteInfo.instanceId}</CFormText>
 					</CCol>
 
-					{instanceInfo?.remoteConfigFields?.map((fieldDef) => {
-						return (
-							<React.Fragment key={fieldDef.id}>
-								<form.Field
-									name={`config.${fieldDef.id}`}
-									validators={{
-										onChange: ({ value }) => validateInputValue(fieldDef, value).validationError,
-									}}
-									children={(field) => (
-										<>
-											<EditPanelConfigField
-												definition={fieldDef}
-												setValue={(_k, v) => field.handleChange(v)}
-												value={field.state.value}
-											/>
-											{field.state.meta.errors.length > 0 && (
-												<CCol sm={{ offset: 4, span: 8 }}>
-													<CAlert color="warning" className="mt-2">
-														{field.state.meta.errors}
-													</CAlert>
-												</CCol>
-											)}
-										</>
-									)}
-								/>
-							</React.Fragment>
-						)
-					})}
+					<form.Subscribe
+						selector={(state) => state.values.config}
+						children={(config) => (
+							<OptionsVisibility options={instanceInfo?.remoteConfigFields ?? []} values={config}>
+								{(optionVisibility) => (
+									<>
+										{instanceInfo?.remoteConfigFields?.map((fieldDef) => (
+											<React.Fragment key={fieldDef.id}>
+												<form.Field
+													name={`config.${fieldDef.id}`}
+													validators={{
+														onChange: ({ value }) => validateInputValue(fieldDef, value).validationError,
+													}}
+													children={(field) => {
+														const isVisible = optionVisibility.get(fieldDef.id) ?? true
+														return (
+															<>
+																<EditPanelConfigField
+																	definition={fieldDef}
+																	setValue={(_k, v) => field.handleChange(v)}
+																	value={field.state.value}
+																	isVisible={isVisible}
+																/>
+																{field.state.meta.errors.length > 0 && (
+																	<CCol sm={{ offset: 4, span: 8 }} className={classNames({ displayNone: !isVisible })}>
+																		<CAlert color="warning" className="mt-2">
+																			{field.state.meta.errors}
+																		</CAlert>
+																	</CCol>
+																)}
+															</>
+														)
+													}}
+												/>
+											</React.Fragment>
+										))}
+									</>
+								)}
+							</OptionsVisibility>
+						)}
+					/>
 				</div>
 			</div>
 
@@ -198,4 +213,18 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			/>
 		</form>
 	)
+})
+
+// Minimal wrapper component to allow using a hook inside a nested render function
+const OptionsVisibility = observer(function OptionsVisibility({
+	options,
+	values,
+	children,
+}: {
+	options: CompanionSurfaceConfigField[]
+	values: Record<string, JsonValue | undefined>
+	children: (visibility: ReadonlyMap<string, boolean>) => React.ReactNode
+}) {
+	const visibility = usePlainOptionsVisibility(options, values)
+	return <>{children(visibility)}</>
 })

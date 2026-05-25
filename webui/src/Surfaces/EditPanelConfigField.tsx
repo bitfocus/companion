@@ -13,11 +13,13 @@ import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import type { JsonValue } from 'type-fest'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import classNames from 'classnames'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: JsonValue | undefined) => void
 	definition: CompanionSurfaceConfigField
 	value: JsonValue | undefined
+	isVisible: boolean
 }
 
 const SurfaceLocalVariables: DropdownChoiceInt[] = [
@@ -39,6 +41,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	setValue,
 	definition,
 	value,
+	isVisible,
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
 	const checkValid = useCallback(
@@ -124,7 +127,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	return (
 		<>
-			<CFormLabel className="col-sm-4 col-form-label col-form-label-sm">
+			<CFormLabel className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !isVisible })}>
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && (
@@ -133,7 +136,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					</InlineHelp>
 				)}
 			</CFormLabel>
-			<CCol sm={8}>
+			<CCol sm={8} className={classNames({ displayNone: !isVisible })}>
 				{control}
 				{definition.description && <div className="form-text">{definition.description}</div>}
 			</CCol>
