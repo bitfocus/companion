@@ -435,6 +435,17 @@ export class ControlEntityList {
 	}
 
 	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The new storeResult values
+	 */
+	updateStoreResultValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>
+	): ControlEntityInstance[] {
+		return this.#entities.flatMap((entity) => entity.updateStoreResultValues(newValues))
+	}
+
+	/**
 	 * Get all the connection ids that are enabled
 	 */
 	getAllEnabledConnectionIds(connectionIds: Set<string>): void {

@@ -120,4 +120,16 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
+
+	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The new storeResult values
+	 */
+	updateStoreResultValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>): void {
+		this.#actions.updateStoreResultValues(newValues)
+
+		// this.#feedbacks and this.#localVariables contain only feedbacks, not
+		// actions, so do not require updating.
+	}
 }

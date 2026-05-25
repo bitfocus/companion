@@ -35,6 +35,7 @@ import { OptionsInputField } from '../OptionsInputField.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
 import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
+import { StoreResultFields } from './StoreResultFields.js'
 
 interface EntityCommonCellsProps {
 	entity: SomeEntityModel
@@ -179,6 +180,19 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							/>
 						</MyErrorBoundary>
 					))}
+
+					{entityDefinition?.entityType === EntityModelType.Action &&
+						!!entityDefinition.actionHasResult &&
+						!!service.setRawStoreResult && (
+							<StoreResultFields
+								isLocatedInGrid={!!location}
+								controlId={controlId}
+								storeResult={entity.type === EntityModelType.Action ? entity.storeResult : undefined}
+								setStoreResult={service.setRawStoreResult}
+								readonly={readonly}
+								localVariablesStore={localVariablesStore}
+							/>
+						)}
 
 					{!!entity &&
 						entity.type === EntityModelType.Feedback &&

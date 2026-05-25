@@ -1,7 +1,12 @@
 import z from 'zod'
 import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
 import type { ActionSetId } from './ActionModel.js'
-import { ExpressionOrJsonValueSchema, type ExpressionableOptionsObject, type ExpressionOrValue } from './Options.js'
+import {
+	createExpressionOrValueSchema,
+	ExpressionOrJsonValueSchema,
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+} from './Options.js'
 import type { VariableValue } from './Variables.js'
 
 export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
@@ -42,8 +47,43 @@ export function isInternalUserValueFeedback(entity: EntityModelBase): boolean {
 	)
 }
 
+export type RawStoreResultLocalVariable = {
+	readonly type: 'local-variable'
+	readonly location: Readonly<ExpressionOrValue<string>>
+	readonly variableName: Readonly<ExpressionOrValue<string>>
+}
+
+export type RawStoreResultCustomVariable = {
+	readonly type: 'custom-variable'
+	readonly variableName: Readonly<ExpressionOrValue<string>>
+	readonly createIfNotExists: boolean
+}
+
+export type RawStoreResult = RawStoreResultLocalVariable | RawStoreResultCustomVariable
+
+const zodExpressionableString = createExpressionOrValueSchema(z.string())
+
+export const zodRawStoreResult: z.ZodSchema<RawStoreResult> = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('local-variable'),
+		location: zodExpressionableString,
+		variableName: zodExpressionableString,
+	}),
+	z.object({
+		type: z.literal('custom-variable'),
+		variableName: zodExpressionableString,
+		createIfNotExists: z.boolean(),
+	}),
+])
+
 export interface ActionEntityModel extends EntityModelBase {
 	readonly type: EntityModelType.Action
+
+	/**
+	 * If this action returns a result, the target the result should be written
+	 * to.  (Absent means any result is discarded.)
+	 */
+	storeResult?: RawStoreResult
 }
 
 export interface FeedbackEntityModel extends EntityModelBase {

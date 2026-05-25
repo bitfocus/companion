@@ -138,12 +138,16 @@ export type InternalActionDefinition = SetOptional<
 	| 'sortKey'
 	| 'hasLearn'
 	| 'learnTimeout'
+	| 'actionHasResult'
 	| 'showButtonPreview'
 	| 'supportsChildGroups'
 	| 'optionsToMonitorForInvalidations'
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<ClientEntityDefinition, 'entityType' | 'hasLifecycleFunctions' | 'optionsToMonitorForInvalidations'>,
+	Omit<
+		ClientEntityDefinition,
+		'entityType' | 'hasLifecycleFunctions' | 'optionsToMonitorForInvalidations' | 'actionHasResult'
+	>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

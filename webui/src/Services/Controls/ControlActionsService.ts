@@ -72,6 +72,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			performLearn: undefined,
 			setEnabled: undefined,
 			setHeadline: undefined,
+			setRawStoreResult: undefined,
 
 			setInverted: (_entityId: string, _inverted: ExpressionOrValue<boolean>) => {
 				// Not supported

@@ -1,6 +1,8 @@
 import debounceFn from 'debounce-fn'
+import type { ExecuteExpressionResultError } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ExpressionOrValue, JsonValue } from '@companion-module/host'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
@@ -10,6 +12,7 @@ import type {
 	SpecialExpressions,
 	UpdateSpecialExpressionValuesFn,
 } from './SpecialExpressions.js'
+import type { StoreResult } from './Types.js'
 
 export type CreateVariablesAndExpressionParser = (
 	overrideVariableValues: VariableValues | null
@@ -28,6 +31,31 @@ type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
 	logger: Logger
 ) => SpecialExpressions[Expression]
 
+type EvaluationResult<T> = { variableIds: ReadonlySet<string> } & (
+	| { ok: true; value: T }
+	| { ok: false; error: ExecuteExpressionResultError['error'] }
+)
+
+const NoVariables = new Set<string>()
+
+function evaluateBoolean(
+	exprOrVal: ExpressionOrValue<JsonValue>,
+	parser: VariablesAndExpressionParser
+): EvaluationResult<boolean> {
+	if (!exprOrVal.isExpression) {
+		return { ok: true, variableIds: NoVariables, value: !!exprOrVal.value }
+	}
+
+	const parsed = parser.executeExpression(exprOrVal.value, 'boolean')
+	return parsed.ok
+		? { ok: true, variableIds: parsed.variableIds, value: !!parsed.value }
+		: {
+				ok: false,
+				variableIds: parsed.variableIds,
+				error: parsed.error,
+			}
+}
+
 function ComputeIsInverted(
 	entity: ControlEntityInstance,
 	wrapper: EntityWrapper,
@@ -41,24 +69,93 @@ function ComputeIsInverted(
 		isInverted = false
 
 		wrapper.lastReferencedVariableIds = null
-	} else if (!isInvertedExpression.isExpression) {
-		isInverted = !!isInvertedExpression.value
-
-		wrapper.lastReferencedVariableIds = null
 	} else {
-		const parsed = parser.executeExpression(isInvertedExpression.value, 'boolean')
-
-		wrapper.lastReferencedVariableIds = parsed.variableIds
-
-		if (!parsed.ok) {
-			logger.warn(`Failed to parse boolean expression: ${parsed.error}`)
-			isInverted = false
+		const result = evaluateBoolean(isInvertedExpression, parser)
+		if (result.ok) {
+			isInverted = result.value
 		} else {
-			isInverted = !!parsed.value
+			logger.warn(`Failed to parse boolean expression: ${result.error}`)
+			isInverted = false
 		}
+		wrapper.lastReferencedVariableIds = result.variableIds
 	}
 
 	return isInverted
+}
+
+function evaluateString(
+	exprOrVal: ExpressionOrValue<JsonValue>,
+	parser: VariablesAndExpressionParser
+): EvaluationResult<string> {
+	if (!exprOrVal.isExpression) {
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		const parsed = parser.parseVariables(String(exprOrVal.value))
+		return { ok: true, variableIds: parsed.variableIds, value: parsed.text }
+	}
+
+	const parsed = parser.executeExpression(exprOrVal.value, 'string')
+	return parsed.ok
+		? {
+				ok: true,
+				variableIds: parsed.variableIds,
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
+				value: String(parsed.value),
+			}
+		: {
+				ok: false,
+				variableIds: parsed.variableIds,
+				error: parsed.error,
+			}
+}
+
+function ComputeStoreResult(
+	entity: ControlEntityInstance,
+	wrapper: EntityWrapper,
+	parser: VariablesAndExpressionParser,
+	logger: Logger
+): StoreResult | undefined {
+	const rawStoreResult = entity.rawStoreResult
+	if (rawStoreResult === undefined) {
+		wrapper.lastReferencedVariableIds = null
+		return undefined
+	}
+
+	const variableNameResult = evaluateString(rawStoreResult.variableName, parser)
+	let variableName: string
+	if (variableNameResult.ok) {
+		variableName = variableNameResult.value
+	} else {
+		logger.warn(`Failed to parse string expression: ${variableNameResult.error}`)
+		variableName = ''
+	}
+
+	if (rawStoreResult.type === 'local-variable') {
+		const locationResult = evaluateString(rawStoreResult.location, parser)
+
+		let location: string
+		if (locationResult.ok) {
+			location = locationResult.value
+		} else {
+			logger.warn(`Failed to parse string expression: ${locationResult.error}`)
+			location = ''
+		}
+
+		wrapper.lastReferencedVariableIds = locationResult.variableIds.union(variableNameResult.variableIds)
+
+		return {
+			type: 'local-variable',
+			location,
+			variableName,
+		}
+	}
+
+	wrapper.lastReferencedVariableIds = variableNameResult.variableIds
+
+	return {
+		type: 'custom-variable',
+		variableName,
+		createIfNotExists: rawStoreResult.createIfNotExists,
+	}
 }
 
 /**
@@ -97,6 +194,12 @@ export class EntityPoolSpecialExpressionManager {
 				computeNewValueFn: ComputeIsInverted,
 				updateFn: updateFns.isInverted,
 				logger: LogController.createLogger(`Controls/${controlId}/EntityPoolSpecialExpressionManager/isInverted`),
+			},
+			storeResult: {
+				entities: new Map(),
+				computeNewValueFn: ComputeStoreResult,
+				updateFn: updateFns.storeResult,
+				logger: LogController.createLogger(`Controls/${controlId}/EntityPoolSpecialExpressionManager/storeResult`),
 			},
 		}
 	}
@@ -163,8 +266,9 @@ export class EntityPoolSpecialExpressionManager {
 	}
 
 	/**
-	 * Track an entity in the manager.  This will ensure that the entity is
-	 * processed and associated expressions parsed.
+	 * Track a special expression in an entity.  This ensures that the special
+	 * expression's new value is computed whenever the special expression, or the
+	 * value of any variables it depends upon, change.
 	 */
 	trackEntity(entity: ControlEntityInstance, expression: SpecialExpression): void {
 		const { entities, logger } = this.#specialExpressions[expression]
@@ -182,8 +286,8 @@ export class EntityPoolSpecialExpressionManager {
 	}
 
 	/**
-	 * Forget an entity in the manager.  This will remove the entity from the
-	 * manager and abort any pending processing.
+	 * Stop tracking any special expressions in an entity.  This aborts pending
+	 * processing of those special expressions to compute their new values.
 	 */
 	forgetEntity(entityId: string): void {
 		for (const { entities } of Object.values(this.#specialExpressions)) {

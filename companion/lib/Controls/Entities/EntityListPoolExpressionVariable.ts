@@ -97,4 +97,14 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
+
+	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param _newValues The new storeResult values
+	 */
+	override updateStoreResultValues(_newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>): void {
+		// this.#entities and this.#localVariables contain feedbacks, not actions,
+		// so nothing to do
+	}
 }

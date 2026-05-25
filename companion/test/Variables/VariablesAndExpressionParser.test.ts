@@ -28,6 +28,7 @@ function createDefinition(
 		hasLearn: false,
 		learnTimeout: undefined,
 		showInvert: false,
+		actionHasResult: false,
 		feedbackAffectedProperties: undefined,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,

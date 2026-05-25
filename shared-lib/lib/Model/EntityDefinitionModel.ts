@@ -26,6 +26,12 @@ export interface ClientEntityDefinition {
 	showInvert: boolean
 
 	/**
+	 * When an action, whether the action specifies that its callback returns a
+	 * `JsonValue` result.
+	 */
+	actionHasResult: boolean | undefined
+
+	/**
 	 * When an advanced feedback, the properties that should have overrides assigned
 	 */
 	feedbackAffectedProperties: string[] | undefined
