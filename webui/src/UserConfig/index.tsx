@@ -1,13 +1,14 @@
-import { CCard, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
+import { Callout } from '~/Components/Callout'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 
 export function SettingsSelectPage(): React.JSX.Element {
 	return (
 		<CRow className="split-panels">
-			<CCol xl={6} className="primary-panel">
+			<CCol xxl={6} xl={8} lg={10} md={12} className="primary-panel">
 				<div className="d-flex justify-content-between">
 					<div>
 						<h4>Settings</h4>
@@ -50,13 +51,13 @@ function SettingsLinkCard<const TFrom extends string = string, const TTo extends
 }: SettingsLinkCardProps<TFrom, TTo>) {
 	return (
 		<CCol sm={center ? { span: 6, offset: 3 } : 6} className="mb-4">
-			<Link to={to} className="text-decoration-none grid h-100">
-				<CCard>
+			<Link to={to} className="text-decoration-none grid h-100 settings-grid-card">
+				<Callout color="info" className="h-100 flex align-items-center justify-content-center">
 					<NonIdealState icon={icon} style={{ padding: '5vh 1rem' }}>
 						<h3>{label}</h3>
 						{sublabel}
 					</NonIdealState>
-				</CCard>
+				</Callout>
 			</Link>
 		</CCol>
 	)

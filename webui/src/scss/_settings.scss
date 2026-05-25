@@ -45,3 +45,12 @@
 		min-width: 6em;
 	}
 }
+
+.settings-grid-card {
+	color: inherit;
+	display: block;
+
+	> :hover {
+		background-color: #eee;
+	}
+}
