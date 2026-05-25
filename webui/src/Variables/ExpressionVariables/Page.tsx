@@ -1,10 +1,9 @@
 import { CCol, CRow } from '@coreui/react'
-import { faAdd, faArrowLeft, faClone, faCopy, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faArrowLeft, faClone, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
-import CopyToClipboard from 'react-copy-to-clipboard'
 import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientExpressionVariableData,
@@ -12,6 +11,7 @@ import type {
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
+import { CopyButton } from '~/Components/CopyButton'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
@@ -192,8 +192,6 @@ interface ExpressionVariableTableRowProps {
 const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2({
 	item,
 }: ExpressionVariableTableRowProps) {
-	const { notifier } = useContext(RootAppStoreContext)
-
 	const tableContext = useExpressionVariablesTableContext()
 
 	const deleteMutation = useMutationExt(trpc.controls.expressionVariables.delete.mutationOptions())
@@ -229,21 +227,13 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
-	const onCopied = useCallback(() => {
-		notifier.show(`Copied`, 'Copied to clipboard', 5000)
-	}, [notifier])
-
 	return (
 		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
 			<div className="flex flex-column grow">
 				{fullname ? (
 					<span className="variable-style">
 						{fullname}
-						<CopyToClipboard text={fullname} onCopy={onCopied}>
-							<Button size="sm" title="Copy variable name">
-								<FontAwesomeIcon icon={faCopy} color="#d50215" />
-							</Button>
-						</CopyToClipboard>
+						<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={fullname} />
 					</span>
 				) : (
 					<b>Unnamed</b>

@@ -7,7 +7,6 @@ const meta = {
 	component: VariableValueDisplay,
 	args: {
 		value: 'Hello, World!',
-		onCopied: () => {},
 		showIcon: true,
 		showCopy: true,
 		compact: false,

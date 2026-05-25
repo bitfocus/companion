@@ -15,6 +15,7 @@ export type ButtonColor =
 	| 'dark'
 	| 'disabled'
 	| 'link'
+	| 'variable'
 
 interface ButtonVisualProps {
 	className?: string

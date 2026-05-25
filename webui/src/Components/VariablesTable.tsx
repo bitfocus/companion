@@ -1,13 +1,10 @@
-import { faCopy, faSearch } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSearch } from '@fortawesome/free-solid-svg-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef, useState } from 'react'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { useContext, useRef, useState } from 'react'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { Button } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
@@ -16,6 +13,7 @@ import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
 import { StaticAlert } from './Alert.js'
+import { CopyButton } from './CopyButton.js'
 import { SearchBox } from './SearchBox.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
 
@@ -28,7 +26,7 @@ type FuzzyVariableDefinition = VariableDefinitionExt & { fuzzy: ReturnType<typeo
 const nameCollator = new Intl.Collator(undefined, { numeric: true })
 
 export const VariablesTable = observer(function VariablesTable({ label }: VariablesTableProps) {
-	const { notifier, variablesStore } = useContext(RootAppStoreContext)
+	const { variablesStore } = useContext(RootAppStoreContext)
 
 	const [filter, setFilter] = useState('')
 
@@ -46,10 +44,6 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 			fuzzy: fuzzyPrepare(`${def.name} ${def.description}`),
 		}))
 	}, [variablesStore, label])
-
-	const onCopied = useCallback(() => {
-		notifier.show(`Copied`, 'Copied to clipboard', 3000)
-	}, [notifier])
 
 	const [candidates, errorMsg] = useComputed(() => {
 		let candidates: VariableDefinitionExt[] = []
@@ -140,7 +134,6 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 									variable={variable}
 									value={variableValues.get(variable.name)}
 									label={label}
-									onCopied={onCopied}
 									panelCollapseHelper={panelCollapseHelper}
 								/>
 							</div>
@@ -156,7 +149,6 @@ interface VariablesTableRowProps {
 	variable: VariableDefinitionExt
 	label: string
 	value: VariableValue | undefined
-	onCopied: () => void
 	panelCollapseHelper: PanelCollapseHelperLite
 }
 
@@ -164,7 +156,6 @@ const VariablesTableRow = observer(function VariablesTableRow({
 	variable,
 	value,
 	label,
-	onCopied,
 	panelCollapseHelper,
 }: VariablesTableRowProps) {
 	const variableId = `$(${label}:${variable.name})`
@@ -177,11 +168,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 						<span className="variable-style autowrap" title={variableId}>
 							{variableId}
 						</span>
-						<CopyToClipboard text={variableId} onCopy={onCopied}>
-							<Button size="sm" title="Copy variable name">
-								<FontAwesomeIcon icon={faCopy} color="#d50215" />
-							</Button>
-						</CopyToClipboard>
+						<CopyButton size="sm" title="Copy variable name" text={variableId} color="primary" variant="ghost" />
 					</div>
 					<div className="autowrap" title={variable.description}>
 						{variable.description}
@@ -193,7 +180,6 @@ const VariablesTableRow = observer(function VariablesTableRow({
 					value={toJS(value)}
 					collapsePanelId={variable.name}
 					panelCollapseHelper={panelCollapseHelper}
-					onCopied={onCopied}
 				/>
 			</div>
 		</div>

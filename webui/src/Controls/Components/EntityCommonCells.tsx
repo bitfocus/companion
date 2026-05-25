@@ -1,10 +1,8 @@
 import { CCol } from '@coreui/react'
-import { faCopy, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
-import CopyToClipboard from 'react-copy-to-clipboard'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -16,7 +14,7 @@ import {
 import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button.js'
+import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -52,7 +50,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	entityDefinition,
 	service,
 }: EntityCommonCellsProps): React.JSX.Element {
-	const { notifier } = useContext(RootAppStoreContext)
 	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
 	const { connections } = useContext(RootAppStoreContext)
 
@@ -74,10 +71,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 		[service]
 	)
 
-	const onCopied = useCallback(() => {
-		notifier.show(`Copied`, 'Copied to clipboard', 3000)
-	}, [notifier])
-
 	const variableNameId = useId()
 
 	return (
@@ -98,11 +91,14 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									<InlineHelpIcon className="ms-1">
 										The name to give this value as a {localVariablePrefix} variable
 									</InlineHelpIcon>
-									<CopyToClipboard text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`} onCopy={onCopied}>
-										<Button size="sm" title="Copy variable name" className="ps-0">
-											<FontAwesomeIcon icon={faCopy} color="#d50215" />
-										</Button>
-									</CopyToClipboard>
+									<CopyButton
+										size="sm"
+										title="Copy variable name"
+										className="ps-0"
+										color="primary"
+										variant="ghost"
+										text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`}
+									/>
 								</FormLabel>
 								<CCol sm={8}>
 									<TextInputFieldSimple
@@ -257,10 +253,6 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 })
 
 function LocalVariableCurrentValue({ controlId, name }: { controlId: string; name: string }) {
-	const { notifier } = useContext(RootAppStoreContext)
-
-	const onCopied = useCallback(() => notifier.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
-
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
@@ -280,7 +272,7 @@ function LocalVariableCurrentValue({ controlId, name }: { controlId: string; nam
 		return <StaticAlert color="danger">Error: {sub.data.error}</StaticAlert>
 	}
 
-	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />
+	return <VariableValueDisplay value={sub.data.value} />
 }
 
 const FeedbackInvertOption: CompanionInputFieldCheckboxExtended = {

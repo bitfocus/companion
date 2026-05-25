@@ -1,5 +1,5 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
@@ -7,7 +7,6 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useDebounced } from '~/Resources/util.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { StaticAlert } from './Alert.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
@@ -60,10 +59,6 @@ export function ExpressionValuePreview({
 }
 
 function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }: ExpressionValuePreviewProps) {
-	const { notifier } = useContext(RootAppStoreContext)
-
-	const onCopied = useCallback(() => notifier.show('Copied', 'Copied to clipboard', 3000), [notifier])
-
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
@@ -115,12 +110,7 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 
 	return (
 		<div className="mt-1">
-			<VariableValueDisplayPopover
-				value={displayData.value}
-				onCopied={onCopied}
-				showCopy={false}
-				invalidReason={validationResult}
-			/>
+			<VariableValueDisplayPopover value={displayData.value} showCopy={false} invalidReason={validationResult} />
 		</div>
 	)
 }
