@@ -490,6 +490,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							definition={field}
 							value={surfaceConfig.config?.[field.id]}
 							setValue={setSurfaceConfigValue}
+							isVisible
 						/>
 					))}
 
