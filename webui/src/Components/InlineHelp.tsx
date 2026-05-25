@@ -15,7 +15,11 @@ export const InlineHelpCustom = ({
 	return (
 		<Tooltip.Root>
 			<Tooltip.Trigger
-				render={<span className={classnames('inline-help-outer', className)}>{children}</span>}
+				render={
+					<span tabIndex={0} className={classnames('inline-help-outer', className)}>
+						{children}
+					</span>
+				}
 				delay={300}
 				closeDelay={100}
 			/>

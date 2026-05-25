@@ -133,6 +133,7 @@ export function PNGInputField({
 				id={id}
 				className="d-none"
 				type="file"
+				accept={allowNonPng ? 'image/*' : 'image/png'}
 				ref={inputRef}
 				onChange={onChange}
 				disabled={!apiIsSupported || disabled}
