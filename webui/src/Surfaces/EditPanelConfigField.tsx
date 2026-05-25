@@ -1,4 +1,5 @@
 import { CCol } from '@coreui/react'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -20,6 +21,7 @@ interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: JsonValue | undefined) => void
 	definition: CompanionSurfaceConfigField
 	value: JsonValue | undefined
+	isVisible: boolean
 }
 
 const SurfaceLocalVariables: DropdownChoiceInt[] = [
@@ -41,6 +43,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	setValue,
 	definition,
 	value,
+	isVisible,
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
 	const checkValid = useCallback(
@@ -131,12 +134,15 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	return (
 		<>
-			<FormLabel htmlFor={inputId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel
+				htmlFor={inputId}
+				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !isVisible })}
+			>
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
-			<CCol sm={8}>
+			<CCol sm={8} className={classNames({ displayNone: !isVisible })}>
 				{control}
 				{definition.description && <div className="form-text">{definition.description}</div>}
 			</CCol>

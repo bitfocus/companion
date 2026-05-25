@@ -1,16 +1,18 @@
 import { CCol } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
-import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { usePlainOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
@@ -152,34 +154,47 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						<span className="text-muted align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</CCol>
 
-					{instanceInfo?.remoteConfigFields?.map((fieldDef) => {
-						return (
-							<React.Fragment key={fieldDef.id}>
-								<form.Field
-									name={`config.${fieldDef.id}`}
-									validators={{
-										onChange: ({ value }) => validateInputValue(fieldDef, value).validationError,
-									}}
-									children={(field) => (
-										<>
-											<EditPanelConfigField
-												definition={fieldDef}
-												setValue={(_k, v) => field.handleChange(v)}
-												value={field.state.value}
-											/>
-											{field.state.meta.errors.length > 0 && (
-												<CCol sm={{ offset: 4, span: 8 }}>
-													<StaticAlert color="warning" className="mt-2">
-														{field.state.meta.errors}
-													</StaticAlert>
-												</CCol>
-											)}
-										</>
-									)}
-								/>
-							</React.Fragment>
-						)
-					})}
+					<form.Subscribe
+						selector={(state) => state.values.config}
+						children={(config) => (
+							<OptionsVisibility options={instanceInfo?.remoteConfigFields ?? []} values={config}>
+								{(optionVisibility) => (
+									<>
+										{instanceInfo?.remoteConfigFields?.map((fieldDef) => (
+											<React.Fragment key={fieldDef.id}>
+												<form.Field
+													name={`config.${fieldDef.id}`}
+													validators={{
+														onChange: ({ value }) => validateInputValue(fieldDef, value).validationError,
+													}}
+													children={(field) => {
+														const isVisible = optionVisibility.get(fieldDef.id) ?? true
+														return (
+															<>
+																<EditPanelConfigField
+																	definition={fieldDef}
+																	setValue={(_k, v) => field.handleChange(v)}
+																	value={field.state.value}
+																	isVisible={isVisible}
+																/>
+																{field.state.meta.errors.length > 0 && (
+																	<CCol sm={{ offset: 4, span: 8 }} className={classNames({ displayNone: !isVisible })}>
+																		<StaticAlert color="warning" className="mt-2">
+																			{field.state.meta.errors}
+																		</StaticAlert>
+																	</CCol>
+																)}
+															</>
+														)
+													}}
+												/>
+											</React.Fragment>
+										))}
+									</>
+								)}
+							</OptionsVisibility>
+						)}
+					/>
 				</div>
 			</div>
 
@@ -210,4 +225,18 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			/>
 		</Form>
 	)
+})
+
+// Minimal wrapper component to allow using a hook inside a nested render function
+const OptionsVisibility = observer(function OptionsVisibility({
+	options,
+	values,
+	children,
+}: {
+	options: CompanionSurfaceConfigField[]
+	values: Record<string, JsonValue | undefined>
+	children: (visibility: ReadonlyMap<string, boolean>) => React.ReactNode
+}) {
+	const visibility = usePlainOptionsVisibility(options, values)
+	return <>{children(visibility)}</>
 })

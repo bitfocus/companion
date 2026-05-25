@@ -68,6 +68,31 @@ export function useOptionsVisibility(
 	}, [isVisibleFns, optionValues, allowedReferences, optionsSupportExpressions])
 }
 
+export function usePlainOptionsVisibility(
+	itemOptions: Array<SomeCompanionInputField> | undefined | null,
+	optionValues: Record<string, JsonValue | undefined> | undefined | null
+): ReadonlyMap<string, boolean> {
+	return useComputed<ReadonlyMap<string, boolean>>(() => {
+		const visibility = new Map<string, boolean>()
+
+		if (!optionValues) return visibility
+
+		for (const option of itemOptions ?? []) {
+			try {
+				const isVisibleFn = parseIsVisibleFn(option)
+				if (!isVisibleFn) continue
+
+				const simpleOptions = structuredClone(toJS(optionValues))
+				visibility.set(option.id, isVisibleFn(simpleOptions))
+			} catch (e) {
+				console.error('Failed to check visibility', e)
+			}
+		}
+
+		return visibility
+	}, [itemOptions, optionValues])
+}
+
 export function parseIsVisibleFn(option: SomeCompanionInputField): IsVisibleFn | null {
 	try {
 		if (!option.isVisibleUi) return null
