@@ -1,4 +1,4 @@
-import { CCol, CFormInput } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -10,6 +10,7 @@ import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -160,10 +161,11 @@ export const AddInstanceModal = observer(
 											Label&nbsp;
 										</FormLabel>
 										<CCol sm={8}>
-											<CFormInput
+											<TextInputField
 												id={labelFieldId}
 												value={instanceLabel}
-												onChange={(e) => setInstanceLabel(e.currentTarget.value)}
+												setValue={setInstanceLabel}
+												immediateValue
 											/>
 										</CCol>
 

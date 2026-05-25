@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
@@ -8,6 +8,7 @@ import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -104,13 +105,13 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<CFormInput
+													<TextInputFieldSimple
 														id={nameFieldId}
-														type="text"
-														style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 														value={field.state.value}
-														onChange={(e) => field.handleChange(e.target.value)}
+														setValue={field.handleChange}
+														checkValid={field.state.meta.errors.length === 0}
 														onBlur={field.handleBlur}
+														immediateValue
 													/>
 												</CCol>
 											</>
@@ -137,13 +138,13 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 													</InlineHelpIcon>
 												</FormLabel>
 												<CCol className={`fieldtype-textinput`} sm={8}>
-													<CFormInput
+													<TextInputFieldSimple
 														id={idFieldId}
-														type="text"
-														style={{ color: field.state.meta.errors.length ? 'red' : undefined }}
 														value={field.state.value}
-														onChange={(e) => field.handleChange(e.target.value)}
+														setValue={field.handleChange}
+														checkValid={field.state.meta.errors.length === 0}
 														onBlur={field.handleBlur}
+														immediateValue
 													/>
 													{field.state.meta.errors.length > 0 && (
 														<StaticAlert color="warning" className="mt-2">

@@ -1,4 +1,4 @@
-import { CCol, CInputGroup } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,10 +7,10 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form, FormLabel } from '~/Components/Form.js'
+import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
-import { TextInputField } from '../Components/TextInputField.js'
+import { TextInputField, TextInputFieldSimple } from '../Components/TextInputField.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { backupTypes } from './BackupConstants.js'
 
@@ -129,19 +129,19 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				Rule Name
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<CInputGroup>
-					<TextInputField id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
+				<InputGroup>
+					<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
 					<Button color="warning" onClick={runNow}>
 						Run Now
 					</Button>
-				</CInputGroup>
+				</InputGroup>
 			</CCol>
 
 			<FormLabel htmlFor={cronFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 				Cron Schedule
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<TextInputField id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
+				<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
 			</CCol>
 			<CCol className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
 				<small className="form-text text-muted">
@@ -177,7 +177,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				Backup Path
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<TextInputField
+				<TextInputFieldSimple
 					id={backupPathFieldId}
 					value={rule.backupPath}
 					setValue={(value) => updateField('backupPath', value)}

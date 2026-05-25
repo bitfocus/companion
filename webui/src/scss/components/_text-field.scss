@@ -7,7 +7,7 @@
 
 	&:focus {
 		// Dont change background color on focus
-		background-color: inherit;
+		background-color: #ffffff;
 	}
 
 	&:read-only {
@@ -16,5 +16,10 @@
 
 	&.invalid-value {
 		color: red;
+	}
+
+	&.no-focus {
+		outline: none;
+		box-shadow: none;
 	}
 }

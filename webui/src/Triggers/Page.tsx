@@ -1,4 +1,4 @@
-import { CCol, CFormInput, CInputGroup, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faClone,
@@ -6,7 +6,6 @@ import {
 	faFileExport,
 	faLayerGroup,
 	faList,
-	faTimes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,6 +24,7 @@ import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/Co
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
@@ -80,8 +80,6 @@ export const TriggersPage = observer(function Triggers() {
 	}, [triggersList.triggers])
 
 	const [filter, setFilter] = useState('')
-	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
 
 	const TriggerItemRow = (item: TriggerDataWithId) => {
 		// Perform a fuzzy filter to hide irrelevant items
@@ -149,23 +147,7 @@ export const TriggersPage = observer(function Triggers() {
 							</Button>
 						</div>
 
-						<CInputGroup className="variables-table-filter mt-2">
-							<CFormInput
-								type="text"
-								placeholder="Filter ..."
-								onChange={updateFilter}
-								value={filter}
-								style={{ fontSize: '1.2em' }}
-							/>
-							<Button
-								color="primary"
-								onClick={clearFilter}
-								aria-label="Clear search filter"
-								title="Clear search filter"
-							>
-								<FontAwesomeIcon icon={faTimes} />
-							</Button>
-						</CInputGroup>
+						<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
 					</div>
 
 					<div className="scrollable-content">

@@ -1,4 +1,3 @@
-import { CPopover } from '@coreui/react'
 import { faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
@@ -7,6 +6,7 @@ import { Button } from '~/Components/Button.js'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { StaticAlert } from './Alert.js'
+import { Popover } from './Popover.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 
 interface VariableValueDisplay {
@@ -287,6 +287,7 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 }) => {
 	const [expanded, setExpanded] = useState(false)
 	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+	const triggerRef = useRef<HTMLDivElement>(null)
 
 	const cancelClose = useCallback(() => {
 		if (closeTimerRef.current !== null) {
@@ -304,13 +305,30 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 	}, [cancelClose])
 
 	return (
-		<CPopover
-			visible={expanded}
-			onHide={() => setExpanded(false)}
-			placement="bottom"
-			fallbackPlacements={['top', 'bottom', 'right', 'left']}
-			className="variable-value-expanded"
-			content={
+		<Popover.Root open={expanded} onOpenChange={setExpanded}>
+			<div
+				ref={triggerRef}
+				onMouseEnter={() => {
+					cancelClose()
+					setExpanded(true)
+				}}
+				onMouseLeave={scheduleClose}
+				style={{ minWidth: 0 }}
+			>
+				<VariableValueDisplay
+					value={value}
+					onCopied={onCopied}
+					showCopy={showCopy}
+					showIcon={showIcon}
+					icon={icon}
+					compact
+					showHoverTitle={false}
+					invalidReason={invalidReason}
+					panelCollapseHelper={panelCollapseHelper}
+					collapsePanelId={collapsePanelId}
+				/>
+			</div>
+			<Popover.Popup anchor={triggerRef} side="bottom" align="start" arrow className="variable-value-expanded">
 				<div
 					onMouseEnter={cancelClose}
 					onMouseLeave={scheduleClose}
@@ -337,29 +355,7 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 						collapsePanelId={collapsePanelId}
 					/>
 				</div>
-			}
-		>
-			<div
-				onMouseEnter={() => {
-					cancelClose()
-					setExpanded(true)
-				}}
-				onMouseLeave={scheduleClose}
-				style={{ minWidth: 0 }}
-			>
-				<VariableValueDisplay
-					value={value}
-					onCopied={onCopied}
-					showCopy={showCopy}
-					showIcon={showIcon}
-					icon={icon}
-					compact
-					showHoverTitle={false}
-					invalidReason={invalidReason}
-					panelCollapseHelper={panelCollapseHelper}
-					collapsePanelId={collapsePanelId}
-				/>
-			</div>
-		</CPopover>
+			</Popover.Popup>
+		</Popover.Root>
 	)
 }

@@ -10,7 +10,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TabArea } from '~/Components/TabArea.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
@@ -212,7 +212,7 @@ function ActionSetTab({
 			onDoubleClick={showField}
 		>
 			{showInputField ? (
-				<TextInputField
+				<TextInputFieldSimple
 					id={undefined}
 					value={name ?? ''}
 					setValue={renameStep}

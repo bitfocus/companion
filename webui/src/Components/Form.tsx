@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { forwardRef, type FormHTMLAttributes, type LabelHTMLAttributes } from 'react'
+import { forwardRef, type FormHTMLAttributes, type HTMLAttributes, type LabelHTMLAttributes } from 'react'
 
 export interface FormProps extends FormHTMLAttributes<HTMLFormElement> {
 	/**
@@ -35,3 +35,23 @@ export const FormLabel = forwardRef<HTMLLabelElement, FormLabelProps>(({ childre
 		</label>
 	)
 })
+
+export type InputGroupProps = HTMLAttributes<HTMLDivElement>
+
+export const InputGroup = forwardRef<HTMLDivElement, InputGroupProps>(({ children, className, ...rest }, ref) => {
+	return (
+		<div className={classNames('input-group2', className)} {...rest} ref={ref}>
+			{children}
+		</div>
+	)
+})
+
+export const InputGroupText = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+	({ children, className, ...rest }, ref) => {
+		return (
+			<div className={classNames('input-group2-text', className)} {...rest} ref={ref}>
+				{children}
+			</div>
+		)
+	}
+)

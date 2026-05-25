@@ -1,4 +1,4 @@
-import { CCol, CContainer, CFormInput, CProgress, CRow } from '@coreui/react'
+import { CCol, CContainer, CProgress, CRow } from '@coreui/react'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -11,7 +11,8 @@ import { PuffLoader } from 'react-spinners'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
-import { Form } from './Components/Form.js'
+import { Form, InputGroup } from './Components/Form.js'
+import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
 import { MyHeader } from './Layout/Header.js'
@@ -333,18 +334,18 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 				<CCol xxl={4} md={6} sm={8} xs={10}>
 					<h3>Companion is locked</h3>
 					<Form onSubmit={tryLogin}>
-						<div className="login-form">
-							<CFormInput
-								type="password"
+						<InputGroup>
+							<SecretTextInputField
+								id={undefined}
 								value={password}
-								onChange={(e) => passwordChanged(e.currentTarget.value)}
-								invalid={showError}
-								readOnly={!userConfig.properties}
+								setValue={passwordChanged}
+								checkValid={showError ? false : undefined}
+								immediateValue
 							/>
 							<Button type="submit" color="primary">
 								Unlock
 							</Button>
-						</div>
+						</InputGroup>
 					</Form>
 				</CCol>
 			</CRow>

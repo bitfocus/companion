@@ -1,11 +1,11 @@
-import { CDropdownDivider, CDropdownItem, CDropdownMenu } from '@coreui/react'
 import { type IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import { faExternalLinkSquare } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link, type LinkOptions } from '@tanstack/react-router'
-import { type ElementType, type ReactElement } from 'react'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
+import { useNavigate, type LinkOptions } from '@tanstack/react-router'
+import copy from 'copy-to-clipboard'
+import { type ReactElement } from 'react'
+import { Popover } from './Popover.js'
 
 // provide a declarative menu specification:
 interface MenuItemBaseProps {
@@ -15,7 +15,11 @@ interface MenuItemBaseProps {
 	readonly fullWidth?: boolean
 	readonly tooltip?: string
 	readonly inNewTab?: boolean
-	readonly copyToClipboard?: Omit<CopyToClipboard.Props, 'children'>
+	readonly copyToClipboard?: {
+		text: string
+		onCopy?: (text: string, result: boolean) => void
+		options?: { debug?: boolean; message?: string; format?: string }
+	}
 }
 
 interface MenuFnItemProps extends MenuItemBaseProps {
@@ -47,74 +51,98 @@ interface MenuSeparatorProps {
 
 export type MenuItemProps = MenuActionItemProps | MenuSeparatorProps
 
-export interface MenuItemList {
-	readonly menuItems: MenuItemProps[]
-	readonly style?: React.CSSProperties
-}
-
-export function ActionMenu({ menuItems, style }: MenuItemList): React.JSX.Element {
+export function PopoverActionMenu({ menuItems }: { menuItems: MenuItemProps[] }): React.JSX.Element {
+	const noIcons = menuItems.every((item) => 'isSeparator' in item || item.icon === undefined)
 	return (
-		<CDropdownMenu style={style}>
+		<>
 			{menuItems.map((option, idx) => (
-				<MenuItem key={option.id || `item-${idx}`} data={option} />
+				<PopoverMenuItem key={option.id || `item-${idx}`} data={noIcons ? { ...option, icon: 'none' } : option} />
 			))}
-		</CDropdownMenu>
+		</>
 	)
 }
 
-// create menu-entries with (1) optional left-hand icon, (2) label, (3) optional right-side "external link" icon
-// The menu action can be either a URL or a function call
-export function MenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
+function PopoverMenuItemContents({ data }: { data: MenuActionItemProps }): React.JSX.Element {
+	return (
+		<>
+			{!data.fullWidth && data.icon !== 'none' && (
+				<span className="dropdown-item-icon">
+					{typeof data.icon === 'function' ? (
+						data.icon()
+					) : (
+						<FontAwesomeIcon
+							icon={data.icon ? data.icon : faOpenCircle}
+							className={data.icon ? 'visible' : 'invisible'}
+						/>
+					)}
+				</span>
+			)}
+			<span className="dropdown-item-label">{data.label}</span>
+			{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
+		</>
+	)
+}
+
+function PopoverRouteItem({
+	data,
+}: {
+	data: MenuActionItemProps & { to: NonNullable<LinkOptions['to']> }
+}): React.JSX.Element {
+	// Separate element so that this useNavigate isn't required unless using a router link
+	const navigate = useNavigate()
+
+	return (
+		<Popover.Item
+			className={data.id ? `dropdown-item-${data.id}` : undefined}
+			title={data.tooltip}
+			onClick={() => void navigate({ to: data.to })}
+		>
+			<PopoverMenuItemContents data={data} />
+		</Popover.Item>
+	)
+}
+
+function PopoverMenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
 	if ('isSeparator' in data) {
 		return (
-			<div className={data.id && `dropdown-sep-${data.id}`}>
-				<CDropdownDivider />
+			<div className={data.id ? `dropdown-sep-${data.id}` : undefined}>
+				<hr className="dropdown-divider" />
 				{data.label && <div className="dropdown-group-label">{data.label}</div>}
 			</div>
 		)
-	} else {
-		//Note 'to' expects a Tanstack route; 'href' expect an "external" link, i.e. one not served by Tanstack
-		const isCallback = data.do !== undefined
-		const isExternalLink = data.href !== undefined // currently, this includes /user-guide links (and /int, /img, ...)
+	}
 
-		const navProps = isCallback
-			? { as: 'button' as ElementType, onClick: data.do }
-			: {
-					// note: using Link for href items causes CDropDownItem to mark them as active, so just use 'a'
-					...(isExternalLink
-						? { href: data.href, as: 'a' as ElementType, rel: 'noopener noreferrer' }
-						: { to: data.to, as: Link, activeOptions: { exact: true } }),
-					target: data.inNewTab ? '_blank' : undefined,
-				}
+	if (data.to !== undefined) {
+		return <PopoverRouteItem data={{ ...data, to: data.to }} />
+	}
 
-		// Structure: [CDropdownItem [CNavLink [left-icon, text, right-icon ]]]
-		const menuItem = (
-			// note: CDropdownItem has CSS class: dropdown-item. Here we only add the optional item-specific class
-			<CDropdownItem
-				type={isCallback ? 'button' : undefined}
-				className={'d-flex justify-content-start' + (data.id ? ` dropdown-item-${data.id}` : '')}
-				title={data.tooltip}
-				{...navProps}
-			>
-				{!data.fullWidth && data.icon !== 'none' && (
-					<span className="dropdown-item-icon">
-						{typeof data.icon === 'function' ? (
-							data.icon()
-						) : (
-							<FontAwesomeIcon
-								icon={data.icon ? data.icon : faOpenCircle}
-								className={data.icon ? 'visible' : 'invisible'}
-							/>
-						)}
-					</span>
-				)}
-				<span className="dropdown-item-label">{data.label}</span>
-
-				{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
-			</CDropdownItem>
-		)
+	const handleClick = () => {
+		if (data.do) {
+			data.do()
+		} else if (data.href) {
+			window.open(data.href, data.inNewTab ? '_blank' : '_self', 'noopener,noreferrer')
+		}
 
 		const clip = data.copyToClipboard
-		return clip ? <CopyToClipboard {...clip}>{menuItem}</CopyToClipboard> : menuItem
+		if (clip) {
+			copy(clip.text, clip.options)
+				.then((res) => {
+					clip.onCopy?.(clip.text, res)
+				})
+				.catch((err) => {
+					clip.onCopy?.(clip.text, false)
+					console.error('Copy to clipboard failed', err)
+				})
+		}
 	}
+
+	return (
+		<Popover.Item
+			className={data.id ? `dropdown-item-${data.id}` : undefined}
+			title={data.tooltip}
+			onClick={handleClick}
+		>
+			<PopoverMenuItemContents data={data} />
+		</Popover.Item>
+	)
 }

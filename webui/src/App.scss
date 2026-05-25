@@ -4,21 +4,23 @@
 @use '@coreui/coreui/scss/coreui'; // note this is not strictly necessary, since it's forwarded by _variables, above.
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
-@use 'scss/react-time-picker';
-@use 'scss/react-date-picker';
 
 @use 'scss/components/alert';
 @use 'scss/components/button';
 @use 'scss/components/callout';
 @use 'scss/components/checkbox-field';
+@use 'scss/components/date-picker';
 @use 'scss/components/dropdown-field';
 @use 'scss/components/form';
 @use 'scss/components/modal';
 @use 'scss/components/number-field';
+@use 'scss/components/popover';
+@use 'scss/components/tooltip';
 @use 'scss/components/number-range';
 @use 'scss/components/switch-field';
 @use 'scss/components/tab-area';
 @use 'scss/components/text-field';
+@use 'scss/components/time-picker';
 
 @use 'scss/layout';
 @use 'scss/common';
@@ -191,13 +193,10 @@ body {
 .variable-value-expanded {
 	background-color: #fff;
 	min-width: 250px;
+	padding: 0.75rem;
 
 	.alert-element {
 		--alert-elm-padding-x: 0.75rem;
 		--alert-elm-padding-y: 0.5rem;
-	}
-
-	.popover-body {
-		padding: 0.75rem;
 	}
 }

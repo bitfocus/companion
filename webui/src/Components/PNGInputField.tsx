@@ -1,4 +1,3 @@
-import { CFormInput } from '@coreui/react'
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
@@ -130,10 +129,11 @@ export function PNGInputField({
 			title={apiIsSupported ? undefined : 'Not supported in your browser'}
 		>
 			<FontAwesomeIcon icon={faFolderOpen} />
-			<CFormInput
+			<input
 				id={id}
 				className="d-none"
 				type="file"
+				accept={allowNonPng ? 'image/*' : 'image/png'}
 				ref={inputRef}
 				onChange={onChange}
 				disabled={!apiIsSupported || disabled}

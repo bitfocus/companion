@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/coreui';
+@use '@coreui/coreui/scss/mixins/breakpoints';
 
 .edit-button-panel {
 	height: 100%;
@@ -168,10 +168,6 @@
 			> form:not(:first-child) {
 				margin-top: 0.5rem;
 			}
-		}
-
-		.input-group {
-			flex-wrap: nowrap;
 		}
 	}
 }
@@ -448,7 +444,7 @@
 		/* allow percentage-height children to resolve when used inside flex/grid parents */
 		min-height: 0;
 
-		@include coreui.media-breakpoint-down(md) {
+		@include breakpoints.media-breakpoint-down('md') {
 			overflow-y: auto;
 			display: block;
 		}
@@ -462,7 +458,7 @@
 		/* allow children with percentage heights or flex to shrink properly */
 		min-height: 0;
 
-		@include coreui.media-breakpoint-down(md) {
+		@include breakpoints.media-breakpoint-down('md') {
 			&:not(:first-child) {
 				margin-top: 0.5rem;
 			}

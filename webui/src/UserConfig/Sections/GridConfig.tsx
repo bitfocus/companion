@@ -183,6 +183,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										max={0}
 										step={1}
 										setValue={setMinRow}
+										immediateValue
 									/>
 								</CCol>
 
@@ -196,6 +197,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										min={0}
 										step={1}
 										setValue={setMaxRow}
+										immediateValue
 									/>
 								</CCol>
 
@@ -209,6 +211,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										max={0}
 										step={1}
 										setValue={setMinColumn}
+										immediateValue
 									/>
 								</CCol>
 
@@ -222,6 +225,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										min={0}
 										step={1}
 										setValue={setMaxColumn}
+										immediateValue
 									/>
 								</CCol>
 							</Form>

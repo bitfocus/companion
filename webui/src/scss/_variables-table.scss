@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/coreui';
+@use '@coreui/coreui/scss/mixins/breakpoints';
 
 .variables-panel {
 	margin-right: -0.5rem;
@@ -10,10 +10,6 @@
 
 	display: flex;
 	flex-direction: column;
-
-	.variables-table-filter {
-		margin-top: 1rem;
-	}
 
 	.variables-table-scroller {
 		flex: 1;
@@ -79,13 +75,13 @@
 			display: grid;
 			grid-template-columns: 0.25fr 1fr;
 
-			@include coreui.media-breakpoint-up(sm) {
+			@include breakpoints.media-breakpoint-up('sm') {
 				.align-right {
 					text-align: right;
 					align-self: center;
 				}
 			}
-			@include coreui.media-breakpoint-down(sm) {
+			@include breakpoints.media-breakpoint-down('sm') {
 				.align-right {
 					margin-bottom: 0;
 				}
@@ -96,19 +92,11 @@
 
 .variables-table-modal-body {
 	// reduce padding above the filter
-	padding-top: 0.5rem;
-
-	.variables-table-filter {
-		padding-top: var(--cui-modal-padding);
-	}
+	padding-top: 0.25rem;
 
 	.variables-table-scroller {
 		max-height: calc(90vh - 10rem);
 	}
-}
-
-.variables-table-filter {
-	margin: 0 0 0.4rem 0;
 }
 
 .variables-table-count {

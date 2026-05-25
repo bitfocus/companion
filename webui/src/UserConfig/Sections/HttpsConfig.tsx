@@ -1,10 +1,11 @@
-import { CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -62,15 +63,12 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 					<tr>
 						<td>Certificate Type</td>
 						<td>
-							<CDropdown className="mt-2" style={{ display: 'inline-block', overflow: 'visible' }}>
-								<CDropdownToggle>
-									{props.config.https_cert_type === 'external' ? 'External' : 'Self Signed'}
-								</CDropdownToggle>
-								<CDropdownMenu>
-									<CDropdownItem onClick={() => props.setValue('https_cert_type', 'self')}>Self Signed</CDropdownItem>
-									<CDropdownItem onClick={() => props.setValue('https_cert_type', 'external')}>External</CDropdownItem>
-								</CDropdownMenu>
-							</CDropdown>
+							<SimpleDropdownInputField
+								id={undefined}
+								value={props.config.https_cert_type}
+								setValue={(val) => props.setValue('https_cert_type', val)}
+								choices={certTypeOptions}
+							/>
 						</td>
 						<td>
 							<Button onClick={() => props.resetValue('https_cert_type')} title="Reset to default">
@@ -194,3 +192,8 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 		</>
 	)
 })
+
+const certTypeOptions: DropdownChoice[] = [
+	{ id: 'self', label: 'Self Signed' },
+	{ id: 'external', label: 'External' },
+]

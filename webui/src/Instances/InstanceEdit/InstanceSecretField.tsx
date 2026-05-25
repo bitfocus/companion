@@ -32,6 +32,7 @@ export function InstanceSecretField({
 					value={stringifyVariableValue(value) ?? ''}
 					setValue={setValue}
 					checkValid={checkValid}
+					immediateValue
 				/>
 			)
 		default:

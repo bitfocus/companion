@@ -1,5 +1,4 @@
-import { CFormInput, CInputGroup } from '@coreui/react'
-import { faCopy, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
@@ -17,6 +16,7 @@ import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
 import { StaticAlert } from './Alert.js'
+import { SearchBox } from './SearchBox.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
 
 interface VariablesTableProps {
@@ -67,9 +67,6 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 		}
 	}, [variableDefinitions, filter])
 
-	const clearFilter = useCallback(() => setFilter(''), [])
-	const updateFilter = useCallback((e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value), [])
-
 	const parentRef = useRef<HTMLDivElement | null>(null)
 
 	const virtualizer = useVirtualizer({
@@ -92,18 +89,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	return (
 		<>
-			<CInputGroup className="variables-table-filter">
-				<CFormInput
-					type="text"
-					placeholder="Filter ..."
-					onChange={updateFilter}
-					value={filter}
-					style={{ fontSize: '1.2em' }}
-				/>
-				<Button color="primary" onClick={clearFilter} aria-label="Clear search filter" title="Clear search filter">
-					<FontAwesomeIcon icon={faTimes} />
-				</Button>
-			</CInputGroup>
+			<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
 			<p className="variables-table-count">
 				{filter ? (
 					<>

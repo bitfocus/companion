@@ -1,7 +1,7 @@
-import { CPopover } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
+import { Tooltip } from '~/Components/Tooltip.js'
 
 export const InlineHelpCustom = ({
 	help,
@@ -13,17 +13,20 @@ export const InlineHelpCustom = ({
 	className?: string
 }): JSX.Element => {
 	return (
-		<>
-			<CPopover
-				content={<div className="inline-help">{help}</div>}
-				trigger={['hover', 'focus']} // better for keyboard navigation and, possibly, screen readers.
-				delay={{ show: 300, hide: 100 }}
-				animation={false}
-				placement="bottom"
-			>
-				<span className={classnames('inline-help-outer', className)}>{children}</span>
-			</CPopover>
-		</>
+		<Tooltip.Root>
+			<Tooltip.Trigger
+				render={
+					<span tabIndex={0} className={classnames('inline-help-outer', className)}>
+						{children}
+					</span>
+				}
+				delay={300}
+				closeDelay={100}
+			/>
+			<Tooltip.Popup side="bottom" arrow size="md">
+				<div className="inline-help">{help}</div>
+			</Tooltip.Popup>
+		</Tooltip.Root>
 	)
 }
 

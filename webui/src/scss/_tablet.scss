@@ -1,6 +1,10 @@
+@use 'sass:color';
+
 .page-tablet {
+	$primary-color: #d69e2e;
+
 	background-color: #181818;
-	color: #d69e2e;
+	color: $primary-color;
 
 	height: 100vh;
 
@@ -13,8 +17,13 @@
 		}
 	}
 
-	.form-label {
+	.form-label2 {
 		margin-top: 0.5rem;
+	}
+
+	.text-muted {
+		color: color.adjust($primary-color, $lightness: -10%) !important;
+		font-size: 0.93em;
 	}
 
 	.container-fluid {

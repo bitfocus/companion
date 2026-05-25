@@ -5,7 +5,7 @@ import { useCallback } from 'react'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 
 interface EntityCellControlProps {
@@ -55,7 +55,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
 					headline
 				) : (
-					<TextInputField
+					<TextInputFieldSimple
 						id={undefined}
 						value={entity.headline ?? ''}
 						placeholder={`Describe the intent of the ${entityTypeLabel}`}

@@ -15,6 +15,7 @@ interface ExpressionInputFieldProps {
 	setValue: (value: string) => void
 	disabled?: boolean
 	localVariables?: DropdownChoiceInt[]
+	immediateValue?: boolean
 }
 
 export const ExpressionInputField = observer(function ExpressionInputField({
@@ -23,6 +24,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	setValue,
 	disabled,
 	localVariables,
+	immediateValue,
 }: ExpressionInputFieldProps) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 
@@ -30,7 +32,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 	const [isValid, setValid] = useState(true)
 
-	const showValue = stringifyVariableValue(tmpValue ?? value ?? '') ?? ''
+	const showValue = stringifyVariableValue((immediateValue ? null : tmpValue) ?? value ?? '') ?? ''
 
 	// Update validation when value changes
 	useEffect(() => {
@@ -70,12 +72,12 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	const storeValue2 = useCallback(
 		(value: string | undefined, _ev: editor.IModelContentChangedEvent) => {
 			const newValue = value ?? ''
-			setTmpValue(newValue)
+			if (!immediateValue) setTmpValue(newValue)
 			setValue(newValue)
 
 			setValid(isExpressionValid(newValue))
 		},
-		[setValue]
+		[immediateValue, setValue]
 	)
 
 	// Render the input

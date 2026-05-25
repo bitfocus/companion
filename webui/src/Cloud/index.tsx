@@ -1,4 +1,4 @@
-import { CCard, CCardBody, CCardHeader, CCol, CFormInput, CListGroup } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
@@ -120,8 +120,13 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 
 	return (
 		<CCol sm={6} className="cloud-auth-state">
-			<FormLabel htmlFor={userId}>Logged in as</FormLabel>
-			<CFormInput id={userId} readOnly type="text" value={authenticatedAs} />
+			<FormLabel htmlFor={userId} className="mb-1">
+				Logged in as
+			</FormLabel>
+			<div id={userId} className="text-muted px-3">
+				{authenticatedAs}
+			</div>
+
 			{!cloudActive && (
 				<div className="my-3">
 					<Button

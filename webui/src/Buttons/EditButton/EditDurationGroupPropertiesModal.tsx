@@ -81,6 +81,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 											step={1}
 											checkValid={newDurationValue !== null && newDurationValue > 0}
 											setValue={setNewDurationValue}
+											immediateValue
 										/>
 									</CCol>
 

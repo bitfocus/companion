@@ -25,6 +25,11 @@
 		color: #ccc;
 	}
 
+	&.col-form-label {
+		// Respect the override
+		margin-bottom: 0;
+	}
+
 	.feature-icons {
 		white-space: nowrap;
 
@@ -44,3 +49,77 @@
 		}
 	}
 }
+
+// HACK: temporary until all ported
+.input-group {
+	flex-wrap: nowrap;
+}
+
+.input-group2 {
+	position: relative;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	width: 100%;
+
+	> .button {
+		// Allow other elements to border on top of buttons
+		z-index: 2;
+		position: relative;
+
+		// Avoid text wrapping
+		white-space: nowrap;
+	}
+
+	> .input-group2-text {
+		display: flex;
+		align-items: center;
+		padding: 0.375rem 0.75rem;
+		font-size: 1rem;
+		font-weight: 400;
+		line-height: 1.5;
+		color: var(--cui-input-group-addon-color, var(--cui-body-color));
+		text-align: center;
+		white-space: nowrap;
+		background-color: var(--cui-input-group-addon-bg, var(--cui-tertiary-bg));
+		border: var(--cui-border-width) solid var(--cui-input-group-addon-border-color, var(--cui-border-color));
+		border-radius: var(--cui-border-radius);
+	}
+
+	> :focus {
+		// Allow other elements to border on top of focused inputs
+		z-index: 5;
+	}
+
+	> :not(:last-child),
+	> :not(:last-child) .input-group-borders {
+		--border-right-radius: 0;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+
+		&.input-group2-text {
+			border-right: 0;
+		}
+	}
+	> :not(:first-child),
+	> :not(:first-child) .input-group-borders {
+		--border-left-radius: 0;
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+
+		&.input-group2-text {
+			border-left: 0;
+		}
+	}
+}
+
+// .input-group > .form-control,
+// .react-date-picker .input-group > .react-date-picker__wrapper,
+// .react-time-picker .input-group > .react-time-picker__wrapper,
+// .input-group > .form-select,
+// .input-group > .form-floating {
+// 	position: relative;
+// 	flex: 1 1 auto;
+// 	width: 1%;
+// 	min-width: 0;
+// }

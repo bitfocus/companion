@@ -12,7 +12,7 @@ import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
 
@@ -58,7 +58,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	switch (definition.type) {
 		case 'textinput':
 			control = (
-				<TextInputField
+				<TextInputFieldSimple
 					id={inputId}
 					value={stringifyVariableValue(value) ?? ''}
 					placeholder={definition.placeholder}

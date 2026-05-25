@@ -1,14 +1,4 @@
-import {
-	CContainer,
-	CDropdown,
-	CDropdownToggle,
-	CHeader,
-	CHeaderBrand,
-	CHeaderNav,
-	CHeaderToggler,
-	CNavItem,
-	CNavLink,
-} from '@coreui/react'
+import { CContainer, CHeader, CHeaderBrand, CHeaderNav, CHeaderToggler, CNavItem, CNavLink } from '@coreui/react'
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
 import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import {
@@ -24,7 +14,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, type ReactElement } from 'react'
-import { ActionMenu, type MenuActionItemProps, type MenuItemProps } from '~/Components/ActionMenu.js'
+import { PopoverActionMenu, type MenuActionItemProps, type MenuItemProps } from '~/Components/ActionMenu.js'
+import { Popover } from '~/Components/Popover.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -135,11 +126,8 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 
 function HelpMenu() {
 	// We could add the config wizard (showWizard) to the help menu in this useContext...
-	const { whatsNewModal } = useContext(RootAppStoreContext)
+	const { whatsNewModal, notifier } = useContext(RootAppStoreContext)
 	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
-
-	// get notifier for adding a toast notification when copied to clipboard.
-	const { notifier } = useContext(RootAppStoreContext)
 
 	const { versionName, versionBuild, os, browser } = useCompanionVersion(true)
 	const sysinfo = useMemo(() => {
@@ -232,19 +220,16 @@ function HelpMenu() {
 		[copyVersionToClipboard, sysinfo, whatsNewOpen]
 	)
 
-	// technical detail: unlike the other elements, CDropdownToggle does not define a 'dropdown-toggle' CSS class,
-	// but worse, if you add it manually, `caret={false}` is ignored, so it's named 'help-toggle' here.
 	return (
-		// note: CDropdown is assigned class btn-group. Previously _common.scss incorrectly assigned "overflow: hidden" to this class
-		//  which caused the dropdown to be clipped out of existence. Leading to the former note... now all is good.
-		//  and the dropdown is automatically assigned z-index: 1000 (--cui-dropdown-zindex)
-		// former note: without position-static, the menu doesn't show. Alternatively, set style={{position: 'inherit'}} or play with z-index
-		<CDropdown className="help-menu" offset={[10, 0]}>
-			<CDropdownToggle color="primary" caret={false} className="help-toggle" aria-label="Help and support menu">
-				<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
-			</CDropdownToggle>
-
-			<ActionMenu menuItems={helpMenuItems} />
-		</CDropdown>
+		<div className="help-menu">
+			<Popover.Root>
+				<Popover.Trigger color="primary" className="help-toggle" aria-label="Help and support menu">
+					<FontAwesomeIcon icon={faCircleQuestion} className="fa-2xl" />
+				</Popover.Trigger>
+				<Popover.Popup side="bottom" align="end" positionerClassName="help-menu-positioner">
+					<PopoverActionMenu menuItems={helpMenuItems} />
+				</Popover.Popup>
+			</Popover.Root>
+		</div>
 	)
 }

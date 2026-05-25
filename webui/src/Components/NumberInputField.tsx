@@ -20,6 +20,7 @@ interface NumberInputFieldProps {
 	showMinAsNegativeInfinity?: boolean
 	// When true, show the max value as a visual ∞ when value >= max
 	showMaxAsPositiveInfinity?: boolean
+	immediateValue?: boolean
 }
 
 export function NumberInputField({
@@ -36,23 +37,32 @@ export function NumberInputField({
 	checkValid,
 	showMinAsNegativeInfinity,
 	showMaxAsPositiveInfinity,
+	immediateValue,
 }: NumberInputFieldProps): React.JSX.Element {
 	const [tmpValue, setTmpValue] = useState<number | string | null>(null)
 
 	const onChangeValue = useCallback(
 		(value: number | null) => {
 			if (value !== null && !isNaN(value)) {
-				setTmpValue(value)
+				if (!immediateValue) setTmpValue(value)
 				setValue(value)
 			}
 		},
-		[setValue]
+		[immediateValue, setValue]
+	)
+
+	const handleBlur = useCallback(
+		(e: React.FocusEvent<HTMLElement>) => {
+			setTmpValue(null)
+			onBlur?.(e)
+		},
+		[onBlur]
 	)
 
 	// Compute whether we should visually show -∞ or ∞.
-	const numericEffective = Number(tmpValue ?? value ?? 0)
+	const numericEffective = Number((immediateValue ? null : tmpValue) ?? value ?? 0)
 	// Only show infinity overlays when the user has explicitly set a value.
-	const hasExplicitValue = tmpValue !== null || value !== undefined
+	const hasExplicitValue = (!immediateValue && tmpValue !== null) || value !== undefined
 	let showOverlayValue: string | null = null
 	if (
 		hasExplicitValue &&
@@ -78,9 +88,9 @@ export function NumberInputField({
 		<NumberField.Root
 			id={id}
 			disabled={disabled}
-			value={Number(tmpValue ?? value ?? 0)}
+			value={numericEffective}
 			onValueChange={onChangeValue}
-			onBlur={onBlur}
+			onBlur={handleBlur}
 			min={min}
 			max={max}
 			step={step ?? 'any'}
@@ -111,29 +121,72 @@ export function NumberInputField({
 			<div className="d-grid grid-col">
 				<div>{input}</div>
 				<div>
-					<Slider.Root
+					<SliderInputField
 						disabled={disabled}
-						value={Number(tmpValue ?? value ?? 0)}
+						value={numericEffective}
 						min={min}
 						max={max}
 						step={step}
-						title={tooltip}
-						onValueChange={onChangeValue}
-						onFocus={() => setTmpValue(value ?? '')}
+						tooltip={tooltip}
+						setValue={onChangeValue}
+						onFocus={() => {
+							if (!immediateValue) setTmpValue(value ?? '')
+						}}
 						onValueCommitted={() => setTmpValue(null)}
-						thumbAlignment="edge"
-					>
-						<Slider.Control className="number-range">
-							<Slider.Track className="number-range-track">
-								<Slider.Indicator className="number-range-indicator" />
-								<Slider.Thumb aria-label="Value" className="number-range-thumb" />
-							</Slider.Track>
-						</Slider.Control>
-					</Slider.Root>
+					/>
 				</div>
 			</div>
 		)
 	} else {
 		return input
 	}
+}
+
+interface SliderInputFieldProps {
+	value: number
+	setValue: (value: number) => void
+	min?: number
+	max?: number
+	step?: number
+	disabled?: boolean
+	tooltip?: string
+	className?: string
+	onFocus?: () => void
+	onValueCommitted?: (value: number) => void
+}
+
+export function SliderInputField({
+	value,
+	setValue,
+	min,
+	max,
+	step,
+	disabled,
+	tooltip,
+	className,
+	onFocus,
+	onValueCommitted,
+}: SliderInputFieldProps): React.JSX.Element {
+	return (
+		<Slider.Root
+			disabled={disabled}
+			value={value}
+			min={min}
+			max={max}
+			step={step}
+			title={tooltip}
+			onValueChange={setValue}
+			onFocus={onFocus}
+			onValueCommitted={onValueCommitted}
+			thumbAlignment="edge"
+			className={className}
+		>
+			<Slider.Control className="number-range">
+				<Slider.Track className="number-range-track">
+					<Slider.Indicator className="number-range-indicator" />
+					<Slider.Thumb aria-label="Value" className="number-range-thumb" />
+				</Slider.Track>
+			</Slider.Control>
+		</Slider.Root>
+	)
 }

@@ -1,11 +1,13 @@
-import { CCol, CFormInput, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
+import { NumberInputField } from '~/Components/NumberInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 
 interface ConfigurePanelProps {
@@ -27,6 +29,13 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 		}
 	})
 
+	const pagesFieldId = useId()
+	const minColFieldId = useId()
+	const maxColFieldId = useId()
+	const minRowFieldId = useId()
+	const maxRowFieldId = useId()
+	const displayColumnFieldId = useId()
+
 	return show ? (
 		<CRow className="configure">
 			<CCol sm={12}>
@@ -39,46 +48,51 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 				<Form onSubmit={PreventDefaultHandler}>
 					<CRow>
 						<CCol sm={6} xs={12}>
-							<CFormInput
-								label="Pages"
-								value={query['pages'] || ''}
-								onChange={(e) => updateQueryUrl('pages', e.currentTarget.value)}
+							<FormLabel htmlFor={pagesFieldId}>Pages</FormLabel>
+							<TextInputFieldSimple
+								id={pagesFieldId}
+								value={query['pages'] ? String(query['pages']) : ''}
+								setValue={(val) => updateQueryUrl('pages', val)}
 								placeholder={'1..99'}
 							/>
-							<p>use 1..6 for ranges, and commas for multiple selections. Follows provided order</p>
+							<p className="text-muted">
+								use 1..6 for ranges, and commas for multiple selections. Follows provided order
+							</p>
 
-							<CFormInput
-								label="Min Column"
-								type="number"
-								max={query['max_col'] ?? gridSize.maxColumn}
+							<FormLabel htmlFor={minColFieldId}>Min Column</FormLabel>
+							<NumberInputField
+								id={minColFieldId}
+								value={Number(query['min_col']) || 0}
+								setValue={(val) => updateQueryUrl('min_col', val)}
+								max={Number(query['max_col']) || gridSize.maxColumn}
 								min={gridSize.minColumn}
-								value={query['min_col'] || 0}
-								onChange={(e) => updateQueryUrl('min_col', e.currentTarget.value)}
-							/>
-							<CFormInput
-								label="Max Column"
-								type="number"
-								min={query['min_col'] ?? gridSize.minColumn}
-								max={gridSize.maxColumn}
-								value={query['max_col'] || gridSize.maxColumn}
-								onChange={(e) => updateQueryUrl('max_col', e.currentTarget.value)}
 							/>
 
-							<CFormInput
-								label="Min Row"
-								type="number"
-								max={query['max_row'] ?? gridSize.maxRow}
-								min={gridSize.minRow}
-								value={query['min_row'] || 0}
-								onChange={(e) => updateQueryUrl('min_row', e.currentTarget.value)}
+							<FormLabel htmlFor={maxColFieldId}>Max Column</FormLabel>
+							<NumberInputField
+								id={maxColFieldId}
+								value={Number(query['max_col']) || 0}
+								setValue={(val) => updateQueryUrl('max_col', val)}
+								max={gridSize.maxColumn}
+								min={Number(query['min_col']) || gridSize.minColumn}
 							/>
-							<CFormInput
-								label="Max Row"
-								type="number"
-								min={query['min_row'] ?? gridSize.minRow}
+
+							<FormLabel htmlFor={minRowFieldId}>Min Row</FormLabel>
+							<NumberInputField
+								id={minRowFieldId}
+								value={Number(query['min_row']) || 0}
+								setValue={(val) => updateQueryUrl('min_row', val)}
+								max={Number(query['max_row']) || gridSize.maxRow}
+								min={gridSize.minRow}
+							/>
+
+							<FormLabel htmlFor={maxRowFieldId}>Max Row</FormLabel>
+							<NumberInputField
+								id={maxRowFieldId}
+								value={Number(query['max_row']) || 0}
+								setValue={(val) => updateQueryUrl('max_row', val)}
 								max={gridSize.maxRow}
-								value={query['max_row'] || gridSize.maxRow}
-								onChange={(e) => updateQueryUrl('max_row', e.currentTarget.value)}
+								min={Number(query['min_row']) || gridSize.minRow}
 							/>
 						</CCol>
 						<CCol sm={6} xs={12}>
@@ -101,12 +115,13 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 								value={!!query['showpages']}
 								setValue={(val) => updateQueryUrl('showpages', val)}
 							/>
-							<CFormInput
-								label="Display Columns (0 for dynamic)"
-								type="number"
+
+							<FormLabel htmlFor={displayColumnFieldId}>Display Columns (0 for dynamic)</FormLabel>
+							<NumberInputField
+								id={displayColumnFieldId}
+								value={Number(query['display_cols']) || 0}
+								setValue={(val) => updateQueryUrl('display_cols', val)}
 								min={0}
-								value={query['display_cols'] || '0'}
-								onChange={(e) => updateQueryUrl('display_cols', e.currentTarget.value)}
 							/>
 						</CCol>
 					</CRow>

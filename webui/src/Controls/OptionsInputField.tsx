@@ -1,4 +1,4 @@
-import { CCol, CInputGroupText } from '@coreui/react'
+import { CCol } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -19,7 +19,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
-import { FormLabel } from '~/Components/Form.js'
+import { FormLabel, InputGroupText } from '~/Components/Form.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -332,7 +332,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			break
 	}
 
-	return <CInputGroupText>Unknown type "{option.type}"</CInputGroupText>
+	return <InputGroupText>Unknown type "{option.type}"</InputGroupText>
 })
 
 export interface InputFeatureIconsProps {

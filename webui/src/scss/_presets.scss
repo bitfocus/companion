@@ -1,4 +1,4 @@
-@use '@coreui/coreui/scss/coreui'; // not strictly necessary, but it allows us to clarify the origin of mixins
+@use '@coreui/coreui/scss/mixins/breakpoints';
 
 .variables-category-grid {
 	display: grid;
@@ -11,15 +11,15 @@
 
 	align-content: stretch;
 
-	@include coreui.media-breakpoint-down('lg') {
+	@include breakpoints.media-breakpoint-down('lg') {
 		grid-template-columns: repeat(3, 1fr);
 	}
 
-	@include coreui.media-breakpoint-down('md') {
+	@include breakpoints.media-breakpoint-down('md') {
 		grid-template-columns: repeat(2, 1fr);
 	}
 
-	@include coreui.media-breakpoint-down('sm') {
+	@include breakpoints.media-breakpoint-down('sm') {
 		grid-template-columns: 1fr;
 	}
 }

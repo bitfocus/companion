@@ -20,7 +20,7 @@ import { Button, ButtonGroup } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import { usePanelCollapseHelperLite, type PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
@@ -364,7 +364,7 @@ const EventEditor = observer(function EventEditor({
 					{!service.setHeadline || !headlineExpanded || isCollapsed ? (
 						headline || name
 					) : (
-						<TextInputField
+						<TextInputFieldSimple
 							id={undefined}
 							value={headline ?? ''}
 							placeholder={'Describe the intent of the event'}

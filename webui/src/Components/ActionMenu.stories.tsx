@@ -1,13 +1,25 @@
 import { faCopy, faDownload, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons'
 import type { Meta, StoryObj } from '@storybook/react'
-import { ActionMenu } from './ActionMenu'
+import { PopoverActionMenu, type MenuItemProps } from './ActionMenu'
+import { Popover } from './Popover'
+
+function PopoverMenuStory({ menuItems }: { menuItems: MenuItemProps[] }): React.JSX.Element {
+	return (
+		<Popover.Root>
+			<Popover.Trigger>Open Menu</Popover.Trigger>
+			<Popover.Popup>
+				<PopoverActionMenu menuItems={menuItems} />
+			</Popover.Popup>
+		</Popover.Root>
+	)
+}
 
 const meta = {
-	component: ActionMenu,
+	component: PopoverMenuStory,
 	args: {
 		menuItems: [],
 	},
-} satisfies Meta<typeof ActionMenu>
+} satisfies Meta<typeof PopoverMenuStory>
 
 export default meta
 type Story = StoryObj<typeof meta>

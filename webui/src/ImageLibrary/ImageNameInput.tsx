@@ -2,7 +2,7 @@ import React, { useId } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { FormLabel } from '~/Components/Form.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 
 interface ImageNameInputProps {
 	value: string
@@ -57,7 +57,7 @@ export function ImageNameInput({
 					Image name
 				</FormLabel>
 				<div className="col-sm-9">
-					<TextInputField
+					<TextInputFieldSimple
 						id={labelInputId}
 						value={value}
 						setValue={onChange}
@@ -65,6 +65,7 @@ export function ImageNameInput({
 						tooltip={tooltip}
 						checkValid={isLabelValid}
 						disabled={disabled}
+						immediateValue
 					/>
 				</div>
 			</div>

@@ -340,7 +340,8 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 													id={exportNameId}
 													value={String(field.state.value)}
 													setValue={(val) => field.handleChange(val)}
-													useVariables={true}
+													useVariables
+													immediateValue
 												/>
 											)}
 										/>

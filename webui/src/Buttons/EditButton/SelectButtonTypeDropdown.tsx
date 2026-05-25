@@ -1,9 +1,9 @@
-import { CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Popover } from '~/Components/Popover.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export function SelectButtonTypeDropdown({
@@ -55,24 +55,28 @@ export function SelectButtonTypeDropdown({
 		[resetControlMutation, location, configRef, resetModalRef]
 	)
 
+	const btnGroupRef = useRef<HTMLDivElement>(null)
+
 	return (
-		<CDropdown variant="btn-group">
-			<Button color="primary" onClick={() => setButtonType('button-layered')} title="Create regular button.">
-				Create button
-			</Button>
-			<CDropdownToggle
-				color="primary"
-				split
-				style={{ opacity: 0.7, padding: '0 0.75em' }}
-				aria-label="Toggle Button-Type Dropdown"
-				title="Toggle Button-Type Dropdown"
-			/>
-			<CDropdownMenu>
-				<CDropdownItem onClick={() => setButtonType('button-layered')}>Regular button</CDropdownItem>
-				<CDropdownItem onClick={() => setButtonType('pageup')}>Page up</CDropdownItem>
-				<CDropdownItem onClick={() => setButtonType('pagenum')}>Page number</CDropdownItem>
-				<CDropdownItem onClick={() => setButtonType('pagedown')}>Page down</CDropdownItem>
-			</CDropdownMenu>
-		</CDropdown>
+		<Popover.Root>
+			<div className="btn-group" ref={btnGroupRef}>
+				<Button color="primary" onClick={() => setButtonType('button-layered')} title="Create regular button.">
+					Create button
+				</Button>
+				<Popover.Trigger
+					color="primary"
+					caret
+					style={{ opacity: 0.7, padding: '0 0.75em' }}
+					aria-label="Toggle Button-Type Dropdown"
+					title="Toggle Button-Type Dropdown"
+				/>
+			</div>
+			<Popover.Popup anchor={btnGroupRef}>
+				<Popover.Item onClick={() => setButtonType('button-layered')}>Regular button</Popover.Item>
+				<Popover.Item onClick={() => setButtonType('pageup')}>Page up</Popover.Item>
+				<Popover.Item onClick={() => setButtonType('pagenum')}>Page number</Popover.Item>
+				<Popover.Item onClick={() => setButtonType('pagedown')}>Page down</Popover.Item>
+			</Popover.Popup>
+		</Popover.Root>
 	)
 }

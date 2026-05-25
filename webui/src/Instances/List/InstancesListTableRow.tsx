@@ -1,4 +1,3 @@
-import { CPopover } from '@coreui/react'
 import {
 	faBug,
 	faEllipsisV,
@@ -13,9 +12,8 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Popover } from '~/Components/Popover'
 import { SwitchInputField } from '~/Components/SwitchInputField'
-import { Tuck } from '~/Components/Tuck'
 import { windowLinkOpen } from '~/Helpers/Window'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { isCollectionEnabled, makeAbsolutePath } from '~/Resources/util'
@@ -122,76 +120,44 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						disabled={!moduleInfo || !moduleVersion || !canToggleEnabled}
 					/>
 				</div>
-				<CPopover
-					trigger="focus"
-					placement="right"
-					style={{ backgroundColor: 'white' }}
-					content={
-						<>
-							{/* Note: the popover closing due to focus loss stops mouseup/click events propagating */}
-							<ButtonGroup vertical>
-								<Button
-									onMouseDown={doShowHelp}
-									color="secondary"
-									title="Help"
-									disabled={!moduleVersion?.helpPath}
-									className="text-start"
-								>
-									<Tuck>
-										<FontAwesomeIcon icon={faQuestionCircle} />
-									</Tuck>
-									Help
-								</Button>
-
-								<Button
-									onMouseDown={openBugUrl}
-									color="secondary"
-									title="Issue Tracker"
-									disabled={!moduleInfo?.display?.bugUrl}
-									className="text-start"
-								>
-									<Tuck>
-										<FontAwesomeIcon icon={faBug} />
-									</Tuck>
-									Known issues
-								</Button>
-
-								{extraMenuItems}
-
-								{!!debugLogUrl && (
-									<Button
-										onMouseDown={() => windowLinkOpen({ href: makeAbsolutePath(debugLogUrl), title: 'View debug log' })}
-										title="Logs"
-										color="secondary"
-										className="text-start"
-									>
-										<Tuck>
-											<FontAwesomeIcon icon={faTerminal} />
-										</Tuck>
-										View logs
-									</Button>
-								)}
-
-								<Button onMouseDown={doDelete} title="Delete" color="secondary" className="text-start">
-									<Tuck>
-										<FontAwesomeIcon icon={faTrash} />
-									</Tuck>
-									Delete
-								</Button>
-							</ButtonGroup>
-						</>
-					}
-				>
-					<Button
+				<Popover.Root>
+					<Popover.Trigger
 						color="secondary"
 						className="py-1 px-2"
-						onClick={(e) => e.currentTarget.focus()}
 						title="Click for additional options."
 						aria-label="Click for additional options."
 					>
 						<FontAwesomeIcon icon={faEllipsisV} />
-					</Button>
-				</CPopover>
+					</Popover.Trigger>
+					<Popover.Popup arrow side="right" align="center">
+						<Popover.Item onClick={doShowHelp} title="Help" disabled={!moduleVersion?.helpPath}>
+							<FontAwesomeIcon icon={faQuestionCircle} className="me-2" />
+							Help
+						</Popover.Item>
+
+						<Popover.Item onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.display?.bugUrl}>
+							<FontAwesomeIcon icon={faBug} className="me-2" />
+							Known issues
+						</Popover.Item>
+
+						{extraMenuItems}
+
+						{!!debugLogUrl && (
+							<Popover.Item
+								onClick={() => windowLinkOpen({ href: makeAbsolutePath(debugLogUrl), title: 'View debug log' })}
+								title="Logs"
+							>
+								<FontAwesomeIcon icon={faTerminal} className="me-2" />
+								View logs
+							</Popover.Item>
+						)}
+
+						<Popover.Item onClick={doDelete} title="Delete">
+							<FontAwesomeIcon icon={faTrash} className="me-2" />
+							Delete
+						</Popover.Item>
+					</Popover.Popup>
+				</Popover.Root>
 			</div>
 		</div>
 	)

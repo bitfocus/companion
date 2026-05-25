@@ -1,4 +1,4 @@
-import { CBackdrop, CNavLink, CPopover, CSidebarBrand, CSidebarHeader, CSidebarNav } from '@coreui/react'
+import { CBackdrop, CNavLink, CSidebarBrand, CSidebarHeader, CSidebarNav } from '@coreui/react'
 import type { CNavItemProps } from '@coreui/react/dist/esm/components/nav/CNavItem'
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
 import {
@@ -58,6 +58,7 @@ import { useLocalStorage } from 'usehooks-ts'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { type MenuItemProps } from '~/Components/ActionMenu'
 import { ContextMenu } from '~/Components/ContextMenu'
+import { Tooltip } from '~/Components/Tooltip.js'
 import { MenuSeparator, useContextMenuState } from '~/Components/useContextMenuProps'
 import { useMobileMode } from '~/Hooks/useLayoutMode'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -116,34 +117,21 @@ interface SidebarMenuItemProps {
 }
 
 /**
- * NarrowModePopover - creates a CPopover "tooltip" showing the label text in narrow mode; otherwise is a no-op.
+ * NarrowModePopover - creates a "tooltip" showing the label text in narrow mode; otherwise is a no-op.
  * @param label - the tooltip text
  */
 function NarrowModePopover({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
 	const isNarrow = useContext(NarrowModeContext)
-	if (isNarrow) {
-		// CPopover defaulted to black-on-black text. Also override the default padding defined in App.scss
-		const customVars = {
-			'--cui-popover-body-color': 'white',
-			'--cui-popover-bg': '#111',
-			'--cui-popover-body-padding-y': '.5rem',
-		} as React.CSSProperties
+	if (!isNarrow) return <>{children}</>
 
-		return (
-			<CPopover
-				style={customVars}
-				content={<span>{title}</span>}
-				trigger={['hover', 'focus']} // better for keyboard navigation and, possibly, screen readers.
-				delay={{ show: 100, hide: 100 }}
-				animation={false}
-				placement="right"
-			>
-				{children}
-			</CPopover>
-		)
-	} else {
-		return <>{children}</>
-	}
+	return (
+		<Tooltip.Root>
+			<Tooltip.Trigger render={children as React.ReactElement} delay={100} closeDelay={100} />
+			<Tooltip.Popup side="right" arrow noPadding>
+				{title}
+			</Tooltip.Popup>
+		</Tooltip.Root>
+	)
 }
 
 function SidebarMenuItemLabel(item: SidebarMenuItemProps) {

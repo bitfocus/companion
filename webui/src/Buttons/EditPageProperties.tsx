@@ -1,8 +1,9 @@
-import { CCol, CFormInput, CRow } from '@coreui/react'
-import { forwardRef, useCallback, useId, useImperativeHandle, useRef, useState } from 'react'
+import { CCol, CRow } from '@coreui/react'
+import { forwardRef, useCallback, useId, useImperativeHandle, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 
@@ -19,8 +20,6 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 		const [show, setShow] = useState(false)
 
 		const [pageName, setName] = useState<string | null>(null)
-
-		const inputRef = useRef<HTMLInputElement>(null)
 
 		const setNameMutation = useMutationExt(trpc.pages.setName.mutationOptions())
 
@@ -64,10 +63,6 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 			}
 		}, [])
 
-		const onNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			setName(e.target.value)
-		}, [])
-
 		const nameFieldId = useId()
 
 		return (
@@ -75,7 +70,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 				<Modal.Portal>
 					<Modal.Backdrop />
 					<Modal.Viewport>
-						<Modal.Popup initialFocus={inputRef}>
+						<Modal.Popup>
 							<Modal.Header closeButton>
 								<Modal.Title>Configure Page {pageNumber}</Modal.Title>
 							</Modal.Header>
@@ -87,12 +82,11 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 												Name
 											</FormLabel>
 											<CCol sm={9}>
-												<CFormInput
-													ref={inputRef}
+												<TextInputFieldSimple
 													id={nameFieldId}
-													type="text"
 													value={pageName || ''}
-													onChange={onNameChange}
+													setValue={setName}
+													immediateValue
 												/>
 											</CCol>
 										</CRow>

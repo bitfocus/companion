@@ -9,7 +9,7 @@ import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
@@ -115,7 +115,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								Description:
 							</FormLabel>
 							<CCol sm={9}>
-								<TextInputField
+								<TextInputFieldSimple
 									id={descriptionFieldId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}

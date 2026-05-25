@@ -16,7 +16,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
-import { TextInputField } from '~/Components/TextInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { InstanceEditField } from '~/Instances/InstanceEdit/InstanceEditField.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
@@ -189,11 +189,12 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 				Label
 			</FormLabel>
 			<CCol className={`fieldtype-textinput`} sm={8}>
-				<TextInputField
+				<TextInputFieldSimple
 					id={labelId}
 					setValue={panelStore.setLabelValue}
 					checkValid={panelStore.checkLabelIsValid}
 					value={panelStore.labelValue}
+					immediateValue
 				/>
 			</CCol>
 		</>

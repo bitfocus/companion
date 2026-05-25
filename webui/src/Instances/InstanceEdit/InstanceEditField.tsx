@@ -9,7 +9,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
-import { TextInputField } from '~/Components/TextInputField'
+import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 
 interface InstanceEditFieldProps {
@@ -41,13 +41,14 @@ export function InstanceEditField({
 		}
 		case 'textinput':
 			return (
-				<TextInputField
+				<TextInputFieldSimple
 					id={inputId}
 					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
 					multiline={definition.multiline}
 					placeholder={definition.placeholder}
+					immediateValue
 				/>
 			)
 		case 'number':
@@ -61,6 +62,7 @@ export function InstanceEditField({
 					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
+					immediateValue
 				/>
 			)
 		case 'checkbox':

@@ -220,7 +220,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 							<Modal.Title>Browse {capitalize(entityTypeLabel)}s</Modal.Title>
 						</Modal.Header>
 						<Modal.Header>
-							<SearchBox filter={filter} setFilter={setFilter} />
+							<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
 						</Modal.Header>
 						<Modal.Body>
 							<EntityTypeLabelContext.Provider value={entityTypeLabel}>

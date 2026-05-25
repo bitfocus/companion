@@ -7,26 +7,37 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
 import { VariableSuggestionPopup } from './DropdownInputField/Popup.js'
 
-interface TextInputFieldProps {
+interface TextInputFieldSimpleProps {
 	id: string | undefined
 	tooltip?: string
 	placeholder?: string
 	value: string
 	className?: string
 	setValue: (value: string) => void
-	checkValid?: (valid: string) => boolean
+	checkValid?: boolean | ((value: string) => boolean)
 	disabled?: boolean
-	useVariables?: boolean
-	localVariables?: DropdownChoiceInt[]
+	/**
+	 * When provided, enables the variable suggestion popup with these options.
+	 */
+	variableOptions?: DropdownChoice[]
 	multiline?: boolean
 	autoFocus?: boolean
 	onBlur?: () => void
 	onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLTextAreaElement>) => void
+	/**
+	 * If the value is written to local storage, set this to opt out of the internal temporary focus value
+	 */
+	immediateValue?: boolean
+}
+
+interface TextInputFieldProps extends Omit<TextInputFieldSimpleProps, 'variableOptions'> {
+	useVariables?: boolean
+	localVariables?: DropdownChoiceInt[]
 }
 
 const EMPTY_VARIABLE_DEFS: never[] = []
 
-export const TextInputField = observer(function TextInputField({
+export function TextInputFieldSimple({
 	id,
 	tooltip,
 	placeholder,
@@ -35,14 +46,14 @@ export const TextInputField = observer(function TextInputField({
 	setValue,
 	checkValid,
 	disabled,
-	useVariables,
-	localVariables,
+	variableOptions,
 	multiline,
 	autoFocus,
 	onBlur,
 	onKeyDown: onKeyDownProp,
-}: TextInputFieldProps) {
-	const { variablesStore } = useContext(RootAppStoreContext)
+	immediateValue,
+}: TextInputFieldSimpleProps): React.JSX.Element {
+	const useVariables = !!variableOptions
 
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
@@ -53,10 +64,10 @@ export const TextInputField = observer(function TextInputField({
 
 	const storeValue = useCallback(
 		(val: string) => {
-			setTmpValue(val)
+			if (!immediateValue) setTmpValue(val)
 			setValue(val)
 		},
-		[setValue]
+		[immediateValue, setValue]
 	)
 
 	const doOnChange = useCallback(
@@ -67,28 +78,12 @@ export const TextInputField = observer(function TextInputField({
 		[storeValue]
 	)
 
-	const showValue = (tmpValue ?? value ?? '').toString()
-	const valueIsInvalid = !!checkValid && !checkValid(showValue)
+	const showValue = ((immediateValue ? null : tmpValue) ?? value ?? '').toString()
+	const valueIsInvalid = typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(showValue)
 
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(useVariables ? showValue : '', cursorPosition)
 
-	const baseVariableDefinitions = useVariables ? variablesStore.allVariableDefinitions.get() : EMPTY_VARIABLE_DEFS
-	const options = useMemo((): DropdownChoice[] => {
-		if (!useVariables) return []
-		const suggestions: DropdownChoice[] = []
-		for (const variable of baseVariableDefinitions) {
-			suggestions.push({
-				id: `${variable.connectionLabel}:${variable.name}`,
-				label: variable.description,
-			})
-		}
-		if (localVariables) {
-			for (const v of localVariables) {
-				suggestions.push({ id: v.value, label: v.label })
-			}
-		}
-		return suggestions
-	}, [useVariables, baseVariableDefinitions, localVariables])
+	const options = variableOptions ?? EMPTY_VARIABLE_DEFS
 
 	const filteredItems = useMemo(
 		() =>
@@ -168,11 +163,11 @@ export const TextInputField = observer(function TextInputField({
 			title={tooltip}
 			onChange={doOnChange}
 			onFocus={(e) => {
-				setTmpValue(currentValueRef.current ?? '')
+				if (!immediateValue) setTmpValue(currentValueRef.current ?? '')
 				setCursorPosition(e.currentTarget.selectionStart)
 			}}
 			onBlur={() => {
-				setTmpValue(null)
+				if (!immediateValue) setTmpValue(null)
 				setCursorPosition(null)
 				onBlur?.()
 			}}
@@ -199,6 +194,34 @@ export const TextInputField = observer(function TextInputField({
 			/>
 		</div>
 	)
+}
+
+export const TextInputField = observer(function TextInputField({
+	useVariables,
+	localVariables,
+	...rest
+}: TextInputFieldProps) {
+	const { variablesStore } = useContext(RootAppStoreContext)
+
+	const baseVariableDefinitions = useVariables ? variablesStore.allVariableDefinitions.get() : EMPTY_VARIABLE_DEFS
+	const variableOptions = useMemo((): DropdownChoice[] | undefined => {
+		if (!useVariables) return undefined
+		const suggestions: DropdownChoice[] = []
+		for (const variable of baseVariableDefinitions) {
+			suggestions.push({
+				id: `${variable.connectionLabel}:${variable.name}`,
+				label: variable.description,
+			})
+		}
+		if (localVariables) {
+			for (const v of localVariables) {
+				suggestions.push({ id: v.value, label: v.label })
+			}
+		}
+		return suggestions
+	}, [useVariables, baseVariableDefinitions, localVariables])
+
+	return <TextInputFieldSimple {...rest} variableOptions={variableOptions} />
 })
 
 function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
