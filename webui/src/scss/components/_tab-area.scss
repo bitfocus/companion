@@ -5,6 +5,7 @@
 	overflow-y: hidden;
 
 	.tab-bar {
+		position: relative;
 		display: flex;
 		flex-wrap: nowrap;
 		margin-bottom: 0;
