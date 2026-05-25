@@ -8,8 +8,8 @@ import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Co
 import { DateInputField } from '~/Components/DateInputField.js'
 import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { ImageInputField } from '~/Components/ImageInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
-import { PngImageInputField } from '~/Components/PngImageInputField.js'
 import { TimeInputField } from '~/Components/TimeInputField.js'
 import { VariablePickerField } from '~/Components/VariablePickerField.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
@@ -109,16 +109,15 @@ export function InternalModuleField(
 			return <HorizontalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:vertical-alignment':
 			return <VerticalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
-		case 'internal:png-image': {
+		case 'internal:image-file': {
 			return (
-				<PngImageInputField
+				<ImageInputField
 					id={id}
 					value={value}
 					setValue={setValue}
 					disabled={readonly}
 					min={option.min}
 					max={option.max}
-					allowNonPng={option.allowNonPng}
 				/>
 			)
 		}

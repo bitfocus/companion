@@ -72,7 +72,7 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:page'
 		| 'internal:horizontal-alignment'
 		| 'internal:vertical-alignment'
-		| 'internal:png-image'
+		| 'internal:image-file'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -157,15 +157,13 @@ export interface InternalInputFieldVerticalAlignment extends CompanionInputField
 	default: 'top' | 'center' | 'bottom'
 }
 export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExtended {
-	type: 'internal:png-image'
+	type: 'internal:image-file'
 	/** The default value */
 	default: string | null
 	/** Minimum image dimensions */
 	min?: { width: number; height: number }
 	/** Maximum image dimensions */
 	max?: { width: number; height: number }
-	/** Allow non-PNG image formats */
-	allowNonPng?: boolean
 }
 
 export type InternalInputField =

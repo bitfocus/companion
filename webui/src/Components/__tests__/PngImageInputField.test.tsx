@@ -1,15 +1,15 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { PngImageInputField } from '../PngImageInputField'
+import { ImageInputField } from '../ImageInputField'
 
 // Minimal 1×1 red PNG data URL
 const SAMPLE_PNG =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg=='
 
-function renderField(props: Partial<React.ComponentProps<typeof PngImageInputField>> = {}) {
+function renderField(props: Partial<React.ComponentProps<typeof ImageInputField>> = {}) {
 	const setValue = vi.fn()
-	render(<PngImageInputField id={undefined} value={null} setValue={setValue} {...props} />)
+	render(<ImageInputField id={undefined} value={null} setValue={setValue} {...props} />)
 	return { setValue }
 }
 
@@ -24,20 +24,10 @@ function changeFile(input: HTMLInputElement, file: File): void {
 }
 
 // ---------------------------------------------------------------------------
-// File-picker accept attribute (the allowNonPng feature)
+// File-picker accept attribute
 // ---------------------------------------------------------------------------
 
 describe('file input accept attribute', () => {
-	it('accepts all image types when allowNonPng is true', () => {
-		renderField({ allowNonPng: true })
-		expect(getFileInput()).toHaveAttribute('accept', 'image/*')
-	})
-
-	it('accepts only PNG when allowNonPng is false', () => {
-		renderField({ allowNonPng: false })
-		expect(getFileInput()).toHaveAttribute('accept', 'image/png')
-	})
-
 	it('defaults to accepting all image types', () => {
 		renderField()
 		expect(getFileInput()).toHaveAttribute('accept', 'image/*')
@@ -88,20 +78,6 @@ describe('disabled prop', () => {
 // ---------------------------------------------------------------------------
 
 describe('file type validation errors', () => {
-	it('shows an error when a non-PNG file is selected with allowNonPng=false', () => {
-		renderField({ allowNonPng: false })
-		const bmpFile = new File(['data'], 'image.bmp', { type: 'image/bmp' })
-		changeFile(getFileInput(), bmpFile)
-		expect(screen.getByRole('alert')).toHaveTextContent('Only proper PNG files are supported')
-	})
-
-	it('shows an error when an unsupported type is selected with allowNonPng=true', () => {
-		renderField({ allowNonPng: true })
-		const bmpFile = new File(['data'], 'image.bmp', { type: 'image/bmp' })
-		changeFile(getFileInput(), bmpFile)
-		expect(screen.getByRole('alert')).toHaveTextContent('PNG, JPEG, GIF, WebP or SVG')
-	})
-
 	it('does not show an error initially', () => {
 		renderField()
 		expect(screen.queryByRole('alert')).not.toBeInTheDocument()
@@ -109,7 +85,7 @@ describe('file type validation errors', () => {
 
 	it('dismisses the error when the close button is clicked', async () => {
 		const user = userEvent.setup()
-		renderField({ allowNonPng: false })
+		renderField()
 		changeFile(getFileInput(), new File(['data'], 'image.bmp', { type: 'image/bmp' }))
 		expect(screen.getByRole('alert')).toBeInTheDocument()
 		await user.click(screen.getByRole('button', { name: /close/i }))

@@ -39,7 +39,7 @@ function convertFieldType(field: SomeCompanionInputField, isExpressionable: bool
 				tsType = field.choices.map((choice) => JSON.stringify(choice.id)).join(' | ')
 			}
 			break
-		case 'internal:png-image':
+		case 'internal:image-file':
 			tsType = 'string | null'
 			break
 		case 'internal:horizontal-alignment':

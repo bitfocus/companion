@@ -334,7 +334,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:time':
 			case 'internal:horizontal-alignment':
 			case 'internal:page':
-			case 'internal:png-image':
+			case 'internal:image-file':
 			case 'internal:surface_serial':
 			case 'internal:vertical-alignment':
 			case 'internal:trigger':

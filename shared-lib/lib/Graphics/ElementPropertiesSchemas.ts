@@ -190,13 +190,12 @@ export const imageElementSchema: SomeCompanionInputField[] = [
 	...boundsFields,
 	...rotationFields,
 	{
-		type: 'internal:png-image',
+		type: 'internal:image-file',
 		id: 'base64Image',
 		label: 'Image',
 		default: null,
 		min: { width: 8, height: 8 },
 		max: { width: 400, height: 400 },
-		allowNonPng: true,
 	},
 	{
 		type: 'internal:horizontal-alignment',
