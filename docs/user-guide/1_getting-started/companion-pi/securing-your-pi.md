@@ -27,6 +27,14 @@ If using the Raspberry Pi Imager, you can configure the username and password be
    ```
    Use the output of the previous step as the password hash.
 
+:::tip
+
+You must not use `companion` as the username, otherwise you will clash with the user that Companion gets run as.
+
+It is recommended to not use `pi` as the username, to make it harder for an attacker to guess it.
+
+:::
+
 ## Security Best Practices
 
 There are other security-oriented best practices that are recommended:
