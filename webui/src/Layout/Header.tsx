@@ -1,4 +1,4 @@
-import { CContainer, CHeader, CHeaderBrand, CHeaderNav, CHeaderToggler, CNavItem, CNavLink } from '@coreui/react'
+import { CHeader, CHeaderBrand, CHeaderNav, CHeaderToggler, CNavItem, CNavLink } from '@coreui/react'
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
 import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import {
@@ -15,6 +15,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, type ReactElement } from 'react'
 import { PopoverActionMenu, type MenuActionItemProps, type MenuItemProps } from '~/Components/ActionMenu.js'
+import { Grid } from '~/Components/Grid'
 import { Popover } from '~/Components/Popover.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
@@ -67,7 +68,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
 		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
 		<CHeader className="p-0">
-			<CContainer fluid>
+			<Grid.Container fluid>
 				{mobileMode && (
 					<CHeaderToggler className="ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
@@ -119,7 +120,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 				{/* Placing HelpMenu outside CHeaderNav gives "standard" menu line-heights. 
 						Move it into the CHeaderNav block to make it look more like the sidebar line height.  */}
 				<HelpMenu />
-			</CContainer>
+			</Grid.Container>
 		</CHeader>
 	)
 })

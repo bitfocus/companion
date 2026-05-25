@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { useCallback, useId, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
@@ -7,6 +6,7 @@ import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
@@ -78,28 +78,28 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 						When this button has multiple steps, control how the next step changes
 					</InlineHelpIcon>
 				</FormLabel>
-				<CCol sm={8}>
+				<Grid.Col sm={8}>
 					<SimpleDropdownInputField
 						id={stepProgressionId}
 						choices={STEP_PROGRESSION_CHOICES}
 						setValue={setStepProgressionValue}
 						value={options.stepProgression}
 					/>
-				</CCol>
+				</Grid.Col>
 
 				{options.stepProgression === 'expression' && (
 					<>
 						<FormLabel htmlFor={stepExpressionId} className="col-sm-4 col-form-label col-form-label-sm">
 							Step Progression Expression <InputFeatureIcons variables local />
 						</FormLabel>
-						<CCol sm={8}>
+						<Grid.Col sm={8}>
 							<ExpressionInputField
 								id={stepExpressionId}
 								setValue={setStepExpressionValue}
 								value={options.stepExpression ?? ''}
 								localVariables={ControlLocalVariables}
 							/>
-						</CCol>
+						</Grid.Col>
 					</>
 				)}
 
@@ -107,9 +107,9 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					Rotary Actions
 					<InlineHelpIcon className="ms-1">Make this button compatible with rotation events</InlineHelpIcon>
 				</FormLabel>
-				<CCol sm={8}>
+				<Grid.Col sm={8}>
 					<SwitchInputField id={rotaryActionsId} value={options.rotaryActions} setValue={setRotaryActions} />
-				</CCol>
+				</Grid.Col>
 
 				<FormLabel htmlFor={canModifyStyleInApisId} className="col-sm-4 col-form-label col-form-label-sm">
 					Allow style changes
@@ -117,13 +117,13 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 						Allow the external APIs and internal actions to modify the style of this button
 					</InlineHelpIcon>
 				</FormLabel>
-				<CCol sm={8}>
+				<Grid.Col sm={8}>
 					<SwitchInputField
 						id={canModifyStyleInApisId}
 						value={options.canModifyStyleInApis}
 						setValue={setCanModifyStyleInApis}
 					/>
-				</CCol>
+				</Grid.Col>
 			</Form>
 		</>
 	)

@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faAdd, faArrowLeft, faClone, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -13,6 +12,7 @@ import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { CopyButton } from '~/Components/CopyButton'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
@@ -117,10 +117,10 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 	const showSecondaryPanel = !!selectedVariableId
 
 	return (
-		<CRow className="triggers-page split-panels">
+		<Grid.Row className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
@@ -164,15 +164,15 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						/>
 					</ExpressionVariablesTableContextProvider>
 				</PanelCollapseHelperProvider>
-			</CCol>
+			</Grid.Col>
 
-			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })
 

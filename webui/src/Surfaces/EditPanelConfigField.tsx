@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
@@ -10,6 +9,7 @@ import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -142,10 +142,10 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
-			<CCol sm={8} className={classNames({ displayNone: !isVisible })}>
+			<Grid.Col sm={8} className={classNames({ displayNone: !isVisible })}>
 				{control}
 				{definition.description && <div className="form-text">{definition.description}</div>}
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })

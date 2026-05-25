@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
@@ -6,6 +5,7 @@ import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Commo
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
@@ -28,11 +28,11 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 
 	if (!connectionInfo) {
 		return (
-			<CRow className="edit-connection">
-				<CCol xs={12}>
+			<Grid.Row className="edit-connection">
+				<Grid.Col xs={12}>
 					<p>Connection not found</p>
-				</CCol>
-			</CRow>
+				</Grid.Col>
+			</Grid.Row>
 		)
 	}
 

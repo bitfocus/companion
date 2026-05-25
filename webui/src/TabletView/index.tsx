@@ -1,4 +1,3 @@
-import { CCol, CContainer, CRow } from '@coreui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import rangeParser from 'parse-numeric-range'
@@ -6,6 +5,7 @@ import queryString from 'query-string'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Grid } from '~/Components/Grid'
 import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { usePagesInfoSubscription } from '~/Hooks/usePagesInfoSubscription.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
@@ -171,14 +171,14 @@ export const TabletView = observer(function TabletView() {
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
-				<CContainer fluid className="d-flex flex-column">
+				<Grid.Container fluid className="d-flex flex-column">
 					{pagesReady && userConfigReady && rawGridSize ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} gridSize={rawGridSize} />
 
 							<div className="button-zone">
-								<CRow>
-									<CCol sm={12} className="buttongrid-row">
+								<Grid.Row>
+									<Grid.Col sm={12} className="buttongrid-row">
 										<div ref={elementSizeRef} className="buttons-holder">
 											{showPageHeadings ? (
 												<PagesWithHeadings
@@ -197,19 +197,19 @@ export const TabletView = observer(function TabletView() {
 												/>
 											)}
 										</div>
-									</CCol>
-								</CRow>
+									</Grid.Col>
+								</Grid.Row>
 							</div>
 						</>
 					) : (
-						<CRow className="flex-grow-1">
+						<Grid.Row className="flex-grow-1">
 							<div className="cycle-layout">
 								<div></div>
 								<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} design="pulse-xl" />
 							</div>
-						</CRow>
+						</Grid.Row>
 					)}
-				</CContainer>
+				</Grid.Container>
 			</div>
 		</div>
 	)

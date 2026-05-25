@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,6 +6,7 @@ import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -78,7 +78,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 					</span>
 				) : null}
 			</FormLabel>
-			<CCol sm={8}>
+			<Grid.Col sm={8}>
 				{disableAutoExpression ? (
 					children({ value: elementProp.value }, setInnerValue, inputId)
 				) : (
@@ -94,7 +94,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 						{children({ value: elementProp.value }, setInnerValue, inputId)}
 					</FieldOrExpression>
 				)}
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })

@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import {
 	faClone,
 	faCompressArrowsAlt,
@@ -19,6 +18,7 @@ import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@compa
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -414,10 +414,10 @@ const EventEditor = observer(function EventEditor({
 
 			{!isCollapsed && (
 				<div className="editor-grid editor-grid-events">
-					<CCol sm={12} className="cell-description">
+					<Grid.Col sm={12} className="cell-description">
 						{headlineExpanded && <p className="name">{name}</p>}
 						{eventSpec?.description || ''}
-					</CCol>
+					</Grid.Col>
 
 					<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 						{eventSpec?.options.map((opt, i) => (

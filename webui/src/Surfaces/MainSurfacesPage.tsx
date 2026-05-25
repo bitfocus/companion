@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faAdd, faCog, faSync } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
@@ -8,6 +7,7 @@ import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Callout } from '~/Components/Callout'
+import { Grid } from '~/Components/Grid'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -88,8 +88,8 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 	const showSecondaryPanel = twoPanelMode || !!selectedSurfaceId || showSettings
 
 	return (
-		<CRow className="surfaces-page split-panels">
-			<CCol
+		<Grid.Row className="surfaces-page split-panels">
+			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
 				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
 			>
@@ -155,15 +155,15 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						?
 					</Callout>
 				</div>
-			</CCol>
+			</Grid.Col>
 
-			<CCol xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />
 					</MyErrorBoundary>
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })

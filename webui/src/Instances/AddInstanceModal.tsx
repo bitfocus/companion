@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -9,6 +8,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
@@ -160,14 +160,14 @@ export const AddInstanceModal = observer(
 										<FormLabel htmlFor={labelFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 											Label&nbsp;
 										</FormLabel>
-										<CCol sm={8}>
+										<Grid.Col sm={8}>
 											<TextInputField
 												id={labelFieldId}
 												value={instanceLabel}
 												setValue={setInstanceLabel}
 												immediateValue
 											/>
-										</CCol>
+										</Grid.Col>
 
 										<FormLabel htmlFor={versionFieldId} className="col-sm-4 col-form-label col-form-label-sm pe-0">
 											<div className="flex">
@@ -182,7 +182,7 @@ export const AddInstanceModal = observer(
 												)}
 											</div>
 										</FormLabel>
-										<CCol sm={8}>
+										<Grid.Col sm={8}>
 											<SimpleDropdownInputField
 												id={versionFieldId}
 												value={selectedVersion as string}
@@ -190,18 +190,18 @@ export const AddInstanceModal = observer(
 												noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
 												choices={versionChoices}
 											/>
-										</CCol>
-										<CCol sm={{ span: 8, offset: 4 }} className="mt-0">
+										</Grid.Col>
+										<Grid.Col sm={{ span: 8, offset: 4 }} className="mt-0">
 											<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>
-										</CCol>
+										</Grid.Col>
 
 										{hasIncompatibleNewerVersion && (
-											<CCol xs={12}>
+											<Grid.Col xs={12}>
 												<StaticAlert color="warning" className="mt-2 mb-0">
 													There is a newer version of this module on the store, but it requires a newer version of
 													Companion.
 												</StaticAlert>
-											</CCol>
+											</Grid.Col>
 										)}
 									</Form>
 

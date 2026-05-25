@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -10,6 +9,7 @@ import { Button, ButtonGroup } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { FormLabel } from '~/Components/Form'
 import { Form } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
@@ -172,8 +172,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 			</div>
 			<div>
 				<Form className="flex-form" onSubmit={PreventDefaultHandler}>
-					<CRow>
-						<CCol sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
+					<Grid.Row>
+						<Grid.Col sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
 							<FormLabel htmlFor={stepInputId}>Step</FormLabel>
 
 							<SimpleDropdownInputField
@@ -183,8 +183,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}
 							/>
-						</CCol>
-						<CCol sm={10} xs={9} hidden={actionSetOptions.length === 0}>
+						</Grid.Col>
+						<Grid.Col sm={10} xs={9} hidden={actionSetOptions.length === 0}>
 							<FormLabel htmlFor={setInputId}>Action Group</FormLabel>
 
 							<SimpleDropdownInputField
@@ -194,8 +194,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
 								disabled={!controlInfo}
 							/>
-						</CCol>
-						<CCol className="py-1" sm={10} xs={9}>
+						</Grid.Col>
+						<Grid.Col className="py-1" sm={10} xs={9}>
 							<ButtonGroup>
 								<Button
 									color="primary"
@@ -214,8 +214,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 									Append
 								</Button>
 							</ButtonGroup>
-						</CCol>
-					</CRow>
+						</Grid.Col>
+					</Grid.Row>
 				</Form>
 			</div>
 		</>

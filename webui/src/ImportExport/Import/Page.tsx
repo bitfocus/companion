@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faFileCircleExclamation, faFileCirclePlus, faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
@@ -21,6 +20,7 @@ import { useGridZoom } from '~/Buttons/GridZoom.js'
 import { Button } from '~/Components/Button'
 import { Callout } from '~/Components/Callout'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
+import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -119,12 +119,12 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 				Choose a source page containing the buttons to import and a destination page where they will be imported. You
 				can either replace an existing page or create a new one.
 			</p>
-			<CRow className="import-page-row">
-				<CCol xs={12} xl={6} className="import-page-grid">
+			<Grid.Row className="import-page-row">
+				<Grid.Col xs={12} xl={6} className="import-page-grid">
 					<h5>Source Page</h5>
 					<MyErrorBoundary>
 						<>
-							<CCol sm={12}>
+							<Grid.Col sm={12}>
 								<PageNumberPicker
 									pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 									changePage={isSinglePage ? undefined : changeImportPage}
@@ -135,7 +135,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</PageNumberPicker>
-							</CCol>
+							</Grid.Col>
 							<div className="buttongrid" ref={hasBeenRenderedRef}>
 								{hasBeenRendered && sourceGridSize && (
 									<ButtonInfiniteGrid
@@ -150,13 +150,13 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 							</div>
 						</>
 					</MyErrorBoundary>
-				</CCol>
+				</Grid.Col>
 
-				<CCol xs={12} xl={6} className="import-page-grid">
+				<Grid.Col xs={12} xl={6} className="import-page-grid">
 					<h5>Destination Page</h5>
 					<MyErrorBoundary>
 						<>
-							<CCol sm={12}>
+							<Grid.Col sm={12}>
 								<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber} newPageAtEnd>
 									<ButtonGridZoomControl
 										useCompactButtons={true}
@@ -168,7 +168,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</ButtonGridHeader>
-							</CCol>
+							</Grid.Col>
 							<div className="buttongrid">
 								{hasBeenRendered && destinationGridSize && pageNumber != -1 && (
 									<ButtonInfiniteGrid
@@ -195,8 +195,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 							</div>
 						</>
 					</MyErrorBoundary>
-				</CCol>
-			</CRow>
+				</Grid.Col>
+			</Grid.Row>
 			<MyErrorBoundary>
 				<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 			</MyErrorBoundary>

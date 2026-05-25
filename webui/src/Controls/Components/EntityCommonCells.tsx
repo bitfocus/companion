@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -16,6 +15,7 @@ import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js
 import { StaticAlert } from '~/Components/Alert.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
@@ -100,7 +100,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 										text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`}
 									/>
 								</FormLabel>
-								<CCol sm={8}>
+								<Grid.Col sm={8}>
 									<TextInputFieldSimple
 										id={variableNameId}
 										value={entity.variableName ?? ''}
@@ -108,7 +108,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 										checkValid={(str) => str === '' || isLabelValid(str)}
 										disabled={readonly}
 									/>
-								</CCol>
+								</Grid.Col>
 							</MyErrorBoundary>
 
 							<MyErrorBoundary>
@@ -229,7 +229,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 			<FormLabel htmlFor={invertFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 				Current Value
 			</FormLabel>
-			<CCol sm={8}>
+			<Grid.Col sm={8}>
 				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
 					<TextInputFieldSimple
 						id={invertFieldId}
@@ -247,7 +247,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 				) : (
 					<small>Variable is not active (the name is empty)</small>
 				)}
-			</CCol>
+			</Grid.Col>
 		</MyErrorBoundary>
 	)
 })

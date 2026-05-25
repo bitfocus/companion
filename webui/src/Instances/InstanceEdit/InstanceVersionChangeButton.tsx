@@ -1,4 +1,4 @@
-import { CCol, CCollapse, CRow } from '@coreui/react'
+import { CCollapse } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -11,6 +11,7 @@ import { Button } from '~/Components/Button'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
@@ -130,8 +131,8 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 							}}
 						>
 							<Modal.Body>
-								<CRow className="g-sm-2">
-									<CCol sm={12}>
+								<Grid.Row className="g-sm-2">
+									<Grid.Col sm={12}>
 										<StaticAlert color="warning" className="mb-3">
 											Be careful when downgrading the module version. Some features may not be available in older
 											versions.
@@ -141,7 +142,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 												Save failed: {saveError}
 											</StaticAlert>
 										)}
-									</CCol>
+									</Grid.Col>
 
 									<form.Subscribe
 										selector={(state) => [state.values.moduleId, advancedMode] as const}
@@ -160,7 +161,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 																	<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
 																)}
 															</FormLabel>
-															<CCol sm={9}>
+															<Grid.Col sm={9}>
 																<SelectedVersionDropdown
 																	moduleType={service.moduleType}
 																	moduleId={effectiveModuleId}
@@ -169,7 +170,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 																	onChange={field.handleChange}
 																	onBlur={field.handleBlur}
 																/>
-															</CCol>
+															</Grid.Col>
 														</>
 													)}
 												/>
@@ -177,25 +178,25 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										}}
 									/>
 
-									<CCol sm={12} className="mt-3 mb-2">
+									<Grid.Col sm={12} className="mt-3 mb-2">
 										<hr className="my-2" />
 										<Button color="link" size="sm" onClick={toggleAdvancedMode} className="p-0 text-decoration-none">
 											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
 										</Button>
-									</CCol>
+									</Grid.Col>
 
 									<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
-										<CCol sm={12}>
+										<Grid.Col sm={12}>
 											<StaticAlert color="danger" className="mt-0 mb-3">
 												{changeModuleDangerMessage}
 											</StaticAlert>
-										</CCol>
+										</Grid.Col>
 
 										<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
 											Module
 										</FormLabel>
-										<CCol sm={9}>
+										<Grid.Col sm={9}>
 											<form.Field
 												name="moduleId"
 												children={(field) => (
@@ -211,9 +212,9 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													/>
 												)}
 											/>
-										</CCol>
+										</Grid.Col>
 									</CCollapse>
-								</CRow>
+								</Grid.Row>
 							</Modal.Body>
 							<Modal.Footer>
 								<form.Subscribe

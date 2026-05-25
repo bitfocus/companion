@@ -1,4 +1,4 @@
-import { CCol, CContainer, CProgress, CRow } from '@coreui/react'
+import { CProgress } from '@coreui/react'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -8,6 +8,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend'
 import { TouchBackend } from 'react-dnd-touch-backend'
 import { useIdleTimer } from 'react-idle-timer'
 import { PuffLoader } from 'react-spinners'
+import { Grid } from '~/Components/Grid'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
@@ -87,11 +88,11 @@ export default function App(): React.JSX.Element {
 					</div>
 					<Suspense
 						fallback={
-							<CRow className={'loading'}>
+							<Grid.Row className={'loading'}>
 								<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
 									<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
 								</div>
-							</CRow>
+							</Grid.Row>
 						}
 					>
 						<MonacoLoader />
@@ -273,10 +274,10 @@ interface AppLoadingProps {
 function AppLoading({ progress, connected }: AppLoadingProps) {
 	const message = connected ? 'Syncing' : 'Connecting'
 	return (
-		<CContainer fluid className="fadeIn loading">
-			<CRow>
-				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
-				<CCol xxl={4} md={6} sm={8} xs={10}>
+		<Grid.Container fluid className="fadeIn loading">
+			<Grid.Row>
+				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
+				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
 					{connected ? (
 						<CProgress className="mt-4" value={connected ? progress : 0} />
@@ -285,9 +286,9 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
 						</div>
 					)}
-				</CCol>
-			</CRow>
-		</CContainer>
+				</Grid.Col>
+			</Grid.Row>
+		</Grid.Container>
 	)
 }
 
@@ -328,10 +329,10 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 	)
 
 	return (
-		<CContainer fluid className="fadeIn loading">
-			<CRow>
-				<CCol xxl={4} md={3} sm={2} xs={1}></CCol>
-				<CCol xxl={4} md={6} sm={8} xs={10}>
+		<Grid.Container fluid className="fadeIn loading">
+			<Grid.Row>
+				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
+				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>Companion is locked</h3>
 					<Form onSubmit={tryLogin}>
 						<InputGroup>
@@ -347,9 +348,9 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 							</Button>
 						</InputGroup>
 					</Form>
-				</CCol>
-			</CRow>
-		</CContainer>
+				</Grid.Col>
+			</Grid.Row>
+		</Grid.Container>
 	)
 })
 
@@ -399,12 +400,12 @@ const AppContent = observer(function AppContent() {
 	}, [userConfig.properties?.installName])
 
 	return (
-		<CContainer fluid className="fadeIn">
+		<Grid.Container fluid className="fadeIn">
 			<WizardModal />
 
 			<MyErrorBoundary>
 				<Outlet />
 			</MyErrorBoundary>
-		</CContainer>
+		</Grid.Container>
 	)
 })

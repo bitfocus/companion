@@ -1,5 +1,5 @@
-import { CCol, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 
@@ -39,9 +39,9 @@ export const ConnectionVariablesModal = forwardRef<ConnectionVariablesModalRef>(
 								<Modal.Title>Variables for {connectionLabel}</Modal.Title>
 							</Modal.Header>
 							<Modal.Body className="variables-table-modal-body">
-								<CRow>
-									<CCol lg={12}>{connectionLabel && <VariablesTable label={connectionLabel} />}</CCol>
-								</CRow>
+								<Grid.Row>
+									<Grid.Col lg={12}>{connectionLabel && <VariablesTable label={connectionLabel} />}</Grid.Col>
+								</Grid.Row>
 							</Modal.Body>
 						</Modal.Popup>
 					</Modal.Viewport>

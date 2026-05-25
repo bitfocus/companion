@@ -1,14 +1,14 @@
-import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
+import { Grid } from '~/Components/Grid'
 import { useUserConfigProps } from './Context.js'
 import { CompanionConfig } from './Sections/CompanionConfig.js'
 import { DataCollectionConfig } from './Sections/DataCollection.js'
 
 export const SettingsGeneralPage = memo(function UserConfig() {
 	return (
-		<CRow className="split-panels">
-			<CCol xl={6} className="primary-panel">
+		<Grid.Row className="split-panels">
+			<Grid.Col xl={6} className="primary-panel">
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
@@ -22,8 +22,8 @@ export const SettingsGeneralPage = memo(function UserConfig() {
 						<UserConfigTable />
 					</div>
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })
 

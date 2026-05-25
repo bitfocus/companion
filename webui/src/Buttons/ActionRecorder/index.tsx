@@ -1,10 +1,10 @@
-import { CCol, CRow } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef } from 'react'
 import type { RecordSessionUpdate } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { Callout } from '~/Components/Callout.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
@@ -60,7 +60,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 	)
 
 	return (
-		<CRow className="action-recorder-panel">
+		<Grid.Row className="action-recorder-panel">
 			<GenericConfirmModal ref={confirmRef} />
 
 			{sessionsStore.isFinishing && selectedSessionId ? (
@@ -69,7 +69,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 				''
 			)}
 
-			<CCol xs={12} className={'sticky-heading'}>
+			<Grid.Col xs={12} className={'sticky-heading'}>
 				<h5>Action Recorder</h5>
 				<p>
 					You can use this panel to record actions as you make changes directly on a configured device. <br />
@@ -84,7 +84,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 						/>
 					)}
 				</div>
-			</CCol>
+			</Grid.Col>
 
 			{selectedSessionId ? (
 				<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
@@ -93,6 +93,6 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 			) : (
 				<Callout color="danger">There is no session, this looks like a bug!</Callout>
 			)}
-		</CRow>
+		</Grid.Row>
 	)
 })

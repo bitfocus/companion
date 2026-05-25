@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -10,6 +9,7 @@ import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Grid } from '~/Components/Grid'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -31,11 +31,11 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleTyp
 
 	if (!moduleInfo && !moduleStoreInfo) {
 		return (
-			<CRow className="edit-connection">
-				<CCol xs={12}>
+			<Grid.Row className="edit-connection">
+				<Grid.Col xs={12}>
 					<p>Module not found</p>
-				</CCol>
-			</CRow>
+				</Grid.Col>
+			</Grid.Row>
 		)
 	}
 

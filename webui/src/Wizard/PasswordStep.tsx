@@ -1,10 +1,10 @@
-import { CCol, CRow } from '@coreui/react'
 import { useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { FormLabel } from '~/Components/Form'
+import { Grid } from '~/Components/Grid'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
 
@@ -18,43 +18,43 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 	const timeoutFieldId = useId()
 
 	return (
-		<CRow>
-			<CCol sm={12}>
+		<Grid.Row>
+			<Grid.Col sm={12}>
 				<h5>Admin GUI Password</h5>
 				<p>
 					Optionally, you can restrict this interface using a password. This is intended to keep normal users from
 					stumbling upon the settings and changing things. It will not keep out someone determined to bypass it.
 				</p>
 				<StaticAlert color="danger">This does not make an installation more secure!</StaticAlert>
-			</CCol>
+			</Grid.Col>
 
-			<CCol xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"
 					value={!!config.admin_lockout}
 					setValue={(val) => setValue('admin_lockout', val)}
 				/>
-			</CCol>
+			</Grid.Col>
 
 			{config.admin_lockout && (
 				<>
 					<FormLabel htmlFor={passwordFieldId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
 						Password
 					</FormLabel>
-					<CCol sm={5} className="mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<SecretTextInputField
 							id={passwordFieldId}
 							value={config.admin_password || ''}
 							setValue={(val) => setValue('admin_password', val)}
 							immediateValue
 						/>
-					</CCol>
-					<CCol sm={2}></CCol>
+					</Grid.Col>
+					<Grid.Col sm={2}></Grid.Col>
 
 					<FormLabel htmlFor={timeoutFieldId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
 						Session Timeout
 					</FormLabel>
-					<CCol sm={5} className="mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={timeoutFieldId}
 							value={config.admin_timeout}
@@ -64,10 +64,10 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 							immediateValue
 						/>
 						<span className="text-muted">(minutes, 0 for none)</span>
-					</CCol>
-					<CCol sm={2}></CCol>
+					</Grid.Col>
+					<Grid.Col sm={2}></Grid.Col>
 				</>
 			)}
-		</CRow>
+		</Grid.Row>
 	)
 }

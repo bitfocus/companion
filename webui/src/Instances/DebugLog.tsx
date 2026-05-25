@@ -1,10 +1,10 @@
-import { CCol, CContainer, CRow } from '@coreui/react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 import dayjs from 'dayjs'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Grid } from '~/Components/Grid'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'
@@ -125,10 +125,10 @@ export function InstanceDebugLog({
 	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
 
 	return (
-		<CContainer style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
+		<Grid.Container style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
-				<CRow className="px-3">
-					<CCol>
+				<Grid.Row className="px-3">
+					<Grid.Col>
 						<ButtonGroup className="me-2">
 							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>
 								{isConnected ? 'Connected' : 'Reconnecting'}
@@ -182,15 +182,15 @@ export function InstanceDebugLog({
 								</Button>
 							</ButtonGroup>
 						</div>
-					</CCol>
-				</CRow>
-				<CRow className="log-panel">
-					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
+					</Grid.Col>
+				</Grid.Row>
+				<Grid.Row className="log-panel">
+					<Grid.Col lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
 						<LogPanelContents linesBuffer={linesBuffer} config={config} />
-					</CCol>
-				</CRow>
+					</Grid.Col>
+				</Grid.Row>
 			</div>
-		</CContainer>
+		</Grid.Container>
 	)
 }
 

@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { useCallback, useId, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
@@ -7,6 +6,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
@@ -166,18 +166,18 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 	const nameFieldId = useId()
 
 	return (
-		<CCol sm={12} className="p-0">
+		<Grid.Col sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
-				<CCol xs={12}>
+				<Grid.Col xs={12}>
 					<FormLabel htmlFor={nameFieldId}>Name</FormLabel>
 					<br />
 					<InputGroup>
 						<TextInputFieldSimple id={nameFieldId} setValue={setName} value={options.name} />
 						<TestActionsButton controlId={controlId} hidden={!options} />
 					</InputGroup>
-				</CCol>
+				</Grid.Col>
 			</Form>
-		</CCol>
+		</Grid.Col>
 	)
 }
 

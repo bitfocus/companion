@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { faArrowsAlt, faArrowsLeftRight, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -8,6 +7,7 @@ import { useResizeObserver } from 'usehooks-ts'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button, type ButtonColor } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface ButtonGridActionsRef {
@@ -199,7 +199,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		<>
 			<GenericConfirmModal ref={resetRef} />
 
-			<CCol sm={12} className={classnames({ out: isHot, fadeinout: true })}>
+			<Grid.Col sm={12} className={classnames({ out: isHot, fadeinout: true })}>
 				<div className="button-grid-controls" ref={setSizeRef}>
 					<div>
 						{getButton('Copy', faCopy, 'copy')}
@@ -228,7 +228,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						</Button>
 					</div>
 				</div>
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })

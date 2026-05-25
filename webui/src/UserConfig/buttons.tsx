@@ -1,14 +1,14 @@
-import { CCol, CRow } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
+import { Grid } from '~/Components/Grid'
 import { useUserConfigProps } from './Context.js'
 import { ButtonsConfig } from './Sections/ButtonsConfig.js'
 import { GridConfigRows } from './Sections/GridConfig.js'
 
 export const SettingsButtonsPage = memo(function UserConfig() {
 	return (
-		<CRow className="split-panels">
-			<CCol xl={6} className="primary-panel">
+		<Grid.Row className="split-panels">
+			<Grid.Col xl={6} className="primary-panel">
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
@@ -22,16 +22,16 @@ export const SettingsButtonsPage = memo(function UserConfig() {
 						<UserConfigTable />
 					</div>
 				</div>
-			</CCol>
-			{/* <CCol xs={12} xl={6} className="secondary-panel">
+			</Grid.Col>
+			{/* <Grid.Col xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-header">
 					<h4>Remote control</h4>
 					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
 				</div>
 				<div className="secondary-panel-inner">
 				</div>
-			</CCol> */}
-		</CRow>
+			</Grid.Col> */}
+		</Grid.Row>
 	)
 })
 

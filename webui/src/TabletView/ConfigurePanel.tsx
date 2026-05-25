@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faCog, faExpand } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useId, useState } from 'react'
@@ -6,6 +5,7 @@ import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigM
 import { Button } from '~/Components/Button'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { NumberInputField } from '~/Components/NumberInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
@@ -37,8 +37,8 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 	const displayColumnFieldId = useId()
 
 	return show ? (
-		<CRow className="configure">
-			<CCol sm={12}>
+		<Grid.Row className="configure">
+			<Grid.Col sm={12}>
 				<h3>
 					Configure Buttons View
 					<Button className="close-config" onClick={() => setShow(false)} title="Close">
@@ -46,8 +46,8 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 					</Button>
 				</h3>
 				<Form onSubmit={PreventDefaultHandler}>
-					<CRow>
-						<CCol sm={6} xs={12}>
+					<Grid.Row>
+						<Grid.Col sm={6} xs={12}>
 							<FormLabel htmlFor={pagesFieldId}>Pages</FormLabel>
 							<TextInputFieldSimple
 								id={pagesFieldId}
@@ -94,8 +94,8 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 								max={gridSize.maxRow}
 								min={Number(query['min_row']) || gridSize.minRow}
 							/>
-						</CCol>
-						<CCol sm={6} xs={12}>
+						</Grid.Col>
+						<Grid.Col sm={6} xs={12}>
 							<CheckboxInputFieldWithLabel
 								className="my-1"
 								label="Hide configure button"
@@ -123,14 +123,14 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 								setValue={(val) => updateQueryUrl('display_cols', val)}
 								min={0}
 							/>
-						</CCol>
-					</CRow>
+						</Grid.Col>
+					</Grid.Row>
 				</Form>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	) : (
-		<CRow className="header">
-			<CCol xs={12}>
+		<Grid.Row className="header">
+			<Grid.Col xs={12}>
 				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] && (
 					<Button
 						onClick={() => {
@@ -149,7 +149,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 						<FontAwesomeIcon icon={faCog} />
 					</Button>
 				)}
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 }
