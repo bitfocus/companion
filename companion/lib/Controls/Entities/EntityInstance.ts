@@ -19,13 +19,13 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
-import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
+import type { EntityPoolSpecialExpressionManager } from './EntityIsInvertedManager.js'
 import { ControlEntityList } from './EntityList.js'
+import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
-	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from './Types.js'
 
@@ -38,7 +38,7 @@ export class ControlEntityInstance {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #isInvertedManager: EntityPoolIsInvertedManager
+	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
 
 	/**
 	 * Id of the control this belongs to
@@ -165,7 +165,7 @@ export class ControlEntityInstance {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		isInvertedManager: EntityPoolIsInvertedManager,
+		specialExpressionManager: EntityPoolSpecialExpressionManager,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -175,7 +175,7 @@ export class ControlEntityInstance {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#isInvertedManager = isInvertedManager
+		this.#specialExpressionManager = specialExpressionManager
 		this.#controlId = controlId
 
 		{
@@ -224,7 +224,7 @@ export class ControlEntityInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#isInvertedManager,
+			this.#specialExpressionManager,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
 			listDefinition
@@ -270,7 +270,7 @@ export class ControlEntityInstance {
 			})
 		}
 
-		this.#isInvertedManager.forgetEntity(this.id)
+		this.#specialExpressionManager.forgetEntity(this.id)
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
@@ -301,7 +301,7 @@ export class ControlEntityInstance {
 				})
 			}
 			if (!this.#data.disabled) {
-				this.#isInvertedManager.trackEntity(this)
+				this.#specialExpressionManager.trackEntity(this, 'isInverted')
 			}
 		}
 
@@ -810,15 +810,17 @@ export class ControlEntityInstance {
 	 * Update the isInverted values on the control with new calculated isInverted values
 	 * @param newValues The new isInverted values
 	 */
-	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): ControlEntityInstance[] {
+	updateIsInvertedValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
+	): ControlEntityInstance[] {
 		const changed: ControlEntityInstance[] = []
 
 		const newValue = newValues.get(this.#data.id)
 
 		let thisChanged = false
 		if (this.type === EntityModelType.Feedback && newValue && !isInternalUserValueFeedback(this)) {
-			if (!!newValue.isInverted !== this.#cachedIsInverted) {
-				this.#cachedIsInverted = !!newValue.isInverted
+			if (newValue.value !== this.#cachedIsInverted) {
+				this.#cachedIsInverted = newValue.value
 				changed.push(this)
 				thisChanged = true
 			}

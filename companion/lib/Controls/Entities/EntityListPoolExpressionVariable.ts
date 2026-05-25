@@ -9,7 +9,8 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import type { NewFeedbackValue, NewIsInvertedValue } from './Types.js'
+import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
+import type { NewFeedbackValue } from './Types.js'
 
 export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase {
 	#entities: ControlEntityList
@@ -84,7 +85,7 @@ export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase 
 	 * Update the isInverted values on the control with new calculated isInverted values
 	 * @param newValues The new isInverted values
 	 */
-	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): void {
+	override updateIsInvertedValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>): void {
 		const changedVariableEntities = this.#localVariables.updateIsInvertedValues(newValues)
 
 		if (this.#entities.updateIsInvertedValues(newValues).length > 0) {

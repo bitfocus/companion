@@ -21,9 +21,3 @@ export interface NewFeedbackValue {
 
 	value: FeedbackValue
 }
-
-export interface NewIsInvertedValue {
-	entityId: string
-	controlId: string
-	isInverted: boolean
-}
