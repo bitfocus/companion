@@ -8,12 +8,12 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { clamp } from '../../Resources/Util.js'
 import { ControlEntityInstance } from './EntityInstance.js'
-import type { EntityPoolIsInvertedManager } from './EntityIsInvertedManager.js'
+import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
+import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
-	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from './Types.js'
 
@@ -26,7 +26,7 @@ export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #isInvertedManager: EntityPoolIsInvertedManager
+	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
 
 	/**
 	 * Id of the control this belongs to
@@ -51,7 +51,7 @@ export class ControlEntityList {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		isInvertedManager: EntityPoolIsInvertedManager,
+		specialExpressionManager: EntityPoolSpecialExpressionManager,
 		controlId: string,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
@@ -59,7 +59,7 @@ export class ControlEntityList {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#isInvertedManager = isInvertedManager
+		this.#specialExpressionManager = specialExpressionManager
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
@@ -105,7 +105,7 @@ export class ControlEntityList {
 						this.#instanceDefinitions,
 						this.#internalModule,
 						this.#processManager,
-						this.#isInvertedManager,
+						this.#specialExpressionManager,
 						this.#controlId,
 						entity,
 						!!isCloned
@@ -182,7 +182,7 @@ export class ControlEntityList {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#isInvertedManager,
+			this.#specialExpressionManager,
 			this.#controlId,
 			entityModel,
 			!!isCloned
@@ -302,7 +302,7 @@ export class ControlEntityList {
 				this.#instanceDefinitions,
 				this.#internalModule,
 				this.#processManager,
-				this.#isInvertedManager,
+				this.#specialExpressionManager,
 				this.#controlId,
 				entityModel,
 				true
@@ -428,8 +428,21 @@ export class ControlEntityList {
 	 * Update the isInverted values on the control with new calculated isInverted values
 	 * @param newValues The new isInverted values
 	 */
-	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): ControlEntityInstance[] {
+	updateIsInvertedValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
+	): ControlEntityInstance[] {
 		return this.#entities.flatMap((entity) => entity.updateIsInvertedValues(newValues))
+	}
+
+	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The new storeResult values
+	 */
+	updateStoreResultValues(
+		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>
+	): ControlEntityInstance[] {
+		return this.#entities.flatMap((entity) => entity.updateStoreResultValues(newValues))
 	}
 
 	/**

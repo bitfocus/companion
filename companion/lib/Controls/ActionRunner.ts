@@ -1,9 +1,12 @@
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
+import type { VariablesController } from '../Variables/Controller.js'
+import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
 /**
@@ -26,10 +29,19 @@ export class ActionRunner {
 
 	readonly #instanceController: InstanceController
 	readonly #internalModule: InternalController
+	readonly #variablesController: VariablesController
+	readonly #localVariablesController: LocalVariablesController
 
-	constructor(instanceController: InstanceController, internalModule: InternalController) {
+	constructor(
+		instanceController: InstanceController,
+		internalModule: InternalController,
+		variablesController: VariablesController,
+		localVariablesController: LocalVariablesController
+	) {
 		this.#instanceController = instanceController
 		this.#internalModule = internalModule
+		this.#variablesController = variablesController
+		this.#localVariablesController = localVariablesController
 	}
 
 	/**
@@ -38,18 +50,55 @@ export class ActionRunner {
 	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
 		this.#logger.silly('Running action', action)
 
+		let result: JsonValue | undefined
 		if (action.connectionId === 'internal') {
-			await this.#internalModule.executeAction(action, extras)
+			result = await this.#internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
-			if (instance) {
-				const entityModel = action.asEntityModel(false)
-				if (entityModel.type !== EntityModelType.Action)
-					throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
-				await instance.actionRun(entityModel, extras)
-			} else {
+			if (!instance) {
 				this.#logger.silly('trying to run action on a missing instance.', action)
+				return
 			}
+
+			const entityModel = action.asEntityModel(false)
+			if (entityModel.type !== EntityModelType.Action)
+				throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
+			result = await instance.actionRun(entityModel, extras)
+		}
+
+		// Store the result if necessary, then return.
+		const storeResult = action.storeResult
+		if (!storeResult) return
+
+		switch (storeResult.type) {
+			case 'local-variable': {
+				const { location, variableName: name } = storeResult
+				const localVariable = this.#localVariablesController.localVariableFor(location, name, extras)
+				if (!localVariable) {
+					this.#logger.warn(`Local variable ${name} in location \`${location}\` is invalid`)
+					break
+				}
+
+				this.#localVariablesController.setLocalVariable(localVariable, result)
+				break
+			}
+			case 'custom-variable': {
+				const variableName = storeResult.variableName
+				if (variableName) {
+					const customVars = this.#variablesController.custom
+					if (customVars.hasCustomVariable(variableName)) {
+						customVars.setValue(variableName, result)
+					} else if (storeResult.createIfNotExists) {
+						customVars.createVariable(variableName, result)
+					} else {
+						this.#logger.warn(`Custom variable "${variableName}" not found`)
+					}
+				}
+				break
+			}
+			default:
+				this.#logger.warn(`Invalid store result target: ${JSON.stringify(storeResult)}`)
+				break
 		}
 	}
 

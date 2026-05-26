@@ -31,6 +31,7 @@ import { SurfaceController } from './Surface/Controller.js'
 import { UIController } from './UI/Controller.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { VariablesController } from './Variables/Controller.js'
+import { LocalVariablesController } from './Variables/LocalVariablesController.js'
 
 let infoFileName: URL
 // note this could be done in one line, but webpack was having trouble before url processing was disabled.
@@ -237,7 +238,9 @@ export class Registry {
 
 		this.internalModule = new InternalController(controlStore, pageStore, this.instance, this.variables)
 
-		const actionRunner = new ActionRunner(this.instance, this.internalModule)
+		const localVariables = new LocalVariablesController(controlStore, pageStore)
+
+		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
 			surfaces: this.surfaces,
@@ -264,6 +267,7 @@ export class Registry {
 			this.surfaces,
 			this.graphics,
 			this.userconfig,
+			localVariables,
 			controlEvents,
 			actionRunner,
 			this.exit.bind(this)

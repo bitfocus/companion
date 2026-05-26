@@ -23,6 +23,7 @@ function createDefinition(
 		hasLearn: false,
 		learnTimeout: undefined,
 		showInvert: false,
+		actionHasResult: false,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],

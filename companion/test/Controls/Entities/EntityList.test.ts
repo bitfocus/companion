@@ -9,13 +9,13 @@ import {
 	SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
-import { EntityPoolIsInvertedManager } from '../../../lib/Controls/Entities/EntityIsInvertedManager.js'
 import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
+import { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
+import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
-	NewIsInvertedValue,
 	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
 import {
@@ -42,7 +42,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		connectionEntityDelete,
 		connectionEntityLearnOptions: null as any,
 	}
-	const isInvertedManager: EntityPoolIsInvertedManager = {
+	const specialExpressionManager: EntityPoolSpecialExpressionManager = {
 		trackEntity: vi.fn(),
 		forgetEntity: vi.fn(),
 	} as any
@@ -57,7 +57,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
-		isInvertedManager,
+		specialExpressionManager,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -77,7 +77,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
-		isInvertedManager,
+		specialExpressionManager,
 		controlId,
 		newActionModel,
 		false
@@ -97,7 +97,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
-		isInvertedManager,
+		specialExpressionManager,
 		newActionModel,
 		newAction,
 	}
@@ -1714,7 +1714,7 @@ describe('updateIsInvertedValues', () => {
 	})
 
 	test('lifecycle tracks inverted', () => {
-		const { list, isInvertedManager, getEntityDefinition } = createList('test01', null, {
+		const { list, specialExpressionManager, getEntityDefinition } = createList('test01', null, {
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
@@ -1741,10 +1741,10 @@ describe('updateIsInvertedValues', () => {
 		// loadStorage calls subscribe(true) if skipSubscribe is false
 		list.loadStorage([newFeedback], false, false)
 
-		expect(isInvertedManager.trackEntity).toHaveBeenCalledTimes(1)
+		expect(specialExpressionManager.trackEntity).toHaveBeenCalledTimes(1)
 
 		list.cleanup()
-		expect(isInvertedManager.forgetEntity).toHaveBeenCalledTimes(1)
+		expect(specialExpressionManager.forgetEntity).toHaveBeenCalledTimes(1)
 	})
 })
 
@@ -1810,13 +1810,15 @@ describe('moveEntity', () => {
 	})
 })
 
-function translateIsInvertedValues(oldValues: Record<string, boolean>): Map<string, NewIsInvertedValue> {
-	const map = new Map<string, NewIsInvertedValue>()
+function translateIsInvertedValues(
+	oldValues: Record<string, boolean>
+): Map<string, NewSpecialExpressionValue<'isInverted'>> {
+	const map = new Map<string, NewSpecialExpressionValue<'isInverted'>>()
 	for (const [entityId, isInverted] of Object.entries(oldValues)) {
 		map.set(entityId, {
 			entityId,
 			controlId: '',
-			isInverted,
+			value: isInverted,
 		})
 	}
 	return map

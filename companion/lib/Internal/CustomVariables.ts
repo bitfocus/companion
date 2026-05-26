@@ -10,6 +10,10 @@
  */
 
 import { EventEmitter } from 'node:events'
+import {
+	CustomVariableCreateIfNotExistsOption,
+	CustomVariableSelectorOption,
+} from '@companion-app/shared/CustomVariable.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
@@ -19,6 +23,7 @@ import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
 	InternalVisitor,
@@ -44,20 +49,8 @@ export class InternalCustomVariables
 				label: 'Custom Variable: Set value',
 				description: undefined,
 				options: [
-					{
-						type: 'internal:custom_variable',
-						label: 'Custom variable',
-						id: 'name',
-						expressionDescription:
-							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
-					},
-					{
-						type: 'checkbox',
-						label: 'Create if not exists',
-						id: 'create',
-						default: false,
-						disableAutoExpression: true,
-					},
+					CustomVariableSelectorOption,
+					CustomVariableCreateIfNotExistsOption,
 					{
 						type: 'textinput',
 						label: 'Value',
@@ -103,34 +96,40 @@ export class InternalCustomVariables
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
-		if (action.definitionId === 'custom_variable_set_value') {
-			const variableName = stringifyVariableValue(action.options.name)
-			if (!variableName) return true
-
-			if (this.#variableController.custom.hasCustomVariable(variableName)) {
-				this.#variableController.custom.setValue(variableName, action.options.value)
-			} else if (action.options.create) {
-				this.#variableController.custom.createVariable(variableName, action.options.value)
-			} else {
-				this.#logger.warn(`Custom variable "${variableName}" not found`)
+	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): InternalActionResult {
+		switch (action.definitionId) {
+			case 'custom_variable_set_value': {
+				const variableName = stringifyVariableValue(action.options.name)
+				if (variableName) {
+					if (this.#variableController.custom.hasCustomVariable(variableName)) {
+						this.#variableController.custom.setValue(variableName, action.options.value)
+					} else if (action.options.create) {
+						this.#variableController.custom.createVariable(variableName, action.options.value)
+					} else {
+						this.#logger.warn(`Custom variable "${variableName}" not found`)
+					}
+				}
+				break
 			}
-			return true
-		} else if (action.definitionId === 'custom_variable_reset_to_default') {
-			const variableName = stringifyVariableValue(action.options.name)
-			if (!variableName) return true
-
-			this.#variableController.custom.resetValueToDefault(variableName)
-			return true
-		} else if (action.definitionId === 'custom_variable_sync_to_default') {
-			const variableName = stringifyVariableValue(action.options.name)
-			if (!variableName) return true
-
-			this.#variableController.custom.syncValueToDefault(variableName)
-			return true
-		} else {
-			return false
+			case 'custom_variable_reset_to_default': {
+				const variableName = stringifyVariableValue(action.options.name)
+				if (variableName) {
+					this.#variableController.custom.resetValueToDefault(variableName)
+				}
+				break
+			}
+			case 'custom_variable_sync_to_default': {
+				const variableName = stringifyVariableValue(action.options.name)
+				if (variableName) {
+					this.#variableController.custom.syncValueToDefault(variableName)
+				}
+				break
+			}
+			default:
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {

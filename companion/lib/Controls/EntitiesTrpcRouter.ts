@@ -3,6 +3,7 @@ import {
 	EntityModelType,
 	schemaFeedbackEntityStyleOverride,
 	zodEntityLocation,
+	zodRawStoreResult,
 	type EntityOwner,
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -109,6 +110,29 @@ export function createEntitiesTrpcRouter(
 				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
 
 				return control.entities.entityEnabled(entityLocation, entityId, enabled)
+			}),
+
+		setRawStoreResult: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					target:
+						// tRPC's transport drops `undefined` fields during serialization
+						// because they're not JSON-compatible.  Use `.optional()` rather
+						// than including `z.undefined()` directly in the union to permit
+						// true absence.
+						zodRawStoreResult.optional(),
+				})
+			)
+			.mutation(async ({ input: { controlId, entityLocation, entityId, target } }) => {
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
+
+				return control.entities.entitySetRawStoreResult(entityLocation, entityId, target)
 			}),
 
 		setHeadline: publicProcedure

@@ -17,7 +17,8 @@ import type { ControlActionSetAndStepsManager } from './ControlActionSetAndSteps
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
-import type { NewFeedbackValue, NewIsInvertedValue } from './Types.js'
+import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
+import type { NewFeedbackValue } from './Types.js'
 
 interface CurrentStepFromExpression {
 	type: 'expression'
@@ -486,6 +487,19 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	/**
+	 * Update the storeResult values on the control with new calculated
+	 * storeResult values
+	 * @param newValues The new storeResult values
+	 */
+	override updateStoreResultValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>): void {
+		for (const step of this.#steps.values()) {
+			for (const set of step.sets.values()) {
+				set.updateStoreResultValues(newValues)
+			}
+		}
+	}
+
+	/**
 	 * Propagate variable changes
 	 */
 	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
@@ -869,7 +883,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * Update the isInverted values on the control with new calculated isInverted values
 	 * @param newValues The new isInverted values
 	 */
-	updateIsInvertedValues(newValues: ReadonlyMap<string, NewIsInvertedValue>): void {
+	override updateIsInvertedValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>): void {
 		for (const step of this.#steps.values()) {
 			for (const set of step.sets.values()) {
 				set.updateIsInvertedValues(newValues)

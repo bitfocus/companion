@@ -29,6 +29,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -338,32 +339,37 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): boolean {
-		if (action.definitionId === 'instance_control') {
-			const instanceId = stringifyVariableValue(action.options.instance_id)
-			if (!instanceId) return true
+	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): InternalActionResult {
+		switch (action.definitionId) {
+			case 'instance_control': {
+				const instanceId = stringifyVariableValue(action.options.instance_id)
+				if (instanceId) {
+					let newState = action.options.enable == 'true'
+					if (action.options.enable == 'toggle') {
+						const curState = this.#instanceController.getInstanceStatus(instanceId)
 
-			let newState = action.options.enable == 'true'
-			if (action.options.enable == 'toggle') {
-				const curState = this.#instanceController.getInstanceStatus(instanceId)
+						newState = !curState?.category
+					}
 
-				newState = !curState?.category
+					this.#instanceController.enableDisableConnection(instanceId, newState)
+				}
+				break
 			}
+			case 'connection_collection_enabled': {
+				const collectionId = stringifyVariableValue(action.options.collection_id)
+				if (collectionId) {
+					let newState: boolean | 'toggle' = action.options.enable == 'true'
+					if (action.options.enable == 'toggle') newState = 'toggle'
 
-			this.#instanceController.enableDisableConnection(instanceId, newState)
-			return true
-		} else if (action.definitionId === 'connection_collection_enabled') {
-			const collectionId = stringifyVariableValue(action.options.collection_id)
-			if (!collectionId) return true
-
-			let newState: boolean | 'toggle' = action.options.enable == 'true'
-			if (action.options.enable == 'toggle') newState = 'toggle'
-
-			this.#instanceController.connectionCollections.setCollectionEnabled(collectionId, newState)
-			return true
-		} else {
-			return false
+					this.#instanceController.connectionCollections.setCollectionEnabled(collectionId, newState)
+				}
+				break
+			}
+			default:
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	executeFeedback(feedback: FeedbackForInternalExecution): CompanionFeedbackButtonStyleResult | boolean | void {

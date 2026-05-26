@@ -24,6 +24,7 @@ import type {
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalActionDefinition,
+	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
@@ -174,108 +175,114 @@ export class InternalActionRecorder
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): boolean {
-		if (action.definitionId === 'action_recorder_set_recording') {
-			const session = this.#actionRecorder.getSession()
-			if (session) {
-				const rawEnable =
-					typeof action.options.enable === 'string' ? action.options.enable.trim().toLowerCase() : action.options.enable
+	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
+		switch (action.definitionId) {
+			case 'action_recorder_set_recording': {
+				const session = this.#actionRecorder.getSession()
+				if (session) {
+					const rawEnable =
+						typeof action.options.enable === 'string'
+							? action.options.enable.trim().toLowerCase()
+							: action.options.enable
 
-				let newState = typeof rawEnable === 'boolean' ? rawEnable : rawEnable == 'true'
-				if (rawEnable == 'toggle') newState = !session.isRunning
+					let newState = typeof rawEnable === 'boolean' ? rawEnable : rawEnable == 'true'
+					if (rawEnable == 'toggle') newState = !session.isRunning
 
-				this.#actionRecorder.setRecording(newState)
+					this.#actionRecorder.setRecording(newState)
+				}
+				break
 			}
+			case 'action_recorder_set_connections': {
+				const session = this.#actionRecorder.getSession()
+				if (session) {
+					let result = new Set(session.connectionIds)
 
-			return true
-		} else if (action.definitionId === 'action_recorder_set_connections') {
-			const session = this.#actionRecorder.getSession()
-			if (session) {
-				let result = new Set(session.connectionIds)
-
-				const selectedIds = new Set<string>()
-				if (Array.isArray(action.options.connections)) {
-					for (const connectionId of action.options.connections) {
-						if (typeof connectionId === 'string' && connectionId) {
-							selectedIds.add(connectionId)
+					const selectedIds = new Set<string>()
+					if (Array.isArray(action.options.connections)) {
+						for (const connectionId of action.options.connections) {
+							if (typeof connectionId === 'string' && connectionId) {
+								selectedIds.add(connectionId)
+							}
 						}
+					}
+
+					switch (action.options.mode) {
+						case 'set':
+							result = selectedIds
+							break
+						case 'add':
+							for (const id of selectedIds) {
+								result.add(id)
+							}
+							break
+						case 'remove':
+							for (const id of selectedIds) {
+								result.delete(id)
+							}
+							break
+						case 'toggle':
+							for (const id of selectedIds) {
+								if (!result.delete(id)) {
+									// It wasnt found, so we should add it
+									result.add(id)
+								}
+							}
+							break
+					}
+
+					this.#actionRecorder.setSelectedConnectionIds(Array.from(result))
+				}
+
+				break
+			}
+			case 'action_recorder_save_to_button': {
+				let stepId = stringifyVariableValue(action.options.step)
+				let setId = stringifyVariableValue(action.options.set)
+
+				if (setId === 'press') setId = 'down'
+				else if (setId === 'release') setId = 'up'
+
+				let page = Number(action.options.page)
+				const bank = Number(action.options.bank)
+				if (!isNaN(page) && !isNaN(bank) && setId && stepId) {
+					let controlId: string | null = null
+
+					if (page === 0) page = extras.location?.pageNumber ?? 0
+					if (bank === 0 && extras.location) {
+						controlId = this.#pageStore.getControlIdAt({
+							...extras.location,
+							pageNumber: page,
+						})
+					} else if (bank > 0) {
+						controlId = this.#pageStore.getControlIdAtOldBankIndex(page, bank)
+					}
+
+					if (!controlId) break
+
+					// If stepId is a number, it must be a step button. account for the 0 index
+					if (!isNaN(Number(stepId))) stepId = `${Number(stepId) - 1}`
+
+					try {
+						const setIdSafe = validateActionSetId(setId as any)
+						if (setIdSafe === undefined) throw new Error('Invalid setId')
+
+						this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.options.mode as any)
+					} catch (e) {
+						// We don't have a good way to present this to the user, so ignore it for now. They should notice that it didnt work
+						this.#logger.info(`action_recorder_save_to_button failed: ${e}`)
 					}
 				}
 
-				switch (action.options.mode) {
-					case 'set':
-						result = selectedIds
-						break
-					case 'add':
-						for (const id of selectedIds) {
-							result.add(id)
-						}
-						break
-					case 'remove':
-						for (const id of selectedIds) {
-							result.delete(id)
-						}
-						break
-					case 'toggle':
-						for (const id of selectedIds) {
-							if (!result.delete(id)) {
-								// It wasnt found, so we should add it
-								result.add(id)
-							}
-						}
-						break
-				}
-
-				this.#actionRecorder.setSelectedConnectionIds(Array.from(result))
+				break
 			}
-
-			return true
-		} else if (action.definitionId === 'action_recorder_save_to_button') {
-			let stepId = stringifyVariableValue(action.options.step)
-			let setId = stringifyVariableValue(action.options.set)
-
-			if (setId === 'press') setId = 'down'
-			else if (setId === 'release') setId = 'up'
-
-			let page = Number(action.options.page)
-			const bank = Number(action.options.bank)
-			if (!isNaN(page) && !isNaN(bank) && setId && stepId) {
-				let controlId: string | null = null
-
-				if (page === 0) page = extras.location?.pageNumber ?? 0
-				if (bank === 0 && extras.location) {
-					controlId = this.#pageStore.getControlIdAt({
-						...extras.location,
-						pageNumber: page,
-					})
-				} else if (bank > 0) {
-					controlId = this.#pageStore.getControlIdAtOldBankIndex(page, bank)
-				}
-
-				if (!controlId) return true
-
-				// If stepId is a number, it must be a step button. account for the 0 index
-				if (!isNaN(Number(stepId))) stepId = `${Number(stepId) - 1}`
-
-				try {
-					const setIdSafe = validateActionSetId(setId as any)
-					if (setIdSafe === undefined) throw new Error('Invalid setId')
-
-					this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.options.mode as any)
-				} catch (e) {
-					// We don't have a good way to present this to the user, so ignore it for now. They should notice that it didnt work
-					this.#logger.info(`action_recorder_save_to_button failed: ${e}`)
-				}
-			}
-
-			return true
-		} else if (action.definitionId === 'action_recorder_discard_actions') {
-			this.#actionRecorder.discardActions()
-
-			return true
-		} else {
-			return false
+			case 'action_recorder_discard_actions':
+				this.#actionRecorder.discardActions()
+				break
+			default:
+				return null
 		}
+
+		return { result: undefined }
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
