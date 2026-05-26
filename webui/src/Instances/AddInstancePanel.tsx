@@ -1,4 +1,3 @@
-import { CTooltip } from '@coreui/react'
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import {
 	faCog,
@@ -18,6 +17,7 @@ import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
+import { Tooltip } from '~/Components/Tooltip.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
@@ -246,13 +246,14 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 	return (
 		<div className="flex">
 			{isLimitReached ? (
-				<CTooltip content="This module is limited to one instance">
-					<span>
+				<Tooltip.Root>
+					<Tooltip.Trigger render={<span />}>
 						<Button color="primary" disabled>
 							Add
 						</Button>
-					</span>
-				</CTooltip>
+					</Tooltip.Trigger>
+					<Tooltip.Popup arrow>This module is limited to one instance</Tooltip.Popup>
+				</Tooltip.Root>
 			) : (
 				<Button color="primary" onClick={addInstanceClick}>
 					Add

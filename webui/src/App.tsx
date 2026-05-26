@@ -1,4 +1,3 @@
-import { CProgress } from '@coreui/react'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -13,6 +12,7 @@ import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
 import { Form, InputGroup } from './Components/Form.js'
+import { ProgressBar } from './Components/ProgressBar.js'
 import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
@@ -280,7 +280,7 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
 					{connected ? (
-						<CProgress className="mt-4" value={connected ? progress : 0} />
+						<ProgressBar className="mt-4" value={connected ? progress : 0} />
 					) : (
 						<div className="mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />

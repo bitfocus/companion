@@ -1,0 +1,32 @@
+.progress2 {
+	--progress-height: 1rem;
+	--progress-font-size: 0.75rem;
+	--progress-bg: var(--cui-secondary-bg, #e9ecef);
+	--progress-border-radius: var(--cui-border-radius, 0.375rem);
+	--progress-bar-color: #fff;
+	--progress-bar-bg: var(--cui-primary, #d50215);
+	--progress-bar-transition: width 0.6s ease;
+
+	display: flex;
+	height: var(--progress-height);
+	overflow: hidden;
+	font-size: var(--progress-font-size);
+	background-color: var(--progress-bg);
+	border-radius: var(--progress-border-radius);
+}
+
+.progress2-bar {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+	color: var(--progress-bar-color);
+	text-align: center;
+	white-space: nowrap;
+	background-color: var(--progress-bar-bg);
+	transition: var(--progress-bar-transition);
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
