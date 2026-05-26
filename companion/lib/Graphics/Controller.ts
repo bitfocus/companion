@@ -43,7 +43,8 @@ import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
-import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
+import { ImageResult } from './ImageResult.js'
+import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
@@ -255,19 +256,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
-								const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
-									renderStyle,
-									CRASHED_WORKER_RETRY_COUNT
-								)
-								render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
-									this.#executePoolDrawButtonBareImage(
-										renderStyle,
-										{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-										rotation,
-										format,
-										CRASHED_WORKER_RETRY_COUNT
-									)
-								)
+								render = await this.#drawImageResult(renderStyle)
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -314,19 +303,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
-							const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(
-								renderStyle,
-								CRASHED_WORKER_RETRY_COUNT
-							)
-							render = new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
-								this.#executePoolDrawButtonBareImage(
-									renderStyle,
-									{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-									rotation,
-									format,
-									CRASHED_WORKER_RETRY_COUNT
-								)
-							)
+							render = await this.#drawImageResult(renderStyle)
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
@@ -495,16 +472,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			location: undefined,
 		}
 
-		const { dataUrl, processedStyle } = await this.#executePoolDrawButtonImage(drawStyle, CRASHED_WORKER_RETRY_COUNT)
-		return new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
-			this.#executePoolDrawButtonBareImage(
-				drawStyle,
-				{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-				rotation,
-				format,
-				CRASHED_WORKER_RETRY_COUNT
-			)
-		)
+		return this.#drawImageResult(drawStyle)
 	}
 
 	/**
@@ -641,32 +609,55 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#debounceResizeRenderCache()
 	}
 
-	/**
-	 * Draw a button image in the worker pool
-	 * @returns Image render object
-	 */
-	async #executePoolDrawButtonImage(
-		drawStyle: RendererDrawStyle,
-		remainingAttempts: number
-	): Promise<{
-		dataUrl: string
-		processedStyle: ImageResultProcessedStyle
-	}> {
-		return this.#poolExec('drawButtonImage', [drawStyle], remainingAttempts)
+	async #drawImageResult(drawStyle: RendererButtonStyle): Promise<ImageResult> {
+		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
+
+		const dataUrlResolution = { width: 72, height: 72, oversampling: 4 } // Default values
+		const { dataUrl } = await this.#executePoolDrawButtonImageDataUrl(
+			drawStyle,
+			dataUrlResolution,
+			null,
+			CRASHED_WORKER_RETRY_COUNT
+		)
+
+		return new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
+			this.#executePoolDrawButtonImageBuffer(
+				drawStyle,
+				{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+				rotation,
+				format,
+				CRASHED_WORKER_RETRY_COUNT
+			)
+		)
 	}
 
 	/**
 	 * Draw a button image in the worker pool
 	 * @returns Image render object
 	 */
-	async #executePoolDrawButtonBareImage(
+	async #executePoolDrawButtonImageDataUrl(
+		drawStyle: RendererDrawStyle,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null,
+		remainingAttempts: number
+	): Promise<{
+		dataUrl: string
+	}> {
+		return this.#poolExec('drawButtonImageDataUrl', [drawStyle, resolution, rotation], remainingAttempts)
+	}
+
+	/**
+	 * Draw a button image in the worker pool
+	 * @returns Image render object
+	 */
+	async #executePoolDrawButtonImageBuffer(
 		drawStyle: RendererDrawStyle,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		return this.#poolExec('drawButtonBareImage', [drawStyle, resolution, rotation, format], remainingAttempts)
+		return this.#poolExec('drawButtonImageBuffer', [drawStyle, resolution, rotation, format], remainingAttempts)
 	}
 
 	/**

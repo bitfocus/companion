@@ -24,7 +24,6 @@ import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { Image } from './Image.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
-import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 
 /**
  * Shared style for lock icon display
@@ -139,7 +138,7 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for a button
 	 */
-	static async drawButtonBareImageUnwrapped(
+	static async drawButtonImageBuffer(
 		drawStyle: RendererDrawStyle,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
@@ -152,7 +151,10 @@ export class GraphicsRenderer {
 			dimensions[1],
 			resolution.oversampling,
 			async (img) => {
-				await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle)
+				await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {
+					x: 0,
+					y: 0,
+				})
 
 				return {
 					buffer: img.buffer(),
@@ -168,44 +170,25 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for a button
 	 */
-	static async drawButtonImageUnwrapped(drawStyle: RendererDrawStyle): Promise<{
+	static async drawButtonImageDataUrl(
+		drawStyle: RendererDrawStyle,
+		resolution: { width: number; height: number; oversampling: number },
+		rotation: SurfaceRotation | null
+	): Promise<{
 		dataUrl: string
-		processedStyle: ImageResultProcessedStyle
 	}> {
-		return GraphicsRenderer.#getCachedImage(72, 72, 4, async (img) => {
-			const processedStyle = await GraphicsRenderer.#drawButtonImageInternal(img, drawStyle)
+		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
 
-			return {
-				dataUrl: img.toDataURLSync(),
-				processedStyle,
-			}
-		})
-	}
-
-	static async #drawButtonImageInternal(img: Image, drawStyle: RendererDrawStyle): Promise<ImageResultProcessedStyle> {
-		// console.log('starting drawButtonImage '+ performance.now())
-		// console.time('drawButtonImage')
-
-		let processedStyle: ImageResultProcessedStyle
-
-		// Calculate some constants for drawing without reinventing the numbers
-
-		if (drawStyle.style === 'button-layered') {
-			processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
-
+		return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], resolution.oversampling, async (img) => {
 			await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {
 				x: 0,
 				y: 0,
 			})
-		} else {
-			processedStyle = {
-				type: 'button', // Default to button style
+
+			return {
+				dataUrl: img.toDataURLSync(),
 			}
-		}
-
-		// console.timeEnd('drawButtonImage')
-
-		return processedStyle
+		})
 	}
 
 	/**
