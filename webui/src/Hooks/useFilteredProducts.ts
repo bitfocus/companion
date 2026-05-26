@@ -21,8 +21,9 @@ export function useAllModuleProducts(
 		for (const moduleInfo of modules.allModules.values()) {
 			if (onlyModuleType && moduleInfo.moduleType !== onlyModuleType) continue
 
+			// Prefer the dev version to highlight any pending changes, then chain through the stability levels
 			const latestVersion =
-				moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.builtinVersion ?? moduleInfo.devVersion
+				moduleInfo.devVersion ?? moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.builtinVersion
 			if (!latestVersion) continue // shouldn't happen, but just in case
 
 			for (const product of moduleInfo.display.products) {
