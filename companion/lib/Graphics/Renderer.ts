@@ -83,29 +83,26 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(
-		resolution: { width: number; height: number },
-		showTopbar: boolean,
-		location: ControlLocation | null
-	): ImageResult {
-		// let now = performance.now()
-		// console.log('starting drawBlank ' + now, 'time elapsed since last start ' + (now - lastDraw))
-		// lastDraw = now
-		// console.time('drawBlankImage')
-
-		return GraphicsRenderer.#getCachedImage(resolution.width, resolution.height, 2, (img) => {
-			// console.timeEnd('drawBlankImage')
-			GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
-
-			return new ImageResult(img.toDataURLSync(), null, async (width, height, rotation, format) => {
+	static drawBlank(showTopbar: boolean, location: ControlLocation | null): ImageResult {
+		return new ImageResult(
+			null,
+			async (width, height, rotation, format) => {
 				const dimensions = rotateResolution(width, height, rotation)
 				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
 					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
 				})
-			})
-		})
+			},
+			async (width, height, rotation) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 2, (img) => {
+					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
+
+					return img.toDataURLSync()
+				})
+			}
+		)
 	}
 
 	static #drawBlankImage(img: Image, showTopbar: boolean, location: ControlLocation | null) {
@@ -174,9 +171,7 @@ export class GraphicsRenderer {
 		drawStyle: RendererDrawStyle,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null
-	): Promise<{
-		dataUrl: string
-	}> {
+	): Promise<string> {
 		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
 
 		return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], resolution.oversampling, async (img) => {
@@ -185,9 +180,7 @@ export class GraphicsRenderer {
 				y: 0,
 			})
 
-			return {
-				dataUrl: img.toDataURLSync(),
-			}
+			return img.toDataURLSync()
 		})
 	}
 
@@ -266,28 +259,35 @@ export class GraphicsRenderer {
 	 * @param height Height of the image
 	 */
 	static drawLockIcon(): ImageResult {
-		return new ImageResult('', LOCK_ICON_STYLE, async (width, height, rotation, format) => {
-			const dimensions = rotateResolution(width, height, rotation)
-			return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
-				// Fill with black background
-				img.fillColor('rgb(0, 0, 0)')
+		return new ImageResult(
+			LOCK_ICON_STYLE,
+			async (width, height, rotation, format) => {
+				const dimensions = rotateResolution(width, height, rotation)
+				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
+					// Fill with black background
+					img.fillColor('rgb(0, 0, 0)')
 
-				// Draw a centered padlock unicode character in light grey
-				img.drawAlignedText(
-					0,
-					0,
-					width,
-					height,
-					'🔒',
-					'rgb(200, 200, 200)',
-					Math.floor(height * 0.6),
-					'center',
-					'center'
-				)
+					// Draw a centered padlock unicode character in light grey
+					img.drawAlignedText(
+						0,
+						0,
+						dimensions[0],
+						dimensions[1],
+						'🔒',
+						'rgb(200, 200, 200)',
+						Math.floor(dimensions[1] * 0.6),
+						'center',
+						'center'
+					)
 
-				return this.#RotateAndConvertImage(img, width, height, rotation, format)
-			})
-		})
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				})
+			},
+			async () => {
+				// data-url of this image is never used
+				return ''
+			}
+		)
 	}
 
 	/**

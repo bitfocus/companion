@@ -402,7 +402,8 @@ export class ImportExportController {
 					)
 
 					const res = await this.#graphicsController.drawPreview(drawType, elements)
-					return res?.style ? (res?.asDataUrl ?? null) : null
+					if (!res?.style) return null
+					return await res.drawDataUrl()
 				}),
 
 			importSinglePage: publicProcedure

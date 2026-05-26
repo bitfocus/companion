@@ -2,6 +2,7 @@ import type * as imageRs from '@julusian/image-rs'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import { lazy } from '../Resources/Util.js'
 
 export interface ImageResultProcessedStyle {
 	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
@@ -31,12 +32,13 @@ export type ImageResultNativeDrawFn = (
 	format: imageRs.PixelFormat
 ) => Promise<Uint8Array>
 
-export class ImageResult {
-	/**
-	 * Image data-url for webui clients
-	 */
-	readonly #dataUrl: string
+export type ImageResultDataUrlDrawFn = (
+	width: number,
+	height: number,
+	rotation: SurfaceRotation | null
+) => Promise<string>
 
+export class ImageResult {
 	/**
 	 * Image draw style
 	 */
@@ -44,6 +46,7 @@ export class ImageResult {
 
 	readonly #drawNativeCache = new Map<string, Promise<Uint8Array>>()
 	readonly #drawNative: ImageResultNativeDrawFn
+	readonly #dataUrl: () => Promise<string>
 
 	/**
 	 * Last updated time
@@ -63,26 +66,19 @@ export class ImageResult {
 	readonly referencedLocations: ReadonlySet<string>
 
 	constructor(
-		dataUrl: string,
 		style: ImageResultProcessedStyle | null,
 		drawNative: ImageResultNativeDrawFn,
+		drawDataUrl: ImageResultDataUrlDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> = new Set()
 	) {
-		this.#dataUrl = dataUrl
 		this.style = style
 		this.#drawNative = drawNative
 		this.drawElements = drawElements
+		this.#dataUrl = lazy(async () => drawDataUrl(72, 72, null)) // Default values for backwards compatibility
 		this.referencedLocations = referencedLocations
 
 		this.updated = Date.now()
-	}
-
-	/**
-	 * Get the image as a data url which can be used by a web base client
-	 */
-	get asDataUrl(): string {
-		return this.#dataUrl
 	}
 
 	get bgcolor(): number {
@@ -107,5 +103,13 @@ export class ImageResult {
 		const newBuffer = this.#drawNative(width, height, rotation, format)
 		this.#drawNativeCache.set(cacheKey, newBuffer)
 		return newBuffer
+	}
+
+	/**
+	 * Get the image as a png data url for web and similar clients
+	 * This caches the result between calls, and is safe to call multiple times
+	 */
+	async drawDataUrl(): Promise<string> {
+		return this.#dataUrl()
 	}
 }

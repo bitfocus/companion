@@ -260,7 +260,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, null)
+							render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, null)
 						}
 
 						this.emit('presetDrawn', args.controlId, render)
@@ -308,7 +308,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
+						render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 					}
 
 					if (location && locationIsInBounds) {
@@ -417,11 +417,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(
-					{ width: 72, height: 72 },
-					!this.#drawOptions.remove_topbar,
-					location
-				)
+				const blankRender = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 
 				this.#updateCacheWithRender(location, blankRender)
 				this.emit('button_drawn', location, blankRender)
@@ -590,7 +586,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank({ width: 72, height: 72 }, !this.#drawOptions.remove_topbar, location)
+		return GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
 	}
 
 	/**
@@ -617,16 +613,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	): Promise<ImageResult> {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
-		const dataUrlResolution = { width: 72, height: 72, oversampling: 4 } // Default values
-		const { dataUrl } = await this.#executePoolDrawButtonImageDataUrl(
-			drawStyle,
-			dataUrlResolution,
-			null,
-			CRASHED_WORKER_RETRY_COUNT
-		)
-
 		return new ImageResult(
-			dataUrl,
 			processedStyle,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
@@ -634,6 +621,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
 					rotation,
 					format,
+					CRASHED_WORKER_RETRY_COUNT
+				),
+			async (width, height, rotation) =>
+				this.#executePoolDrawButtonImageDataUrl(
+					drawStyle,
+					{ width, height, oversampling: 4 }, // Default values
+					rotation,
 					CRASHED_WORKER_RETRY_COUNT
 				),
 			drawElements,
@@ -650,9 +644,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		remainingAttempts: number
-	): Promise<{
-		dataUrl: string
-	}> {
+	): Promise<string> {
 		return this.#poolExec('drawButtonImageDataUrl', [drawStyle, resolution, rotation], remainingAttempts)
 	}
 
