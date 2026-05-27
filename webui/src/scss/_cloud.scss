@@ -37,12 +37,25 @@
 		}
 	}
 
-	.card-header {
+	.cloud-regions-heading {
 		font-weight: bold;
+		margin-bottom: 0.75rem;
+	}
+
+	.cloud-region-list {
+		margin-bottom: 0.75rem;
 	}
 }
 
 .cloud-region-item {
+	border-top: 1px solid var(--cui-border-color);
+	padding-top: 0.5rem;
+
+	&:first-child {
+		border-top: 0;
+		padding-top: 0;
+	}
+
 	.cloud-region-text {
 		align-content: center;
 		margin-bottom: 0;

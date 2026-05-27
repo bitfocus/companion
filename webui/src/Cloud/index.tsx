@@ -1,4 +1,3 @@
-import { CCard, CCardBody, CCardHeader, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
@@ -156,23 +155,23 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 
 	return (
 		<Grid.Col sm={12}>
-			<CCard>
-				<CCardHeader>Cloud regions</CCardHeader>
+			<div className="section cloud-regions-section">
+				<h5 className="cloud-regions-heading">Cloud regions</h5>
 
 				{!cloudActive && (
-					<CCardBody>
+					<div className="mb-3">
 						Please select the regions that is closest to you. You need to select at least <b>two regions</b> which will
 						give you redundancy.
-					</CCardBody>
+					</div>
 				)}
 
-				<CListGroup flush>
+				<div className="cloud-region-list">
 					{regionIds.map((regionId) => (
 						<CloudRegionPanel key={regionId} hideDisabled={cloudActive} regionId={regionId} />
 					))}
-				</CListGroup>
+				</div>
 
-				<CCardBody>
+				<div>
 					{cloudActive && (
 						<Callout color="info">Companion Cloud is currently activated. Deactivate to change regions.</Callout>
 					)}
@@ -185,8 +184,8 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 						small
 						tooltip="Activate Companion Cloud"
 					/>
-				</CCardBody>
-			</CCard>
+				</div>
+			</div>
 		</Grid.Col>
 	)
 }
