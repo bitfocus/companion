@@ -181,7 +181,7 @@ export class EntityPoolSpecialExpressionManager {
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
 	#destroyed = false
 
-	readonly #specialExpressions: {
+	private readonly specialExpressions: {
 		readonly [Expression in SpecialExpression]: {
 			readonly entities: Map<string, EntityWrapper>
 			readonly computeNewValueFn: ComputeSpecialExpressionValueFn<Expression>
@@ -200,7 +200,7 @@ export class EntityPoolSpecialExpressionManager {
 		this.#controlId = controlId
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
 
-		this.#specialExpressions = {
+		this.specialExpressions = {
 			isInverted: {
 				entities: new Map(),
 				computeNewValueFn: ComputeIsInverted,
@@ -222,7 +222,7 @@ export class EntityPoolSpecialExpressionManager {
 
 			const parser = this.#createVariablesAndExpressionParser(null)
 
-			for (const [type, specialExpression] of Object.entries(this.#specialExpressions)) {
+			for (const [type, specialExpression] of Object.entries(this.specialExpressions)) {
 				// Skip a special expression when no entities track it.
 				const entities = specialExpression.entities
 				if (entities.size === 0) continue
@@ -279,7 +279,7 @@ export class EntityPoolSpecialExpressionManager {
 	destroy(): void {
 		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
-		for (const { entities } of Object.values(this.#specialExpressions)) {
+		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.clear()
 		}
 	}
@@ -290,7 +290,7 @@ export class EntityPoolSpecialExpressionManager {
 	 * value of any variables it depends upon, change.
 	 */
 	trackEntity(entity: ControlEntityInstance, expression: SpecialExpression): void {
-		const { entities, logger } = this.#specialExpressions[expression]
+		const { entities, logger } = this.specialExpressions[expression]
 
 		// This may replace an existing entity, if so it needs to restart the process
 		entities.set(entity.id, {
@@ -308,7 +308,7 @@ export class EntityPoolSpecialExpressionManager {
 	 * processing of those special expressions to compute their new values.
 	 */
 	forgetEntity(entityId: string): void {
-		for (const { entities } of Object.values(this.#specialExpressions)) {
+		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.delete(entityId)
 		}
 	}
@@ -321,7 +321,7 @@ export class EntityPoolSpecialExpressionManager {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
-		for (const { entities } of Object.values(this.#specialExpressions)) {
+		for (const { entities } of Object.values(this.specialExpressions)) {
 			for (const wrapper of entities.values()) {
 				// Check if already queued for processing
 				const referencedVariableIds = wrapper.referencedVariableIds
