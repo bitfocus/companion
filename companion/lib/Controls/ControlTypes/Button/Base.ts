@@ -401,6 +401,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	 */
 	triggerLocationHasChanged(): void {
 		this.entities.resubscribeEntities(EntityModelType.Feedback, 'internal')
+
+		// Report the location variables for this control as having changed
+		const changedVariableIds = new Set(['this:page', 'this:row', 'this:column', 'this:location'])
+		if (changedVariableIds.size > 0) {
+			this.deps.variableValues.emit('local_variables_changed', changedVariableIds, this.controlId)
+		}
 	}
 }
 
