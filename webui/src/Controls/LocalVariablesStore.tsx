@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { action, makeObservable, observable } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { useEffect, useMemo } from 'react'
+import type { Equal, Expect } from 'type-testing'
+import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
@@ -90,7 +92,7 @@ export function useLocalVariablesStore(
 	return store
 }
 
-export const ControlLocalVariables: DropdownChoiceInt[] = [
+export const ControlLocalVariables = [
 	{
 		value: 'this:page',
 		label: 'This page',
@@ -131,7 +133,12 @@ export const ControlLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:page_name',
 		label: 'This page name',
 	},
-]
+] as const satisfies DropdownChoiceInt[]
+
+// @ts-expect-error Type used only to assert a type condition
+type _VerifyControlVariablesDropdownIsComplete = Expect<
+	Equal<(typeof ControlLocalVariables)[number]['value'], ThisLocationVariable>
+>
 
 export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 	...ControlLocalVariables,
