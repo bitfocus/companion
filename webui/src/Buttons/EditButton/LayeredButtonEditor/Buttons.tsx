@@ -1,4 +1,3 @@
-import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem } from '@coreui/react'
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
 	faCircle,
@@ -17,6 +16,7 @@ import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { Accordion } from '~/Components/Accordion'
 import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Popover } from '~/Components/Popover'
@@ -155,10 +155,12 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 	}, [])
 
 	return (
-		<CAccordion activeItemKey={isOpen ? group.connectionId : undefined} flush>
-			<CAccordionItem itemKey={group.connectionId}>
-				<CAccordionHeader onMouseDown={toggleOpen}>{group.connectionLabel}</CAccordionHeader>
-				<CAccordionBody>
+		<Accordion.Root value={isOpen ? [group.connectionId] : []}>
+			<Accordion.Item value={group.connectionId}>
+				<Accordion.Header>
+					<Accordion.Trigger onMouseDown={toggleOpen}>{group.connectionLabel}</Accordion.Trigger>
+				</Accordion.Header>
+				<Accordion.Panel>
 					{group.elements.map(({ elementId, definition }) => (
 						<AddElementDropdownPopoverButton
 							key={`${group.connectionId};${elementId}`}
@@ -169,9 +171,9 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 							icon={faCube}
 						/>
 					))}
-				</CAccordionBody>
-			</CAccordionItem>
-		</CAccordion>
+				</Accordion.Panel>
+			</Accordion.Item>
+		</Accordion.Root>
 	)
 })
 

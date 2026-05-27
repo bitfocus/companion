@@ -5,6 +5,7 @@
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 
+@use 'scss/components/accordion';
 @use 'scss/components/alert';
 @use 'scss/components/button';
 @use 'scss/components/callout';
