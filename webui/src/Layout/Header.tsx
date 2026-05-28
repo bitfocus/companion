@@ -1,4 +1,3 @@
-import { CHeader, CHeaderBrand, CHeaderNav, CHeaderToggler, CNavItem, CNavLink } from '@coreui/react'
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
 import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import {
@@ -12,9 +11,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, type ReactElement } from 'react'
+import { useCallback, useContext, useMemo, type HTMLAttributes, type ReactElement } from 'react'
 import { PopoverActionMenu, type MenuActionItemProps, type MenuItemProps } from '~/Components/ActionMenu.js'
+import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { Popover } from '~/Components/Popover.js'
 import { MenuSeparator } from '~/Components/useContextMenuProps.js'
@@ -67,25 +68,31 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		// note: position="sticky" is not necessary since the header is never part of a scrolling element.
 		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
 		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
-		<CHeader className="p-0">
+		<div className="header p-0">
 			<Grid.Container fluid>
 				{mobileMode && (
-					<CHeaderToggler className="ps-1" onClick={handleShowSidebar}>
+					<button type="button" className="header-toggler ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
-					</CHeaderToggler>
+					</button>
 				)}
-				<CHeaderBrand className="mx-auto d-md-none">
-					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
-				</CHeaderBrand>
 
-				<CHeaderNav className="d-none d-md-flex me-auto">
+				<a className="header-brand mx-auto d-md-none">
+					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
+				</a>
+
+				<HeaderNav className="d-none d-md-flex me-auto">
 					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
-						<CNavItem className="install-name">{userConfig.properties?.installName}</CNavItem>
+						<li className="nav-item install-name">{userConfig.properties?.installName}</li>
 					)}
 
 					{updateData.data?.message ? (
-						<CNavItem className="header-notification-item">
-							<CNavLink target="_blank" href={updateData.data.link || 'https://companion.free/'}>
+						<li className="nav-item header-notification-item">
+							<a
+								className="nav-link"
+								target="_blank"
+								href={updateData.data.link || 'https://companion.free/'}
+								rel="noopener noreferrer"
+							>
 								<div className="flex">
 									<div className="align-self-center">
 										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
@@ -101,29 +108,42 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 										<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
 									</div>
 								</div>
-							</CNavLink>
-						</CNavItem>
+							</a>
+						</li>
 					) : (
 						''
 					)}
-				</CHeaderNav>
+				</HeaderNav>
 
-				<CHeaderNav className="ml-auto header-right">
+				<HeaderNav className="ml-auto header-right">
 					{canLock && (
-						<CNavItem>
-							<CNavLink onClick={() => setLocked(true)} title="Lock Admin UI">
-								<FontAwesomeIcon icon={faLock} className="fa-lg" />
-							</CNavLink>
-						</CNavItem>
+						<Button color="primary" className="help-toggle" onClick={() => setLocked(true)} title="Lock Admin UI">
+							<FontAwesomeIcon icon={faLock} className="fa-lg" />
+						</Button>
 					)}
-				</CHeaderNav>
+				</HeaderNav>
 				{/* Placing HelpMenu outside CHeaderNav gives "standard" menu line-heights. 
 						Move it into the CHeaderNav block to make it look more like the sidebar line height.  */}
 				<HelpMenu />
 			</Grid.Container>
-		</CHeader>
+		</div>
 	)
 })
+
+interface HeaderNavProps extends HTMLAttributes<HTMLUListElement> {
+	/**
+	 * A string of all className you want applied to the component.
+	 */
+	className?: string
+}
+
+function HeaderNav({ children, className, ...rest }: HeaderNavProps) {
+	return (
+		<ul className={classNames('header-nav', className)} role="navigation" {...rest}>
+			{children}
+		</ul>
+	)
+}
 
 function HelpMenu() {
 	// We could add the config wizard (showWizard) to the help menu in this useContext...
