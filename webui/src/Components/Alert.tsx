@@ -1,7 +1,21 @@
-import { CCloseButton, useForkedRef } from '@coreui/react'
+import { Button as BaseButton } from '@base-ui/react'
 import classNames from 'classnames'
-import { forwardRef, useEffect, useRef, useState, type HTMLAttributes } from 'react'
+import { forwardRef, useEffect, useRef, useState, type ForwardedRef, type HTMLAttributes } from 'react'
 import { Transition } from 'react-transition-group'
+
+function mergeRefs<T>(...refs: Array<ForwardedRef<T> | undefined>) {
+	return (value: T | null): void => {
+		for (const ref of refs) {
+			if (!ref) continue
+
+			if (typeof ref === 'function') {
+				ref(value)
+			} else {
+				ref.current = value
+			}
+		}
+	}
+}
 
 export interface StaticAlertProps extends HTMLAttributes<HTMLDivElement> {
 	/**
@@ -51,7 +65,7 @@ export const StaticAlert = forwardRef<HTMLDivElement, StaticAlertProps>(
 export const DismissableAlert = forwardRef<HTMLDivElement, DismissableAlertProps>(
 	({ children, onClose, className, visible = true, ...rest }, ref) => {
 		const alertRef = useRef<HTMLDivElement>(null)
-		const forkedRef = useForkedRef(ref, alertRef)
+		const forkedRef = mergeRefs(ref, alertRef)
 		const [_visible, setVisible] = useState(visible)
 
 		useEffect(() => setVisible(visible), [visible])
@@ -68,7 +82,12 @@ export const DismissableAlert = forwardRef<HTMLDivElement, DismissableAlertProps
 						})}
 					>
 						{children}
-						<CCloseButton onClick={() => setVisible(false)} />
+						<BaseButton
+							type="button"
+							className="btn btn-close"
+							aria-label="Close alert"
+							onClick={() => setVisible(false)}
+						/>
 					</StaticAlert>
 				)}
 			</Transition>
