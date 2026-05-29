@@ -215,6 +215,22 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				: VARIABLE_UNKNOWN_VALUE
 		)
 	}
+
+	triggerLocationVariablesChange(controlId: string): void {
+		const newValues: VariablesCache = new Map()
+		this.addInjectedVariablesForLocation(newValues, { pageNumber: 1, row: 1, column: 1 }) // Fake location, we don't need it
+
+		const changedVariableIds = new Set<string>()
+		for (const variableId of newValues.keys()) {
+			// Strip off the wrapper
+			if (variableId.startsWith('$(') && variableId.endsWith(')')) {
+				changedVariableIds.add(variableId.substring(2, variableId.length - 1))
+			}
+		}
+		if (changedVariableIds.size > 0) {
+			this.emit('local_variables_changed', changedVariableIds, controlId)
+		}
+	}
 }
 
 export interface VariableValueEntry {
