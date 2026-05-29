@@ -1,13 +1,15 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { ClientBonjourService, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { DropdownInputField } from './DropdownInputField.js'
 
+const MANUAL_SENTINEL = ''
+
 interface BonjourDeviceInputFieldProps {
 	id: string | undefined
-	value: string
-	setValue: (value: DropdownChoiceId) => void
+	value: string | null
+	setValue: (value: DropdownChoiceId | null) => void
 	connectionId: string
 	queryId: string
 }
@@ -20,6 +22,15 @@ export function BonjourDeviceInputField({
 	queryId,
 }: BonjourDeviceInputFieldProps): React.JSX.Element {
 	const [services, setServices] = useState<Record<string, ClientBonjourService | undefined>>({})
+
+	// Translate null (Manual) ↔ empty string for the dropdown, which requires string | number
+	const internalValue = value ?? MANUAL_SENTINEL
+	const internalSetValue = useCallback(
+		(v: DropdownChoiceId) => {
+			setValue(v === MANUAL_SENTINEL ? null : v)
+		},
+		[setValue]
+	)
 
 	/*const bonjourSub = */ useSubscription(
 		trpc.bonjour.watchQuery.subscriptionOptions(
@@ -56,7 +67,7 @@ export function BonjourDeviceInputField({
 	const choicesRaw = useMemo(() => {
 		const choices: DropdownChoice[] = []
 
-		choices.push({ id: null as any, label: 'Manual' })
+		choices.push({ id: MANUAL_SENTINEL, label: 'Manual' })
 
 		for (const svc of Object.values(services)) {
 			if (!svc) continue
@@ -75,15 +86,15 @@ export function BonjourDeviceInputField({
 	const choices = useMemo(() => {
 		const choices = [...choicesRaw]
 
-		if (!choices.find((opt) => opt.id == value)) {
+		if (!choices.find((opt) => opt.id == internalValue)) {
 			choices.push({
-				id: value,
-				label: `*Unavailable* (${value})`,
+				id: internalValue,
+				label: `*Unavailable* (${internalValue})`,
 			})
 		}
 
 		return choices
-	}, [choicesRaw, value])
+	}, [choicesRaw, internalValue])
 
-	return <DropdownInputField htmlName={id} value={value} setValue={setValue} choices={choices} />
+	return <DropdownInputField htmlName={id} value={internalValue} setValue={internalSetValue} choices={choices} />
 }
