@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,6 +6,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
+import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
@@ -119,8 +119,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 				<ButtonGridResizePrompt />
 
-				<CRow>
-					<CCol sm={12}>
+				<Grid.Row>
+					<Grid.Col sm={12}>
 						<ButtonGridHeader pageNumber={pageNumber} changePage={changePage2} setPage={setPage}>
 							<ButtonGridZoomControl
 								useCompactButtons={true}
@@ -137,8 +137,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								<FontAwesomeIcon icon={faFileExport} />
 							</Button>
 						</ButtonGridHeader>
-					</CCol>
-				</CRow>
+					</Grid.Col>
+				</Grid.Row>
 			</div>
 			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }}>
 				{hasBeenInView && gridSize && (

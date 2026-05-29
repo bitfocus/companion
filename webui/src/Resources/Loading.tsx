@@ -1,10 +1,10 @@
-import { CCol } from '@coreui/react'
 import type { TRPCClientErrorLike } from '@trpc/client'
 import { useEffect, useState } from 'react'
 import { BarLoader, PuffLoader } from 'react-spinners'
 import type { LoaderHeightWidthProps } from 'react-spinners/helpers/props.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
+import { Grid } from '~/Components/Grid'
 import { PRIMARY_COLOR } from './Constants.js'
 
 type LoadingBarProps = LoaderHeightWidthProps
@@ -72,7 +72,7 @@ export function LoadingRetryOrError({
 		<>
 			{/* Show error message with manual retry button */}
 			{error && (
-				<CCol sm={12}>
+				<Grid.Col sm={12}>
 					<StaticAlert color="danger" role="alert">
 						<p>{typeof error === 'string' ? error : error.message}</p>
 						{/* Show retry button with countdown when data is not ready and retry function is provided */}
@@ -82,11 +82,11 @@ export function LoadingRetryOrError({
 							</Button>
 						)}
 					</StaticAlert>
-				</CCol>
+				</Grid.Col>
 			)}
 			{/* Show loading spinner when data is not ready and there's no error */}
 			{!dataReady && !error && (
-				<CCol sm={12}>
+				<Grid.Col sm={12}>
 					{design === 'pulse' ? (
 						<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
@@ -98,7 +98,7 @@ export function LoadingRetryOrError({
 					) : (
 						<LoadingBar />
 					)}
-				</CCol>
+				</Grid.Col>
 			)}
 		</>
 	)

@@ -1,9 +1,9 @@
-import { CCol, CRow } from '@coreui/react'
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { Form } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -65,11 +65,11 @@ export function RecorderSessionFinishModal({ doClose, sessionId }: RecorderSessi
 										<ButtonPicker selectButton={doSave} />
 									</TabArea.Panel>
 									<TabArea.Panel value="triggers">
-										<CRow>
-											<CCol sm={12}>
+										<Grid.Row>
+											<Grid.Col sm={12}>
 												<TriggerPicker selectControl={doSave} />
-											</CCol>
-										</CRow>
+											</Grid.Col>
+										</Grid.Row>
 									</TabArea.Panel>
 								</TabArea.Root>
 							</Form>

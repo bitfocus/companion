@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -15,6 +14,7 @@ import type { ExpressionVariableOptions } from '@companion-app/shared/Model/Expr
 import { StaticAlert } from '~/Components/Alert'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
@@ -131,7 +131,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	const descriptionFieldId = useId()
 
 	return (
-		<CCol sm={12} className="p-0">
+		<Grid.Col sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Name
@@ -139,23 +139,23 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
 					</InlineHelpIcon>
 				</FormLabel>
-				<CCol xs={8}>
+				<Grid.Col xs={8}>
 					<TextInputFieldSimple
 						id={nameFieldId}
 						setValue={setName}
 						value={options.variableName}
 						checkValid={isLabelValid}
 					/>
-				</CCol>
+				</Grid.Col>
 
 				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Description
 				</FormLabel>
-				<CCol xs={8}>
+				<Grid.Col xs={8}>
 					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
-				</CCol>
+				</Grid.Col>
 			</Form>
-		</CCol>
+		</Grid.Col>
 	)
 }
 
@@ -234,20 +234,20 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 
 	return (
 		<>
-			<CCol sm={12} className="p-0">
+			<Grid.Col sm={12} className="p-0">
 				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 					<FormLabel htmlFor={undefined} className="col-sm-4 col-form-label col-form-label-sm">
 						Current Value
 					</FormLabel>
-					<CCol xs={8}>
+					<Grid.Col xs={8}>
 						{expressionVariableDefinition?.isActive ? (
 							<ExpressionVariableCurrentValue name={expressionVariableDefinition.variableName} />
 						) : (
 							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
 						)}
-					</CCol>
+					</Grid.Col>
 				</Form>
-			</CCol>
+			</Grid.Col>
 
 			<div className="editor-grid">
 				<EntityCommonCells
@@ -323,10 +323,6 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 })
 
 function ExpressionVariableCurrentValue({ name }: { name: string }) {
-	const { notifier } = useContext(RootAppStoreContext)
-
-	const onCopied = useCallback(() => notifier.show(`Copied`, 'Copied to clipboard', 3000), [notifier])
-
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
@@ -346,5 +342,5 @@ function ExpressionVariableCurrentValue({ name }: { name: string }) {
 		return <StaticAlert color="danger">Error: {sub.data.error}</StaticAlert>
 	}
 
-	return <VariableValueDisplay value={sub.data.value} onCopied={onCopied} />
+	return <VariableValueDisplay value={sub.data.value} />
 }

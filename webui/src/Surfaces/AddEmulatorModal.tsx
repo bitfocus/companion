@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
@@ -6,6 +5,7 @@ import { isEmulatorIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -97,11 +97,11 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 							}}
 						>
 							<Modal.Body>
-								<CRow className="g-sm-2">
+								<Grid.Row className="g-sm-2">
 									{saveError && (
-										<CCol className={`fieldtype-textinput`} sm={12}>
+										<Grid.Col className={`fieldtype-textinput`} sm={12}>
 											<StaticAlert color="danger">{saveError}</StaticAlert>
-										</CCol>
+										</Grid.Col>
 									)}
 
 									<form.Field
@@ -114,7 +114,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														Display name for the emulator. This can be changed later
 													</InlineHelpIcon>
 												</FormLabel>
-												<CCol className={`fieldtype-textinput`} sm={8}>
+												<Grid.Col className={`fieldtype-textinput`} sm={8}>
 													<TextInputFieldSimple
 														id={nameFieldId}
 														value={field.state.value}
@@ -123,7 +123,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														onBlur={field.handleBlur}
 														immediateValue
 													/>
-												</CCol>
+												</Grid.Col>
 											</>
 										)}
 									/>
@@ -150,7 +150,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														set.
 													</InlineHelpIcon>
 												</FormLabel>
-												<CCol className={`fieldtype-textinput`} sm={8}>
+												<Grid.Col className={`fieldtype-textinput`} sm={8}>
 													<TextInputFieldSimple
 														id={idFieldId}
 														value={field.state.value}
@@ -165,7 +165,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
-												</CCol>
+												</Grid.Col>
 											</>
 										)}
 									/>
@@ -186,7 +186,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 												<FormLabel htmlFor={rowsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 													Rows
 												</FormLabel>
-												<CCol className={`fieldtype-textinput`} sm={8}>
+												<Grid.Col className={`fieldtype-textinput`} sm={8}>
 													<NumberInputField
 														id={rowsFieldId}
 														min={1}
@@ -201,7 +201,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
-												</CCol>
+												</Grid.Col>
 											</>
 										)}
 									/>
@@ -222,7 +222,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 												<FormLabel htmlFor={columnsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 													Columns
 												</FormLabel>
-												<CCol className={`fieldtype-textinput`} sm={8}>
+												<Grid.Col className={`fieldtype-textinput`} sm={8}>
 													<NumberInputField
 														id={columnsFieldId}
 														min={1}
@@ -237,11 +237,11 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
-												</CCol>
+												</Grid.Col>
 											</>
 										)}
 									/>
-								</CRow>
+								</Grid.Row>
 							</Modal.Body>
 							<Modal.Footer>
 								<form.Subscribe

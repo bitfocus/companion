@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
@@ -13,6 +12,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
@@ -105,9 +105,9 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 				<div className="flex-fill">
 					<div className="row edit-connection">
 						{saveError && (
-							<CCol className="fieldtype-textinput" sm={12}>
+							<Grid.Col className="fieldtype-textinput" sm={12}>
 								<StaticAlert color="danger">{saveError}</StaticAlert>
-							</CCol>
+							</Grid.Col>
 						)}
 
 						<InstanceLabelInputField panelStore={panelStore} />
@@ -122,25 +122,25 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
 
 						{!instanceShouldBeRunning && (
-							<CCol xs={12}>
+							<Grid.Col xs={12}>
 								<NonIdealState icon={faGear}>
 									<p>
 										{capitalize(service.moduleTypeDisplayName)} configuration cannot be edited while it is disabled. The
 										fields above can be edited.
 									</p>
 								</NonIdealState>
-							</CCol>
+							</Grid.Col>
 						)}
 
 						{instanceShouldBeRunning && !instanceIsCrashed && (panelStore.isLoading || panelStore.loadError) && (
-							<CCol xs={12}>
+							<Grid.Col xs={12}>
 								<LoadingRetryOrError
 									error={panelStore.loadError}
 									dataReady={!panelStore.isLoading}
 									doRetry={panelStore.triggerReload}
 									design="pulse"
 								/>
-							</CCol>
+							</Grid.Col>
 						)}
 
 						{instanceShouldBeRunning && !panelStore.isLoading && !instanceIsCrashed && (
@@ -188,7 +188,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 			<FormLabel htmlFor={labelId} className="col-sm-4 col-form-label col-form-label-sm">
 				Label
 			</FormLabel>
-			<CCol className={`fieldtype-textinput`} sm={8}>
+			<Grid.Col className={`fieldtype-textinput`} sm={8}>
 				<TextInputFieldSimple
 					id={labelId}
 					setValue={panelStore.setLabelValue}
@@ -196,7 +196,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 					value={panelStore.labelValue}
 					immediateValue
 				/>
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })
@@ -221,7 +221,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 			<FormLabel htmlFor={moduleVersionId} className="col-sm-4 col-form-label col-form-label-sm">
 				Module Version
 			</FormLabel>
-			<CCol className={`fieldtype-textinput`} sm={8}>
+			<Grid.Col className={`fieldtype-textinput`} sm={8}>
 				<div className="d-flex align-items-center gap-2">
 					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
@@ -233,7 +233,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 						changeModuleDangerMessage={changeModuleDangerMessage}
 					/>
 				</div>
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })
@@ -257,7 +257,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 			<FormLabel htmlFor={enabledId} className="col-sm-4 col-form-label col-form-label-sm">
 				Enabled
 			</FormLabel>
-			<CCol className={`fieldtype-textinput`} sm={8}>
+			<Grid.Col className={`fieldtype-textinput`} sm={8}>
 				<SwitchInputField
 					id={enabledId}
 					value={isEnabled}
@@ -271,7 +271,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 						{cannotEnableReason}
 					</div>
 				)}
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })
@@ -295,14 +295,14 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
 				</InlineHelpIcon>
 			</FormLabel>
-			<CCol className={`fieldtype-textinput`} sm={8}>
+			<Grid.Col className={`fieldtype-textinput`} sm={8}>
 				<SimpleDropdownInputField
 					id={updatePolicyId}
 					value={panelStore.updatePolicy}
 					setValue={(value) => panelStore.setUpdatePolicy(value as InstanceVersionUpdatePolicy)}
 					choices={UpdatePolicyOptions}
 				/>
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })
@@ -388,7 +388,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 
 	return (
 		<div className="row connection-form-buttons border-top">
-			<CCol sm={12}>
+			<Grid.Col sm={12}>
 				<div className="flex flex-row">
 					<div className="grow">
 						<Button
@@ -412,7 +412,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 						</Button>
 					</div>
 				</div>
-			</CCol>
+			</Grid.Col>
 		</div>
 	)
 })
@@ -440,10 +440,10 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
 				return (
-					<CCol sm={12}>
+					<Grid.Col sm={12}>
 						{fieldInfo.label ? <FormLabel htmlFor={inputId}>{fieldInfo.label}</FormLabel> : ''}
 						<StaticTextFieldText {...fieldInfo} id={inputId} allowImages />
-					</CCol>
+					</Grid.Col>
 				)
 			}
 		}
@@ -457,9 +457,9 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
-				<CCol sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
+				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
 					{children}
-				</CCol>
+				</Grid.Col>
 			</React.Fragment>
 		)
 	} else {
@@ -467,7 +467,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 		const hideInXs = fieldInfo.type === 'static-text' && !fieldInfo.label && !fieldInfo.value
 
 		return (
-			<CCol
+			<Grid.Col
 				className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
@@ -477,7 +477,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				</FormLabel>
 
 				{children}
-			</CCol>
+			</Grid.Col>
 		)
 	}
 })

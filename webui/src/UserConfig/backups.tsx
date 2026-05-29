@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -9,6 +8,7 @@ import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Grid } from '~/Components/Grid'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
@@ -51,8 +51,8 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	const showSecondaryPanel = !!selectedRuleId
 
 	return (
-		<CRow className="split-panels">
-			<CCol xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+		<Grid.Row className="split-panels">
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="d-flex justify-content-between">
@@ -81,14 +81,14 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 						<BackupsTable editRule={doEditRule} />
 					</div>
 				</div>
-			</CCol>
+			</Grid.Col>
 
-			<CCol xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })
 

@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -6,6 +5,7 @@ import { useCallback, useContext, useRef } from 'react'
 import { useDrag, useDrop } from 'react-dnd'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
@@ -92,8 +92,8 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 				You can insert, delete, and re-arrange the order of pages here. You can also give each page a unique name to
 				help you identify its purpose.
 			</p>
-			<CRow>
-				<CCol xs={12}>
+			<Grid.Row>
+				<Grid.Col xs={12}>
 					<GenericConfirmModal ref={deleteRef} />
 					<EditPagePropertiesModal ref={editRef} includeName={false} />
 
@@ -127,8 +127,8 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 							))}
 						</tbody>
 					</table>
-				</CCol>
-			</CRow>
+				</Grid.Col>
+			</Grid.Row>
 		</div>
 	)
 })

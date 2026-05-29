@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faCalculator, faGift, faLayerGroup, faThLarge, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
@@ -9,6 +8,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { TabArea } from '~/Components/TabArea.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -312,17 +312,17 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	)
 
 	return (
-		<CRow className="buttons-page split-panels">
+		<Grid.Row className="buttons-page split-panels">
 			<GenericConfirmModal ref={clearModalRef} />
 
 			{/* On large screens, show the grid in its own column */}
 			{isLargeScreen && (
-				<CCol xs={12} xl={6} className="primary-panel">
+				<Grid.Col xs={12} xl={6} className="primary-panel">
 					{gridPanel}
-				</CCol>
+				</Grid.Col>
 			)}
 
-			<CCol xs={12} xl={6} className="secondary-panel">
+			<Grid.Col xs={12} xl={6} className="secondary-panel">
 				<div className="secondary-panel-inner">
 					<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
 						<TabArea.List>
@@ -378,7 +378,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						</TabArea.Panel>
 					</TabArea.Root>
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })

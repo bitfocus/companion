@@ -1,7 +1,7 @@
-import { CCol } from '@coreui/react'
 import { forwardRef, useCallback, useId, useImperativeHandle, useRef, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -73,7 +73,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 									<FormLabel htmlFor={pressDurationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Press duration
 									</FormLabel>
-									<CCol sm={8}>
+									<Grid.Col sm={8}>
 										<NumberInputField
 											id={pressDurationFieldId}
 											value={newDurationValue ?? undefined}
@@ -83,18 +83,18 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 											setValue={setNewDurationValue}
 											immediateValue
 										/>
-									</CCol>
+									</Grid.Col>
 
 									<FormLabel htmlFor={whileHeldFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 										Execute while held
 									</FormLabel>
-									<CCol sm={8}>
+									<Grid.Col sm={8}>
 										<SwitchInputField
 											id={whileHeldFieldId}
 											value={!!newWhileHeldValue}
 											setValue={setNewWhileHeldValue}
 										/>
-									</CCol>
+									</Grid.Col>
 								</Form>
 							</Modal.Body>
 							<Modal.Footer>

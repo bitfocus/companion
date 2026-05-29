@@ -1,4 +1,3 @@
-import { CCard, CCardBody, CCardHeader, CCol, CListGroup } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
@@ -6,6 +5,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Callout } from '~/Components/Callout.js'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -119,7 +119,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 	const userId = useId()
 
 	return (
-		<CCol sm={6} className="cloud-auth-state">
+		<Grid.Col sm={6} className="cloud-auth-state">
 			<FormLabel htmlFor={userId} className="mb-1">
 				Logged in as
 			</FormLabel>
@@ -140,7 +140,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 					</Button>
 				</div>
 			)}
-		</CCol>
+		</Grid.Col>
 	)
 }
 
@@ -154,24 +154,24 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 	const setCloudActiveMutation = useMutationExt(trpc.cloud.setCloudActive.mutationOptions())
 
 	return (
-		<CCol sm={12}>
-			<CCard>
-				<CCardHeader>Cloud regions</CCardHeader>
+		<Grid.Col sm={12}>
+			<div className="section cloud-regions-section">
+				<h5 className="cloud-regions-heading">Cloud regions</h5>
 
 				{!cloudActive && (
-					<CCardBody>
+					<div className="mb-3">
 						Please select the regions that is closest to you. You need to select at least <b>two regions</b> which will
 						give you redundancy.
-					</CCardBody>
+					</div>
 				)}
 
-				<CListGroup flush>
+				<div className="cloud-region-list">
 					{regionIds.map((regionId) => (
 						<CloudRegionPanel key={regionId} hideDisabled={cloudActive} regionId={regionId} />
 					))}
-				</CListGroup>
+				</div>
 
-				<CCardBody>
+				<div>
 					{cloudActive && (
 						<Callout color="info">Companion Cloud is currently activated. Deactivate to change regions.</Callout>
 					)}
@@ -184,9 +184,9 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 						small
 						tooltip="Activate Companion Cloud"
 					/>
-				</CCardBody>
-			</CCard>
-		</CCol>
+				</div>
+			</div>
+		</Grid.Col>
 	)
 }
 
@@ -194,7 +194,7 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 	const regenerateUUIDMutation = useMutationExt(trpc.cloud.regenerateUUID.mutationOptions())
 
 	return (
-		<CCol sm={12} className="super-secret-key">
+		<Grid.Col sm={12} className="super-secret-key">
 			<h5>Super secret key</h5>
 
 			<p>
@@ -210,6 +210,6 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 					Regenerate secret key
 				</Button>
 			</div>
-		</CCol>
+		</Grid.Col>
 	)
 })

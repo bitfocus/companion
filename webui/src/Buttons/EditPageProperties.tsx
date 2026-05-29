@@ -1,7 +1,7 @@
-import { CCol, CRow } from '@coreui/react'
 import { forwardRef, useCallback, useId, useImperativeHandle, useState } from 'react'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -77,19 +77,19 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 							<Modal.Body>
 								<Form onSubmit={doAction}>
 									{includeName && (
-										<CRow className="mb-3">
+										<Grid.Row className="mb-3">
 											<FormLabel htmlFor={nameFieldId} className="col-sm-3 col-form-label col-form-label-sm">
 												Name
 											</FormLabel>
-											<CCol sm={9}>
+											<Grid.Col sm={9}>
 												<TextInputFieldSimple
 													id={nameFieldId}
 													value={pageName || ''}
 													setValue={setName}
 													immediateValue
 												/>
-											</CCol>
-										</CRow>
+											</Grid.Col>
+										</Grid.Row>
 									)}
 									{/* TODO: more fields should be added here */}
 								</Form>

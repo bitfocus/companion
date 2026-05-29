@@ -1,9 +1,9 @@
-import { CSpinner } from '@coreui/react'
 import { faCheckCircle, faPowerOff, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
+import { Spinner } from '~/Components/Spinner'
 
 interface InstanceTableStatusCellProps {
 	isEnabled: boolean
@@ -41,7 +41,7 @@ export const InstanceTableStatusCell = observer(function InstanceTableStatusCell
 						return (
 							<InlineHelpCustom help={`${status.level ?? 'Error'}${messageStr ? ': ' + messageStr : ''}`}>
 								<div style={{ padding: '0 3.5px' }}>
-									<CSpinner color="warning" style={{ width: '29px', height: '29px' }} />
+									<Spinner color="warning" style={{ width: '29px', height: '29px' }} />
 								</div>
 							</InlineHelpCustom>
 						)

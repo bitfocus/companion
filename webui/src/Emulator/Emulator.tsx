@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faCancel, faExpand, faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -8,6 +7,7 @@ import { useCallback, useState } from 'react'
 import type { EmulatorConfig } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button.js'
 import { Form } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -48,18 +48,18 @@ export const Emulator = observer(function Emulator() {
 					)}
 				</>
 			) : config.data === null ? (
-				<CRow className={'loading'}>
+				<Grid.Row className={'loading'}>
 					<EmulatorNotFound emulatorId={emulatorId} />
-				</CRow>
+				</Grid.Row>
 			) : (
-				<CRow className={'loading'}>
+				<Grid.Row className={'loading'}>
 					<LoadingRetryOrError
 						dataReady={false}
 						error={config.error || imagesSub.error || lockedState.error}
 						doRetry={doRetryLoad}
 						design="pulse-xl"
 					/>
-				</CRow>
+				</Grid.Row>
 			)}
 		</div>
 	)
@@ -95,11 +95,11 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 	}, [])
 
 	return show && config.emulator_prompt_fullscreen && !fullscreen ? (
-		<CRow className="configure">
-			<CCol sm={12}>
+		<Grid.Row className="configure">
+			<Grid.Col sm={12}>
 				<Form onSubmit={PreventDefaultHandler}>
-					<CRow>
-						<CCol xs={12}>
+					<Grid.Row>
+						<Grid.Col xs={12}>
 							<Button
 								onClick={doRequestFullscreen}
 								title="Fullscreen"
@@ -110,11 +110,11 @@ function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
 							<Button onClick={doDismiss} title="Dismiss">
 								<FontAwesomeIcon icon={faCancel} /> Dismiss
 							</Button>
-						</CCol>
-					</CRow>
+						</Grid.Col>
+					</Grid.Row>
 				</Form>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	) : null
 }
 

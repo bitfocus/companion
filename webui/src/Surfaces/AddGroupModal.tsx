@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { nanoid } from 'nanoid'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useState } from 'react'
@@ -6,6 +5,7 @@ import { isSurfaceGroupIdValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
@@ -87,11 +87,11 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 							}}
 						>
 							<Modal.Body>
-								<CRow className="g-sm-2">
+								<Grid.Row className="g-sm-2">
 									{saveError && (
-										<CCol className={`fieldtype-textinput`} sm={12}>
+										<Grid.Col className={`fieldtype-textinput`} sm={12}>
 											<StaticAlert color="danger">{saveError}</StaticAlert>
-										</CCol>
+										</Grid.Col>
 									)}
 
 									<form.Field
@@ -104,7 +104,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 														Display name for the group. This can be changed later
 													</InlineHelpIcon>
 												</FormLabel>
-												<CCol className={`fieldtype-textinput`} sm={8}>
+												<Grid.Col className={`fieldtype-textinput`} sm={8}>
 													<TextInputFieldSimple
 														id={nameFieldId}
 														value={field.state.value}
@@ -113,7 +113,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 														onBlur={field.handleBlur}
 														immediateValue
 													/>
-												</CCol>
+												</Grid.Col>
 											</>
 										)}
 									/>
@@ -137,7 +137,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 														Id for the group, this is used for internal references. This cannot be changed once set.
 													</InlineHelpIcon>
 												</FormLabel>
-												<CCol className={`fieldtype-textinput`} sm={8}>
+												<Grid.Col className={`fieldtype-textinput`} sm={8}>
 													<TextInputFieldSimple
 														id={idFieldId}
 														value={field.state.value}
@@ -151,11 +151,11 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
-												</CCol>
+												</Grid.Col>
 											</>
 										)}
 									/>
-								</CRow>
+								</Grid.Row>
 							</Modal.Body>
 							<Modal.Footer>
 								<form.Subscribe

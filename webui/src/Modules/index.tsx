@@ -1,6 +1,6 @@
-import { CCol, CRow } from '@coreui/react'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { memo, useCallback } from 'react'
+import { Grid } from '~/Components/Grid'
 import { ModulesList, type ModuleTypeAndIdPair } from './ModulesList.js'
 
 export const ModulesPage = memo(function ConnectionsPage() {
@@ -25,12 +25,16 @@ export const ModulesPage = memo(function ConnectionsPage() {
 	const showSecondaryPanel = !!selectedModuleInfo
 
 	return (
-		<CRow className="connections-page split-panels">
-			<CCol xs={12} xl={6} className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+		<Grid.Row className="connections-page split-panels">
+			<Grid.Col
+				xs={12}
+				xl={6}
+				className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}
+			>
 				<ModulesList doManageModule={doManageModule} selectedModuleInfo={selectedModuleInfo} />
-			</CCol>
+			</Grid.Col>
 
-			<CCol
+			<Grid.Col
 				xs={12}
 				xl={6}
 				className={`connections-panel secondary-panel add-connections-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}
@@ -38,7 +42,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })

@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -12,6 +11,7 @@ import {
 	type CollectionGroupMeta,
 	type ConnectionLeafItem,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
+import { Grid } from '~/Components/Grid'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
@@ -82,8 +82,8 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 		: []
 
 	return (
-		<CRow>
-			<CCol xs={12} className="flex-column-layout">
+		<Grid.Row>
+			<Grid.Col xs={12} className="flex-column-layout">
 				<div className="fixed-header">
 					<h4 className="button-inline">
 						Variables
@@ -121,8 +121,8 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 						onLeafClick={(leaf) => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
 					/>
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })
 

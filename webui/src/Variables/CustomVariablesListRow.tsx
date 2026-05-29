@@ -1,13 +1,13 @@
-import { CCol, CRow } from '@coreui/react'
-import { faCompressArrowsAlt, faCopy, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCompressArrowsAlt, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { CopyButton } from '~/Components/CopyButton'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
@@ -50,15 +50,11 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 			<div className="cell-header">
 				<div className={classNames('cell-header-item', !isCollapsed && 'span-2')}>
 					<span className="variable-style">$({fullname})</span>
-					<CopyToClipboard text={`$(${fullname})`} onCopy={customVariablesApi.onCopied}>
-						<Button size="sm" title="Copy variable name">
-							<FontAwesomeIcon icon={faCopy} color="#d50215" />
-						</Button>
-					</CopyToClipboard>
+					<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={`$(${fullname})`} />
 				</div>
 				{isCollapsed && (
 					<div className="cell-header-item grow">
-						<VariableValueDisplay value={value} onCopied={customVariablesApi.onCopied} />
+						<VariableValueDisplay value={value} />
 					</div>
 				)}
 				<div className="cell-header-item">
@@ -110,35 +106,35 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								/>
 							</div>
 						</div>
-						<CRow>
+						<Grid.Row>
 							<FormLabel htmlFor={descriptionFieldId} className="col-sm-3 align-right">
 								Description:
 							</FormLabel>
-							<CCol sm={9}>
+							<Grid.Col sm={9}>
 								<TextInputFieldSimple
 									id={descriptionFieldId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
 									className="mb-2"
 								/>
-							</CCol>
+							</Grid.Col>
 
 							<FormLabel htmlFor={currentValueFieldId} className="col-sm-3 align-right">
 								Current value:
 							</FormLabel>
-							<CCol sm={9}>
+							<Grid.Col sm={9}>
 								<VariableInputGroup
 									id={currentValueFieldId}
 									value={value}
 									name={info.id}
 									setCurrentValue={customVariablesApi.setCurrentValue}
 								/>
-							</CCol>
+							</Grid.Col>
 
 							<FormLabel htmlFor={startupValueFieldId} className="col-sm-3 align-right">
 								Startup value:
 							</FormLabel>
-							<CCol sm={9}>
+							<Grid.Col sm={9}>
 								<VariableInputGroup
 									id={startupValueFieldId}
 									disabled={!!info.persistCurrentValue}
@@ -146,8 +142,8 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 									name={info.id}
 									setCurrentValue={customVariablesApi.setStartupValue}
 								/>
-							</CCol>
-						</CRow>
+							</Grid.Col>
+						</Grid.Row>
 					</Form>
 				</>
 			)}

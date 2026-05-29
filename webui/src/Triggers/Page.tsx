@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import {
 	faAdd,
 	faClone,
@@ -23,6 +22,7 @@ import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -118,11 +118,14 @@ export const TriggersPage = observer(function Triggers() {
 	const showSecondaryPanel = twoPanelMode || !!selectedTriggerId
 
 	return (
-		<CRow className="triggers-page split-panels">
+		<Grid.Row className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
-			<CCol xs={twoPanelMode ? 6 : 12} className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}>
+			<Grid.Col
+				xs={twoPanelMode ? 6 : 12}
+				className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}
+			>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<h4 className="button-inline">
@@ -173,17 +176,17 @@ export const TriggersPage = observer(function Triggers() {
 						</PanelCollapseHelperProvider>
 					</div>
 				</div>
-			</CCol>
+			</Grid.Col>
 
-			<CCol xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
 						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
 					)}
 					<Outlet />
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })
 

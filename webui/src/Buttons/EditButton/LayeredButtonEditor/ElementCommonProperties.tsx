@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
@@ -9,6 +8,7 @@ import {
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -29,9 +29,9 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 			<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 				Element Name
 			</FormLabel>
-			<CCol sm={8}>
+			<Grid.Col sm={8}>
 				<FieldElementNameInput elementProps={elementProps} inputId={nameFieldId} />
-			</CCol>
+			</Grid.Col>
 
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
 				<>
@@ -45,9 +45,9 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 							for this element
 						</InlineHelpIcon>
 					</FormLabel>
-					<CCol sm={8}>
+					<Grid.Col sm={8}>
 						<FieldElementUsageInput elementProps={elementProps} inputId={usageFieldId} />
-					</CCol>
+					</Grid.Col>
 				</>
 			)}
 		</>

@@ -1,0 +1,87 @@
+// ─── Accordion ───────────────────────────────────────────────────────────────
+
+.accordion2 {
+	--accordion2-trigger-bg: var(--cui-tertiary-bg, #f8f9fa);
+	--accordion2-trigger-border: var(--popover2-border-color, var(--cui-border-color, rgba(0, 0, 21, 0.175)));
+
+	background-color: transparent;
+	border: 0;
+
+	.accordion2-item {
+		background-color: transparent;
+		border: 0;
+	}
+
+	.accordion2-header {
+		margin-bottom: 0;
+	}
+
+	.accordion2-trigger {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: var(--popover2-item-padding-y, 0.25rem) var(--popover2-item-padding-x, 1rem);
+		font-size: 0.95rem;
+		line-height: 1.5;
+		background-color: var(--accordion2-trigger-bg);
+		color: var(--popover2-link-color, var(--cui-dropdown-link-color, #212529));
+		font-weight: 400;
+		text-align: left;
+		border: 0;
+		border-radius: 0;
+		box-shadow:
+			inset 0 1px 0 var(--accordion2-trigger-border),
+			inset 0 -1px 0 var(--accordion2-trigger-border);
+		cursor: pointer;
+		transition: background-color 0.15s ease-in-out;
+
+		&:hover,
+		&:focus-visible {
+			background-color: var(--popover2-link-hover-bg, var(--cui-dropdown-link-hover-bg, #e9ecef));
+			color: var(--popover2-link-hover-color, var(--cui-dropdown-link-hover-color, #1e2125));
+			outline: none;
+		}
+
+		&:focus {
+			box-shadow: none;
+		}
+
+		&[data-panel-open] {
+			background-color: var(--popover2-link-hover-bg, var(--cui-dropdown-link-hover-bg, #e9ecef));
+			color: var(--popover2-link-hover-color, var(--cui-dropdown-link-hover-color, #1e2125));
+			box-shadow: none;
+		}
+
+		&::after {
+			content: '';
+			margin-left: auto;
+			width: 0.35rem;
+			height: 0.35rem;
+			border-right: 2px solid currentColor;
+			border-bottom: 2px solid currentColor;
+			transform: rotate(45deg);
+			transition: transform 0.2s ease;
+		}
+
+		&[data-panel-open]::after {
+			transform: rotate(-135deg);
+		}
+	}
+
+	.accordion2-panel {
+		padding: 0;
+		overflow: hidden;
+		height: var(--accordion-panel-height);
+		transition: height 0.35s ease;
+
+		&[data-starting-style],
+		&[data-ending-style] {
+			height: 0;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+}

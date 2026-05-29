@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import { useContext, useRef } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -6,6 +5,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -62,7 +62,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 				</>
 			) : (
 				<>
-					<CCol sm={12}>
+					<Grid.Col sm={12}>
 						<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
 						<MyErrorBoundary>
 							<SelectButtonTypeDropdown location={location} resetModalRef={resetModalRef} configRef={undefined} />
@@ -73,7 +73,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 							To get started, click button above to create a regular button, or use the drop down to make a special
 							button.
 						</p>
-					</CCol>
+					</Grid.Col>
 				</>
 			)}
 		</KeyReceiver>
@@ -98,7 +98,7 @@ const EditButtonContent = observer(function EditButton({
 }: EditButtonContentProps) {
 	return (
 		<>
-			<CCol sm={12}>
+			<Grid.Col sm={12}>
 				<ButtonPreviewBase fixedSize preview={previewImage} right={true} className="button-zero-display-height" />
 
 				<ControlClearButton location={location} resetModalRef={resetModalRef} />
@@ -107,7 +107,7 @@ const EditButtonContent = observer(function EditButton({
 						<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
 					)}
 				</MyErrorBoundary>
-			</CCol>
+			</Grid.Col>
 
 			{config.type === 'pageup' && (
 				<>

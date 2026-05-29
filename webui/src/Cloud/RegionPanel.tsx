@@ -1,4 +1,3 @@
-import { CListGroupItem } from '@coreui/react'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { useCallback, useState } from 'react'
@@ -36,7 +35,7 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 	if (!regionState || (hideDisabled && !regionState.enabled)) return null
 
 	return (
-		<CListGroupItem className="cloud-region-item">
+		<div className="cloud-region-item">
 			<p
 				className={classNames('cloud-region-text', {
 					online: regionState.connected,
@@ -53,7 +52,7 @@ export function CloudRegionPanel({ regionId, hideDisabled }: CloudRegionPanelPro
 			</p>
 
 			{regionState.enabled && regionState.error && <StaticAlert color="danger">{regionState.error}</StaticAlert>}
-		</CListGroupItem>
+		</div>
 	)
 }
 

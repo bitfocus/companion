@@ -1,4 +1,3 @@
-import { CCol, CRow } from '@coreui/react'
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useVirtualizer } from '@tanstack/react-virtual'
@@ -8,6 +7,7 @@ import { nanoid } from 'nanoid'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { Button, ButtonGroup, LinkButtonExternal } from './Components/Button'
@@ -75,8 +75,8 @@ export const LogPanel = memo(function LogPanel() {
 		<>
 			<GenericConfirmModal ref={exportRef} />
 			<div className="log-page">
-				<CRow>
-					<CCol lg={12} className="px-3">
+				<Grid.Row>
+					<Grid.Col lg={12} className="px-3">
 						<ButtonGroup>
 							<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 								Warning
@@ -105,14 +105,14 @@ export const LogPanel = memo(function LogPanel() {
 								<FontAwesomeIcon icon={faFileExport} /> Export support bundle
 							</Button>
 						</div>
-					</CCol>
-				</CRow>
+					</Grid.Col>
+				</Grid.Row>
 
-				<CRow className="log-panel">
-					<CCol lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
+				<Grid.Row className="log-panel">
+					<Grid.Col lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
 						<LogPanelContents config={config} />
-					</CCol>
-				</CRow>
+					</Grid.Col>
+				</Grid.Row>
 			</div>
 		</>
 	)

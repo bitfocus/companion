@@ -1,13 +1,13 @@
-import { CCol } from '@coreui/react'
-import { faCopy, faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useRef, useState } from 'react'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
+import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Grid } from '~/Components/Grid'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageDescriptionEditor } from './imageDescriptionEditor.js'
@@ -122,10 +122,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		[onImageNameChanged]
 	)
 
-	const handleCopyVariableValue = useCallback(() => {
-		notifier.show('Copied', 'Copied to clipboard', 5000)
-	}, [notifier])
-
 	const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
 		event.preventDefault()
 		event.stopPropagation()
@@ -211,14 +207,10 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			<Form className="row mb-3">
 				<div className="form-label col-sm-4 col-form-label col-form-label-sm">Name</div>
-				<CCol sm={8} className="d-flex align-items-center justify-content-between">
+				<Grid.Col sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
 						<span className="font-monospace">{imageInfo.name}</span>
-						<CopyToClipboard text={`$(image:${imageInfo.name})`} onCopy={handleCopyVariableValue}>
-							<Button size="sm" title="Copy variable name">
-								<FontAwesomeIcon icon={faCopy} />
-							</Button>
-						</CopyToClipboard>
+						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
 					</div>
 
 					<ImageNameEditModal
@@ -226,19 +218,19 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						currentName={imageInfo.name}
 						onNameChanged={handleImageNameChanged}
 					/>
-				</CCol>
+				</Grid.Col>
 			</Form>
 			<Form className="row mb-3">
 				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 					Description
 				</FormLabel>
-				<CCol sm={8}>
+				<Grid.Col sm={8}>
 					<ImageDescriptionEditor
 						id={descriptionFieldId}
 						imageName={selectedImageName}
 						currentName={imageInfo.description}
 					/>
-				</CCol>
+				</Grid.Col>
 			</Form>
 
 			<div

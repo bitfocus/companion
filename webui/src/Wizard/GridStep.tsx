@@ -1,7 +1,7 @@
-import { CCol, CRow } from '@coreui/react'
 import { useCallback, useId, useState } from 'react'
 import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { FormLabel } from '~/Components/Form'
+import { Grid } from '~/Components/Grid'
 import { NumberInputField } from '~/Components/NumberInputField'
 
 interface GridStepProps {
@@ -49,8 +49,8 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 	const columnFieldId = useId()
 
 	return (
-		<CRow>
-			<CCol sm={12}>
+		<Grid.Row>
+			<Grid.Col sm={12}>
 				<h5>Button Grid Size</h5>
 				<p>
 					By default Companion makes a grid of buttons sized for the Stream Deck XL. This can be made larger (or
@@ -61,20 +61,20 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 					For example, to accommodate two Stream Deck XL's side-by-side you can set the grid size as 4 rows x 16
 					columns.
 				</p>
-			</CCol>
+			</Grid.Col>
 
 			<FormLabel htmlFor={rowFieldId} className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Rows
 			</FormLabel>
-			<CCol sm={5} className="mb-2">
+			<Grid.Col sm={5} className="mb-2">
 				<NumberInputField id={rowFieldId} value={totalRows} min={0} step={1} setValue={setMaxRow} immediateValue />
-			</CCol>
-			<CCol sm={3}></CCol>
+			</Grid.Col>
+			<Grid.Col sm={3}></Grid.Col>
 
 			<FormLabel htmlFor={columnFieldId} className="col-sm-4 col-form-label col-form-label-sm mb-2">
 				Columns
 			</FormLabel>
-			<CCol sm={5} className="mb-2">
+			<Grid.Col sm={5} className="mb-2">
 				<NumberInputField
 					id={columnFieldId}
 					value={totalColumns}
@@ -83,12 +83,12 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 					setValue={setMaxColumn}
 					immediateValue
 				/>
-			</CCol>
-			<CCol sm={3}></CCol>
+			</Grid.Col>
+			<Grid.Col sm={3}></Grid.Col>
 
-			<CCol sm={12}>
+			<Grid.Col sm={12}>
 				<p>You can change this at any time on the 'Settings' tab in the GUI.</p>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 }

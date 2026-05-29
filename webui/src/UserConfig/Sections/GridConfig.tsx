@@ -1,10 +1,10 @@
-import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useRef, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -167,16 +167,16 @@ export const GridSizeModal = observer(function GridSizeModal() {
 						<Modal.Body>
 							<Form onSubmit={doAction} className="row">
 								{newGridSize && (
-									<CCol sm={12} className="mb-3">
+									<Grid.Col sm={12} className="mb-3">
 										New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
 										{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
-									</CCol>
+									</Grid.Col>
 								)}
 
 								<FormLabel htmlFor={minRowFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
 									Min Row
 								</FormLabel>
-								<CCol sm={9} className="mb-2">
+								<Grid.Col sm={9} className="mb-2">
 									<NumberInputField
 										id={minRowFieldId}
 										value={newGridSize?.minRow}
@@ -185,12 +185,12 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										setValue={setMinRow}
 										immediateValue
 									/>
-								</CCol>
+								</Grid.Col>
 
 								<FormLabel htmlFor={maxRowFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
 									Max Row
 								</FormLabel>
-								<CCol sm={9} className="mb-2">
+								<Grid.Col sm={9} className="mb-2">
 									<NumberInputField
 										id={maxRowFieldId}
 										value={newGridSize?.maxRow}
@@ -199,12 +199,12 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										setValue={setMaxRow}
 										immediateValue
 									/>
-								</CCol>
+								</Grid.Col>
 
 								<FormLabel htmlFor={minColumnFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
 									Min Column
 								</FormLabel>
-								<CCol sm={9} className="mb-2">
+								<Grid.Col sm={9} className="mb-2">
 									<NumberInputField
 										id={minColumnFieldId}
 										value={newGridSize?.minColumn}
@@ -213,12 +213,12 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										setValue={setMinColumn}
 										immediateValue
 									/>
-								</CCol>
+								</Grid.Col>
 
 								<FormLabel htmlFor={maxColumnFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
 									Max Column
 								</FormLabel>
-								<CCol sm={9} className="mb-2">
+								<Grid.Col sm={9} className="mb-2">
 									<NumberInputField
 										id={maxColumnFieldId}
 										value={newGridSize?.maxColumn}
@@ -227,7 +227,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 										setValue={setMaxColumn}
 										immediateValue
 									/>
-								</CCol>
+								</Grid.Col>
 							</Form>
 							{isInvalidRange && (
 								<StaticAlert color="danger" className="mb-0 mt-2">

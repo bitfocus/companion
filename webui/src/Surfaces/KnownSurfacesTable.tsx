@@ -1,11 +1,11 @@
-import { faCircleUp, faCopy, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCircleUp, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import CopyToClipboard from 'react-copy-to-clipboard'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
+import { CopyButton } from '~/Components/CopyButton'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
@@ -156,8 +156,6 @@ const ManualGroupRow = observer(function ManualGroupRow({
 	selectedItemId,
 	selectItem,
 }: ManualGroupRowProps) {
-	const { notifier } = useContext(RootAppStoreContext)
-
 	const deleteGroup2 = useCallback(() => deleteGroup(group.id), [deleteGroup, group.id])
 
 	const handleGroupClick = useCallback(
@@ -186,11 +184,7 @@ const ManualGroupRow = observer(function ManualGroupRow({
 						<span className="surface-id" title={group.id}>
 							{group.id}
 						</span>
-						<CopyToClipboard text={group.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
-							<Button size="sm" title="Copy group id" className="p-0 px-1">
-								<FontAwesomeIcon icon={faCopy} color="#000" />
-							</Button>
-						</CopyToClipboard>
+						<CopyButton size="sm" title="Copy group id" text={group.id} />
 					</div>
 				</div>
 				<div className="grid-cell">
@@ -239,8 +233,6 @@ const SurfaceRow = observer(function SurfaceRow({
 	isSelected,
 	selectItem,
 }: SurfaceRowProps) {
-	const { notifier } = useContext(RootAppStoreContext)
-
 	const deleteEmulator2 = useCallback(() => deleteEmulator(surface.id), [deleteEmulator, surface.id])
 	const forgetSurface2 = useCallback(() => forgetSurface(surface.id), [forgetSurface, surface.id])
 
@@ -295,11 +287,7 @@ const SurfaceRow = observer(function SurfaceRow({
 				</div>
 				<div className="surface-id-row">
 					<span className="surface-id">{surface.id}</span>
-					<CopyToClipboard text={surface.id} onCopy={() => notifier.show(`Copied`, 'Copied to clipboard', 5000)}>
-						<Button size="sm" title="Copy surface id" className="p-0 px-1">
-							<FontAwesomeIcon icon={faCopy} color="#000" />
-						</Button>
-					</CopyToClipboard>
+					<CopyButton size="sm" title="Copy surface id" text={surface.id} />
 					<span className={classNames('surface-status', { 'surface-disabled': surfaceDisabled })}>
 						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
 					</span>

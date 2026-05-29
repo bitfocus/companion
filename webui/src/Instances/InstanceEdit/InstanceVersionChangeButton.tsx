@@ -1,4 +1,3 @@
-import { CCol, CCollapse, CRow } from '@coreui/react'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -8,9 +7,11 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
+import { Collapse } from '~/Components/Collapse'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
@@ -92,17 +93,16 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 		[form]
 	)
 
-	const toggleAdvancedMode = useCallback(() => {
-		setAdvancedMode((prev) => {
-			const newMode = !prev
-			// When toggling back to simple mode, restore the original module
-			if (!newMode) {
+	const handleAdvancedModeChange = useCallback(
+		(open: boolean) => {
+			if (!open) {
 				form.setFieldValue('moduleId', originalModuleIdRef.current)
 				form.setFieldValue('versionId', currentVersionId)
 			}
-			return newMode
-		})
-	}, [form, currentVersionId])
+			setAdvancedMode(open)
+		},
+		[form, currentVersionId]
+	)
 
 	const versionFieldId = useId()
 	const moduleFieldId = useId()
@@ -130,8 +130,8 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 							}}
 						>
 							<Modal.Body>
-								<CRow className="g-sm-2">
-									<CCol sm={12}>
+								<Grid.Row className="g-sm-2">
+									<Grid.Col sm={12}>
 										<StaticAlert color="warning" className="mb-3">
 											Be careful when downgrading the module version. Some features may not be available in older
 											versions.
@@ -141,7 +141,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 												Save failed: {saveError}
 											</StaticAlert>
 										)}
-									</CCol>
+									</Grid.Col>
 
 									<form.Subscribe
 										selector={(state) => [state.values.moduleId, advancedMode] as const}
@@ -160,7 +160,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 																	<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
 																)}
 															</FormLabel>
-															<CCol sm={9}>
+															<Grid.Col sm={9}>
 																<SelectedVersionDropdown
 																	moduleType={service.moduleType}
 																	moduleId={effectiveModuleId}
@@ -169,7 +169,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 																	onChange={field.handleChange}
 																	onBlur={field.handleBlur}
 																/>
-															</CCol>
+															</Grid.Col>
 														</>
 													)}
 												/>
@@ -177,43 +177,47 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										}}
 									/>
 
-									<CCol sm={12} className="mt-3 mb-2">
+									<Collapse.Root
+										open={advancedMode}
+										onOpenChange={handleAdvancedModeChange}
+										className="col-sm-12 mt-3 mb-2 p-0"
+									>
 										<hr className="my-2" />
-										<Button color="link" size="sm" onClick={toggleAdvancedMode} className="p-0 text-decoration-none">
+										<Collapse.Trigger className="btn btn-link btn-sm p-0 text-decoration-none">
 											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
-										</Button>
-									</CCol>
+										</Collapse.Trigger>
 
-									<CCollapse visible={advancedMode} className="row g-sm-2 p-0">
-										<CCol sm={12}>
-											<StaticAlert color="danger" className="mt-0 mb-3">
-												{changeModuleDangerMessage}
-											</StaticAlert>
-										</CCol>
+										<Collapse.Panel keepMounted className="row g-sm-2 p-0">
+											<Grid.Col sm={12}>
+												<StaticAlert color="danger" className="mt-2 mb-3">
+													{changeModuleDangerMessage}
+												</StaticAlert>
+											</Grid.Col>
 
-										<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
-											Module
-										</FormLabel>
-										<CCol sm={9}>
-											<form.Field
-												name="moduleId"
-												children={(field) => (
-													<SelectedModuleDropdown
-														moduleType={service.moduleType}
-														htmlName={moduleFieldId}
-														value={field.state.value}
-														onChange={(val) => {
-															field.handleChange(val)
-															form.setFieldValue('versionId', null)
-														}}
-														onBlur={field.handleBlur}
-													/>
-												)}
-											/>
-										</CCol>
-									</CCollapse>
-								</CRow>
+											<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
+												Module
+											</FormLabel>
+											<Grid.Col sm={9}>
+												<form.Field
+													name="moduleId"
+													children={(field) => (
+														<SelectedModuleDropdown
+															moduleType={service.moduleType}
+															htmlName={moduleFieldId}
+															value={field.state.value}
+															onChange={(val) => {
+																field.handleChange(val)
+																form.setFieldValue('versionId', null)
+															}}
+															onBlur={field.handleBlur}
+														/>
+													)}
+												/>
+											</Grid.Col>
+										</Collapse.Panel>
+									</Collapse.Root>
+								</Grid.Row>
 							</Modal.Body>
 							<Modal.Footer>
 								<form.Subscribe

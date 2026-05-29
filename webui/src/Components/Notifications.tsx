@@ -1,93 +1,57 @@
-import { CToast, CToastBody, CToaster, CToastHeader } from '@coreui/react'
+import { Toast } from '@base-ui/react/toast'
 import { nanoid } from 'nanoid'
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react'
+import { forwardRef, useImperativeHandle } from 'react'
 
 export interface NotificationsManagerRef {
 	show(title: string, message: string, duration?: number | null, stickyId?: string): string
 	close(messageId: string): void
 }
 
-interface CurrentToast {
-	id: string
-	message: string
-	title: string
-	show: boolean
-	autohide: number | undefined
+const toastManager = Toast.createToastManager()
 
-	closeButton?: boolean
+function ToastList() {
+	const { toasts } = Toast.useToastManager()
+	return (
+		<Toast.Portal>
+			<Toast.Viewport className="notification-viewport">
+				{toasts.map((toast) => {
+					const isSticky = toast.timeout === 0
+					const showHeader = !!toast.title || isSticky
+					return (
+						<Toast.Root key={toast.id} toast={toast} className="notification">
+							<Toast.Content className="notification-content">
+								{showHeader && (
+									<div className="notification-header">
+										{toast.title && <Toast.Title className="notification-title">{toast.title}</Toast.Title>}
+										<Toast.Close className="btn btn-close" aria-label="Close notification" />
+									</div>
+								)}
+								<Toast.Description className="notification-body">{toast.description}</Toast.Description>
+							</Toast.Content>
+						</Toast.Root>
+					)
+				})}
+			</Toast.Viewport>
+		</Toast.Portal>
+	)
 }
 
 export const NotificationsManager = forwardRef<NotificationsManagerRef>(function NotificationsManager(_props, ref) {
-	const [toasts, setToasts] = useState<CurrentToast[]>([])
-
-	const doPruneToastIdInner = useCallback((id: string) => {
-		setToasts((oldToasts) => oldToasts.filter((t) => t.id !== id))
-	}, [])
-	const doPruneToastId = useCallback(
-		(id: string, duration: number) => {
-			setTimeout(() => {
-				// now prune them
-				doPruneToastIdInner(id)
-			}, 3000 + duration)
+	useImperativeHandle(ref, () => ({
+		show(title, message, duration, stickyId) {
+			const id = stickyId ?? nanoid()
+			const timeout = duration === null ? 0 : (duration ?? 10000)
+			toastManager.add({ id, title: title || undefined, description: message ?? title, timeout })
+			return id
 		},
-		[doPruneToastIdInner]
-	)
-	const doDisposeToastId = useCallback(
-		(id: string) => {
-			// hide them
-			setToasts((oldToasts) => oldToasts.map((t) => (t.id === id ? { ...t, autohide: 1 } : t)))
-
-			doPruneToastIdInner(id)
+		close(id) {
+			toastManager.close(id)
 		},
-		[doPruneToastIdInner]
-	)
-
-	// Expose reload to the parent
-	useImperativeHandle(
-		ref,
-		() => ({
-			show(title, message, duration, stickyId) {
-				const id = stickyId ?? nanoid()
-
-				const autohide = duration === null ? undefined : (duration ?? 10000)
-				if (typeof autohide === 'number') {
-					doPruneToastId(id, autohide)
-				}
-
-				setToasts((oldToasts) => [
-					...oldToasts.filter((t) => t.id !== id),
-					{
-						id: id,
-						message: message ?? title,
-						title: title,
-						show: true,
-						autohide: autohide,
-					},
-				])
-
-				return id
-			},
-			close(id) {
-				doDisposeToastId(id)
-			},
-		}),
-		[doDisposeToastId, doPruneToastId]
-	)
+	}))
 
 	return (
-		<CToaster placement={'top-end'}>
-			{toasts.map((toast) => {
-				const autohide = (toast.autohide ?? 0) > 0
-				const closeButton = !autohide || toast.closeButton
-				return (
-					<React.Fragment key={toast.id}>
-						<CToast visible={toast.show} autohide={autohide} delay={toast.autohide} className="w-auto">
-							{(toast.title || closeButton) && <CToastHeader closeButton={closeButton}>{toast.title}</CToastHeader>}
-							<CToastBody>{toast.message}</CToastBody>
-						</CToast>
-					</React.Fragment>
-				)
-			})}
-		</CToaster>
+		<Toast.Provider toastManager={toastManager} timeout={10000} limit={20}>
+			<ToastList />
+		</Toast.Provider>
 	)
 })

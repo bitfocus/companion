@@ -1,11 +1,10 @@
-import { faCopy, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { Button } from '~/Components/Button.js'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { StaticAlert } from './Alert.js'
+import { CopyButton } from './CopyButton.js'
 import { Popover } from './Popover.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
 
@@ -27,9 +26,6 @@ interface VariableValueDisplay {
 
 	/** Use a specific icon for type annotation, optional, by default the icon is derived from the value type */
 	icon?: string
-
-	/** Will be called when copy is clicked, optional */
-	onCopied: () => void
 
 	/** If set, displays the value in an invalid/error style and shows the reason as a tooltip */
 	invalidReason?: string
@@ -56,7 +52,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 	showIcon = true,
 	showCopy = true,
 	icon,
-	onCopied = () => {},
 	invalidReason,
 	compact = false,
 	maxLines,
@@ -238,11 +233,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			<div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
 				{valuePill}
 				{showCopy && (
-					<CopyToClipboard text={valueStr} onCopy={onCopied}>
-						<Button size="sm" title="Copy variable value">
-							<FontAwesomeIcon icon={faCopy} color={color} />
-						</Button>
-					</CopyToClipboard>
+					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="variable" variant="ghost" />
 				)}
 			</div>
 		</div>
@@ -268,9 +259,6 @@ interface VariableValueDisplayPopoverProps {
 	/** Use a specific icon for type annotation, optional, by default the icon is derived from the value type */
 	icon?: string
 
-	/** Will be called when copy is clicked, optional */
-	onCopied: () => void
-
 	/** If set, displays the value in an invalid/error style and shows the reason as a tooltip */
 	invalidReason?: string
 }
@@ -282,7 +270,6 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 	showIcon = true,
 	showCopy = true,
 	icon,
-	onCopied = () => {},
 	invalidReason,
 }) => {
 	const [expanded, setExpanded] = useState(false)
@@ -317,7 +304,6 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 			>
 				<VariableValueDisplay
 					value={value}
-					onCopied={onCopied}
 					showCopy={showCopy}
 					showIcon={showIcon}
 					icon={icon}
@@ -346,7 +332,6 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 					)}
 					<VariableValueDisplay
 						value={value}
-						onCopied={onCopied}
 						showCopy={false}
 						showIcon={showIcon}
 						icon={icon}

@@ -1,8 +1,8 @@
-import { CCol, CRow } from '@coreui/react'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import { Grid } from '~/Components/Grid'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -41,22 +41,25 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	const showSecondaryPanel = twoPanelMode || !!selectedImageName
 
 	return (
-		<CRow className="image-library-page split-panels">
-			<CCol xs={twoPanelMode ? 6 : 12} className={classNames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}>
+		<Grid.Row className="image-library-page split-panels">
+			<Grid.Col
+				xs={twoPanelMode ? 6 : 12}
+				className={classNames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}
+			>
 				<MyErrorBoundary>
 					<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
 				</MyErrorBoundary>
-			</CCol>
+			</Grid.Col>
 
-			<CCol xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}
 					<MyErrorBoundary>
 						<Outlet />
 					</MyErrorBoundary>
 				</div>
-			</CCol>
-		</CRow>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })
 

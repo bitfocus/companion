@@ -1,8 +1,8 @@
-import { CCol } from '@coreui/react'
 import { observer } from 'mobx-react-lite'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { Callout } from '~/Components/Callout'
+import { Grid } from '~/Components/Grid'
 import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
 import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -18,7 +18,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} design="pulse" />
 
 	return (
-		<CCol xs={12} className="flex-form">
+		<Grid.Col xs={12} className="flex-form">
 			<EntityEditorContextProvider
 				controlId={`action_recorder_${sessionInfo.id}`}
 				location={undefined}
@@ -36,6 +36,6 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 				/>
 			</EntityEditorContextProvider>
 			{sessionInfo.actions.length === 0 ? <Callout color="info">No actions have been recorded</Callout> : ''}
-		</CCol>
+		</Grid.Col>
 	)
 })

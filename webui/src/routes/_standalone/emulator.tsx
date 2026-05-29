@@ -1,8 +1,8 @@
-import { CRow } from '@coreui/react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCallback } from 'react'
 import { useDocumentTitle } from 'usehooks-ts'
+import { Grid } from '~/Components/Grid'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { LoadingRetryOrError } from '~/Resources/Loading'
 import { trpc } from '~/Resources/TRPC'
@@ -29,15 +29,15 @@ function RouteComponent() {
 			{status.status === TRPCConnectionStatus.Connected || !emulatorPageConfig.data ? (
 				<Outlet />
 			) : (
-				<CRow className={'loading'}>
+				<Grid.Row className={'loading'}>
 					<LoadingRetryOrError
 						dataReady={false}
-						error={status.error || emulatorPageConfig.error || 'test'}
+						error={status.error || emulatorPageConfig.error}
 						doRetry={doRetry}
 						retryLabel="Reload Emulator"
 						design="pulse-xl"
 					/>
-				</CRow>
+				</Grid.Row>
 			)}
 		</div>
 	)

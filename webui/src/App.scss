@@ -5,16 +5,21 @@
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 
+@use 'scss/components/accordion';
 @use 'scss/components/alert';
 @use 'scss/components/button';
 @use 'scss/components/callout';
+@use 'scss/components/collapse';
 @use 'scss/components/checkbox-field';
 @use 'scss/components/date-picker';
 @use 'scss/components/dropdown-field';
 @use 'scss/components/form';
 @use 'scss/components/modal';
+@use 'scss/components/notifications';
 @use 'scss/components/number-field';
 @use 'scss/components/popover';
+@use 'scss/components/progress';
+@use 'scss/components/spinner';
 @use 'scss/components/tooltip';
 @use 'scss/components/number-range';
 @use 'scss/components/switch-field';
@@ -27,6 +32,7 @@
 @use 'scss/tablet';
 @use 'scss/emulator';
 @use 'scss/modules-manage';
+@use 'scss/sidebar';
 
 @use 'scss/action-recorder';
 @use 'scss/button-control';

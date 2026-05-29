@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -20,6 +19,7 @@ import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel, InputGroupText } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -143,10 +143,10 @@ export const OptionsInputField = observer(function OptionsInputField({
 					/>
 				)}
 			</FormLabel>
-			<CCol sm={8} className={classNames({ displayNone: !visibility })}>
+			<Grid.Col sm={8} className={classNames({ displayNone: !visibility })}>
 				{control}
 				{description && <div className="form-text">{description}</div>}
-			</CCol>
+			</Grid.Col>
 		</>
 	)
 })

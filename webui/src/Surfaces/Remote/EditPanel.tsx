@@ -1,4 +1,3 @@
-import { CCol } from '@coreui/react'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
@@ -10,6 +9,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { usePlainOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible'
@@ -110,9 +110,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			<div className="flex-fill">
 				<div className="row g-sm-2">
 					{saveError && (
-						<CCol className="fieldtype-textinput" sm={12}>
+						<Grid.Col className="fieldtype-textinput" sm={12}>
 							<StaticAlert color="danger">{saveError}</StaticAlert>
-						</CCol>
+						</Grid.Col>
 					)}
 
 					<form.Field
@@ -128,7 +128,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 									Name
 								</FormLabel>
-								<CCol className="fieldtype-textinput" sm={8}>
+								<Grid.Col className="fieldtype-textinput" sm={8}>
 									<TextInputFieldSimple
 										id={nameFieldId}
 										value={field.state.value}
@@ -142,7 +142,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 											{field.state.meta.errors}
 										</StaticAlert>
 									)}
-								</CCol>
+								</Grid.Col>
 							</>
 						)}
 					/>
@@ -150,9 +150,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					<FormLabel htmlFor={integrationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
 						Surface Integration
 					</FormLabel>
-					<CCol sm={8} className="flex px-2">
+					<Grid.Col sm={8} className="flex px-2">
 						<span className="text-muted align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
-					</CCol>
+					</Grid.Col>
 
 					<form.Subscribe
 						selector={(state) => state.values.config}
@@ -178,11 +178,14 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 																	isVisible={isVisible}
 																/>
 																{field.state.meta.errors.length > 0 && (
-																	<CCol sm={{ offset: 4, span: 8 }} className={classNames({ displayNone: !isVisible })}>
+																	<Grid.Col
+																		sm={{ offset: 4, span: 8 }}
+																		className={classNames({ displayNone: !isVisible })}
+																	>
 																		<StaticAlert color="warning" className="mt-2">
 																			{field.state.meta.errors}
 																		</StaticAlert>
-																	</CCol>
+																	</Grid.Col>
 																)}
 															</>
 														)
@@ -202,7 +205,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 				selector={(state) => [state.isDirty, state.isValid, state.isSubmitting]}
 				children={([isDirty, isValid, isSubmitting]) => (
 					<div className="row connection-form-buttons border-top">
-						<CCol sm={12}>
+						<Grid.Col sm={12}>
 							<div className="flex flex-row">
 								<div className="grow">
 									<Button
@@ -219,7 +222,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 									</Button>
 								</div>
 							</div>
-						</CCol>
+						</Grid.Col>
 					</div>
 				)}
 			/>
