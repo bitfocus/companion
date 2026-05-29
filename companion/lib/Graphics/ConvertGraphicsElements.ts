@@ -252,6 +252,7 @@ function convertGroupElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
+		squareCoords: helper.getBoolean('squareCoords', false),
 		children: [], // Will be filled in by caller
 		contentHash: '', // Will be computed below
 	}
@@ -414,6 +415,7 @@ async function convertCompositeElementForDrawing(
 		opacity,
 		...bounds,
 		rotation: 0, // Not supported on composite elements
+		squareCoords: false,
 		children: [], // Will be filled in by caller
 		contentHash: '', // Will be computed below
 	}

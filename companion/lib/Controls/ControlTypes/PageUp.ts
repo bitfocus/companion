@@ -34,6 +34,7 @@ export const pageUpElements: SomeButtonGraphicsElement[] = [
 		// Draw the arrow
 		...(CreateElementOfType('group') as ButtonGraphicsGroupElement),
 		enabled: exprExpr('!$(internal:_graphics_page_plusminus)'),
+		squareCoords: exprVal(true),
 		children: [
 			{
 				...(CreateElementOfType('line') as ButtonGraphicsLineElement),

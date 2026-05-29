@@ -156,12 +156,14 @@ export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
 export interface ButtonGraphicsGroupDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
 	type: 'group'
+	squareCoords: boolean
 	children: SomeButtonGraphicsDrawElement[]
 }
 
 export interface ButtonGraphicsGroupElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'group'
+	squareCoords: ExpressionOrValue<boolean>
 	children: SomeButtonGraphicsElement[]
 }
 

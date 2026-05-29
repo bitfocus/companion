@@ -136,6 +136,7 @@ function convertLayeredPresetElement(
 
 				...convertElementSize(element),
 				rotation: { value: 0, isExpression: false }, // TODO - presets
+				squareCoords: { value: false, isExpression: false },
 
 				children: element.children
 					.map((child) => convertLayeredPresetElement(logger, connectionId, child, forceNewIds))

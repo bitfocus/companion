@@ -171,6 +171,16 @@ export class GraphicsLayeredButtonRenderer {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw) return drawBounds
 
+		if (element.squareCoords) {
+			const squareSize = Math.min(drawBounds.width, drawBounds.height)
+			return new DrawBounds(
+				drawBounds.x + (drawBounds.width - squareSize) / 2,
+				drawBounds.y + (drawBounds.height - squareSize) / 2,
+				squareSize,
+				squareSize
+			)
+		}
+
 		return drawBounds
 	}
 

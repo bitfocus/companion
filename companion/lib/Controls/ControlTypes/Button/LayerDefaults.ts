@@ -77,6 +77,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				width: { value: 100, isExpression: false },
 				height: { value: 100, isExpression: false },
 				rotation: { value: 0, isExpression: false },
+				squareCoords: { value: false, isExpression: false },
 				children: [],
 			}
 		case 'line':

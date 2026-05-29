@@ -389,6 +389,14 @@ export const groupElementSchema: SomeCompanionInputField[] = [
 	...commonElementFields,
 	...boundsFields,
 	...rotationFields,
+	{
+		type: 'checkbox',
+		id: 'squareCoords',
+		label: 'Square Aspect Ratio',
+		tooltip:
+			'When enabled, the coordinate space for child elements is constrained to a square (using the shorter side), centered within the group. This prevents shapes like arrows from stretching when the button is not square.',
+		default: false,
+	},
 ]
 
 export const compositeElementSchema: SomeCompanionInputField[] = [...commonElementFields, ...boundsFields]

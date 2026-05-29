@@ -173,6 +173,7 @@ function makeGroupEl(
 		width: val(100),
 		height: val(100),
 		rotation: val(0),
+		squareCoords: val(false),
 		...overrides,
 		children,
 	}
@@ -271,6 +272,7 @@ describe('collectContentHashes', () => {
 				width: 100,
 				height: 100,
 				rotation: 0,
+				squareCoords: false,
 				contentHash: 'groupHash',
 				children: [makeTextDrawEl({ id: 'child1', width: 50, height: 50, contentHash: 'childHash' })],
 			},
@@ -293,6 +295,7 @@ describe('collectContentHashes', () => {
 				width: 100,
 				height: 100,
 				rotation: 0,
+				squareCoords: false,
 				contentHash: 'outerHash',
 				children: [
 					{
@@ -306,6 +309,7 @@ describe('collectContentHashes', () => {
 						width: 50,
 						height: 50,
 						rotation: 0,
+						squareCoords: false,
 						contentHash: 'innerHash',
 						children: [makeBoxDrawEl({ id: 'leaf', width: 25, height: 25, contentHash: 'leafHash' })],
 					},
@@ -330,6 +334,7 @@ describe('collectContentHashes', () => {
 				width: 100,
 				height: 100,
 				rotation: 0,
+				squareCoords: false,
 				contentHash: 'emptyGroupHash',
 				children: [],
 			},
