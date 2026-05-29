@@ -141,9 +141,10 @@ export const AddEntitiesModal = observer(
 						sortKey: String(info.sortKey ?? info.label),
 						description: info.description,
 					})
-
-					leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
 				}
+
+				leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
+
 				return leaves
 			},
 			[definitions.connections, feedbackListType]
