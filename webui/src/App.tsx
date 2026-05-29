@@ -280,7 +280,7 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
 					{connected ? (
-						<ProgressBar className="mt-4" value={connected ? progress : 0} />
+						<ProgressBar className="mt-4" value={progress} />
 					) : (
 						<div className="mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />

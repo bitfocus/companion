@@ -32,7 +32,7 @@ function RouteComponent() {
 				<Grid.Row className={'loading'}>
 					<LoadingRetryOrError
 						dataReady={false}
-						error={status.error || emulatorPageConfig.error || 'test'}
+						error={status.error || emulatorPageConfig.error}
 						doRetry={doRetry}
 						retryLabel="Reload Emulator"
 						design="pulse-xl"

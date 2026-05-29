@@ -7,10 +7,11 @@ export interface ProgressBarProps extends Pick<HTMLAttributes<HTMLDivElement>, '
 }
 
 export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(({ className, style, value }, ref) => {
+	const safeValue = Math.max(0, Math.min(100, value ?? 0))
 	return (
-		<Progress.Root value={value ?? 0} className={classNames('progress2', className)} style={style} ref={ref}>
+		<Progress.Root value={safeValue} className={classNames('progress2', className)} style={style} ref={ref}>
 			<Progress.Track style={{ display: 'contents' }}>
-				<Progress.Indicator className="progress2-bar" style={{ width: `${value ?? 0}%` }} />
+				<Progress.Indicator className="progress2-bar" style={{ width: `${safeValue}%` }} />
 			</Progress.Track>
 		</Progress.Root>
 	)

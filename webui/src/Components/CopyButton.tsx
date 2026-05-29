@@ -25,7 +25,12 @@ export function CopyButton({
 
 	const handleClick = useCallback(() => {
 		copy(text)
-			.then(() => {
+			.then((success) => {
+				if (!success) {
+					console.error('Failed to copy text:', text)
+					return
+				}
+
 				setCopied(true)
 				setTimeout(() => setCopied(false), 2000)
 			})

@@ -147,18 +147,16 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 }) {
 	const [isOpen, setIsOpen] = useState(false)
 
-	const toggleOpen = useCallback((e: React.MouseEvent) => {
-		e.preventDefault()
-		e.stopPropagation()
-
-		setIsOpen((prev) => !prev)
-	}, [])
-
 	return (
-		<Accordion.Root value={isOpen ? [group.connectionId] : []}>
+		<Accordion.Root
+			value={isOpen ? [group.connectionId] : []}
+			onValueChange={(open) => {
+				setIsOpen(open.includes(group.connectionId))
+			}}
+		>
 			<Accordion.Item value={group.connectionId}>
 				<Accordion.Header>
-					<Accordion.Trigger onMouseDown={toggleOpen}>{group.connectionLabel}</Accordion.Trigger>
+					<Accordion.Trigger>{group.connectionLabel}</Accordion.Trigger>
 				</Accordion.Header>
 				<Accordion.Panel>
 					{group.elements.map(({ elementId, definition }) => (
