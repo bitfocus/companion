@@ -127,7 +127,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 	// itemToStringLabel-based display.
 	const onInputFocus = useCallback(() => {
 		if (!isEditingMode) return
-		runInAction(() => controlledInput.set(String(localDisplay.get())))
+		const raw = localDisplay.get()
+		runInAction(() => controlledInput.set(raw == null ? '' : String(raw)))
 	}, [isEditingMode, localDisplay, controlledInput])
 
 	// On blur: if in editing mode and no item was selected via onValueChange, commit the
@@ -139,7 +140,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 			const currentLocal = localDisplay.get()
 			// Preserve the original value type when the text hasn't changed (e.g. focus + blur
 			// with no edits). Without this, a numeric DropdownChoiceId becomes a string silently.
-			const next = currentControlled === String(currentLocal) ? currentLocal : currentControlled
+			const prefilled = currentLocal == null ? '' : String(currentLocal)
+			const next = currentControlled === prefilled ? currentLocal : currentControlled
 			setValue(next)
 			runInAction(() => controlledInput.set(undefined))
 			setInputValue('')

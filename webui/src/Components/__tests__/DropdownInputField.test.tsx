@@ -564,3 +564,49 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 		expect(setValue).toHaveBeenCalledWith('99')
 	})
 })
+
+// ---------------------------------------------------------------------------
+// null value edge cases (runtime null passed as value)
+// ---------------------------------------------------------------------------
+
+describe('null value edge cases (runtime null passed as value)', () => {
+	it('does not show "null" in the input when the field is focused with a null value', async () => {
+		const setValue = vi.fn()
+		const user = userEvent.setup()
+		render(
+			<MenuPortalContext.Provider value={document.body}>
+				<DropdownInputField
+					choices={CHOICES}
+					allowCustom={true}
+					value={null as unknown as DropdownChoiceId}
+					setValue={setValue}
+					htmlName={undefined}
+				/>
+			</MenuPortalContext.Provider>
+		)
+		const input = screen.getByRole('combobox')
+		await user.click(input)
+		expect(input).toHaveValue('')
+	})
+
+	it('does not prepend "null" when typing into a null-value field', async () => {
+		const setValue = vi.fn()
+		const user = userEvent.setup()
+		render(
+			<MenuPortalContext.Provider value={document.body}>
+				<DropdownInputField
+					choices={CHOICES}
+					allowCustom={true}
+					value={null as unknown as DropdownChoiceId}
+					setValue={setValue}
+					htmlName={undefined}
+				/>
+			</MenuPortalContext.Provider>
+		)
+		const input = screen.getByRole('combobox')
+		await user.click(input)
+		await user.type(input, 'custom')
+		await user.tab()
+		expect(setValue).toHaveBeenCalledWith('custom')
+	})
+})
