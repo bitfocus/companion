@@ -95,6 +95,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	connectionLabelRename(labelFrom: string, labelTo: string): void {
+		if (labelFrom === labelTo) return
+
 		const valuesTo = this.#variableValues[labelTo] || Object.create(null)
 		this.#variableValues[labelTo] = valuesTo
 
@@ -133,6 +135,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	setVariableValues(label: string, variables: VariableValueEntry[]): void {
+		if (variables.length === 0) return
+
 		const moduleValues = this.#variableValues[label] ?? Object.create(null)
 		this.#variableValues[label] = moduleValues
 
