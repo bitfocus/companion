@@ -11,7 +11,8 @@
 		margin-top: 1rem;
 	}
 
-	svg {
+	svg:not(.non-ideal-svg) {
+		// This is a hack, but fixing it properly is a messy task
 		font-size: 1rem;
 	}
 

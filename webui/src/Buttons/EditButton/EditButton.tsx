@@ -1,3 +1,4 @@
+import { faFileArrowDown, faFileArrowUp, faFileLines } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useContext, useRef } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -6,6 +7,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -119,24 +121,24 @@ const EditButtonContent = observer(function EditButton({
 			</div>
 
 			{config.type === 'pageup' && (
-				<>
-					<h4 className="mt-2">Page up button</h4>
+				<NonIdealState icon={faFileArrowUp}>
+					<h4 className="mt-1">Page up button</h4>
 					<p className="mt-3">No configuration available for page up buttons</p>
-				</>
+				</NonIdealState>
 			)}
 
 			{config.type === 'pagenum' && (
-				<>
-					<h4 className="mt-2">Page number button</h4>
+				<NonIdealState icon={faFileLines}>
+					<h4 className="mt-1">Page number button</h4>
 					<p className="mt-3">No configuration available for page number buttons</p>
-				</>
+				</NonIdealState>
 			)}
 
 			{config.type === 'pagedown' && (
-				<>
-					<h4 className="mt-2">Page down button</h4>
+				<NonIdealState icon={faFileArrowDown}>
+					<h4 className="mt-1">Page down button</h4>
 					<p className="mt-3">No configuration available for page down buttons</p>
-				</>
+				</NonIdealState>
 			)}
 
 			{config.type === 'button-layered' && (
