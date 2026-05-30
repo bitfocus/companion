@@ -198,6 +198,18 @@ export interface ButtonGraphicsCompositeElement extends ButtonGraphicsElementBas
 	[customKey: CompositeElementOptionKey]: ExpressionOrValue<JsonValue | undefined> | undefined
 }
 
+export interface ButtonGraphicsReferenceDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
+	type: 'reference'
+	children: SomeButtonGraphicsDrawElement[]
+}
+
+export interface ButtonGraphicsReferenceElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
+	type: 'reference'
+	location: ExpressionOrValue<string>
+}
+
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
@@ -206,6 +218,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsLineDrawElement
 	| ButtonGraphicsGroupDrawElement
 	| ButtonGraphicsCircleDrawElement
+	| ButtonGraphicsReferenceDrawElement
 
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
@@ -216,3 +229,4 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsGroupElement
 	| ButtonGraphicsCircleElement
 	| ButtonGraphicsCompositeElement
+	| ButtonGraphicsReferenceElement

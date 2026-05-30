@@ -121,6 +121,21 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 			// Composite elements should not be created directly through this function
 			// They are created with custom logic in layeredStyleAddElement
 			throw new Error('Composite elements should be created through layeredStyleAddElement')
+		case 'reference':
+			return {
+				id: nanoid(),
+				name: 'Reference',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				type: 'reference',
+				enabled: { value: true, isExpression: false },
+				opacity: { value: 100, isExpression: false },
+				x: { value: 0, isExpression: false },
+				y: { value: 0, isExpression: false },
+				width: { value: 100, isExpression: false },
+				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
+				location: { value: '', isExpression: false },
+			}
 		default:
 			assertNever(type)
 			throw new Error(`Unknown element type: ${type}`)

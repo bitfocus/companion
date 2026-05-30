@@ -97,7 +97,9 @@ export abstract class ControlButtonPage<TJson>
 			rawElements,
 			emptyMap,
 			true,
-			this.#elementConversionCache
+			this.#elementConversionCache,
+			null,
+			null
 		)
 		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 

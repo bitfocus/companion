@@ -26,6 +26,7 @@ export class PreviewController {
 		this.#elementStream = new PreviewElementStream(
 			instanceDefinitions,
 			graphicsController,
+			pageStore,
 			controlsController,
 			controlEvents
 		)

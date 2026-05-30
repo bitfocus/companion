@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { JsonValue } from 'type-fest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
@@ -20,6 +22,8 @@ import type {
 	ButtonGraphicsImageElement,
 	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsLineElement,
+	ButtonGraphicsReferenceDrawElement,
+	ButtonGraphicsReferenceElement,
 	ButtonGraphicsTextDrawElement,
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsDrawElement,
@@ -27,6 +31,7 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
 	type CompositeElementOptionKey,
 	type DrawImageBuffer,
@@ -38,6 +43,7 @@ import type {
 	CompositeElementIdString,
 	InstanceDefinitions,
 } from '../Instance/Definitions.js'
+import { ParseLocationString } from '../Internal/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {
 	createParseElementsContext,
@@ -46,8 +52,9 @@ import {
 	type ExpressionReferences,
 	type ParseElementsContext,
 } from './ConvertGraphicsElements/Helper.js'
-import { computeElementContentHash } from './ConvertGraphicsElements/Util.js'
+import { collectContentHashes, computeElementContentHash } from './ConvertGraphicsElements/Util.js'
 import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
+import type { ImageResult } from './ImageResult.js'
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,
@@ -56,11 +63,14 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	elements: SomeButtonGraphicsElement[],
 	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>,
 	onlyEnabled: boolean,
-	cache: ElementConversionCache | null
+	cache: ElementConversionCache | null,
+	currentLocationStr: string | null = null,
+	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null = null
 ): Promise<{
 	elements: SomeButtonGraphicsDrawElement[]
 	usedVariables: Set<string>
 	usedCompositeElements: Set<CompositeElementIdString>
+	referencedLocations: Set<string>
 }> {
 	// Apply any queued invalidations before processing
 	cache?.applyQueuedInvalidations()
@@ -68,6 +78,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	const globalReferences: ExpressionReferences = {
 		variables: new Set(),
 		compositeElements: new Set(),
+		referencedLocations: new Set(),
 	}
 
 	// Track all processed element IDs (with prefixes) for cache purging
@@ -81,7 +92,9 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		onlyEnabled,
 		cache,
 		globalReferences,
-		processedElementIds
+		processedElementIds,
+		currentLocationStr,
+		getRenderAtLocation
 	)
 
 	const newElements = await convertElements(context, elements, '')
@@ -94,6 +107,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		elements: newElements,
 		usedVariables: globalReferences.variables,
 		usedCompositeElements: globalReferences.compositeElements,
+		referencedLocations: globalReferences.referencedLocations,
 	}
 }
 
@@ -144,6 +158,10 @@ async function convertElements(
 					}
 					case 'composite': {
 						cacheEntry = await convertCompositeElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'reference': {
+						cacheEntry = await convertReferenceElementForDrawing(context, element, idPrefix)
 						break
 					}
 					default:
@@ -259,6 +277,121 @@ function convertGroupElementForDrawing(
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
 	return { drawElement, usedVariables, compositeElement: null }
+}
+
+/**
+ * Convert reference element for drawing.
+ * Evaluates the location expression and, if a render cache callback is provided,
+ * resolves the referenced button's draw elements inline.
+ */
+async function convertReferenceElementForDrawing(
+	context: ParseElementsContext,
+	element: ButtonGraphicsReferenceElement,
+	idPrefix: string
+): Promise<ElementConversionCacheEntry> {
+	const { helper, usedVariables } = context.createHelper(element)
+
+	// Perform enabled check first, to avoid executing expressions when not needed
+	const enabled = helper.getBoolean('enabled', true)
+	if (!enabled && context.onlyEnabled) {
+		return { drawElement: null, usedVariables, compositeElement: null }
+	}
+
+	const opacity = helper.getNumber('opacity', 1, 0.01)
+	const drawBounds = convertDrawBounds(helper)
+	const rotation = helper.getNumber('rotation', 0)
+
+	const locationStr = helper.getString('location', '')
+
+	const drawElement: ButtonGraphicsReferenceDrawElement = {
+		id: idPrefix + element.id,
+		type: 'reference',
+		usage: element.usage,
+		enabled,
+		opacity,
+		...drawBounds,
+		rotation,
+		children: [],
+		contentHash: '',
+	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+
+	// Inline reference resolution using the provided render cache callback
+	let referencedLocationStr: string | null = null
+	if (locationStr) {
+		if (!context.getRenderAtLocation) {
+			// References are disabled (no render callback) — show a placeholder
+			drawElement.children = [makeReferencePlaceholder(drawElement.id, '?')]
+		} else {
+			const currentLocation = ParseLocationString(context.currentLocationStr, undefined)
+			const targetLocation = ParseLocationString(locationStr, currentLocation ?? undefined)
+
+			if (targetLocation) {
+				const targetLocationStr = formatLocation(targetLocation)
+				referencedLocationStr = targetLocationStr
+
+				const targetRender = context.getRenderAtLocation(targetLocation)
+
+				// Always track the direct dependency so we re-render when the target eventually renders
+				context.globalReferences.referencedLocations.add(targetLocationStr)
+
+				// Loop detection: check if the target's render transitively references this button
+				const isLoop =
+					targetLocationStr === context.currentLocationStr ||
+					(context.currentLocationStr !== null &&
+						targetRender?.referencedLocations.has(context.currentLocationStr) === true)
+
+				if (isLoop) {
+					// Circular reference detected — show a placeholder instead of recursing infinitely
+					drawElement.children = [makeReferencePlaceholder(drawElement.id, '\u221e')]
+				} else if (targetRender?.drawElements) {
+					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific)
+					drawElement.children = targetRender.drawElements.filter((el) => el.type !== 'canvas')
+
+					// Track transitive referenced locations for loop detection in parent renders
+					for (const loc of targetRender.referencedLocations) {
+						context.globalReferences.referencedLocations.add(loc)
+					}
+				}
+			}
+		}
+
+		// Recompute contentHash to include children hashes so the LRU cache invalidates when referenced content changes
+		const childHashes = collectContentHashes(drawElement.children).join(',')
+		drawElement.contentHash = createHash('sha256')
+			.update(drawElement.contentHash)
+			.update(':')
+			.update(childHashes)
+			.digest('hex')
+	}
+
+	return { drawElement, usedVariables, compositeElement: null, referencedLocation: referencedLocationStr }
+}
+
+function makeReferencePlaceholder(parentId: string, text: string): ButtonGraphicsTextDrawElement {
+	const el: ButtonGraphicsTextDrawElement = {
+		id: `${parentId}:placeholder`,
+		type: 'text',
+		usage: ButtonGraphicsElementUsage.Automatic,
+		enabled: true,
+		opacity: 1,
+		x: 0,
+		y: 0,
+		width: 1,
+		height: 1,
+		rotation: 0,
+		text,
+		fontsize: 'auto',
+		font: 'companion-sans',
+		color: 0xffffff,
+		outlineColor: 0,
+		halign: 'center',
+		valign: 'center',
+		contentHash: '',
+	}
+	el.contentHash = computeElementContentHash(el)
+	return el
 }
 
 function parseCompositeElementChildOptions(

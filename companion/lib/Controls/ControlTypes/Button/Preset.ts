@@ -250,7 +250,9 @@ export class ControlButtonPreset
 			this.#drawElements,
 			feedbackOverrides,
 			true,
-			this.#elementConversionCache
+			this.#elementConversionCache,
+			null,
+			null
 		)
 		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null

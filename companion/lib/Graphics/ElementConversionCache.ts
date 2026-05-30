@@ -21,6 +21,9 @@ export interface ElementConversionCacheEntry {
 		/** Prefix applied to child element IDs */
 		readonly childIdPrefix: string
 	} | null
+
+	/** The location string (e.g. '1/0/0') referenced by this element (if it is a reference element) */
+	readonly referencedLocation?: string | null
 }
 
 /**
@@ -84,6 +87,18 @@ export class ElementConversionCache {
 	queueInvalidateCompositeType(compositeTypeIds: Iterable<CompositeElementIdString>): void {
 		for (const id of compositeTypeIds) {
 			this.#compositeTypesToInvalidate.add(id)
+		}
+	}
+
+	/**
+	 * Queue all reference elements pointing to a given location for invalidation.
+	 * @param locationStr The location string (e.g. '1/0/0') whose referencing elements should be invalidated
+	 */
+	queueInvalidateReferencedLocation(locationStr: string): void {
+		for (const [elementId, entry] of this.#cache) {
+			if ((entry.referencedLocation ?? null) === locationStr) {
+				this.#invalidationQueue.add(elementId)
+			}
 		}
 	}
 

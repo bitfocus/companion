@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsReferenceDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '../Model/StyleLayersModel.js'
@@ -122,6 +123,24 @@ export class GraphicsLayeredButtonRenderer {
 						})
 						break
 					}
+					case 'reference': {
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
+							await img.usingRotation(drawBounds, element.rotation, async () => {
+								elementBounds = await this.#drawReferenceElement(img, drawBounds, element, skipDraw)
+
+								await this.#drawElements(
+									img,
+									element.children,
+									elementsToHide,
+									selectedElementId,
+									rootBounds,
+									elementBounds,
+									skipDraw
+								)
+							})
+						})
+						break
+					}
 					case 'image':
 						elementBounds = await this.#drawImageElement(img, drawBounds, element, skipDraw)
 
@@ -182,6 +201,15 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		return drawBounds
+	}
+
+	static async #drawReferenceElement(
+		_img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsReferenceDrawElement,
+		_skipDraw: boolean
+	): Promise<DrawBounds> {
+		return parentBounds.compose(element.x, element.y, element.width, element.height)
 	}
 
 	static async #drawImageElement(
