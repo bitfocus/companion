@@ -29,6 +29,9 @@ interface ButtonsGridPanelProps {
 	clearSelectedButton: () => void
 	gridZoomValue: number
 	gridZoomController: GridZoomController
+	copySourceButton?: ControlLocation | null
+	contextMenuButton?: ControlLocation | null
+	onButtonContextMenu?: (location: ControlLocation, x: number, y: number) => void
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -41,6 +44,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	clearSelectedButton,
 	gridZoomValue,
 	gridZoomController,
+	copySourceButton,
+	contextMenuButton,
+	onButtonContextMenu,
 }: ButtonsGridPanelProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
 
@@ -148,6 +154,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						pageNumber={pageNumber}
 						buttonClick={buttonClick}
 						selectedButton={selectedButton}
+						copySourceButton={copySourceButton}
+						contextMenuButton={contextMenuButton}
+						onButtonContextMenu={onButtonContextMenu}
 						gridSize={gridSize}
 						ButtonIconFactory={PrimaryButtonGridIcon}
 						drawScale={gridZoomValue / 100}

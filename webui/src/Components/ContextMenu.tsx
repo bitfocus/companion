@@ -1,7 +1,13 @@
 import { useMemo } from 'react'
-import { PopoverActionMenu } from './ActionMenu'
+import { PopoverActionMenu, type MenuItemProps } from './ActionMenu'
 import { Popover } from './Popover'
-import { type ContextMenuProps } from './useContextMenuProps'
+
+interface ContextMenuProps {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	position: { x: number; y: number }
+	menuItems: MenuItemProps[]
+}
 
 export const ContextMenu = ({ open, onOpenChange, position, menuItems = [] }: ContextMenuProps): React.JSX.Element => {
 	const virtualAnchor = useMemo(

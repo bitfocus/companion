@@ -6,9 +6,7 @@ export const MenuSeparator: MenuItemProps = {
 	isSeparator: true,
 }
 
-// technically, ContextMenuProps is private to the ContextMenu code,
-// but since we have to split the hook and component into two files, it needs to be exported here.
-export interface ContextMenuProps {
+export interface ContextMenuState {
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	position: { x: number; y: number }
@@ -29,7 +27,7 @@ export interface ContextMenuProps {
 		<ContextMenu { ...contextMenuProps}/>
 	</div>
 */
-export function useContextMenuState(menuItems: MenuItemProps[]): ContextMenuProps {
+export function useContextMenuState(menuItems: MenuItemProps[]): ContextMenuState {
 	const [open, setOpen] = useState(false)
 	const [position, setPosition] = useState({ x: 0, y: 0 })
 

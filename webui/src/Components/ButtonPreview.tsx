@@ -1,5 +1,5 @@
 import classnames from 'classnames'
-import { memo, useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
 // Single pixel of red
@@ -9,6 +9,9 @@ export const RedImage: string =
 
 export interface ButtonPreviewProps extends Omit<ButtonPreviewBaseProps, 'onClick'> {
 	onClick?: (location: ControlLocation, pressed: boolean) => void
+	onContextMenu?: (location: ControlLocation, x: number, y: number) => void
+	copySource?: boolean
+	contextMenuOpen?: boolean
 	location: ControlLocation
 }
 
@@ -20,6 +23,8 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 		drophover: props.dropHover,
 		draggable: !!props.dragRef,
 		selected: props.selected,
+		'copy-source': !!props.copySource,
+		'context-menu-open': !!props.contextMenuOpen,
 		clickable: !!props.onClick,
 		right: !!props.right,
 	}
@@ -30,24 +35,53 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 
 	const rawOnClick = props.onClick
 	const rawLocation = props.location
+	const rawOnContextMenu = props.onContextMenu
+
+	// Tracks whether a press-down was actually fired, so we can ensure a matching release.
+	// Also guards against pointercancel (button=0) firing spuriously after right-click.
+	const isPressedRef = useRef(false)
 
 	const doPress = useCallback(
 		(e: React.UIEvent) => {
 			if (e.type !== 'pointerdown' && e.type !== 'mousedown') e.preventDefault()
 			e.stopPropagation()
 
-			rawOnClick?.(rawLocation, true)
+			// Skip primary action for right-click/secondary pointer — context menu only
+			const isSecondaryButton = 'button' in e && (e as React.PointerEvent).button === 2
+			if (!isSecondaryButton) {
+				rawOnClick?.(rawLocation, true)
+				isPressedRef.current = true
+			}
 		},
 		[rawOnClick, rawLocation]
 	)
+
 	const doRelease = useCallback(
 		(e: React.UIEvent) => {
 			e.preventDefault()
 			e.stopPropagation()
 
-			rawOnClick?.(rawLocation, false)
+			if (isPressedRef.current) {
+				isPressedRef.current = false
+				rawOnClick?.(rawLocation, false)
+			}
 		},
 		[rawOnClick, rawLocation]
+	)
+
+	const handleNativeContextMenu = useCallback(
+		(e: React.MouseEvent) => {
+			if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
+			e.preventDefault()
+			e.stopPropagation()
+			// If a press was started (mobile long-press), release it before opening the menu
+			if (isPressedRef.current) {
+				isPressedRef.current = false
+				rawOnClick?.(rawLocation, false)
+			}
+			rawOnContextMenu?.(rawLocation, e.clientX, e.clientY)
+		},
+		[rawOnContextMenu, rawOnClick, rawLocation]
 	)
 
 	return (
@@ -58,17 +92,14 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 			// Prefer the newer pointer events
 			onPointerDown={hasPointerEvents ? doPress : undefined}
 			onPointerUp={hasPointerEvents ? doRelease : undefined}
+			onPointerCancel={hasPointerEvents ? doRelease : undefined}
 			// Setup the older mouse and touch events for compatibility
 			onMouseDown={!hasPointerEvents ? doPress : undefined}
 			onMouseUp={!hasPointerEvents ? doRelease : undefined}
 			onTouchStart={!hasPointerEvents ? doPress : undefined}
 			onTouchEnd={!hasPointerEvents ? doRelease : undefined}
 			onTouchCancel={!hasPointerEvents ? doRelease : undefined}
-			onContextMenu={(e) => {
-				e.preventDefault()
-				e.stopPropagation()
-				return false
-			}}
+			onContextMenu={handleNativeContextMenu}
 		>
 			<div
 				className="button-border"
