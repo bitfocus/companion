@@ -8,6 +8,7 @@ import {
 } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type {
 	NewSpecialExpressionValue,
+	SpecialExpression,
 	UpdateSpecialExpressionValuesFn,
 } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
@@ -203,6 +204,323 @@ describe('EntityPoolSpecialExpressionManager', () => {
 				])
 			)
 			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('entity wrapper referencedVariableIds state transitions', () => {
+		it('nonexpression isInverted', () => {
+			const mockEntity = createMockFeedbackEntity('entity-niner', { isExpression: false, value: true })
+
+			// Bracket-literal access evades access restrictions, for testing.  Don't
+			// try this at home, kids!
+			const {
+				isInverted: { entities },
+			} = manager['specialExpressions']
+
+			const maybeWrapper = () => entities.get('entity-niner')
+
+			// Initially no wrapper.
+			expect(maybeWrapper()).toBe(undefined)
+
+			// Start tracking.
+			manager.trackEntity(mockEntity, 'isInverted')
+
+			// Now a wrapper, with not-yet-computed referencedVariableIds.
+			let w = maybeWrapper()
+			expect(w).not.toBe(undefined)
+			const wrapper = w!
+			expect(wrapper.referencedVariableIds).toBe(null)
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+
+			while (vi.getTimerCount() > 0) {
+				vi.advanceTimersToNextTimer()
+
+				w = maybeWrapper()
+				if (w !== undefined) {
+					expect(w).toBe(wrapper)
+					expect(w.referencedVariableIds).toBe(null)
+
+					expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+					continue // still not computed, keep going
+				}
+
+				expect(entities.size).toBe(0)
+				break
+			}
+
+			expect(mockVariablesParser.executeExpression).not.toHaveBeenCalled()
+			expect(mockVariablesParser.parseVariables).not.toHaveBeenCalled()
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledExactlyOnceWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
+					[
+						'entity-niner',
+						{
+							entityId: 'entity-niner',
+							controlId: 'control-1',
+							value: true,
+						},
+					],
+				])
+			)
+		})
+
+		it('isInverted expression no variables', () => {
+			const mockEntity = createMockFeedbackEntity('entity-lion', { isExpression: true, value: 'this is an expression' })
+
+			// Bracket-literal access evades access restrictions, for testing.  Don't
+			// try this at home, kids!
+			const {
+				isInverted: { entities },
+			} = manager['specialExpressions']
+
+			const maybeWrapper = () => entities.get('entity-lion')
+
+			// Initially no wrapper.
+			expect(maybeWrapper()).toBe(undefined)
+
+			// Start tracking.
+			manager.trackEntity(mockEntity, 'isInverted')
+
+			expect(mockVariablesParser.executeExpression).not.toHaveBeenCalled()
+
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+			}
+
+			// Now a wrapper, with not-yet-computed referencedVariableIds.
+			let w = maybeWrapper()
+			expect(w).not.toBe(undefined)
+			const wrapper = w!
+			expect(wrapper.referencedVariableIds).toBe(null)
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+
+			while (vi.getTimerCount() > 0) {
+				vi.advanceTimersToNextTimer()
+
+				w = maybeWrapper()
+				if (w !== undefined) {
+					expect(w).toBe(wrapper)
+					expect(w.referencedVariableIds).toBe(null)
+
+					expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+					continue // still not computed, keep going
+				}
+
+				expect(entities.size).toBe(0)
+				break
+			}
+
+			expect(mockVariablesParser.parseVariables).not.toHaveBeenCalled()
+			expect(mockVariablesParser.executeExpression).toHaveBeenCalledExactlyOnceWith('this is an expression', 'boolean')
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledExactlyOnceWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
+					[
+						'entity-lion',
+						{
+							entityId: 'entity-lion',
+							controlId: 'control-1',
+							value: false,
+						},
+					],
+				])
+			)
+		})
+
+		it('isInverted expression with a variable', () => {
+			const mockEntity = createMockFeedbackEntity('entity-tiger', { isExpression: true, value: 'also an expression' })
+
+			// Bracket-literal access evades access restrictions, for testing.  Don't
+			// try this at home, kids!
+			const {
+				isInverted: { entities },
+			} = manager['specialExpressions']
+
+			const maybeWrapper = () => entities.get('entity-tiger')
+
+			// Initially no wrapper.
+			expect(maybeWrapper()).toBe(undefined)
+
+			// Start tracking.
+			manager.trackEntity(mockEntity, 'isInverted')
+
+			expect(mockVariablesParser.executeExpression).not.toHaveBeenCalled()
+
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(['custom:DeadBeef']),
+			}
+
+			// Now a wrapper, with not-yet-computed referencedVariableIds.
+			let w = maybeWrapper()
+			expect(w).not.toBe(undefined)
+			const wrapper = w!
+			expect(wrapper.referencedVariableIds).toBe(null)
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+
+			while (vi.getTimerCount() > 0) {
+				vi.advanceTimersToNextTimer()
+
+				w = maybeWrapper()
+				expect(w).toBe(wrapper)
+
+				if (wrapper.referencedVariableIds === null) {
+					expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+					continue // still not computed, keep going
+				}
+
+				expect(wrapper.referencedVariableIds.size).toBe(1)
+				expect(wrapper.referencedVariableIds.has('custom:DeadBeef')).toBe(true)
+				break
+			}
+
+			expect(mockVariablesParser.parseVariables).not.toHaveBeenCalled()
+			expect(mockVariablesParser.executeExpression).toHaveBeenCalledExactlyOnceWith('also an expression', 'boolean')
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledExactlyOnceWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
+					[
+						'entity-tiger',
+						{
+							entityId: 'entity-tiger',
+							controlId: 'control-1',
+							value: false,
+						},
+					],
+				])
+			)
+		})
+
+		it('isInverted expression without variable, storeResult nonexpression with variable', () => {
+			const mockFeedbackEntity = createMockFeedbackEntity('entity-batman', {
+				isExpression: true,
+				value: 'mucho expression',
+			})
+			const mockActionEntity = createMockActionEntity('entity-robin', {
+				type: 'custom-variable',
+				variableName: {
+					isExpression: false,
+					value: 'my variable name string',
+				},
+				createIfNotExists: true,
+			})
+
+			// Bracket-literal access evades access restrictions, for testing.  Don't
+			// try this at home, kids!
+			const {
+				isInverted: { entities: isInvertedEntities },
+				storeResult: { entities: storeResultEntities },
+			} = manager['specialExpressions']
+
+			const maybeIsInvertedWrapper = () => isInvertedEntities.get('entity-batman')
+			const maybeStoreResultWrapper = () => storeResultEntities.get('entity-robin')
+
+			// Initially no wrappers.
+			expect(maybeIsInvertedWrapper()).toBe(undefined)
+			expect(maybeStoreResultWrapper()).toBe(undefined)
+
+			// Start tracking.
+			manager.trackEntity(mockFeedbackEntity, 'isInverted')
+			expect(isInvertedEntities.size).toBe(1)
+			manager.trackEntity(mockActionEntity, 'storeResult')
+			expect(storeResultEntities.size).toBe(1)
+
+			expect(mockVariablesParser.executeExpression).not.toHaveBeenCalled()
+			expect(mockVariablesParser.parseVariables).not.toHaveBeenCalled()
+
+			mockParseExpressionResult = {
+				ok: true,
+				value: true,
+				variableIds: new Set<string>(),
+			}
+			mockParseVariablesResult = {
+				text: 'custom:variable-name',
+				variableIds: new Set<string>(['custom:BeefCafe']),
+			}
+
+			// Now a wrapper, with not-yet-computed referencedVariableIds.
+			let isInvertedW = maybeIsInvertedWrapper()
+			expect(isInvertedW).not.toBe(undefined)
+			const isInvertedWrapper = isInvertedW!
+			expect(isInvertedWrapper.referencedVariableIds).toBe(null)
+
+			let storeResultW = maybeStoreResultWrapper()
+			expect(storeResultW).not.toBe(undefined)
+			const storeResultWrapper = storeResultW!
+			expect(storeResultWrapper.referencedVariableIds).toBe(null)
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
+
+			while (vi.getTimerCount() > 0) {
+				vi.advanceTimersToNextTimer()
+
+				isInvertedW = maybeIsInvertedWrapper()
+				storeResultW = maybeStoreResultWrapper()
+
+				// Recorded, no calculations completed.
+				if (
+					isInvertedW &&
+					storeResultW &&
+					isInvertedW.referencedVariableIds === null &&
+					storeResultW.referencedVariableIds === null
+				) {
+					expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+					expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
+					continue
+				}
+
+				// Calculations completed, update functions called (or not)
+				if (isInvertedW === undefined && storeResultW && storeResultW.referencedVariableIds) {
+					expect(storeResultW).toBe(storeResultWrapper)
+					expect(storeResultW.referencedVariableIds.values().toArray()).toEqual(['custom:BeefCafe'])
+					break
+				}
+
+				// Unexpected state.
+				expect('unexpected state').toBe(`
+isInvertedW=${isInvertedW}, isInvertedW.referencedVariableIds=${isInvertedW?.referencedVariableIds?.values().toArray()}
+storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?.referencedVariableIds?.values().toArray()}
+`)
+			}
+
+			expect(isInvertedEntities.size).toBe(0)
+			expect(mockVariablesParser.executeExpression).toHaveBeenCalledExactlyOnceWith('mucho expression', 'boolean')
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledExactlyOnceWith(
+				new Map<string, NewSpecialExpressionValue<'isInverted'>>([
+					[
+						'entity-batman',
+						{
+							entityId: 'entity-batman',
+							controlId: 'control-1',
+							value: true,
+						},
+					],
+				])
+			)
+
+			expect(storeResultEntities.size).toBe(1)
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledExactlyOnceWith('my variable name string')
+			expect(mockUpdateStoreResultFn).toHaveBeenCalledExactlyOnceWith(
+				new Map<string, NewSpecialExpressionValue<'storeResult'>>([
+					[
+						'entity-robin',
+						{
+							entityId: 'entity-robin',
+							controlId: 'control-1',
+							value: {
+								type: 'custom-variable',
+								variableName: 'custom:variable-name',
+								createIfNotExists: true,
+							},
+						},
+					],
+				])
+			)
 		})
 	})
 

@@ -12,24 +12,42 @@ import type {
 	SpecialExpressions,
 	UpdateSpecialExpressionValuesFn,
 } from './SpecialExpressions.js'
-import type { StoreResult } from './Types.js'
 
 export type CreateVariablesAndExpressionParser = (
 	overrideVariableValues: VariableValues | null
 ) => VariablesAndExpressionParser
 
 interface EntityWrapper {
+	/**
+	 * The entity containing the special expression being tracked.
+	 */
 	readonly entity: WeakRef<ControlEntityInstance>
-	needsProcessing: boolean
-	lastReferencedVariableIds: ReadonlySet<string> | null
+
+	/**
+	 * If null, then the pertinent special expression is in need of initial
+	 * computation or subsequent recomputation, and so the set of variables it
+	 * uses is unknown.
+	 *
+	 * Otherwise the special expression *has* been computed, that computed value
+	 * has been recorded, and the special expression depends upon this *nonempty*
+	 * set of variables.
+	 *
+	 * No wrapper is tracked for a special expression that has been computed that
+	 * depends upon no variables.
+	 */
+	referencedVariableIds: null | ReadonlySet<string>
+}
+
+type SpecialExpressionComputation<Expression extends SpecialExpression> = {
+	referencedVariableIds: EntityWrapper['referencedVariableIds']
+	computedValue: SpecialExpressions[Expression]
 }
 
 type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
 	entity: ControlEntityInstance,
-	wrapper: EntityWrapper,
 	parser: VariablesAndExpressionParser,
 	logger: Logger
-) => SpecialExpressions[Expression]
+) => SpecialExpressionComputation<Expression>
 
 type EvaluationResult<T> = { variableIds: ReadonlySet<string> } & (
 	| { ok: true; value: T }
@@ -56,31 +74,25 @@ function evaluateBoolean(
 			}
 }
 
-function ComputeIsInverted(
+const ComputeIsInverted: ComputeSpecialExpressionValueFn<'isInverted'> = (
 	entity: ControlEntityInstance,
-	wrapper: EntityWrapper,
 	parser: VariablesAndExpressionParser,
 	logger: Logger
-): boolean {
-	let isInverted: boolean
-
+): SpecialExpressionComputation<'isInverted'> => {
 	const isInvertedExpression = entity.rawIsInverted
 	if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) {
-		isInverted = false
-
-		wrapper.lastReferencedVariableIds = null
-	} else {
-		const result = evaluateBoolean(isInvertedExpression, parser)
-		if (result.ok) {
-			isInverted = result.value
-		} else {
-			logger.warn(`Failed to parse boolean expression: ${result.error}`)
-			isInverted = false
-		}
-		wrapper.lastReferencedVariableIds = result.variableIds
+		return { referencedVariableIds: null, computedValue: false }
 	}
 
-	return isInverted
+	const result = evaluateBoolean(isInvertedExpression, parser)
+	let isInverted: boolean
+	if (result.ok) {
+		isInverted = result.value
+	} else {
+		logger.warn(`Failed to parse boolean expression: ${result.error}`)
+		isInverted = false
+	}
+	return { referencedVariableIds: result.variableIds, computedValue: isInverted }
 }
 
 function evaluateString(
@@ -108,16 +120,14 @@ function evaluateString(
 			}
 }
 
-function ComputeStoreResult(
+const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 	entity: ControlEntityInstance,
-	wrapper: EntityWrapper,
 	parser: VariablesAndExpressionParser,
 	logger: Logger
-): StoreResult | undefined {
+): SpecialExpressionComputation<'storeResult'> => {
 	const rawStoreResult = entity.rawStoreResult
 	if (rawStoreResult === undefined) {
-		wrapper.lastReferencedVariableIds = null
-		return undefined
+		return { referencedVariableIds: null, computedValue: undefined }
 	}
 
 	const variableNameResult = evaluateString(rawStoreResult.variableName, parser)
@@ -140,21 +150,23 @@ function ComputeStoreResult(
 			location = ''
 		}
 
-		wrapper.lastReferencedVariableIds = locationResult.variableIds.union(variableNameResult.variableIds)
-
 		return {
-			type: 'local-variable',
-			location,
-			variableName,
+			referencedVariableIds: locationResult.variableIds.union(variableNameResult.variableIds),
+			computedValue: {
+				type: 'local-variable',
+				location,
+				variableName,
+			},
 		}
 	}
 
-	wrapper.lastReferencedVariableIds = variableNameResult.variableIds
-
 	return {
-		type: 'custom-variable',
-		variableName,
-		createIfNotExists: rawStoreResult.createIfNotExists,
+		referencedVariableIds: variableNameResult.variableIds,
+		computedValue: {
+			type: 'custom-variable',
+			variableName,
+			createIfNotExists: rawStoreResult.createIfNotExists,
+		},
 	}
 }
 
@@ -169,7 +181,7 @@ export class EntityPoolSpecialExpressionManager {
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
 	#destroyed = false
 
-	readonly #specialExpressions: {
+	private readonly specialExpressions: {
 		readonly [Expression in SpecialExpression]: {
 			readonly entities: Map<string, EntityWrapper>
 			readonly computeNewValueFn: ComputeSpecialExpressionValueFn<Expression>
@@ -188,7 +200,7 @@ export class EntityPoolSpecialExpressionManager {
 		this.#controlId = controlId
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
 
-		this.#specialExpressions = {
+		this.specialExpressions = {
 			isInverted: {
 				entities: new Map(),
 				computeNewValueFn: ComputeIsInverted,
@@ -210,7 +222,7 @@ export class EntityPoolSpecialExpressionManager {
 
 			const parser = this.#createVariablesAndExpressionParser(null)
 
-			for (const specialExpression of Object.values(this.#specialExpressions)) {
+			for (const [type, specialExpression] of Object.entries(this.specialExpressions)) {
 				// Skip a special expression when no entities track it.
 				const entities = specialExpression.entities
 				if (entities.size === 0) continue
@@ -227,16 +239,23 @@ export class EntityPoolSpecialExpressionManager {
 						continue
 					}
 
-					// Check if processing is needed
-					if (!wrapper.needsProcessing) continue
+					// Check whether referenced variables have already been computed
+					if (wrapper.referencedVariableIds) continue
+
+					const { referencedVariableIds, computedValue } = computeNewValueFn(entity, parser, logger)
+					if (!referencedVariableIds || referencedVariableIds.size === 0) {
+						// Do not track a special expression that refers to no variables.
+						logger.silly(`Stopped tracking ${entity.id}/${type} as it refers to no variables`)
+						entities.delete(entity.id)
+					} else {
+						wrapper.referencedVariableIds = referencedVariableIds
+					}
 
 					updatedValues.set(entity.id, {
 						entityId: entity.id,
 						controlId: this.#controlId,
-						value: computeNewValueFn(entity, wrapper, parser, logger),
+						value: computedValue,
 					})
-
-					wrapper.needsProcessing = false
 				}
 
 				// Propagate the updates if needed
@@ -260,7 +279,7 @@ export class EntityPoolSpecialExpressionManager {
 	destroy(): void {
 		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
-		for (const { entities } of Object.values(this.#specialExpressions)) {
+		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.clear()
 		}
 	}
@@ -271,16 +290,15 @@ export class EntityPoolSpecialExpressionManager {
 	 * value of any variables it depends upon, change.
 	 */
 	trackEntity(entity: ControlEntityInstance, expression: SpecialExpression): void {
-		const { entities, logger } = this.#specialExpressions[expression]
+		const { entities, logger } = this.specialExpressions[expression]
 
 		// This may replace an existing entity, if so it needs to restart the process
 		entities.set(entity.id, {
 			entity: new WeakRef(entity),
-			needsProcessing: true,
-			lastReferencedVariableIds: null,
+			referencedVariableIds: null,
 		})
 
-		logger.silly(`Queued entity ${entity.id} for processing`)
+		logger.silly(`Queued entity ${entity.id}/${expression} for processing`)
 
 		this.#debounceProcessPending()
 	}
@@ -290,7 +308,7 @@ export class EntityPoolSpecialExpressionManager {
 	 * processing of those special expressions to compute their new values.
 	 */
 	forgetEntity(entityId: string): void {
-		for (const { entities } of Object.values(this.#specialExpressions)) {
+		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.delete(entityId)
 		}
 	}
@@ -303,23 +321,19 @@ export class EntityPoolSpecialExpressionManager {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
-		for (const { entities } of Object.values(this.#specialExpressions)) {
+		for (const { entities } of Object.values(this.specialExpressions)) {
 			for (const wrapper of entities.values()) {
 				// Check if already queued for processing
-				if (wrapper.needsProcessing) continue
+				const referencedVariableIds = wrapper.referencedVariableIds
+				if (!referencedVariableIds) continue
 
-				if (!wrapper.lastReferencedVariableIds || wrapper.lastReferencedVariableIds.size === 0) {
-					// No variables to check, nothing to do
-					continue
-				}
-
-				if (variableIds.isDisjointFrom(wrapper.lastReferencedVariableIds)) {
+				if (variableIds.isDisjointFrom(referencedVariableIds)) {
 					// No variables changed that we care about, nothing to do
 					continue
 				}
 
 				// The entity needs re-processing
-				wrapper.needsProcessing = true
+				wrapper.referencedVariableIds = null
 				anyInvalidated = true
 			}
 		}
