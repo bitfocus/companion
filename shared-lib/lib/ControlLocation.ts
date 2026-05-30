@@ -10,3 +10,15 @@ export const ControlLocationOption = {
 	default: '$(this:page)/$(this:row)/$(this:column)',
 	useVariables: CompanionFieldVariablesSupport.InternalParser,
 } as const satisfies CompanionInputFieldTextInputExtended
+
+export type ThisLocationVariable =
+	| 'this:page'
+	| 'this:column'
+	| 'this:row'
+	| 'this:location'
+	| 'this:page_name'
+	| 'this:active'
+	| 'this:step'
+	| 'this:step_count'
+	| 'this:actions_running'
+	| 'this:button_status'

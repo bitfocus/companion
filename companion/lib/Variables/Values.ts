@@ -12,6 +12,7 @@
 import EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
@@ -30,6 +31,51 @@ import { VariablesBlinker } from './VariablesBlinker.js'
 export interface VariablesValuesEvents {
 	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
 	local_variables_changed: [changed: ReadonlySet<string>, fromControlId: string]
+}
+
+const ThisLocationVariables: Record<
+	ThisLocationVariable,
+	(location: ControlLocation | null | undefined) => VariableValue
+> = {
+	'this:page': (location) => location?.pageNumber,
+	'this:column': (location) => location?.column,
+	'this:row': (location) => location?.row,
+	'this:location': (location) => (location ? formatLocation(location) : undefined),
+
+	// The remaining variables simply delegate to internally-defined variables.
+	'this:page_name': (location) =>
+		location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+	'this:active': (location) =>
+		location
+			? `$(internal:b_active_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+
+	'this:step': (location) =>
+		location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE,
+	'this:step_count': (location) =>
+		location
+			? `$(internal:b_step_count_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+
+	'this:actions_running': (location) =>
+		location
+			? `$(internal:b_actions_running_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+
+	'this:button_status': (location) =>
+		location
+			? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+}
+
+const ThisLocationVariablesSet: ReadonlySet<string> = new Set(Object.keys(ThisLocationVariables))
+
+export function InjectedVariablesForLocation(controlLocation: ControlLocation | null | undefined): VariablesCache {
+	const injectedVariables: VariablesCache = new Map()
+	for (const [variableId, computeVariable] of Object.entries(ThisLocationVariables)) {
+		injectedVariables.set(`$(${variableId})`, computeVariable(controlLocation))
+	}
+	return injectedVariables
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
@@ -64,8 +110,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues | null
 	): VariablesAndExpressionParser {
-		const thisValues: VariablesCache = new Map()
-		this.addInjectedVariablesForLocation(thisValues, controlLocation)
+		const thisValues = InjectedVariablesForLocation(controlLocation)
 
 		return new VariablesAndExpressionParser(
 			this.#blinker,
@@ -175,65 +220,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		}
 	}
 
-	/**
-	 * Variables to inject based on location
-	 */
-	addInjectedVariablesForLocation(values: VariablesCache, location: ControlLocation | null | undefined): void {
-		values.set('$(this:page)', location?.pageNumber)
-		values.set('$(this:column)', location?.column)
-		values.set('$(this:row)', location?.row)
-		values.set('$(this:location)', location ? formatLocation(location) : undefined)
-
-		// Reactivity happens for these because of references to the inner variables
-		values.set(
-			'$(this:page_name)',
-			location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE
-		)
-		values.set(
-			'$(this:active)',
-			location
-				? `$(internal:b_active_${location.pageNumber}_${location.row}_${location.column})`
-				: VARIABLE_UNKNOWN_VALUE
-		)
-		values.set(
-			'$(this:step)',
-			location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE
-		)
-		values.set(
-			'$(this:step_count)',
-			location
-				? `$(internal:b_step_count_${location.pageNumber}_${location.row}_${location.column})`
-				: VARIABLE_UNKNOWN_VALUE
-		)
-
-		values.set(
-			'$(this:actions_running)',
-			location
-				? `$(internal:b_actions_running_${location.pageNumber}_${location.row}_${location.column})`
-				: VARIABLE_UNKNOWN_VALUE
-		)
-		values.set(
-			'$(this:button_status)',
-			location
-				? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
-				: VARIABLE_UNKNOWN_VALUE
-		)
-	}
-
 	triggerLocationVariablesChange(controlId: string): void {
-		const newValues: VariablesCache = new Map()
-		this.addInjectedVariablesForLocation(newValues, { pageNumber: 1, row: 1, column: 1 }) // Fake location, we don't need it
-
-		const changedVariableIds = new Set<string>()
-		for (const variableId of newValues.keys()) {
-			// Strip off the wrapper
-			if (variableId.startsWith('$(') && variableId.endsWith(')')) {
-				changedVariableIds.add(variableId.substring(2, variableId.length - 1))
-			}
-		}
-		if (changedVariableIds.size > 0) {
-			this.emit('local_variables_changed', changedVariableIds, controlId)
-		}
+		this.emit('local_variables_changed', ThisLocationVariablesSet, controlId)
 	}
 }
 
