@@ -79,7 +79,7 @@ export function ButtonEditorTabs({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			<div ref={tabBarRef} className="sticky-heading pt-0">
+			<div ref={tabBarRef} className="sticky-tabs">
 				<TabArea.Root value={selectedStep} onValueChange={setSelectedStep}>
 					<TabArea.List>
 						{extraTabs?.map(

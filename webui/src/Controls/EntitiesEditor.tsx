@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -17,6 +18,7 @@ import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { findAllEntityIdsDeep } from './Util.js'
 
 interface ControlEntitiesEditorProps {
+	className?: string
 	controlId: string
 	location: ControlLocation | undefined
 	listId: SomeSocketEntityLocation
@@ -32,6 +34,7 @@ interface ControlEntitiesEditorProps {
 }
 
 export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
+	className,
 	controlId,
 	location,
 	listId,
@@ -52,7 +55,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	const entityIds = useMemo(() => findAllEntityIdsDeep(entities ?? []), [entities])
 
 	return (
-		<div className="entity-category">
+		<div className={classNames('entity-category', className)}>
 			<EntityEditorContextProvider
 				controlId={controlId}
 				location={location}

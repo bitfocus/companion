@@ -437,17 +437,6 @@ form.row > * {
 			.tab-content {
 				overflow-y: scroll;
 			}
-
-			.sticky-heading {
-				position: sticky;
-				padding-top: 0;
-				padding-top: 1rem;
-				// margin-top: -1rem;
-				top: 0;
-				left: 0;
-				background-color: #fff;
-				z-index: 1;
-			}
 		}
 
 		.secondary-panel-simple {
@@ -465,6 +454,19 @@ form.row > * {
 	}
 }
 //}
+
+.sticky-tabs {
+	position: sticky;
+	top: 0;
+	left: 0;
+	background-color: #fff;
+	z-index: 1;
+
+	top: -1.5rem;
+	margin: 0;
+	padding: 0.5rem 0 0 0; // 1.5rem covers the scroll container padding gap + 0.5rem visual breathing room
+	box-shadow: none;
+}
 
 // For bigger screens, like 1440p and 4K, allow scaling
 @media only screen and (min-width: 2000px) {

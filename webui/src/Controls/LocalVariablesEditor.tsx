@@ -11,12 +11,14 @@ import { ControlEntitiesEditor } from './EntitiesEditor.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 
 interface LocalVariablesEditorProps {
+	className?: string
 	controlId: string
 	location: ControlLocation | undefined
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
 }
 export function LocalVariablesEditor({
+	className,
 	controlId,
 	location,
 	variables,
@@ -25,6 +27,7 @@ export function LocalVariablesEditor({
 	return (
 		<>
 			<ControlEntitiesEditor
+				className={className}
 				heading="Local Variables"
 				subheading={
 					<StaticAlert color="info" className="mb-2 py-2">

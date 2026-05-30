@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import { useLocalStorage } from 'usehooks-ts'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
@@ -7,7 +8,7 @@ import { Button } from '~/Components/Button'
 import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
-import { InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
@@ -63,6 +64,7 @@ interface TriggerPanelContentProps {
 
 function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): React.ReactNode {
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+	const [activeTab, setActiveTab] = useLocalStorage('triggerEditor.activeTab', 'events')
 
 	return (
 		<>
@@ -74,70 +76,79 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<ControlNotesEditor controlId={controlId} notes={config.options.notes} />
 			</MyErrorBoundary>
 
-			<MyErrorBoundary>
-				<TriggerEventEditor
-					heading={
-						<>
-							Events
-							<InlineHelpIcon className="ms-2">
-								This trigger will be executed when any of the events happens
-							</InlineHelpIcon>
-						</>
-					}
-					controlId={controlId}
-					events={config.events}
-					localVariablesStore={localVariablesStore}
-				/>
-			</MyErrorBoundary>
+			<div className="sticky-tabs">
+				<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+					<TabArea.List>
+						<TabArea.Tab value="events">Events</TabArea.Tab>
+						<TabArea.Tab value="conditions">Conditions</TabArea.Tab>
+						<TabArea.Tab value="actions">Actions</TabArea.Tab>
+						<TabArea.Tab value="variables">Local Variables</TabArea.Tab>
+						<TabArea.Indicator />
+					</TabArea.List>
+				</TabArea.Root>
+			</div>
 
-			<MyErrorBoundary>
-				<ControlEntitiesEditor
-					heading={
-						<>
-							Conditions
-							<InlineHelpIcon className="ms-2">Only execute when all of these conditions are true</InlineHelpIcon>
-						</>
-					}
-					controlId={controlId}
-					entities={config.condition}
-					listId="feedbacks"
-					entityType={EntityModelType.Feedback}
-					entityTypeLabel="condition"
-					feedbackListType={FeedbackEntitySubType.Boolean}
-					location={undefined}
-					localVariablesStore={localVariablesStore}
-					localVariablePrefix={null}
-				/>
-			</MyErrorBoundary>
+			{activeTab === 'events' && (
+				<MyErrorBoundary>
+					<TriggerEventEditor
+						heading="Events"
+						subheading={<div className="mb-2">This trigger will be executed when any of the events happens</div>}
+						controlId={controlId}
+						events={config.events}
+						localVariablesStore={localVariablesStore}
+					/>
+				</MyErrorBoundary>
+			)}
 
-			<MyErrorBoundary>
-				<ControlEntitiesEditor
-					heading={
-						<>
-							Actions
-							<InlineHelpIcon className="ms-2">What should happen when executed</InlineHelpIcon>
-						</>
-					}
-					controlId={controlId}
-					location={undefined}
-					listId="trigger_actions"
-					entities={config.actions}
-					entityType={EntityModelType.Action}
-					entityTypeLabel="action"
-					feedbackListType={null}
-					localVariablesStore={localVariablesStore}
-					localVariablePrefix={null}
-				/>
-			</MyErrorBoundary>
+			{activeTab === 'conditions' && (
+				<MyErrorBoundary>
+					<ControlEntitiesEditor
+						className="mt-2"
+						heading="Conditions"
+						subheading={<div className="mb-2">Only execute when all of these conditions are true</div>}
+						controlId={controlId}
+						entities={config.condition}
+						listId="feedbacks"
+						entityType={EntityModelType.Feedback}
+						entityTypeLabel="condition"
+						feedbackListType={FeedbackEntitySubType.Boolean}
+						location={undefined}
+						localVariablesStore={localVariablesStore}
+						localVariablePrefix={null}
+					/>
+				</MyErrorBoundary>
+			)}
 
-			<MyErrorBoundary>
-				<LocalVariablesEditor
-					controlId={controlId}
-					location={undefined}
-					variables={config.localVariables}
-					localVariablesStore={localVariablesStore}
-				/>
-			</MyErrorBoundary>
+			{activeTab === 'actions' && (
+				<MyErrorBoundary>
+					<ControlEntitiesEditor
+						className="mt-2"
+						heading="Actions"
+						subheading={<div className="mb-2">What should happen when executed</div>}
+						controlId={controlId}
+						location={undefined}
+						listId="trigger_actions"
+						entities={config.actions}
+						entityType={EntityModelType.Action}
+						entityTypeLabel="action"
+						feedbackListType={null}
+						localVariablesStore={localVariablesStore}
+						localVariablePrefix={null}
+					/>
+				</MyErrorBoundary>
+			)}
+
+			{activeTab === 'variables' && (
+				<MyErrorBoundary>
+					<LocalVariablesEditor
+						className="mt-2"
+						controlId={controlId}
+						location={undefined}
+						variables={config.localVariables}
+						localVariablesStore={localVariablesStore}
+					/>
+				</MyErrorBoundary>
+			)}
 		</>
 	)
 }

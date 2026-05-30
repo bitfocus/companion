@@ -99,7 +99,7 @@ const EditButtonContent = observer(function EditButton({
 }: EditButtonContentProps) {
 	return (
 		<>
-			<div className="d-flex gap-2">
+			<div className="d-flex mb-0">
 				<div className="flex-grow-1 min-w-0 d-flex flex-column gap-1">
 					<div className="d-flex flex-wrap align-items-center gap-1">
 						<ControlClearButton location={location} resetModalRef={resetModalRef} />
@@ -120,21 +120,21 @@ const EditButtonContent = observer(function EditButton({
 
 			{config.type === 'pageup' && (
 				<>
-					<h4>Page up button</h4>
+					<h4 className="mt-2">Page up button</h4>
 					<p className="mt-3">No configuration available for page up buttons</p>
 				</>
 			)}
 
 			{config.type === 'pagenum' && (
 				<>
-					<h4>Page number button</h4>
+					<h4 className="mt-2">Page number button</h4>
 					<p className="mt-3">No configuration available for page number buttons</p>
 				</>
 			)}
 
 			{config.type === 'pagedown' && (
 				<>
-					<h4>Page down button</h4>
+					<h4 className="mt-2">Page down button</h4>
 					<p className="mt-3">No configuration available for page down buttons</p>
 				</>
 			)}

@@ -41,6 +41,7 @@ interface TriggerEventEditorProps {
 	controlId: string
 	events: EventInstance[]
 	heading: JSX.Element | string
+	subheading?: React.ReactNode
 	localVariablesStore: LocalVariablesStore
 }
 
@@ -48,6 +49,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 	controlId,
 	events,
 	heading,
+	subheading,
 	localVariablesStore,
 }: TriggerEventEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
@@ -64,7 +66,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 		<>
 			<GenericConfirmModal ref={confirmModal} />
 
-			<h4 className="mt-3">
+			<h5 className="mt-2">
 				{heading}
 				{events.length > 1 && (
 					<ButtonGroup className="right">
@@ -80,7 +82,8 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 						)}
 					</ButtonGroup>
 				)}
-			</h4>
+			</h5>
+			{subheading}
 
 			<EventListDragLayer
 				events={events}
