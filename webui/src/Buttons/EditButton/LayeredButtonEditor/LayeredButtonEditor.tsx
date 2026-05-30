@@ -60,6 +60,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 			style={{
 				marginTop: '50px', // HACK: this is a bit silly, but is needed to avoid clipping the preview
 				// Once we have a 'notes' section, that can occupy the space this creates and avoid this issue for us.
+				minHeight: '0',
 			}}
 		>
 			{runtimeProps && (

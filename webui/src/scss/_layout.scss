@@ -225,32 +225,14 @@ form.row > * {
 	}
 }
 
-.tab-content {
-	background-color: #fff;
-	border-bottom-right-radius: 8px;
-	border-bottom-left-radius: 8px;
-	border-left: 1px solid #bbb;
-	border-bottom: 1px solid #bbb;
-	border-right: 1px solid #bbb;
-	// margin-bottom: 38px;
-
-	max-width: 1900px;
-	min-height: 300px;
-	//max-height: 100%;
+.tab-panel {
 	height: 100%;
+	padding: 1rem 1rem 1rem 1rem;
 
-	display: flex;
-	flex-direction: column;
+	flex-grow: 1;
 
-	.tab-pane {
-		height: 100%;
-		padding: 1rem 1rem 1rem 1rem;
-
-		flex-grow: 1;
-
-		// Make absolute positioned child components be relative to this
-		position: relative;
-	}
+	// Make absolute positioned child components be relative to this
+	position: relative;
 
 	.edit-sticky-body {
 		--raw-height: 0px;

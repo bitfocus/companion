@@ -19,7 +19,7 @@ export function AddElementPickerModal({ onSave }: AddElementPickerModalProps): R
 	const [isOpen, setIsOpen] = useState(false)
 
 	const selectedElement = selectedElementId ? styleStore.findElementById(selectedElementId) : null
-	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
+	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type]?.flatMap((s) => s.fields) : null
 
 	const handleSave = useCallback(() => {
 		if (selectedElementId && selectedProperties.length > 0) {

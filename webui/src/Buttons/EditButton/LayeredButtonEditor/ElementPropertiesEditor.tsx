@@ -5,6 +5,7 @@ import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/G
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { Accordion } from '~/Components/Accordion.js'
 import { Form } from '~/Components/Form.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { getInputFeatures, OptionsInputControl } from '~/Controls/OptionsInputField.js'
@@ -55,7 +56,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 	const { localVariablesStore } = useElementPropertiesContext()
 	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
-	let schema: SomeCompanionInputField[] = elementSchemas[elementProps.type]
+	let schema = elementSchemas[elementProps.type]
 
 	// If this is a composite element, get the full schema
 	if (elementProps.type === 'composite' && elementProps.connectionId && elementProps.elementId) {
@@ -66,11 +67,11 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 
 		if (compositeDefinition) {
 			// Combine common element fields with the custom schema from the composite definition
-			schema = [...schema, ...compositeDefinition.options]
+			schema = [...schema, { id: 'properties', label: 'Properties', fields: compositeDefinition.options }]
 		}
 	}
 
-	const simpleModeFields: string[] | undefined =
+	const simpleModeFieldIds: readonly string[] | undefined =
 		simpleMode && elementProps.type in elementSimpleModeFields
 			? elementSimpleModeFields[elementProps.type as keyof typeof elementSimpleModeFields]
 			: undefined
@@ -79,26 +80,61 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 		return <div>No schema found for element type: {elementProps.type}</div>
 	}
 
+	// Render flat for simple mode, or elements with only one section
+	if (simpleModeFieldIds || schema.length === 1) {
+		const flatFields = schema.flatMap((s) => s.fields)
+
+		return (
+			<>
+				{flatFields.map((field) => {
+					if (simpleModeFieldIds && !simpleModeFieldIds.includes(field.id)) return null
+					return (
+						<SchemaFieldWrapper
+							key={field.id}
+							field={field}
+							elementProps={elementProps}
+							localVariablesStore={localVariablesStore}
+						/>
+					)
+				})}
+
+				{simpleModeFieldIds ? (
+					<div className="text-center text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+						Some fields are hidden in simple mode
+					</div>
+				) : null}
+			</>
+		)
+	}
+
+	const defaultOpenSectionIds = schema.filter((s) => s.fields.length > 0).map((s) => s.id)
+
 	return (
 		<>
-			{schema.map((field) => {
-				// In simple mode, skip fields not in the allowlist
-				if (simpleModeFields && !simpleModeFields.includes(field.id)) return null
-
-				return (
-					<SchemaFieldWrapper
-						key={field.id}
-						field={field}
-						elementProps={elementProps}
-						localVariablesStore={localVariablesStore}
-					/>
-				)
-			})}
-			{simpleModeFields ? (
-				<div className="text-center text-muted mt-3" style={{ fontSize: '0.875rem' }}>
-					Some fields are hidden in simple mode
-				</div>
-			) : null}
+			<Accordion.Root defaultValue={defaultOpenSectionIds} multiple>
+				{schema.map((section) => {
+					if (section.fields.length === 0) return null
+					return (
+						<Accordion.Item key={section.id} value={section.id}>
+							<Accordion.Header>
+								<Accordion.Trigger className="fw-bold">{section.label}</Accordion.Trigger>
+							</Accordion.Header>
+							<Accordion.Panel>
+								<div className="row g-2 p-2">
+									{section.fields.map((field) => (
+										<SchemaFieldWrapper
+											key={field.id}
+											field={field}
+											elementProps={elementProps}
+											localVariablesStore={localVariablesStore}
+										/>
+									))}
+								</div>
+							</Accordion.Panel>
+						</Accordion.Item>
+					)
+				})}
+			</Accordion.Root>
 		</>
 	)
 })

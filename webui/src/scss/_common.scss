@@ -322,10 +322,13 @@ svg.pad-left {
 
 	.expression-field {
 		flex-grow: 1;
+
+		align-self: center;
 	}
 
 	.expression-toggle-button {
 		justify-self: flex-end;
+		align-self: stretch;
 
 		.button {
 			height: 100%;

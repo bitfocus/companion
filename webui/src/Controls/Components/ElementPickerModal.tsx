@@ -27,7 +27,7 @@ export function ElementPickerModal({
 	const selectedProperty2 = selectedProperty ?? currentOverride.elementProperty
 
 	const selectedElement = selectedElementId2 ? styleStore.findElementById(selectedElementId2) : null
-	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
+	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type]?.flatMap((s) => s.fields) : null
 
 	const handleSave = useCallback(() => {
 		if (selectedElementId2 && selectedProperty2) {

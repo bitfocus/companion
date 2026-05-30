@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import { useCallback, useState } from 'react'
 import type { JsonValue } from 'type-fest'
-import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import { getElementSchemaProperty } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -76,10 +76,8 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 			// Secondary sort: property name
 			const selectedElementA = styleStore.findElementById(a.elementId)
 			const selectedElementB = styleStore.findElementById(b.elementId)
-			const selectedSchemaA = selectedElementA?.type ? elementSchemas[selectedElementA.type] : null
-			const selectedSchemaB = selectedElementB?.type ? elementSchemas[selectedElementB.type] : null
-			const selectedPropertyA = selectedSchemaA?.find((prop) => prop.id === a.elementProperty)
-			const selectedPropertyB = selectedSchemaB?.find((prop) => prop.id === b.elementProperty)
+			const selectedPropertyA = getElementSchemaProperty(selectedElementA?.type, a.elementProperty)
+			const selectedPropertyB = getElementSchemaProperty(selectedElementB?.type, b.elementProperty)
 
 			const propertyNameA = selectedPropertyA?.label || a.elementProperty
 			const propertyNameB = selectedPropertyB?.label || b.elementProperty
@@ -227,8 +225,7 @@ const SelectedElementProperty = observer(function SelectedElementProperty({
 	if (!row.elementId || !row.elementProperty) return <div className="text-muted">No element selected</div>
 
 	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
-	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
-	const selectedProperty = selectedSchema?.find((prop) => prop.id === row.elementProperty)
+	const selectedProperty = getElementSchemaProperty(selectedElement?.type, row.elementProperty)
 
 	return (
 		<>
@@ -252,8 +249,7 @@ const PropertyValueInput = observer(function PropertyValueInput({
 	const { styleStore } = useLayeredStyleElementsContext()
 
 	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
-	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type] : null
-	const selectedProperty = selectedSchema?.find((prop) => prop.id === row.elementProperty)
+	const selectedProperty = getElementSchemaProperty(selectedElement?.type, row.elementProperty)
 
 	const setOverride = useCallback(
 		(override: ExpressionOrValue<JsonValue | undefined>) => {

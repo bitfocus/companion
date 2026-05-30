@@ -123,7 +123,7 @@ for (const [id, fields] of Object.entries(baseInterfaceTypes)) {
 generatedFile += `export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDrawBase, 'enabled' | 'opacity'> {\n`
 generatedFile += `\t// Note: this is the background element and can only be at the bottom of the stack\n`
 generatedFile += `\ttype: 'canvas'\n`
-for (const field of canvasElementSchema) {
+for (const field of canvasElementSchema.flatMap((s) => s.fields)) {
 	if (field.id === 'decoration') {
 		generatedFile += `\tdecoration: ButtonGraphicsDecorationType // replaces show_topbar\n`
 	} else if (field.id === 'showStatusIcons') {
@@ -139,7 +139,7 @@ generatedFile += '}\n\n'
 generatedFile += `export interface ButtonGraphicsCanvasElement extends Omit<ButtonGraphicsElementBase, 'enabled' | 'opacity'> {\n`
 generatedFile += `\t// Note: this is the background element and can only be at the bottom of the stack\n`
 generatedFile += `\ttype: 'canvas'\n`
-for (const field of canvasElementSchema) {
+for (const field of canvasElementSchema.flatMap((s) => s.fields)) {
 	if (field.id === 'decoration') {
 		generatedFile += `\tdecoration: ExpressionOrValue<ButtonGraphicsDecorationType> // replaces show_topbar\n`
 	} else {
@@ -154,8 +154,9 @@ generatedFile += '}\n\n'
 const allDrawElementTypes: string[] = ['ButtonGraphicsCanvasDrawElement']
 const allElementTypes: string[] = ['ButtonGraphicsCanvasElement']
 
-for (const [id, fields] of Object.entries(elementSchemas)) {
+for (const [id, sections] of Object.entries(elementSchemas)) {
 	if (id === 'canvas') continue // already done
+	const fields = sections.flatMap((s) => s.fields)
 
 	const typeName = capitalize(id)
 
