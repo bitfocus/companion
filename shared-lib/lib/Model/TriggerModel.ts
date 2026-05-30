@@ -19,6 +19,7 @@ export type TriggerOptions = {
 	enabled: boolean
 	sortOrder: number
 	collectionId?: string
+	notes?: string
 }
 
 export interface ClientTriggerData extends TriggerOptions {

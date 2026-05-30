@@ -59,6 +59,7 @@ export type ButtonOptionsBase = {
 export type LayeredButtonOptions = ButtonOptionsBase & {
 	rotaryActions: boolean
 	canModifyStyleInApis: boolean
+	notes?: string
 }
 
 export type ButtonStatus = 'good' | 'warning' | 'error'

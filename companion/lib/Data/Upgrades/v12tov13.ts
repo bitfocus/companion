@@ -62,6 +62,7 @@ function convertControlToLayered(control: NormalButtonModel, defaultNoTopBar: bo
 		options: {
 			...(control.options as Complete<NormalButtonOptions>),
 			canModifyStyleInApis: true, // Backwards compatibility
+			notes: '',
 		} satisfies Complete<LayeredButtonOptions>,
 		localVariables: control.localVariables,
 		steps: control.steps,

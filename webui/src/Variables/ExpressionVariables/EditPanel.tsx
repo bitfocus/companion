@@ -24,6 +24,7 @@ import { EntityManageChildGroups } from '~/Controls/Components/EntityChildGroup'
 import { EntityCommonCells } from '~/Controls/Components/EntityCommonCells'
 import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
+import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore'
 import { findAllEntityIdsDeep } from '~/Controls/Util.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
@@ -129,6 +130,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 
 	const nameFieldId = useId()
 	const descriptionFieldId = useId()
+	const notesFieldId = useId()
 
 	return (
 		<Grid.Col sm={12} className="p-0">
@@ -153,6 +155,13 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 				</FormLabel>
 				<Grid.Col xs={8}>
 					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
+				</Grid.Col>
+
+				<FormLabel htmlFor={notesFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+					Notes
+				</FormLabel>
+				<Grid.Col xs={8}>
+					<ControlNotesEditor id={notesFieldId} controlId={controlId} notes={options.notes} className="mb-2" />
 				</Grid.Col>
 			</Form>
 		</Grid.Col>

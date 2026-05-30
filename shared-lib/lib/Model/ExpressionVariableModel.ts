@@ -18,6 +18,7 @@ export type ExpressionVariableOptions = {
 	description: string
 	sortOrder: number
 	collectionId?: string
+	notes?: string
 }
 
 export interface ClientExpressionVariableData extends ExpressionVariableOptions {

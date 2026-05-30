@@ -6,6 +6,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
+import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -98,16 +99,24 @@ const EditButtonContent = observer(function EditButton({
 }: EditButtonContentProps) {
 	return (
 		<>
-			<Grid.Col sm={12}>
-				<ButtonPreviewBase fixedSize preview={previewImage} right={true} className="button-zero-display-height" />
-
-				<ControlClearButton location={location} resetModalRef={resetModalRef} />
-				<MyErrorBoundary>
+			<div className="d-flex gap-2">
+				<div className="flex-grow-1 min-w-0 d-flex flex-column gap-1">
+					<div className="d-flex flex-wrap align-items-center gap-1">
+						<ControlClearButton location={location} resetModalRef={resetModalRef} />
+						<MyErrorBoundary>
+							{config.type === 'button-layered' && (
+								<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+							)}
+						</MyErrorBoundary>
+					</div>
 					{config.type === 'button-layered' && (
-						<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+						<MyErrorBoundary>
+							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-100 mt-1" />
+						</MyErrorBoundary>
 					)}
-				</MyErrorBoundary>
-			</Grid.Col>
+				</div>
+				<ButtonPreviewBase fixedSize preview={previewImage} />
+			</div>
 
 			{config.type === 'pageup' && (
 				<>

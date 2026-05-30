@@ -69,6 +69,7 @@ export class ControlExpressionVariable
 		variableName: '',
 		description: 'An expression variable',
 		sortOrder: 0,
+		notes: '',
 	}
 
 	/**
