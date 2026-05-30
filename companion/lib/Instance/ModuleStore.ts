@@ -453,7 +453,7 @@ function transformApiModuleToCache(
 	// Match what the on disk scanner generates
 	return {
 		id: data.id,
-		name: data.products.length === 0 ? data.manufacturer || data.name : prefix + data.products.join('; '),
+		name: data.name,
 		shortname: data.shortname,
 		products: data.products.length === 0 ? [data.manufacturer ?? data.name] : data.products.map((p) => `${prefix}${p}`),
 		keywords: data.keywords,
