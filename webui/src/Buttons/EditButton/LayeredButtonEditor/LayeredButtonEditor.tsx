@@ -55,14 +55,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
 
 	return (
-		<div
-			className="grow flex flex-column"
-			style={{
-				marginTop: '50px', // HACK: this is a bit silly, but is needed to avoid clipping the preview
-				// Once we have a 'notes' section, that can occupy the space this creates and avoid this issue for us.
-				minHeight: '0',
-			}}
-		>
+		<div className="grow flex flex-column min-h-0">
 			{runtimeProps && (
 				<MyErrorBoundary>
 					<ButtonEditorTabs

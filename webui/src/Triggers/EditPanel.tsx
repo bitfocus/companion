@@ -9,6 +9,7 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
+import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -67,6 +68,10 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 		<>
 			<MyErrorBoundary>
 				<TriggerConfig options={config.options} controlId={controlId} />
+			</MyErrorBoundary>
+
+			<MyErrorBoundary>
+				<ControlNotesEditor controlId={controlId} notes={config.options.notes} />
 			</MyErrorBoundary>
 
 			<MyErrorBoundary>

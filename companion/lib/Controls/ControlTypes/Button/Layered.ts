@@ -147,6 +147,7 @@ export class ControlButtonLayered
 			...structuredClone(ButtonControlBase.DefaultOptions),
 			rotaryActions: false,
 			canModifyStyleInApis: false,
+			notes: '',
 		}
 
 		if (!storage) {

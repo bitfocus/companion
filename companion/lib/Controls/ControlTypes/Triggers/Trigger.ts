@@ -75,6 +75,7 @@ export class ControlTrigger
 		name: 'New Trigger',
 		enabled: false,
 		sortOrder: 0,
+		notes: '',
 	}
 
 	/**
