@@ -74,7 +74,8 @@
 		outline: none;
 	}
 
-	&:disabled {
+	&:disabled,
+	&[aria-disabled='true'] {
 		opacity: 0.4;
 		cursor: not-allowed;
 		pointer-events: none;
