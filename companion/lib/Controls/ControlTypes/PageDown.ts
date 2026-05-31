@@ -1,6 +1,4 @@
-import { nanoid } from 'nanoid'
 import type { LayeredButtonModel, PageDownButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -152,40 +150,11 @@ export class ControlButtonPageDown extends ControlButtonPage<PageDownButtonModel
 	}
 
 	convertControl(): LayeredButtonModel {
-		return {
-			type: 'button-layered',
+		return this.buildConvertedControl(pageDownElements, {
+			definitionId: 'dec_page',
 			options: {
-				stepProgression: 'auto',
-				rotaryActions: false,
-				canModifyStyleInApis: false,
+				surfaceId: exprVal('self'),
 			},
-			style: {
-				layers: structuredClone(pageDownElements),
-			},
-			feedbacks: [],
-			steps: {
-				'0': {
-					action_sets: {
-						down: [
-							{
-								type: EntityModelType.Action,
-								id: nanoid(),
-								definitionId: 'dec_page',
-								connectionId: 'internal',
-								options: {
-									surfaceId: exprVal('self'),
-								},
-								upgradeIndex: undefined,
-							},
-						],
-						up: undefined,
-						rotate_left: undefined,
-						rotate_right: undefined,
-					},
-					options: { runWhileHeld: [] },
-				},
-			},
-			localVariables: [],
-		}
+		})
 	}
 }

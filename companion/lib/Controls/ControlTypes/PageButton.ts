@@ -1,4 +1,7 @@
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { nanoid } from 'nanoid'
+import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../Graphics/ConvertGraphicsElements.js'
@@ -167,4 +170,38 @@ export abstract class ControlButtonPage<TJson>
 	}
 
 	abstract convertControl(): SomeButtonModel
+
+	// in ControlButtonPage
+	protected buildConvertedControl(
+		elements: SomeButtonGraphicsElement[],
+		action: { definitionId: string; options: ExpressionableOptionsObject }
+	): LayeredButtonModel {
+		return {
+			type: 'button-layered',
+			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			style: { layers: structuredClone(elements) },
+			feedbacks: [],
+			steps: {
+				'0': {
+					action_sets: {
+						down: [
+							{
+								type: EntityModelType.Action,
+								id: nanoid(),
+								definitionId: action.definitionId,
+								connectionId: 'internal',
+								options: action.options,
+								upgradeIndex: undefined,
+							},
+						],
+						up: undefined,
+						rotate_left: undefined,
+						rotate_right: undefined,
+					},
+					options: { runWhileHeld: [] },
+				},
+			},
+			localVariables: [],
+		}
+	}
 }
