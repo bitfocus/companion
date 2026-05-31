@@ -53,6 +53,7 @@ export class ControlExpressionVariable
 	readonly type = 'expression-variable'
 
 	readonly supportsActions = false
+	readonly supportsConvert = false
 	readonly supportsEvents = false
 	readonly supportsEntities = true
 	readonly supportsLayeredStyle = false

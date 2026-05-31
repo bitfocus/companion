@@ -28,6 +28,7 @@ import type {
 	ControlWithLayeredStyle,
 	ControlWithoutActions,
 	ControlWithoutActionSets,
+	ControlWithoutConvert,
 	ControlWithoutEvents,
 	ControlWithoutOptions,
 	ControlWithoutPushed,
@@ -55,7 +56,8 @@ export class ControlButtonPreset
 		ControlWithoutActionSets,
 		ControlWithEntities,
 		ControlWithoutOptions,
-		ControlWithoutPushed
+		ControlWithoutPushed,
+		ControlWithoutConvert
 {
 	readonly type = 'preset:button'
 
@@ -66,6 +68,7 @@ export class ControlButtonPreset
 	readonly supportsEntities = true
 	readonly supportsOptions = false
 	readonly supportsPushed = false
+	readonly supportsConvert = false
 
 	readonly entities: ControlEntityListPoolButton
 

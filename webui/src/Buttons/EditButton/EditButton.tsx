@@ -17,6 +17,7 @@ import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
+import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 import { SelectButtonTypeDropdown } from './SelectButtonTypeDropdown.js'
 
@@ -106,6 +107,9 @@ const EditButtonContent = observer(function EditButton({
 					<div className="d-flex flex-wrap align-items-center gap-1">
 						<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						<MyErrorBoundary>
+							{(config.type === 'pageup' || config.type === 'pagenum' || config.type === 'pagedown') && (
+								<ConvertToNormalButton location={location} />
+							)}
 							{config.type === 'button-layered' && (
 								<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
 							)}
