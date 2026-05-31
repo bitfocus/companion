@@ -91,7 +91,7 @@ function makeHelper(
 ): { helper: ElementExpressionHelper<TestEl>; usedVariables: Set<string> } {
 	const usedVariables = new Set<string>()
 	const parser = createMockParser(variableValues)
-	const helper = new ElementExpressionHelper(parser, usedVariables, element, overrides)
+	const helper = new ElementExpressionHelper(parser, usedVariables, element, overrides, makeGlobalRefs())
 	return { helper, usedVariables }
 }
 
@@ -101,6 +101,7 @@ function makeGlobalRefs(): ExpressionReferences {
 		compositeElements: new Set(),
 		referencedLocations: new Set(),
 		cyclicLocations: new Set(),
+		clockSensitive: false,
 	}
 }
 
@@ -204,7 +205,7 @@ describe('ElementExpressionHelper', () => {
 				},
 				createChildParser: () => throwingParser,
 			} as unknown as VariablesAndExpressionParser
-			const helper = new ElementExpressionHelper(throwingParser, usedVariables, makeEl(), undefined)
+			const helper = new ElementExpressionHelper(throwingParser, usedVariables, makeEl(), undefined, makeGlobalRefs())
 			expect(helper.parseVariablesInString('$(ns:x)', 'fallback')).toBe('fallback')
 		})
 
@@ -776,7 +777,7 @@ describe('ElementExpressionHelper', () => {
 			// missing properties that TypeScript's type claims are present.
 			const incompleteEl = { id: 'el1' } // no ExpressionOrValue properties at all
 			const usedVariables = new Set<string>()
-			const helper = new ElementExpressionHelper(createMockParser(), usedVariables, incompleteEl as any, undefined)
+			const helper = new ElementExpressionHelper(createMockParser(), usedVariables, incompleteEl as any, undefined, makeGlobalRefs())
 
 			expect(() => helper.getNumber('numProp' as any, 0)).not.toThrow()
 			expect(helper.getNumber('numProp' as any, 0)).toBe(0)

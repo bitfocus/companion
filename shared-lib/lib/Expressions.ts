@@ -18,7 +18,7 @@ export interface GetVariableValueProps {
 export type ResolveExpressionLimits = Pick<ResolveExpressionOptionsRaw, 'maxOperations' | 'maxCallDepth'>
 
 export type ResolveExpressionOptions = Complete<
-	Pick<ResolveExpressionOptionsRaw, 'parseVariables' | 'blink' | 'defaultTimezone'>
+	Pick<ResolveExpressionOptionsRaw, 'parseVariables' | 'blink' | 'oscillate' | 'defaultTimezone'>
 > & {
 	getVariableValue: (props: GetVariableValueProps) => VariableValue | undefined
 } & ResolveExpressionLimits
