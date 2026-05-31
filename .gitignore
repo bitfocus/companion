@@ -46,6 +46,9 @@ lib-cov
 /coverage
 /html
 
+# Image snapshot test failure artefacts (visual debugging, not golden files)
+companion/test/Graphics/__failures__/
+
 # nyc test coverage
 .nyc_output
 

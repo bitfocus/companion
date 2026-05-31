@@ -25,6 +25,7 @@ export default defineConfig({
 				test: {
 					name: 'companion',
 					root: 'companion',
+					setupFiles: ['./test/setup.ts'],
 					exclude: [
 						'**/module-local-dev/**',
 						'**/bundled-modules/**',
