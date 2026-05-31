@@ -249,21 +249,40 @@ export class GraphicsLayeredButtonRenderer {
 		if (imageDrawn === false) {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				await img.usingTemporaryLayer(element.opacity, async (img) => {
-					// Draw a thick red cross
-					img.drawPath(
+					const { x, y, width, height, maxX, maxY } = drawBounds
+
+					// Orange background
+					img.box(x, y, maxX, maxY, '#ff8c00')
+
+					// Square warning triangle icon (same style as the status bar warning icon)
+					const iconSize = Math.round(Math.min(width * 0.5, height * 0.33))
+					const iconCenterX = x + width / 2
+					const iconTop = y + height * 0.1
+
+					img.drawFilledPath(
 						[
-							[drawBounds.x, drawBounds.y],
-							[drawBounds.maxX, drawBounds.maxY],
+							[iconCenterX - iconSize / 2, iconTop + iconSize], // bottom-left
+							[iconCenterX + iconSize / 2, iconTop + iconSize], // bottom-right
+							[iconCenterX, iconTop], // apex
 						],
-						{ color: 'red', width: 5 }
+						'#ffffff'
 					)
-					img.drawPath(
-						[
-							[drawBounds.x, drawBounds.maxY],
-							[drawBounds.maxX, drawBounds.y],
-						],
-						{ color: 'red', width: 5 }
+
+					// Bold "!" inside the triangle, matching the status bar icon
+					img.drawTextLineAligned(
+						iconCenterX,
+						iconTop + iconSize,
+						'!',
+						'#ff8c00',
+						Math.floor(iconSize * 0.7),
+						'center',
+						'bottom',
+						'bold'
 					)
+
+					// "image error" label immediately below the icon
+					const textY = iconTop + iconSize + Math.round(height * 0.04)
+					img.drawAlignedText(x, textY, width, maxY - textY, 'image error', '#ffffff', 'auto', 'center', 'center')
 				})
 			})
 		}
