@@ -445,10 +445,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		halign: HorizontalAlignment = 'center',
 		valign: VerticalAlignment = 'center',
 		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
-	): Promise<void> {
+	): Promise<true | false | null> {
 		if (!base64Image || base64Image.length <= 40) {
 			// No image data. This is a bit cautious of a threshold, as empty buffers cause the canvas to crash
-			return
+			return null
 		}
 
 		let canvasImage: TDrawImageType | undefined
@@ -457,7 +457,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			canvasImage = await this.loadBase64Image(base64Image)
 		} catch (e) {
 			this.logger.error('Error loading image', e)
-			return
+			return false
 		}
 
 		const imageWidth = canvasImage.width
@@ -488,9 +488,9 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			scaledImageWidth = imageWidth * calculatedScale
 			scaledImageHeight = imageHeight * calculatedScale
 		} else if (typeof scale === 'number') {
-			if (scale === 0) {
-				this.logger.warn('image scale is zero, abort drawing of image')
-				return
+			if (scale <= 0) {
+				this.logger.warn('image scale is zero or negative, abort drawing of image')
+				return null
 			}
 			calculatedScale = scale
 			scaledImageWidth = imageWidth * calculatedScale
@@ -503,7 +503,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		if (scaledImageWidth < 1 || scaledImageHeight < 1) {
 			this.logger.warn('image width or height after scaling is less then one pixel, abort drawing of image')
-			return
+			return null
 		}
 
 		// set default transformation values at 'fill'-type
@@ -569,6 +569,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			destination.w,
 			destination.h
 		)
+		return true as const
 	}
 
 	#sanitiseText(text: string | undefined): string {

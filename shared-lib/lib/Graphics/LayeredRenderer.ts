@@ -223,12 +223,14 @@ export class GraphicsLayeredButtonRenderer {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw || !element.base64Image) return drawBounds
 
+		let imageDrawn: true | false | null = null
+
 		try {
 			const imageData = element.base64Image
 
 			await img.usingAlpha(element.opacity, async () => {
 				await img.usingRotation(drawBounds, element.rotation, async () => {
-					await img.drawBase64Image(
+					imageDrawn = await img.drawBase64Image(
 						imageData,
 						drawBounds.x,
 						drawBounds.y,
@@ -242,7 +244,9 @@ export class GraphicsLayeredButtonRenderer {
 			})
 		} catch (e) {
 			console.error('error drawing image:', e)
+		}
 
+		if (imageDrawn === false) {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				await img.usingTemporaryLayer(element.opacity, async (img) => {
 					// Draw a thick red cross
