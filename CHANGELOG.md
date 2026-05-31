@@ -1,5 +1,18 @@
 # Bitfocus Companion
 
+## Companion v4.3.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- excessive sorting of entities in add modal
+- References to local variables in module actions/feedbacks not being invalidated when control is moved #4192
+- use module manifest name field from newer modules #4121
+- respect isVisibleExpression for remote surface config fields #4188
+- grid size grow prompt for surfaces not dismissing
+- importing pagenum buttons show broken page number
+- update elgato-stream-deck surface module
+- run `yarn build` for dev modules in docker #4177
+
 ## Companion v4.3.3 - Release Notes
 
 ### 🐞 BUG FIXES
