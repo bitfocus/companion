@@ -1729,7 +1729,7 @@ __metadata:
     "@types/plist": "npm:^3.0.5"
     chokidar: "npm:^5.0.0"
     debounce-fn: "npm:^6.0.0"
-    electron: "npm:41.7.0"
+    electron: "npm:41.7.1"
     electron-builder: "npm:26.8.2"
     electron-reloader: "npm:^1.2.3"
     electron-store: "npm:^11.0.2"
@@ -12588,16 +12588,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:41.7.0":
-  version: 41.7.0
-  resolution: "electron@npm:41.7.0"
+"electron@npm:41.7.1":
+  version: 41.7.1
+  resolution: "electron@npm:41.7.1"
   dependencies:
     "@electron/get": "npm:^2.0.0"
     "@types/node": "npm:^24.9.0"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/47d7ea163a90b95996bb0eb26876a4cc406b6239fb3d28c4e61349f333a5b1b6df8aa70af603e251a61f8024e2cb86b689a85a088c4bb4a07a8549d94768c522
+  checksum: 10c0/9ed09dfbd50882aa2a07a6a5df9d62ba92911a9398c0a827d3d6b913c230d334642285d4938afec168b3aa98a50ca646785ed9037a3d452ca6dbfdc988c808c2
   languageName: node
   linkType: hard
 
@@ -18676,16 +18676,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.11":
-  version: 3.3.11
-  resolution: "nanoid@npm:3.3.11"
-  bin:
-    nanoid: bin/nanoid.cjs
-  checksum: 10c0/40e7f70b3d15f725ca072dfc4f74e81fcf1fbb02e491cf58ac0c79093adc9b0a73b152bcde57df4b79cd097e13023d7504acb38404a4da7bc1cd8e887b82fe0b
-  languageName: node
-  linkType: hard
-
-"nanoid@npm:^3.3.12":
+"nanoid@npm:^3.3.11, nanoid@npm:^3.3.12":
   version: 3.3.12
   resolution: "nanoid@npm:3.3.12"
   bin:
