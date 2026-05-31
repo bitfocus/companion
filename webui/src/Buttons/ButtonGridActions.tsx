@@ -130,13 +130,6 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 				if (isDown) {
 					switch (activeFunction) {
 						case 'delete':
-							resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
-								resetControlMutation.mutateAsync({ location }).catch((e) => {
-									console.error(`Reset failed: ${e}`)
-								})
-							})
-
-							stopFunction()
 							return true
 						case 'copy':
 							if (activeFunctionButton) {
@@ -176,7 +169,15 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 							return false
 					}
 				} else {
-					if (activeFunction) {
+					if (activeFunction === 'delete') {
+						resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
+							resetControlMutation.mutateAsync({ location }).catch((e) => {
+								console.error(`Reset failed: ${e}`)
+							})
+						})
+						stopFunction()
+						return true
+					} else if (activeFunction) {
 						return true
 					} else {
 						return false
