@@ -697,6 +697,44 @@ describe('functions', () => {
 		})
 	})
 
+	describe('uri', () => {
+		it('encodeURI', () => {
+			expect(ExpressionFunctions.encodeURI('hello world')).toBe('hello%20world')
+			expect(ExpressionFunctions.encodeURI('hello world&1')).toBe('hello%20world&1')
+			expect(ExpressionFunctions.encodeURI('https://example.com/path?q=hello world')).toBe(
+				'https://example.com/path?q=hello%20world'
+			)
+			expect(ExpressionFunctions.encodeURI(undefined)).toBe('')
+			expect(ExpressionFunctions.encodeURI(42)).toBe('42')
+		})
+
+		it('decodeURI', () => {
+			expect(ExpressionFunctions.decodeURI('hello%20world')).toBe('hello world')
+			expect(ExpressionFunctions.decodeURI('hello%20world&1')).toBe('hello world&1')
+			expect(ExpressionFunctions.decodeURI('https://example.com/path?q=hello%20world')).toBe(
+				'https://example.com/path?q=hello world'
+			)
+			expect(ExpressionFunctions.decodeURI(undefined)).toBe('')
+			expect(ExpressionFunctions.decodeURI(42)).toBe('42')
+		})
+
+		it('encodeURIComponent', () => {
+			expect(ExpressionFunctions.encodeURIComponent('hello world')).toBe('hello%20world')
+			expect(ExpressionFunctions.encodeURIComponent('hello world&1')).toBe('hello%20world%261')
+			expect(ExpressionFunctions.encodeURIComponent('https://example.com')).toBe('https%3A%2F%2Fexample.com')
+			expect(ExpressionFunctions.encodeURIComponent(undefined)).toBe('')
+			expect(ExpressionFunctions.encodeURIComponent(42)).toBe('42')
+		})
+
+		it('decodeURIComponent', () => {
+			expect(ExpressionFunctions.decodeURIComponent('hello%20world')).toBe('hello world')
+			expect(ExpressionFunctions.decodeURIComponent('hello%20world%261')).toBe('hello world&1')
+			expect(ExpressionFunctions.decodeURIComponent('https%3A%2F%2Fexample.com')).toBe('https://example.com')
+			expect(ExpressionFunctions.decodeURIComponent(undefined)).toBe('')
+			expect(ExpressionFunctions.decodeURIComponent(42)).toBe('42')
+		})
+	})
+
 	describe('time', () => {
 		it('unixNow', () => {
 			const value = ExpressionFunctions.unixNow()
