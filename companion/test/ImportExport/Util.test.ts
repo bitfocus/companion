@@ -158,6 +158,7 @@ describe('stringifyExport', () => {
 	test('both json-gz and json produce the correct filename fields', async () => {
 		const result = await stringifyExport(logger, sampleData, 'café-export', 'json')
 		expect(result!.asciiFilename).toBe('"cafe-export"')
+		// typos:disable-line test of transformation
 		expect(result!.utf8Filename).toBe('caf%C3%A9-export')
 	})
 })

@@ -294,7 +294,7 @@ describe('ConvertLegacyStyleToElements', () => {
 		expect((previewStyleFeedbacks[0] as FeedbackEntityModel).styleOverrides).toBeDefined()
 	})
 
-	test('previewStyle with no overrideable properties gives empty previewStyleFeedbacks', () => {
+	test('previewStyle with no overridable properties gives empty previewStyleFeedbacks', () => {
 		// Empty partial style → parsedStyle has nothing set → overrides.length === 0
 		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {})
 		expect(previewStyleFeedbacks).toHaveLength(0)
