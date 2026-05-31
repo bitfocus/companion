@@ -306,6 +306,7 @@ export function validateInputValue(
 		case 'internal:date':
 		case 'internal:page':
 		case 'internal:surface_serial':
+		case 'internal:outbound_surface_id':
 		case 'internal:time':
 		case 'internal:variable':
 		case 'internal:trigger':

@@ -69,6 +69,7 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:connection_id'
 		| 'internal:connection_collection'
 		| 'internal:surface_serial'
+		| 'internal:outbound_surface_id'
 		| 'internal:page'
 		| 'internal:horizontal-alignment'
 		| 'internal:vertical-alignment'
@@ -140,6 +141,9 @@ export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBase
 	default: string
 	useRawSurfaces?: boolean
 }
+export interface InternalInputFieldOutboundSurfaceId extends CompanionInputFieldBaseExtended {
+	type: 'internal:outbound_surface_id'
+}
 export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended {
 	type: 'internal:page'
 	includeStartup: boolean
@@ -176,6 +180,7 @@ export type InternalInputField =
 	| InternalInputFieldConnectionId
 	| InternalInputFieldConnectionCollection
 	| InternalInputFieldSurfaceSerial
+	| InternalInputFieldOutboundSurfaceId
 	| InternalInputFieldPage
 	| InternalInputFieldHorizontalAlignment
 	| InternalInputFieldVerticalAlignment

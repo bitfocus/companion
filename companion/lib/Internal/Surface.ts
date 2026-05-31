@@ -54,6 +54,13 @@ const CHOICES_SURFACE_GROUP: SomeCompanionInputField = {
 	includeSelf: true,
 }
 
+const CHOICES_OUTBOUND_SURFACE_ID: SomeCompanionInputField = {
+	type: 'internal:outbound_surface_id',
+	label: 'Remote surface',
+	id: 'surfaceId',
+	disableAutoExpression: true,
+}
+
 const CHOICES_PAGE: SomeCompanionInputField = {
 	type: 'internal:page',
 	label: 'Page',
@@ -122,6 +129,10 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#surfaceController.on('surface-in-group', () => debounceUpdateVariables())
 		this.#surfaceController.on('surface_name', () => debounceUpdateVariables())
 		this.#surfaceController.on('group_name', () => debounceUpdateVariables())
+
+		this.#surfaceController.outbound.events.on('clientInfo', () => {
+			this.emit('checkFeedbacks', 'outbound_surface_enabled')
+		})
 	}
 
 	#fetchSurfaceId(
@@ -424,6 +435,28 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 				optionsSupportExpressions: true,
 			},
+
+			outbound_surface_set_enabled: {
+				label: 'Remote surface: Enable/Disable',
+				description: undefined,
+				options: [
+					CHOICES_OUTBOUND_SURFACE_ID,
+					{
+						type: 'dropdown',
+						label: 'Enable',
+						id: 'setType',
+						default: 'toggle',
+						choices: [
+							{ id: 'enable', label: 'Enable' },
+							{ id: 'disable', label: 'Disable' },
+							{ id: 'toggle', label: 'Toggle' },
+						],
+						disableAutoExpression: true,
+					},
+				],
+
+				optionsSupportExpressions: true,
+			},
 		}
 	}
 
@@ -581,6 +614,21 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				this.#surfaceController.adjustDevicePosition(surfaceId, xAdjustment, yAdjustment, true)
 				break
 			}
+			case 'outbound_surface_set_enabled': {
+				const surfaceId = stringifyVariableValue(action.options.surfaceId)?.trim()
+				if (!surfaceId) break
+
+				const setType = stringifyVariableValue(action.options.setType)
+				let newEnabled: boolean
+				if (setType === 'toggle') {
+					newEnabled = !(this.#surfaceController.outbound.getById(surfaceId)?.enabled ?? false)
+				} else {
+					newEnabled = setType !== 'disable'
+				}
+
+				this.#surfaceController.outbound.setOutboundEnabled(surfaceId, newEnabled)
+				break
+			}
 			default:
 				return null
 		}
@@ -631,6 +679,19 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				],
 				optionsSupportExpressions: true,
 			},
+
+			outbound_surface_enabled: {
+				feedbackType: FeedbackEntitySubType.Boolean,
+				label: 'Remote surface: When enabled',
+				description: 'Change style when a remote surface is enabled',
+				feedbackStyle: {
+					color: 0xffffff,
+					bgcolor: 0x00aa00,
+				},
+				showInvert: true,
+				options: [CHOICES_OUTBOUND_SURFACE_ID],
+				optionsSupportExpressions: true,
+			},
 		}
 	}
 
@@ -645,9 +706,24 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			return currentPage == thePage
 		}
+		if (feedback.definitionId == 'outbound_surface_enabled') {
+			const surfaceId = stringifyVariableValue(feedback.options.surfaceId)?.trim()
+			if (!surfaceId) return false
+
+			return this.#surfaceController.outbound.getById(surfaceId)?.enabled ?? false
+		}
 	}
 
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
+	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
+		for (const action of actions) {
+			if (action.action === 'outbound_surface_set_enabled') {
+				visitor.visitOutboundSurfaceId(action.options, 'surfaceId')
+			}
+		}
+		for (const feedback of feedbacks) {
+			if (feedback.type === 'outbound_surface_enabled') {
+				visitor.visitOutboundSurfaceId(feedback.options, 'surfaceId', feedback.id)
+			}
+		}
 	}
 }

@@ -281,7 +281,13 @@ export class ControlTrigger
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
+		new VisitorReferencesCollector(
+			this.deps.internalModule,
+			foundConnectionIds,
+			foundConnectionLabels,
+			foundVariables,
+			undefined
+		)
 			.visitEntities(this.entities.getAllEntities(), [])
 			.visitEvents(this.events)
 	}
@@ -398,7 +404,12 @@ export class ControlTrigger
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
 		// Fix up references
-		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+		const changed = new VisitorReferencesUpdater(
+			this.deps.internalModule,
+			{ [labelFrom]: labelTo },
+			undefined,
+			undefined
+		)
 			.visitEntities(this.entities.getAllEntities(), [])
 			.visitEvents(this.events)
 			.recheckChangedFeedbacks()

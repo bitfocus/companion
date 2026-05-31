@@ -405,6 +405,26 @@ export class SurfaceOutboundController {
 		})
 	}
 
+	getById(id: string): OutboundSurfaceInfo | undefined {
+		return this.#storage.get(id)
+	}
+
+	setOutboundEnabled(id: string, enabled: boolean): void {
+		const surfaceInfo = this.#storage.get(id)
+		if (!surfaceInfo) return
+
+		surfaceInfo.enabled = !!enabled
+		this.#dbTable.set(id, surfaceInfo)
+
+		this.#startStopConnection(surfaceInfo)
+
+		this.events.emit('clientInfo', {
+			type: 'add',
+			itemId: id,
+			info: surfaceInfo,
+		})
+	}
+
 	addOutboundConnection(newInfo: OutboundSurfaceInfo): void {
 		if (this.#storage.has(newInfo.id)) throw new Error(`Outbound surface with ID ${newInfo.id} already exists`)
 

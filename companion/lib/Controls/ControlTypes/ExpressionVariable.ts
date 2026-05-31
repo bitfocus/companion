@@ -173,7 +173,8 @@ export class ControlExpressionVariable
 			this.deps.internalModule,
 			foundConnectionIds,
 			foundConnectionLabels,
-			foundVariables
+			foundVariables,
+			undefined
 		).visitEntities(this.entities.getAllEntities(), [])
 	}
 
@@ -217,7 +218,12 @@ export class ControlExpressionVariable
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+		const changed = new VisitorReferencesUpdater(
+			this.deps.internalModule,
+			{ [labelFrom]: labelTo },
+			undefined,
+			undefined
+		)
 			.visitEntities(allEntities, [])
 			.recheckChangedFeedbacks()
 			.hasChanges()

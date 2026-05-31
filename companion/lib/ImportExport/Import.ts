@@ -82,7 +82,7 @@ export class ImportController {
 		}
 		this.#graphicsController.clearAllForPage(topage)
 
-		this.#performPageImport(pageInfo, topage, instanceIdMap)
+		this.#performPageImport(pageInfo, topage, instanceIdMap, undefined)
 
 		// Report the used remap to the ui, for future imports
 		const instanceRemap2: ConnectionRemappings = {}
@@ -121,7 +121,7 @@ export class ImportController {
 			// If trigger already exists, generate a new id
 			if (this.#controlsController.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
 
-			const fixedControlObj = fixupTriggerControl(this.#internalModule, trigger, instanceIdMap)
+			const fixedControlObj = fixupTriggerControl(this.#internalModule, trigger, instanceIdMap, undefined)
 			this.#controlsController.importTrigger(controlId, fixedControlObj)
 		}
 
@@ -151,6 +151,16 @@ export class ImportController {
 			: {}
 		const instanceIdMap = this.#importInstances(data.instances, preserveRemap)
 
+		// Pre-compute outbound surface ID remap so pages and triggers can reference new IDs
+		const outboundSurfaceIdRemap: Record<string, string> = {}
+		if (isImporting(config.surfaces.remote)) {
+			for (const remoteInfo of Object.values(data.surfacesRemote || {})) {
+				if (remoteInfo && remoteInfo.id) {
+					outboundSurfaceIdRemap[remoteInfo.id] = nanoid()
+				}
+			}
+		}
+
 		// import custom variables
 		if (isImporting(config.customVariables)) {
 			this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
@@ -163,7 +173,12 @@ export class ImportController {
 
 			for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
 				const controlId = CreateExpressionVariableControlId(id)
-				const fixedControlObj = fixupExpressionVariableControl(this.#internalModule, variableDefinition, instanceIdMap)
+				const fixedControlObj = fixupExpressionVariableControl(
+					this.#internalModule,
+					variableDefinition,
+					instanceIdMap,
+					outboundSurfaceIdRemap
+				)
 
 				this.#controlsController.importExpressionVariable(controlId, fixedControlObj)
 			}
@@ -190,7 +205,7 @@ export class ImportController {
 					)
 				}
 
-				this.#performPageImport(pageInfo, pageNumber, instanceIdMap)
+				this.#performPageImport(pageInfo, pageNumber, instanceIdMap, outboundSurfaceIdRemap)
 			}
 		}
 
@@ -278,11 +293,15 @@ export class ImportController {
 						surfaceInstancesMap.get(instanceId) || fallbackSurfaceInstances.get(remoteInfo.moduleId) || instanceId
 				}
 
+				// Use the pre-computed new ID to avoid conflicts
+				const newId = outboundSurfaceIdRemap[remoteInfo.id] ?? remoteInfo.id
+
 				// Future: validation
 				this.#surfacesController.outbound.addOutboundConnection({
 					...remoteInfo,
 					// Translate the instanceId
 					instanceId: instanceId,
+					id: newId,
 				})
 			}
 		}
@@ -295,7 +314,12 @@ export class ImportController {
 
 			for (const [id, trigger] of Object.entries(data.triggers || {})) {
 				const controlId = CreateTriggerControlId(id)
-				const fixedControlObj = fixupTriggerControl(this.#internalModule, trigger, instanceIdMap)
+				const fixedControlObj = fixupTriggerControl(
+					this.#internalModule,
+					trigger,
+					instanceIdMap,
+					outboundSurfaceIdRemap
+				)
 				this.#controlsController.importTrigger(controlId, fixedControlObj)
 			}
 		}
@@ -312,7 +336,8 @@ export class ImportController {
 	#performPageImport = (
 		pageInfo: ExportPageContentv6,
 		topage: number,
-		instanceIdMap: InstanceAppliedRemappings
+		instanceIdMap: InstanceAppliedRemappings,
+		outboundSurfaceIdRemap: Record<string, string> | undefined
 	): void => {
 		{
 			// Ensure the configured grid size is large enough for the import
@@ -348,7 +373,8 @@ export class ImportController {
 		const referencesUpdater = new VisitorReferencesUpdater(
 			this.#internalModule,
 			connectionLabelRemap,
-			connectionIdRemap
+			connectionIdRemap,
+			outboundSurfaceIdRemap
 		)
 
 		// Import the controls

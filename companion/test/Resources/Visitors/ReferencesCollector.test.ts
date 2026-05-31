@@ -18,8 +18,9 @@ function makeVisitor(opts?: {
 	ids?: Set<string>
 	labels?: Set<string>
 	variables?: Set<string>
+	outboundSurfaceIds?: Set<string>
 }): VisitorReferencesCollectorVisitor {
-	return new VisitorReferencesCollectorVisitor(opts?.ids, opts?.labels, opts?.variables)
+	return new VisitorReferencesCollectorVisitor(opts?.ids, opts?.labels, opts?.variables, opts?.outboundSurfaceIds)
 }
 
 // ─── Constructor ─────────────────────────────────────────────────────────────
@@ -29,32 +30,37 @@ describe('VisitorReferencesCollectorVisitor – constructor', () => {
 		const ids = new Set<string>(['existing-id'])
 		const labels = new Set<string>(['existing-label'])
 		const variables = new Set<string>(['existing-label:var'])
+		const outboundSurfaceIds = new Set<string>(['existing-surface-id'])
 
-		const visitor = new VisitorReferencesCollectorVisitor(ids, labels, variables)
+		const visitor = new VisitorReferencesCollectorVisitor(ids, labels, variables, outboundSurfaceIds)
 
 		expect(visitor.connectionIds).toBe(ids)
 		expect(visitor.connectionLabels).toBe(labels)
 		expect(visitor.variables).toBe(variables)
+		expect(visitor.outboundSurfaceIds).toBe(outboundSurfaceIds)
 	})
 
 	it('creates fresh sets when all arguments are undefined', () => {
-		const visitor = new VisitorReferencesCollectorVisitor(undefined, undefined, undefined)
+		const visitor = new VisitorReferencesCollectorVisitor(undefined, undefined, undefined, undefined)
 
 		expect(visitor.connectionIds).toBeInstanceOf(Set)
 		expect(visitor.connectionLabels).toBeInstanceOf(Set)
 		expect(visitor.variables).toBeInstanceOf(Set)
+		expect(visitor.outboundSurfaceIds).toBeInstanceOf(Set)
 		expect(visitor.connectionIds.size).toBe(0)
 		expect(visitor.connectionLabels.size).toBe(0)
 		expect(visitor.variables.size).toBe(0)
+		expect(visitor.outboundSurfaceIds.size).toBe(0)
 	})
 
 	it('creates fresh sets independently for each undefined argument', () => {
 		const ids = new Set<string>()
-		const visitor = new VisitorReferencesCollectorVisitor(ids, undefined, undefined)
+		const visitor = new VisitorReferencesCollectorVisitor(ids, undefined, undefined, undefined)
 
 		expect(visitor.connectionIds).toBe(ids)
 		expect(visitor.connectionLabels).toBeInstanceOf(Set)
 		expect(visitor.variables).toBeInstanceOf(Set)
+		expect(visitor.outboundSurfaceIds).toBeInstanceOf(Set)
 	})
 })
 
@@ -366,15 +372,18 @@ describe('VisitorReferencesCollectorVisitor – shared external sets', () => {
 		const ids = new Set<string>()
 		const labels = new Set<string>()
 		const vars = new Set<string>()
+		const outboundSurfaceIds = new Set<string>()
 
-		const visitor = new VisitorReferencesCollectorVisitor(ids, labels, vars)
+		const visitor = new VisitorReferencesCollectorVisitor(ids, labels, vars, outboundSurfaceIds)
 		visitor.visitConnectionId({ id: 'ext-id' }, 'id')
 		visitor.visitString({ text: '$(ext-conn:ext-var)' }, 'text')
 		visitor.visitVariableName({ v: 'ext-conn2:ext-var2' }, 'v')
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('ext-surface') }, 'surfaceId')
 
 		expect(ids).toEqual(new Set(['ext-id']))
 		expect(labels).toEqual(new Set(['ext-conn', 'ext-conn2']))
 		expect(vars).toEqual(new Set(['ext-conn:ext-var', 'ext-conn2:ext-var2']))
+		expect(outboundSurfaceIds).toEqual(new Set(['ext-surface']))
 	})
 
 	it('accumulates across multiple visit calls', () => {
@@ -384,5 +393,55 @@ describe('VisitorReferencesCollectorVisitor – shared external sets', () => {
 		visitor.visitConnectionIdArray({ c: ['id-3', 'id-4'] }, 'c')
 
 		expect(visitor.connectionIds).toEqual(new Set(['id-1', 'id-2', 'id-3', 'id-4']))
+	})
+})
+
+// ─── visitOutboundSurfaceId ──────────────────────────────────────────────────
+
+describe('VisitorReferencesCollectorVisitor – visitOutboundSurfaceId', () => {
+	it('adds an ExpressionOrValue (isExpression: false) string value to outboundSurfaceIds', () => {
+		const visitor = makeVisitor()
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('surface-abc') }, 'surfaceId')
+		expect(visitor.outboundSurfaceIds).toEqual(new Set(['surface-abc']))
+	})
+
+	it('ignores an expression (isExpression: true)', () => {
+		const visitor = makeVisitor()
+		visitor.visitOutboundSurfaceId({ surfaceId: exprExpr('$(some:var)') }, 'surfaceId')
+		expect(visitor.outboundSurfaceIds.size).toBe(0)
+	})
+
+	it('ignores a non-string value', () => {
+		const visitor = makeVisitor()
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal(42) }, 'surfaceId')
+		expect(visitor.outboundSurfaceIds.size).toBe(0)
+	})
+
+	it('ignores null', () => {
+		const visitor = makeVisitor()
+		visitor.visitOutboundSurfaceId({ surfaceId: null }, 'surfaceId')
+		expect(visitor.outboundSurfaceIds.size).toBe(0)
+	})
+
+	it('does not mutate connectionIds or connectionLabels', () => {
+		const visitor = makeVisitor()
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('surface-abc') }, 'surfaceId')
+		expect(visitor.connectionIds.size).toBe(0)
+		expect(visitor.connectionLabels.size).toBe(0)
+	})
+
+	it('uses an externally-supplied outboundSurfaceIds set', () => {
+		const outboundSurfaceIds = new Set<string>()
+		const visitor = new VisitorReferencesCollectorVisitor(undefined, undefined, undefined, outboundSurfaceIds)
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('surface-xyz') }, 'surfaceId')
+		expect(outboundSurfaceIds).toEqual(new Set(['surface-xyz']))
+	})
+
+	it('accumulates multiple outbound surface ids', () => {
+		const visitor = makeVisitor()
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('s1') }, 'surfaceId')
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('s2') }, 'surfaceId')
+		visitor.visitOutboundSurfaceId({ surfaceId: exprVal('s1') }, 'surfaceId') // duplicate
+		expect(visitor.outboundSurfaceIds).toEqual(new Set(['s1', 's2']))
 	})
 })

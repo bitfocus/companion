@@ -14,8 +14,9 @@ function exprExpr(value: string): { value: string; isExpression: true } {
 function makeUpdater(opts?: {
 	labelRemap?: Record<string, string>
 	idRemap?: Record<string, string>
+	outboundSurfaceIdRemap?: Record<string, string>
 }): VisitorReferencesUpdaterVisitor {
-	return new VisitorReferencesUpdaterVisitor(opts?.labelRemap, opts?.idRemap)
+	return new VisitorReferencesUpdaterVisitor(opts?.labelRemap, opts?.idRemap, opts?.outboundSurfaceIdRemap)
 }
 
 // ─── Constructor ─────────────────────────────────────────────────────────────
@@ -24,17 +25,20 @@ describe('VisitorReferencesUpdaterVisitor – constructor', () => {
 	it('stores the provided remaps', () => {
 		const labelRemap = { old: 'new' }
 		const idRemap = { 'old-id': 'new-id' }
-		const visitor = new VisitorReferencesUpdaterVisitor(labelRemap, idRemap)
+		const outboundSurfaceIdRemap = { 'old-surface-id': 'new-surface-id' }
+		const visitor = new VisitorReferencesUpdaterVisitor(labelRemap, idRemap, outboundSurfaceIdRemap)
 
 		expect(visitor.connectionLabelsRemap).toBe(labelRemap)
 		expect(visitor.connectionIdRemap).toBe(idRemap)
+		expect(visitor.outboundSurfaceIdRemap).toBe(outboundSurfaceIdRemap)
 	})
 
 	it('stores undefined remaps', () => {
-		const visitor = new VisitorReferencesUpdaterVisitor(undefined, undefined)
+		const visitor = new VisitorReferencesUpdaterVisitor(undefined, undefined, undefined)
 
 		expect(visitor.connectionLabelsRemap).toBeUndefined()
 		expect(visitor.connectionIdRemap).toBeUndefined()
+		expect(visitor.outboundSurfaceIdRemap).toBeUndefined()
 	})
 
 	it('starts with changed = false and empty changedFeedbackIds', () => {
@@ -541,6 +545,78 @@ describe('VisitorReferencesUpdaterVisitor – change tracking', () => {
 		visitor.visitConnectionId({ conn: 'old-id' }, 'conn', undefined)
 
 		expect(visitor.changed).toBe(true)
+		expect(visitor.changedFeedbackIds.size).toBe(0)
+	})
+})
+
+// ─── visitOutboundSurfaceId ──────────────────────────────────────────────────
+
+describe('VisitorReferencesUpdaterVisitor – visitOutboundSurfaceId', () => {
+	it('remaps a plain string surface id', () => {
+		const visitor = makeUpdater({ outboundSurfaceIdRemap: { 'old-surface': 'new-surface' } })
+		const obj = structuredClone({ surfaceId: 'old-surface' })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId')
+
+		expect(obj.surfaceId).toBe('new-surface')
+		expect(visitor.changed).toBe(true)
+	})
+
+	it('leaves a surface id unchanged when not in remap', () => {
+		const visitor = makeUpdater({ outboundSurfaceIdRemap: { 'other-surface': 'new-surface' } })
+		const obj = structuredClone({ surfaceId: 'my-surface' })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId')
+
+		expect(obj.surfaceId).toBe('my-surface')
+		expect(visitor.changed).toBe(false)
+	})
+
+	it('does nothing when no outboundSurfaceIdRemap is provided', () => {
+		const visitor = makeUpdater()
+		const obj = structuredClone({ surfaceId: 'old-surface' })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId')
+
+		expect(obj.surfaceId).toBe('old-surface')
+		expect(visitor.changed).toBe(false)
+	})
+
+	it('skips expression strings (isExpression: true)', () => {
+		const visitor = makeUpdater({ outboundSurfaceIdRemap: { 'old-surface': 'new-surface' } })
+		const obj = structuredClone({ surfaceId: exprExpr('some-expression') })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId')
+
+		expect(obj.surfaceId).toEqual(exprExpr('some-expression'))
+		expect(visitor.changed).toBe(false)
+	})
+
+	it('remaps a literal id wrapped in ExpressionOrValue (isExpression: false)', () => {
+		const visitor = makeUpdater({ outboundSurfaceIdRemap: { 'old-surface': 'new-surface' } })
+		const obj = structuredClone({ surfaceId: exprVal('old-surface') })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId')
+
+		expect(obj.surfaceId).toEqual(exprVal('new-surface'))
+		expect(visitor.changed).toBe(true)
+	})
+
+	it('tracks the feedbackId when a change is made', () => {
+		const visitor = makeUpdater({ outboundSurfaceIdRemap: { 'old-surface': 'new-surface' } })
+		const obj = structuredClone({ surfaceId: 'old-surface' })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId', 'fb-1')
+
+		expect(visitor.changedFeedbackIds).toEqual(new Set(['fb-1']))
+	})
+
+	it('does not add feedbackId when no change is made', () => {
+		const visitor = makeUpdater({ outboundSurfaceIdRemap: { 'other-surface': 'new-surface' } })
+		const obj = structuredClone({ surfaceId: 'my-surface' })
+
+		visitor.visitOutboundSurfaceId(obj, 'surfaceId', 'fb-1')
+
 		expect(visitor.changedFeedbackIds.size).toBe(0)
 	})
 })

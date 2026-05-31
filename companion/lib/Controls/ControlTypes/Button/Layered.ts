@@ -315,7 +315,13 @@ export class ControlButtonLayered
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
+		new VisitorReferencesCollector(
+			this.deps.internalModule,
+			foundConnectionIds,
+			foundConnectionLabels,
+			foundVariables,
+			undefined
+		)
 			.visitEntities(this.entities.getAllEntities(), [])
 			.visitDrawElements(this.#drawElements)
 	}
@@ -656,7 +662,12 @@ export class ControlButtonLayered
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+		const changed = new VisitorReferencesUpdater(
+			this.deps.internalModule,
+			{ [labelFrom]: labelTo },
+			undefined,
+			undefined
+		)
 			.visitEntities(allEntities, [])
 			.visitDrawElements(this.#drawElements)
 			.recheckChangedFeedbacks()

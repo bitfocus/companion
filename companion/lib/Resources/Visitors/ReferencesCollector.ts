@@ -8,11 +8,17 @@ export class VisitorReferencesCollector extends VisitorReferencesBase<VisitorRef
 		internalModule: InternalController,
 		foundConnectionIds: Set<string> | undefined,
 		foundConnectionLabels: Set<string> | undefined,
-		foundVariables: Set<string> | undefined
+		foundVariables: Set<string> | undefined,
+		foundOutboundSurfaceIds: Set<string> | undefined
 	) {
 		super(
 			internalModule,
-			new VisitorReferencesCollectorVisitor(foundConnectionIds, foundConnectionLabels, foundVariables)
+			new VisitorReferencesCollectorVisitor(
+				foundConnectionIds,
+				foundConnectionLabels,
+				foundVariables,
+				foundOutboundSurfaceIds
+			)
 		)
 	}
 }
@@ -36,14 +42,31 @@ export class VisitorReferencesCollectorVisitor {
 	 */
 	readonly variables: Set<string>
 
+	/**
+	 * Referenced outbound surface ids
+	 */
+	readonly outboundSurfaceIds: Set<string>
+
 	constructor(
 		foundConnectionIds: Set<string> | undefined,
 		foundConnectionLabels: Set<string> | undefined,
-		foundVariables: Set<string> | undefined
+		foundVariables: Set<string> | undefined,
+		foundOutboundSurfaceIds: Set<string> | undefined
 	) {
 		this.connectionLabels = foundConnectionLabels || new Set()
 		this.connectionIds = foundConnectionIds || new Set()
 		this.variables = foundVariables || new Set()
+		this.outboundSurfaceIds = foundOutboundSurfaceIds || new Set()
+	}
+
+	/**
+	 * Visit an outbound surface id property
+	 */
+	visitOutboundSurfaceId(obj: Record<string, any>, propName: string, _feedbackId?: string): void {
+		const surfaceId = this.#getAndUnwrapPropertyValue(obj, propName)
+		if (surfaceId.isExpression || typeof surfaceId.value !== 'string') return
+
+		this.outboundSurfaceIds.add(surfaceId.value)
 	}
 
 	/**
