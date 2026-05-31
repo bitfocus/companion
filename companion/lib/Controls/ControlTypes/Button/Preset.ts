@@ -286,7 +286,13 @@ export class ControlButtonPreset
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		new VisitorReferencesCollector(this.deps.internalModule, foundConnectionIds, foundConnectionLabels, foundVariables)
+		new VisitorReferencesCollector(
+			this.deps.internalModule,
+			foundConnectionIds,
+			foundConnectionLabels,
+			foundVariables,
+			undefined
+		)
 			.visitDrawElements(this.#drawElements)
 			.visitEntities(this.entities.getAllEntities(), [])
 	}
@@ -300,7 +306,12 @@ export class ControlButtonPreset
 		const allEntities = this.entities.getAllEntities()
 
 		// Fix up references
-		const changed = new VisitorReferencesUpdater(this.deps.internalModule, { [labelFrom]: labelTo }, undefined)
+		const changed = new VisitorReferencesUpdater(
+			this.deps.internalModule,
+			{ [labelFrom]: labelTo },
+			undefined,
+			undefined
+		)
 			.visitDrawElements(this.#drawElements)
 			.visitEntities(allEntities, [])
 			.recheckChangedFeedbacks()

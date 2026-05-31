@@ -498,6 +498,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:page':
 			case 'internal:image-file':
 			case 'internal:surface_serial':
+			case 'internal:outbound_surface_id':
 			case 'internal:vertical-alignment':
 			case 'internal:trigger':
 			case 'internal:trigger_collection':

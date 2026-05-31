@@ -17,7 +17,8 @@ export type InstanceAppliedRemappings = Record<
 export function fixupTriggerControl(
 	internalModule: InternalController,
 	control: ExportTriggerContentv6,
-	instanceIdMap: InstanceAppliedRemappings
+	instanceIdMap: InstanceAppliedRemappings,
+	outboundSurfaceIdRemap: Record<string, string> | undefined
 ): TriggerModel {
 	// Future: this does not feel durable
 
@@ -53,8 +54,8 @@ export function fixupTriggerControl(
 		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
 	}
 
-	new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap)
-		.visitEntities([], result.condition.concat(result.actions))
+	new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap, outboundSurfaceIdRemap)
+		.visitEntities([], [...result.localVariables, ...result.condition, ...result.actions])
 		.visitEvents(result.events || [])
 
 	return result
@@ -63,7 +64,8 @@ export function fixupTriggerControl(
 export function fixupExpressionVariableControl(
 	internalModule: InternalController,
 	control: ExpressionVariableModel,
-	instanceIdMap: InstanceAppliedRemappings
+	instanceIdMap: InstanceAppliedRemappings,
+	outboundSurfaceIdRemap: Record<string, string>
 ): ExpressionVariableModel {
 	// Future: this does not feel durable
 
@@ -93,10 +95,12 @@ export function fixupExpressionVariableControl(
 		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
 	}
 
-	const visitor = new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap).visitEntities(
-		[],
-		result.localVariables
-	)
+	const visitor = new VisitorReferencesUpdater(
+		internalModule,
+		connectionLabelRemap,
+		connectionIdRemap,
+		outboundSurfaceIdRemap
+	).visitEntities([], result.localVariables)
 	if (result.entity) visitor.visitEntities([], [result.entity])
 
 	return result

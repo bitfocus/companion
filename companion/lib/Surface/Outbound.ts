@@ -286,21 +286,8 @@ export class SurfaceOutboundController {
 				.mutation(async ({ input }) => {
 					const { id, enabled } = input
 
-					const surfaceInfo = this.#storage.get(id)
-					if (!surfaceInfo) throw new Error('Surface not found')
-
-					surfaceInfo.enabled = !!enabled
-					this.#dbTable.set(id, surfaceInfo)
-
-					// Start/stop the connection
-					this.#startStopConnection(surfaceInfo)
-
-					this.events.emit('clientInfo', {
-						type: 'add',
-						itemId: id,
-
-						info: surfaceInfo,
-					})
+					const success = this.setOutboundEnabled(id, enabled)
+					if (!success) throw new Error('Surface not found')
 				}),
 
 			saveConfig: publicProcedure
@@ -403,6 +390,28 @@ export class SurfaceOutboundController {
 					return true
 				}),
 		})
+	}
+
+	getById(id: string): OutboundSurfaceInfo | undefined {
+		return this.#storage.get(id)
+	}
+
+	setOutboundEnabled(id: string, enabled: boolean): boolean {
+		const surfaceInfo = this.#storage.get(id)
+		if (!surfaceInfo) return false
+
+		surfaceInfo.enabled = !!enabled
+		this.#dbTable.set(id, surfaceInfo)
+
+		this.#startStopConnection(surfaceInfo)
+
+		this.events.emit('clientInfo', {
+			type: 'add',
+			itemId: id,
+			info: surfaceInfo,
+		})
+
+		return true
 	}
 
 	addOutboundConnection(newInfo: OutboundSurfaceInfo): void {

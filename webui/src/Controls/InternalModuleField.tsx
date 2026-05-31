@@ -86,6 +86,8 @@ export function InternalModuleField(
 					useRawSurfaces={option.useRawSurfaces}
 				/>
 			)
+		case 'internal:outbound_surface_id':
+			return <OutboundSurfaceDropdown id={id} disabled={readonly} value={value} setValue={setValue} />
 		case 'internal:trigger':
 			return (
 				<InternalTriggerDropdown
@@ -469,6 +471,34 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 
 		return choices
 	}, [surfaces, isLocatedInGrid, includeSelf, useRawSurfaces])
+
+	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
+})
+
+interface OutboundSurfaceDropdownProps {
+	id: string | undefined
+	value: any
+	setValue: (value: any) => void
+	disabled: boolean
+}
+
+const OutboundSurfaceDropdown = observer(function OutboundSurfaceDropdown({
+	id,
+	value,
+	setValue,
+	disabled,
+}: Readonly<OutboundSurfaceDropdownProps>) {
+	const { surfaces } = useContext(RootAppStoreContext)
+
+	const choices = useComputed((): DropdownChoice[] => {
+		return surfaces.outboundSurfaces
+			.values()
+			.map((surface) => ({
+				id: surface.id,
+				label: surface.displayName || surface.id,
+			}))
+			.toArray()
+	}, [surfaces])
 
 	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })

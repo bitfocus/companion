@@ -7,9 +7,13 @@ export class VisitorReferencesUpdater extends VisitorReferencesBase<VisitorRefer
 	constructor(
 		internalModule: InternalController,
 		connectionLabelsRemap: Record<string, string> | undefined,
-		connectionIdRemap: Record<string, string> | undefined
+		connectionIdRemap: Record<string, string> | undefined,
+		outboundSurfaceIdRemap: Record<string, string> | undefined
 	) {
-		super(internalModule, new VisitorReferencesUpdaterVisitor(connectionLabelsRemap, connectionIdRemap))
+		super(
+			internalModule,
+			new VisitorReferencesUpdaterVisitor(connectionLabelsRemap, connectionIdRemap, outboundSurfaceIdRemap)
+		)
 	}
 
 	recheckChangedFeedbacks(): this {
@@ -41,6 +45,11 @@ export class VisitorReferencesUpdaterVisitor {
 	readonly connectionIdRemap: Record<string, string> | undefined
 
 	/**
+	 * outbound surface id remapping
+	 */
+	readonly outboundSurfaceIdRemap: Record<string, string> | undefined
+
+	/**
 	 * Feedback ids that have been changed
 	 */
 	readonly changedFeedbackIds = new Set<string>()
@@ -52,10 +61,12 @@ export class VisitorReferencesUpdaterVisitor {
 
 	constructor(
 		connectionLabelsRemap: Record<string, string> | undefined,
-		connectionIdRemap: Record<string, string> | undefined
+		connectionIdRemap: Record<string, string> | undefined,
+		outboundSurfaceIdRemap: Record<string, string> | undefined
 	) {
 		this.connectionLabelsRemap = connectionLabelsRemap
 		this.connectionIdRemap = connectionIdRemap
+		this.outboundSurfaceIdRemap = outboundSurfaceIdRemap
 	}
 
 	/**
@@ -64,6 +75,24 @@ export class VisitorReferencesUpdaterVisitor {
 	#trackChange(feedbackId: string | undefined): void {
 		this.changed = true
 		if (feedbackId) this.changedFeedbackIds.add(feedbackId)
+	}
+
+	/**
+	 * Visit an outbound surface id property
+	 */
+	visitOutboundSurfaceId(obj: Record<string, any>, propName: string | number, feedbackId?: string): void {
+		if (!this.outboundSurfaceIdRemap) return
+
+		this.#updateValue(obj, propName, (oldValue, isExpression) => {
+			if (!this.outboundSurfaceIdRemap || isExpression) return oldValue // An expression can't be a plain surface id
+
+			const newId = this.outboundSurfaceIdRemap[oldValue]
+			if (newId && newId !== oldValue) {
+				this.#trackChange(feedbackId)
+				return newId
+			}
+			return oldValue
+		})
 	}
 
 	/**
