@@ -326,7 +326,7 @@ async function convertReferenceElementForDrawing(
 	if (locationStr) {
 		if (!context.getRenderAtLocation) {
 			// References are disabled (no render callback) — show a placeholder
-			drawElement.children = [makeReferencePlaceholder(drawElement.id, '?')]
+			drawElement.children = makeReferencePlaceholder(drawElement.id, 'Unresolved\nReference')
 		} else {
 			const currentLocation = ParseLocationString(context.currentLocationStr, undefined)
 			const targetLocation = ParseLocationString(locationStr, currentLocation ?? undefined)
@@ -349,7 +349,7 @@ async function convertReferenceElementForDrawing(
 				if (isLoop) {
 					// Circular reference detected — show a placeholder instead of recursing infinitely
 					context.globalReferences.cyclicLocations.add(targetLocationStr)
-					drawElement.children = [makeReferencePlaceholder(drawElement.id, '\u221e')]
+					drawElement.children = makeReferencePlaceholder(drawElement.id, '\u221e')
 				} else if (targetRender?.drawElements) {
 					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific)
 					drawElement.children = targetRender.drawElements.filter((el) => el.type !== 'canvas')
@@ -374,9 +374,31 @@ async function convertReferenceElementForDrawing(
 	return { drawElement, usedVariables, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
-function makeReferencePlaceholder(parentId: string, text: string): ButtonGraphicsTextDrawElement {
-	const el: ButtonGraphicsTextDrawElement = {
-		id: `${parentId}:placeholder`,
+function makeReferencePlaceholder(
+	parentId: string,
+	text: string
+): [ButtonGraphicsBoxDrawElement, ButtonGraphicsTextDrawElement] {
+	const boxEl: ButtonGraphicsBoxDrawElement = {
+		id: `${parentId}:placeholder-bg`,
+		type: 'box',
+		usage: ButtonGraphicsElementUsage.Automatic,
+		enabled: true,
+		opacity: 1,
+		x: 0,
+		y: 0,
+		width: 1,
+		height: 1,
+		rotation: 0,
+		color: 0xff8c00,
+		borderWidth: 0,
+		borderColor: 0,
+		borderPosition: 'inside',
+		contentHash: '',
+	}
+	boxEl.contentHash = computeElementContentHash(boxEl)
+
+	const textEl: ButtonGraphicsTextDrawElement = {
+		id: `${parentId}:placeholder-text`,
 		type: 'text',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		enabled: true,
@@ -395,8 +417,9 @@ function makeReferencePlaceholder(parentId: string, text: string): ButtonGraphic
 		valign: 'center',
 		contentHash: '',
 	}
-	el.contentHash = computeElementContentHash(el)
-	return el
+	textEl.contentHash = computeElementContentHash(textEl)
+
+	return [boxEl, textEl]
 }
 
 function parseCompositeElementChildOptions(

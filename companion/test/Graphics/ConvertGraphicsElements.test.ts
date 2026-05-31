@@ -1991,8 +1991,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.elements).toHaveLength(1)
 			expect(result.elements[0].type).toBe('reference')
 			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
-			expect(refEl.children).toHaveLength(1)
-			expect(refEl.children[0].type).toBe('text')
+			expect(refEl.children).toHaveLength(2)
+			expect(refEl.children[0].type).toBe('box')
+			expect(refEl.children[1].type).toBe('text')
 		})
 
 		test('produces an empty reference element when location is empty', async () => {
@@ -2161,8 +2162,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
-			expect(refEl.children).toHaveLength(1)
-			expect(refEl.children[0].type).toBe('text')
+			expect(refEl.children).toHaveLength(2)
+			expect(refEl.children[0].type).toBe('box')
+			expect(refEl.children[1].type).toBe('text')
 		})
 
 		test('shows placeholder when reference target transitively references the current location (indirect loop)', async () => {
@@ -2188,8 +2190,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
-			expect(refEl.children).toHaveLength(1)
-			expect(refEl.children[0].type).toBe('text')
+			expect(refEl.children).toHaveLength(2)
+			expect(refEl.children[0].type).toBe('box')
+			expect(refEl.children[1].type).toBe('text')
 		})
 
 		test('propagates transitive referencedLocations from the target render', async () => {
