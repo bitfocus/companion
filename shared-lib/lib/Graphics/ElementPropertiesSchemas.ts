@@ -466,7 +466,8 @@ export const referenceElementSchema: ElementSchemaSection[] = [
 				type: 'textinput',
 				id: 'location',
 				label: 'Location',
-				tooltip: 'The location of the button to reference, in the format "page/row/column"',
+				tooltip:
+					'The location of the button to reference, in the format "page/row/column" (e.g. "1/0/0" for page 1, row 0, column 0)',
 				default: '',
 				useVariables: CompanionFieldVariablesSupport.InternalParser,
 			},

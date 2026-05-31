@@ -71,6 +71,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	usedVariables: Set<string>
 	usedCompositeElements: Set<CompositeElementIdString>
 	referencedLocations: Set<string>
+	cyclicLocations: Set<string>
 }> {
 	// Apply any queued invalidations before processing
 	cache?.applyQueuedInvalidations()
@@ -79,6 +80,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		variables: new Set(),
 		compositeElements: new Set(),
 		referencedLocations: new Set(),
+		cyclicLocations: new Set(),
 	}
 
 	// Track all processed element IDs (with prefixes) for cache purging
@@ -108,6 +110,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		usedVariables: globalReferences.variables,
 		usedCompositeElements: globalReferences.compositeElements,
 		referencedLocations: globalReferences.referencedLocations,
+		cyclicLocations: globalReferences.cyclicLocations,
 	}
 }
 
@@ -181,6 +184,7 @@ async function convertElements(
 			}
 			if (cacheEntry.compositeElement?.elementId)
 				context.globalReferences.compositeElements.add(cacheEntry.compositeElement.elementId)
+			if (cacheEntry.referencedLocation) context.globalReferences.referencedLocations.add(cacheEntry.referencedLocation)
 
 			// If this is a group, populate the children
 			if (element.type === 'group' || element.type === 'composite') {
@@ -344,6 +348,7 @@ async function convertReferenceElementForDrawing(
 
 				if (isLoop) {
 					// Circular reference detected — show a placeholder instead of recursing infinitely
+					context.globalReferences.cyclicLocations.add(targetLocationStr)
 					drawElement.children = [makeReferencePlaceholder(drawElement.id, '\u221e')]
 				} else if (targetRender?.drawElements) {
 					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific)

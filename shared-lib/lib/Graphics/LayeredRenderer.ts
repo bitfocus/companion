@@ -128,6 +128,8 @@ export class GraphicsLayeredButtonRenderer {
 							await img.usingRotation(drawBounds, element.rotation, async () => {
 								elementBounds = await this.#drawReferenceElement(img, drawBounds, element, skipDraw)
 
+								// Note: children of a reference element cannot be individually selected,
+								// so the return value (selected child bounds) is intentionally discarded.
 								await this.#drawElements(
 									img,
 									element.children,

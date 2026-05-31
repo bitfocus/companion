@@ -22,6 +22,8 @@ export interface ExpressionReferences {
 	readonly variables: Set<string>
 	readonly compositeElements: Set<CompositeElementIdString>
 	readonly referencedLocations: Set<string>
+	/** Locations where a cycle was detected during this conversion (subset of referencedLocations) */
+	readonly cyclicLocations: Set<string>
 }
 
 export class ElementExpressionHelper<T> {

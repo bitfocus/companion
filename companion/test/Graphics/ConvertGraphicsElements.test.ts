@@ -1125,6 +1125,44 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const childSetCalls = setSpy.mock.calls.filter((call) => call[0] === childKey)
 			expect(childSetCalls).toHaveLength(0)
 		})
+
+		test('cache hit still propagates referencedLocation into global referencedLocations', async () => {
+			const cache = new ElementConversionCache()
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [makeTextDrawEl({ id: 'ref-text', text: 'Hi' })]
+			const mockRender = createMockImageResult(referencedDrawElements)
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('2/0/0') })]
+
+			// First call — populates cache
+			const result1 = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				'1/0/0',
+				getRenderAtLocation
+			)
+			expect(result1.referencedLocations.has('2/0/0')).toBe(true)
+
+			// Second call — cache hit path
+			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				'1/0/0',
+				getRenderAtLocation
+			)
+			// Must still report '2/0/0' even though element was served from cache
+			expect(result2.referencedLocations.has('2/0/0')).toBe(true)
+		})
 	})
 
 	describe('feedback overrides', () => {
@@ -2196,6 +2234,75 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect(result.elements).toHaveLength(0)
+		})
+
+		test('cyclicLocations is empty when no cycle exists', async () => {
+			const mockRender = createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Hi' })])
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.cyclicLocations.size).toBe(0)
+		})
+
+		test('cyclicLocations contains the location on a self-reference loop', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/0') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0', // self-reference
+				getRenderAtLocation
+			)
+
+			expect(result.cyclicLocations.has('1/0/0')).toBe(true)
+			// Also tracked in referencedLocations
+			expect(result.referencedLocations.has('1/0/0')).toBe(true)
+		})
+
+		test('cyclicLocations contains the location on an indirect loop', async () => {
+			// Target '1/0/1' has a render that references back to '1/0/0'
+			const targetRender = createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Loop' })], new Set(['1/0/0']))
+			const getRenderAtLocation = vi.fn(() => targetRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.cyclicLocations.has('1/0/1')).toBe(true)
+			// The direct location is still in referencedLocations
+			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+			// Only the cyclic entry, not an unrelated location
+			expect(result.cyclicLocations.size).toBe(1)
 		})
 	})
 })

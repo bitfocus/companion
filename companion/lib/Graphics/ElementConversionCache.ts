@@ -22,7 +22,16 @@ export interface ElementConversionCacheEntry {
 		readonly childIdPrefix: string
 	} | null
 
-	/** The location string (e.g. '1/0/0') referenced by this element (if it is a reference element) */
+	/**
+	 * The location string (e.g. '1/0/0') directly referenced by this element (if it is a reference element).
+	 *
+	 * This intentionally stores only the **direct** reference target, not the full transitive closure.
+	 * Transitive invalidation is handled by the event-driven chain: when C changes, B redraws and emits
+	 * `button_drawn`, which A observes and uses to re-fetch B's now-updated render via `getRenderAtLocation`.
+	 * Storing transitive locations here would cause A to evict its cache and call `getRenderAtLocation(B)`
+	 * before B has had a chance to re-render, embedding stale B content and triggering a redundant
+	 * extra redraw.
+	 */
 	readonly referencedLocation?: string | null
 }
 

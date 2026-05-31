@@ -26,6 +26,7 @@ import {
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
+import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 import { lazy } from '../../../Resources/Util.js'
@@ -133,6 +134,12 @@ export class ControlButtonLayered
 	 * When any of these locations are re-rendered, this control must be re-rendered too.
 	 */
 	#lastDrawReferencedLocations: ReadonlySet<string> | null = null
+
+	/**
+	 * Locations where a reference cycle was detected in the last draw.
+	 * Used to suppress redundant redraws when we're already showing ∞ for a location.
+	 */
+	#lastCyclicReferences: ReadonlySet<string> | null = null
 
 	/**
 	 * The base style without feedbacks applied
@@ -266,7 +273,7 @@ export class ControlButtonLayered
 		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
 
 		// Compute the new drawing, using the element conversion cache for per-element caching
-		const { elements, usedVariables, usedCompositeElements, referencedLocations } =
+		const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations } =
 			await ConvertSomeButtonGraphicsElementForDrawing(
 				this.deps.instance.definitions,
 				parser,
@@ -281,6 +288,7 @@ export class ControlButtonLayered
 		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
 		this.#lastDrawReferencedLocations = referencedLocations.size > 0 ? referencedLocations : null
+		this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),
@@ -710,9 +718,16 @@ export class ControlButtonLayered
 	 * Called after any located control has finished rendering. If this control references the changed
 	 * location, invalidate the relevant cache entries and trigger a redraw.
 	 */
-	onReferencedButtonDrawn = (location: ControlLocation): void => {
+	onReferencedButtonDrawn = (location: ControlLocation, render: ImageResult): void => {
 		const locStr = formatLocation(location)
 		if (!this.#lastDrawReferencedLocations?.has(locStr)) return
+
+		// Suppress ping-pong when we're already rendering a cycle: if we're already showing ∞ for this
+		// location AND the target still references us back, no visible output would change.
+		if (this.#lastCyclicReferences?.has(locStr)) {
+			const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+			if (myLocation && render.referencedLocations.has(formatLocation(myLocation))) return
+		}
 
 		this.#elementConversionCache.queueInvalidateReferencedLocation(locStr)
 		this.logger.silly('referenced control rendered in button ' + this.controlId)

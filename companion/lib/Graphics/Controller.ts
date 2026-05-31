@@ -296,6 +296,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						const cacheKeyObj: Record<string, any> = {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
+							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 						}
 						const cacheKey = JSON.stringify(cacheKeyObj)
 
