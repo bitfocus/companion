@@ -1,7 +1,7 @@
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useRef, type ElementType } from 'react'
-import { Button } from '~/Components/Button'
+import { useCallback, useRef } from 'react'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
@@ -50,29 +50,14 @@ export function ContextHelpButton({ children, action }: ContextHelpButtonProps):
 		afterElementRef.current?.focus({ preventScroll: true })
 	}, [])
 
-	const onClick2 = useCallback(
-		(event: React.MouseEvent<HTMLButtonElement>, helpFn: () => void) => {
-			helpFn()
+	const onClickAction = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement>) => {
+			if (typeof action === 'function') action()
+
 			removeFocus(event)
 		},
-		[removeFocus]
+		[removeFocus, action]
 	)
-
-	const helpButtonProps = {
-		...(typeof action === 'string'
-			? {
-					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
-					href: makeAbsolutePath(action),
-					target: '_blank',
-					rel: 'noopener noreferrer',
-					as: 'a' as ElementType,
-					onClick: removeFocus,
-				}
-			: action !== undefined
-				? { onClick: (e: React.MouseEvent<HTMLButtonElement>) => onClick2(e, action) }
-				: {}),
-		...(children ? {} : { title: 'Open help in a new tab', 'aria-label': 'Open help in a new tab' }),
-	}
 
 	if (children && typeof children === 'string' && action && !/click/i.test(children)) {
 		children += ' Click the icon for further help.'
@@ -85,9 +70,25 @@ export function ContextHelpButton({ children, action }: ContextHelpButtonProps):
 	return (
 		<>
 			<HelpWrapper usePopover={!!children} help={children}>
-				<Button variant="ghost" className="context-help-button-btn p-0" {...helpButtonProps}>
-					<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
-				</Button>
+				{typeof action === 'string' ? (
+					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
+					<LinkButtonExternal
+						variant="ghost"
+						className="context-help-button-btn p-0"
+						href={makeAbsolutePath(action)}
+						target="_blank"
+						rel="noopener noreferrer"
+						// onClick={removeFocus}
+						title="Open help in a new tab"
+						aria-label="Open help in a new tab"
+					>
+						<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
+					</LinkButtonExternal>
+				) : (
+					<Button variant="ghost" className="context-help-button-btn p-0" onClick={onClickAction}>
+						<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
+					</Button>
+				)}
 			</HelpWrapper>
 			<span ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />
 		</>
