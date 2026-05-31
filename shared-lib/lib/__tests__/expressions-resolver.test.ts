@@ -370,6 +370,31 @@ describe('resolver', function () {
 			const result = resolve(parse('a = 1; ++a'), defaultGetValue)
 			expect(result).toBe(2)
 		})
+
+		it('no return with decrement', () => {
+			const result = resolve(parse('a = 5; --a'), defaultGetValue)
+			expect(result).toBe(4)
+		})
+
+		it('postfix decrement', () => {
+			const result = resolve(parse('a = 5; a--; a'), defaultGetValue)
+			expect(result).toBe(4)
+		})
+
+		it('nullish coalescing assignment - left is null', () => {
+			const result = resolve(parse('a = null; a ??= 5'), defaultGetValue)
+			expect(result).toBe(5)
+		})
+
+		it('nullish coalescing assignment - left is undefined', () => {
+			const result = resolve(parse('a ??= 5'), defaultGetValue)
+			expect(result).toBe(5)
+		})
+
+		it('nullish coalescing assignment - left has value', () => {
+			const result = resolve(parse('a = 3; a ??= 5'), defaultGetValue)
+			expect(result).toBe(3)
+		})
 	})
 
 	describe('assignment - array', () => {
@@ -401,6 +426,16 @@ describe('resolver', function () {
 		it('return with update', () => {
 			const result = resolve(parse('a = [4,5,6]; ++a[0]; a'), defaultGetValue)
 			expect(result).toEqual([5, 5, 6])
+		})
+
+		it('no return with decrement', () => {
+			const result = resolve(parse('a = [4,5,6]; --a[0]'), defaultGetValue)
+			expect(result).toEqual(3)
+		})
+
+		it('return with decrement', () => {
+			const result = resolve(parse('a = [4,5,6]; --a[0]; a'), defaultGetValue)
+			expect(result).toEqual([3, 5, 6])
 		})
 
 		it('mutate in place', () => {

@@ -33,6 +33,7 @@ const assignmentOperators = new Set([
 	'|=',
 	'&&=',
 	'||=',
+	'??=',
 ])
 const updateOperators = [PLUS_CODE, MINUS_CODE]
 const assignmentPrecedence = 0.9
