@@ -32,6 +32,11 @@
 		height: 72px;
 	}
 
+	&.fixed-100 .button-border {
+		width: 100px;
+		height: 100px;
+	}
+
 	&.drophere {
 		border: 1px dashed black;
 		background-color: #eee;

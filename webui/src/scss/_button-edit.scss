@@ -48,6 +48,7 @@
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
+		width: 100%;
 
 		&:last-child {
 			margin-bottom: 0;
@@ -153,9 +154,17 @@
 
 		.cell-button-preview {
 			align-content: center;
+			flex-shrink: 0;
 
 			.button-control {
 				padding: 0;
+
+				&.fixed .button-border {
+					@media (min-width: 1200px) and (max-width: 1399.98px), (max-width: 767.98px) {
+						width: 48px;
+						height: 48px;
+					}
+				}
 			}
 		}
 

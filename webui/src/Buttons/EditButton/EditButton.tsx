@@ -66,7 +66,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			) : (
 				<>
 					<Grid.Col sm={12}>
-						<ButtonPreviewBase fixedSize preview={previewImage} right={true} />
+						<ButtonPreviewBase fixedSize={100} preview={previewImage} right={true} />
 						<MyErrorBoundary>
 							<SelectButtonTypeDropdown location={location} resetModalRef={resetModalRef} configRef={undefined} />
 						</MyErrorBoundary>
@@ -117,7 +117,7 @@ const EditButtonContent = observer(function EditButton({
 						</MyErrorBoundary>
 					)}
 				</div>
-				<ButtonPreviewBase fixedSize preview={previewImage} />
+				<ButtonPreviewBase fixedSize={100} preview={previewImage} />
 			</div>
 
 			{config.type === 'pageup' && (

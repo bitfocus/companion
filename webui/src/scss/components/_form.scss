@@ -31,7 +31,8 @@
 	}
 
 	.feature-icons {
-		white-space: nowrap;
+		display: inline-flex;
+		align-items: center;
 
 		background-color: #ddd;
 		border-radius: 100px; // as much as possible
@@ -45,7 +46,7 @@
 			margin-left: 1px;
 			margin-right: 1px;
 
-			font-size: 0.8rem;
+			font-size: 0.8rem !important;
 		}
 	}
 }

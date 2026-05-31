@@ -18,7 +18,8 @@ export interface ButtonPreviewProps extends Omit<ButtonPreviewBaseProps, 'onClic
 export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewProps) {
 	const classes = {
 		'button-control': true,
-		fixed: !!props.fixedSize,
+		fixed: !!props.fixedSize && props.fixedSize !== 100,
+		'fixed-100': props.fixedSize === 100,
 		drophere: props.canDrop,
 		drophover: props.dropHover,
 		draggable: !!props.dragRef,
@@ -117,7 +118,7 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 
 export interface ButtonPreviewBaseProps {
 	className?: string
-	fixedSize?: boolean
+	fixedSize?: boolean | 100
 	canDrop?: boolean
 	dropHover?: boolean
 	dragRef?: React.RefCallback<HTMLDivElement>
@@ -134,7 +135,8 @@ export interface ButtonPreviewBaseProps {
 export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPreviewBaseProps) {
 	const classes = {
 		'button-control': true,
-		fixed: !!props.fixedSize,
+		fixed: !!props.fixedSize && props.fixedSize !== 100,
+		'fixed-100': props.fixedSize === 100,
 		drophere: props.canDrop,
 		drophover: props.dropHover,
 		draggable: !!props.dragRef,
