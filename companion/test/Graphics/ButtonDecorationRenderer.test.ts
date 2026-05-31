@@ -75,6 +75,7 @@ function makeCanvas(w: number, h: number) {
 
 beforeAll(() => {
 	GlobalFonts.registerFromPath(join(FONTS_DIR, 'Arimo-Regular.ttf'), 'Companion-sans')
+	// typos:disable-line wdth is part of the filename
 	GlobalFonts.registerFromPath(join(FONTS_DIR, 'NotoSansMono-wdth-wght.ttf'), 'Companion-mono')
 })
 

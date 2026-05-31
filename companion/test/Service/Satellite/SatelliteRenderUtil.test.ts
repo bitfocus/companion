@@ -1,7 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
+import { ImageResult, type ImageResultProcessedStyle } from '../../../lib/Graphics/ImageResult.js'
 import { buildSatelliteStyleArgs } from '../../../lib/Service/Satellite/SatelliteRenderUtil.js'
-import { ImageResult } from '../../../lib/Graphics/ImageResult.js'
-import type { ImageResultProcessedStyle } from '../../../lib/Graphics/ImageResult.js'
 import type { SatelliteControlStylePreset } from '../../../lib/Service/Satellite/SatelliteSurfaceManifestSchema.js'
 
 function makeImage(

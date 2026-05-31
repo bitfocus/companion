@@ -1,5 +1,5 @@
-import type { ImageSnapshotOptions } from './Graphics/helpers/imageSnapshot.js'
 import type { Canvas } from '@napi-rs/canvas'
+import type { ImageSnapshotOptions } from './Graphics/helpers/imageSnapshot.js'
 
 declare module 'vitest' {
 	interface Assertion {
