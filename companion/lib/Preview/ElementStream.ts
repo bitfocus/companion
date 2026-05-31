@@ -1,5 +1,7 @@
 import EventEmitter from 'node:events'
 import z from 'zod'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -7,6 +9,7 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 export interface ElementStreamResult {
@@ -24,6 +27,7 @@ export class PreviewElementStream {
 
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #graphicsController: GraphicsController
+	readonly #pageStore: IPageStore
 	readonly #controlsController: ControlsController
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
@@ -32,17 +36,19 @@ export class PreviewElementStream {
 	constructor(
 		instanceDefinitions: InstanceDefinitions,
 		graphicsController: GraphicsController,
+		pageStore: IPageStore,
 		controlsController: ControlsController,
 		controlEvents: EventEmitter<ControlCommonEvents>
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#graphicsController = graphicsController
+		this.#pageStore = pageStore
 		this.#controlsController = controlsController
 		this.#controlEvents = controlEvents
 
 		// Listen for element changes to trigger re-evaluation
 		this.#controlEvents.on('layeredStyleElementChanged', this.#onElementChanged)
-		this.#controlEvents.on('invalidateControlRender', this.#onControlRender)
+		this.#graphicsController.on('button_drawn', this.#onButtonDrawn)
 	}
 
 	createTrpcRouter() {
@@ -78,7 +84,7 @@ export class PreviewElementStream {
 								elementId: input.elementId,
 								trackedExpressions: new Set<string>(),
 								trackedCompositeElements: new Set(),
-
+								trackedReferencedLocations: new Set(),
 								latestResult: { ok: true, element: null },
 								changes: new EventEmitter(),
 								isEvaluating: false,
@@ -123,13 +129,12 @@ export class PreviewElementStream {
 		}
 	}
 
-	#onControlRender = (controlId: string): void => {
-		// TODO - This is rather heavy-handled, we should ideally track which elements triggered the change
-
-		// Find all sessions for this control
+	#onButtonDrawn = (location: ControlLocation): void => {
+		const locationStr = formatLocation(location)
+		// Re-evaluate sessions that reference this location
 		for (const [elementStreamId, session] of this.#sessions) {
-			if (session.controlId === controlId) {
-				this.#logger.silly(`Re-evaluating element: ${elementStreamId} due to control render invalidation`)
+			if (session.trackedReferencedLocations.has(locationStr)) {
+				this.#logger.silly(`Re-evaluating element: ${elementStreamId} due to button drawn`)
 				this.#triggerElementReEvaluation(session)
 			}
 		}
@@ -159,6 +164,7 @@ export class PreviewElementStream {
 			session.latestResult = { ok: true, element: newValue.element }
 			session.trackedExpressions = newValue.referencedVariableIds
 			session.trackedCompositeElements = newValue.referencedCompositeElements
+			session.trackedReferencedLocations = newValue.referencedLocations
 
 			session.changes.emit('change', { ok: true, element: newValue.element })
 		} catch (err) {
@@ -212,27 +218,47 @@ export class PreviewElementStream {
 		element: SomeButtonGraphicsDrawElement | null
 		referencedVariableIds: Set<string>
 		referencedCompositeElements: Set<CompositeElementIdString>
+		referencedLocations: Set<string>
 	}> {
 		const control = this.#controlsController.getControl(controlId)
 		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
-			return { element: null, referencedVariableIds: new Set(), referencedCompositeElements: new Set() }
+			return {
+				element: null,
+				referencedVariableIds: new Set(),
+				referencedCompositeElements: new Set(),
+				referencedLocations: new Set(),
+			}
 		}
 
 		const elementDef = control.layeredStyleGetElementById(elementId)
 		if (!elementDef) {
-			return { element: null, referencedVariableIds: new Set(), referencedCompositeElements: new Set() }
+			return {
+				element: null,
+				referencedVariableIds: new Set(),
+				referencedCompositeElements: new Set(),
+				referencedLocations: new Set(),
+			}
 		}
 
 		const feedbackOverrides = control.entities.getFeedbackStyleOverrides()
 
 		if (!elementDef) {
-			return { element: null, referencedVariableIds: new Set(), referencedCompositeElements: new Set() }
+			return {
+				element: null,
+				referencedVariableIds: new Set(),
+				referencedCompositeElements: new Set(),
+				referencedLocations: new Set(),
+			}
 		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
 
+		const controlLocation = this.#pageStore.getLocationOfControlId(controlId)
+		const currentLocationStr = controlLocation ? formatLocation(controlLocation) : null
+
 		try {
 			// For group elements, clear children since they should be watched independently
+			// Reference elements keep their children (embedded from referenced control)
 			let elementDefToProcess = elementDef
 			if (elementDef.type === 'group') {
 				elementDefToProcess = { ...elementDef, children: [] }
@@ -244,6 +270,7 @@ export class PreviewElementStream {
 				elements,
 				usedVariables,
 				usedCompositeElements: connectionCompositeElements,
+				referencedLocations,
 			} = await ConvertSomeButtonGraphicsElementForDrawing(
 				this.#instanceDefinitions,
 				parser,
@@ -251,7 +278,9 @@ export class PreviewElementStream {
 				[elementDefToProcess],
 				feedbackOverrides,
 				false, // onlyEnabled
-				null
+				null,
+				currentLocationStr,
+				(location) => this.#graphicsController.getCachedRender(location) ?? null
 			)
 
 			if (elements.length === 0) {
@@ -264,6 +293,7 @@ export class PreviewElementStream {
 				element: elements[0],
 				referencedVariableIds: usedVariables,
 				referencedCompositeElements: connectionCompositeElements,
+				referencedLocations,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)
@@ -278,6 +308,7 @@ interface ElementStreamSession {
 	readonly elementId: string
 	trackedExpressions: Set<string>
 	trackedCompositeElements: Set<CompositeElementIdString>
+	trackedReferencedLocations: Set<string>
 
 	latestResult: ElementStreamResult
 

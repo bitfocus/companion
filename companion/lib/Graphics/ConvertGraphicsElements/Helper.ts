@@ -1,6 +1,7 @@
 import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import {
@@ -15,10 +16,14 @@ import type {
 } from '../../Instance/Definitions.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ElementConversionCache } from '../ElementConversionCache.js'
+import type { ImageResult } from '../ImageResult.js'
 
 export interface ExpressionReferences {
 	readonly variables: Set<string>
 	readonly compositeElements: Set<CompositeElementIdString>
+	readonly referencedLocations: Set<string>
+	/** Locations where a cycle was detected during this conversion (subset of referencedLocations) */
+	readonly cyclicLocations: Set<string>
 }
 
 export class ElementExpressionHelper<T> {
@@ -243,6 +248,12 @@ export interface ParseElementsContext {
 	/**  Function to prepare pixel buffers for image elements */
 	readonly drawPixelBuffers: DrawPixelBuffers
 
+	/** Location string of the button being drawn (e.g. '1/0/0'), used for loop detection */
+	readonly currentLocationStr: string | null
+
+	/** Callback to fetch the last-rendered ImageResult for a given location */
+	readonly getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null
+
 	/**
 	 * Create a child factory for recursive conversion (e.g., inside composite elements)
 	 * with prop overrides injected into the parser
@@ -269,7 +280,9 @@ export function createParseElementsContext(
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null,
 	globalReferences: ExpressionReferences,
-	processedElementIds: Set<string>
+	processedElementIds: Set<string>,
+	currentLocationStr: string | null,
+	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null
 ): ParseElementsContext {
 	return {
 		cache,
@@ -277,6 +290,8 @@ export function createParseElementsContext(
 		processedElementIds,
 		onlyEnabled,
 		drawPixelBuffers,
+		currentLocationStr,
+		getRenderAtLocation,
 
 		createHelper<T extends { readonly id: string }>(
 			element: T
@@ -298,7 +313,9 @@ export function createParseElementsContext(
 				onlyEnabled,
 				cache,
 				globalReferences,
-				processedElementIds
+				processedElementIds,
+				currentLocationStr,
+				getRenderAtLocation
 			)
 		},
 

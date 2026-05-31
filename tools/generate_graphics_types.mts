@@ -175,7 +175,29 @@ for (const [id, sections] of Object.entries(elementSchemas)) {
 
 	const filteredFields = fields.filter((field) => !ignoreFields.has(field.id))
 
-	if (id !== 'composite') {
+	if (id === 'reference') {
+		// Reference element has a manually defined draw form with embedded children
+		// Only generate the element (config) interface; the draw interface is handled manually below
+		const drawElementName = `ButtonGraphicsReferenceDrawElement`
+		allDrawElementTypes.push(drawElementName)
+
+		generatedFile += `export interface ${drawElementName} extends ${drawInterfaces.filter((i) => i !== 'ButtonGraphicsDrawBase' || true).join(', ')} {\n`
+		generatedFile += `\ttype: 'reference'\n`
+		generatedFile += `\tchildren: SomeButtonGraphicsDrawElement[]\n`
+		generatedFile += '}\n\n'
+
+		// Generate the config element interface (location field comes from schema)
+		const elementName = `ButtonGraphics${typeName}Element`
+		allElementTypes.push(elementName)
+
+		generatedFile += `export interface ${elementName} extends ${elementInterfaces.join(', ')} {\n`
+		generatedFile += `\ttype: 'reference'\n`
+		for (const field of filteredFields) {
+			const tsType = convertFieldType(field, true)
+			generatedFile += `\t${field.id}: ${tsType}\n`
+		}
+		generatedFile += '}\n\n'
+	} else if (id !== 'composite') {
 		// Generate draw element interface
 		const drawElementName = `ButtonGraphics${typeName}DrawElement`
 		allDrawElementTypes.push(drawElementName)
@@ -188,26 +210,38 @@ for (const [id, sections] of Object.entries(elementSchemas)) {
 		}
 		if (id === 'group') generatedFile += `\tchildren: SomeButtonGraphicsDrawElement[]\n`
 		generatedFile += '}\n\n'
-	}
 
-	// Generate raw element interface
-	const elementName = `ButtonGraphics${typeName}Element`
-	allElementTypes.push(elementName)
+		// Generate raw element interface
+		const elementName = `ButtonGraphics${typeName}Element`
+		allElementTypes.push(elementName)
 
-	generatedFile += `export interface ${elementName} extends ${elementInterfaces.join(', ')} {\n`
-	generatedFile += `\ttype: '${id}'\n`
-	for (const field of filteredFields) {
-		const tsType = convertFieldType(field, true)
-		generatedFile += `\t${field.id}: ${tsType}\n`
+		generatedFile += `export interface ${elementName} extends ${elementInterfaces.join(', ')} {\n`
+		generatedFile += `\ttype: '${id}'\n`
+		for (const field of filteredFields) {
+			const tsType = convertFieldType(field, true)
+			generatedFile += `\t${field.id}: ${tsType}\n`
+		}
+		if (id === 'group') generatedFile += `\tchildren: SomeButtonGraphicsElement[]\n`
+		generatedFile += '}\n\n'
+	} else {
+		// composite - no draw element, just config element
+		const elementName = `ButtonGraphics${typeName}Element`
+		allElementTypes.push(elementName)
+
+		generatedFile += `export interface ${elementName} extends ${elementInterfaces.join(', ')} {\n`
+		generatedFile += `\ttype: '${id}'\n`
+		for (const field of filteredFields) {
+			const tsType = convertFieldType(field, true)
+			generatedFile += `\t${field.id}: ${tsType}\n`
+		}
+		if (id === 'composite') {
+			generatedFile += `\tconnectionId: string\n`
+			generatedFile += `\telementId: string\n`
+			generatedFile += `\n\t/**\n\t* Custom elements have options defined by their composite definition\n\t */\n`
+			generatedFile += `\t[customKey: CompositeElementOptionKey]: ExpressionOrValue<JsonValue | undefined> | undefined\n`
+		}
+		generatedFile += '}\n\n'
 	}
-	if (id === 'group') generatedFile += `\tchildren: SomeButtonGraphicsElement[]\n`
-	if (id === 'composite') {
-		generatedFile += `\tconnectionId: string\n`
-		generatedFile += `\telementId: string\n`
-		generatedFile += `\n\t/**\n\t* Custom elements have options defined by their composite definition\n\t */\n`
-		generatedFile += `\t[customKey: CompositeElementOptionKey]: ExpressionOrValue<JsonValue | undefined> | undefined\n`
-	}
-	generatedFile += '}\n\n'
 }
 
 generatedFile += `export type SomeButtonGraphicsDrawElement =\n`

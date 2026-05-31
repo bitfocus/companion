@@ -5,9 +5,12 @@ import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@compani
 import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsBoxElement,
+	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageElement,
+	ButtonGraphicsReferenceDrawElement,
+	ButtonGraphicsReferenceElement,
 	ButtonGraphicsTextDrawElement,
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsDrawElement,
@@ -23,6 +26,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../lib/Graphics/ConvertGraphicsElements.js'
 import { collectContentHashes } from '../../lib/Graphics/ConvertGraphicsElements/Util.js'
 import { ElementConversionCache } from '../../lib/Graphics/ElementConversionCache.js'
+import { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import type { CompositeElementDefinition, InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import {
 	executeExpression,
@@ -177,6 +181,34 @@ function makeGroupEl(
 		...overrides,
 		children,
 	}
+}
+
+function makeReferenceEl(overrides: Partial<ButtonGraphicsReferenceElement> = {}): ButtonGraphicsReferenceElement {
+	return {
+		id: 'ref1',
+		name: '',
+		type: 'reference',
+		usage: USAGE,
+		enabled: val(true),
+		opacity: val(100),
+		x: val(0),
+		y: val(0),
+		width: val(100),
+		height: val(100),
+		rotation: val(0),
+		location: val(''),
+		...overrides,
+	}
+}
+
+/**
+ * Creates a minimal mock ImageResult for use in reference element tests.
+ */
+function createMockImageResult(
+	drawElements: SomeButtonGraphicsDrawElement[] = [],
+	referencedLocations: ReadonlySet<string> = new Set()
+): ImageResult {
+	return new ImageResult('', null, async () => Buffer.alloc(0), drawElements, referencedLocations)
 }
 
 /**
@@ -370,6 +402,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -394,6 +428,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -418,6 +454,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -434,6 +472,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				false,
+				null,
+				null,
 				null
 			)
 
@@ -453,6 +493,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -475,6 +517,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -505,6 +549,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -534,6 +580,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -574,6 +622,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -622,6 +672,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -651,6 +703,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -680,6 +734,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -700,6 +756,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -721,6 +779,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -740,6 +800,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -761,7 +823,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Cache should now contain the element
@@ -778,7 +842,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Verify cache was queried
@@ -800,7 +866,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Queue invalidation for the variable and apply it
@@ -815,7 +883,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Content should be different
@@ -839,7 +909,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			expect(cache.get('text1')).toBeDefined()
@@ -853,7 +925,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				[elements[0]],
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Cache should now only have text1
@@ -876,7 +950,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Verify both are cached
@@ -905,7 +981,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				disabledElements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 			expect(result.elements).toHaveLength(0)
 
@@ -924,7 +1002,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Should have the group with its child
@@ -985,7 +1065,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Find the child cache key from the spy calls (includes the propOverridesHash prefix)
@@ -1015,7 +1097,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				disabledElements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Child should still be in cache (verify by checking cache.get returns a value)
@@ -1032,12 +1116,52 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
-				cache
+				cache,
+				null,
+				null
 			)
 
 			// Child should NOT have been re-cached (cache hit)
 			const childSetCalls = setSpy.mock.calls.filter((call) => call[0] === childKey)
 			expect(childSetCalls).toHaveLength(0)
+		})
+
+		test('cache hit still propagates referencedLocation into global referencedLocations', async () => {
+			const cache = new ElementConversionCache()
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [makeTextDrawEl({ id: 'ref-text', text: 'Hi' })]
+			const mockRender = createMockImageResult(referencedDrawElements)
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('2/0/0') })]
+
+			// First call — populates cache
+			const result1 = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				'1/0/0',
+				getRenderAtLocation
+			)
+			expect(result1.referencedLocations.has('2/0/0')).toBe(true)
+
+			// Second call — cache hit path
+			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				'1/0/0',
+				getRenderAtLocation
+			)
+			// Must still report '2/0/0' even though element was served from cache
+			expect(result2.referencedLocations.has('2/0/0')).toBe(true)
 		})
 	})
 
@@ -1058,6 +1182,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				globalReferences,
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1076,6 +1202,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1086,6 +1214,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1104,6 +1234,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements1,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1114,6 +1246,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements2,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1161,6 +1295,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1213,6 +1349,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1233,6 +1371,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1281,6 +1421,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1304,6 +1446,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1322,6 +1466,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1380,6 +1526,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1434,6 +1582,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1482,6 +1632,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1505,6 +1657,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1529,6 +1683,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1553,6 +1709,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1574,6 +1732,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1596,6 +1756,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					elements,
 					new Map(),
 					true,
+					null,
+					null,
 					null
 				)
 
@@ -1652,6 +1814,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1708,6 +1872,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1766,6 +1932,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
@@ -1794,11 +1962,350 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				elements,
 				new Map(),
 				true,
+				null,
+				null,
 				null
 			)
 
 			// Should fall back to 'inside' as default
 			expect((result.elements[0] as { borderPosition: string }).borderPosition).toBe('inside')
+		})
+	})
+
+	describe('reference element conversion', () => {
+		test('shows placeholder when no getRenderAtLocation is provided (references disabled)', async () => {
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/0') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements).toHaveLength(1)
+			expect(result.elements[0].type).toBe('reference')
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children).toHaveLength(2)
+			expect(refEl.children[0].type).toBe('box')
+			expect(refEl.children[1].type).toBe('text')
+		})
+
+		test('produces an empty reference element when location is empty', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.elements).toHaveLength(1)
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children).toHaveLength(0)
+			expect(getRenderAtLocation).not.toHaveBeenCalled()
+		})
+
+		test('produces an empty reference element when location is invalid', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('not-valid') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children).toHaveLength(0)
+		})
+
+		test('produces an empty reference element when no render exists at the location', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children).toHaveLength(0)
+		})
+
+		test('embeds draw elements from the referenced location', async () => {
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [
+				makeTextDrawEl({ id: 'ref-text', text: 'Hello from ref' }),
+			]
+			const mockRender = createMockImageResult(referencedDrawElements)
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.elements).toHaveLength(1)
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.type).toBe('reference')
+			expect(refEl.children).toHaveLength(1)
+			expect(refEl.children[0]).toMatchObject({ type: 'text', text: 'Hello from ref' })
+		})
+
+		test('excludes canvas elements from the referenced location', async () => {
+			const canvasDrawEl: ButtonGraphicsCanvasDrawElement = {
+				id: 'canvas1',
+				type: 'canvas',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				contentHash: 'hash-canvas',
+				decoration: ButtonGraphicsDecorationType.FollowDefault,
+				showStatusIcons: ButtonGraphicsShowStatusIcons.FollowDefault,
+			}
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [
+				canvasDrawEl,
+				makeTextDrawEl({ id: 'ref-text', text: 'Visible' }),
+			]
+			const mockRender = createMockImageResult(referencedDrawElements)
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			// Canvas should be excluded; only the text should appear
+			expect(refEl.children).toHaveLength(1)
+			expect(refEl.children[0].type).toBe('text')
+		})
+
+		test('records the referenced location in referencedLocations', async () => {
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [makeTextDrawEl({ id: 'ref-text', text: 'Hi' })]
+			const mockRender = createMockImageResult(referencedDrawElements)
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+		})
+
+		test('shows placeholder when reference target is the current location (self-loop)', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/0') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0', // same location as target → self-reference loop
+				getRenderAtLocation
+			)
+
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children).toHaveLength(2)
+			expect(refEl.children[0].type).toBe('box')
+			expect(refEl.children[1].type).toBe('text')
+		})
+
+		test('shows placeholder when reference target transitively references the current location (indirect loop)', async () => {
+			// Target '1/0/1' has already been rendered, and its render references back to '1/0/0'
+			const targetRender = createMockImageResult(
+				[makeTextDrawEl({ id: 'ref-text', text: 'Unreachable' })],
+				new Set(['1/0/0']) // back-reference to current button
+			)
+			const getRenderAtLocation = vi.fn(() => targetRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			const refEl = result.elements[0] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children).toHaveLength(2)
+			expect(refEl.children[0].type).toBe('box')
+			expect(refEl.children[1].type).toBe('text')
+		})
+
+		test('propagates transitive referencedLocations from the target render', async () => {
+			const targetRender = createMockImageResult(
+				[makeTextDrawEl({ id: 'ref-text', text: 'Hi' })],
+				new Set(['1/0/2', '1/0/3'])
+			)
+			const getRenderAtLocation = vi.fn(() => targetRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.has('1/0/2')).toBe(true)
+			expect(result.referencedLocations.has('1/0/3')).toBe(true)
+		})
+
+		test('reference element is omitted when disabled and onlyEnabled=true', async () => {
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ enabled: val(false), location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				vi.fn(() => null)
+			)
+
+			expect(result.elements).toHaveLength(0)
+		})
+
+		test('cyclicLocations is empty when no cycle exists', async () => {
+			const mockRender = createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Hi' })])
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.cyclicLocations.size).toBe(0)
+		})
+
+		test('cyclicLocations contains the location on a self-reference loop', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/0') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0', // self-reference
+				getRenderAtLocation
+			)
+
+			expect(result.cyclicLocations.has('1/0/0')).toBe(true)
+			// Also tracked in referencedLocations
+			expect(result.referencedLocations.has('1/0/0')).toBe(true)
+		})
+
+		test('cyclicLocations contains the location on an indirect loop', async () => {
+			// Target '1/0/1' has a render that references back to '1/0/0'
+			const targetRender = createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Loop' })], new Set(['1/0/0']))
+			const getRenderAtLocation = vi.fn(() => targetRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.cyclicLocations.has('1/0/1')).toBe(true)
+			// The direct location is still in referencedLocations
+			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+			// Only the cyclic entry, not an unrelated location
+			expect(result.cyclicLocations.size).toBe(1)
 		})
 	})
 })

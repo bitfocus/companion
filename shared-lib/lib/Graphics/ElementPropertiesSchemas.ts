@@ -455,6 +455,26 @@ export const compositeElementSchema: ElementSchemaSection[] = [
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields] },
 ]
 
+export const referenceElementSchema: ElementSchemaSection[] = [
+	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
+	{
+		id: 'source',
+		label: 'Source',
+		fields: [
+			{
+				type: 'textinput',
+				id: 'location',
+				label: 'Location',
+				tooltip:
+					'The location of the button to reference, in the format "page/row/column" (e.g. "1/0/0" for page 1, row 0, column 0)',
+				default: '',
+				useVariables: CompanionFieldVariablesSupport.InternalParser,
+			},
+		],
+	},
+]
+
 /**
  * Section-structured schemas per element type.
  */
@@ -467,6 +487,7 @@ export const elementSchemas = {
 	circle: circleElementSchema,
 	composite: compositeElementSchema,
 	canvas: canvasElementSchema,
+	reference: referenceElementSchema,
 } as const satisfies Record<string, ElementSchemaSection[]>
 
 export function getElementSchemaProperty(

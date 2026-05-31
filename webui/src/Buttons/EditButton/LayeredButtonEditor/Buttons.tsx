@@ -5,6 +5,7 @@ import {
 	faEye,
 	faImage,
 	faLayerGroup,
+	faLink,
 	faMinus,
 	faPlus,
 	faSquare,
@@ -249,6 +250,13 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 				elementType="circle"
 				label="Circle"
 				icon={faCircle}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="reference"
+				label="Reference"
+				icon={faLink}
 			/>
 
 			{/* Composite Elements grouped by connection */}

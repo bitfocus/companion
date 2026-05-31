@@ -396,6 +396,8 @@ export class ImportExportController {
 						rawElements,
 						new Map(),
 						true,
+						null, // Future: we should be able to resolve references within this import ui, but it needs some thought on how to cache and resolve cross-page references
+						null,
 						null
 					)
 

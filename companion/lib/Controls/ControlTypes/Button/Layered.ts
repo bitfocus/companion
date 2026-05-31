@@ -1,10 +1,12 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type {
 	LayeredButtonModel,
 	LayeredButtonOptions,
 	NormalButtonRuntimeProps,
 } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -24,6 +26,7 @@ import {
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
+import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 import { lazy } from '../../../Resources/Util.js'
@@ -127,6 +130,18 @@ export class ControlButtonLayered
 	#lastDrawCompositeElements: ReadonlySet<CompositeElementIdString> | null = null
 
 	/**
+	 * Location strings (e.g. '1/0/0') of buttons this control references via reference elements.
+	 * When any of these locations are re-rendered, this control must be re-rendered too.
+	 */
+	#lastDrawReferencedLocations: ReadonlySet<string> | null = null
+
+	/**
+	 * Locations where a reference cycle was detected in the last draw.
+	 * Used to suppress redundant redraws when we're already showing ∞ for a location.
+	 */
+	#lastCyclicReferences: ReadonlySet<string> | null = null
+
+	/**
 	 * The base style without feedbacks applied
 	 */
 	#drawElements: SomeButtonGraphicsElement[] = structuredClone(ControlButtonLayered.DefaultElements)
@@ -197,12 +212,16 @@ export class ControlButtonLayered
 			// Ensure control is stored before setup
 			if (isImport) setImmediate(() => this.postProcessImport())
 		}
+
+		// Listen for other controls finishing rendering (needed for reference element invalidation)
+		this.deps.graphics.on('button_drawn', this.onReferencedButtonDrawn)
 	}
 
 	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.deps.graphics.off('button_drawn', this.onReferencedButtonDrawn)
 		this.#elementConversionCache.clear()
 		super.destroy()
 	}
@@ -249,25 +268,33 @@ export class ControlButtonLayered
 			injectedVariableValues
 		)
 
+		const locationStr = location ? formatLocation(location) : null
+
 		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
 
 		// Compute the new drawing, using the element conversion cache for per-element caching
-		const { elements, usedVariables, usedCompositeElements } = await ConvertSomeButtonGraphicsElementForDrawing(
-			this.deps.instance.definitions,
-			parser,
-			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
-			this.#drawElements,
-			feedbackOverrides,
-			true,
-			this.#elementConversionCache
-		)
+		const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations } =
+			await ConvertSomeButtonGraphicsElementForDrawing(
+				this.deps.instance.definitions,
+				parser,
+				this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
+				this.#drawElements,
+				feedbackOverrides,
+				true,
+				this.#elementConversionCache,
+				locationStr,
+				(location) => this.deps.graphics.getCachedRender(location) ?? null
+			)
 		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
 		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
+		this.#lastDrawReferencedLocations = referencedLocations.size > 0 ? referencedLocations : null
+		this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
 
 		const result: DrawStyleLayeredButtonModel = {
 			...this.getDrawStyleButtonStateProps(),
 
 			elements,
+			referencedLocations,
 
 			style: 'button-layered',
 			drawType: 'button',
@@ -684,6 +711,26 @@ export class ControlButtonLayered
 		this.#elementConversionCache.queueInvalidateCompositeType(allChangedElementIds)
 
 		this.logger.silly('composite element changed in button ' + this.controlId)
+		this.triggerRedraw()
+	}
+
+	/**
+	 * Called after any located control has finished rendering. If this control references the changed
+	 * location, invalidate the relevant cache entries and trigger a redraw.
+	 */
+	onReferencedButtonDrawn = (location: ControlLocation, render: ImageResult): void => {
+		const locStr = formatLocation(location)
+		if (!this.#lastDrawReferencedLocations?.has(locStr)) return
+
+		// Suppress ping-pong when we're already rendering a cycle: if we're already showing ∞ for this
+		// location AND the target still references us back, no visible output would change.
+		if (this.#lastCyclicReferences?.has(locStr)) {
+			const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+			if (myLocation && render.referencedLocations.has(formatLocation(myLocation))) return
+		}
+
+		this.#elementConversionCache.queueInvalidateReferencedLocation(locStr)
+		this.logger.silly('referenced control rendered in button ' + this.controlId)
 		this.triggerRedraw()
 	}
 

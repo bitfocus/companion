@@ -18,6 +18,12 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	drawType: 'button' | 'pagenum' | 'pageup' | 'pagedown'
 
 	elements: SomeButtonGraphicsDrawElement[]
+
+	/**
+	 * Location strings (e.g. '1/0/0') transitively referenced by this button's elements.
+	 * Only populated for layered buttons that went through reference element resolution.
+	 */
+	referencedLocations?: ReadonlySet<string>
 }
 
 export interface DrawImageBuffer {

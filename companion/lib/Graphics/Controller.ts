@@ -296,6 +296,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						const cacheKeyObj: Record<string, any> = {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
+							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 						}
 						const cacheKey = JSON.stringify(cacheKeyObj)
 
@@ -303,7 +304,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
-							render = await this.#drawImageResult(renderStyle)
+							render = await this.#drawImageResult(renderStyle, buttonStyle.elements, buttonStyle.referencedLocations)
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
@@ -609,7 +610,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#debounceResizeRenderCache()
 	}
 
-	async #drawImageResult(drawStyle: RendererButtonStyle): Promise<ImageResult> {
+	async #drawImageResult(
+		drawStyle: RendererButtonStyle,
+		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
+		referencedLocations: ReadonlySet<string> | undefined = undefined
+	): Promise<ImageResult> {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 		const dataUrlResolution = { width: 72, height: 72, oversampling: 4 } // Default values
@@ -620,14 +625,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			CRASHED_WORKER_RETRY_COUNT
 		)
 
-		return new ImageResult(dataUrl, processedStyle, async (width, height, rotation, format) =>
-			this.#executePoolDrawButtonImageBuffer(
-				drawStyle,
-				{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
-				rotation,
-				format,
-				CRASHED_WORKER_RETRY_COUNT
-			)
+		return new ImageResult(
+			dataUrl,
+			processedStyle,
+			async (width, height, rotation, format) =>
+				this.#executePoolDrawButtonImageBuffer(
+					drawStyle,
+					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+					rotation,
+					format,
+					CRASHED_WORKER_RETRY_COUNT
+				),
+			drawElements,
+			referencedLocations ?? new Set()
 		)
 	}
 
