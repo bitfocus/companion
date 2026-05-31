@@ -695,6 +695,48 @@ describe('ServiceSatelliteApi', () => {
 			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
 			expect(callArgs.configFields).toBeUndefined()
 		})
+
+		test('passes CAN_CHANGE_PAGE to addSatelliteDevice', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" CAN_CHANGE_PAGE="swipe"\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.canChangePage).toBe('swipe')
+		})
+
+		test('canChangePage defaults to undefined when CAN_CHANGE_PAGE not provided', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"\n')
+
+			expect(surfaceController.addSatelliteDevice).toHaveBeenCalledTimes(1)
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.canChangePage).toBeUndefined()
+		})
+
+		test('error for LAYOUT_MANIFEST that fails schema validation', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			// Valid base64 + valid JSON but missing required 'controls' and 'stylePresets' fields
+			const badManifest = { foo: 'bar' }
+			const encoded = Buffer.from(JSON.stringify(badManifest)).toString('base64')
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" LAYOUT_MANIFEST="${encoded}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid LAYOUT_MANIFEST')
+		})
 	})
 
 	describe('REMOVE-DEVICE', () => {
@@ -1213,6 +1255,58 @@ describe('ServiceSatelliteApi', () => {
 			processMessage('FIRMWARE-UPDATE-INFO DEVICEID="dev1" UPDATE_URL=""\n')
 
 			expect(mockDevice.updateFirmwareUpdateInfo).toHaveBeenCalledWith(null)
+			expect(socket.lastMessage).toContain('OK')
+		})
+	})
+
+	describe('CHANGE-PAGE', () => {
+		test('error when device not found', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('CHANGE-PAGE DEVICEID="nonexist" DIRECTION=1\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Device not found')
+		})
+
+		test('error when missing DIRECTION', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+
+			processMessage('CHANGE-PAGE DEVICEID="dev1"\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Missing DIRECTION')
+		})
+
+		test('successfully navigates forward', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.doChangePage.mockReturnValue(undefined)
+
+			processMessage('CHANGE-PAGE DEVICEID="dev1" DIRECTION=1\n')
+
+			expect(mockDevice.doChangePage).toHaveBeenCalledWith(true)
+			expect(socket.lastMessage).toContain('CHANGE-PAGE')
+			expect(socket.lastMessage).toContain('OK')
+			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+		})
+
+		test('successfully navigates backward', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.doChangePage.mockReturnValue(undefined)
+
+			processMessage('CHANGE-PAGE DEVICEID="dev1" DIRECTION=0\n')
+
+			expect(mockDevice.doChangePage).toHaveBeenCalledWith(false)
 			expect(socket.lastMessage).toContain('OK')
 		})
 	})
