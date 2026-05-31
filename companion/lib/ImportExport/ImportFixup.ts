@@ -55,7 +55,7 @@ export function fixupTriggerControl(
 	}
 
 	new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap, outboundSurfaceIdRemap)
-		.visitEntities([], result.condition.concat(result.actions))
+		.visitEntities([], [...result.localVariables, ...result.condition, ...result.actions])
 		.visitEvents(result.events || [])
 
 	return result
