@@ -8,7 +8,6 @@ const meta = {
 		open: true,
 		onOpenChange: () => {},
 		position: { x: 20, y: 20 },
-		onContextMenu: (e: React.MouseEvent<HTMLDivElement>) => e.preventDefault(),
 		menuItems: [],
 	},
 } satisfies Meta<typeof ContextMenu>
@@ -24,7 +23,6 @@ export const Default: Story = {
 				open={true}
 				position={{ x: 20, y: 20 }}
 				onOpenChange={() => {}}
-				onContextMenu={(e) => e.preventDefault()}
 				menuItems={[
 					{ label: 'Edit', icon: faEdit, do: () => console.log('edit') },
 					{ isSeparator: true },
@@ -43,7 +41,6 @@ export const Hidden: Story = {
 				open={false}
 				position={{ x: 20, y: 20 }}
 				onOpenChange={() => {}}
-				onContextMenu={(e) => e.preventDefault()}
 				menuItems={[{ label: 'Edit', icon: faEdit, do: () => console.log('edit') }]}
 			/>
 		)

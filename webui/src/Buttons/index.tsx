@@ -7,6 +7,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ContextMenu } from '~/Components/ContextMenu.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
 import { TabArea } from '~/Components/TabArea.js'
@@ -19,6 +20,7 @@ import { EditButton } from './EditButton/EditButton.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { ConnectionPresets } from './Presets/Presets.js'
+import { useButtonContextMenu } from './useButtonContextMenu.js'
 
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
 
@@ -110,6 +112,21 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
 	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
 	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
+	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
+
+	const {
+		contextMenuOpen,
+		setContextMenuOpen,
+		contextMenuPosition,
+		contextMenuLocation,
+		contextMenuItems,
+		doButtonContextMenu,
+	} = useButtonContextMenu({
+		copyFromButton,
+		setCopyFromButton,
+		clearModalRef,
+		setTabResetToken,
+	})
 
 	const handleKeyDownInButtons = useCallback(
 		(e: React.KeyboardEvent) => {
@@ -139,6 +156,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				gridZoomController.zoomReset()
 			} else {
 				switch (e.key) {
+					case 'Escape':
+						setCopyFromButton(null)
+						break
 					case 'ArrowDown':
 						setSelectedButton((selectedButton) => {
 							if (selectedButton && gridSize) {
@@ -262,6 +282,14 @@ export const ButtonsPage = observer(function ButtonsPage() {
 								})
 							setCopyFromButton(null)
 							setTabResetToken(nanoid())
+						} else if (copyFromButton[1] === 'swap') {
+							swapControlMutation
+								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
+								.catch((e) => {
+									console.error(`swap failed: ${e}`)
+								})
+							setCopyFromButton(null)
+							setTabResetToken(nanoid())
 						} else {
 							console.error('unknown paste operation:', copyFromButton[1])
 						}
@@ -273,6 +301,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			resetControlMutation,
 			copyControlMutation,
 			moveControlMutation,
+			swapControlMutation,
 			selectedButton,
 			copyFromButton,
 			gridSize,
@@ -301,6 +330,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				buttonGridClick={doButtonGridClick}
 				isHot={viewControl.buttonGridHotPress}
 				selectedButton={selectedButton}
+				copySourceButton={copyFromButton?.[0] ?? null}
+				contextMenuButton={contextMenuOpen ? contextMenuLocation : null}
+				onButtonContextMenu={doButtonContextMenu}
 				pageNumber={pageNumber}
 				changePage={setPageNumber}
 				onKeyDown={handleKeyDownInButtons}
@@ -314,6 +346,12 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	return (
 		<Grid.Row className="buttons-page split-panels">
 			<GenericConfirmModal ref={clearModalRef} />
+			<ContextMenu
+				open={contextMenuOpen}
+				onOpenChange={setContextMenuOpen}
+				position={contextMenuPosition}
+				menuItems={contextMenuItems}
+			/>
 
 			{/* On large screens, show the grid in its own column */}
 			{isLargeScreen && (

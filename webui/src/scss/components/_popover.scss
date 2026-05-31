@@ -73,6 +73,13 @@
 		color: var(--popover2-link-hover-color);
 		outline: none;
 	}
+
+	&:disabled,
+	&[aria-disabled='true'] {
+		opacity: 0.4;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
 }
 
 // ─── Split-button border-radius fix ─────────────────────────────────────────

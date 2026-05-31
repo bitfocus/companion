@@ -24,6 +24,8 @@ export interface ButtonInfiniteGridButtonProps {
 	left: number
 	top: number
 	style: React.CSSProperties
+	onContextMenu?: (location: ControlLocation, x: number, y: number) => void
+	copySource?: boolean
 }
 
 interface ButtonInfiniteGridProps {
@@ -31,6 +33,9 @@ interface ButtonInfiniteGridProps {
 	pageNumber: number
 	buttonClick?: (location: ControlLocation, pressed: boolean) => void
 	selectedButton?: ControlLocation | null
+	copySourceButton?: ControlLocation | null
+	contextMenuButton?: ControlLocation | null
+	onButtonContextMenu?: (location: ControlLocation, x: number, y: number) => void
 	gridSize: UserConfigGridSize
 	ButtonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any> // TODO - this type is flawed
 	drawScale: number
@@ -45,6 +50,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			pageNumber,
 			buttonClick,
 			selectedButton,
+			copySourceButton,
+			contextMenuButton,
+			onButtonContextMenu,
 			gridSize,
 			ButtonIconFactory,
 			drawScale,
@@ -184,10 +192,21 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 						column={column}
 						pageNumber={pageNumber}
 						onClick={buttonClick}
+						onContextMenu={onButtonContextMenu}
 						selected={
 							selectedButton?.pageNumber === pageNumber &&
 							selectedButton?.column === column &&
 							selectedButton?.row === row
+						}
+						copySource={
+							copySourceButton?.pageNumber === pageNumber &&
+							copySourceButton?.column === column &&
+							copySourceButton?.row === row
+						}
+						contextMenuOpen={
+							contextMenuButton?.pageNumber === pageNumber &&
+							contextMenuButton?.column === column &&
+							contextMenuButton?.row === row
 						}
 						left={(column - minColumn) * tileSize}
 						top={(row - minRow) * tileSize}
@@ -288,6 +307,9 @@ interface ButtonGridIconBaseProps {
 	dropRef?: React.RefCallback<HTMLDivElement>
 	dropHover?: boolean
 	canDrop?: boolean
+	onContextMenu?: (location: ControlLocation, x: number, y: number) => void
+	copySource?: boolean
+	contextMenuOpen?: boolean
 }
 
 export const ButtonGridIconBase = memo(function ButtonGridIcon({

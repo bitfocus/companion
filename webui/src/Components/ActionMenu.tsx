@@ -24,6 +24,7 @@ interface MenuItemBaseProps {
 
 interface MenuFnItemProps extends MenuItemBaseProps {
 	readonly do: () => void
+	readonly disabled?: boolean
 	// note: MenuItemFn can set inNewTab to show the "external link" icon but needs to manage opening the window on its own.
 	readonly to?: never
 	readonly href?: never
@@ -141,6 +142,7 @@ function PopoverMenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
 			className={data.id ? `dropdown-item-${data.id}` : undefined}
 			title={data.tooltip}
 			onClick={handleClick}
+			disabled={'disabled' in data ? data.disabled : undefined}
 		>
 			<PopoverMenuItemContents data={data} />
 		</Popover.Item>
