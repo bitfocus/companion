@@ -78,6 +78,13 @@
 		@include dragging-style(0, 0.5);
 	}
 
+	.entity-row.entity-disabled {
+		.cell-name,
+		.form-label2 {
+			color: var(--cui-disabled);
+		}
+	}
+
 	.entitylist-dropzone {
 		background-color: white;
 

@@ -1,5 +1,6 @@
 import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
@@ -67,7 +68,11 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 
 	return (
 		<div className="flex flex-row align-items-center gap-2 hand">
-			<div onClick={doEdit} className="flex flex-column grow" style={{ minWidth: 0 }}>
+			<div
+				onClick={doEdit}
+				className={classNames('flex flex-column grow', { disabled: !isEnabled })}
+				style={{ minWidth: 0 }}
+			>
 				<b>{remoteConnection.displayName}</b>
 				<span className="auto-ellipsis" title={surfaceInstanceDisplayName}>
 					{surfaceInstanceDisplayName}

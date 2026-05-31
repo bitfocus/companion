@@ -148,7 +148,13 @@ const EventEditorRowContent = observer(function EventEditorRowContent({
 	const service = useControlEventService(serviceFactory, event)
 
 	return (
-		<div ref={rowRef} className={classNames('entity-row', { 'entitylist-dragging': isDragging })}>
+		<div
+			ref={rowRef}
+			className={classNames('entity-row', {
+				'entitylist-dragging': isDragging,
+				'entity-disabled': !event.enabled,
+			})}
+		>
 			<div ref={dragRef} className="entity-row-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</div>

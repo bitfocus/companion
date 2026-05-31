@@ -291,10 +291,15 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	)
 
 	const collectionDisabled = !(item.collectionEnabled ?? true)
+	const triggerOrCollectionDisabled = !item.enabled || collectionDisabled
 
 	return (
-		<div className={classnames('flex flex-row align-items-center gap-2 hand', { disabled: collectionDisabled })}>
-			<div className="flex flex-column grow" style={{ minWidth: 0 }} onClick={doEdit}>
+		<div className="flex flex-row align-items-center gap-2 hand">
+			<div
+				className={classnames('flex flex-column grow', { disabled: triggerOrCollectionDisabled })}
+				style={{ minWidth: 0 }}
+				onClick={doEdit}
+			>
 				<b>{item.name}</b>
 				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}

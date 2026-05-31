@@ -175,7 +175,13 @@ export const EntityTableRowContent = observer(function EntityTableRowContent({
 	dragRef,
 }: EntityTableRowContentProps): React.JSX.Element {
 	return (
-		<div ref={rowRef} className={classNames('entity-row', { 'entitylist-dragging': isDragging })}>
+		<div
+			ref={rowRef}
+			className={classNames('entity-row', {
+				'entitylist-dragging': isDragging,
+				'entity-disabled': !!entity.disabled,
+			})}
+		>
 			<div ref={dragRef} className="entity-row-reorder">
 				<FontAwesomeIcon icon={faSort} />
 			</div>
