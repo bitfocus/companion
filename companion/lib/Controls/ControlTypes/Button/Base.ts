@@ -31,6 +31,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	implements ControlWithEntities, ControlWithOptions, ControlWithPushed
 {
 	readonly supportsEntities = true
+	readonly supportsConvert = false
 	readonly supportsOptions = true
 	readonly supportsPushed = true
 

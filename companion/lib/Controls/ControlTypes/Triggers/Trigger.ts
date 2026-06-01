@@ -60,6 +60,7 @@ export class ControlTrigger
 	readonly type = 'trigger'
 
 	readonly supportsActions = true
+	readonly supportsConvert = false
 	readonly supportsEvents = true
 	readonly supportsEntities = true
 	readonly supportsStyle = false

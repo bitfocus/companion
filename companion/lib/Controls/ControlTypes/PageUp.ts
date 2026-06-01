@@ -1,4 +1,4 @@
-import type { PageUpButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel, PageUpButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -147,5 +147,14 @@ export class ControlButtonPageUp extends ControlButtonPage<PageUpButtonModel> {
 		return {
 			type: this.type,
 		}
+	}
+
+	convertControl(): LayeredButtonModel {
+		return this.buildConvertedControl(pageUpElements, {
+			definitionId: 'inc_page',
+			options: {
+				surfaceId: exprVal('self'),
+			},
+		})
 	}
 }

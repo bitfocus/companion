@@ -1,4 +1,5 @@
 import type { JsonObject, JsonValue } from 'type-fest'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -15,7 +16,8 @@ export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithEvents | ControlWithoutEvents) &
 	(ControlWithActionSets | ControlWithoutActionSets) &
 	(ControlWithOptions | ControlWithoutOptions) &
-	(ControlWithPushed | ControlWithoutPushed)
+	(ControlWithPushed | ControlWithoutPushed) &
+	(ControlWithConvert | ControlWithoutConvert)
 
 export interface ControlWithoutLayeredStyle extends ControlBase<any> {
 	readonly supportsLayeredStyle: false
@@ -227,4 +229,19 @@ export interface ControlWithPushed extends ControlBase<any> {
 
 export interface ControlWithoutPushed extends ControlBase<any> {
 	readonly supportsPushed: false
+}
+
+export interface ControlWithConvert extends ControlBase<any> {
+	readonly supportsConvert: true
+
+	/**
+	 * Convert this control to another type of control.
+	 * This is intended to convert some 'automatic' controls, to a 'manual' editable form
+	 * @returns The new model for the converted control
+	 */
+	convertControl(): SomeButtonModel
+}
+
+export interface ControlWithoutConvert extends ControlBase<any> {
+	readonly supportsConvert: false
 }

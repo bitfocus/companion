@@ -1,9 +1,14 @@
+import { nanoid } from 'nanoid'
+import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../Graphics/ElementConversionCache.js'
 import { ControlBase } from '../ControlBase.js'
 import type {
+	ControlWithConvert,
 	ControlWithoutActions,
 	ControlWithoutActionSets,
 	ControlWithoutEvents,
@@ -32,6 +37,7 @@ const emptyMap: ReadonlyMap<string, never> = new Map<string, never>()
 export abstract class ControlButtonPage<TJson>
 	extends ControlBase<TJson>
 	implements
+		ControlWithConvert,
 		ControlWithoutActions,
 		ControlWithoutLayeredStyle,
 		ControlWithoutEvents,
@@ -40,6 +46,7 @@ export abstract class ControlButtonPage<TJson>
 		ControlWithoutPushed
 {
 	readonly supportsActions = false
+	readonly supportsConvert = true
 	readonly supportsEntities = false
 	readonly supportsLayeredStyle = false
 	readonly supportsEvents = false
@@ -160,5 +167,41 @@ export abstract class ControlButtonPage<TJson>
 
 		this.logger.silly('variable changed in button ' + this.controlId)
 		this.triggerRedraw()
+	}
+
+	abstract convertControl(): SomeButtonModel
+
+	// in ControlButtonPage
+	protected buildConvertedControl(
+		elements: SomeButtonGraphicsElement[],
+		action: { definitionId: string; options: ExpressionableOptionsObject }
+	): LayeredButtonModel {
+		return {
+			type: 'button-layered',
+			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			style: { layers: structuredClone(elements) },
+			feedbacks: [],
+			steps: {
+				'0': {
+					action_sets: {
+						down: [
+							{
+								type: EntityModelType.Action,
+								id: nanoid(),
+								definitionId: action.definitionId,
+								connectionId: 'internal',
+								options: action.options,
+								upgradeIndex: undefined,
+							},
+						],
+						up: undefined,
+						rotate_left: undefined,
+						rotate_right: undefined,
+					},
+					options: { runWhileHeld: [] },
+				},
+			},
+			localVariables: [],
+		}
 	}
 }

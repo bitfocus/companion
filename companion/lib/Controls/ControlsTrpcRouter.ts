@@ -42,6 +42,23 @@ export function createControlsTrpcRouter(
 				return controlsController.importControl(input.location, model)
 			}),
 
+		convertControl: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+				})
+			)
+			.mutation(async ({ input }) => {
+				const controlId = pageStore.getControlIdAt(input.location)
+				if (!controlId) return null
+
+				const control = controlsMap.get(controlId)
+				if (!control || !control.supportsConvert) return null
+
+				const newModel = control.convertControl()
+				return controlsController.importControl(input.location, newModel)
+			}),
+
 		resetControl: publicProcedure
 			.input(
 				z.object({
