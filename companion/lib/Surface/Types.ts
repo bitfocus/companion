@@ -9,7 +9,7 @@ import type {
 	SurfaceGroupConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -18,11 +18,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { EmulatorUpdateEvents } from './IP/ElgatoEmulator.js'
 
-export type SurfaceExecuteExpressionFn = (
-	str: string,
-	surfaceId: string,
-	injectedVariableValues?: VariableValues
-) => ExecuteExpressionResult
+export type SurfaceExecuteExpressionFn = (str: string, surfaceId: string) => ExecuteExpressionResult
 
 export interface SurfacePanelInfo {
 	surfaceId: string

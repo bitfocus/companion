@@ -1414,15 +1414,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.triggerUpdateDevicesList()
 	}
 
-	surfaceExecuteExpression(
-		str: string,
-		surfaceId: string,
-		injectedVariableValues: VariableValues | undefined
-	): ExecuteExpressionResult {
-		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
-			...injectedVariableValues,
-			...this.#getInjectedVariablesForSurfaceId(surfaceId),
-		})
+	surfaceExecuteExpression(str: string, surfaceId: string): ExecuteExpressionResult {
+		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(
+			null,
+			null,
+			this.#getInjectedVariablesForSurfaceId(surfaceId)
+		)
 
 		return parser.executeExpression(str, undefined)
 	}
