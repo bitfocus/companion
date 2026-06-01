@@ -321,12 +321,11 @@ export function sendOverIpc(data: any): void {
 }
 
 /**
- * Whether the application is packaged with webpack
+ * Whether the application is running as a bundled package
  */
 export function isPackaged(): boolean {
-	// Dual check: works under webpack (legacy) and under esbuild (process.env.COMPANION_BUNDLED
-	// is replaced with '"1"' at compile time via esbuild define)
-	return typeof __webpack_require__ === 'function' || process.env.COMPANION_BUNDLED === '1'
+	// process.env.COMPANION_BUNDLED is replaced with '"1"' at compile time via esbuild define
+	return process.env.COMPANION_BUNDLED === '1'
 }
 
 /**

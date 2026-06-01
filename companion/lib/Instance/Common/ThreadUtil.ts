@@ -8,8 +8,5 @@ const ensureFileUrl = (url: string) => {
 }
 
 export async function importModuleFromPath(modulePath: string): Promise<any> {
-	// Future: Once webpacked, the dynamic import() doesn't work, so fallback to require()
-	return typeof __non_webpack_require__ === 'function'
-		? __non_webpack_require__(modulePath)
-		: await import(ensureFileUrl(modulePath))
+	return import(ensureFileUrl(modulePath))
 }

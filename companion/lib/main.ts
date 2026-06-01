@@ -1,8 +1,5 @@
 /* eslint-disable n/no-process-exit */
 
-// Setup some fixes before loading any imports
-// prettier-ignore
-import './Resources/FixImports.js';
 // Setup segfault handler
 // prettier-ignore
 import '@julusian/segfault-raub';
