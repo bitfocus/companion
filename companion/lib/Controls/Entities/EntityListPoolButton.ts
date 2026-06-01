@@ -10,7 +10,7 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
@@ -47,11 +47,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	readonly #steps = new Map<string, ControlEntityListActionStep>()
 
-	readonly #executeExpressionInControl: (
-		expression: string,
-		requiredType?: string,
-		injectedVariableValues?: VariableValues
-	) => ExecuteExpressionResult
+	readonly #executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult
 	readonly #sendRuntimePropsChange: () => void
 
 	/**
@@ -76,11 +72,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	constructor(
 		props: ControlEntityListPoolProps,
 		sendRuntimePropsChange: () => void,
-		executeExpressionInControl: (
-			expression: string,
-			requiredType?: string,
-			injectedVariableValues?: VariableValues
-		) => ExecuteExpressionResult,
+		executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult,
 		isLayeredButton: boolean
 	) {
 		super(props, isLayeredButton)

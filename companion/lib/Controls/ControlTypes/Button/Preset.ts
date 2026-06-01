@@ -131,12 +131,12 @@ export class ControlButtonPreset
 				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
-			(expression, requiredType, injectedVariableValues) =>
+			(expression, requiredType) =>
 				deps.variableValues
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
 						null, // This doesn't support local variables
-						injectedVariableValues ?? null
+						null
 					)
 					.executeExpression(expression, requiredType),
 			false
