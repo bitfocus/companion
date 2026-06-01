@@ -34,7 +34,7 @@ import LogController from '../Log/Controller.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
 
 // Everybody stand back. I know regular expressions. - xckd #208 /ck/kc/
-const VARIABLE_REGEX = /\$\(([^:$)]+):([^)$]+)\)/
+const VARIABLE_REGEX = /\$\((([^:$)]+):([^)$]+))\)/
 // Like VARIABLE_REGEX but allows $ in the variable name part, to support nested variables
 const REPLACE_VARIABLE_REGEX = /\$\(([^:$)]+):([^)]+)\)/
 
@@ -138,9 +138,10 @@ export function parseVariablesInString(
 			break
 		}
 
-		const fullId = matches[0]
-		let connectionLabel = matches[1]
-		let variableId = matches[2]
+		const fullReference = matches[0]
+		const fullId = matches[1]
+		let connectionLabel = matches[2]
+		let variableId = matches[3]
 
 		if (connectionLabel === 'internal' && variableId.substring(0, 7) === 'custom_') {
 			connectionLabel = 'custom'
@@ -185,7 +186,7 @@ export function parseVariablesInString(
 
 		// Pass a function, to avoid special interpreting of `$$` and other sequences
 		const cachedValueConst = stringifyVariableValue(value) ?? ''
-		string = string.replace(fullId, () => cachedValueConst)
+		string = string.replace(fullReference, () => cachedValueConst)
 	}
 
 	return {
@@ -212,7 +213,7 @@ export function replaceAllVariables(string: string, newLabel: string, preserveLa
 			// ensure we don't try and match the same thing again
 			fromIndex = matches.index + fromIndex + 1
 
-			if (matches[2] !== undefined && !preserveLabels.has(matches[1])) {
+			if (!preserveLabels.has(matches[1])) {
 				string = string.replace(matches[0], `$(${newLabel}:${matches[2]})`)
 			}
 		}
@@ -222,7 +223,11 @@ export function replaceAllVariables(string: string, newLabel: string, preserveLa
 }
 
 /**
- * A view of a simple cache for variable values, allowing for lazy evaluation and writing back of lazily computed values
+ * A view of a simple cache for variable values, allowing for lazy evaluation
+ * and writing back of lazily computed values.
+ *
+ * Variable ids in this interface have type `${connectionLabel}:${variableId}`,
+ * e.g. `"custom:foo"`.  They are not enclosed in `$()`.
  */
 export interface VariableValueCache {
 	has(id: string): boolean
@@ -250,7 +255,7 @@ export function executeExpression(
 		const getVariableValue = (props: GetVariableValueProps): VariableValue | undefined => {
 			referencedVariableIds.add(props.variableId)
 
-			const fullId = `$(${props.variableId})`
+			const fullId = props.variableId
 			// First check for an injected value
 			let value: VariableValue | undefined
 			if (cachedVariableValues.has(fullId)) {
@@ -280,9 +285,9 @@ export function executeExpression(
 				const valueMatch = value.match(VARIABLE_REGEX)
 				if (valueMatch && valueMatch[0] === value) {
 					return getVariableValue({
-						variableId: `${valueMatch[1]}:${valueMatch[2]}`,
-						label: valueMatch[1],
-						name: valueMatch[2],
+						variableId: valueMatch[1],
+						label: valueMatch[2],
+						name: valueMatch[3],
 					})
 				} else {
 					// Wrap the cache, to inject $RE for this variable to avoid unbound recursion

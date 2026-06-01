@@ -158,4 +158,41 @@ describe('variable parsing', () => {
 			variableIds: new Set(['abc:third', 'abc:nope']),
 		})
 	})
+
+	test('internal:custom_* -> custom:* mapping and rewriting', () => {
+		const variables = {
+			custom: {
+				textual: 'hello',
+				numeric: 42,
+				bool: false,
+			},
+		}
+
+		expect(parseVariablesInString('$(internal:custom_textual)', variables, new Map(), VARIABLE_UNKNOWN_VALUE)).toEqual({
+			text: 'hello',
+			variableIds: new Set(['custom:textual']),
+		})
+		expect(
+			parseVariablesInString(
+				'The answer to the Ultimate Question of Life, the Universe and Everything: $(internal:custom_numeric)',
+				variables,
+				new Map(),
+				VARIABLE_UNKNOWN_VALUE
+			)
+		).toEqual({
+			text: 'The answer to the Ultimate Question of Life, the Universe and Everything: 42',
+			variableIds: new Set(['custom:numeric']),
+		})
+		expect(
+			parseVariablesInString(
+				'$(internal:custom_bool): now place variable ref at start',
+				variables,
+				new Map(),
+				VARIABLE_UNKNOWN_VALUE
+			)
+		).toEqual({
+			text: 'false: now place variable ref at start',
+			variableIds: new Set(['custom:bool']),
+		})
+	})
 })

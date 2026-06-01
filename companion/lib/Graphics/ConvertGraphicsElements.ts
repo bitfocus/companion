@@ -432,7 +432,7 @@ function parseCompositeElementChildOptions(
 
 	for (const option of elementDefinition.options) {
 		const optionKey: CompositeElementOptionKey = `opt:${option.id}`
-		const overrideKey = `$(options:${option.id})`
+		const overrideKey = `options:${option.id}`
 
 		switch (option.type) {
 			case 'checkbox':

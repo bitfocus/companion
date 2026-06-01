@@ -1434,13 +1434,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const pageNumber = this.devicePageGet(surfaceId)
 
 		return {
-			'$(this:surface_id)': surfaceId,
+			'this:surface_id': surfaceId,
 
 			// Reactivity is triggered manually
-			'$(this:page)': pageNumber,
+			'this:page': pageNumber,
 
 			// Reactivity happens for these because of references to the inner variables
-			'$(this:page_name)': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+			'this:page_name': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
 		}
 	}
 

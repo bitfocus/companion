@@ -71,11 +71,12 @@ const ThisLocationVariables: Record<
 const ThisLocationVariablesSet: ReadonlySet<string> = new Set(Object.keys(ThisLocationVariables))
 
 export function InjectedVariablesForLocation(controlLocation: ControlLocation | null | undefined): VariablesCache {
-	const injectedVariables: VariablesCache = new Map()
-	for (const [variableId, computeVariable] of Object.entries(ThisLocationVariables)) {
-		injectedVariables.set(`$(${variableId})`, computeVariable(controlLocation))
-	}
-	return injectedVariables
+	return new Map(
+		Object.entries(ThisLocationVariables).map(([variableId, computeVariable]) => [
+			variableId,
+			computeVariable(controlLocation),
+		])
+	)
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
