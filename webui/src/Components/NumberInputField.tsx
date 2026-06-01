@@ -96,6 +96,7 @@ export function NumberInputField({
 			step={step ?? 'any'}
 			title={tooltip}
 			className="number-field"
+			format={{ useGrouping: false }}
 		>
 			<NumberField.Group className="number-field-group">
 				<NumberField.Input className={classNames('number-field-input', { 'invalid-value': valueIsInvalid })} />
