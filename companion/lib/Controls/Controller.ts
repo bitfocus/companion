@@ -679,10 +679,7 @@ export class ControlsController {
 		}
 	}
 
-	createVariablesAndExpressionParser(
-		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
-	): VariablesAndExpressionParser {
-		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues)
+	createVariablesAndExpressionParser(controlId: string | null | undefined): VariablesAndExpressionParser {
+		return this.#store.createVariablesAndExpressionParser(controlId, null)
 	}
 }

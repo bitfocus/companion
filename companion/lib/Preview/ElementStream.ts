@@ -251,7 +251,7 @@ export class PreviewElementStream {
 			}
 		}
 
-		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId)
 
 		const controlLocation = this.#pageStore.getLocationOfControlId(controlId)
 		const currentLocationStr = controlLocation ? formatLocation(controlLocation) : null
