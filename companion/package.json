@@ -9,7 +9,9 @@
     "dev": "run dev:inner --admin-address 127.0.0.1 --log-level debug",
     "dev:inner": "run -TB tsx --env-file-if-exists=../.env ../tools/dev.mts --extra-module-path=../module-local-dev",
     "dev:debug": "run dev:inner --admin-address 127.0.0.1 --log-level silly",
-    "build": "tsc && webpack"
+    "build": "tsc && webpack && run build:esbuild",
+    "build:esbuild": "run -TB tsx esbuild.config.mts",
+    "build:typecheck": "tsc --noEmit"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
