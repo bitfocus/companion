@@ -24,6 +24,7 @@ import { Route as AppRouteImport } from './routes/_app.tsx'
 import { Route as AppIndexRouteImport } from './routes/_app/index.tsx'
 import { Route as StandaloneEmulatorRouteImport } from './routes/_standalone/emulator.tsx'
 import { Route as AppTriggersRouteImport } from './routes/_app/triggers.tsx'
+import { Route as AppTimelineRouteImport } from './routes/_app/timeline.tsx'
 import { Route as AppSurfacesRouteImport } from './routes/_app/surfaces.tsx'
 import { Route as AppModulesRouteImport } from './routes/_app/modules.tsx'
 import { Route as AppLogRouteImport } from './routes/_app/log.tsx'
@@ -151,6 +152,11 @@ const StandaloneEmulatorRoute = StandaloneEmulatorRouteImport.update({
 const AppTriggersRoute = AppTriggersRouteImport.update({
   id: '/triggers',
   path: '/triggers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTimelineRoute = AppTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSurfacesRoute = AppSurfacesRouteImport.update({
@@ -449,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/log': typeof AppLogRoute
   '/modules': typeof AppModulesRouteWithChildren
   '/surfaces': typeof AppSurfacesRouteWithChildren
+  '/timeline': typeof AppTimelineRoute
   '/triggers': typeof AppTriggersRouteWithChildren
   '/emulator': typeof StandaloneEmulatorRouteWithChildren
   '/tablet': typeof StandaloneTabletDotlazyRoute
@@ -510,6 +517,7 @@ export interface FileRoutesByTo {
   '/cloud': typeof AppCloudRoute
   '/import-export': typeof AppImportExportRoute
   '/log': typeof AppLogRoute
+  '/timeline': typeof AppTimelineRoute
   '/tablet': typeof StandaloneTabletDotlazyRoute
   '/': typeof AppIndexRoute
   '/buttons/$page': typeof AppButtonsPageRoute
@@ -573,6 +581,7 @@ export interface FileRoutesById {
   '/_app/log': typeof AppLogRoute
   '/_app/modules': typeof AppModulesRouteWithChildren
   '/_app/surfaces': typeof AppSurfacesRouteWithChildren
+  '/_app/timeline': typeof AppTimelineRoute
   '/_app/triggers': typeof AppTriggersRouteWithChildren
   '/_standalone/emulator': typeof StandaloneEmulatorRouteWithChildren
   '/_standalone/tablet': typeof StandaloneTabletDotlazyRoute
@@ -642,6 +651,7 @@ export interface FileRouteTypes {
     | '/log'
     | '/modules'
     | '/surfaces'
+    | '/timeline'
     | '/triggers'
     | '/emulator'
     | '/tablet'
@@ -703,6 +713,7 @@ export interface FileRouteTypes {
     | '/cloud'
     | '/import-export'
     | '/log'
+    | '/timeline'
     | '/tablet'
     | '/'
     | '/buttons/$page'
@@ -765,6 +776,7 @@ export interface FileRouteTypes {
     | '/_app/log'
     | '/_app/modules'
     | '/_app/surfaces'
+    | '/_app/timeline'
     | '/_app/triggers'
     | '/_standalone/emulator'
     | '/_standalone/tablet'
@@ -928,6 +940,13 @@ declare module '@tanstack/react-router' {
       path: '/triggers'
       fullPath: '/triggers'
       preLoaderRoute: typeof AppTriggersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/timeline': {
+      id: '/_app/timeline'
+      path: '/timeline'
+      fullPath: '/timeline'
+      preLoaderRoute: typeof AppTimelineRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/surfaces': {
@@ -1454,6 +1473,7 @@ interface AppRouteChildren {
   AppLogRoute: typeof AppLogRoute
   AppModulesRoute: typeof AppModulesRouteWithChildren
   AppSurfacesRoute: typeof AppSurfacesRouteWithChildren
+  AppTimelineRoute: typeof AppTimelineRoute
   AppTriggersRoute: typeof AppTriggersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
   AppSettingsAdvancedRoute: typeof AppSettingsAdvancedRoute
@@ -1480,6 +1500,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLogRoute: AppLogRoute,
   AppModulesRoute: AppModulesRouteWithChildren,
   AppSurfacesRoute: AppSurfacesRouteWithChildren,
+  AppTimelineRoute: AppTimelineRoute,
   AppTriggersRoute: AppTriggersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
   AppSettingsAdvancedRoute: AppSettingsAdvancedRoute,

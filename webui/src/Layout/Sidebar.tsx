@@ -2,6 +2,7 @@ import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icon
 import {
 	faArrowsDownToLine,
 	faArrowsUpToLine,
+	faChartGantt,
 	faCheck,
 	faClipboardList,
 	faClock,
@@ -409,6 +410,7 @@ export const MySidebar = memo(function MySidebar() {
 						path="/connections"
 					/>
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
+					<SidebarMenuItem name="Timeline" icon={faChartGantt} path="/timeline" />
 					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 					<SidebarMenuItemGroup
 						name="Surfaces"

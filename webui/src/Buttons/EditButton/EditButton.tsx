@@ -19,6 +19,7 @@ import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
+import { OpenInTimelineButton } from './OpenInTimelineButton.js'
 import { SelectButtonTypeDropdown } from './SelectButtonTypeDropdown.js'
 
 interface EditButtonProps {
@@ -111,7 +112,10 @@ const EditButtonContent = observer(function EditButton({
 								<ConvertToNormalButton location={location} />
 							)}
 							{config.type === 'button-layered' && (
-								<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+								<>
+									<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+									<OpenInTimelineButton location={location} />
+								</>
 							)}
 						</MyErrorBoundary>
 					</div>
