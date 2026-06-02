@@ -96,7 +96,7 @@ export class CloudRegion {
 	/**
 	 * Process a <code>getBanks</code> call from a remote client
 	 */
-	async #clientGetBanks(): Promise<object> {
+	async #clientGetBanks(): Promise<object[]> {
 		this.#logger.silly('Client requested getBanks()')
 		return this.#cloud.getBanks()
 	}
@@ -436,7 +436,7 @@ export class CloudRegion {
 		if (!this.#socket) throw new Error('No socket')
 		await this.#socket.transmitPublish('companion-banks:' + this.#cloud.state.uuid, {
 			type: 'full',
-			data: this.#cloud.getBanks(),
+			data: await this.#cloud.getBanks(),
 		})
 	}
 

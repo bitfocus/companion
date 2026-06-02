@@ -332,7 +332,7 @@ export function isPackaged(): boolean {
  * @param fn Function to compute the value
  * @returns Function that returns the computed value, only computed once
  */
-export function lazy<T>(fn: () => T): () => T | undefined {
+export function lazy<T>(fn: () => T): () => T {
 	let value: T | undefined
 	let valueSet = false
 
@@ -341,6 +341,6 @@ export function lazy<T>(fn: () => T): () => T | undefined {
 			value = fn()
 			valueSet = true
 		}
-		return value
+		return value as T
 	}
 }

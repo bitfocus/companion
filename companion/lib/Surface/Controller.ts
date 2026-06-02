@@ -615,7 +615,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				const changes = toIterable(self.#updateEvents, 'emulatorImages', signal)
 
-				yield { images: surface.panel.latestImages(), clearCache: true }
+				yield { images: await surface.panel.latestImages(), clearCache: true }
 
 				for await (const [changeId, changeData, clearCache] of changes) {
 					if (changeId === input.id) yield { images: changeData, clearCache }

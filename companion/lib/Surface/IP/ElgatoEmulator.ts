@@ -15,7 +15,9 @@ import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type { ImageResult } from '../../Graphics/ImageResult.js'
 import LogController from '../../Log/Controller.js'
+import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
@@ -88,9 +90,11 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 
 	#lastLockedState: EmulatorLockedState | false = false
 
-	readonly #pendingBufferUpdates = new Map<string, [number, number]>()
+	readonly #pendingBufferUpdates = new Map<string, [x: number, y: number, buffer: string | false]>()
 
-	#imageCache = new Map<string, string>()
+	#imageCache = new Map<string, ImageResult>()
+
+	readonly #drawQueue: ImageWriteQueue<string, [DrawButtonItem]>
 
 	readonly info: SurfacePanelInfo
 
@@ -98,12 +102,8 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		() => {
 			if (this.#pendingBufferUpdates.size > 0) {
 				const newImages: EmulatorImage[] = []
-				for (const [x, y] of this.#pendingBufferUpdates.values()) {
-					newImages.push({
-						x,
-						y,
-						buffer: this.#imageCache.get(getCacheKey(x, y)) ?? false,
-					})
+				for (const [x, y, buffer] of this.#pendingBufferUpdates.values()) {
+					newImages.push({ x, y, buffer })
 				}
 
 				this.#pendingBufferUpdates.clear()
@@ -136,6 +136,19 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		}
 
 		this.#logger.debug('Adding Elgato Streamdeck Emulator')
+
+		this.#drawQueue = new ImageWriteQueue(this.#logger, async (key: string, item: DrawButtonItem) => {
+			if (this.#events.listenerCount('emulatorImages') === 0) return
+
+			const dataUrl = await item.defaultRender.drawDataUrl()
+			if (this.#imageCache.get(key) !== item.defaultRender) return // Discard render if the cache has already moved on
+			if (!dataUrl) {
+				this.#logger.verbose('draw call had no data-url')
+				return
+			}
+			this.#pendingBufferUpdates.set(key, [item.x, item.y, dataUrl])
+			this.#emitChanged()
+		})
 	}
 
 	get gridSize(): GridSize {
@@ -149,15 +162,17 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		return this.#lastSentConfigJson
 	}
 
-	latestImages(): EmulatorImage[] {
+	async latestImages(): Promise<EmulatorImage[]> {
 		const images: EmulatorImage[] = []
 
 		for (let y = 0; y < this.gridSize.rows; y++) {
 			for (let x = 0; x < this.gridSize.columns; x++) {
+				const key = getCacheKey(x, y)
+				const render = this.#imageCache.get(key)
 				images.push({
 					x,
 					y,
-					buffer: this.#imageCache.get(getCacheKey(x, y)) ?? false,
+					buffer: render ? await render.drawDataUrl() : false,
 				})
 			}
 		}
@@ -189,10 +204,12 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		if (config.emulator_columns !== oldSize.columns || config.emulator_rows !== oldSize.rows) {
 			// Clear the cache to ensure no bleed
 			this.#imageCache.clear()
+			this.#pendingBufferUpdates.clear()
 
+			// Tell the client of empty images for the old size
 			for (let y = 0; y < oldSize.rows; y++) {
 				for (let x = 0; x < oldSize.columns; x++) {
-					this.#trackChanged(x, y)
+					this.#pendingBufferUpdates.set(`${x}/${y}`, [x, y, false])
 				}
 			}
 
@@ -229,23 +246,8 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		const size = this.gridSize
 		if (item.x < 0 || item.y < 0 || item.x >= size.columns || item.y >= size.rows) return
 
-		const dataUrl = item.defaultRender.asDataUrl
-		if (!dataUrl) {
-			this.#logger.verbose('draw call had no data-url')
-			return
-		}
-
-		this.#imageCache.set(getCacheKey(item.x, item.y), dataUrl)
-
-		this.#trackChanged(item.x, item.y)
-		this.#emitChanged()
-	}
-
-	/**
-	 * Track the pending changes
-	 */
-	#trackChanged(x: number, y: number): void {
-		this.#pendingBufferUpdates.set(`${x}/${y}`, [x, y])
+		this.#imageCache.set(getCacheKey(item.x, item.y), item.defaultRender)
+		this.#drawQueue.queue(getCacheKey(item.x, item.y), item)
 	}
 
 	clearDeck(): void {
@@ -253,6 +255,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 
 		// clear all images
 		this.#imageCache.clear()
+		this.#pendingBufferUpdates.clear()
 
 		if (this.#events.listenerCount('emulatorImages') > 0) {
 			this.#events.emit('emulatorImages', this.#emulatorId, [], true)

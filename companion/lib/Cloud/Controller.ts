@@ -3,7 +3,7 @@ import isEqual from 'fast-deep-equal'
 import nodeMachineId from 'node-machine-id'
 import { v4 } from 'uuid'
 import z from 'zod'
-import { xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { formatLocation, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { CloudRegionState } from '@companion-app/shared/Model/Cloud.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -16,6 +16,7 @@ import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
+import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { delay } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { CloudRegion, RegionInfo } from './Region.js'
@@ -104,6 +105,8 @@ export class CloudController {
 	 * The initialized region handlers
 	 */
 	#regionInstances: { [region: string]: CloudRegion } = {}
+
+	readonly #updateBankQueue: ImageWriteQueue<string, [ControlLocation, ImageResult]>
 	/**
 	 * The state object for the UI
 	 */
@@ -139,6 +142,31 @@ export class CloudController {
 		this.pageStore = pageStore
 
 		this.#uiEvents.setMaxListeners(0)
+
+		this.#updateBankQueue = new ImageWriteQueue(
+			this.#logger,
+			async (_locationId: string, location: ControlLocation, render: ImageResult) => {
+				if (!this.state.cloudActive) return
+
+				const bank = xyToOldBankIndex(location.column, location.row)
+				const updateId = v4()
+				const png64 = await render.drawDataUrl()
+				for (const region of Object.values(this.#regionInstances)) {
+					region.socketTransmit('companion-banks:' + this.state.uuid, {
+						updateId,
+						type: 'single',
+						location,
+						p: this.protocolVersion,
+						page: location.pageNumber, // backwards compatibility, remove in release
+						bank, // backwards compatibility, remove in release
+						data: {
+							// Provide the default render as the best we can do
+							png64,
+						},
+					})
+				}
+			}
+		)
 
 		this.data = this.#dbTable.getOrDefault('auth', {
 			token: '',
@@ -180,8 +208,6 @@ export class CloudController {
 		setInterval(this.#timerTick.bind(this), 1000)
 
 		this.#graphics.on('button_drawn', this.#updateBank.bind(this))
-
-		this.#updateAllBanks()
 
 		this.pageStore.on('pageDataChanged', this.#handlePageNameUpdate.bind(this))
 	}
@@ -303,8 +329,8 @@ export class CloudController {
 	 * Get the current bank database
 	 * @returns the bank database
 	 */
-	getBanks(): object[] {
-		const retval = []
+	async getBanks(): Promise<object[]> {
+		const items: Array<Promise<object>> = []
 
 		for (const controlId of this.controls.getAllControls().keys()) {
 			const location = this.pageStore.getLocationOfControlId(controlId)
@@ -321,22 +347,23 @@ export class CloudController {
 			}
 
 			const render = this.#graphics.getCachedRender(location)
-
 			const bankIndex = xyToOldBankIndex(location.column, location.row)
 
-			retval.push({
-				location,
-				bank: bankIndex, // backwards compatibility, TODO: remove in release
-				page: location.pageNumber, // backwards compatibility, remove in release
-				p: this.protocolVersion,
-				data: {
-					// Provide the default render as the best we can do
-					png64: render?.asDataUrl,
-				},
-			})
+			items.push(
+				(render ? render.drawDataUrl() : Promise.resolve(undefined)).then((png64) => ({
+					location,
+					bank: bankIndex, // backwards compatibility, TODO: remove in release
+					page: location.pageNumber, // backwards compatibility, remove in release
+					p: this.protocolVersion,
+					data: {
+						// Provide the default render as the best we can do
+						png64,
+					},
+				}))
+			)
 		}
 
-		return retval
+		return Promise.all(items)
 	}
 
 	/**
@@ -711,46 +738,12 @@ export class CloudController {
 	}
 
 	/**
-	 * Get copies of all the current bank styles
-	 */
-	#updateAllBanks(): void {
-		const updateId = v4()
-		const data = this.getBanks()
-		for (let region in this.#regionInstances) {
-			if (!!this.#regionInstances[region]?.socketTransmit) {
-				this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
-					updateId,
-					type: 'full',
-					data,
-				})
-			}
-		}
-	}
-
-	/**
 	 * Store and transmit an updated bank style
 	 * @param location - the location of the control
 	 * @param render
 	 */
 	#updateBank(location: ControlLocation, render: ImageResult): void {
-		const bank = xyToOldBankIndex(location.column, location.row)
-		const updateId = v4()
-		for (let region in this.#regionInstances) {
-			if (!!this.#regionInstances[region]?.socketTransmit) {
-				this.#regionInstances[region].socketTransmit('companion-banks:' + this.state.uuid, {
-					updateId,
-					type: 'single',
-					location,
-					p: this.protocolVersion,
-					page: location.pageNumber, // backwards compatibility, remove in release
-					bank, // backwards compatibility, remove in release
-					data: {
-						// Provide the default render as the best we can do
-						png64: render.asDataUrl,
-					},
-				})
-			}
-		}
+		this.#updateBankQueue.queue(formatLocation(location), location, render)
 	}
 }
 
