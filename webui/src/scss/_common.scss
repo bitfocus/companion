@@ -322,6 +322,7 @@ svg.pad-left {
 
 	.expression-field {
 		flex-grow: 1;
+		min-width: 0;
 
 		align-self: center;
 	}
