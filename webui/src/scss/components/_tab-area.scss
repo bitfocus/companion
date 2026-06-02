@@ -12,9 +12,16 @@
 		overflow-x: auto;
 		overflow-y: hidden;
 		scrollbar-width: thin;
+		scrollbar-color: #ccc transparent;
 		flex-shrink: 0;
 		border-bottom: 1px solid #bbb;
 		background: transparent;
+
+		// JS sets this class when scrollWidth > clientWidth.
+		// overflow:scroll keeps the scrollbar in the render tree so Safari shows it immediately.
+		&.tab-bar--overflowing {
+			overflow-x: scroll;
+		}
 
 		&::-webkit-scrollbar {
 			height: 4px;
