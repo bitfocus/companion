@@ -385,9 +385,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			bank_style: {
 				feedbackType: FeedbackEntitySubType.Advanced,
-				label: 'Button: Use another buttons style (Deprecated)',
+				label: 'Button: Use another buttons legacy style (Deprecated)',
 				description:
-					'Imitate the legacy style of another button. This is not capable of preserving the full element stack.',
+					'Since 5.0 this is no longer capable of replicating the full style of a button. Instead you should add a reference element in the Style tab.',
 				showButtonPreview: true,
 				feedbackStyle: undefined,
 				showInvert: false,
