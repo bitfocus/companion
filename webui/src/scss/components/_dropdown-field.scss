@@ -271,6 +271,14 @@
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
+
+		// Hide the popup for the first animation frame so the virtualizer can measure
+		// actual item heights before the popup becomes visible. Without this, the popup
+		// briefly appears at the estimated height then snaps to the measured height.
+		// base-ui sets data-starting-style for exactly one RAF after opening.
+		&[data-starting-style] {
+			opacity: 0;
+		}
 	}
 
 	.dropdown-field-list {

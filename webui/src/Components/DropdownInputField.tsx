@@ -110,7 +110,14 @@ export const DropdownInputField = observer(function DropdownInputField({
 
 	const onInputValueChange = useCallback(
 		(v: string, eventDetails: Combobox.Root.ChangeEventDetails) => {
-			setInputValue(v)
+			// In editing mode, only update the filter state when the user is actually typing.
+			// base-ui fires this with reason 'none' or 'item-press' on popup close/open and
+			// item selection, passing the itemToStringLabel result (the display label). Storing
+			// that label in inputValue causes the fuzzy filter to activate on the next open
+			// because the label doesn't match String(localDisplayValue) (which is the raw id).
+			if (!isEditingMode || eventDetails.reason === 'input-change') {
+				setInputValue(v)
+			}
 			// Only mirror into the controlled value when the user is actually typing.
 			// When base-ui resets the input (e.g. popup close, item selection), the reason
 			// is 'none' or 'item-press' — in those cases we must NOT overwrite the raw id
@@ -119,7 +126,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 				runInAction(() => controlledInput.set(v))
 			}
 		},
-		[controlledInput]
+		[controlledInput, isEditingMode]
 	)
 
 	// On focus in editing mode: pre-fill the controlled input value with the raw id so it can be
