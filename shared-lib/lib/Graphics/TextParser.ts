@@ -50,18 +50,20 @@ export const MIN_FONT_SIZE_FRACTION = 0.1
 export function resolveFontSizes(w: number, h: number, fontsize: number | 'auto', charCount: number): number[] {
 	let fontheight = Number(fontsize)
 	if (isNaN(fontheight)) {
-		// narrow the sizes to check by guessing how many chars will fit at a size
-		const area = (w * h) / 5000
+		// Estimate how many characters fit per font-height-squared of available area.
+		// Capacity at fraction s ≈ (w/h) / (s² × char_aspect), so threshold comparisons
+		// should use w/h — purely relative, resolution-independent.
+		const relativeWidth = w / h
 
 		// Sizes expressed as fractions of canvas height
 		let baseSizes: number[]
-		if (charCount < 7 * area) {
+		if (charCount < 7 * relativeWidth) {
 			baseSizes = [0.83, 0.71, 0.61, 0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else if (charCount < 30 * area) {
+		} else if (charCount < 30 * relativeWidth) {
 			baseSizes = [0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else if (charCount < 40 * area) {
+		} else if (charCount < 40 * relativeWidth) {
 			baseSizes = [0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else if (charCount < 50 * area) {
+		} else if (charCount < 50 * relativeWidth) {
 			baseSizes = [0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
 		} else {
 			baseSizes = [0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]

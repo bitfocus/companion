@@ -862,6 +862,50 @@ describe('Image drawing', () => {
 			img.drawAlignedText(0, 0, 72, 58, 'Hello\0World', '#ffffff', 14, 'center', 'center')
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		// Resolution-independence: the same text drawn in a proportionally identical subregion
+		// of the canvas must use the same font fraction at any canvas size.
+		// The bug was that `(w*h)/5000` made the size-range selection depend on absolute pixels,
+		// so a small subregion (e.g. h=25px at 72px canvas) fell into a lower range than a
+		// proportionally identical large subregion (h=70px at 200px canvas), producing visually
+		// different text sizes. The fix uses `w/h` which is scale-invariant.
+		describe('auto size resolution independence', () => {
+			for (const { label, text, heightFrac } of [
+				// 50% height — existing cases
+				{ label: 'short (5 chars, 50% height)', text: 'Scene', heightFrac: 0.5 },
+				{ label: 'medium (11 chars, 50% height)', text: 'Hello World', heightFrac: 0.5 },
+				{ label: 'longer (18 chars, 50% height)', text: 'Hello World Button', heightFrac: 0.5 },
+				// 35% and 40% height — single-line labels where the bug was clearly visible:
+				// at 72px canvas, h≈25px → old formula area≈0.36, 3 chars fell into Range 2 [0.43…]
+				// while at 200px canvas, h≈70px → area=2.8, same 3 chars used Range 1 [0.83…]
+				{ label: 'single line (3 chars, 35% height)', text: 'Act', heightFrac: 0.35 },
+				{ label: 'single line (3 chars, 40% height)', text: 'Act', heightFrac: 0.4 },
+				{ label: 'single line (5 chars, 35% height)', text: 'Scene', heightFrac: 0.35 },
+			]) {
+				describe(label, () => {
+					test('at 72x72', async () => {
+						const img = Image.create(72, 72, 1, null)
+						img.fillColor('#000000')
+						img.drawAlignedText(0, 0, 72, Math.round(72 * heightFrac), text, '#ffffff', 'auto', 'center', 'center')
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+
+					test('at 144x144', async () => {
+						const img = Image.create(144, 144, 1, null)
+						img.fillColor('#000000')
+						img.drawAlignedText(0, 0, 144, Math.round(144 * heightFrac), text, '#ffffff', 'auto', 'center', 'center')
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+
+					test('at 200x200', async () => {
+						const img = Image.create(200, 200, 1, null)
+						img.fillColor('#000000')
+						img.drawAlignedText(0, 0, 200, Math.round(200 * heightFrac), text, '#ffffff', 'auto', 'center', 'center')
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+				})
+			}
+		})
 	})
 
 	// -------------------------------------------------------------------------

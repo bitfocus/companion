@@ -193,16 +193,14 @@ describe('resolveFontSizes', () => {
 			const w = 144
 			const h = 144
 
-			test('thresholds scale with area, sizes scaled with h', () => {
-				// charCount < 7 * area (~29 chars)
+			test('thresholds are resolution-independent, sizes scale with h', () => {
+				// relativeWidth = 1.0 for square — same thresholds as 72x72; charCount < 30 * 1 = 30
 				expect(r3(resolveFontSizes(w, h, 'auto', 20))).toEqual([
-					119.52, 102.24, 87.84, 61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
-				])
-
-				// charCount < 30 * area (~125 chars)
-				expect(r3(resolveFontSizes(w, h, 'auto', 50))).toEqual([
 					61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
 				])
+
+				// charCount >= 50 * 1 = 50
+				expect(r3(resolveFontSizes(w, h, 'auto', 50))).toEqual([30.24, 24.48, 20.16, 18.72, 15.84, 14.4])
 			})
 		})
 
@@ -210,16 +208,12 @@ describe('resolveFontSizes', () => {
 			const w = 360
 			const h = 360
 
-			test('larger area allows more characters at larger font sizes, sizes scale with h', () => {
-				// charCount < 7 * area (~181 chars)
-				expect(r3(resolveFontSizes(w, h, 'auto', 100))).toEqual([
-					298.8, 255.6, 219.6, 154.8, 118.8, 100.8, 86.4, 75.6, 61.2, 50.4, 46.8, 39.6, 36,
-				])
+			test('thresholds are resolution-independent, sizes scale with h', () => {
+				// relativeWidth = 1.0 for square — same thresholds as 72x72; charCount >= 50 * 1 = 50
+				expect(r3(resolveFontSizes(w, h, 'auto', 100))).toEqual([75.6, 61.2, 50.4, 46.8, 39.6, 36])
 
-				// Even 150 chars still gets the largest sizes
-				expect(r3(resolveFontSizes(w, h, 'auto', 150))).toEqual([
-					298.8, 255.6, 219.6, 154.8, 118.8, 100.8, 86.4, 75.6, 61.2, 50.4, 46.8, 39.6, 36,
-				])
+				// 150 chars — same smallest range
+				expect(r3(resolveFontSizes(w, h, 'auto', 150))).toEqual([75.6, 61.2, 50.4, 46.8, 39.6, 36])
 			})
 		})
 	})
@@ -262,6 +256,65 @@ describe('resolveFontSizes', () => {
 			// '14' coerced to 14
 			expect(resolveFontSizes(72, 72, '14' as unknown as number, 10)).toEqual([14])
 		})
+	})
+
+	// The candidate size range must depend only on the element's aspect ratio (w/h), not its
+	// absolute pixel size. The bug this tests: old formula `(w*h)/5000` was calibrated for a
+	// ~72px button, so a *small* subregion (e.g. 36×36) produces area ≈ 0.26 and falls into a
+	// smaller size range than a proportionally-equivalent large subregion (e.g. 100×100, area=2).
+	// The fix normalises to w/h so the same range is always selected for the same aspect ratio.
+	describe('resolution independence — same candidate fractions for any subregion size', () => {
+		// Normalise returned sizes to fractions-of-h so different absolute sizes are comparable
+		const fractions = (w: number, h: number, chars: number) =>
+			resolveFontSizes(w, h, 'auto', chars).map((s) => r3([s / h])[0])
+
+		// Square subregion (1:1): critical case is short text in a small element.
+		// Old formula: 36×36 → area=0.26, 2 chars → Range 2 [0.43…]
+		//              100×100 → area=2.0,  2 chars → Range 1 [0.83…]  ← different!
+		// New formula: both → relativeWidth=1, 2 < 7 → Range 1 [0.83…] ← same
+		test.each([
+			{ chars: 2, desc: '2 chars' },
+			{ chars: 4, desc: '4 chars' },
+			{ chars: 6, desc: '6 chars' },
+		])('square subregion: $desc — same fractions at 36px, 72px, and 100px', ({ chars }) => {
+			const atSmall = fractions(36, 36, chars) // small subregion: old formula diverges here
+			expect(fractions(72, 72, chars)).toEqual(atSmall)
+			expect(fractions(100, 100, chars)).toEqual(atSmall)
+		})
+
+		// Wide subregion (2:1): same principle across different absolute widths
+		test.each([{ chars: 2 }, { chars: 5 }])(
+			'2:1 subregion: $chars chars — same fractions at 36×18, 72×36, and 100×50',
+			({ chars }) => {
+				const atSmall = fractions(36, 18, chars)
+				expect(fractions(72, 36, chars)).toEqual(atSmall)
+				expect(fractions(100, 50, chars)).toEqual(atSmall)
+			}
+		)
+
+		// Narrow-height element (~35% of canvas height, full width): the specific case
+		// the user observed — a single line of text in a short text region.
+		// Old formula: w=72, h=25 → area=0.36, 3 chars ≥ 7×0.36=2.52 → Range 2 [0.43…]
+		//              w=200, h=70 → area=2.8,  3 chars < 7×2.8=19.6  → Range 1 [0.83…]  ← different!
+		// New formula: relativeWidth=72/25=2.88 or 200/70=2.857, both → 3 < 7×2.857=20 → Range 1
+		test.each([
+			{ chars: 3, desc: '3 chars (single short word)' },
+			{ chars: 5, desc: '5 chars (single medium word)' },
+		])('full-width 35% height element: $desc — same fractions at 72×25, 144×50, and 200×70', ({ chars }) => {
+			const atSmall = fractions(72, 25, chars)
+			expect(fractions(144, 50, chars)).toEqual(atSmall)
+			expect(fractions(200, 70, chars)).toEqual(atSmall)
+		})
+
+		// Same for ~40% height
+		test.each([{ chars: 3 }, { chars: 5 }])(
+			'full-width 40% height element: $chars chars — same fractions at 72×29, 144×58, and 200×80',
+			({ chars }) => {
+				const atSmall = fractions(72, 29, chars)
+				expect(fractions(144, 58, chars)).toEqual(atSmall)
+				expect(fractions(200, 80, chars)).toEqual(atSmall)
+			}
+		)
 	})
 })
 
