@@ -52,7 +52,6 @@ export class GraphicsLayeredButtonRenderer {
 			elementsToHide,
 			selectedElementId,
 			drawBounds,
-			drawBounds,
 			false
 		)
 
@@ -89,7 +88,6 @@ export class GraphicsLayeredButtonRenderer {
 		elements: SomeButtonGraphicsDrawElement[],
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
-		rootBounds: DrawBounds,
 		drawBounds: DrawBounds,
 		skipDrawParent: boolean
 	): Promise<DrawBounds | null> {
@@ -114,7 +112,6 @@ export class GraphicsLayeredButtonRenderer {
 									element.children,
 									elementsToHide,
 									selectedElementId,
-									rootBounds,
 									elementBounds,
 									skipDraw
 								)
@@ -135,7 +132,6 @@ export class GraphicsLayeredButtonRenderer {
 									element.children,
 									elementsToHide,
 									selectedElementId,
-									rootBounds,
 									elementBounds,
 									skipDraw
 								)
@@ -148,7 +144,7 @@ export class GraphicsLayeredButtonRenderer {
 
 						break
 					case 'text':
-						elementBounds = await this.#drawTextElement(img, rootBounds, drawBounds, element, skipDraw)
+						elementBounds = await this.#drawTextElement(img, drawBounds, element, skipDraw)
 						break
 					case 'box':
 						elementBounds = await this.#drawBoxElement(img, drawBounds, element, skipDraw)
@@ -292,7 +288,6 @@ export class GraphicsLayeredButtonRenderer {
 
 	static async #drawTextElement(
 		img: ImageBase<any>,
-		rootBounds: DrawBounds,
 		parentBounds: DrawBounds,
 		element: ButtonGraphicsTextDrawElement,
 		skipDraw: boolean
@@ -309,9 +304,9 @@ export class GraphicsLayeredButtonRenderer {
 		const marginY = 1 * marginScale
 
 		if (typeof fontSize === 'number') {
-			// Scale font to be a percentage relative to the height of the usable button space
-			// Future: should this be relative to the bounds of the text element?
-			fontSize *= rootBounds.height / 100 / 1.2
+			// Scale font to be a percentage relative to the height of the usable space
+			// to constraint it to the size of the text element
+			fontSize *= drawBounds.height / 100 / 1.2
 		}
 
 		await img.usingAlpha(element.opacity, async () => {
