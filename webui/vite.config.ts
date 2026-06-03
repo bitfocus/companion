@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
 
 	// UPSTREAM_URL takes precedence; fall back to COMPANION_APP_PORT, then the default
 	const upstreamUrl =
-		env.UPSTREAM_URL ?? (env.COMPANION_APP_PORT ? `localhost:${env.COMPANION_APP_PORT}` : 'localhost:8000')
+		env.UPSTREAM_URL ?? (env.COMPANION_APP_PORT ? `127.0.0.1:${env.COMPANION_APP_PORT}` : '127.0.0.1:8000')
 
 	return {
 		publicDir: 'public',
