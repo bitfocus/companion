@@ -2,13 +2,16 @@ import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { faArrowsAlt, faArrowsLeftRight, faCompass, faCopy, faEraser, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button, type ButtonColor } from '~/Components/Button'
+import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { Modal } from '~/Components/Modal.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { queryClient, trpc, useMutationExt, type RouterOutput } from '~/Resources/TRPC'
 
 export interface ButtonGridActionsRef {
 	buttonClick: (location: ControlLocation, isDown: boolean) => void
@@ -19,6 +22,8 @@ interface ButtonGridActionsProps {
 	clearSelectedButton: () => void
 }
 
+type ControlIncrementOption = RouterOutput['controls']['getControlIncrementOptions'][number]
+
 export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActionsProps>(function ButtonGridActions(
 	{ isHot, pageNumber, clearSelectedButton },
 	ref
@@ -28,14 +33,44 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	const [activeFunction, setActiveFunction] = useState<string | null>(null)
 	const [activeFunctionButton, setActiveFunctionButton] = useState<ControlLocation | null>(null)
 
+	const [copyIncrementModalOpen, setCopyIncrementModalOpen] = useState(false)
+	const [copyIncrementLoading, setCopyIncrementLoading] = useState(false)
+	const [copyIncrementLoadError, setCopyIncrementLoadError] = useState<string | null>(null)
+	const [copyIncrementFields, setCopyIncrementFields] = useState<ControlIncrementOption[]>([])
+	const [copyIncrementSelectedFieldIds, setCopyIncrementSelectedFieldIds] = useState<string[]>([])
+	const [copyIncrementStep, setCopyIncrementStep] = useState(1)
+	const [copyIncrementPasteIndex, setCopyIncrementPasteIndex] = useState(1)
+	const [copyIncrementSettingsReady, setCopyIncrementSettingsReady] = useState(false)
+
 	let hintText = ''
 	if (activeFunction) {
-		if (!activeFunctionButton) {
+		if (activeFunction === 'copy-increment') {
+			if (!activeFunctionButton) {
+				hintText = 'Press the source button for Copy +N'
+			} else if (!copyIncrementSettingsReady) {
+				hintText = 'Choose which values to increment'
+			} else {
+				hintText = `Paste with ${copyIncrementPasteIndex * copyIncrementStep >= 0 ? '+' : ''}${
+					copyIncrementPasteIndex * copyIncrementStep
+				}: press a target button`
+			}
+		} else if (!activeFunctionButton) {
 			hintText = `Press the button you want to ${activeFunction}`
 		} else {
 			hintText = `Where do you want it?`
 		}
 	}
+
+	const resetCopyIncrementState = useCallback(() => {
+		setCopyIncrementModalOpen(false)
+		setCopyIncrementLoading(false)
+		setCopyIncrementLoadError(null)
+		setCopyIncrementFields([])
+		setCopyIncrementSelectedFieldIds([])
+		setCopyIncrementStep(1)
+		setCopyIncrementPasteIndex(1)
+		setCopyIncrementSettingsReady(false)
+	}, [])
 
 	const startFunction = useCallback(
 		(func: string) => {
@@ -54,6 +89,45 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	const stopFunction = useCallback(() => {
 		setActiveFunction(null)
 		setActiveFunctionButton(null)
+		resetCopyIncrementState()
+	}, [resetCopyIncrementState])
+
+	const prepareCopyIncrementSource = useCallback((location: ControlLocation) => {
+		setActiveFunctionButton(location)
+		setCopyIncrementModalOpen(true)
+		setCopyIncrementLoading(true)
+		setCopyIncrementLoadError(null)
+		setCopyIncrementFields([])
+		setCopyIncrementSelectedFieldIds([])
+		setCopyIncrementStep(1)
+		setCopyIncrementPasteIndex(1)
+		setCopyIncrementSettingsReady(false)
+
+		queryClient
+			.fetchQuery(trpc.controls.getControlIncrementOptions.queryOptions({ location }))
+			.then((fields) => {
+				setCopyIncrementFields(fields)
+				setCopyIncrementSelectedFieldIds([])
+			})
+			.catch((e) => {
+				setCopyIncrementLoadError(String(e))
+			})
+			.finally(() => {
+				setCopyIncrementLoading(false)
+			})
+	}, [])
+
+	const applyCopyIncrementSettings = useCallback(() => {
+		setCopyIncrementSettingsReady(true)
+		setCopyIncrementPasteIndex(1)
+		setCopyIncrementModalOpen(false)
+	}, [])
+
+	const setCopyIncrementFieldSelected = useCallback((fieldId: string, selected: boolean) => {
+		setCopyIncrementSelectedFieldIds((oldIds) => {
+			if (selected) return oldIds.includes(fieldId) ? oldIds : [...oldIds, fieldId]
+			return oldIds.filter((id) => id !== fieldId)
+		})
 	}, [])
 
 	const setSizeRef = useRef(null)
@@ -73,6 +147,27 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			!disabled && (
 				<Button color={color} disabled={disabled} onClick={() => startFunction(func)} title={label}>
 					<FontAwesomeIcon icon={icon} /> {useCompactButtons ? '' : label}
+				</Button>
+			)
+		)
+	}
+
+	const getCopyIncrementButton = () => {
+		let color: ButtonColor = 'light'
+		let disabled = false
+		if (activeFunction === 'copy-increment') {
+			color = 'success'
+		} else if (activeFunction) {
+			disabled = true
+		}
+
+		return (
+			!disabled && (
+				<Button color={color} disabled={disabled} onClick={() => startFunction('copy-increment')} title="Copy +1">
+					<span className="button-grid-copy-increment-icon">
+						<FontAwesomeIcon icon={faCopy} />
+						<span className="button-grid-copy-increment-icon-badge">+1</span>
+					</span>
 				</Button>
 			)
 		)
@@ -120,6 +215,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 
 	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
 	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
+	const copyControlWithOffsetMutation = useMutationExt(trpc.controls.copyControlWithOffset.mutationOptions())
 	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
 	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
 
@@ -140,6 +236,28 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 								stopFunction()
 							} else {
 								setActiveFunctionButton(location)
+							}
+							return true
+						case 'copy-increment':
+							if (activeFunctionButton) {
+								if (copyIncrementSettingsReady) {
+									const fromInfo = activeFunctionButton
+									copyControlWithOffsetMutation
+										.mutateAsync({
+											fromLocation: fromInfo,
+											toLocation: location,
+											incrementFieldIds: copyIncrementSelectedFieldIds,
+											incrementBy: copyIncrementPasteIndex * copyIncrementStep,
+										})
+										.then((copied) => {
+											if (copied) setCopyIncrementPasteIndex((oldIndex) => oldIndex + 1)
+										})
+										.catch((e) => {
+											console.error(`copy +N failed: ${e}`)
+										})
+								}
+							} else {
+								prepareCopyIncrementSource(location)
 							}
 							return true
 						case 'move':
@@ -193,17 +311,39 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 			activeFunction,
 			activeFunctionButton,
 			stopFunction,
+			copyControlWithOffsetMutation,
+			copyIncrementSettingsReady,
+			copyIncrementSelectedFieldIds,
+			copyIncrementPasteIndex,
+			copyIncrementStep,
+			prepareCopyIncrementSource,
 		]
 	)
 
 	return (
 		<>
 			<GenericConfirmModal ref={resetRef} />
+			<CopyIncrementSettingsModal
+				open={copyIncrementModalOpen}
+				loading={copyIncrementLoading}
+				error={copyIncrementLoadError}
+				fields={copyIncrementFields}
+				selectedFieldIds={copyIncrementSelectedFieldIds}
+				step={copyIncrementStep}
+				onStepChange={setCopyIncrementStep}
+				onFieldSelected={setCopyIncrementFieldSelected}
+				onSelectAll={() => setCopyIncrementSelectedFieldIds(copyIncrementFields.map((field) => field.id))}
+				onSelectNone={() => setCopyIncrementSelectedFieldIds([])}
+				onCancel={stopFunction}
+				onApply={applyCopyIncrementSettings}
+			/>
 
 			<Grid.Col sm={12} className={classnames({ out: isHot, fadeinout: true })}>
 				<div className="button-grid-controls" ref={setSizeRef}>
 					<div>
 						{getButton('Copy', faCopy, 'copy')}
+						&nbsp;
+						{getCopyIncrementButton()}
 						&nbsp;
 						{getButton('Move', faArrowsAlt, 'move')}
 						&nbsp;
@@ -233,3 +373,108 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		</>
 	)
 })
+
+interface CopyIncrementSettingsModalProps {
+	open: boolean
+	loading: boolean
+	error: string | null
+	fields: ControlIncrementOption[]
+	selectedFieldIds: string[]
+	step: number
+	onStepChange: (value: number) => void
+	onFieldSelected: (fieldId: string, selected: boolean) => void
+	onSelectAll: () => void
+	onSelectNone: () => void
+	onCancel: () => void
+	onApply: () => void
+}
+
+function CopyIncrementSettingsModal({
+	open,
+	loading,
+	error,
+	fields,
+	selectedFieldIds,
+	step,
+	onStepChange,
+	onFieldSelected,
+	onSelectAll,
+	onSelectNone,
+	onCancel,
+	onApply,
+}: CopyIncrementSettingsModalProps): JSX.Element {
+	const selectedFieldIdSet = useMemo(() => new Set(selectedFieldIds), [selectedFieldIds])
+	const stepIsValid = Number.isInteger(step) && step >= -999 && step <= 999
+
+	return (
+		<Modal.Root open={open} disableDismiss>
+			<Modal.Portal>
+				<Modal.Backdrop />
+				<Modal.Viewport>
+					<Modal.Popup size="lg" scrollable>
+						<Modal.Header>
+							<Modal.Title>Copy +N</Modal.Title>
+						</Modal.Header>
+						<Modal.Body>
+							<div className="button-grid-copy-increment-settings">
+								<label className="form-label" htmlFor="copy-increment-step">
+									Increase step size
+								</label>
+								<NumberInputField
+									id="copy-increment-step"
+									value={step}
+									setValue={onStepChange}
+									min={-999}
+									max={999}
+									step={1}
+									immediateValue
+									checkValid={stepIsValid}
+									disabled={loading}
+								/>
+
+								<div className="button-grid-copy-increment-toolbar">
+									<Button color="secondary" size="sm" onClick={onSelectAll} disabled={loading || fields.length === 0}>
+										Select all
+									</Button>
+									<Button color="secondary" size="sm" onClick={onSelectNone} disabled={loading || fields.length === 0}>
+										Select none
+									</Button>
+								</div>
+
+								{loading && <p>Loading values...</p>}
+								{error && <p className="text-danger">{error}</p>}
+								{!loading && !error && fields.length === 0 && <p>No numeric values were found on this button.</p>}
+								{!loading && !error && fields.length > 0 && (
+									<div className="button-grid-copy-increment-fields">
+										{fields.map((field) => (
+											<CheckboxInputFieldWithLabel
+												key={field.id}
+												value={selectedFieldIdSet.has(field.id)}
+												setValue={(selected) => onFieldSelected(field.id, selected)}
+												disabled={loading}
+												label={
+													<span>
+														<span className="button-grid-copy-increment-field-label">{field.label}</span>
+														<span className="button-grid-copy-increment-field-value">{field.currentValue}</span>
+													</span>
+												}
+											/>
+										))}
+									</div>
+								)}
+							</div>
+						</Modal.Body>
+						<Modal.Footer>
+							<Button color="secondary" onClick={onCancel}>
+								Cancel
+							</Button>
+							<Button color="primary" onClick={onApply} disabled={loading || !!error || !stepIsValid}>
+								Use Copy +N
+							</Button>
+						</Modal.Footer>
+					</Modal.Popup>
+				</Modal.Viewport>
+			</Modal.Portal>
+		</Modal.Root>
+	)
+}
