@@ -159,6 +159,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			tooltip={field.tooltip}
 			features={features}
 			disableAutoExpression={field.disableAutoExpression}
+			isImageField={field.type === 'internal:image-file'}
 		>
 			{(elementProp, setValueFromForm, inputId) => (
 				<OptionsInputControl

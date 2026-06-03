@@ -20,6 +20,7 @@ import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel, InputGroupText } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
+import { ImagePreviewIcon, ImagePreviewIconFromExpression } from '~/Components/ImagePreviewIcon.js'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
@@ -48,12 +49,21 @@ interface OptionsInputFieldProps {
 	fieldSupportsExpression: boolean
 }
 
-function OptionLabel({ option, features }: { option: SomeCompanionInputField; features?: InputFeatureIconsProps }) {
+function OptionLabel({
+	option,
+	features,
+	imagePreviewNode,
+}: {
+	option: SomeCompanionInputField
+	features?: InputFeatureIconsProps
+	imagePreviewNode?: React.ReactNode
+}) {
 	return (
 		<>
 			{option.label}
 			<InputFeatureIcons {...features} />
 			{option.tooltip && <InlineHelpIcon className="ms-1">{option.tooltip}</InlineHelpIcon>}
+			{imagePreviewNode}
 		</>
 	)
 }
@@ -128,13 +138,32 @@ export const OptionsInputField = observer(function OptionsInputField({
 	const description =
 		isInExpressionMode && option.expressionDescription !== undefined ? option.expressionDescription : option.description
 
+	const isImageField = option.type === 'internal:image-file'
+	let imagePreviewNode: React.ReactNode = null
+	if (isImageField) {
+		if (isInExpressionMode) {
+			imagePreviewNode = (
+				<ImagePreviewIconFromExpression
+					expression={stringifyVariableValue(rawValue?.value) ?? ''}
+					controlId={controlId ?? null}
+				/>
+			)
+		} else {
+			imagePreviewNode = <ImagePreviewIcon value={(rawValue?.value as string | null) ?? null} />
+		}
+	}
+
 	return (
 		<>
 			<FormLabel
 				htmlFor={inputId}
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
-				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
+				<OptionLabel
+					option={option}
+					features={isInExpressionMode ? ExpressionModeFeatures : features}
+					imagePreviewNode={imagePreviewNode}
+				/>
 				{isInExpressionMode && (
 					<ExpressionValuePreview
 						expression={stringifyVariableValue(rawValue?.value) ?? ''}

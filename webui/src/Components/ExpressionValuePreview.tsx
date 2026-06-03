@@ -1,13 +1,10 @@
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import { trpc } from '~/Resources/TRPC.js'
-import { useDebounced } from '~/Resources/util.js'
 import { StaticAlert } from './Alert.js'
+import { useResolvedExpression, type ResolvedExpressionResult } from './useResolvedExpression.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
 interface ExpressionValuePreviewProps {
@@ -16,26 +13,15 @@ interface ExpressionValuePreviewProps {
 	fieldDefinition: SomeCompanionInputField
 }
 
-function isExpressionParseable(value: string): boolean {
-	try {
-		ParseExpression(value)
-		return true
-	} catch {
-		return false
-	}
-}
-
 export function ExpressionValuePreview({
 	expression,
 	controlId,
 	fieldDefinition,
 }: ExpressionValuePreviewProps): React.JSX.Element | null {
-	const debouncedExpression = useDebounced(expression, 300)
-	const isParseable = useMemo(() => isExpressionParseable(debouncedExpression), [debouncedExpression])
+	// useResolvedExpression debounces internally
+	const { result, isEmpty, isParseable } = useResolvedExpression(expression, controlId)
 
-	if (!debouncedExpression.trim()) {
-		return null
-	}
+	if (isEmpty) return null
 
 	if (!isParseable) {
 		return (
@@ -49,47 +35,27 @@ export function ExpressionValuePreview({
 		)
 	}
 
-	return (
-		<ExpressionValuePreviewInner
-			expression={debouncedExpression}
-			controlId={controlId}
-			fieldDefinition={fieldDefinition}
-		/>
-	)
+	return <ExpressionValuePreviewInner result={result} fieldDefinition={fieldDefinition} />
 }
 
-function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }: ExpressionValuePreviewProps) {
-	const sub = useSubscription(
-		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
-			{
-				controlId: controlId,
-				expression: expression,
-				isVariableString: false,
-			},
-			{}
-		)
-	)
+interface ExpressionValuePreviewInnerProps {
+	result: ResolvedExpressionResult | undefined
+	fieldDefinition: SomeCompanionInputField
+}
 
-	// Keep the last known result so we can show it while waiting for new data
-	const lastDataRef = useRef(sub.data)
-	if (sub.data) {
-		lastDataRef.current = sub.data
-	}
-
-	// Only show spinner after 200ms of no data
+function ExpressionValuePreviewInner({ result, fieldDefinition }: ExpressionValuePreviewInnerProps) {
+	// Only show spinner after 200ms of no data (first load only — subsequent loads show the old result)
 	const [showSpinner, setShowSpinner] = useState(false)
 	useEffect(() => {
-		if (sub.data) {
+		if (result !== undefined) {
 			setShowSpinner(false)
 			return
 		}
 		const timer = setTimeout(() => setShowSpinner(true), 200)
 		return () => clearTimeout(timer)
-	}, [sub.data])
+	}, [result])
 
-	const displayData = sub.data ?? lastDataRef.current
-
-	if (!displayData) {
+	if (result === undefined) {
 		if (!showSpinner) return null
 		return (
 			<div className="mt-1">
@@ -98,19 +64,19 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 		)
 	}
 
-	if (!displayData.ok) {
+	if (!result.ok) {
 		return (
 			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
-				Error: {displayData.error}
+				Error: {result.error}
 			</StaticAlert>
 		)
 	}
 
-	const validationResult = validateExpressionResult(fieldDefinition, displayData.value)
+	const validationResult = validateExpressionResult(fieldDefinition, result.value)
 
 	return (
 		<div className="mt-1">
-			<VariableValueDisplayPopover value={displayData.value} showCopy={false} invalidReason={validationResult} />
+			<VariableValueDisplayPopover value={result.value} showCopy={false} invalidReason={validationResult} />
 		</div>
 	)
 }
