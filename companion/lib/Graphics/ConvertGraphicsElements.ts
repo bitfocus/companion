@@ -612,6 +612,9 @@ async function convertImageElementForDrawing(
 		if (Array.isArray(imageObjs)) {
 			// This is not very efficient, as it is not cached, but as this is a deprecated feature, it is acceptable for now
 			base64Image = (await context.drawPixelBuffers(imageObjs)) || null
+		} else {
+			// This could be a reference to the image library
+			base64Image = helper.parseVariablesInString(base64Image, 'ERR')
 		}
 	}
 

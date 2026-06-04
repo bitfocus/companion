@@ -1,31 +1,17 @@
-import { faImage, faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faLayerGroup, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import fuzzysort from 'fuzzysort'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef, useState } from 'react'
-import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { useCallback, useContext, useRef } from 'react'
 import { Button, ButtonGroup } from '~/Components/Button.js'
-import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
-import type { CollectionsNestingTableItem } from '~/Components/CollectionsNestingTable/Types.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { NonIdealState } from '~/Components/NonIdealState.js'
-import { SearchBox } from '~/Components/SearchBox'
-import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageAddModal, type ImageAddModalRef } from './ImageAddModal'
 import { useImageLibraryCollectionsApi } from './ImageLibraryCollectionsApi.js'
 import { ImageLibraryDropzone } from './ImageLibraryDropzone'
-import { ImageThumbnail } from './ImageThumbnail'
+import { ImageLibrarySelector } from './ImageLibrarySelector'
 import { useImageLibraryUpload } from './useImageLibraryUpload'
-
-interface ImageItem extends CollectionsNestingTableItem {
-	// Additional image info
-	imageInfo: ImageLibraryInfo
-	fuzzy: Fuzzysort.Prepared
-}
 
 interface ImageLibraryGridProps {
 	selectedImageName: string | null
@@ -36,11 +22,9 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 	selectedImageName,
 	onSelectImage,
 }: ImageLibraryGridProps) {
-	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
-	const [searchQuery, setSearchQuery] = useState('')
+	const { notifier } = useContext(RootAppStoreContext)
 	const addModalRef = useRef<ImageAddModalRef>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
-	const gridContentRef = useRef<HTMLDivElement>(null)
 
 	const createMutation = useMutationExt(trpc.imageLibrary.create.mutationOptions())
 	const { uploadImageFile } = useImageLibraryUpload()
@@ -97,38 +81,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 
 	const handleCreateNew = useCallback(() => addModalRef.current?.show(), [])
 
-	const images = imageLibrary.getAllImages()
-
-	// Convert images to items format for CollectionsNestingTable
-	const imageItems: ImageItem[] = useComputed(
-		() =>
-			images.map((image) => ({
-				id: image.name,
-				collectionId: image.collectionId ?? null,
-				sortOrder: image.sortOrder,
-				imageInfo: image,
-				fuzzy: fuzzysort.prepare(`${image.name} ${image.description}`),
-			})),
-		[images]
-	)
-
 	const collectionsApi = useImageLibraryCollectionsApi(confirmModalRef)
-
-	// ItemRow component for rendering individual images
-	const ItemRow = useCallback(
-		(item: ImageItem) => {
-			if (searchQuery && fuzzysort.single(searchQuery, item.fuzzy) === null) return null
-
-			return (
-				<ImageThumbnail
-					image={item.imageInfo}
-					selected={selectedImageName === item.id}
-					onClick={() => onSelectImage(item.id)}
-				/>
-			)
-		},
-		[selectedImageName, onSelectImage, searchQuery]
-	)
 
 	return (
 		<div className="image-library-grid">
@@ -143,46 +96,31 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 				</p>
 
 				<div className="image-library-controls">
-					<div className="d-flex gap-2 mb-2">
-						<ButtonGroup>
-							<Button color="primary" size="sm" onClick={handleImportFiles}>
-								<FontAwesomeIcon icon={faPlus} /> Import Images
-							</Button>
-							<Button color="primary" size="sm" onClick={handleCreateNew}>
-								<FontAwesomeIcon icon={faPlus} /> Add Placeholder
-							</Button>
-							<CreateCollectionButton />
-						</ButtonGroup>
-					</div>
-
-					<SearchBox placeholder="Search images..." filter={searchQuery} setFilter={setSearchQuery} />
+					<ButtonGroup>
+						<Button color="primary" size="sm" onClick={handleImportFiles}>
+							<FontAwesomeIcon icon={faPlus} /> Import Images
+						</Button>
+						<Button color="primary" size="sm" onClick={handleCreateNew}>
+							<FontAwesomeIcon icon={faPlus} /> Add Placeholder
+						</Button>
+						<CreateCollectionButton />
+					</ButtonGroup>
 				</div>
 			</div>
 
 			<ImageLibraryDropzone />
 
-			<div className="image-library-grid-content" ref={gridContentRef}>
-				<PanelCollapseHelperProvider storageId="image_library" knownPanelIds={imageLibrary.allCollectionIds}>
-					<CollectionsNestingTable
-						ItemRow={ItemRow}
-						itemName="image"
-						dragId="image-library"
-						collectionsApi={collectionsApi}
-						selectedItemId={selectedImageName}
-						gridLayout={true}
-						collections={imageLibrary.rootCollections()}
-						items={imageItems}
-						NoContent={NoContent}
-					/>
-				</PanelCollapseHelperProvider>
+			<div className="image-library-grid-content">
+				<ImageLibrarySelector
+					selectedImageName={selectedImageName}
+					onSelectImage={onSelectImage}
+					collectionsApi={collectionsApi}
+					dragId="image-library"
+				/>
 			</div>
 		</div>
 	)
 })
-
-function NoContent() {
-	return <NonIdealState icon={faImage} text="No images in library" />
-}
 
 function CreateCollectionButton() {
 	const createMutation = useMutationExt(trpc.imageLibrary.collections.add.mutationOptions())

@@ -13,6 +13,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageDescriptionEditor } from './imageDescriptionEditor.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageNameEditModal } from './ImageNameEditModal.js'
+import { ImagePreviewBox } from './ImagePreviewBox.js'
 import { useImageLibraryUpload } from './useImageLibraryUpload'
 
 interface ImageLibraryEditorProps {
@@ -26,9 +27,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	onDeleteImage,
 	onImageNameChanged,
 }: ImageLibraryEditorProps) {
-	const { imageLibrary, notifier } = useContext(RootAppStoreContext)
+	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
-	const [isDragOver, setIsDragOver] = useState(false)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
@@ -87,18 +87,18 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	}, [selectedImageName, imageInfo])
 
 	const uploadFile = useCallback(
-		async (file: File) => {
+		(file: File) => {
 			if (!selectedImageName) return
 
 			setUploading(true)
 
-			try {
-				await uploadImageFile(file, selectedImageName)
-			} catch (err) {
-				console.error('Failed to replace image:', err)
-			} finally {
-				setUploading(false)
-			}
+			uploadImageFile(file, selectedImageName)
+				.catch((err) => {
+					console.error('Failed to upload image:', err)
+				})
+				.finally(() => {
+					setUploading(false)
+				})
 		},
 		[uploadImageFile, selectedImageName]
 	)
@@ -110,7 +110,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			if (!file) return
 
-			void uploadFile(file)
+			uploadFile(file)
 		},
 		[uploadFile]
 	)
@@ -120,38 +120,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			onImageNameChanged?.(oldName, newName)
 		},
 		[onImageNameChanged]
-	)
-
-	const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-		event.preventDefault()
-		event.stopPropagation()
-		setIsDragOver(true)
-	}, [])
-
-	const handleDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-		event.preventDefault()
-		event.stopPropagation()
-		setIsDragOver(false)
-	}, [])
-
-	const handleDrop = useCallback(
-		(event: React.DragEvent<HTMLDivElement>) => {
-			event.preventDefault()
-			event.stopPropagation()
-			setIsDragOver(false)
-
-			const files = event.dataTransfer.files
-			if (files && files.length > 0) {
-				const file = files[0]
-				// Check if it's an image file
-				if (file.type.startsWith('image/')) {
-					void uploadFile(file)
-				} else {
-					notifier.show('Invalid File', 'Please drop an image file', 5000)
-				}
-			}
-		},
-		[uploadFile, notifier]
 	)
 
 	const formatDate = (timestamp: number) => {
@@ -233,24 +201,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</Grid.Col>
 			</Form>
 
-			<div
-				className={`image-preview-full ${isDragOver ? 'drag-over' : ''}`}
-				onDragOver={handleDragOver}
-				onDragLeave={handleDragLeave}
-				onDrop={handleDrop}
-			>
+			<ImagePreviewBox onFileDrop={uploadFile} dragOverMessage="Drop image to replace">
 				<ImageLibraryImagePreview
 					imageName={selectedImageName}
 					type="original"
 					checksum={imageInfo.checksum}
 					alt={imageInfo.name}
 				/>
-				{isDragOver && (
-					<div className="drag-overlay">
-						<div className="drag-overlay-message">Drop image to replace</div>
-					</div>
-				)}
-			</div>
+			</ImagePreviewBox>
 
 			<div className="image-properties">
 				<div className="image-metadata">
