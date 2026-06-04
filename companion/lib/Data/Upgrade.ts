@@ -15,6 +15,7 @@ import v9tov10 from './Upgrades/v9tov10.js'
 import v10tov11 from './Upgrades/v10tov11.js'
 import v11tov12 from './Upgrades/v11tov12.js'
 import v12tov13 from './Upgrades/v12tov13.js'
+import v13tov14 from './Upgrades/v13tov14.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -30,7 +31,8 @@ const allUpgrades = [
 	v9tov10, // v4.2 - surface integrations
 	v10tov11, // v4.3 - internal action/feedback upgrade & options into ExpressionOrValue
 	v11tov12, // v4.3 - surface plugin config field renames
-	v12tov13, // v4.x - graphics overhaul
+	v12tov13, // v5.0 - graphics overhaul
+	v13tov14, // v5.0 - split fontsize into size + allowShrink
 ]
 const targetVersion = allUpgrades.length + 1
 

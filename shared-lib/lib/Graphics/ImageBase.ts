@@ -675,6 +675,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param text the text to draw
 	 * @param color CSS color string
 	 * @param fontsize height of font, either pixels or 'auto'
+	 * @param allowShrink whether to allow the font size to shrink to fit the box
 	 * @param halign horizontal alignment left, center, right
 	 * @param valign vertical alignment top, center, bottom
 	 * @param outlineStyle optional outline style, if not provided there will be no outline
@@ -687,7 +688,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		h: number,
 		text: string,
 		color: string,
-		fontsize: number | 'auto' = 'auto',
+		fontsize: number,
+		allowShrink = true,
 		halign: HorizontalAlignment = 'center',
 		valign: VerticalAlignment = 'center',
 		outlineStyle?: LineStyle,
@@ -711,9 +713,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		)
 
 		// If we hit the character limit, only the smallest font size could possibly fit
-		const checkSizes = wasTruncated
-			? [Math.max(MIN_FONT_SIZE_FRACTION * h, 1)]
-			: resolveFontSizes(w, h, fontsize, displayTextChars.length)
+		const checkSizes =
+			allowShrink && wasTruncated
+				? [Math.max(MIN_FONT_SIZE_FRACTION * h, 1)]
+				: resolveFontSizes(w, h, fontsize, allowShrink, displayTextChars.length)
 
 		// Find the best fitting size
 		let textLayout: TextLayoutResult | undefined

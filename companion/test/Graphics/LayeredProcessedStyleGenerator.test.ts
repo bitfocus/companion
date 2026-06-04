@@ -35,7 +35,8 @@ function makeTextEl(overrides: Partial<ButtonGraphicsTextDrawElement> = {}): But
 		id: 'text1',
 		type: 'text',
 		text: 'Label',
-		fontsize: '7',
+		fontsize: 7,
+		fontsizeAllowShrink: false,
 		font: 'companion-sans',
 		color: 0xffffff,
 		outlineColor: 0,
@@ -299,35 +300,27 @@ describe('GraphicsLayeredProcessedStyleGenerator.Generate', () => {
 	})
 
 	describe('downConvertFontSize (tested via text layer)', () => {
-		function getFontSize(fontsize: string): number | 'auto' {
-			const textEl = makeTextEl({ usage: ButtonGraphicsElementUsage.Text, fontsize })
+		function getFontSize(fontsize: number, allowShrink: boolean): number | 'auto' {
+			const textEl = makeTextEl({ usage: ButtonGraphicsElementUsage.Text, fontsize, fontsizeAllowShrink: allowShrink })
 			const result = GraphicsLayeredProcessedStyleGenerator.Generate(makeButtonStyle([textEl]))
 			return result.text!.size
 		}
 
-		test('"auto" stays as "auto"', () => {
-			expect(getFontSize('auto')).toBe('auto')
+		test('allowShrink=true returns "auto" (backward compat for modules)', () => {
+			expect(getFontSize(10, true)).toBe('auto')
 		})
 
-		test('numeric string is scaled by 0.48', () => {
-			expect(getFontSize('10')).toBe(4.8)
+		test('allowShrink=false: size is scaled by 0.48', () => {
+			expect(getFontSize(10, false)).toBe(4.8)
 		})
 
-		test('result is rounded to 1 decimal place', () => {
+		test('allowShrink=false: result is rounded to 1 decimal place', () => {
 			// 7 * 0.48 = 3.36
-			expect(getFontSize('7')).toBe(3.4)
+			expect(getFontSize(7, false)).toBe(3.4)
 		})
 
-		test('non-numeric string returns "auto"', () => {
-			expect(getFontSize('large')).toBe('auto')
-		})
-
-		test('zero returns "auto" (fails the > 0 check)', () => {
-			expect(getFontSize('0')).toBe('auto')
-		})
-
-		test('negative value returns "auto"', () => {
-			expect(getFontSize('-5')).toBe('auto')
+		test('allowShrink=false: zero returns "auto" (fails the > 0 check)', () => {
+			expect(getFontSize(0, false)).toBe('auto')
 		})
 	})
 

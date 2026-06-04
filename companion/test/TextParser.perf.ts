@@ -22,7 +22,9 @@ interface BenchmarkCase {
 	text: string
 	width: number
 	height: number
-	fontSize: number | 'auto'
+	/** Pixel font size. Defaults to height (maximum) when allowShrink is true. */
+	fontSize?: number
+	allowShrink: boolean
 }
 
 const WARMUP_ITERATIONS = 10
@@ -35,28 +37,28 @@ const testCases: BenchmarkCase[] = [
 		text: 'Hello',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '72x72 medium text auto',
 		text: 'This is a medium length text that will wrap',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '72x72 long text auto',
 		text: 'This is a very long text that will definitely need to wrap across multiple lines and will test the wrapping algorithm performance',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '72x72 very long text auto',
 		text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '72x72 short text fixed 14px',
@@ -64,6 +66,7 @@ const testCases: BenchmarkCase[] = [
 		width: 72,
 		height: 72,
 		fontSize: 14,
+		allowShrink: false,
 	},
 	{
 		name: '72x72 medium text fixed 10px',
@@ -71,6 +74,7 @@ const testCases: BenchmarkCase[] = [
 		width: 72,
 		height: 72,
 		fontSize: 10,
+		allowShrink: false,
 	},
 
 	// Larger buttons
@@ -79,21 +83,21 @@ const testCases: BenchmarkCase[] = [
 		text: 'Hello',
 		width: 144,
 		height: 144,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '144x144 medium text auto',
 		text: 'This is a medium length text',
 		width: 144,
 		height: 144,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '144x144 long text auto',
 		text: 'This is a very long text that will definitely need to wrap across multiple lines and will test the wrapping algorithm performance with larger button sizes',
 		width: 144,
 		height: 144,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 
 	// Large displays
@@ -102,14 +106,14 @@ const testCases: BenchmarkCase[] = [
 		text: 'Medium text on large display',
 		width: 360,
 		height: 360,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '360x360 very long text auto',
 		text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
 		width: 360,
 		height: 360,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 
 	// Unicode and emoji
@@ -118,21 +122,21 @@ const testCases: BenchmarkCase[] = [
 		text: '🎉 Hello 😀 World 🎨',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '72x72 chinese text auto',
 		text: '你好世界 这是一个测试文本',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 	{
 		name: '72x72 mixed unicode auto',
 		text: 'Hello 你好 🎉 café ਸਤਿ 안녕',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 
 	// Newlines
@@ -141,7 +145,7 @@ const testCases: BenchmarkCase[] = [
 		text: 'Line 1\nLine 2\nLine 3\nLine 4',
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 
 	// Extreme cases
@@ -150,7 +154,7 @@ const testCases: BenchmarkCase[] = [
 		text: 'a'.repeat(2000),
 		width: 72,
 		height: 72,
-		fontSize: 'auto',
+		allowShrink: true,
 	},
 ]
 
@@ -172,7 +176,8 @@ function runBenchmark(testCase: BenchmarkCase, iterations: number): BenchmarkRes
 			testCase.height,
 			testCase.text,
 			'#ffffff',
-			testCase.fontSize,
+			testCase.fontSize ?? testCase.height,
+			testCase.allowShrink,
 			'center',
 			'center'
 		)

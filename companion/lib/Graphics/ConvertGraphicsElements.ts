@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -409,7 +410,8 @@ function makeReferencePlaceholder(
 		height: 1,
 		rotation: 0,
 		text,
-		fontsize: 'auto',
+		fontsize: FONTSIZE_SHRINK_DEFAULT,
+		fontsizeAllowShrink: true,
 		font: 'companion-sans',
 		color: 0xffffff,
 		outlineColor: 0,
@@ -654,7 +656,8 @@ function convertTextElementForDrawing(
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
 		text: helper.getDrawText('text') + '',
-		fontsize: helper.getUnknown('fontsize', 'auto') as string,
+		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
+		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', ['companion-sans', 'companion-mono'], 'companion-sans'),
 		color: helper.getNumber('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),

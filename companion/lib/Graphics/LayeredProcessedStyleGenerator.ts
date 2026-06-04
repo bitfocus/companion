@@ -59,7 +59,7 @@ export class GraphicsLayeredProcessedStyleGenerator {
 				? {
 						text: textLayer.text,
 						color: textLayer.color,
-						size: downConvertFontSize(textLayer.fontsize),
+						size: downConvertFontSize(textLayer.fontsize, textLayer.fontsizeAllowShrink),
 						halign: textLayer.halign,
 						valign: textLayer.valign,
 					}
@@ -134,13 +134,12 @@ export class GraphicsLayeredProcessedStyleGenerator {
 	}
 }
 
-function downConvertFontSize(size: string): number | 'auto' {
-	if (size === 'auto') return 'auto'
+function downConvertFontSize(size: number, allowShrink: boolean): number | 'auto' {
+	if (allowShrink) return 'auto'
 
-	const parsed = parseFloat(size)
-	if (isNaN(parsed) || parsed <= 0) return 'auto'
+	if (size <= 0) return 'auto'
 
-	const scaled = parsed * 0.48 // Convert to the old drawing numbers
+	const scaled = size * 0.48 // Convert to the old drawing numbers
 
 	return Number(scaled.toFixed(1)) // Round to 1 decimal place
 }

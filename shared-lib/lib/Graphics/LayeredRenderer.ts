@@ -278,7 +278,18 @@ export class GraphicsLayeredButtonRenderer {
 
 					// "image error" label immediately below the icon
 					const textY = iconTop + iconSize + Math.round(height * 0.04)
-					img.drawAlignedText(x, textY, width, maxY - textY, 'image error', '#ffffff', 'auto', 'center', 'center')
+					img.drawAlignedText(
+						x,
+						textY,
+						width,
+						maxY - textY,
+						'image error',
+						'#ffffff',
+						maxY - textY,
+						true,
+						'center',
+						'center'
+					)
 				})
 			})
 		}
@@ -296,18 +307,13 @@ export class GraphicsLayeredButtonRenderer {
 		if (skipDraw || !element.text) return drawBounds
 
 		// Draw button text
-		let fontSize: 'auto' | number = Number(element.fontsize) || 'auto'
+		// Scale font to be a percentage relative to the height of the draw area
+		const fontSize = (element.fontsize * drawBounds.height) / 100 / 1.2
 
 		// Force some padding around the text, scaled proportionally
 		const marginScale = 0.015
 		const marginX = 2 * marginScale
 		const marginY = 1 * marginScale
-
-		if (typeof fontSize === 'number') {
-			// Scale font to be a percentage relative to the height of the usable space
-			// to constraint it to the size of the text element
-			fontSize *= drawBounds.height / 100 / 1.2
-		}
 
 		await img.usingAlpha(element.opacity, async () => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
@@ -319,6 +325,7 @@ export class GraphicsLayeredButtonRenderer {
 					element.text,
 					parseColor(element.color),
 					fontSize,
+					element.fontsizeAllowShrink,
 					element.halign,
 					element.valign,
 					rgbRev(element.outlineColor, true).a > 0

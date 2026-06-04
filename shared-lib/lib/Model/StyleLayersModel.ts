@@ -81,7 +81,8 @@ export interface ButtonGraphicsTextDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
 	type: 'text'
 	text: string
-	fontsize: string
+	fontsize: number
+	fontsizeAllowShrink: boolean
 	font: 'companion-sans' | 'companion-mono'
 	color: number
 	outlineColor: number
@@ -93,7 +94,8 @@ export interface ButtonGraphicsTextElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'text'
 	text: ExpressionOrValue<string>
-	fontsize: ExpressionOrValue<string>
+	fontsize: ExpressionOrValue<number>
+	fontsizeAllowShrink: ExpressionOrValue<boolean>
 	font: ExpressionOrValue<'companion-sans' | 'companion-mono'>
 	color: ExpressionOrValue<number>
 	outlineColor: ExpressionOrValue<number>

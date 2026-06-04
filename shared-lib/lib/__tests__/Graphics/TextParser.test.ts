@@ -144,48 +144,89 @@ describe('segmentTextToUnicodeChars', () => {
 })
 
 describe('resolveFontSizes', () => {
-	describe('with auto font size', () => {
+	describe('allowShrink=false (fixed size)', () => {
+		test('returns single element array with requested size', () => {
+			expect(resolveFontSizes(72, 72, 14, false, 10)).toEqual([14])
+			expect(resolveFontSizes(72, 72, 24, false, 10)).toEqual([24])
+			expect(resolveFontSizes(72, 72, 7, false, 10)).toEqual([7])
+		})
+
+		test('clamps minimum font size to 3', () => {
+			expect(resolveFontSizes(72, 72, 1, false, 10)).toEqual([3])
+			expect(resolveFontSizes(72, 72, 2, false, 10)).toEqual([3])
+			expect(resolveFontSizes(72, 72, 0, false, 10)).toEqual([3])
+			expect(resolveFontSizes(72, 72, -5, false, 10)).toEqual([3])
+		})
+
+		test('clamps maximum font size to height', () => {
+			expect(resolveFontSizes(72, 72, 150, false, 10)).toEqual([72])
+			expect(resolveFontSizes(72, 123, 200, false, 10)).toEqual([123])
+			expect(resolveFontSizes(72, 72, 120, false, 10)).toEqual([72])
+		})
+
+		test('passes through edge values', () => {
+			expect(resolveFontSizes(72, 72, 3, false, 10)).toEqual([3])
+			expect(resolveFontSizes(72, 72, 71, false, 10)).toEqual([71])
+		})
+	})
+
+	describe('allowShrink=true (shrink to fit)', () => {
 		describe('w:72 h:72 (standard button)', () => {
 			const w = 72
 			const h = 72
 
-			test('very short text returns largest font sizes first', () => {
-				// charCount < 7 * area (~7 chars)
-				const result = resolveFontSizes(w, h, 'auto', 3)
+			test('configured size appears first, then heuristic sizes below it', () => {
+				// fontsize=60 is above the 0.83*72=59.76 threshold
+				const result = resolveFontSizes(w, h, 60, true, 3)
 				expect(r3(result)).toEqual([
-					59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
+					60, 59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
 				])
 			})
 
-			test('short text returns medium font sizes', () => {
-				// charCount < 30 * area (~31 chars)
-				const result = resolveFontSizes(w, h, 'auto', 15)
+			test('configured size caps the heuristic candidates for short text', () => {
+				// fontsize=30.96 (≈ 0.43*72) — only heuristic sizes below it are included
+				const result = resolveFontSizes(w, h, 30.96, true, 3)
 				expect(r3(result)).toEqual([30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
 			})
 
-			test('medium text returns smaller font sizes', () => {
-				// charCount < 40 * area (~42 chars)
-				const result = resolveFontSizes(w, h, 'auto', 35)
-				expect(r3(result)).toEqual([23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('longer text returns even smaller font sizes', () => {
-				// charCount < 50 * area (~52 chars)
-				const result = resolveFontSizes(w, h, 'auto', 45)
-				expect(r3(result)).toEqual([17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('very long text returns smallest font sizes', () => {
-				// charCount >= 50 * area
-				const result = resolveFontSizes(w, h, 'auto', 60)
-				expect(r3(result)).toEqual([15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('empty text returns largest font sizes', () => {
-				const result = resolveFontSizes(w, h, 'auto', 0)
+			test('very short text: FONTSIZE_SHRINK_DEFAULT equivalent gives full heuristic list', () => {
+				// FONTSIZE_SHRINK_DEFAULT=100 → pixel size = 100*72/100/1.2 = 60
+				// Equivalent to old 'auto' for very short text (charCount < 7*area)
+				const result = resolveFontSizes(w, h, 60, true, 3)
 				expect(r3(result)).toEqual([
-					59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
+					60, 59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
 				])
+			})
+
+			test('short text (charCount < 30*area)', () => {
+				const result = resolveFontSizes(w, h, 60, true, 15)
+				expect(r3(result)).toEqual([60, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
+			})
+
+			test('medium text (charCount < 40*area)', () => {
+				const result = resolveFontSizes(w, h, 60, true, 35)
+				expect(r3(result)).toEqual([60, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
+			})
+
+			test('longer text (charCount < 50*area)', () => {
+				const result = resolveFontSizes(w, h, 60, true, 45)
+				expect(r3(result)).toEqual([60, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
+			})
+
+			test('very long text (charCount >= 50*area)', () => {
+				const result = resolveFontSizes(w, h, 60, true, 60)
+				expect(r3(result)).toEqual([60, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
+			})
+
+			test('configured size below all heuristic candidates returns only that size', () => {
+				// fontsize=5 < MIN_FONT_SIZE_FRACTION*72=7.2, so nothing from heuristic qualifies
+				const result = resolveFontSizes(w, h, 5, true, 3)
+				expect(r3(result)).toEqual([5])
+			})
+
+			test('clamps min/max like fixed mode', () => {
+				expect(resolveFontSizes(w, h, 0, true, 3)).toEqual([3])
+				expect(resolveFontSizes(w, h, 200, true, 3)[0]).toEqual(72)
 			})
 		})
 
@@ -195,66 +236,13 @@ describe('resolveFontSizes', () => {
 
 			test('thresholds are resolution-independent, sizes scale with h', () => {
 				// relativeWidth = 1.0 for square — same thresholds as 72x72; charCount < 30 * 1 = 30
-				expect(r3(resolveFontSizes(w, h, 'auto', 20))).toEqual([
+				expect(r3(resolveFontSizes(w, h, h, true, 20))).toEqual([
 					61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
 				])
 
 				// charCount >= 50 * 1 = 50
-				expect(r3(resolveFontSizes(w, h, 'auto', 50))).toEqual([30.24, 24.48, 20.16, 18.72, 15.84, 14.4])
+				expect(r3(resolveFontSizes(w, h, h, true, 50))).toEqual([30.24, 24.48, 20.16, 18.72, 15.84, 14.4])
 			})
-		})
-
-		describe('w:360 h:360 (large display)', () => {
-			const w = 360
-			const h = 360
-
-			test('thresholds are resolution-independent, sizes scale with h', () => {
-				// relativeWidth = 1.0 for square — same thresholds as 72x72; charCount >= 50 * 1 = 50
-				expect(r3(resolveFontSizes(w, h, 'auto', 100))).toEqual([75.6, 61.2, 50.4, 46.8, 39.6, 36])
-
-				// 150 chars — same smallest range
-				expect(r3(resolveFontSizes(w, h, 'auto', 150))).toEqual([75.6, 61.2, 50.4, 46.8, 39.6, 36])
-			})
-		})
-	})
-
-	describe('with fixed font size', () => {
-		test('returns single element array with requested size', () => {
-			expect(resolveFontSizes(72, 72, 14, 10)).toEqual([14])
-			expect(resolveFontSizes(72, 72, 24, 10)).toEqual([24])
-			expect(resolveFontSizes(72, 72, 7, 10)).toEqual([7])
-		})
-
-		test('clamps minimum font size to 3', () => {
-			expect(resolveFontSizes(72, 72, 1, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 2, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 0, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, -5, 10)).toEqual([3])
-		})
-
-		test('clamps maximum font size to height', () => {
-			expect(resolveFontSizes(72, 72, 150, 10)).toEqual([72])
-			expect(resolveFontSizes(72, 123, 200, 10)).toEqual([123])
-			expect(resolveFontSizes(72, 72, 120, 10)).toEqual([72])
-		})
-
-		test('passes through edge values', () => {
-			expect(resolveFontSizes(72, 72, 3, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 71, 10)).toEqual([71])
-		})
-	})
-
-	describe('font size type coercion', () => {
-		test('treats NaN-producing values as auto', () => {
-			// NaN values should trigger auto behavior
-			expect(r3(resolveFontSizes(72, 72, NaN, 3))).toEqual([
-				59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
-			])
-		})
-
-		test('treats string numbers as explicit sizes', () => {
-			// '14' coerced to 14
-			expect(resolveFontSizes(72, 72, '14' as unknown as number, 10)).toEqual([14])
 		})
 	})
 
@@ -266,7 +254,7 @@ describe('resolveFontSizes', () => {
 	describe('resolution independence — same candidate fractions for any subregion size', () => {
 		// Normalise returned sizes to fractions-of-h so different absolute sizes are comparable
 		const fractions = (w: number, h: number, chars: number) =>
-			resolveFontSizes(w, h, 'auto', chars).map((s) => r3([s / h])[0])
+			resolveFontSizes(w, h, h, true, chars).map((s) => r3([s / h])[0])
 
 		// Square subregion (1:1): critical case is short text in a small element.
 		// Old formula: 36×36 → area=0.26, 2 chars → Range 2 [0.43…]

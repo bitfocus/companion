@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type {
 	LayeredButtonModel,
 	LayeredButtonOptions,
@@ -112,7 +113,8 @@ export class ControlButtonLayered
 			color: { value: 0xffffff, isExpression: false },
 			halign: { value: 'center', isExpression: false },
 			valign: { value: 'center', isExpression: false },
-			fontsize: { value: 'auto', isExpression: false },
+			fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
+			fontsizeAllowShrink: { value: true, isExpression: false },
 			font: { value: 'companion-sans', isExpression: false },
 			outlineColor: { value: 0xff000000, isExpression: false },
 		},
@@ -594,7 +596,10 @@ export class ControlButtonLayered
 
 		if (parsedStyle.text.size !== undefined) {
 			const textElement = lazyTextElement()
-			if (textElement) textElement.fontsize = { isExpression: false, value: String(parsedStyle.text.size) }
+			if (textElement) {
+				textElement.fontsize = { isExpression: false, value: parsedStyle.text.size }
+				textElement.fontsizeAllowShrink = { isExpression: false, value: parsedStyle.text.sizeAllowShrink ?? false }
+			}
 		}
 
 		if (parsedStyle.text.color !== undefined) {
