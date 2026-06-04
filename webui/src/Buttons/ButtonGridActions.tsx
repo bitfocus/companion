@@ -41,6 +41,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	const [copyIncrementStep, setCopyIncrementStep] = useState(1)
 	const [copyIncrementPasteIndex, setCopyIncrementPasteIndex] = useState(1)
 	const [copyIncrementSettingsReady, setCopyIncrementSettingsReady] = useState(false)
+	const copyIncrementLoadRequestIdRef = useRef(0)
 
 	let hintText = ''
 	if (activeFunction) {
@@ -62,6 +63,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	}
 
 	const resetCopyIncrementState = useCallback(() => {
+		copyIncrementLoadRequestIdRef.current += 1
 		setCopyIncrementModalOpen(false)
 		setCopyIncrementLoading(false)
 		setCopyIncrementLoadError(null)
@@ -93,6 +95,8 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 	}, [resetCopyIncrementState])
 
 	const prepareCopyIncrementSource = useCallback((location: ControlLocation) => {
+		const requestId = ++copyIncrementLoadRequestIdRef.current
+
 		setActiveFunctionButton(location)
 		setCopyIncrementModalOpen(true)
 		setCopyIncrementLoading(true)
@@ -106,13 +110,19 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		queryClient
 			.fetchQuery(trpc.controls.getControlIncrementOptions.queryOptions({ location }))
 			.then((fields) => {
+				if (copyIncrementLoadRequestIdRef.current !== requestId) return
+
 				setCopyIncrementFields(fields)
 				setCopyIncrementSelectedFieldIds([])
 			})
 			.catch((e) => {
+				if (copyIncrementLoadRequestIdRef.current !== requestId) return
+
 				setCopyIncrementLoadError(String(e))
 			})
 			.finally(() => {
+				if (copyIncrementLoadRequestIdRef.current !== requestId) return
+
 				setCopyIncrementLoading(false)
 			})
 	}, [])
