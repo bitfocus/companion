@@ -7,7 +7,6 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
-import { ImagePreviewIcon, ImagePreviewIconFromExpression } from '~/Components/ImagePreviewIcon.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -27,7 +26,6 @@ interface FormPropertyFieldProps {
 	tooltip: string | undefined
 	features: InputFeatureIconsProps | undefined
 	disableAutoExpression: boolean | undefined
-	isImageField?: boolean
 	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn, inputId: string) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField({
@@ -37,7 +35,6 @@ export const FormPropertyField = observer(function FormPropertyField({
 	tooltip,
 	features,
 	disableAutoExpression,
-	isImageField,
 	children,
 }: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
@@ -69,27 +66,12 @@ export const FormPropertyField = observer(function FormPropertyField({
 
 	const inputId = useId()
 
-	let imagePreviewNode: React.ReactNode = null
-	if (isImageField) {
-		if (elementProp.isExpression) {
-			imagePreviewNode = (
-				<ImagePreviewIconFromExpression
-					expression={typeof elementProp.value === 'string' ? elementProp.value : ''}
-					controlId={controlId}
-				/>
-			)
-		} else {
-			imagePreviewNode = <ImagePreviewIcon value={(elementProp.value as string | null) ?? null} />
-		}
-	}
-
 	return (
 		<>
 			<FormLabel htmlFor={inputId} className={'col-sm-4 col-form-label col-form-label-sm'}>
 				{label}
 				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
-				{imagePreviewNode}
 				{isOverridden ? (
 					<span title="Value has a linked feedback override">
 						<FontAwesomeIcon icon={faLayerGroup} />
