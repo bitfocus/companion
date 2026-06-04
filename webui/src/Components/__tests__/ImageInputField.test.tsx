@@ -227,14 +227,20 @@ describe('Select button opens modal', () => {
 describe('Download button', () => {
 	it('triggers a download with the correct filename for a PNG', async () => {
 		const user = userEvent.setup()
+		const createdAnchors: HTMLAnchorElement[] = []
+		const origCreate = document.createElement.bind(document)
+		vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+			const el = origCreate(tag)
+			if (tag === 'a') createdAnchors.push(el as HTMLAnchorElement)
+			return el
+		})
 		const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
-
 		renderField({ value: SAMPLE_PNG })
 		await user.click(screen.getByRole('button', { name: 'Download image' }))
-
 		expect(clickSpy).toHaveBeenCalledTimes(1)
-
-		clickSpy.mockRestore()
+		const anchor = createdAnchors.find((a) => a.download)
+		expect(anchor?.download).toBe('custom-image.png')
+		vi.restoreAllMocks()
 	})
 
 	it('uses .jpg extension for jpeg images', async () => {

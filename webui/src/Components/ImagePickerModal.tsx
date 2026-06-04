@@ -2,7 +2,7 @@ import { faFolderOpen } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
-import { forwardRef, useCallback, useContext, useImperativeHandle, useRef, useState } from 'react'
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
@@ -146,8 +146,21 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
-	const previewUrl =
-		imageSource?.kind === 'file' ? URL.createObjectURL(imageSource.file) : (imageSource?.dataUrl ?? null)
+	const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null)
+	const imageFile = imageSource?.kind === 'file' ? imageSource.file : null
+	useEffect(() => {
+		if (!imageFile) {
+			setFilePreviewUrl(null)
+			return
+		}
+		const url = URL.createObjectURL(imageFile)
+		setFilePreviewUrl(url)
+		return () => {
+			URL.revokeObjectURL(url)
+		}
+	}, [imageFile])
+
+	const previewUrl = imageSource?.kind === 'file' ? filePreviewUrl : (imageSource?.dataUrl ?? null)
 
 	// Sync incoming sharedDataUrl changes from the other tab (only when no file is selected locally)
 	const prevSharedDataUrlRef = useRef(sharedDataUrl)
@@ -342,17 +355,25 @@ function CustomImageTab({
 			Promise.resolve()
 				.then(async () => {
 					const imageSourceStr = await blobToDataURL(file)
-					const img = new Image()
-					img.onload = () => {
-						if (max && (img.height > max.height || img.width > max.width)) {
-							onSharedDataUrlChange(imageResize(img))
-						} else if (min && (img.width < min.width || img.height < min.height)) {
-							setErrorMessage(`Image dimensions must be at least ${min.width}×${min.height}`)
-						} else {
-							onSharedDataUrlChange(imageSourceStr)
+					await new Promise<void>((resolve, reject) => {
+						const img = new Image()
+						img.onload = () => {
+							try {
+								if (max && (img.height > max.height || img.width > max.width)) {
+									onSharedDataUrlChange(imageResize(img))
+								} else if (min && (img.width < min.width || img.height < min.height)) {
+									setErrorMessage(`Image dimensions must be at least ${min.width}×${min.height}`)
+								} else {
+									onSharedDataUrlChange(imageSourceStr)
+								}
+								resolve()
+							} catch (err) {
+								reject(err instanceof Error ? err : new Error(String(err)))
+							}
 						}
-					}
-					img.src = imageSourceStr
+						img.onerror = () => reject(new Error('Failed to load image — the file may be corrupted or unsupported.'))
+						img.src = imageSourceStr
+					})
 				})
 				.catch((err) => {
 					setErrorMessage(`Error reading file: ${err}`)
