@@ -46,7 +46,7 @@ const queryClient = new QueryClient({
 // Pre-seed the query cache so LibraryImageThumbnail renders the image instead of a spinner
 queryClient.setQueryData(
 	trpc.imageLibrary.getData.queryOptions({ imageName: SAMPLE_IMAGE_ID, type: 'preview' }).queryKey,
-	{ image: SAMPLE_PNG, checksum: SAMPLE_CHECKSUM }
+	() => ({ image: SAMPLE_PNG, checksum: SAMPLE_CHECKSUM })
 )
 
 const withProviders: Decorator = (Story) => (
