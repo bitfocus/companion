@@ -7,24 +7,23 @@ import { base64EncodeUint8Array } from '~/Resources/util.js'
 /**
  * Hook for uploading image files to the image library
  */
-export function useImageLibraryUpload(): { uploadImageFile: (file: File, imageName: string) => Promise<void> } {
+export function useImageLibraryUpload(): {
+	uploadImageFile: (file: File, imageName: string) => Promise<void>
+	uploadDataUrl: (dataUrl: string, imageName: string) => Promise<void>
+} {
 	const startUploadMutation = useMutationExt(trpc.imageLibrary.upload.start.mutationOptions())
 	const uploadChunkMutation = useMutationExt(trpc.imageLibrary.upload.uploadChunk.mutationOptions())
 	const completeUploadMutation = useMutationExt(trpc.imageLibrary.upload.complete.mutationOptions())
 
-	const uploadImageFile = useCallback(
-		async (file: File, imageName: string) => {
-			// Convert file to data URL and upload
-			const dataUrl = await blobToDataURL(file)
-			const data = new TextEncoder().encode(dataUrl)
-
+	const uploadEncodedData = useCallback(
+		async (data: Uint8Array, filename: string, imageName: string) => {
 			const hasher = CryptoJS.algo.SHA1.create()
 			hasher.update(CryptoJS.lib.WordArray.create(data))
 			const checksum = hasher.finalize().toString(CryptoJS.enc.Hex)
 
 			// Start upload
 			const sessionId = await startUploadMutation.mutateAsync({
-				name: file.name,
+				name: filename,
 				size: data.byteLength,
 			})
 			if (!sessionId) throw new Error('Failed to start upload')
@@ -55,5 +54,22 @@ export function useImageLibraryUpload(): { uploadImageFile: (file: File, imageNa
 		[startUploadMutation, uploadChunkMutation, completeUploadMutation]
 	)
 
-	return { uploadImageFile }
+	const uploadImageFile = useCallback(
+		async (file: File, imageName: string) => {
+			const dataUrl = await blobToDataURL(file)
+			const data = new TextEncoder().encode(dataUrl)
+			await uploadEncodedData(data, file.name, imageName)
+		},
+		[uploadEncodedData]
+	)
+
+	const uploadDataUrl = useCallback(
+		async (dataUrl: string, imageName: string) => {
+			const data = new TextEncoder().encode(dataUrl)
+			await uploadEncodedData(data, '', imageName)
+		},
+		[uploadEncodedData]
+	)
+
+	return { uploadImageFile, uploadDataUrl }
 }

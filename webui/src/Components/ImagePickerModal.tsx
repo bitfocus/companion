@@ -27,7 +27,7 @@ interface MinMaxDimension {
 }
 
 export interface ImagePickerModalRef {
-	show(initialTab?: TabKey): void
+	show(initialTab?: TabKey, initialDataUrl?: string | null): void
 }
 
 interface ImagePickerModalProps {
@@ -42,12 +42,14 @@ export const ImagePickerModal = observer(
 	forwardRef<ImagePickerModalRef, ImagePickerModalProps>(function ImagePickerModal({ setValue, min, max }, ref) {
 		const [open, setOpen] = useState(false)
 		const [activeTab, setActiveTab] = useState<TabKey>('library')
+		const [sharedDataUrl, setSharedDataUrl] = useState<string | null>(null)
 
 		useImperativeHandle(
 			ref,
 			() => ({
-				show(initialTab: TabKey = 'library') {
+				show(initialTab: TabKey = 'library', initialDataUrl: string | null = null) {
 					setActiveTab(initialTab)
+					setSharedDataUrl(initialDataUrl)
 					setOpen(true)
 				},
 			}),
@@ -95,11 +97,21 @@ export const ImagePickerModal = observer(
 									</TabArea.Panel>
 
 									<TabArea.Panel value="upload">
-										<UploadToLibraryTab onComplete={handleLibrarySelect} />
+										<UploadToLibraryTab
+											onComplete={handleLibrarySelect}
+											sharedDataUrl={sharedDataUrl}
+											onSharedDataUrlChange={setSharedDataUrl}
+										/>
 									</TabArea.Panel>
 
 									<TabArea.Panel value="custom">
-										<CustomImageTab onComplete={handleCustomSelect} min={min} max={max} />
+										<CustomImageTab
+											onComplete={handleCustomSelect}
+											min={min}
+											max={max}
+											sharedDataUrl={sharedDataUrl}
+											onSharedDataUrlChange={setSharedDataUrl}
+										/>
 									</TabArea.Panel>
 								</TabArea.Root>
 							</Modal.Body>
@@ -113,20 +125,41 @@ export const ImagePickerModal = observer(
 
 interface UploadToLibraryTabProps {
 	onComplete: (imageName: string) => void
+	sharedDataUrl: string | null
+	onSharedDataUrlChange: (dataUrl: string) => void
 }
 
-const UploadToLibraryTab = observer(function UploadToLibraryTab({ onComplete }: UploadToLibraryTabProps) {
+type ImageSource = { kind: 'file'; file: File } | { kind: 'dataUrl'; dataUrl: string }
+
+const UploadToLibraryTab = observer(function UploadToLibraryTab({
+	onComplete,
+	sharedDataUrl,
+	onSharedDataUrlChange,
+}: UploadToLibraryTabProps) {
 	const { notifier } = useContext(RootAppStoreContext)
-	const [selectedFile, setSelectedFile] = useState<File | null>(null)
-	const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+	const [imageSource, setImageSource] = useState<ImageSource | null>(() =>
+		sharedDataUrl ? { kind: 'dataUrl', dataUrl: sharedDataUrl } : null
+	)
 	const [description, setDescription] = useState('')
 	const [imageName, setImageName] = useState(() => humanId({ separator: '-', capitalize: false }))
 	const [isUploading, setIsUploading] = useState(false)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
+	const previewUrl =
+		imageSource?.kind === 'file' ? URL.createObjectURL(imageSource.file) : (imageSource?.dataUrl ?? null)
+
+	// Sync incoming sharedDataUrl changes from the other tab (only when no file is selected locally)
+	const prevSharedDataUrlRef = useRef(sharedDataUrl)
+	if (prevSharedDataUrlRef.current !== sharedDataUrl) {
+		prevSharedDataUrlRef.current = sharedDataUrl
+		if (sharedDataUrl && imageSource?.kind !== 'file') {
+			setImageSource({ kind: 'dataUrl', dataUrl: sharedDataUrl })
+		}
+	}
+
 	const createMutation = useMutationExt(trpc.imageLibrary.create.mutationOptions())
-	const { uploadImageFile } = useImageLibraryUpload()
+	const { uploadImageFile, uploadDataUrl } = useImageLibraryUpload()
 
 	const handleFileClick = useCallback(() => {
 		setErrorMessage(null)
@@ -136,17 +169,23 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({ onComplete }: 
 		}
 	}, [])
 
-	const handleFile = useCallback((file: File) => {
-		if (!allowedImageTypes.includes(file.type)) {
-			setErrorMessage('Only PNG, JPEG, GIF, WebP or SVG files are supported.')
-			return
-		}
-		setSelectedFile(file)
-		const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
-		setDescription(nameWithoutExt)
-		setPreviewUrl(URL.createObjectURL(file))
-		setErrorMessage(null)
-	}, [])
+	const handleFile = useCallback(
+		(file: File) => {
+			if (!allowedImageTypes.includes(file.type)) {
+				setErrorMessage('Only PNG, JPEG, GIF, WebP or SVG files are supported.')
+				return
+			}
+			const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '')
+			setDescription(nameWithoutExt)
+			setImageSource({ kind: 'file', file })
+			// Notify the other tab — convert to data URL asynchronously
+			blobToDataURL(file)
+				.then(onSharedDataUrlChange)
+				.catch((err) => console.error('Failed to convert file to data URL:', err))
+			setErrorMessage(null)
+		},
+		[onSharedDataUrlChange]
+	)
 
 	const handleFileChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,11 +197,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({ onComplete }: 
 	)
 
 	const handleUpload = useCallback(() => {
-		if (!selectedFile) return
-		if (!description.trim()) {
-			setErrorMessage('Description is required.')
-			return
-		}
+		if (!imageSource) return
 		if (!isLabelValid(imageName)) {
 			setErrorMessage('Image ID is invalid.')
 			return
@@ -171,10 +206,15 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({ onComplete }: 
 		setIsUploading(true)
 		setErrorMessage(null)
 
+		const doUpload =
+			imageSource.kind === 'file'
+				? async () => uploadImageFile(imageSource.file, imageName)
+				: async () => uploadDataUrl(imageSource.dataUrl, imageName)
+
 		createMutation
 			.mutateAsync({ name: imageName, description: description.trim() })
 			.then(async () => {
-				await uploadImageFile(selectedFile, imageName)
+				await doUpload()
 				onComplete(imageName)
 			})
 			.catch((err) => {
@@ -185,9 +225,9 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({ onComplete }: 
 			.finally(() => {
 				setIsUploading(false)
 			})
-	}, [selectedFile, description, imageName, createMutation, uploadImageFile, onComplete, notifier])
+	}, [imageSource, description, imageName, createMutation, uploadImageFile, uploadDataUrl, onComplete, notifier])
 
-	const canUpload = !!selectedFile && description.trim() !== '' && isLabelValid(imageName) && !isUploading
+	const canUpload = !!imageSource && isLabelValid(imageName) && !isUploading
 
 	return (
 		<div className="d-flex flex-column gap-3 pt-3">
@@ -240,15 +280,18 @@ interface CustomImageTabProps {
 	onComplete: (dataUrl: string | null) => void
 	min?: MinMaxDimension
 	max?: MinMaxDimension
+	sharedDataUrl: string | null
+	onSharedDataUrlChange: (dataUrl: string) => void
 }
 
 function CustomImageTab({
 	onComplete,
 	min = { width: 8, height: 8 },
 	max = { width: 400, height: 400 },
+	sharedDataUrl,
+	onSharedDataUrlChange,
 }: CustomImageTabProps) {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
-	const [pendingDataUrl, setPendingDataUrl] = useState<string | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
@@ -302,11 +345,11 @@ function CustomImageTab({
 					const img = new Image()
 					img.onload = () => {
 						if (max && (img.height > max.height || img.width > max.width)) {
-							setPendingDataUrl(imageResize(img))
+							onSharedDataUrlChange(imageResize(img))
 						} else if (min && (img.width < min.width || img.height < min.height)) {
 							setErrorMessage(`Image dimensions must be at least ${min.width}×${min.height}`)
 						} else {
-							setPendingDataUrl(imageSourceStr)
+							onSharedDataUrlChange(imageSourceStr)
 						}
 					}
 					img.src = imageSourceStr
@@ -315,7 +358,7 @@ function CustomImageTab({
 					setErrorMessage(`Error reading file: ${err}`)
 				})
 		},
-		[min, max, imageResize]
+		[min, max, imageResize, onSharedDataUrlChange]
 	)
 
 	const handleFileChange = useCallback(
@@ -328,10 +371,10 @@ function CustomImageTab({
 	)
 
 	const handleUseImage = useCallback(() => {
-		if (pendingDataUrl) {
-			onComplete(pendingDataUrl)
+		if (sharedDataUrl) {
+			onComplete(sharedDataUrl)
 		}
-	}, [pendingDataUrl, onComplete])
+	}, [sharedDataUrl, onComplete])
 
 	return (
 		<div className="d-flex flex-column gap-3 pt-3">
@@ -357,10 +400,10 @@ function CustomImageTab({
 				/>
 			</div>
 
-			<ImagePreviewBox src={pendingDataUrl} onFileDrop={handleFile} dragOverMessage="Drop image to preview" />
+			<ImagePreviewBox src={sharedDataUrl} onFileDrop={handleFile} dragOverMessage="Drop image to preview" />
 
 			<div>
-				<Button color="primary" disabled={!pendingDataUrl} onClick={handleUseImage}>
+				<Button color="primary" disabled={!sharedDataUrl} onClick={handleUseImage}>
 					Use This Image
 				</Button>
 			</div>

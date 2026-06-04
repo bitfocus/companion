@@ -1,4 +1,4 @@
-import { faExclamationTriangle, faImage, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faExclamationTriangle, faFolderOpen, faImage, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
@@ -79,8 +79,25 @@ export const ImageInputField = observer(function ImageInputField({
 	const libraryImage = parsed.type === 'library' ? imageLibrary.getImage(parsed.id) : undefined
 
 	const openModal = useCallback(() => {
-		modalRef.current?.show('library')
-	}, [])
+		if (parsed.type === 'inline') {
+			modalRef.current?.show('custom', parsed.dataUrl)
+		} else {
+			modalRef.current?.show('library')
+		}
+	}, [parsed])
+
+	const handleDownload = useCallback(() => {
+		if (parsed.type !== 'inline') return
+		const mimeType = parsed.dataUrl.split(';')[0]?.split(':')[1] ?? 'image/png'
+		const subtype = mimeType.split('/')[1]?.split('+')[0] ?? 'png'
+		const ext = subtype === 'jpeg' ? 'jpg' : subtype
+		const link = document.createElement('a')
+		link.href = parsed.dataUrl
+		link.download = `custom-image.${ext}`
+		document.body.appendChild(link)
+		link.click()
+		document.body.removeChild(link)
+	}, [parsed])
 
 	const clearImage = useCallback(() => {
 		setValue(null)
@@ -112,9 +129,26 @@ export const ImageInputField = observer(function ImageInputField({
 				<div className="image-input-field__preview">{thumbnail}</div>
 				<div className="image-input-field__label flex-grow-1 text-truncate">{label}</div>
 				<ButtonGroup>
-					<Button color="primary" onClick={openModal} disabled={disabled}>
-						Browse…
+					<Button
+						color="primary"
+						onClick={openModal}
+						disabled={disabled}
+						aria-label="Select image"
+						title="Select image"
+					>
+						<FontAwesomeIcon icon={faFolderOpen} />
 					</Button>
+					{parsed.type === 'inline' && (
+						<Button
+							color="secondary"
+							onClick={handleDownload}
+							disabled={disabled}
+							aria-label="Download image"
+							title="Download image"
+						>
+							<FontAwesomeIcon icon={faDownload} />
+						</Button>
+					)}
 					<Button
 						color="danger"
 						onClick={clearImage}
