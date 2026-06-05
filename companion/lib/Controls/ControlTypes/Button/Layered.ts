@@ -24,7 +24,6 @@ import {
 	type ButtonStyleProperties,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
@@ -257,18 +256,18 @@ export class ControlButtonLayered
 	 */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
 		// Block out the button text
-		const injectedVariableValues: VariableValues = {}
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 		if (location) {
 			// Ensure we don't enter into an infinite loop
 			// TODO - legacy location variables?
-			// injectedVariableValues[`internal:b_text_${location.pageNumber}_${location.row}_${location.column}`] = '$RE'
+			// would mean creating a createParserForLayeredButton that adds them as
+			// another contextual variables set possibility
 		}
 
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
+		const parser = this.deps.variableValues.createParserForControl(
 			location,
-			this.entities.getLocalVariableEntities(),
-			injectedVariableValues
+			undefined,
+			this.entities.getLocalVariableEntities()
 		)
 
 		const locationStr = location ? formatLocation(location) : null

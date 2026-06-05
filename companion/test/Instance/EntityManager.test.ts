@@ -1320,7 +1320,7 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 
 			// Should have passed the location to parse variables
-			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', null)
+			expect(mockControlsController.createVariablesAndExpressionParser).toHaveBeenCalledWith('control-1', undefined)
 			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalled()
 		})
 	})

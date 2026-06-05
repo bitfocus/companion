@@ -133,10 +133,10 @@ export class ControlButtonPreset
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType) =>
 				deps.variableValues
-					.createVariablesAndExpressionParser(
+					.createParserForControl(
 						deps.pageStore.getLocationOfControlId(this.controlId),
-						null, // This doesn't support local variables
-						null
+						undefined,
+						null // This doesn't support local variables
 					)
 					.executeExpression(expression, requiredType),
 			false
@@ -237,11 +237,7 @@ export class ControlButtonPreset
 	 * @returns the processed style of the button
 	 */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
-			null,
-			this.entities.getLocalVariableEntities(),
-			null
-		)
+		const parser = this.deps.variableValues.createStandaloneParser(undefined, this.entities.getLocalVariableEntities())
 
 		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
 

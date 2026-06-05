@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
-import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
+import { VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
 
 describe('VariablesValues', () => {
 	let values: VariablesValues
@@ -317,69 +317,6 @@ describe('VariablesValues', () => {
 			expect(values.getVariableValue('conn', 'a')).toBe(1)
 			expect(values.getVariableValue('conn', 'b')).toBe(2)
 		})
-	})
-
-	describe('InjectedVariablesForLocation', () => {
-		test('sets all ten $(this:*) keys for a valid location', () => {
-			const cache: VariablesCache = InjectedVariablesForLocation({ pageNumber: 2, row: 3, column: 4 })
-			const expectedKeys = [
-				'this:page',
-				'this:column',
-				'this:row',
-				'this:location',
-				'this:page_name',
-				'this:active',
-				'this:step',
-				'this:step_count',
-				'this:actions_running',
-				'this:button_status',
-			]
-			for (const key of expectedKeys) {
-				expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
-			}
-		})
-
-		test('sets page, row, and column to the correct numeric values', () => {
-			const cache: VariablesCache = InjectedVariablesForLocation({ pageNumber: 5, row: 2, column: 7 })
-			expect(cache.get('this:page')).toBe(5)
-			expect(cache.get('this:row')).toBe(2)
-			expect(cache.get('this:column')).toBe(7)
-		})
-
-		test('sets $(this:page_name) to the correct $(internal:page_number_N_name) reference', () => {
-			const cache: VariablesCache = InjectedVariablesForLocation({ pageNumber: 3, row: 1, column: 2 })
-			expect(cache.get('this:page_name')).toBe('$(internal:page_number_3_name)')
-		})
-
-		test('sets button dynamic variables to the correct $(internal:b_*) reference strings', () => {
-			const cache: VariablesCache = InjectedVariablesForLocation({ pageNumber: 2, row: 4, column: 6 })
-			expect(cache.get('this:active')).toBe('$(internal:b_active_2_4_6)')
-			expect(cache.get('this:step')).toBe('$(internal:b_step_2_4_6)')
-			expect(cache.get('this:step_count')).toBe('$(internal:b_step_count_2_4_6)')
-			expect(cache.get('this:actions_running')).toBe('$(internal:b_actions_running_2_4_6)')
-			expect(cache.get('this:button_status')).toBe('$(internal:b_status_2_4_6)')
-		})
-
-		test.each([[null], [undefined]])('$0 location: primitive this:* variables are undefined', (controlLocation) => {
-			const cache: VariablesCache = InjectedVariablesForLocation(controlLocation)
-			expect(cache.get('this:page')).toBeUndefined()
-			expect(cache.get('this:row')).toBeUndefined()
-			expect(cache.get('this:column')).toBeUndefined()
-			expect(cache.get('this:location')).toBeUndefined()
-		})
-
-		test.each([[null], [undefined]])(
-			'$0 location: complex this:* variables resolve to VARIABLE_UNKNOWN_VALUE',
-			(controlLocation) => {
-				const cache: VariablesCache = InjectedVariablesForLocation(controlLocation)
-				expect(cache.get('this:page_name')).toBe(VARIABLE_UNKNOWN_VALUE)
-				expect(cache.get('this:active')).toBe(VARIABLE_UNKNOWN_VALUE)
-				expect(cache.get('this:step')).toBe(VARIABLE_UNKNOWN_VALUE)
-				expect(cache.get('this:step_count')).toBe(VARIABLE_UNKNOWN_VALUE)
-				expect(cache.get('this:actions_running')).toBe(VARIABLE_UNKNOWN_VALUE)
-				expect(cache.get('this:button_status')).toBe(VARIABLE_UNKNOWN_VALUE)
-			}
-		)
 	})
 
 	describe('triggerLocationVariablesChange', () => {

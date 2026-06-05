@@ -20,7 +20,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionOptionValues, Complete } from '@companion-module/base'
@@ -315,7 +315,7 @@ export class InternalController {
 				return undefined
 			}
 
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, undefined)
 
 			// Parse the options if enabled
 			let parsedOptions: CompanionOptionValues
@@ -462,10 +462,7 @@ export class InternalController {
 			)
 			if (!entityDefinition) return
 
-			const overrideVariableValues: VariableValues = {
-				'this:surface_id': extras.surfaceId,
-			}
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues)
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, extras.surfaceId)
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {

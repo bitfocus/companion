@@ -580,7 +580,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 				// Note: for actions, this doesn't need to be reactive
-				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null)
+				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, undefined)
 				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 				if (!parseRes.ok) {
 					this.logger.warn(
@@ -938,7 +938,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		msg: ParseVariablesInStringMessage
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null)
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, undefined)
 			const result = parser.parseVariables(msg.text)
 
 			return {

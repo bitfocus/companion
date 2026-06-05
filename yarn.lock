@@ -1877,6 +1877,7 @@ __metadata:
     prettier: "npm:^3.8.3"
     socket: "npm:^1.1.102"
     tsx: "npm:^4.22.3"
+    type-testing: "npm:^0.2.0"
     typescript: "npm:~6.0.3"
     typescript-eslint: "npm:^8.59.4"
     vitest: "npm:^4.1.7"

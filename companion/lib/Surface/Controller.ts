@@ -31,9 +31,7 @@ import type {
 	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { Complete } from '@companion-module/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
@@ -1415,30 +1413,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	surfaceExecuteExpression(str: string, surfaceId: string): ExecuteExpressionResult {
-		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(
-			null,
-			null,
-			this.#getInjectedVariablesForSurfaceId(surfaceId)
-		)
+		const surfacePageNumber = this.devicePageGet(surfaceId)
+		const parser = this.#handlerDependencies.variables.values.createParserForSurface(surfaceId, surfacePageNumber)
 
 		return parser.executeExpression(str, undefined)
-	}
-
-	/**
-	 * Variables to inject based on location
-	 */
-	#getInjectedVariablesForSurfaceId(surfaceId: string): VariableValues {
-		const pageNumber = this.devicePageGet(surfaceId)
-
-		return {
-			'this:surface_id': surfaceId,
-
-			// Reactivity is triggered manually
-			'this:page': pageNumber,
-
-			// Reactivity happens for these because of references to the inner variables
-			'this:page_name': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
-		}
 	}
 
 	exportAll(): Record<number, SurfaceConfig> {

@@ -82,7 +82,7 @@ export abstract class ControlEntityListPoolBase {
 
 		this.#specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			props.controlId,
-			this.createVariablesAndExpressionParser.bind(this),
+			this.createVariablesAndExpressionParser.bind(this, undefined),
 			{
 				isInverted: this.updateIsInvertedValues.bind(this),
 				storeResult: this.updateStoreResultValues.bind(this),
@@ -174,15 +174,11 @@ export abstract class ControlEntityListPoolBase {
 			})
 	}
 
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+	createVariablesAndExpressionParser(surfaceId: string | undefined): VariablesAndExpressionParser {
 		const controlLocation = this.#pageStore.getLocationOfControlId(this.controlId)
 		const variableEntities = this.getLocalVariableEntities()
 
-		return this.#variableValues.createVariablesAndExpressionParser(
-			controlLocation,
-			variableEntities,
-			overrideVariableValues
-		)
+		return this.#variableValues.createParserForControl(controlLocation, surfaceId, variableEntities)
 	}
 
 	/**

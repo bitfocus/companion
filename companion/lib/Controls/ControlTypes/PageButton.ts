@@ -92,7 +92,7 @@ export abstract class ControlButtonPage<TJson>
 	 */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(location, null, null)
+		const parser = this.deps.variableValues.createParserForControl(location, undefined, null)
 
 		const { drawType, elements: rawElements } = this.getDrawElements()
 
