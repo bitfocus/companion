@@ -8,6 +8,7 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
@@ -1059,6 +1060,122 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				DEFAULT_PADDING
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+	})
+
+	describe('gauge element', () => {
+		const DEFAULT_THRESHOLDS: ButtonGraphicsGaugeDrawElement['thresholds'] = [
+			{ value: 0, color: 0x00ff00 },
+			{ value: 66, color: 0xffff00 },
+			{ value: 85, color: 0xff0000 },
+		]
+
+		function makeGaugeElement(overrides: Partial<ButtonGraphicsGaugeDrawElement> = {}): ButtonGraphicsGaugeDrawElement {
+			return {
+				...ELEMENT_BASE,
+				id: 'gauge-1',
+				type: 'gauge',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				rotation: 0,
+				value: 50,
+				orientation: 'horizontal',
+				reverse: false,
+				multiSegment: true,
+				thresholds: DEFAULT_THRESHOLDS,
+				inactiveStyle: 'transparent',
+				inactiveAmount: 70,
+				...overrides,
+			}
+		}
+
+		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+
+		async function drawGauge(gauge: ButtonGraphicsGaugeDrawElement, size = { w: 72, h: 58 }): Promise<Canvas> {
+			const img = Image.create(size.w, size.h, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements: [gauge] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			return img.canvasImage
+		}
+
+		test('value=0 - only inactive background visible', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 0 }))).toMatchImageSnapshot()
+		})
+
+		test('value=50 - first segment partially active', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50 }))).toMatchImageSnapshot()
+		})
+
+		test('value=75 - two segments active (green + yellow), red inactive', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75 }))).toMatchImageSnapshot()
+		})
+
+		test('value=100 - all segments active, no inactive', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 100 }))).toMatchImageSnapshot()
+		})
+
+		test('reverse=true - fills from right', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, reverse: true }))).toMatchImageSnapshot()
+		})
+
+		test('multiSegment=false - single colour for entire active region', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75, multiSegment: false }))).toMatchImageSnapshot()
+		})
+
+		test('inactiveStyle=dimmed - inactive portions darkened', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, inactiveStyle: 'dimmed', inactiveAmount: 70 }))
+			).toMatchImageSnapshot()
+		})
+
+		test('inactiveAmount=0 - inactive portions invisible', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, inactiveAmount: 0 }))).toMatchImageSnapshot()
+		})
+
+		test('inactiveAmount=100 - inactive same as active colour', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, inactiveAmount: 100 }))).toMatchImageSnapshot()
+		})
+
+		test('orientation=vertical reverse=false - fills from bottom', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, orientation: 'vertical' }))).toMatchImageSnapshot()
+		})
+
+		test('orientation=vertical reverse=true - fills from top', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, orientation: 'vertical', reverse: true }))
+			).toMatchImageSnapshot()
+		})
+
+		test('empty thresholds - nothing drawn', async () => {
+			await expect(await drawGauge(makeGaugeElement({ thresholds: [] }))).toMatchImageSnapshot()
+		})
+
+		test('single threshold - full bar one colour', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, thresholds: [{ value: 0, color: 0x0088ff }] }))
+			).toMatchImageSnapshot()
+		})
+
+		test('unsorted thresholds - sorted before rendering', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 75,
+						thresholds: [
+							{ value: 85, color: 0xff0000 },
+							{ value: 0, color: 0x00ff00 },
+							{ value: 66, color: 0xffff00 },
+						],
+					})
+				)
+			).toMatchImageSnapshot()
 		})
 	})
 })
