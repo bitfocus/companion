@@ -243,7 +243,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 	const canUpload = !!imageSource && isLabelValid(imageName) && !isUploading
 
 	return (
-		<div className="d-flex flex-column gap-3 pt-3">
+		<div className="d-flex flex-column gap-3">
 			<DismissableAlert color="warning" visible={!!errorMessage} onClose={() => setErrorMessage(null)}>
 				{errorMessage}
 			</DismissableAlert>
@@ -398,7 +398,7 @@ function CustomImageTab({
 	}, [sharedDataUrl, onComplete])
 
 	return (
-		<div className="d-flex flex-column gap-3 pt-3">
+		<div className="d-flex flex-column gap-3">
 			<p className="text-muted mb-0">
 				This image will be stored only for this field and will not appear in the image library.
 			</p>
