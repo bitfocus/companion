@@ -4,8 +4,6 @@ import { go as fuzzySearch } from 'fuzzysort'
 import { capitalize } from 'lodash-es'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CollapsibleTree,
@@ -18,6 +16,7 @@ import { SearchBox } from '~/Components/SearchBox'
 import { useConnectionTreeNodes, type ConnectionTreeNodeMeta } from '~/Controls/Components/useConnectionTreeNodes.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
+import { type EntityLeafItem } from '~/Stores/EntityDefinitionsStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
@@ -54,15 +53,6 @@ interface AddEntitiesModalProps {
 	disabled: boolean
 }
 const EntityTypeLabelContext = createContext<string>('')
-
-interface EntityLeafItem {
-	key: string
-	fullId: string
-	label: string
-	searchLabel: string
-	sortKey: string
-	description: string | undefined
-}
 
 const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLeafItem }) {
 	return (
@@ -109,60 +99,20 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		[recentlyUsed, addEntity]
 	)
 
-	// Filter to only connections that have entity definitions matching our entity type + feedback filter
 	const getEntityLeaves = useCallback(
-		(connectionId: string, connectionInfo: ClientConnectionConfig): EntityLeafItem[] => {
-			const items = definitions.connections.get(connectionId)
-			if (!items || items.size === 0) return []
-
-			const leaves: EntityLeafItem[] = []
-			for (const [id, info] of items.entries()) {
-				if (!info || !info.label) continue
-				if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
-
-				leaves.push({
-					key: `${connectionId}:${id}`,
-					fullId: `${connectionId}:${id}`,
-					label: info.label,
-					searchLabel: `${connectionInfo.label}: ${info.label}`,
-					sortKey: String(info.sortKey ?? info.label),
-					description: info.description,
-				})
-			}
-
-			leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
-			return leaves
-		},
-		[definitions.connections, feedbackListType]
+		(connectionId: string): EntityLeafItem[] => definitions.buildConnectionLeaves(connectionId, feedbackListType),
+		[definitions, feedbackListType]
 	)
 
 	const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
 
-	// Build internal connection node if it has matching entities
+	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType)
 	const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
-		const internalItems = definitions.connections.get('internal')
-		if (!internalItems || internalItems.size === 0) return null
-
-		const leaves: EntityLeafItem[] = []
-		for (const [id, info] of internalItems.entries()) {
-			if (!info || !info.label) continue
-			if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
-			leaves.push({
-				key: `internal:${id}`,
-				fullId: `internal:${id}`,
-				label: info.label,
-				searchLabel: `internal: ${info.label}`,
-				sortKey: info.sortKey ?? info.label,
-				description: info.description,
-			})
-		}
-
-		if (leaves.length === 0) return null
-
+		if (internalLeaves.length === 0) return null
 		return {
 			id: 'connection:internal',
 			children: [],
-			leaves,
+			leaves: internalLeaves,
 			metadata: {
 				type: 'connection',
 				connectionId: 'internal',
@@ -170,7 +120,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 				moduleDisplayName: undefined,
 			},
 		}
-	}, [definitions.connections, feedbackListType])
+	}, [internalLeaves])
 
 	// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
 	const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])

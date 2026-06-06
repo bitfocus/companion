@@ -68,6 +68,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 		const expressionVariablesList = new ExpressionVariablesListStore()
 
+		const connections = new ConnectionsStore()
+
 		return {
 			notifier: notifierObj,
 			helpViewer: helpModalRef,
@@ -75,13 +77,13 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			modules: new ModuleInfoStore(),
 
-			connections: new ConnectionsStore(),
+			connections,
 			surfaceInstances: new SurfaceInstancesStore(),
 			instanceStatuses: new InstanceStatusesStore(),
 
 			activeLearns: observable.set(),
 
-			entityDefinitions: new EntityDefinitionsStore(),
+			entityDefinitions: new EntityDefinitionsStore(connections),
 			eventDefinitions: new EventDefinitionsStore(),
 			compositeElementDefinitions: new CompositeElementDefinitionsStore(),
 

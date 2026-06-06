@@ -7,23 +7,13 @@ import { useCallback, useContext, useRef, useState } from 'react'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { FeedbackEntitySubType, type EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
 import { useComputed } from '~/Resources/util.js'
+import type { AddEntityGroup, AddEntityOption } from '~/Stores/EntityDefinitionsStore'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
 
-interface AddEntityOption extends DropdownChoice {
-	sortKey: string
-	fuzzy: ReturnType<typeof fuzzyPrepare>
-}
-interface AddEntityGroup {
-	id: string
-	showWhenUnfiltered: boolean
-
-	label: string
-	items: AddEntityOption[]
-}
 interface AddEntityDropdownProps {
 	onSelect: (connectionId: string, definitionId: string) => void
 	entityType: EntityModelType
@@ -43,74 +33,9 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 	const recentlyUsedStore = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
+	const baseGroups = definitions.buildBaseOptions(feedbackListType)
+
 	const options = useComputed(() => {
-		const groups: Array<AddEntityGroup> = []
-		const allConnectionOptions: AddEntityOption[] = []
-		const pushConnection = (connectionId: string, label: string) => {
-			const entityDefinitions = definitions.connections.get(connectionId)
-			if (!entityDefinitions) return
-
-			const connectionOptions: AddEntityOption[] = []
-
-			for (const [definitionId, definition] of entityDefinitions.entries()) {
-				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
-
-				const optionLabel = `${label}: ${definition.label}`
-				connectionOptions.push({
-					id: `${connectionId}:${definitionId}`,
-					label: optionLabel,
-					sortKey: String(definition.sortKey ?? definition.label),
-					fuzzy: fuzzyPrepare(optionLabel),
-				})
-			}
-
-			connectionOptions.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
-
-			allConnectionOptions.push(...connectionOptions)
-		}
-
-		pushConnection('internal', 'internal')
-		for (const connection of connections.sortedConnections()) {
-			pushConnection(connection.id, connection.label)
-		}
-		groups.push({
-			id: '__all__',
-			label: '',
-			showWhenUnfiltered: false,
-			items: allConnectionOptions,
-		})
-
-		if (feedbackListType === FeedbackEntitySubType.Value) {
-			// Show the builtin value type options as special, to increase visibility
-			const internalDefs = definitions.connections.get('internal')
-			if (internalDefs) {
-				const commonOptions: AddEntityOption[] = []
-
-				for (const [definitionId, definition] of internalDefs.entries()) {
-					if (
-						!canAddEntityToFeedbackList(feedbackListType, definition) ||
-						definition.feedbackType !== FeedbackEntitySubType.Value
-					)
-						continue
-
-					const optionLabel = `internal: ${definition.label}`
-					commonOptions.push({
-						id: `internal:${definitionId}`,
-						label: optionLabel,
-						sortKey: definition.sortKey ?? definition.label,
-						fuzzy: fuzzyPrepare(optionLabel),
-					})
-				}
-
-				groups.push({
-					id: '__common__',
-					label: 'Common',
-					showWhenUnfiltered: true,
-					items: commonOptions,
-				})
-			}
-		}
-
 		const recents: AddEntityOption[] = []
 		for (const definitionPair of recentlyUsedStore.recentIds) {
 			if (!definitionPair) continue
@@ -130,15 +55,17 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				fuzzy: fuzzyPrepare(optionLabel),
 			})
 		}
-		groups.push({
-			id: '__recent__',
-			label: 'Recently Used',
-			showWhenUnfiltered: true,
-			items: recents,
-		})
 
-		return groups
-	}, [definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
+		return [
+			...baseGroups,
+			{
+				id: '__recent__',
+				label: 'Recently Used',
+				showWhenUnfiltered: true,
+				items: recents,
+			},
+		]
+	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
 
 	const onChange = useCallback(
 		(id: DropdownChoice['id'] | null) => {

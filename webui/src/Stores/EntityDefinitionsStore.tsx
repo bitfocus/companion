@@ -1,12 +1,38 @@
+import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { action, observable, type ObservableMap } from 'mobx'
+import { computedFn } from 'mobx-utils'
+import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type {
 	ClientEntityDefinition,
 	EntityDefinitionUpdate,
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever } from '~/Resources/util.js'
 import { ApplyDiffToStore } from './ApplyDiffToMap.js'
+import type { ConnectionsStore } from './ConnectionsStore.js'
 import { RecentlyUsedIdsStore } from './RecentlyUsedIdsStore.js'
+
+export interface AddEntityOption extends DropdownChoice {
+	sortKey: string
+	fuzzy: ReturnType<typeof fuzzyPrepare>
+}
+
+export interface AddEntityGroup {
+	id: string
+	showWhenUnfiltered: boolean
+	label: string
+	items: AddEntityOption[]
+}
+
+export interface EntityLeafItem {
+	key: string
+	fullId: string
+	label: string
+	searchLabel: string
+	sortKey: string
+	description: string | undefined
+}
 
 export class EntityDefinitionsStore {
 	readonly feedbacks: EntityDefinitionsForTypeStore
@@ -15,9 +41,9 @@ export class EntityDefinitionsStore {
 	readonly recentlyAddedActions: RecentlyUsedIdsStore
 	readonly recentlyAddedFeedbacks: RecentlyUsedIdsStore
 
-	constructor() {
-		this.feedbacks = new EntityDefinitionsForTypeStore(EntityModelType.Feedback)
-		this.actions = new EntityDefinitionsForTypeStore(EntityModelType.Action)
+	constructor(connections: ConnectionsStore) {
+		this.feedbacks = new EntityDefinitionsForTypeStore(EntityModelType.Feedback, connections)
+		this.actions = new EntityDefinitionsForTypeStore(EntityModelType.Action, connections)
 
 		this.recentlyAddedActions = new RecentlyUsedIdsStore('recent_actions', 20)
 		this.recentlyAddedFeedbacks = new RecentlyUsedIdsStore('recent_feedbacks', 20)
@@ -60,10 +86,106 @@ export class EntityDefinitionsForTypeStore {
 	readonly connections = observable.map<string, ObservableMap<string, ClientEntityDefinition>>()
 
 	readonly entityType: EntityModelType
+	readonly #connectionsStore: ConnectionsStore
 
-	constructor(entityType: EntityModelType) {
+	constructor(entityType: EntityModelType, connectionsStore: ConnectionsStore) {
 		this.entityType = entityType
+		this.#connectionsStore = connectionsStore
 	}
+
+	#buildConnectionOptions = computedFn(
+		(connectionId: string, label: string, feedbackListType: FeedbackEntitySubType | null): AddEntityOption[] => {
+			const entityDefs = this.connections.get(connectionId)
+			if (!entityDefs) return []
+
+			const options: AddEntityOption[] = []
+			for (const [definitionId, definition] of entityDefs.entries()) {
+				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
+
+				const optionLabel = `${label}: ${definition.label}`
+				options.push({
+					id: `${connectionId}:${definitionId}`,
+					label: optionLabel,
+					sortKey: String(definition.sortKey ?? definition.label),
+					fuzzy: fuzzyPrepare(optionLabel),
+				})
+			}
+			options.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
+			return options
+		}
+	)
+
+	#buildInternalCommonOptions = computedFn((feedbackListType: FeedbackEntitySubType | null): AddEntityOption[] => {
+		if (feedbackListType !== FeedbackEntitySubType.Value) return []
+
+		const internalDefs = this.connections.get('internal')
+		if (!internalDefs) return []
+
+		const options: AddEntityOption[] = []
+		for (const [definitionId, definition] of internalDefs.entries()) {
+			if (
+				!canAddEntityToFeedbackList(feedbackListType, definition) ||
+				definition.feedbackType !== FeedbackEntitySubType.Value
+			)
+				continue
+
+			const optionLabel = `internal: ${definition.label}`
+			options.push({
+				id: `internal:${definitionId}`,
+				label: optionLabel,
+				sortKey: definition.sortKey ?? definition.label,
+				fuzzy: fuzzyPrepare(optionLabel),
+			})
+		}
+		return options
+	})
+
+	buildConnectionLeaves = computedFn(
+		(connectionId: string, feedbackListType: FeedbackEntitySubType | null): EntityLeafItem[] => {
+			const items = this.connections.get(connectionId)
+			if (!items || items.size === 0) return []
+
+			const label = this.#connectionsStore.getLabel(connectionId) || connectionId
+
+			const leaves: EntityLeafItem[] = []
+			for (const [id, info] of items.entries()) {
+				if (!info || !info.label) continue
+				if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
+
+				leaves.push({
+					key: `${connectionId}:${id}`,
+					fullId: `${connectionId}:${id}`,
+					label: info.label,
+					searchLabel: `${label}: ${info.label}`,
+					sortKey: String(info.sortKey ?? info.label),
+					description: info.description,
+				})
+			}
+
+			leaves.sort((a, b) => a.sortKey.localeCompare(b.sortKey, undefined, { sensitivity: 'base' }))
+			return leaves
+		}
+	)
+
+	buildBaseOptions = computedFn((feedbackListType: FeedbackEntitySubType | null): AddEntityGroup[] => {
+		const allConnectionOptions: AddEntityOption[] = [
+			...this.#buildConnectionOptions('internal', 'internal', feedbackListType),
+		]
+		for (const connection of this.#connectionsStore.sortedConnections()) {
+			allConnectionOptions.push(...this.#buildConnectionOptions(connection.id, connection.label, feedbackListType))
+		}
+
+		const groups: AddEntityGroup[] = [
+			{ id: '__all__', label: '', showWhenUnfiltered: false, items: allConnectionOptions },
+		]
+
+		const commonOptions = this.#buildInternalCommonOptions(feedbackListType)
+		if (commonOptions.length > 0) {
+			groups.push({ id: '__common__', label: 'Common', showWhenUnfiltered: true, items: commonOptions })
+		}
+
+		return groups
+	})
 
 	public updateStore = action((change: EntityDefinitionUpdate | null) => {
 		if (!change) {
