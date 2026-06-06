@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import {
 	EntityModelType,
 	type FeedbackEntityModel,
@@ -89,6 +90,7 @@ describe('ParseLegacyStyle', () => {
 		const result = ParseLegacyStyle({})
 		expect(result.text.text).toBeUndefined()
 		expect(result.text.size).toBeUndefined()
+		expect(result.text.sizeAllowShrink).toBeUndefined()
 		expect(result.text.color).toBeUndefined()
 		expect(result.text.halign).toBeUndefined()
 		expect(result.text.valign).toBeUndefined()
@@ -100,25 +102,33 @@ describe('ParseLegacyStyle', () => {
 		expect(result.imageBuffers).toBeUndefined()
 	})
 
-	test('size: "auto" sets textSize to "auto"', () => {
-		expect(ParseLegacyStyle({ size: 'auto' }).text.size).toBe('auto')
+	test('size: "auto" sets size to FONTSIZE_SHRINK_DEFAULT and sizeAllowShrink to true', () => {
+		const result = ParseLegacyStyle({ size: 'auto' })
+		expect(result.text.size).toBe(FONTSIZE_SHRINK_DEFAULT)
+		expect(result.text.sizeAllowShrink).toBe(true)
 	})
 
 	test('numeric size with show_topbar:true scales by TEXT_SIZE_SCALE (2.1)', () => {
 		const result = ParseLegacyStyle({ size: 10, show_topbar: true }, false)
 		expect(result.text.size).toBe(21) // 10 * 2.1 = 21.0
+		expect(result.text.sizeAllowShrink).toBe(false)
 	})
 
 	test('numeric size with show_topbar:false scales by TEXT_SIZE_SCALE_NO_TOPBAR (1/0.6)', () => {
 		const result = ParseLegacyStyle({ size: 10, show_topbar: false }, false)
 		expect(result.text.size).toBe(16.7) // 10 * (1/0.6) ≈ 16.7
+		expect(result.text.sizeAllowShrink).toBe(false)
 	})
 
 	test('numeric size without show_topbar uses !defaultNoTopBar', () => {
 		// defaultNoTopBar=false → !false=true → topbar → TEXT_SIZE_SCALE
-		expect(ParseLegacyStyle({ size: 10 }, false).text.size).toBe(21)
+		const r1 = ParseLegacyStyle({ size: 10 }, false)
+		expect(r1.text.size).toBe(21)
+		expect(r1.text.sizeAllowShrink).toBe(false)
 		// defaultNoTopBar=true → !true=false → no topbar → TEXT_SIZE_SCALE_NO_TOPBAR
-		expect(ParseLegacyStyle({ size: 10 }, true).text.size).toBe(16.7)
+		const r2 = ParseLegacyStyle({ size: 10 }, true)
+		expect(r2.text.size).toBe(16.7)
+		expect(r2.text.sizeAllowShrink).toBe(false)
 	})
 
 	test('alignment string is parsed into halign and valign', () => {
@@ -185,10 +195,28 @@ describe('GetLegacyStyleProperty', () => {
 		expect(GetLegacyStyleProperty(parsed, {}, 'text', '')).toEqual({ isExpression: false, value: 'hello' })
 	})
 
-	test('size property returns a non-expression value', () => {
+	test('size property (elementProperty=fontsize) returns numeric value', () => {
 		const parsed = ParseLegacyStyle({ size: 10, show_topbar: true }, false)
-		const result = GetLegacyStyleProperty(parsed, {}, 'size', '')
+		const result = GetLegacyStyleProperty(parsed, {}, 'size', 'fontsize')
 		expect(result).toEqual({ isExpression: false, value: 21 })
+	})
+
+	test('size property (elementProperty=fontsizeAllowShrink) returns false for numeric size', () => {
+		const parsed = ParseLegacyStyle({ size: 10, show_topbar: true }, false)
+		const result = GetLegacyStyleProperty(parsed, {}, 'size', 'fontsizeAllowShrink')
+		expect(result).toEqual({ isExpression: false, value: false })
+	})
+
+	test('size="auto" (elementProperty=fontsize) returns FONTSIZE_SHRINK_DEFAULT', () => {
+		const parsed = ParseLegacyStyle({ size: 'auto' })
+		const result = GetLegacyStyleProperty(parsed, {}, 'size', 'fontsize')
+		expect(result).toEqual({ isExpression: false, value: 100 })
+	})
+
+	test('size="auto" (elementProperty=fontsizeAllowShrink) returns true', () => {
+		const parsed = ParseLegacyStyle({ size: 'auto' })
+		const result = GetLegacyStyleProperty(parsed, {}, 'size', 'fontsizeAllowShrink')
+		expect(result).toEqual({ isExpression: false, value: true })
 	})
 
 	test('color property', () => {
@@ -391,6 +419,24 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 		expect(new Set(ids).size).toBe(ids.length)
 	})
 
+	test('numeric size creates fontsize and fontsizeAllowShrink overrides', () => {
+		const parsed = ParseLegacyStyle({ size: 10, show_topbar: true }, false)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const fontsizeOverride = overrides.find((o) => o.elementProperty === 'fontsize')
+		const allowShrinkOverride = overrides.find((o) => o.elementProperty === 'fontsizeAllowShrink')
+		expect(fontsizeOverride?.override).toEqual({ isExpression: false, value: 21 })
+		expect(allowShrinkOverride?.override).toEqual({ isExpression: false, value: false })
+	})
+
+	test('auto size creates fontsize=FONTSIZE_SHRINK_DEFAULT and fontsizeAllowShrink=true overrides', () => {
+		const parsed = ParseLegacyStyle({ size: 'auto' })
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const fontsizeOverride = overrides.find((o) => o.elementProperty === 'fontsize')
+		const allowShrinkOverride = overrides.find((o) => o.elementProperty === 'fontsizeAllowShrink')
+		expect(fontsizeOverride?.override).toEqual({ isExpression: false, value: 100 })
+		expect(allowShrinkOverride?.override).toEqual({ isExpression: false, value: true })
+	})
+
 	test('when textElementId is undefined its text overrides are skipped', () => {
 		const ids: { [usage in ButtonGraphicsElementUsage]: string | undefined } = {
 			...defaultSelectedIds,
@@ -410,6 +456,7 @@ describe('CreateAdvancedFeedbackStyleOverrides', () => {
 		const props = overrides.map((o) => o.elementProperty)
 		expect(props).toContain('text')
 		expect(props).toContain('fontsize')
+		expect(props).toContain('fontsizeAllowShrink')
 		expect(props).toContain('halign')
 		expect(props).toContain('valign')
 		expect(props).toContain('color')

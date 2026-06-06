@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -24,7 +25,8 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				color: { value: 0xffffff, isExpression: false },
 				halign: { value: 'center', isExpression: false },
 				valign: { value: 'center', isExpression: false },
-				fontsize: { value: 'auto', isExpression: false },
+				fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
+				fontsizeAllowShrink: { value: true, isExpression: false },
 				font: { value: 'companion-sans', isExpression: false },
 				outlineColor: { value: 0xff000000, isExpression: false },
 			}

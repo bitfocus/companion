@@ -83,7 +83,8 @@ function makeTextElement(overrides: Partial<ButtonGraphicsTextDrawElement> = {})
 		height: 1,
 		rotation: 0,
 		text: 'Hello',
-		fontsize: '0', // Number('0') = 0 → falsy → 'auto'
+		fontsize: 100,
+		fontsizeAllowShrink: true,
 		font: 'companion-sans',
 		color: 0xffffff, // white
 		outlineColor: 0xff000000, // alpha=0 → no outline
@@ -806,7 +807,10 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ ...drawOpts, elements: [makeTextElement({ fontsize: '18', text: 'Big' })] }),
+				makeStyle({
+					...drawOpts,
+					elements: [makeTextElement({ fontsize: 18, fontsizeAllowShrink: false, text: 'Big' })],
+				}),
 				new Set(),
 				null,
 				DEFAULT_PADDING

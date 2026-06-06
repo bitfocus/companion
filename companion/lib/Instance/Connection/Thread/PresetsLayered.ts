@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import {
 	EntityModelType,
 	type FeedbackEntityModel,
@@ -164,10 +165,7 @@ function convertLayeredPresetElement(
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				text: convertModuleExpressionOrValue(element.text, { value: '', isExpression: false }),
-				fontsize: convertModuleExpressionOrValue(element.fontsize as ExpressionOrValueModule<string>, {
-					value: 'auto',
-					isExpression: false,
-				}),
+				...convertModuleFontsize(element.fontsize as ExpressionOrValueModule<string> | undefined),
 				font: { value: 'companion-sans', isExpression: false }, // Future: expose to presets
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
@@ -258,6 +256,31 @@ function convertElementBasicProperties(
 		usage: ButtonGraphicsElementUsage.Automatic,
 		enabled: convertModuleExpressionOrValue(element.enabled, { value: true, isExpression: false }),
 		opacity: convertModuleExpressionOrValue(element.opacity, { value: 1, isExpression: false }),
+	}
+}
+
+function convertModuleFontsize(value: ExpressionOrValueModule<string> | undefined): {
+	fontsize: ExpressionOrValue<number>
+	fontsizeAllowShrink: ExpressionOrValue<boolean>
+} {
+	if (!isExpressionOrValue(value)) {
+		return {
+			fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
+			fontsizeAllowShrink: { value: true, isExpression: false },
+		}
+	}
+	if (value.isExpression) {
+		// If its an expression, it must be prepared for this new structure, so its easy to handle
+		// TODO - adjust this once API has been updated
+		return {
+			fontsize: { value: value.value, isExpression: true },
+			fontsizeAllowShrink: { value: false, isExpression: false },
+		}
+	}
+	const isAuto = value.value === 'auto' || Number.isNaN(Number(value.value))
+	return {
+		fontsize: { value: isAuto ? FONTSIZE_SHRINK_DEFAULT : Number(value.value), isExpression: false },
+		fontsizeAllowShrink: { value: isAuto, isExpression: false },
 	}
 }
 

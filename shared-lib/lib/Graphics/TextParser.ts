@@ -47,49 +47,63 @@ export function segmentTextToUnicodeChars(
 /** Minimum auto font size as a fraction of canvas height (10%) */
 export const MIN_FONT_SIZE_FRACTION = 0.1
 
-export function resolveFontSizes(w: number, h: number, fontsize: number | 'auto', charCount: number): number[] {
-	let fontheight = Number(fontsize)
-	if (isNaN(fontheight)) {
-		// Estimate how many characters fit per font-height-squared of available area.
-		// Capacity at fraction s ≈ (w/h) / (s² × char_aspect), so threshold comparisons
-		// should use w/h — purely relative, resolution-independent.
-		const relativeWidth = w / h
+export function resolveFontSizes(
+	w: number,
+	h: number,
+	fontsize: number,
+	allowShrink: boolean,
+	charCount: number
+): number[] {
+	// Clamp the configured size to a sane pixel range (minimum is calibrated to 72px reference height)
+	const clamped = Math.min(Math.max(fontsize, Math.round(h / 24)), h)
 
-		// Sizes expressed as fractions of canvas height
-		let baseSizes: number[]
-		if (charCount < 7 * relativeWidth) {
-			baseSizes = [0.83, 0.71, 0.61, 0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else if (charCount < 30 * relativeWidth) {
-			baseSizes = [0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else if (charCount < 40 * relativeWidth) {
-			baseSizes = [0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else if (charCount < 50 * relativeWidth) {
-			baseSizes = [0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		} else {
-			baseSizes = [0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-		}
-
-		// Multiply fraction by h to get pixel size; deduplicate while preserving order
-		const seen = new Set<number>()
-		const scaled: number[] = []
-		for (const s of baseSizes) {
-			const v = Math.max(s * h, 1)
-			if (!seen.has(v)) {
-				seen.add(v)
-				scaled.push(v)
-			}
-		}
-		return scaled
-	} else {
-		if (fontheight < 3) {
-			// block out some tiny fontsizes
-			fontheight = 3
-		} else if (fontheight > h) {
-			// block out some giant fontsizes
-			fontheight = h
-		}
-		return [fontheight]
+	if (!allowShrink) {
+		return [clamped]
 	}
+
+	// Estimate how many characters fit per font-height-squared of available area.
+	// Capacity at fraction s ≈ (w/h) / (s² × char_aspect), so threshold comparisons
+	// should use w/h — purely relative, resolution-independent.
+	const relativeWidth = w / h
+
+	// Sizes expressed as fractions of canvas height
+	let baseSizes: number[]
+	if (charCount < 7 * relativeWidth) {
+		baseSizes = [0.83, 0.71, 0.61, 0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+	} else if (charCount < 30 * relativeWidth) {
+		baseSizes = [0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+	} else if (charCount < 40 * relativeWidth) {
+		baseSizes = [0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+	} else if (charCount < 50 * relativeWidth) {
+		baseSizes = [0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+	} else {
+		baseSizes = [0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+	}
+
+	// When fontsize equals h the caller is signalling "use heuristics only" (no user-chosen cap),
+	// so we skip prepending the configured size and just return the heuristic list.
+	const prependConfigured = fontsize !== h
+
+	// Start with the configured size (if appropriate), then add heuristic candidates smaller than it
+	const seen = new Set<number>()
+	const candidates: number[] = []
+
+	if (prependConfigured) {
+		seen.add(clamped)
+		candidates.push(clamped)
+	}
+
+	// Multiply fraction by h to get pixel size; only include sizes strictly below the cap,
+	// and deduplicate while preserving order
+	for (const s of baseSizes) {
+		const v = Math.max(s * h, 1)
+		if (!seen.has(v) && v < clamped) {
+			seen.add(v)
+			candidates.push(v)
+		}
+	}
+
+	return candidates
 }
 
 /**

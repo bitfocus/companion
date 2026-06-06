@@ -9,6 +9,9 @@ export type VerticalAlignment = 'top' | 'bottom' | 'center'
 
 export type LineOrientation = 'inside' | 'center' | 'outside'
 
+/**
+ * Drawing bounds, in pixels for a drawing operation.
+ */
 export class DrawBounds {
 	readonly x: number
 	readonly y: number

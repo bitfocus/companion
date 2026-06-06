@@ -276,6 +276,7 @@ export class GraphicsRenderer {
 						'🔒',
 						'rgb(200, 200, 200)',
 						Math.floor(dimensions[1] * 0.6),
+						false,
 						'center',
 						'center'
 					)

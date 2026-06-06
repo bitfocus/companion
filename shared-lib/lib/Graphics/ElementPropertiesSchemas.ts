@@ -6,6 +6,12 @@ import type {
 } from '../Model/StyleLayersModel.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '../Model/StyleModel.js'
 
+/**
+ * Default font size (as a percentage of canvas height) used when "shrink to fit" is enabled.
+ * At this value the shrink candidates match the behaviour of the old 'auto' mode.
+ */
+export const FONTSIZE_SHRINK_DEFAULT = 100
+
 // Type-safe constants for border position values
 const LINE_ORIENTATION_CHOICES = [
 	{ id: 'inside', label: 'Inside' },
@@ -132,23 +138,21 @@ export const textElementSchema: ElementSchemaSection[] = [
 			},
 			// Future: maybe the below is an 'appearance' section?
 			{
-				type: 'dropdown',
+				type: 'number',
 				id: 'fontsize',
 				label: 'Text Size',
-				tooltip:
-					'The size of the text, in percentage of the canvas height. You can use custom values or select one of the presets.',
-				choices: [
-					{ id: 'auto', label: 'Auto' },
-					{ id: '10', label: '10%' },
-					{ id: '15', label: '15%' },
-					{ id: '25', label: '25%' },
-					{ id: '33', label: '33%' },
-					{ id: '50', label: '50%' },
-					{ id: '100', label: '100%' },
-				],
-				default: 'auto',
-				allowCustom: true,
-				regex: '^0*(?:[3-9]|[1-9][0-9]|1[0-9]{2}|200)?$',
+				tooltip: 'The size of the text, in percentage of the element height.',
+				min: 3,
+				max: 200,
+				default: FONTSIZE_SHRINK_DEFAULT,
+				step: 1,
+			},
+			{
+				type: 'checkbox',
+				id: 'fontsizeAllowShrink',
+				label: 'Shrink to fit',
+				tooltip: 'Allow the text to shrink below the configured size when it is too long to fit.',
+				default: true,
 			},
 			{
 				type: 'dropdown',
@@ -517,6 +521,7 @@ export const elementSimpleModeFields = {
 		//
 		'text',
 		'fontsize',
+		'fontsizeAllowShrink',
 		'color',
 		'halign',
 		'valign',

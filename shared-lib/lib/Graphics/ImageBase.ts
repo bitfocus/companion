@@ -675,6 +675,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param text the text to draw
 	 * @param color CSS color string
 	 * @param fontsize height of font, either pixels or 'auto'
+	 * @param allowShrink whether to allow the font size to shrink to fit the box
 	 * @param halign horizontal alignment left, center, right
 	 * @param valign vertical alignment top, center, bottom
 	 * @param outlineStyle optional outline style, if not provided there will be no outline
@@ -687,12 +688,15 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		h: number,
 		text: string,
 		color: string,
-		fontsize: number | 'auto' = 'auto',
+		fontsize: number,
+		allowShrink = true,
 		halign: HorizontalAlignment = 'center',
 		valign: VerticalAlignment = 'center',
 		outlineStyle?: LineStyle,
 		font?: ButtonGraphicsTextDrawElement['font']
 	): void {
+		if (w <= 0 || h <= 0) return
+
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
 		if (!displayTextStr) return
 
@@ -701,42 +705,67 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
 
-		// Estimate character limit based on minimum font size (7px) with 1px char width and 2px height
-		// This gives a conservative upper bound on how many characters could possibly fit
-		const maxPossibleChars = Math.floor((w * h) / (1 * 2))
+		// Resolution-independent upper bound: capacity ≈ (w/h) / (fontFrac² × charAspect).
+		// When shrinking, the minimum font fraction is the absolute limit; when fixed, use the
+		// configured size (clamped to its minimum of h/24), giving a much tighter bound.
+		const effectiveFontFrac = allowShrink ? MIN_FONT_SIZE_FRACTION : Math.min(Math.max(fontsize / h, 1 / 24), 1)
+		const maxPossibleChars = Math.ceil(w / h / (effectiveFontFrac * effectiveFontFrac * 0.3))
 
 		const { displayTextChars, displayTextCharsStr, wasTruncated } = segmentTextToUnicodeChars(
 			displayTextStr,
 			maxPossibleChars
 		)
 
+		// Normalize layout decisions to a fixed reference height (72 px) so that font-size selection
+		// and line-breaking use identical absolute pixel measurements regardless of actual canvas size.
+		const NORM_H = 72
+		const normScale = NORM_H / h
+		const normW = Math.round(w * normScale)
+		// When fontsize === h (signals "heuristics only"), normFontsize === NORM_H — same signal preserved.
+		const normFontsize = fontsize * normScale
+		const upScale = h / NORM_H
+		const fontNameStr = resolveFontName(font)
+
 		// If we hit the character limit, only the smallest font size could possibly fit
-		const checkSizes = wasTruncated
-			? [Math.max(MIN_FONT_SIZE_FRACTION * h, 1)]
-			: resolveFontSizes(w, h, fontsize, displayTextChars.length)
+		const normCheckSizes =
+			allowShrink && wasTruncated
+				? [Math.max(MIN_FONT_SIZE_FRACTION * NORM_H, 1)]
+				: resolveFontSizes(normW, NORM_H, normFontsize, allowShrink, displayTextChars.length)
 
-		// Find the best fitting size
-		let textLayout: TextLayoutResult | undefined
-		for (const size of checkSizes) {
-			const fontLineHeight = size * 1.1 // this lineheight is not the real lineheight needed for the font, but it is calculated to match the existing font size / lineheight ratio of the bitmap fonts
-			const fontNameStr = resolveFontName(font)
-			const fontSpec = `${size}px/${fontLineHeight}px ${fontNameStr}`
+		// Find the best fitting size at the normalized scale
+		let normLayout: TextLayoutResult | undefined
+		let usedNormSize = normCheckSizes[0]
+		for (const normSize of normCheckSizes) {
+			usedNormSize = normSize
+			const normFontSpec = `${normSize}px/${normSize * 1.1}px ${fontNameStr}`
 
-			// Check cache first
-			const cacheKey = `${fontSpec}:${w}:${h}:${displayTextCharsStr}`
-			textLayout = this.#textLayoutCache?.get(cacheKey)
-			if (!textLayout) {
-				textLayout = computeTextLayout(this.context2d, w, h, displayTextChars, fontSpec)
-
-				// Store in cache
-				this.#textLayoutCache?.set(cacheKey, textLayout)
+			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
+			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
+			let layout = this.#textLayoutCache?.get(cacheKey)
+			if (!layout) {
+				layout = computeTextLayout(this.context2d, normW, NORM_H, displayTextChars, normFontSpec)
+				this.#textLayoutCache?.set(cacheKey, layout)
 			}
 
-			if (textLayout.fits) break
+			normLayout = layout
+			if (layout.fits) break
+		}
+
+		// If no layout was resolved, something went wrong
+		if (!normLayout) return
+
+		// Scale the normalized layout up to the actual canvas dimensions for rendering
+		const actualSize = usedNormSize * upScale
+		const textLayout: TextLayoutResult = {
+			fontDefinition: `${actualSize}px/${actualSize * 1.1}px ${fontNameStr}`,
+			lines: normLayout.lines,
+			measuredLineHeight: normLayout.measuredLineHeight * upScale,
+			measuredAscent: normLayout.measuredAscent * upScale,
+			fits: normLayout.fits,
 		}
 
 		// Perform the draw
-		this.#drawTextLayout(x, y, w, h, textLayout!, color, halign, valign, outlineStyle)
+		this.#drawTextLayout(x, y, w, h, textLayout, color, halign, valign, outlineStyle)
 	}
 
 	/**

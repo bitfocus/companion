@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import {
 	EntityModelType,
@@ -27,7 +28,8 @@ import {
 interface ParsedLegacyStyle {
 	text: {
 		text: ExpressionOrValue<string> | undefined
-		size: 'auto' | number | undefined
+		size: number | undefined
+		sizeAllowShrink: boolean | undefined
 		color: number | undefined
 		halign: HorizontalAlignment | undefined
 		valign: VerticalAlignment | undefined
@@ -50,10 +52,13 @@ const TEXT_SIZE_SCALE_NO_TOPBAR = 1 / 0.6 // When no topbar
 const TEXT_SIZE_SCALE = 2.1 // When with topbar
 
 export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultNoTopBar?: boolean): ParsedLegacyStyle {
-	let textSize: 'auto' | number | undefined = undefined
+	let textSize: number | undefined = undefined
+	let textSizeAllowShrink: boolean | undefined = undefined
 	if (style.size !== undefined) {
-		if (style.size === 'auto') textSize = 'auto'
-		else {
+		if (style.size === 'auto') {
+			textSize = FONTSIZE_SHRINK_DEFAULT
+			textSizeAllowShrink = true
+		} else {
 			const n = Number(style.size)
 			if (!isNaN(n)) {
 				// We can't be 100% accurate on whether to account for the top-bar or not, but during imports we want to try to match how it was just drawing
@@ -63,6 +68,7 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultN
 
 				// Ensure is a number, and round to 1dp
 				textSize = Number((n * scale).toFixed(1))
+				textSizeAllowShrink = false
 			}
 		}
 	}
@@ -76,6 +82,7 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultN
 		text: {
 			text: style.text !== undefined ? { isExpression: !!style.textExpression, value: style.text } : undefined,
 			size: textSize,
+			sizeAllowShrink: textSizeAllowShrink,
 			color: style.color,
 			halign: textAlign ? textAlign[0] : undefined,
 			valign: textAlign ? textAlign[1] : undefined,
@@ -114,11 +121,13 @@ export function GetLegacyStyleProperty(
 			if (parsedStyle.text.text !== undefined) return parsedStyle.text.text
 			break
 		case 'size':
-			if (parsedStyle.text.size !== undefined)
-				return {
-					isExpression: false,
-					value: parsedStyle.text.size,
+			if (parsedStyle.text.size !== undefined) {
+				if (elementProperty === 'fontsizeAllowShrink') {
+					return { isExpression: false, value: parsedStyle.text.sizeAllowShrink ?? false }
+				} else {
+					return { isExpression: false, value: parsedStyle.text.size }
 				}
+			}
 			break
 		case 'alignment':
 			// This is a little brittle, but is hopefully good enough
@@ -264,7 +273,8 @@ export function ConvertLegacyStyleToElements(
 		color: { value: 0xffffff, isExpression: false },
 		halign: { value: 'center', isExpression: false },
 		valign: { value: 'center', isExpression: false },
-		fontsize: { value: 'auto', isExpression: false },
+		fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
+		fontsizeAllowShrink: { value: true, isExpression: false },
 		font: { value: 'companion-sans', isExpression: false },
 		outlineColor: { value: 0xff000000, isExpression: false },
 	}
@@ -290,7 +300,10 @@ export function ConvertLegacyStyleToElements(
 	const parsedStyle = ParseLegacyStyle(style, defaultNoTopBar)
 
 	if (parsedStyle.text.text !== undefined) textElement.text = parsedStyle.text.text
-	if (parsedStyle.text.size !== undefined) textElement.fontsize.value = String(parsedStyle.text.size)
+	if (parsedStyle.text.size !== undefined) {
+		textElement.fontsize.value = parsedStyle.text.size
+		textElement.fontsizeAllowShrink.value = parsedStyle.text.sizeAllowShrink ?? false
+	}
 	if (parsedStyle.text.halign !== undefined) textElement.halign.value = parsedStyle.text.halign
 	if (parsedStyle.text.valign !== undefined) textElement.valign.value = parsedStyle.text.valign
 	if (parsedStyle.text.color !== undefined) textElement.color.value = parsedStyle.text.color
@@ -408,15 +421,20 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 			})
 		}
 		if (parsedStyle.text.size !== undefined) {
-			overrides.push({
-				overrideId: nanoid(),
-				elementId: textElementId,
-				elementProperty: 'fontsize',
-				override: {
-					isExpression: false,
-					value: parsedStyle.text.size,
+			overrides.push(
+				{
+					overrideId: nanoid(),
+					elementId: textElementId,
+					elementProperty: 'fontsize',
+					override: { isExpression: false, value: parsedStyle.text.size },
 				},
-			})
+				{
+					overrideId: nanoid(),
+					elementId: textElementId,
+					elementProperty: 'fontsizeAllowShrink',
+					override: { isExpression: false, value: parsedStyle.text.sizeAllowShrink ?? false },
+				}
+			)
 		}
 
 		if (parsedStyle.text.halign !== undefined) {
@@ -514,12 +532,20 @@ export function CreateAdvancedFeedbackStyleOverrides(
 			})
 		}
 		if (!affectedProperties || affectedProperties.includes('size')) {
-			overrides.push({
-				overrideId: nanoid(),
-				elementId: textElementId,
-				elementProperty: 'fontsize',
-				override: { isExpression: false, value: 'size' },
-			})
+			overrides.push(
+				{
+					overrideId: nanoid(),
+					elementId: textElementId,
+					elementProperty: 'fontsize',
+					override: { isExpression: false, value: 'size' },
+				},
+				{
+					overrideId: nanoid(),
+					elementId: textElementId,
+					elementProperty: 'fontsizeAllowShrink',
+					override: { isExpression: false, value: 'size' },
+				}
+			)
 		}
 		if (!affectedProperties || affectedProperties.includes('alignment')) {
 			overrides.push(
