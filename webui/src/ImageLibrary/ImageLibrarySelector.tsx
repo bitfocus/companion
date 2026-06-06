@@ -17,14 +17,6 @@ interface ImageItem extends CollectionsNestingTableItem {
 	fuzzy: Fuzzysort.Prepared
 }
 
-// No-op api — selector is read-only by default, drag-drop reordering is disabled
-const readOnlyCollectionsApi: NestingCollectionsApi = {
-	renameCollection: () => {},
-	deleteCollection: () => {},
-	moveCollection: () => {},
-	moveItemToCollection: () => {},
-}
-
 interface ImageLibrarySelectorProps {
 	selectedImageName: string | null
 	onSelectImage: (imageName: string) => void
@@ -42,7 +34,7 @@ interface ImageLibrarySelectorProps {
 export const ImageLibrarySelector = observer(function ImageLibrarySelector({
 	selectedImageName,
 	onSelectImage,
-	collectionsApi = readOnlyCollectionsApi,
+	collectionsApi,
 	dragId = 'image-library-selector',
 }: ImageLibrarySelectorProps) {
 	const { imageLibrary } = useContext(RootAppStoreContext)

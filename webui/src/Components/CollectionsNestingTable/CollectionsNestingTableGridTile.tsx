@@ -11,6 +11,7 @@ export function CollectionsNestingTableGridTile({
 	preview,
 	isDragging,
 	isSelected,
+	allowDrag,
 	children,
 }: React.PropsWithChildren<{
 	className: string
@@ -19,6 +20,7 @@ export function CollectionsNestingTableGridTile({
 	preview: ConnectDragPreview
 	isDragging: boolean
 	isSelected: boolean
+	allowDrag: boolean
 }>): React.JSX.Element {
 	const ref = useRef<HTMLDivElement>(null)
 	preview(drop(ref))
@@ -32,9 +34,11 @@ export function CollectionsNestingTableGridTile({
 			})}
 			ref={ref}
 		>
-			<div ref={drag} className="tile-drag-handle" title="Drag to reorder">
-				<FontAwesomeIcon icon={faGrip} />
-			</div>
+			{allowDrag && (
+				<div ref={drag} className="tile-drag-handle" title="Drag to reorder">
+					<FontAwesomeIcon icon={faGrip} />
+				</div>
+			)}
 			<div className="tile-content">{children}</div>
 		</div>
 	)

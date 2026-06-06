@@ -67,6 +67,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 				preview={preview}
 				isDragging={isDragging}
 				isSelected={item.id === selectedItemId}
+				allowDrag={!!collectionsApi}
 				className="collections-nesting-table-tile-item"
 			>
 				{children}
@@ -83,6 +84,7 @@ export const CollectionsNestingTableItemRow = observer(function CollectionsNesti
 			isSelected={item.id === selectedItemId}
 			nestingLevel={nestingLevel}
 			className="collections-nesting-table-row-item"
+			allowDrag={!!collectionsApi}
 		>
 			{children}
 		</CollectionsNestingTableRowBase>
@@ -144,6 +146,7 @@ export const CollectionsNestingTableCollectionRowWrapper = observer(
 				isSelected={false}
 				nestingLevel={nestingLevel}
 				className="collections-nesting-table-row-group"
+				allowDrag={!!collectionsApi}
 			>
 				{children}
 			</CollectionsNestingTableRowBase>
@@ -159,6 +162,7 @@ function CollectionsNestingTableRowBase({
 	isDragging,
 	isSelected,
 	nestingLevel,
+	allowDrag,
 	children,
 }: React.PropsWithChildren<{
 	className: string
@@ -167,6 +171,7 @@ function CollectionsNestingTableRowBase({
 	preview: ConnectDragPreview
 	isDragging: boolean
 	isSelected: boolean
+	allowDrag: boolean
 	nestingLevel: number
 }>) {
 	const { gridLayout } = useCollectionsNestingTableContext()
@@ -187,9 +192,14 @@ function CollectionsNestingTableRowBase({
 				className="collections-nesting-table-row-item-grid"
 				nestingLevel={gridLayout ? 0 : nestingLevel}
 			>
-				<div ref={drag} className="row-reorder-handle">
-					<FontAwesomeIcon icon={faSort} />
-				</div>
+				{allowDrag ? (
+					<div ref={drag} className="row-reorder-handle">
+						<FontAwesomeIcon icon={faSort} />
+					</div>
+				) : (
+					// Empty div to preserve columns
+					<div></div>
+				)}
 				<div className="grow">{children}</div>
 			</CollectionsNestingTableNestingRow>
 		</div>

@@ -14,7 +14,7 @@ export interface CollectionsNestingTableCollectionDragItem {
 
 // For handling group drag and drop, including parent-child relationships
 export function useCollectionListCollectionDrop(
-	collectionApi: NestingCollectionsApi,
+	collectionApi: NestingCollectionsApi | undefined,
 	dragId: string,
 	parentId: string | null,
 	index: number,
@@ -30,13 +30,14 @@ export function useCollectionListCollectionDrop(
 		unknown,
 		{ isOver: boolean; canDrop: boolean; dragCollectionId: string | undefined }
 	>({
-		accept: `${dragId}-collection`,
+		accept: collectionApi ? `${dragId}-collection` : '__drop-zone-disabled__',
 		collect: (monitor) => ({
 			isOver: monitor.isOver(),
 			canDrop: monitor.canDrop(),
 			dragCollectionId: monitor.canDrop() ? monitor.getItem()?.collectionId : undefined,
 		}),
 		hover(item, monitor) {
+			if (!collectionApi) return
 			// If this is the root area (collectionId is null), make the dropped collectionId top-level
 
 			// Ensure the hover targets this element, and not a child element

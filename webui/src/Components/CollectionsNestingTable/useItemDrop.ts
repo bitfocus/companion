@@ -15,7 +15,7 @@ export interface CollectionsNestingTableItemDragStatus {
 }
 
 export function useCollectionsListItemDrop(
-	collectionsApi: NestingCollectionsApi,
+	collectionsApi: NestingCollectionsApi | undefined,
 	dragId: string,
 	collectionId: string | null,
 	hoverItemId: string | null,
@@ -26,11 +26,12 @@ export function useCollectionsListItemDrop(
 	drop: ConnectDropTarget
 } {
 	const [isDragging, drop] = useDrop<CollectionsNestingTableItemDragItem, unknown, boolean>({
-		accept: dragId,
+		accept: collectionsApi ? dragId : '__drop-zone-disabled__',
 		collect: (monitor) => {
 			return monitor.canDrop()
 		},
 		hover(item, monitor) {
+			if (!collectionsApi) return
 			if (hoverItemId === item.itemId) return // Don't allow dropping into the same item
 
 			const hoverItemIdFull = hoverItemId ?? `collection-drop-${collectionId}`
@@ -54,7 +55,7 @@ export function useCollectionsListItemDrop(
 	const isDraggingDeferred = useDeferredValue(isDragging)
 
 	return {
-		isDragging: isDraggingDeferred,
+		isDragging: isDraggingDeferred && !!collectionsApi,
 		drop,
 	}
 }

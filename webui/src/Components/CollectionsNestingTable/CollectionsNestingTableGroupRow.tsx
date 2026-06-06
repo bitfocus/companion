@@ -13,7 +13,7 @@ export interface CollectionsNestingTableCollectionRowProps {
 	index: number
 	isCollapsed: boolean
 	toggleExpanded: () => void
-	collectionsApi: NestingCollectionsApi
+	collectionsApi: NestingCollectionsApi | undefined
 	nestingLevel: number
 }
 
@@ -35,7 +35,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 	}, [toggleExpanded, isEditing])
 
 	const handleSetName = useCallback(
-		(name: string) => collectionsApi.renameCollection(collection.id, name),
+		(name: string) => collectionsApi?.renameCollection(collection.id, name),
 		[collectionsApi, collection.id]
 	)
 
@@ -60,7 +60,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 			e.preventDefault()
 			e.stopPropagation()
 
-			collectionsApi.deleteCollection(collection.id)
+			collectionsApi?.deleteCollection(collection.id)
 		},
 		[collectionsApi, collection.id]
 	)
@@ -93,19 +93,23 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 				<div className="d-flex align-items-center" onClick={(e) => e.stopPropagation()}>
 					{children}
 
-					{isEditing ? (
-						<Button color="link" onClick={handleNameFieldBlur}>
-							<FontAwesomeIcon icon={faCheckCircle} />
-						</Button>
-					) : (
-						<Button color="link" onClick={clickEditName}>
-							<FontAwesomeIcon icon={faPencilAlt} />
-						</Button>
-					)}
+					{!!collectionsApi && (
+						<>
+							{isEditing ? (
+								<Button color="link" onClick={handleNameFieldBlur}>
+									<FontAwesomeIcon icon={faCheckCircle} />
+								</Button>
+							) : (
+								<Button color="link" onClick={clickEditName}>
+									<FontAwesomeIcon icon={faPencilAlt} />
+								</Button>
+							)}
 
-					<Button color="link" onClick={clickDeleteCollection}>
-						<FontAwesomeIcon icon={faTrash} />
-					</Button>
+							<Button color="link" onClick={clickDeleteCollection}>
+								<FontAwesomeIcon icon={faTrash} />
+							</Button>
+						</>
+					)}
 				</div>
 			</div>
 		</CollectionsNestingTableCollectionRowWrapper>
