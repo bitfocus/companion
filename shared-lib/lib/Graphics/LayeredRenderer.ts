@@ -3,6 +3,7 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
@@ -154,6 +155,9 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					case 'circle':
 						elementBounds = await this.#drawCircleElement(img, drawBounds, element, skipDraw)
+						break
+					case 'gauge':
+						elementBounds = await this.#drawGaugeElement(img, drawBounds, element, skipDraw)
 						break
 					default:
 						assertNever(element)
@@ -445,6 +449,84 @@ export class GraphicsLayeredButtonRenderer {
 				element.borderOnlyArc,
 				element.borderPosition
 			)
+		})
+
+		return drawBounds
+	}
+
+	static async #drawGaugeElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsGaugeDrawElement,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		const sorted = [...element.thresholds].sort((a, b) => Number(a.value) - Number(b.value))
+		if (sorted.length === 0) return drawBounds
+
+		const { x, y, width, height, maxX, maxY } = drawBounds
+		const { value, orientation, reverse, multiSegment, inactiveStyle, inactiveAmount } = element
+
+		// For single-color mode, find the highest threshold whose start <= current value
+		let singleActiveColor = Number(sorted[0].color)
+		if (!multiSegment) {
+			for (const t of sorted) {
+				if (Number(t.value) <= value) singleActiveColor = Number(t.color)
+			}
+		}
+
+		// Convert a gauge position range [p1, p2] (0–100) to pixel box coordinates [x1, y1, x2, y2].
+		// Coordinates are rounded to the nearest integer so that adjacent segments always share an
+		// exact pixel edge and anti-aliasing does not leave a visible seam between them.
+		const segmentBox = (p1: number, p2: number): [number, number, number, number] => {
+			if (orientation === 'horizontal') {
+				return reverse
+					? [Math.round(maxX - (p2 / 100) * width), y, Math.round(maxX - (p1 / 100) * width), maxY]
+					: [Math.round(x + (p1 / 100) * width), y, Math.round(x + (p2 / 100) * width), maxY]
+			} else {
+				return reverse
+					? [x, Math.round(y + (p1 / 100) * height), maxX, Math.round(y + (p2 / 100) * height)]
+					: [x, Math.round(maxY - (p2 / 100) * height), maxX, Math.round(maxY - (p1 / 100) * height)]
+			}
+		}
+
+		const dimmedColor = (color: number): string => {
+			const { r, g, b, a } = rgbRev(color, true)
+			const factor = inactiveAmount / 100
+			if (inactiveStyle === 'transparent') {
+				return `rgba(${r}, ${g}, ${b}, ${a * factor})`
+			} else {
+				return `rgba(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)}, ${a})`
+			}
+		}
+
+		await img.usingAlpha(element.opacity, async () => {
+			await img.usingRotation(drawBounds, element.rotation, async () => {
+				for (let i = 0; i < sorted.length; i++) {
+					const segStart = Number(sorted[i].value)
+					const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
+					const color = Number(sorted[i].color)
+
+					if (segStart >= segEnd) continue
+
+					// Active portion: segStart → min(segEnd, value)
+					const activeEnd = Math.min(segEnd, value)
+					if (activeEnd > segStart) {
+						const activeColor = multiSegment ? color : singleActiveColor
+						const [ax1, ay1, ax2, ay2] = segmentBox(segStart, activeEnd)
+						img.box(ax1, ay1, ax2, ay2, parseColor(activeColor))
+					}
+
+					// Inactive portion: max(segStart, value) → segEnd
+					const inactiveStart = Math.max(segStart, value)
+					if (inactiveStart < segEnd) {
+						const [ix1, iy1, ix2, iy2] = segmentBox(inactiveStart, segEnd)
+						img.box(ix1, iy1, ix2, iy2, dimmedColor(color))
+					}
+				}
+			})
 		})
 
 		return drawBounds

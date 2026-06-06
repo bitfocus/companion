@@ -4,6 +4,7 @@ import {
 	faCopy,
 	faCube,
 	faEye,
+	faGauge,
 	faImage,
 	faLayerGroup,
 	faLink,
@@ -273,6 +274,13 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 				elementType="circle"
 				label="Circle"
 				icon={faCircle}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="gauge"
+				label="Gauge"
+				icon={faGauge}
 			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}

@@ -17,6 +17,8 @@ import type {
 	ButtonGraphicsDrawBorder,
 	ButtonGraphicsDrawBounds,
 	ButtonGraphicsElementBase,
+	ButtonGraphicsGaugeDrawElement,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageDrawElement,
@@ -162,6 +164,10 @@ async function convertElements(
 					}
 					case 'circle': {
 						cacheEntry = convertCircleElementForDrawing(context, element, idPrefix)
+						break
+					}
+					case 'gauge': {
+						cacheEntry = convertGaugeElementForDrawing(context, element, idPrefix)
 						break
 					}
 					case 'composite': {
@@ -494,6 +500,7 @@ function parseCompositeElementChildOptions(
 				break
 
 			case 'multidropdown':
+			case 'internal:table':
 			case 'internal:connection_collection':
 			case 'internal:connection_id':
 			case 'internal:custom_variable':
@@ -773,6 +780,49 @@ function convertCircleElementForDrawing(
 		...convertBorderProperties(helper),
 		borderOnlyArc: helper.getBoolean('borderOnlyArc', false),
 		contentHash: '', // Will be computed below
+	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
+}
+
+function convertGaugeElementForDrawing(
+	context: ParseElementsContext,
+	element: ButtonGraphicsGaugeElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
+
+	const enabled = helper.getBoolean('enabled', true)
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+
+	const orientation = helper.getTolerantEnum('orientation', ['horizontal', 'vertical'] as const, 'horizontal')
+	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', ['transparent', 'dimmed'] as const, 'transparent')
+
+	const thresholdsRaw = (element.thresholds as ExpressionOrValue<JsonValue[]>).value
+	const thresholds: ButtonGraphicsGaugeDrawElement['thresholds'] = Array.isArray(thresholdsRaw)
+		? thresholdsRaw.map((row) => ({
+				value: Math.max(0, Math.min(100, Number((row as any)?.value ?? 0))),
+				color: Number((row as any)?.color ?? 0),
+			}))
+		: []
+
+	const drawElement: ButtonGraphicsGaugeDrawElement = {
+		id: idPrefix + element.id,
+		type: 'gauge',
+		usage: element.usage,
+		enabled,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
+		rotation: helper.getNumber('rotation', 0),
+		value: Math.round(Math.max(0, Math.min(100, helper.getNumber('value', 0))) * 10) / 10,
+		orientation,
+		reverse: helper.getBoolean('reverse', false),
+		multiSegment: helper.getBoolean('multiSegment', true),
+		thresholds,
+		inactiveStyle,
+		inactiveAmount: helper.getNumber('inactiveAmount', 70),
+		contentHash: '',
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)

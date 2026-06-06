@@ -574,7 +574,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				id: 'inactiveAmount',
 				label: 'Amount (%)',
 				tooltip:
-					'For transparent: opacity of the inactive segments (0 = invisible, 100 = fully opaque). For dimmed: how much to darken (0 = no dimming, 100 = black).',
+					'How much of the original colour remains in the inactive portion. 0 = invisible / black, 100 = same as the active colour.',
 				default: 70,
 				min: 0,
 				max: 100,
