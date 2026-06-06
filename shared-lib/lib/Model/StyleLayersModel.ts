@@ -218,6 +218,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	value: number
 	orientation: 'horizontal' | 'vertical' | 'ring'
 	reverse: boolean
+	roundedEnds: boolean
 	thickness: number
 	multiSegment: boolean
 	thresholds: Record<string, JsonValue>[]
@@ -231,6 +232,7 @@ export interface ButtonGraphicsGaugeElement
 	value: ExpressionOrValue<number>
 	orientation: ExpressionOrValue<'horizontal' | 'vertical' | 'ring'>
 	reverse: ExpressionOrValue<boolean>
+	roundedEnds: ExpressionOrValue<boolean>
 	thickness: ExpressionOrValue<number>
 	multiSegment: ExpressionOrValue<boolean>
 	thresholds: ExpressionOrValue<Record<string, JsonValue>[]>

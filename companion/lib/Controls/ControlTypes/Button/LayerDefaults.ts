@@ -135,6 +135,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				value: { value: 0, isExpression: false },
 				orientation: { value: 'horizontal', isExpression: false },
 				reverse: { value: false, isExpression: false },
+				roundedEnds: { value: true, isExpression: false },
 				thickness: { value: 20, isExpression: false },
 				multiSegment: { value: true, isExpression: false },
 				thresholds: {

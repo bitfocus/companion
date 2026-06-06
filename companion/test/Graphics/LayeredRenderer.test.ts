@@ -1083,6 +1083,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				value: 50,
 				orientation: 'horizontal',
 				reverse: false,
+				roundedEnds: true,
 				thickness: 20,
 				multiSegment: true,
 				thresholds: DEFAULT_THRESHOLDS,
@@ -1228,6 +1229,10 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 		test('ring multiSegment=false value=75 - single colour active', async () => {
 			await expect(await drawRing({ value: 75, multiSegment: false })).toMatchImageSnapshot()
+		})
+
+		test('ring roundedEnds=false value=75 - flat ends', async () => {
+			await expect(await drawRing({ value: 75, roundedEnds: false })).toMatchImageSnapshot()
 		})
 
 		test('ring in non-square element - stays circular', async () => {

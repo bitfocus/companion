@@ -545,6 +545,44 @@ export class GraphicsLayeredButtonRenderer {
 							})
 						}
 					}
+
+					// Rounded end-caps on the active arc, except when value=100 (complete circle has no ends)
+					if (element.roundedEnds && value > 0 && value < 100) {
+						const capRadius = thicknessPx / 2
+
+						// Cap at position 0: colour of the first active threshold
+						const startColor = multiSegment ? Number(sorted[0].color) : singleActiveColor
+						const startAngle = posToAngle(0)
+						img.circle(
+							cx + arcRadius * Math.cos(startAngle),
+							cy + arcRadius * Math.sin(startAngle),
+							capRadius,
+							capRadius,
+							0,
+							Math.PI * 2,
+							false,
+							parseColor(startColor)
+						)
+
+						// Cap at position=value: colour of whichever threshold the value falls in
+						const endThreshold = [...sorted].reverse().find((t) => Number(t.value) <= value)
+						const endColor = multiSegment
+							? endThreshold
+								? Number(endThreshold.color)
+								: Number(sorted[0].color)
+							: singleActiveColor
+						const endAngle = posToAngle(value)
+						img.circle(
+							cx + arcRadius * Math.cos(endAngle),
+							cy + arcRadius * Math.sin(endAngle),
+							capRadius,
+							capRadius,
+							0,
+							Math.PI * 2,
+							false,
+							parseColor(endColor)
+						)
+					}
 				} else {
 					for (let i = 0; i < sorted.length; i++) {
 						const segStart = Number(sorted[i].value)

@@ -818,6 +818,7 @@ function convertGaugeElementForDrawing(
 		value: Math.round(Math.max(0, Math.min(100, helper.getNumber('value', 0))) * 10) / 10,
 		orientation,
 		reverse: helper.getBoolean('reverse', false),
+		roundedEnds: helper.getBoolean('roundedEnds', true),
 		thickness: Math.max(1, Math.min(50, helper.getNumber('thickness', 20))),
 		multiSegment: helper.getBoolean('multiSegment', true),
 		thresholds,

@@ -523,6 +523,13 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				default: false,
 			},
 			{
+				type: 'checkbox',
+				id: 'roundedEnds',
+				label: 'Rounded ends',
+				tooltip: 'Round the ends of the active arc. Only applies to ring orientation.',
+				default: true,
+			},
+			{
 				type: 'number',
 				id: 'thickness',
 				label: 'Ring thickness (%)',
