@@ -68,8 +68,8 @@ export function ImageLibraryImagePreview({
 
 	if (!queryData?.image) {
 		return (
-			<div className={classNames('image-library-preview-empty', className)}>
-				<FontAwesomeIcon icon={faImage} title="No image data" />
+			<div className={classNames('image-library-preview-empty', className)} title="No image data">
+				<FontAwesomeIcon icon={faImage} />
 			</div>
 		)
 	}

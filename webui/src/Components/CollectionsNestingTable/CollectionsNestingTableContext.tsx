@@ -11,7 +11,7 @@ export interface CollectionsNestingTableContextType<
 	showCollapseButtons?: boolean
 	itemName: string
 	dragId: string
-	collectionsApi: NestingCollectionsApi
+	collectionsApi: NestingCollectionsApi | undefined
 	selectedItemId: string | null
 	gridLayout?: boolean
 }

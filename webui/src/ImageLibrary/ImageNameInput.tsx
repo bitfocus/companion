@@ -13,6 +13,7 @@ interface ImageNameInputProps {
 	showWarning?: boolean
 	warningText?: string | React.ReactNode
 	errorMessage?: string | null
+	className?: string
 }
 
 export function ImageNameInput({
@@ -24,6 +25,7 @@ export function ImageNameInput({
 	showWarning = false,
 	warningText,
 	errorMessage,
+	className,
 }: ImageNameInputProps): JSX.Element {
 	// Generate tooltip based on validation state
 	const tooltip = !isLabelValid(value) ? 'Invalid name: Use only letters, numbers, hyphens, and underscores' : undefined
@@ -52,7 +54,7 @@ export function ImageNameInput({
 				</StaticAlert>
 			)}
 
-			<div className="mb-3 row">
+			<div className={`row ${className || ''}`}>
 				<FormLabel htmlFor={labelInputId} className="col-sm-3 col-form-label">
 					Image name
 				</FormLabel>
@@ -68,8 +70,8 @@ export function ImageNameInput({
 						immediateValue
 					/>
 				</div>
+				<div className="col-sm-12 mt-2 text-muted small">{helpText || defaultHelpText}</div>
 			</div>
-			<div className="text-muted small">{helpText || defaultHelpText}</div>
 		</>
 	)
 }

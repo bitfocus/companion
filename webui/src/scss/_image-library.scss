@@ -1,12 +1,74 @@
+//
+// Shared image preview box — used on the page sidebar and in modal tabs
+//
+
+.image-preview-full {
+	border: 1px solid #dee2e6;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #f8f9fa;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	transition: border-color 0.2s ease;
+	height: 200px;
+
+	&.drag-over {
+		border: 2px dashed #0d6efd;
+	}
+
+	img {
+		max-width: 100%;
+		max-height: 100%;
+		object-fit: contain;
+	}
+
+	.image-library-preview-empty {
+		svg,
+		.fa,
+		.fas,
+		.far,
+		.fal,
+		.fab {
+			width: 150px !important;
+			height: 150px !important;
+			font-size: 150px !important;
+		}
+	}
+
+	.drag-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(13, 110, 253, 0.1);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+		border-radius: 8px;
+
+		.drag-overlay-message {
+			background-color: rgba(255, 255, 255, 0.95);
+			padding: 20px;
+			border-radius: 8px;
+			font-weight: bold;
+			color: #0d6efd;
+		}
+	}
+}
+
+//
+// Page layout
+//
+
 .image-library-page {
 	.image-library-grid {
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-	}
-
-	.image-library-header {
-		border-bottom: 1px solid #dee2e6;
 	}
 
 	.image-library-controls {
@@ -61,12 +123,66 @@
 	.image-library-grid-content {
 		flex: 1;
 		overflow-y: auto;
-		padding: 1rem;
 	}
 
-	// Override CollectionsNestingTable grid dimensions for image thumbnails
-	.collections-nesting-table-grid-container {
-		--collection-nesting-table-grid-tile-min-width: 150px;
+	.image-preview-full {
+		flex: 0 0 300px;
+		height: auto;
+		margin-bottom: 1.5rem;
+	}
+
+	.image-library-editor {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.image-properties {
+		flex: 1;
+		overflow-y: auto;
+
+		.image-metadata {
+			border: 1px solid #dee2e6;
+			border-radius: 6px;
+			padding: 1rem;
+			margin-bottom: 1rem;
+			background: #f8f9fa;
+		}
+
+		.metadata-row {
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 0.5rem;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+
+		.metadata-label {
+			font-weight: 600;
+			color: #495057;
+		}
+	}
+}
+
+//
+// Reusable selector — used in modals and inside .image-library-page
+//
+
+.image-library-selector {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+
+	.image-library-selector-grid {
+		flex: 1;
+		overflow-y: auto;
+		padding: 0.5rem 0;
+
+		.collections-nesting-table-grid-container {
+			--collection-nesting-table-grid-tile-min-width: 150px;
+		}
 	}
 
 	.image-thumbnail {
@@ -137,19 +253,6 @@
 		}
 	}
 
-	.image-preview-full .image-library-preview-empty {
-		svg,
-		.fa,
-		.fas,
-		.far,
-		.fal,
-		.fab {
-			width: 150px !important;
-			height: 150px !important;
-			font-size: 150px !important;
-		}
-	}
-
 	.image-library-preview-error {
 		background: #f8d7da;
 		color: #721c24;
@@ -170,85 +273,5 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-
-	.image-library-editor {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.image-preview-full {
-		flex: 0 0 300px;
-		margin-bottom: 1.5rem;
-		border: 1px solid #dee2e6;
-		border-radius: 8px;
-		overflow: hidden;
-		background: #f8f9fa;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		position: relative;
-		transition: border-color 0.2s ease;
-
-		&.drag-over {
-			border: 2px dashed #0d6efd;
-		}
-
-		img {
-			max-width: 100%;
-			max-height: 100%;
-			object-fit: contain;
-		}
-	}
-
-	.drag-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background-color: rgba(13, 110, 253, 0.1);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		pointer-events: none;
-		border-radius: 8px;
-	}
-
-	.drag-overlay-message {
-		background-color: rgba(255, 255, 255, 0.95);
-		padding: 20px;
-		border-radius: 8px;
-		font-weight: bold;
-		color: #0d6efd;
-	}
-
-	.image-properties {
-		flex: 1;
-		overflow-y: auto;
-
-		.image-metadata {
-			border: 1px solid #dee2e6;
-			border-radius: 6px;
-			padding: 1rem;
-			margin-bottom: 1rem;
-			background: #f8f9fa;
-		}
-
-		.metadata-row {
-			display: flex;
-			justify-content: space-between;
-			margin-bottom: 0.5rem;
-
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
-
-		.metadata-label {
-			font-weight: 600;
-			color: #495057;
-		}
 	}
 }
