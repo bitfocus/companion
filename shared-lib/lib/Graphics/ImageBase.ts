@@ -151,7 +151,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 */
 	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
 		const oldAlpha = this.context2d.globalAlpha
-		this.context2d.globalAlpha = alpha
+		this.context2d.globalAlpha *= alpha
 
 		try {
 			await fcn()

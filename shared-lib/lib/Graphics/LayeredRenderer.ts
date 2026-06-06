@@ -103,7 +103,7 @@ export class GraphicsLayeredButtonRenderer {
 			try {
 				switch (element.type) {
 					case 'group': {
-						await img.usingAlpha(element.opacity, async () => {
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
 							await img.usingRotation(drawBounds, element.rotation, async () => {
 								elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
@@ -122,7 +122,7 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					}
 					case 'reference': {
-						await img.usingAlpha(element.opacity, async () => {
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
 							await img.usingRotation(drawBounds, element.rotation, async () => {
 								elementBounds = await this.#drawReferenceElement(img, drawBounds, element, skipDraw)
 
@@ -247,7 +247,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		if (imageDrawn === false) {
-			await img.usingAlpha(element.opacity, async () => {
+			await img.usingTemporaryLayer(element.opacity, async (img) => {
 				await img.usingRotation(drawBounds, element.rotation, async () => {
 					const { x, y, width, height, maxX, maxY } = drawBounds
 
@@ -319,7 +319,7 @@ export class GraphicsLayeredButtonRenderer {
 		const marginX = 2 * marginScale * drawBounds.width
 		const marginY = 1 * marginScale * drawBounds.height
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.drawAlignedText(
 					drawBounds.x + marginX,
@@ -358,7 +358,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.box(
 					drawBounds.x,
@@ -424,7 +424,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			const midX = drawBounds.x + drawBounds.width / 2
 			const midY = drawBounds.y + drawBounds.height / 2
 			const radiusX = drawBounds.width / 2
@@ -467,13 +467,30 @@ export class GraphicsLayeredButtonRenderer {
 		if (sorted.length === 0) return drawBounds
 
 		const { x, y, width, height, maxX, maxY } = drawBounds
-		const { value, orientation, reverse, multiSegment, inactiveStyle, inactiveAmount } = element
+		const { orientation, reverse, multiSegment, inactiveStyle } = element
+
+		// Clamp gauge-level numbers to valid finite ranges so downstream math never sees NaN.
+		const value = Number.isFinite(element.value) ? Math.max(0, Math.min(100, element.value)) : 0
+		const inactiveAmount = Number.isFinite(element.inactiveAmount)
+			? Math.max(0, Math.min(100, element.inactiveAmount))
+			: 0
+
+		// Sanitize a threshold numeric field: coerce to finite, clamp to 0–100.
+		const safeThreshVal = (v: unknown): number => {
+			const n = Number(v)
+			return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0
+		}
+		// Sanitize a color field: coerce to finite, fall back to black.
+		const safeColor = (v: unknown): number => {
+			const n = Number(v)
+			return Number.isFinite(n) ? n : 0
+		}
 
 		// For single-color mode, find the highest threshold whose start <= current value
-		let singleActiveColor = Number(sorted[0].color)
+		let singleActiveColor = safeColor(sorted[0].color)
 		if (!multiSegment) {
 			for (const t of sorted) {
-				if (Number(t.value) <= value) singleActiveColor = Number(t.color)
+				if (safeThreshVal(t.value) <= value) singleActiveColor = safeColor(t.color)
 			}
 		}
 
@@ -502,7 +519,7 @@ export class GraphicsLayeredButtonRenderer {
 			}
 		}
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				if (orientation === 'ring') {
 					const cx = x + width / 2
@@ -521,9 +538,9 @@ export class GraphicsLayeredButtonRenderer {
 					// the main canvas at the desired transparency in a single operation.
 					const drawInactiveArcs = (target: ImageBase<any>) => {
 						for (let i = 0; i < sorted.length; i++) {
-							const segStart = Number(sorted[i].value)
-							const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
-							const color = Number(sorted[i].color)
+							const segStart = safeThreshVal(sorted[i].value)
+							const segEnd = i + 1 < sorted.length ? safeThreshVal(sorted[i + 1].value) : 100
+							const color = safeColor(sorted[i].color)
 							if (segStart >= segEnd) continue
 
 							const inactiveStart = Math.max(segStart, value)
@@ -551,9 +568,9 @@ export class GraphicsLayeredButtonRenderer {
 
 					// Pass 2: active arcs (always fully opaque, drawn directly).
 					for (let i = 0; i < sorted.length; i++) {
-						const segStart = Number(sorted[i].value)
-						const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
-						const color = Number(sorted[i].color)
+						const segStart = safeThreshVal(sorted[i].value)
+						const segEnd = i + 1 < sorted.length ? safeThreshVal(sorted[i + 1].value) : 100
+						const color = safeColor(sorted[i].color)
 						if (segStart >= segEnd) continue
 
 						const activeEnd = Math.min(segEnd, value)
@@ -608,9 +625,9 @@ export class GraphicsLayeredButtonRenderer {
 					}
 				} else {
 					for (let i = 0; i < sorted.length; i++) {
-						const segStart = Number(sorted[i].value)
-						const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
-						const color = Number(sorted[i].color)
+						const segStart = safeThreshVal(sorted[i].value)
+						const segEnd = i + 1 < sorted.length ? safeThreshVal(sorted[i + 1].value) : 100
+						const color = safeColor(sorted[i].color)
 
 						if (segStart >= segEnd) continue
 
@@ -618,15 +635,13 @@ export class GraphicsLayeredButtonRenderer {
 						const activeEnd = Math.min(segEnd, value)
 						if (activeEnd > segStart) {
 							const activeColor = multiSegment ? color : singleActiveColor
-							const [ax1, ay1, ax2, ay2] = segmentBox(segStart, activeEnd)
-							img.box(ax1, ay1, ax2, ay2, parseColor(activeColor))
+							img.box(...segmentBox(segStart, activeEnd), parseColor(activeColor))
 						}
 
 						// Inactive portion: max(segStart, value) → segEnd
 						const inactiveStart = Math.max(segStart, value)
 						if (inactiveStart < segEnd) {
-							const [ix1, iy1, ix2, iy2] = segmentBox(inactiveStart, segEnd)
-							img.box(ix1, iy1, ix2, iy2, dimmedColor(color))
+							img.box(...segmentBox(inactiveStart, segEnd), dimmedColor(color))
 						}
 					}
 				}

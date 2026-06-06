@@ -158,15 +158,15 @@ export class ElementExpressionHelper<T> {
 	}
 
 	/**
-	 * Like getEnum, but tolerant of leading whitespace and case differences.
-	 * Matches from the first non-whitespace character, case-insensitively.
+	 * Like getEnum, but compares the string value to the enum values in a tolerant way:
+	 * Matches only the first non-whitespace character, case-insensitively.
 	 */
 	getTolerantEnum<TVal extends string>(propertyName: keyof T, values: readonly TVal[], defaultValue: TVal): TVal {
 		const raw = this.getString(propertyName, defaultValue)
 		const trimmed = String(raw ?? '')
-			.trimStart()
+			.trim()
 			.toLowerCase()
-		return values.find((v) => v.toLowerCase().startsWith(trimmed)) ?? defaultValue
+		return values.find((v) => v.toLowerCase().startsWith(trimmed[0])) ?? defaultValue
 	}
 
 	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
