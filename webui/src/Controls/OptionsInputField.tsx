@@ -24,6 +24,7 @@ import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { TableInputField } from '~/Components/TableInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
@@ -309,6 +310,9 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 				)
 			}
 			break
+		}
+		case 'internal:table': {
+			return <TableInputField definition={option} value={value as any} setValue={setValue} disabled={readonly} />
 		}
 		case 'bonjour-device':
 		case 'secret-text':
