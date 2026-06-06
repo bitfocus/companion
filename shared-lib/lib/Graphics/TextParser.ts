@@ -54,8 +54,8 @@ export function resolveFontSizes(
 	allowShrink: boolean,
 	charCount: number
 ): number[] {
-	// Clamp the configured size to a sane pixel range
-	const clamped = Math.min(Math.max(fontsize, 3), h)
+	// Clamp the configured size to a sane pixel range (minimum is calibrated to 72px reference height)
+	const clamped = Math.min(Math.max(fontsize, Math.round(h / 24)), h)
 
 	if (!allowShrink) {
 		return [clamped]

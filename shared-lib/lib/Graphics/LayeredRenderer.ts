@@ -312,8 +312,8 @@ export class GraphicsLayeredButtonRenderer {
 
 		// Force some padding around the text, scaled proportionally
 		const marginScale = 0.015
-		const marginX = 2 * marginScale
-		const marginY = 1 * marginScale
+		const marginX = 2 * marginScale * drawBounds.width
+		const marginY = 1 * marginScale * drawBounds.height
 
 		await img.usingAlpha(element.opacity, async () => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {

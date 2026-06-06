@@ -881,6 +881,12 @@ describe('Image drawing', () => {
 				{ label: 'single line (3 chars, 35% height)', text: 'Act', heightFrac: 0.35 },
 				{ label: 'single line (3 chars, 40% height)', text: 'Act', heightFrac: 0.4 },
 				{ label: 'single line (5 chars, 35% height)', text: 'Scene', heightFrac: 0.35 },
+				// Regression: "Prod101 Edit" (12 chars) diverged between 72px and 200px canvases
+				// at 39–40% height.  The math is scale-invariant (verified by the proportional-mock
+				// unit test in TextParser.test.ts); if these snapshots differ visually between canvas
+				// sizes the root cause is skia-canvas font-hinting at small pixel sizes (≲15px).
+				{ label: 'Prod101 Edit (12 chars, 39% height)', text: 'Prod101 Edit', heightFrac: 0.39 },
+				{ label: 'Prod101 Edit (12 chars, 40% height)', text: 'Prod101 Edit', heightFrac: 0.4 },
 			]) {
 				describe(label, () => {
 					test('at 72x72', async () => {
@@ -901,6 +907,41 @@ describe('Image drawing', () => {
 						const img = Image.create(200, 200, 1, null)
 						img.fillColor('#000000')
 						img.drawAlignedText(0, 0, 200, Math.round(200 * heightFrac), text, '#ffffff', 200, true, 'center', 'center')
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+				})
+			}
+		})
+
+		// Resolution-independence: full-height box with explicit font size as a fraction of canvas height.
+		// This covers the case where the button text area is the full canvas and the configured
+		// font size is ~39-40% of the canvas height (e.g. a label drawn with a fixed-ish font size).
+		// All three canvas sizes must produce proportionally identical layouts.
+		describe('fixed fontsize resolution independence', () => {
+			for (const { label, text, fontFrac } of [
+				{ label: 'Prod101 Edit (12 chars, fontsize 39%)', text: 'Prod101 Edit', fontFrac: 0.39 },
+				{ label: 'Prod101 Edit (12 chars, fontsize 40%)', text: 'Prod101 Edit', fontFrac: 0.4 },
+				{ label: 'Hello World (11 chars, fontsize 39%)', text: 'Hello World', fontFrac: 0.39 },
+			]) {
+				describe(label, () => {
+					test('at 72x72', async () => {
+						const img = Image.create(72, 72, 1, null)
+						img.fillColor('#000000')
+						img.drawAlignedText(0, 0, 72, 72, text, '#ffffff', Math.round(72 * fontFrac), false, 'center', 'center')
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+
+					test('at 144x144', async () => {
+						const img = Image.create(144, 144, 1, null)
+						img.fillColor('#000000')
+						img.drawAlignedText(0, 0, 144, 144, text, '#ffffff', Math.round(144 * fontFrac), false, 'center', 'center')
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+
+					test('at 200x200', async () => {
+						const img = Image.create(200, 200, 1, null)
+						img.fillColor('#000000')
+						img.drawAlignedText(0, 0, 200, 200, text, '#ffffff', Math.round(200 * fontFrac), false, 'center', 'center')
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 				})
