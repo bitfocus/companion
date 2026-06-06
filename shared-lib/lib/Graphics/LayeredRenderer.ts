@@ -103,7 +103,7 @@ export class GraphicsLayeredButtonRenderer {
 			try {
 				switch (element.type) {
 					case 'group': {
-						await img.usingTemporaryLayer(element.opacity, async (img) => {
+						await img.usingAlpha(element.opacity, async () => {
 							await img.usingRotation(drawBounds, element.rotation, async () => {
 								elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
@@ -122,7 +122,7 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					}
 					case 'reference': {
-						await img.usingTemporaryLayer(element.opacity, async (img) => {
+						await img.usingAlpha(element.opacity, async () => {
 							await img.usingRotation(drawBounds, element.rotation, async () => {
 								elementBounds = await this.#drawReferenceElement(img, drawBounds, element, skipDraw)
 
@@ -247,8 +247,8 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		if (imageDrawn === false) {
-			await img.usingRotation(drawBounds, element.rotation, async () => {
-				await img.usingTemporaryLayer(element.opacity, async (img) => {
+			await img.usingAlpha(element.opacity, async () => {
+				await img.usingRotation(drawBounds, element.rotation, async () => {
 					const { x, y, width, height, maxX, maxY } = drawBounds
 
 					// Orange background
@@ -514,13 +514,48 @@ export class GraphicsLayeredButtonRenderer {
 					// p=0 → top (−π/2); CW increases, CCW decreases
 					const posToAngle = (p: number) => -Math.PI / 2 + (reverse ? -1 : 1) * (p / 100) * (Math.PI * 2)
 
+					// Pass 1: inactive arcs.
+					// Drawn into a temporary layer so that anti-aliased arc endpoints at threshold
+					// boundaries don't accumulate alpha and produce bright seams. Each arc is
+					// painted at full opacity on the temp layer; the layer is then composited onto
+					// the main canvas at the desired transparency in a single operation.
+					const drawInactiveArcs = (target: ImageBase<any>) => {
+						for (let i = 0; i < sorted.length; i++) {
+							const segStart = Number(sorted[i].value)
+							const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
+							const color = Number(sorted[i].color)
+							if (segStart >= segEnd) continue
+
+							const inactiveStart = Math.max(segStart, value)
+							if (inactiveStart < segEnd) {
+								const [a1, a2] = reverse
+									? [posToAngle(segEnd), posToAngle(inactiveStart)]
+									: [posToAngle(inactiveStart), posToAngle(segEnd)]
+								// Always use the base colour at full opacity on this layer — the
+								// transparency / darkening is applied when compositing the layer.
+								target.arcStroke(cx, cy, arcRadius, a1, a2, false, {
+									color: inactiveStyle === 'transparent' ? parseColor(color) : dimmedColor(color),
+									width: thicknessPx,
+								})
+							}
+						}
+					}
+
+					if (inactiveStyle === 'transparent') {
+						await img.usingTemporaryLayer(inactiveAmount / 100, async (layer) => {
+							drawInactiveArcs(layer)
+						})
+					} else {
+						drawInactiveArcs(img)
+					}
+
+					// Pass 2: active arcs (always fully opaque, drawn directly).
 					for (let i = 0; i < sorted.length; i++) {
 						const segStart = Number(sorted[i].value)
 						const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
 						const color = Number(sorted[i].color)
 						if (segStart >= segEnd) continue
 
-						// Active portion: segStart → min(segEnd, value)
 						const activeEnd = Math.min(segEnd, value)
 						if (activeEnd > segStart) {
 							const activeColor = multiSegment ? color : singleActiveColor
@@ -529,18 +564,6 @@ export class GraphicsLayeredButtonRenderer {
 								: [posToAngle(segStart), posToAngle(activeEnd)]
 							img.arcStroke(cx, cy, arcRadius, a1, a2, false, {
 								color: parseColor(activeColor),
-								width: thicknessPx,
-							})
-						}
-
-						// Inactive portion: max(segStart, value) → segEnd
-						const inactiveStart = Math.max(segStart, value)
-						if (inactiveStart < segEnd) {
-							const [a1, a2] = reverse
-								? [posToAngle(segEnd), posToAngle(inactiveStart)]
-								: [posToAngle(inactiveStart), posToAngle(segEnd)]
-							img.arcStroke(cx, cy, arcRadius, a1, a2, false, {
-								color: dimmedColor(color),
 								width: thicknessPx,
 							})
 						}
