@@ -212,6 +212,30 @@ export interface ButtonGraphicsReferenceElement
 	location: ExpressionOrValue<string>
 }
 
+export interface ButtonGraphicsGaugeDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
+	type: 'gauge'
+	value: number
+	orientation: 'horizontal' | 'vertical'
+	reverse: boolean
+	multiSegment: boolean
+	thresholds: Record<string, JsonValue>[]
+	inactiveStyle: 'transparent' | 'dimmed'
+	inactiveAmount: number
+}
+
+export interface ButtonGraphicsGaugeElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
+	type: 'gauge'
+	value: ExpressionOrValue<number>
+	orientation: ExpressionOrValue<'horizontal' | 'vertical'>
+	reverse: ExpressionOrValue<boolean>
+	multiSegment: ExpressionOrValue<boolean>
+	thresholds: ExpressionOrValue<Record<string, JsonValue>[]>
+	inactiveStyle: ExpressionOrValue<'transparent' | 'dimmed'>
+	inactiveAmount: ExpressionOrValue<number>
+}
+
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
@@ -221,6 +245,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsGroupDrawElement
 	| ButtonGraphicsCircleDrawElement
 	| ButtonGraphicsReferenceDrawElement
+	| ButtonGraphicsGaugeDrawElement
 
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
@@ -232,3 +257,4 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCircleElement
 	| ButtonGraphicsCompositeElement
 	| ButtonGraphicsReferenceElement
+	| ButtonGraphicsGaugeElement

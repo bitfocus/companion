@@ -1,6 +1,7 @@
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextElement,
 } from '../Model/StyleLayersModel.js'
@@ -479,6 +480,111 @@ export const referenceElementSchema: ElementSchemaSection[] = [
 	},
 ]
 
+export const gaugeElementSchema: ElementSchemaSection[] = [
+	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
+	{
+		id: 'content',
+		label: 'Content',
+		fields: [
+			{
+				type: 'number',
+				id: 'value',
+				label: 'Value (0-100)',
+				tooltip: 'The current value of the gauge, in the range 0-100.',
+				default: 0,
+				min: 0,
+				max: 100,
+				step: 1,
+			},
+		],
+	},
+	{
+		id: 'appearance',
+		label: 'Appearance',
+		fields: [
+			{
+				type: 'dropdown',
+				id: 'orientation',
+				label: 'Orientation',
+				choices: [
+					{ id: 'horizontal', label: 'Horizontal' },
+					{ id: 'vertical', label: 'Vertical' },
+				],
+				default: 'horizontal',
+			},
+			{
+				type: 'checkbox',
+				id: 'reverse',
+				label: 'Reverse direction',
+				tooltip:
+					'When enabled, the gauge fills from the opposite end (right-to-left for horizontal, top-to-bottom for vertical).',
+				default: false,
+			},
+			{
+				type: 'checkbox',
+				id: 'multiSegment',
+				label: 'Multi-segment colours',
+				tooltip:
+					'When enabled, each colour threshold segment is visible in the filled portion. When disabled, only the active threshold colour is used for the entire filled area.',
+				default: true,
+			},
+			{
+				type: 'internal:table',
+				id: 'thresholds',
+				label: 'Colour thresholds',
+				tooltip: 'Define colour stops for the gauge. Each row specifies the value (0-100) at which that colour starts.',
+				disableAutoExpression: true,
+				columns: [
+					{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
+					{
+						id: 'color',
+						type: 'colorpicker',
+						label: 'Colour',
+						default: 0x00ff00,
+						enableAlpha: false,
+						returnType: 'number',
+					},
+				],
+				default: [
+					{ value: 0, color: 0x00ff00 },
+					{ value: 66, color: 0xffff00 },
+					{ value: 85, color: 0xff0000 },
+				],
+			},
+		],
+	},
+	{
+		id: 'inactive',
+		label: 'Inactive portion',
+		fields: [
+			{
+				type: 'dropdown',
+				id: 'inactiveStyle',
+				label: 'Style',
+				tooltip: 'How to render the unfilled portion of the gauge.',
+				choices: [
+					{ id: 'transparent', label: 'Transparent' },
+					{ id: 'dimmed', label: 'Dimmed (darker)' },
+				],
+				default: 'transparent',
+			},
+			{
+				type: 'number',
+				id: 'inactiveAmount',
+				label: 'Amount (%)',
+				tooltip:
+					'For transparent: opacity of the inactive segments (0 = invisible, 100 = fully opaque). For dimmed: how much to darken (0 = no dimming, 100 = black).',
+				default: 70,
+				min: 0,
+				max: 100,
+				step: 1,
+				range: true,
+			},
+		],
+	},
+]
+
 /**
  * Section-structured schemas per element type.
  */
@@ -492,6 +598,7 @@ export const elementSchemas = {
 	composite: compositeElementSchema,
 	canvas: canvasElementSchema,
 	reference: referenceElementSchema,
+	gauge: gaugeElementSchema,
 } as const satisfies Record<string, ElementSchemaSection[]>
 
 export function getElementSchemaProperty(
@@ -536,4 +643,8 @@ export const elementSimpleModeFields = {
 		//
 		'color',
 	] satisfies ReadonlyArray<keyof ButtonGraphicsBoxElement>,
+	gauge: [
+		//
+		'value',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsGaugeElement>,
 } as const

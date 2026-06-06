@@ -11,6 +11,7 @@ import type {
 	CompanionInputFieldSecretExtended,
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
+	InternalInputFieldTable,
 	InternalInputFieldTime,
 } from '../Model/Options.js'
 import { validateInputValue } from '../ValidateInputValue.js'
@@ -1328,6 +1329,150 @@ describe('validateInputValue', () => {
 			})
 			expect(validateInputValue(definition, 123)).toEqual({
 				sanitisedValue: 123,
+				validationError: undefined,
+				validationWarnings: [],
+			})
+		})
+	})
+
+	describe('internal:table', () => {
+		const definition: InternalInputFieldTable = {
+			id: 'test',
+			type: 'internal:table',
+			label: 'Test',
+			columns: [
+				{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
+				{
+					id: 'color',
+					type: 'colorpicker',
+					label: 'Colour',
+					default: 0x00ff00,
+					enableAlpha: false,
+					returnType: 'number',
+				},
+			],
+			default: [],
+		}
+
+		it('should return error when value is not an array', () => {
+			expect(validateInputValue(definition, 'not-an-array')).toEqual({
+				sanitisedValue: 'not-an-array',
+				validationError: 'Value must be an array',
+				validationWarnings: [],
+			})
+			expect(validateInputValue(definition, 42)).toEqual({
+				sanitisedValue: 42,
+				validationError: 'Value must be an array',
+				validationWarnings: [],
+			})
+			expect(validateInputValue(definition, { value: 0, color: 0 })).toEqual({
+				sanitisedValue: { value: 0, color: 0 },
+				validationError: 'Value must be an array',
+				validationWarnings: [],
+			})
+		})
+
+		it('should return empty array for empty input', () => {
+			expect(validateInputValue(definition, [])).toEqual({
+				sanitisedValue: [],
+				validationError: undefined,
+				validationWarnings: [],
+			})
+		})
+
+		it('should return error when a row is not an object', () => {
+			expect(validateInputValue(definition, ['not-a-row'])).toEqual({
+				sanitisedValue: ['not-a-row'],
+				validationError: 'Row 0 must be an object',
+				validationWarnings: [],
+			})
+			expect(validateInputValue(definition, [42])).toEqual({
+				sanitisedValue: [42],
+				validationError: 'Row 0 must be an object',
+				validationWarnings: [],
+			})
+			expect(validateInputValue(definition, [[]])).toEqual({
+				sanitisedValue: [[]],
+				validationError: 'Row 0 must be an object',
+				validationWarnings: [],
+			})
+		})
+
+		it('should validate and sanitise a valid row', () => {
+			expect(validateInputValue(definition, [{ value: 50, color: 0x00ff00 }])).toEqual({
+				sanitisedValue: [{ value: 50, color: 0x00ff00 }],
+				validationError: undefined,
+				validationWarnings: [],
+			})
+		})
+
+		it('should validate multiple valid rows', () => {
+			expect(
+				validateInputValue(definition, [
+					{ value: 0, color: 0x00ff00 },
+					{ value: 66, color: 0xffff00 },
+					{ value: 85, color: 0xff0000 },
+				])
+			).toEqual({
+				sanitisedValue: [
+					{ value: 0, color: 0x00ff00 },
+					{ value: 66, color: 0xffff00 },
+					{ value: 85, color: 0xff0000 },
+				],
+				validationError: undefined,
+				validationWarnings: [],
+			})
+		})
+
+		it('should return error with row/column context when a cell value is invalid', () => {
+			expect(validateInputValue(definition, [{ value: 150, color: 0x00ff00 }])).toEqual({
+				sanitisedValue: [{ value: 150, color: 0x00ff00 }],
+				validationError: 'Row 0, column "Value": Value must be less than or equal to 100',
+				validationWarnings: [],
+			})
+		})
+
+		it('should report the failing row index correctly', () => {
+			expect(
+				validateInputValue(definition, [
+					{ value: 0, color: 0x00ff00 },
+					{ value: -5, color: 0xffff00 },
+				])
+			).toEqual({
+				sanitisedValue: [
+					{ value: 0, color: 0x00ff00 },
+					{ value: -5, color: 0xffff00 },
+				],
+				validationError: 'Row 1, column "Value": Value must be greater than or equal to 0',
+				validationWarnings: [],
+			})
+		})
+
+		it('should propagate column warnings with row/column context', () => {
+			const clampDef: InternalInputFieldTable = {
+				...definition,
+				columns: [
+					{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0, clampValues: true },
+					{
+						id: 'color',
+						type: 'colorpicker',
+						label: 'Colour',
+						default: 0x00ff00,
+						enableAlpha: false,
+						returnType: 'number',
+					},
+				],
+			}
+			expect(validateInputValue(clampDef, [{ value: 150, color: 0x00ff00 }])).toEqual({
+				sanitisedValue: [{ value: 100, color: 0x00ff00 }],
+				validationError: undefined,
+				validationWarnings: ['Row 0, column "Value": Value was clamped to 100'],
+			})
+		})
+
+		it('should coerce string cell values using the column definition', () => {
+			expect(validateInputValue(definition, [{ value: '75', color: 0x00ff00 }])).toEqual({
+				sanitisedValue: [{ value: 75, color: 0x00ff00 }],
 				validationError: undefined,
 				validationWarnings: [],
 			})

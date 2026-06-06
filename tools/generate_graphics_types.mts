@@ -48,6 +48,9 @@ function convertFieldType(field: SomeCompanionInputField, isExpressionable: bool
 		case 'internal:vertical-alignment':
 			tsType = 'VerticalAlignment'
 			break
+		case 'internal:table':
+			tsType = 'Record<string, JsonValue>[]'
+			break
 		default:
 			// assertNever(field.type)
 			throw new Error(`Unhandled field type: ${field.type}`)

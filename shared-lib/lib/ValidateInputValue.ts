@@ -300,6 +300,44 @@ export function validateInputValue(
 			return { sanitisedValue, validationError: undefined, validationWarnings }
 		}
 
+		case 'internal:table': {
+			if (!Array.isArray(value)) {
+				return { sanitisedValue: value, validationError: 'Value must be an array', validationWarnings }
+			}
+
+			const sanitisedRows: JsonValue[] = []
+			for (let rowIndex = 0; rowIndex < value.length; rowIndex++) {
+				const row = value[rowIndex]
+				if (typeof row !== 'object' || row === null || Array.isArray(row)) {
+					return {
+						sanitisedValue: value,
+						validationError: `Row ${rowIndex} must be an object`,
+						validationWarnings,
+					}
+				}
+
+				const sanitisedRow: Record<string, JsonValue> = {}
+				for (const col of definition.columns) {
+					const cellValue = (row as Record<string, JsonValue>)[col.id]
+					const result = validateInputValue(col, cellValue, options)
+					if (result.validationError) {
+						return {
+							sanitisedValue: value,
+							validationError: `Row ${rowIndex}, column "${col.label}": ${result.validationError}`,
+							validationWarnings,
+						}
+					}
+					validationWarnings.push(
+						...result.validationWarnings.map((w) => `Row ${rowIndex}, column "${col.label}": ${w}`)
+					)
+					sanitisedRow[col.id] = result.sanitisedValue as JsonValue
+				}
+				sanitisedRows.push(sanitisedRow)
+			}
+
+			return { sanitisedValue: sanitisedRows, validationError: undefined, validationWarnings }
+		}
+
 		case 'internal:connection_id':
 		case 'internal:connection_collection':
 		case 'internal:custom_variable':
