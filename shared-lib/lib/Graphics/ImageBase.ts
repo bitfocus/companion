@@ -380,6 +380,34 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
+	 * Draws a stroked arc (no fill). Used by the ring gauge renderer.
+	 * @param x center x
+	 * @param y center y
+	 * @param radius arc radius in pixels
+	 * @param startAngle in radians
+	 * @param endAngle in radians
+	 * @param anticlockwise whether to draw counter-clockwise
+	 * @param lineStyle stroke style and width
+	 */
+	arcStroke(
+		x: number,
+		y: number,
+		radius: number,
+		startAngle: number,
+		endAngle: number,
+		anticlockwise: boolean,
+		lineStyle: LineStyle
+	): void {
+		if (radius <= 0 || lineStyle.width <= 0) return
+		this.context2d.beginPath()
+		this.context2d.arc(x, y, radius, startAngle, endAngle, anticlockwise)
+		this.context2d.strokeStyle = lineStyle.color
+		this.context2d.lineWidth = lineStyle.width
+		this.context2d.lineCap = 'butt'
+		this.context2d.stroke()
+	}
+
+	/**
 	 * Draws an outline rectangle
 	 * @param x1 position of left edge
 	 * @param y1 position of top edge

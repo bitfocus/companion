@@ -216,8 +216,9 @@ export interface ButtonGraphicsGaugeDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
 	type: 'gauge'
 	value: number
-	orientation: 'horizontal' | 'vertical'
+	orientation: 'horizontal' | 'vertical' | 'ring'
 	reverse: boolean
+	thickness: number
 	multiSegment: boolean
 	thresholds: Record<string, JsonValue>[]
 	inactiveStyle: 'transparent' | 'dimmed'
@@ -228,8 +229,9 @@ export interface ButtonGraphicsGaugeElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'gauge'
 	value: ExpressionOrValue<number>
-	orientation: ExpressionOrValue<'horizontal' | 'vertical'>
+	orientation: ExpressionOrValue<'horizontal' | 'vertical' | 'ring'>
 	reverse: ExpressionOrValue<boolean>
+	thickness: ExpressionOrValue<number>
 	multiSegment: ExpressionOrValue<boolean>
 	thresholds: ExpressionOrValue<Record<string, JsonValue>[]>
 	inactiveStyle: ExpressionOrValue<'transparent' | 'dimmed'>

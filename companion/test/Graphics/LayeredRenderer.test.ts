@@ -1083,6 +1083,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				value: 50,
 				orientation: 'horizontal',
 				reverse: false,
+				thickness: 20,
 				multiSegment: true,
 				thresholds: DEFAULT_THRESHOLDS,
 				inactiveStyle: 'transparent',
@@ -1161,6 +1162,76 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(
 				await drawGauge(makeGaugeElement({ value: 50, thresholds: [{ value: 0, color: 0x0088ff }] }))
 			).toMatchImageSnapshot()
+		})
+
+		// Helper: draw a gauge on top of a dark box so inactive transparent arcs are visible
+		async function drawRing(
+			overrides: Partial<ButtonGraphicsGaugeDrawElement>,
+			size = { w: 72, h: 72 }
+		): Promise<Canvas> {
+			const img = Image.create(size.w, size.h, 1, null)
+			const bg = makeBoxElement({ color: 0x222222 })
+			const gauge = makeGaugeElement({ orientation: 'ring', ...overrides })
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements: [bg, gauge] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			return img.canvasImage
+		}
+
+		test('ring value=33 - one colour, within first segment', async () => {
+			await expect(await drawRing({ value: 33 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=50 - midway through first segment', async () => {
+			await expect(await drawRing({ value: 50 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=66 - exactly at first threshold boundary', async () => {
+			await expect(await drawRing({ value: 66 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=75 - crossing into yellow segment', async () => {
+			await expect(await drawRing({ value: 75 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=90 - crossing into red segment', async () => {
+			await expect(await drawRing({ value: 90 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=0 - inactive arc only (dark bg makes it visible)', async () => {
+			await expect(await drawRing({ value: 0 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=100 - fully active', async () => {
+			await expect(await drawRing({ value: 100 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=75 dimmed inactive - both halves clearly visible', async () => {
+			await expect(await drawRing({ value: 75, inactiveStyle: 'dimmed', inactiveAmount: 40 })).toMatchImageSnapshot()
+		})
+
+		test('ring reverse=true value=75 - counter-clockwise', async () => {
+			await expect(await drawRing({ value: 75, reverse: true })).toMatchImageSnapshot()
+		})
+
+		test('ring thin thickness=8', async () => {
+			await expect(await drawRing({ value: 75, thickness: 8 })).toMatchImageSnapshot()
+		})
+
+		test('ring thick thickness=40', async () => {
+			await expect(await drawRing({ value: 75, thickness: 40 })).toMatchImageSnapshot()
+		})
+
+		test('ring multiSegment=false value=75 - single colour active', async () => {
+			await expect(await drawRing({ value: 75, multiSegment: false })).toMatchImageSnapshot()
+		})
+
+		test('ring in non-square element - stays circular', async () => {
+			await expect(await drawRing({ value: 50 }, { w: 72, h: 58 })).toMatchImageSnapshot()
 		})
 
 		test('unsorted thresholds - sorted before rendering', async () => {

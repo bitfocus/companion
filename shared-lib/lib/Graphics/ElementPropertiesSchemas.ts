@@ -510,6 +510,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				choices: [
 					{ id: 'horizontal', label: 'Horizontal' },
 					{ id: 'vertical', label: 'Vertical' },
+					{ id: 'ring', label: 'Ring' },
 				],
 				default: 'horizontal',
 			},
@@ -518,8 +519,18 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				id: 'reverse',
 				label: 'Reverse direction',
 				tooltip:
-					'When enabled, the gauge fills from the opposite end (right-to-left for horizontal, top-to-bottom for vertical).',
+					'When enabled, the gauge fills from the opposite end (right-to-left for horizontal, top-to-bottom for vertical, counter-clockwise for ring).',
 				default: false,
+			},
+			{
+				type: 'number',
+				id: 'thickness',
+				label: 'Ring thickness (%)',
+				tooltip: 'Thickness of the ring as a percentage of the shorter dimension. Only applies to ring orientation.',
+				default: 20,
+				min: 1,
+				max: 50,
+				step: 1,
 			},
 			{
 				type: 'checkbox',

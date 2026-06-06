@@ -504,26 +504,69 @@ export class GraphicsLayeredButtonRenderer {
 
 		await img.usingAlpha(element.opacity, async () => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
-				for (let i = 0; i < sorted.length; i++) {
-					const segStart = Number(sorted[i].value)
-					const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
-					const color = Number(sorted[i].color)
+				if (orientation === 'ring') {
+					const cx = x + width / 2
+					const cy = y + height / 2
+					const outerRadius = Math.min(width, height) / 2
+					const thicknessPx = outerRadius * (element.thickness / 100)
+					const arcRadius = outerRadius - thicknessPx / 2
 
-					if (segStart >= segEnd) continue
+					// p=0 → top (−π/2); CW increases, CCW decreases
+					const posToAngle = (p: number) => -Math.PI / 2 + (reverse ? -1 : 1) * (p / 100) * (Math.PI * 2)
 
-					// Active portion: segStart → min(segEnd, value)
-					const activeEnd = Math.min(segEnd, value)
-					if (activeEnd > segStart) {
-						const activeColor = multiSegment ? color : singleActiveColor
-						const [ax1, ay1, ax2, ay2] = segmentBox(segStart, activeEnd)
-						img.box(ax1, ay1, ax2, ay2, parseColor(activeColor))
+					for (let i = 0; i < sorted.length; i++) {
+						const segStart = Number(sorted[i].value)
+						const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
+						const color = Number(sorted[i].color)
+						if (segStart >= segEnd) continue
+
+						// Active portion: segStart → min(segEnd, value)
+						const activeEnd = Math.min(segEnd, value)
+						if (activeEnd > segStart) {
+							const activeColor = multiSegment ? color : singleActiveColor
+							const [a1, a2] = reverse
+								? [posToAngle(activeEnd), posToAngle(segStart)]
+								: [posToAngle(segStart), posToAngle(activeEnd)]
+							img.arcStroke(cx, cy, arcRadius, a1, a2, false, {
+								color: parseColor(activeColor),
+								width: thicknessPx,
+							})
+						}
+
+						// Inactive portion: max(segStart, value) → segEnd
+						const inactiveStart = Math.max(segStart, value)
+						if (inactiveStart < segEnd) {
+							const [a1, a2] = reverse
+								? [posToAngle(segEnd), posToAngle(inactiveStart)]
+								: [posToAngle(inactiveStart), posToAngle(segEnd)]
+							img.arcStroke(cx, cy, arcRadius, a1, a2, false, {
+								color: dimmedColor(color),
+								width: thicknessPx,
+							})
+						}
 					}
+				} else {
+					for (let i = 0; i < sorted.length; i++) {
+						const segStart = Number(sorted[i].value)
+						const segEnd = i + 1 < sorted.length ? Number(sorted[i + 1].value) : 100
+						const color = Number(sorted[i].color)
 
-					// Inactive portion: max(segStart, value) → segEnd
-					const inactiveStart = Math.max(segStart, value)
-					if (inactiveStart < segEnd) {
-						const [ix1, iy1, ix2, iy2] = segmentBox(inactiveStart, segEnd)
-						img.box(ix1, iy1, ix2, iy2, dimmedColor(color))
+						if (segStart >= segEnd) continue
+
+						// Active portion: segStart → min(segEnd, value)
+						const activeEnd = Math.min(segEnd, value)
+						if (activeEnd > segStart) {
+							const activeColor = multiSegment ? color : singleActiveColor
+							const [ax1, ay1, ax2, ay2] = segmentBox(segStart, activeEnd)
+							img.box(ax1, ay1, ax2, ay2, parseColor(activeColor))
+						}
+
+						// Inactive portion: max(segStart, value) → segEnd
+						const inactiveStart = Math.max(segStart, value)
+						if (inactiveStart < segEnd) {
+							const [ix1, iy1, ix2, iy2] = segmentBox(inactiveStart, segEnd)
+							img.box(ix1, iy1, ix2, iy2, dimmedColor(color))
+						}
 					}
 				}
 			})

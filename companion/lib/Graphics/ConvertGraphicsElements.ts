@@ -796,7 +796,7 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	const orientation = helper.getTolerantEnum('orientation', ['horizontal', 'vertical'] as const, 'horizontal')
+	const orientation = helper.getTolerantEnum('orientation', ['horizontal', 'vertical', 'ring'] as const, 'horizontal')
 	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', ['transparent', 'dimmed'] as const, 'transparent')
 
 	const thresholdsRaw = (element.thresholds as ExpressionOrValue<JsonValue[]>).value
@@ -818,6 +818,7 @@ function convertGaugeElementForDrawing(
 		value: Math.round(Math.max(0, Math.min(100, helper.getNumber('value', 0))) * 10) / 10,
 		orientation,
 		reverse: helper.getBoolean('reverse', false),
+		thickness: Math.max(1, Math.min(50, helper.getNumber('thickness', 20))),
 		multiSegment: helper.getBoolean('multiSegment', true),
 		thresholds,
 		inactiveStyle,
