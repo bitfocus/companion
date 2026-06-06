@@ -1909,13 +1909,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.1.0-0-nightly-main-20260523-214159-95c00ff":
-  version: 2.1.0-0-nightly-main-20260523-214159-95c00ff
-  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260523-214159-95c00ff"
+"@companion-module/base@npm:2.1.0-0-nightly-main-20260606-145024-187a8f4":
+  version: 2.1.0-0-nightly-main-20260606-145024-187a8f4
+  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260606-145024-187a8f4"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/5e88171b8baedafd6a2a670deac43a3534de24c3c755eee31b123f1976c73f941c38999b34491dfe2e6a3b7768e0d4a9aec4e88f90cbe538c3ee16b30bd0a64c
+  checksum: 10c0/e1d83cc003aa6a848ebdd55699be5607ad1f2529c291574a5e8de6fbe03c36f55a5f05b5e8d0ecbe75f853b761ebba8749f753b883c37c127c8ac574d5ca93b4
   languageName: node
   linkType: hard
 

@@ -3,7 +3,7 @@ import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
+import { exprVal, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
 import type {
 	PresetDefinition,
 	UIPresetDefinition,
@@ -16,14 +16,13 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	CompanionButtonStepActions,
-	CompanionLayeredButtonPresetDefinition,
 	CompanionPresetAction,
 	CompanionPresetDefinition,
 	CompanionPresetDefinitions,
 	CompanionPresetGroup,
+	CompanionPresetLocalVariable,
 	CompanionPresetReference,
 	CompanionPresetSection,
-	CompanionSimplePresetLocalVariable,
 	Complete,
 	ModuleLogger,
 } from '@companion-module/host'
@@ -282,7 +281,7 @@ function ConvertPresetDefinition(
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
 	presetId: string,
-	rawPreset: CompanionLayeredButtonPresetDefinition | CompanionPresetDefinition
+	rawPreset: CompanionPresetDefinition
 ): PresetDefinition | null {
 	try {
 		const presetType = rawPreset.type
@@ -321,7 +320,13 @@ function ConvertPresetDefinition(
 						},
 
 						steps,
-						localVariables: ConvertLocalVariablesForPreset(logger, rawPreset.localVariables),
+						localVariables: ConvertLocalVariablesForPreset(
+							logger,
+							rawPreset.type,
+							rawPreset.localVariables,
+							connectionId,
+							connectionUpgradeIndex
+						),
 					},
 					presetExtraFeedbacks: parsedStyle.previewStyleFeedbacks,
 					keywords: structuredClone(rawPreset.keywords),
@@ -359,7 +364,13 @@ function ConvertPresetDefinition(
 						),
 
 						steps,
-						localVariables: ConvertLocalVariablesForPreset(logger, rawPreset.localVariables),
+						localVariables: ConvertLocalVariablesForPreset(
+							logger,
+							rawPreset.type,
+							rawPreset.localVariables,
+							connectionId,
+							connectionUpgradeIndex
+						),
 					},
 					presetExtraFeedbacks: [], // No preview style for layered presets
 					keywords: structuredClone(rawPreset.keywords),
@@ -447,14 +458,39 @@ function ConvertStepsForPreset(
 
 function ConvertLocalVariablesForPreset(
 	logger: ModuleLogger,
-	rawLocalVariables: CompanionSimplePresetLocalVariable[] | undefined
+	type: CompanionPresetDefinition['type'],
+	rawLocalVariables: CompanionPresetLocalVariable[] | undefined,
+	connectionId: string,
+	connectionUpgradeIndex: number | undefined
 ): SomeEntityModel[] {
 	if (!rawLocalVariables) return []
 
 	const result: SomeEntityModel[] = []
 
 	for (const localVariable of rawLocalVariables) {
+		const localVariableType = localVariable.variableType
 		switch (localVariable.variableType) {
+			case 'feedback':
+				if (type !== 'layered') {
+					logger.warn(
+						`Local variable "${localVariable.variableName}" is of type "feedback", which is only supported for layered presets. It will be ignored.`
+					)
+					continue
+				}
+
+				result.push({
+					type: EntityModelType.Feedback,
+					id: nanoid(),
+					connectionId: connectionId,
+					definitionId: localVariable.feedbackId,
+					options: structuredClone(optionsObjectToExpressionOptions(localVariable.options ?? {}, true)),
+					isInverted: exprVal(false),
+					headline: localVariable.headline,
+					upgradeIndex: connectionUpgradeIndex,
+					variableName: localVariable.variableName,
+				})
+
+				break
 			case 'simple':
 				result.push({
 					id: nanoid(),
@@ -473,8 +509,8 @@ function ConvertLocalVariablesForPreset(
 				})
 				break
 			default:
-				assertNever(localVariable.variableType)
-				logger.warn(`Unknown local variable type: ${localVariable.variableType}`)
+				assertNever(localVariable)
+				logger.warn(`Unknown local variable type: ${localVariableType}`)
 				break
 		}
 	}
