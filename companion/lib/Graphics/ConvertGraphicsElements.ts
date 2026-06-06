@@ -36,7 +36,11 @@ import {
 	type CompositeElementOptionKey,
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
-import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
+import {
+	stringifyVariableValue,
+	type VariableValue,
+	type VariableValues,
+} from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	CompositeElementDefinition,
@@ -432,27 +436,26 @@ function parseCompositeElementChildOptions(
 
 	for (const option of elementDefinition.options) {
 		const optionKey: CompositeElementOptionKey = `opt:${option.id}`
-		const overrideKey = `$(options:${option.id})`
-
+		let overrideValue: VariableValue
 		switch (option.type) {
 			case 'checkbox':
-				propOverrides[overrideKey] = helper.getBoolean(optionKey, option.default)
+				overrideValue = helper.getBoolean(optionKey, option.default)
 				break
 
 			case 'textinput': {
 				const rawValue = element[optionKey]
 				if (!rawValue) {
-					propOverrides[overrideKey] = option.default ?? ''
+					overrideValue = option.default ?? ''
 				} else if (rawValue.isExpression) {
 					const res = helper.executeExpressionAndTrackVariables(rawValue.value, undefined)
-					propOverrides[overrideKey] = res.ok ? res.value : option.default
+					overrideValue = res.ok ? res.value : option.default
 				} else if (option.useVariables) {
-					propOverrides[overrideKey] = helper.parseVariablesInString(
+					overrideValue = helper.parseVariablesInString(
 						stringifyVariableValue(rawValue.value) ?? '',
 						option.default ?? ''
 					)
 				} else {
-					propOverrides[overrideKey] = stringifyVariableValue(rawValue.value) ?? ''
+					overrideValue = stringifyVariableValue(rawValue.value) ?? ''
 				}
 				break
 			}
@@ -460,20 +463,20 @@ function parseCompositeElementChildOptions(
 			case 'expression': {
 				const rawValue = element[optionKey]
 				if (!rawValue) {
-					propOverrides[overrideKey] = option.default ?? ''
+					overrideValue = option.default ?? ''
 				} else {
 					const res = helper.executeExpressionAndTrackVariables(stringifyVariableValue(rawValue.value) ?? '', undefined)
-					propOverrides[overrideKey] = res.ok ? res.value : option.default
+					overrideValue = res.ok ? res.value : option.default
 				}
 				break
 			}
 
 			case 'number':
-				propOverrides[overrideKey] = helper.getNumber(optionKey, option.default ?? 0, 1)
+				overrideValue = helper.getNumber(optionKey, option.default ?? 0, 1)
 				break
 
 			case 'dropdown':
-				propOverrides[overrideKey] = helper.getEnum(
+				overrideValue = helper.getEnum(
 					optionKey,
 					option.choices.map((c) => c.id),
 					option.default
@@ -482,9 +485,9 @@ function parseCompositeElementChildOptions(
 
 			case 'colorpicker':
 				if (option.returnType === 'string') {
-					propOverrides[overrideKey] = helper.getString(optionKey, String(option.default))
+					overrideValue = helper.getString(optionKey, String(option.default))
 				} else {
-					propOverrides[overrideKey] = helper.getNumber(optionKey, Number(option.default) || 0, 1)
+					overrideValue = helper.getNumber(optionKey, Number(option.default) || 0, 1)
 				}
 				break
 
@@ -508,12 +511,14 @@ function parseCompositeElementChildOptions(
 			case 'custom-variable':
 			case 'bonjour-device':
 				// Not supported
-				break
+				continue
 			default:
 				assertNever(option)
 				// Ignore unknown type
-				break
+				continue
 		}
+
+		propOverrides[`options:${option.id}`] = overrideValue
 	}
 
 	return propOverrides

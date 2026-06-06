@@ -259,7 +259,7 @@ export class ControlButtonLayered
 		if (location) {
 			// Ensure we don't enter into an infinite loop
 			// TODO - legacy location variables?
-			// injectedVariableValues[`$(internal:b_text_${location.pageNumber}_${location.row}_${location.column})`] = '$RE'
+			// injectedVariableValues[`internal:b_text_${location.pageNumber}_${location.row}_${location.column}`] = '$RE'
 		}
 
 		const parser = this.deps.variableValues.createVariablesAndExpressionParser(

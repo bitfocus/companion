@@ -80,7 +80,7 @@ export class VariablesAndExpressionParser {
 
 		// Manual clone the localValues
 		for (const [key, value] of this.#localValues) {
-			if (key.startsWith('$(local:')) childParser.#localValues.set(key, value)
+			if (key.startsWith('local:')) childParser.#localValues.set(key, value)
 		}
 
 		return childParser
@@ -93,7 +93,7 @@ export class VariablesAndExpressionParser {
 
 			// Push the cached values to the store
 			this.#localValues.set(
-				`$(${variableName})`,
+				variableName,
 				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
 			)
 		}

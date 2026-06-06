@@ -1056,7 +1056,7 @@ describe('VariablesAndExpressionParser', () => {
 
 	describe('thisValues and overrideValues', () => {
 		it('should use thisValues when available', () => {
-			const thisValues: VariablesCache = new Map([['$(custom:val)', 'from-this']])
+			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
 
 			const parser = createParser({}, thisValues)
 			const result = parser.parseVariables('$(custom:val)')
@@ -1066,7 +1066,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('should prefer thisValues over rawVariables', () => {
-			const thisValues: VariablesCache = new Map([['$(test:var1)', 'overridden']])
+			const thisValues: VariablesCache = new Map([['test:var1', 'overridden']])
 
 			const parser = createParser(defaultVariables, thisValues)
 			const result = parser.parseVariables('$(test:var1)')
@@ -1188,7 +1188,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child inherits thisValues from parent', () => {
-			const thisValues: VariablesCache = new Map([['$(custom:val)', 'from-this']])
+			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
 			const parser = new VariablesAndExpressionParser(null as any, {}, thisValues, null, null)
 			const child = parser.createChildParser({})
 
@@ -1198,7 +1198,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('child inherits parent override values', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
-				'$(override:val)': 'parent-override',
+				'override:val': 'parent-override',
 			})
 			const child = parser.createChildParser({})
 
@@ -1208,9 +1208,9 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('child new overrides take precedence over parent overrides', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
-				'$(override:val)': 'parent-override',
+				'override:val': 'parent-override',
 			})
-			const child = parser.createChildParser({ '$(override:val)': 'child-override' })
+			const child = parser.createChildParser({ 'override:val': 'child-override' })
 
 			const result = child.parseVariables('$(override:val)')
 			expect(result.text).toBe('child-override')
@@ -1218,9 +1218,9 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('non-overlapping parent overrides remain accessible in child', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
-				'$(override:parent-only)': 'parent-value',
+				'override:parent-only': 'parent-value',
 			})
-			const child = parser.createChildParser({ '$(override:child-only)': 'child-value' })
+			const child = parser.createChildParser({ 'override:child-only': 'child-value' })
 
 			expect(child.parseVariables('$(override:parent-only)').text).toBe('parent-value')
 			expect(child.parseVariables('$(override:child-only)').text).toBe('child-value')
@@ -1228,7 +1228,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('child overrides do not affect parent', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
-			const child = parser.createChildParser({ '$(override:new)': 'child-value' })
+			const child = parser.createChildParser({ 'override:new': 'child-value' })
 
 			expect(parser.parseVariables('$(override:new)').text).toBe('$NA')
 			expect(child.parseVariables('$(override:new)').text).toBe('child-value')
@@ -1259,7 +1259,7 @@ describe('VariablesAndExpressionParser', () => {
 				definitionId: 'some-def',
 			} as unknown as ControlEntityInstance
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), [mockEntity], null)
-			const child = parser.createChildParser({ '$(local:myvar)': 'override-value' })
+			const child = parser.createChildParser({ 'local:myvar': 'override-value' })
 
 			// localValues (inherited) take priority over overrideVariableValues
 			const result = child.parseVariables('$(local:myvar)')
@@ -1277,7 +1277,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('child executeExpression uses child override values', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
-			const child = parser.createChildParser({ '$(custom:num)': 100 })
+			const child = parser.createChildParser({ 'custom:num': 100 })
 
 			const result = child.executeExpression('$(custom:num) * 2', undefined)
 			expect(result.ok).toBe(true)
@@ -1286,7 +1286,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('child override shadows parent raw variable', () => {
 			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
-			const child = parser.createChildParser({ '$(test:var1)': 'shadowed' })
+			const child = parser.createChildParser({ 'test:var1': 'shadowed' })
 
 			expect(child.parseVariables('$(test:var1)').text).toBe('shadowed')
 			expect(parser.parseVariables('$(test:var1)').text).toBe('value1')

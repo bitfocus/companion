@@ -46,8 +46,8 @@ describe('executeExpression', () => {
 
 	test('injected variables', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', 'val1')
-		injectedVariableValues.set('$(another:value)', 'bbb')
+		injectedVariableValues.set('test:something', 'val1')
+		injectedVariableValues.set('another:value', 'bbb')
 
 		const res = executeExpression(
 			mockBlinker,
@@ -61,8 +61,8 @@ describe('executeExpression', () => {
 
 	test('nested variable names', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', 'val1')
-		injectedVariableValues.set('$(another:value)', 'something')
+		injectedVariableValues.set('test:something', 'val1')
+		injectedVariableValues.set('another:value', 'something')
 
 		const res = executeExpression(
 			mockBlinker,
@@ -76,7 +76,7 @@ describe('executeExpression', () => {
 
 	test('array variable', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', [1, 2, 3] as any)
+		injectedVariableValues.set('test:something', [1, 2, 3] as any)
 
 		const res = executeExpression(mockBlinker, '$(test:something)[1]', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 2, variableIds: new Set(['test:something']) })
@@ -84,7 +84,7 @@ describe('executeExpression', () => {
 
 	test('object variable', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', { a: 1, b: '123' } as any)
+		injectedVariableValues.set('test:something', { a: 1, b: '123' } as any)
 
 		const res = executeExpression(mockBlinker, '$(test:something)["b"]', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '123', variableIds: new Set(['test:something']) })
@@ -92,8 +92,8 @@ describe('executeExpression', () => {
 
 	test('chained variables', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', '$(another:value)')
-		injectedVariableValues.set('$(another:value)', 'something')
+		injectedVariableValues.set('test:something', '$(another:value)')
+		injectedVariableValues.set('another:value', 'something')
 
 		const res = executeExpression(
 			mockBlinker,
@@ -107,8 +107,8 @@ describe('executeExpression', () => {
 
 	test('chained variables 2', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', '$(another:value)')
-		injectedVariableValues.set('$(another:value)', 'something')
+		injectedVariableValues.set('test:something', '$(another:value)')
+		injectedVariableValues.set('another:value', 'something')
 
 		const res = executeExpression(mockBlinker, '$(test:something)', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
@@ -116,8 +116,8 @@ describe('executeExpression', () => {
 
 	test('chained array variable', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', '$(another:value)')
-		injectedVariableValues.set('$(another:value)', [1, 2, 3] as any)
+		injectedVariableValues.set('test:something', '$(another:value)')
+		injectedVariableValues.set('another:value', [1, 2, 3] as any)
 
 		const res = executeExpression(mockBlinker, 'join($(test:something), "/")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })
@@ -125,8 +125,8 @@ describe('executeExpression', () => {
 
 	test('undefined variables', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', '$(another:value)')
-		injectedVariableValues.set('$(another:value)', undefined)
+		injectedVariableValues.set('test:something', '$(another:value)')
+		injectedVariableValues.set('another:value', undefined)
 
 		const res = executeExpression(
 			mockBlinker,
@@ -218,8 +218,8 @@ describe('executeExpression', () => {
 
 	test('getVariable chained resolution', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('$(test:something)', '$(another:value)')
-		injectedVariableValues.set('$(another:value)', 'something')
+		injectedVariableValues.set('test:something', '$(another:value)')
+		injectedVariableValues.set('another:value', 'something')
 
 		const res = executeExpression(mockBlinker, "getVariable('test:something')", {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })

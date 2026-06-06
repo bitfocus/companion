@@ -466,7 +466,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					let expressionResult: VariableValue | undefined = VARIABLE_UNKNOWN_VALUE
 
 					const expressionText = this.#config[outputVariable.id]
-					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId, undefined)
+					const parseResult = this.#executeExpression(expressionText ?? '', this.info.surfaceId)
 					if (parseResult.ok) {
 						expressionResult = parseResult.value
 					} else {

@@ -83,12 +83,12 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
-			(expression, requiredType, injectedVariableValues) =>
+			(expression, requiredType) =>
 				deps.variableValues
 					.createVariablesAndExpressionParser(
 						deps.pageStore.getLocationOfControlId(this.controlId),
 						this.entities.getLocalVariableEntities(),
-						injectedVariableValues ?? null
+						null
 					)
 					.executeExpression(expression, requiredType),
 			isLayered

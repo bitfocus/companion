@@ -463,7 +463,7 @@ export class InternalController {
 			if (!entityDefinition) return
 
 			const overrideVariableValues: VariableValues = {
-				'$(this:surface_id)': extras.surfaceId,
+				'this:surface_id': extras.surfaceId,
 			}
 			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues)
 

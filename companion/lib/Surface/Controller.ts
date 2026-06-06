@@ -1414,15 +1414,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.triggerUpdateDevicesList()
 	}
 
-	surfaceExecuteExpression(
-		str: string,
-		surfaceId: string,
-		injectedVariableValues: VariableValues | undefined
-	): ExecuteExpressionResult {
-		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(null, null, {
-			...injectedVariableValues,
-			...this.#getInjectedVariablesForSurfaceId(surfaceId),
-		})
+	surfaceExecuteExpression(str: string, surfaceId: string): ExecuteExpressionResult {
+		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(
+			null,
+			null,
+			this.#getInjectedVariablesForSurfaceId(surfaceId)
+		)
 
 		return parser.executeExpression(str, undefined)
 	}
@@ -1434,13 +1431,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const pageNumber = this.devicePageGet(surfaceId)
 
 		return {
-			'$(this:surface_id)': surfaceId,
+			'this:surface_id': surfaceId,
 
 			// Reactivity is triggered manually
-			'$(this:page)': pageNumber,
+			'this:page': pageNumber,
 
 			// Reactivity happens for these because of references to the inner variables
-			'$(this:page_name)': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+			'this:page_name': pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
 		}
 	}
 
