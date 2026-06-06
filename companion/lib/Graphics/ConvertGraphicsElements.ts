@@ -1,7 +1,10 @@
 import { createHash } from 'node:crypto'
 import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getElementSchemaProperty,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -62,6 +65,29 @@ import {
 import { collectContentHashes, computeElementContentHash } from './ConvertGraphicsElements/Util.js'
 import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
 import type { ImageResult } from './ImageResult.js'
+
+/** Extract the valid choice IDs for a dropdown field directly from the element schema. */
+function dropdownChoices<T extends string>(
+	elementType: Parameters<typeof getElementSchemaProperty>[0],
+	fieldId: string
+): T[] {
+	const field = getElementSchemaProperty(elementType, fieldId)
+	if (field?.type !== 'dropdown') return []
+	return field.choices.map((c) => String(c.id)) as T[]
+}
+
+// All derived once at module load to avoid repeated schema lookups on every render.
+const CANVAS_DECORATION_CHOICES = dropdownChoices<ButtonGraphicsDecorationType>('canvas', 'decoration')
+const CANVAS_SHOW_STATUS_ICONS_CHOICES = dropdownChoices<ButtonGraphicsShowStatusIcons>('canvas', 'showStatusIcons')
+const IMAGE_FILL_MODE_CHOICES = dropdownChoices<ButtonGraphicsImageDrawElement['fillMode']>('image', 'fillMode')
+const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>('text', 'font')
+// borderPosition is shared across box/line/circle — all use the same choices from borderFields.
+const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
+const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
+const GAUGE_INACTIVE_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['inactiveStyle']>(
+	'gauge',
+	'inactiveStyle'
+)
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,
@@ -245,14 +271,10 @@ function convertCanvasElementForDrawing(
 		type: 'canvas',
 		usage: element.usage,
 		// color,
-		decoration: helper.getEnum(
-			'decoration',
-			Object.values(ButtonGraphicsDecorationType),
-			ButtonGraphicsDecorationType.FollowDefault
-		),
+		decoration: helper.getEnum('decoration', CANVAS_DECORATION_CHOICES, ButtonGraphicsDecorationType.FollowDefault),
 		showStatusIcons: helper.getEnum(
 			'showStatusIcons',
-			Object.values(ButtonGraphicsShowStatusIcons),
+			CANVAS_SHOW_STATUS_ICONS_CHOICES,
 			ButtonGraphicsShowStatusIcons.FollowDefault
 		),
 		contentHash: '', // Will be computed below
@@ -643,7 +665,7 @@ async function convertImageElementForDrawing(
 		base64Image,
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit'], 'fit'),
+		fillMode: helper.getEnum('fillMode', IMAGE_FILL_MODE_CHOICES, 'fit'),
 		contentHash: '', // Will be computed below
 	}
 
@@ -673,7 +695,7 @@ function convertTextElementForDrawing(
 		text: helper.getParsedString('text', 'ERR') + '',
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
-		font: helper.getEnum('font', ['companion-sans', 'companion-mono'], 'companion-sans'),
+		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
 		color: helper.getNumber('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
@@ -796,8 +818,8 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	const orientation = helper.getTolerantEnum('orientation', ['horizontal', 'vertical', 'ring'] as const, 'horizontal')
-	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', ['transparent', 'dimmed'] as const, 'transparent')
+	const orientation = helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal')
+	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent')
 
 	const thresholdsRaw = (element.thresholds as ExpressionOrValue<JsonValue[]>).value
 	const thresholds: ButtonGraphicsGaugeDrawElement['thresholds'] = Array.isArray(thresholdsRaw)
@@ -837,7 +859,7 @@ function convertBorderProperties(
 	return {
 		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
 		borderColor: helper.getNumber('borderColor', 0),
-		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
+		borderPosition: helper.getEnum('borderPosition', BORDER_POSITION_CHOICES, 'inside'),
 	}
 }
 
