@@ -2,7 +2,7 @@ import { faArrowDown, faArrowUp, faPlus, faTrash } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { Fragment, useCallback, useId } from 'react'
+import { Fragment, useCallback, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -22,7 +22,7 @@ import { NumberInputField } from './NumberInputField.js'
 import { TextInputFieldSimple } from './TextInputField.js'
 
 function fieldDefault(field: SomeCompanionInputField): JsonValue {
-	if ('default' in field && field.default !== undefined) return field.default as JsonValue
+	if ('default' in field && field.default !== undefined) return field.default
 	return null
 }
 
@@ -108,7 +108,7 @@ export const ListInputField = observer(function ListInputField({
 	visibility = true,
 }: ListInputFieldProps): React.JSX.Element {
 	const baseId = useId()
-	const rows = value ?? []
+	const rows = useMemo(() => value ?? [], [value])
 
 	const addRow = useCallback(() => {
 		setValue([...rows, newRow(definition.fields)])
@@ -135,19 +135,21 @@ export const ListInputField = observer(function ListInputField({
 	const updateCell = useCallback(
 		(rowIndex: number, fieldId: string, cellValue: ExpressionOrValue<JsonValue | undefined>) => {
 			setValue(
-				rows.map((row, i) =>
-					i === rowIndex ? { ...row, [fieldId]: cellValue as ExpressionOrValue<JsonValue> } : row
-				)
+				rows.map((row, i) => (i === rowIndex ? { ...row, [fieldId]: cellValue as ExpressionOrValue<JsonValue> } : row))
 			)
 		},
 		[rows, setValue]
 	)
 
 	const hidden = !visibility
+	const atMinimum = definition.minItems !== undefined && rows.length <= definition.minItems
 
 	return (
 		<>
-			<FormLabel htmlFor={undefined} className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: hidden })}>
+			<FormLabel
+				htmlFor={undefined}
+				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: hidden })}
+			>
 				{definition.label}
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
@@ -189,7 +191,7 @@ export const ListInputField = observer(function ListInputField({
 							color="danger"
 							size="sm"
 							onClick={() => removeRow(rowIndex)}
-							disabled={disabled}
+							disabled={disabled || atMinimum}
 							title="Remove item"
 						>
 							<FontAwesomeIcon icon={faTrash} />
@@ -198,7 +200,7 @@ export const ListInputField = observer(function ListInputField({
 
 					{definition.fields.map((field) => {
 						const cellRaw = row[field.id]
-						const cell = normaliseCell(cellRaw as JsonValue | undefined)
+						const cell = normaliseCell(cellRaw)
 						const inputId = `${baseId}-${rowIndex}-${field.id}`
 						const canExpression = fieldSupportsExpression && !field.disableAutoExpression
 
@@ -209,7 +211,7 @@ export const ListInputField = observer(function ListInputField({
 						const input = (
 							<ListCell
 								field={field}
-								value={cell.isExpression ? undefined : (cell.value as JsonValue | undefined)}
+								value={cell.isExpression ? undefined : cell.value}
 								setValue={setCellValue}
 								disabled={disabled}
 								inputId={inputId}

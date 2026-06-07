@@ -822,9 +822,9 @@ function convertGaugeElementForDrawing(
 	const orientation = helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal')
 	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent')
 
-	const thresholdsRaw = (element.thresholds as ExpressionOrValue<JsonValue[]>).value
+	const segmentsRaw = (element.segments as ExpressionOrValue<JsonValue[]>).value
 	// Resolve a cell that may be a plain JsonValue (old internal:table) or ExpressionOrValue (internal:list)
-	const resolveThresholdCell = (raw: unknown): number => {
+	const resolveSegmentCell = (raw: unknown): number => {
 		if (isExpressionOrValue(raw)) {
 			if (raw.isExpression) {
 				const r = helper.executeExpressionAndTrackVariables(raw.value, 'number')
@@ -834,10 +834,10 @@ function convertGaugeElementForDrawing(
 		}
 		return Number(raw ?? 0)
 	}
-	const thresholds: ButtonGraphicsGaugeDrawElement['thresholds'] = Array.isArray(thresholdsRaw)
-		? thresholdsRaw.map((row) => ({
-				value: Math.max(0, Math.min(100, resolveThresholdCell((row as any)?.value))),
-				color: resolveThresholdCell((row as any)?.color),
+	const thresholds: ButtonGraphicsGaugeDrawElement['segments'] = Array.isArray(segmentsRaw)
+		? segmentsRaw.map((row) => ({
+				value: Math.max(0, Math.min(100, resolveSegmentCell((row as any)?.value))),
+				color: resolveSegmentCell((row as any)?.color),
 			}))
 		: []
 
@@ -855,7 +855,7 @@ function convertGaugeElementForDrawing(
 		roundedEnds: helper.getBoolean('roundedEnds', true),
 		thickness: Math.max(1, Math.min(50, helper.getNumber('thickness', 20))),
 		multiSegment: helper.getBoolean('multiSegment', true),
-		thresholds,
+		segments: thresholds,
 		inactiveStyle,
 		inactiveAmount: helper.getNumber('inactiveAmount', 70),
 		contentHash: '',

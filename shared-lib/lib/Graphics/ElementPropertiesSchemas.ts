@@ -542,24 +542,25 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 		],
 	},
 	{
-		id: 'thresholds',
-		label: 'Colour Thresholds',
+		id: 'segments',
+		label: 'Colour Segments',
 		fields: [
 			{
 				type: 'checkbox',
 				id: 'multiSegment',
 				label: 'Multi-segment colours',
 				tooltip:
-					'When enabled, each colour threshold segment is visible in the filled portion. When disabled, only the active threshold colour is used for the entire filled area.',
+					'When enabled, each colour segment is visible in the filled portion. When disabled, only the active segment colour is used for the entire filled area.',
 				default: true,
 			},
 			{
 				type: 'internal:list',
-				id: 'thresholds',
-				label: 'Thresholds',
+				id: 'segments',
+				label: 'Segments',
 				tooltip:
-					'Define colour stops for the gauge. Each threshold specifies the value (0-100) at which that colour starts.',
-				addLabel: 'Add threshold',
+					'Define colour stops for the gauge. Each segment specifies the value (0-100) at which that colour starts.',
+				addLabel: 'Add segment',
+				minItems: 1,
 				fields: [
 					{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
 					{

@@ -3,7 +3,11 @@ import { useCallback, useContext } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionOrValue, InternalInputFieldList, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type {
+	ExpressionOrValue,
+	InternalInputFieldList,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion.js'
 import { Form } from '~/Components/Form.js'
@@ -155,11 +159,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 
 	if (field.type === 'internal:list') {
 		return (
-			<ListSchemaFieldWrapper
-				field={field}
-				elementProps={elementProps}
-				localVariablesStore={localVariablesStore}
-			/>
+			<ListSchemaFieldWrapper field={field} elementProps={elementProps} localVariablesStore={localVariablesStore} />
 		)
 	}
 
@@ -210,7 +210,12 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	const setValue = useCallback(
 		(newValue: Record<string, any>[]) => {
 			updateOptionMutation
-				.mutateAsync({ controlId, elementId: elementProps.id, key: field.id, value: { isExpression: false, value: newValue } })
+				.mutateAsync({
+					controlId,
+					elementId: elementProps.id,
+					key: field.id,
+					value: { isExpression: false, value: newValue },
+				})
 				.catch((e) => console.error('Failed to update element', e))
 		},
 		[updateOptionMutation, controlId, elementProps.id, field.id]

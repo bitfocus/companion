@@ -21,10 +21,10 @@ import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel, InputGroupText } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { ListInputField } from '~/Components/ListInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
-import { ListInputField } from '~/Components/ListInputField.js'
 import { TableInputField } from '~/Components/TableInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
@@ -94,7 +94,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 			<ListInputField
 				definition={option}
 				value={rawValue?.value as Record<string, any>[] | undefined}
-				setValue={(val) => setValue(option.id, { isExpression: false, value: val as any })}
+				setValue={(val) => setValue(option.id, { isExpression: false, value: val })}
 				disabled={!!readonly}
 				localVariablesStore={localVariablesStore}
 				entityType={entityType}

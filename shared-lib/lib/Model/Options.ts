@@ -182,6 +182,7 @@ export interface InternalInputFieldList extends CompanionInputFieldBaseExtended 
 	type: 'internal:list'
 	fields: SomeCompanionInputField[]
 	addLabel?: string
+	minItems?: number
 	default: Record<string, JsonValue>[]
 }
 

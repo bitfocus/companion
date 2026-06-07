@@ -138,7 +138,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				roundedEnds: { value: true, isExpression: false },
 				thickness: { value: 20, isExpression: false },
 				multiSegment: { value: true, isExpression: false },
-				thresholds: {
+				segments: {
 					value: [
 						{ value: { value: 0, isExpression: false }, color: { value: 0x00ff00, isExpression: false } },
 						{ value: { value: 66, isExpression: false }, color: { value: 0xffff00, isExpression: false } },

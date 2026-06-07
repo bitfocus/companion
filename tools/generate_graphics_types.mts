@@ -49,6 +49,7 @@ function convertFieldType(field: SomeCompanionInputField, isExpressionable: bool
 			tsType = 'VerticalAlignment'
 			break
 		case 'internal:table':
+		case 'internal:list':
 			tsType = 'Record<string, JsonValue>[]'
 			break
 		default:

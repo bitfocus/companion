@@ -463,7 +463,7 @@ export class GraphicsLayeredButtonRenderer {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw) return drawBounds
 
-		const sorted = [...element.thresholds].sort((a, b) => Number(a.value) - Number(b.value))
+		const sorted = [...element.segments].sort((a, b) => Number(a.value) - Number(b.value))
 		if (sorted.length === 0) return drawBounds
 
 		const { x, y, width, height, maxX, maxY } = drawBounds

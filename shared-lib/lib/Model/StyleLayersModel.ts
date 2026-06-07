@@ -221,7 +221,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	roundedEnds: boolean
 	thickness: number
 	multiSegment: boolean
-	thresholds: Record<string, JsonValue>[]
+	segments: Record<string, JsonValue>[]
 	inactiveStyle: 'transparent' | 'dimmed'
 	inactiveAmount: number
 }
@@ -235,7 +235,7 @@ export interface ButtonGraphicsGaugeElement
 	roundedEnds: ExpressionOrValue<boolean>
 	thickness: ExpressionOrValue<number>
 	multiSegment: ExpressionOrValue<boolean>
-	thresholds: ExpressionOrValue<Record<string, JsonValue>[]>
+	segments: ExpressionOrValue<Record<string, JsonValue>[]>
 	inactiveStyle: ExpressionOrValue<'transparent' | 'dimmed'>
 	inactiveAmount: ExpressionOrValue<number>
 }

@@ -1,10 +1,10 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { InternalInputFieldList } from '@companion-app/shared/Model/Options.js'
 import type { JsonValue } from 'type-fest'
-import { MenuPortalContext } from './MenuPortalContext.js'
+import type { ExpressionOrValue, InternalInputFieldList } from '@companion-app/shared/Model/Options.js'
+import { withMockStore } from '../../.storybook/mockRootAppStore.js'
 import { ListInputField } from './ListInputField.js'
+import { MenuPortalContext } from './MenuPortalContext.js'
 
 const withPortal: Decorator = (Story) => (
 	<MenuPortalContext.Provider value={document.body}>
@@ -68,7 +68,7 @@ function StatefulList({
 
 const meta = {
 	title: 'Components/ListInputField',
-	decorators: [withPortal],
+	decorators: [withMockStore, withPortal],
 	render: (args) => <StatefulList {...args} />,
 } satisfies Meta<typeof StatefulList>
 
