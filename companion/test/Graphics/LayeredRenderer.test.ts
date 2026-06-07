@@ -1064,7 +1064,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('gauge element', () => {
-		const DEFAULT_THRESHOLDS: ButtonGraphicsGaugeDrawElement['thresholds'] = [
+		const DEFAULT_SEGMENTS: ButtonGraphicsGaugeDrawElement['segments'] = [
 			{ value: 0, color: 0x00ff00 },
 			{ value: 66, color: 0xffff00 },
 			{ value: 85, color: 0xff0000 },
@@ -1086,7 +1086,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				roundedEnds: true,
 				thickness: 20,
 				multiSegment: true,
-				thresholds: DEFAULT_THRESHOLDS,
+				segments: DEFAULT_SEGMENTS,
 				inactiveStyle: 'transparent',
 				inactiveAmount: 70,
 				...overrides,
@@ -1155,13 +1155,13 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			).toMatchImageSnapshot()
 		})
 
-		test('empty thresholds - nothing drawn', async () => {
-			await expect(await drawGauge(makeGaugeElement({ thresholds: [] }))).toMatchImageSnapshot()
+		test('empty segments - nothing drawn', async () => {
+			await expect(await drawGauge(makeGaugeElement({ segments: [] }))).toMatchImageSnapshot()
 		})
 
-		test('single threshold - full bar one colour', async () => {
+		test('single segment - full bar one colour', async () => {
 			await expect(
-				await drawGauge(makeGaugeElement({ value: 50, thresholds: [{ value: 0, color: 0x0088ff }] }))
+				await drawGauge(makeGaugeElement({ value: 50, segments: [{ value: 0, color: 0x0088ff }] }))
 			).toMatchImageSnapshot()
 		})
 
@@ -1191,7 +1191,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawRing({ value: 50 })).toMatchImageSnapshot()
 		})
 
-		test('ring value=66 - exactly at first threshold boundary', async () => {
+		test('ring value=66 - exactly at first segment boundary', async () => {
 			await expect(await drawRing({ value: 66 })).toMatchImageSnapshot()
 		})
 
@@ -1239,12 +1239,12 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawRing({ value: 50 }, { w: 72, h: 58 })).toMatchImageSnapshot()
 		})
 
-		test('unsorted thresholds - sorted before rendering', async () => {
+		test('unsorted segments - sorted before rendering', async () => {
 			await expect(
 				await drawGauge(
 					makeGaugeElement({
 						value: 75,
-						thresholds: [
+						segments: [
 							{ value: 85, color: 0xff0000 },
 							{ value: 0, color: 0x00ff00 },
 							{ value: 66, color: 0xffff00 },

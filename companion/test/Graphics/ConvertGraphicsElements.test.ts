@@ -206,7 +206,7 @@ function makeGaugeEl(overrides: Partial<ButtonGraphicsGaugeElement> = {}): Butto
 		roundedEnds: val(true),
 		thickness: val(20),
 		multiSegment: val(true),
-		thresholds: val([
+		segments: val([
 			{ value: 0, color: 0x00ff00 },
 			{ value: 66, color: 0xffff00 },
 			{ value: 85, color: 0xff0000 },
@@ -2486,32 +2486,32 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ thickness: val(0) }))).thickness).toBe(1)
 		})
 
-		test('thresholds parsed from table rows', async () => {
+		test('segments parsed from table rows', async () => {
 			const el = gaugeDrawEl(await convertGauge(makeGaugeEl()))
-			expect(el.thresholds).toEqual([
+			expect(el.segments).toEqual([
 				{ value: 0, color: 0x00ff00 },
 				{ value: 66, color: 0xffff00 },
 				{ value: 85, color: 0xff0000 },
 			])
 		})
 
-		test('threshold values clamped to 0–100', async () => {
+		test('segment values clamped to 0–100', async () => {
 			const el = gaugeDrawEl(
 				await convertGauge(
 					makeGaugeEl({
-						thresholds: val([
+						segments: val([
 							{ value: -10, color: 0xff0000 },
 							{ value: 200, color: 0x00ff00 },
 						]),
 					})
 				)
 			)
-			expect(el.thresholds[0]!.value).toBe(0)
-			expect(el.thresholds[1]!.value).toBe(100)
+			expect(el.segments[0]!.value).toBe(0)
+			expect(el.segments[1]!.value).toBe(100)
 		})
 
-		test('empty thresholds produce empty array', async () => {
-			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ thresholds: val([]) }))).thresholds).toEqual([])
+		test('empty segments produce empty array', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ segments: val([]) }))).segments).toEqual([])
 		})
 
 		test('enabled=false with onlyEnabled=true filters element out', async () => {
