@@ -1,14 +1,16 @@
 import { observer } from 'mobx-react-lite'
-import { useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion.js'
 import { Form } from '~/Components/Form.js'
+import { ListInputField } from '~/Components/ListInputField.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { getInputFeatures, OptionsInputControl } from '~/Controls/OptionsInputField.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
@@ -149,6 +151,12 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 }) {
+	if (field.type === 'internal:list') {
+		return (
+			<ListSchemaFieldWrapper field={field} elementProps={elementProps} localVariablesStore={localVariablesStore} />
+		)
+	}
+
 	const features = getInputFeatures(field)
 
 	return (
@@ -175,5 +183,50 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 				/>
 			)}
 		</FormPropertyField>
+	)
+})
+
+const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
+	field,
+	elementProps,
+	localVariablesStore,
+}: {
+	field: InternalInputFieldList
+	elementProps: SomeButtonGraphicsElement
+	localVariablesStore: LocalVariablesStore
+}) {
+	const { controlId } = useElementPropertiesContext()
+	const updateOptionMutation = useMutationExt(trpc.controls.styles.updateOption.mutationOptions())
+
+	const rawValue = (elementProps as unknown as Record<string, unknown>)[field.id] as
+		| ExpressionOrValue<JsonValue | undefined>
+		| undefined
+	const value = rawValue?.isExpression ? undefined : (rawValue?.value as Record<string, any>[] | undefined)
+
+	const setValue = useCallback(
+		(newValue: Record<string, any>[]) => {
+			updateOptionMutation
+				.mutateAsync({
+					controlId,
+					elementId: elementProps.id,
+					key: field.id,
+					value: { isExpression: false, value: newValue },
+				})
+				.catch((e) => console.error('Failed to update element', e))
+		},
+		[updateOptionMutation, controlId, elementProps.id, field.id]
+	)
+
+	return (
+		<ListInputField
+			definition={field}
+			value={value}
+			setValue={setValue}
+			disabled={false}
+			localVariablesStore={localVariablesStore}
+			entityType={null}
+			isLocatedInGrid={false}
+			fieldSupportsExpression={!field.disableAutoExpression}
+		/>
 	)
 })
