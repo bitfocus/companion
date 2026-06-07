@@ -2,7 +2,7 @@ import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import {
 	stringifyVariableValue,
@@ -24,6 +24,10 @@ export interface ExpressionReferences {
 	readonly referencedLocations: Set<string>
 	/** Locations where a cycle was detected during this conversion (subset of referencedLocations) */
 	readonly cyclicLocations: Set<string>
+}
+
+export type NormalisedRow<T extends Record<string, unknown>> = {
+	[K in keyof T]: ExpressionOrValue<JsonValue | undefined>
 }
 
 export class ElementExpressionHelper<T> {
@@ -206,6 +210,18 @@ export class ElementExpressionHelper<T> {
 				return 'center'
 		}
 	}
+
+	forRow(row: unknown): ElementExpressionHelper<Record<string, ExpressionOrValue<JsonValue | undefined>>> {
+		const normalised: Record<string, ExpressionOrValue<JsonValue | undefined>> = {}
+		if (row && typeof row === 'object' && !Array.isArray(row)) {
+			for (const key of Object.keys(row)) {
+				const val = (row as Record<string, unknown>)[key]
+				normalised[key] = isExpressionOrValue(val) ? val : { isExpression: false, value: val as JsonValue | undefined }
+			}
+		}
+		return new ElementExpressionHelper(this.#parser, this.#usedVariables, normalised, undefined)
+	}
+
 	getVerticalAlignment(propertyName: keyof T): VerticalAlignment {
 		const value = this.#getValue(propertyName)
 

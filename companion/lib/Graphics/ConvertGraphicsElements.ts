@@ -6,7 +6,7 @@ import {
 	getElementSchemaProperty,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
 	ButtonGraphicsBounds,
@@ -823,22 +823,14 @@ function convertGaugeElementForDrawing(
 	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent')
 
 	const segmentsRaw = (element.segments as ExpressionOrValue<JsonValue[]>).value
-	// Resolve a cell that may be a plain JsonValue (old internal:table) or ExpressionOrValue (internal:list)
-	const resolveSegmentCell = (raw: unknown): number => {
-		if (isExpressionOrValue(raw)) {
-			if (raw.isExpression) {
-				const r = helper.executeExpressionAndTrackVariables(raw.value, 'number')
-				return r.ok ? Number(r.value) : 0
-			}
-			return Number(raw.value ?? 0)
-		}
-		return Number(raw ?? 0)
-	}
-	const thresholds: ButtonGraphicsGaugeDrawElement['segments'] = Array.isArray(segmentsRaw)
-		? segmentsRaw.map((row) => ({
-				value: Math.max(0, Math.min(100, resolveSegmentCell((row as any)?.value))),
-				color: resolveSegmentCell((row as any)?.color),
-			}))
+	const segments: ButtonGraphicsGaugeDrawElement['segments'] = Array.isArray(segmentsRaw)
+		? segmentsRaw.map((row) => {
+				const rowHelper = helper.forRow(row)
+				return {
+					value: Math.max(0, Math.min(100, rowHelper.getNumber('value', 0))),
+					color: rowHelper.getNumber('color', 0),
+				}
+			})
 		: []
 
 	const drawElement: ButtonGraphicsGaugeDrawElement = {
@@ -855,7 +847,7 @@ function convertGaugeElementForDrawing(
 		roundedEnds: helper.getBoolean('roundedEnds', true),
 		thickness: Math.max(1, Math.min(50, helper.getNumber('thickness', 20))),
 		multiSegment: helper.getBoolean('multiSegment', true),
-		segments: thresholds,
+		segments: segments,
 		inactiveStyle,
 		inactiveAmount: helper.getNumber('inactiveAmount', 70),
 		contentHash: '',

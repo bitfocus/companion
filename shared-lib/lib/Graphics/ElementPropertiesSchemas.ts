@@ -562,7 +562,15 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				addLabel: 'Add segment',
 				minItems: 1,
 				fields: [
-					{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
+					{
+						id: 'value',
+						type: 'number',
+						label: 'Value',
+						min: 0,
+						max: 100,
+						step: 1,
+						default: 0,
+					},
 					{
 						id: 'color',
 						type: 'colorpicker',
