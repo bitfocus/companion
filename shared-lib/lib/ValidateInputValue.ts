@@ -368,9 +368,9 @@ export function validateInputValue(
 								validationWarnings,
 							}
 						}
-						sanitisedRow[field.id] = cell as unknown as JsonValue
+						sanitisedRow[field.id] = cell
 					} else {
-						const result = validateInputValue(field, cell.value as JsonValue | undefined, options)
+						const result = validateInputValue(field, cell.value, options)
 						if (result.validationError) {
 							return {
 								sanitisedValue: value,
