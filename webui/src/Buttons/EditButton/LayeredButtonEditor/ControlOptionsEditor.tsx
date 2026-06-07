@@ -10,7 +10,7 @@ import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
-import { InputFeatureIcons } from '~/Controls/OptionsInputField'
+import { InputFeatureIcons } from '~/Controls/InputFeatures'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 

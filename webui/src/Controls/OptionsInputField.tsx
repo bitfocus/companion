@@ -1,5 +1,3 @@
-import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
@@ -20,21 +18,17 @@ import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel, InputGroupText } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
-import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ListInputField } from '~/Components/ListInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TableInputField } from '~/Components/TableInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { getInputFeatures, InputFeatureIcons, type InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
-
-const ExpressionModeFeatures: InputFeatureIconsProps = Object.freeze({
-	variables: true,
-	local: true,
-})
 
 interface OptionsInputFieldProps {
 	allowInternalFields: boolean
@@ -153,7 +147,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 				htmlFor={inputId}
 				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
 			>
-				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
+				<OptionLabel option={option} features={isInExpressionMode ? { variables: true, local: true } : features} />
 				{isInExpressionMode && (
 					<ExpressionValuePreview
 						expression={stringifyVariableValue(rawValue?.value) ?? ''}
@@ -356,41 +350,3 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 	return <InputGroupText>Unknown type "{option.type}"</InputGroupText>
 })
-
-export interface InputFeatureIconsProps {
-	variables?: boolean
-	local?: boolean
-}
-
-export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
-	const featureIcons: JSX.Element[] = []
-	if (props.variables)
-		featureIcons.push(
-			<InlineHelpCustom key="variables" help="Supports global variables">
-				<FontAwesomeIcon icon={faDollarSign} />
-			</InlineHelpCustom>
-		)
-	if (props.local)
-		featureIcons.push(
-			<InlineHelpCustom key="local" help="Supports local variables">
-				<FontAwesomeIcon icon={faGlobe} />
-			</InlineHelpCustom>
-		)
-
-	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function getInputFeatures(option: SomeCompanionInputField): InputFeatureIconsProps | undefined {
-	if (option.type === 'textinput') {
-		return {
-			variables: !!option.useVariables,
-			local:
-				option.useVariables === CompanionFieldVariablesSupport.InternalParser ||
-				option.useVariables === CompanionFieldVariablesSupport.LocalVariables,
-		}
-	} else if (option.type === 'expression') {
-		return ExpressionModeFeatures
-	}
-	return undefined
-}

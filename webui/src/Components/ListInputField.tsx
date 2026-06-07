@@ -2,7 +2,7 @@ import { faArrowDown, faArrowUp, faPlus, faTrash } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { Fragment, useCallback, useId, useMemo } from 'react'
+import { Fragment, useCallback, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -11,6 +11,7 @@ import {
 	type InternalInputFieldList,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import { ExpressionModeFeatures, getInputFeatures, InputFeatureIcons } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { Button } from './Button.js'
 import { ColorInputField } from './ColorInputField.js'
@@ -32,12 +33,13 @@ function newRow(fields: SomeCompanionInputField[]): Record<string, ExpressionOrV
 	return row
 }
 
-function normaliseCell(raw: JsonValue | undefined): ExpressionOrValue<JsonValue | undefined> {
+// eslint-disable-next-line react-refresh/only-export-components
+export function normaliseCell(raw: JsonValue | undefined): ExpressionOrValue<JsonValue | undefined> {
 	if (isExpressionOrValue(raw)) return raw
 	return { isExpression: false, value: raw }
 }
 
-interface ListCellProps {
+interface ListInputCellProps {
 	field: SomeCompanionInputField
 	value: JsonValue | undefined
 	setValue: (v: JsonValue) => void
@@ -45,7 +47,7 @@ interface ListCellProps {
 	inputId: string
 }
 
-function ListCell({ field, value, setValue, disabled, inputId }: ListCellProps): React.JSX.Element {
+function ListInputCell({ field, value, setValue, disabled, inputId }: ListInputCellProps): React.JSX.Element {
 	switch (field.type) {
 		case 'number':
 			return (
@@ -84,6 +86,117 @@ function ListCell({ field, value, setValue, disabled, inputId }: ListCellProps):
 	}
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
+export function useListField(
+	definition: InternalInputFieldList,
+	value: Record<string, ExpressionOrValue<JsonValue>>[] | undefined,
+	setValue: (rows: Record<string, ExpressionOrValue<JsonValue>>[]) => void
+): {
+	rows: Record<string, ExpressionOrValue<JsonValue>>[]
+	addRow: () => void
+	removeRow: (rowIndex: number) => void
+	moveRow: (rowIndex: number, direction: -1 | 1) => void
+	updateCell: (rowIndex: number, fieldId: string, cellValue: ExpressionOrValue<JsonValue | undefined>) => void
+} {
+	const rows = useMemo(() => value ?? [], [value])
+	const rowsRef = useRef(rows)
+	rowsRef.current = rows
+
+	const addRow = useCallback(() => {
+		setValue([...rowsRef.current, newRow(definition.fields)])
+	}, [definition.fields, setValue])
+
+	const removeRow = useCallback(
+		(rowIndex: number) => {
+			setValue(rowsRef.current.filter((_, i) => i !== rowIndex))
+		},
+		[setValue]
+	)
+
+	const moveRow = useCallback(
+		(rowIndex: number, direction: -1 | 1) => {
+			const next = rowIndex + direction
+			if (next < 0 || next >= rowsRef.current.length) return
+			const updated = [...rowsRef.current]
+			;[updated[rowIndex], updated[next]] = [updated[next], updated[rowIndex]]
+			setValue(updated)
+		},
+		[setValue]
+	)
+
+	const updateCell = useCallback(
+		(rowIndex: number, fieldId: string, cellValue: ExpressionOrValue<JsonValue | undefined>) => {
+			setValue(
+				rowsRef.current.map((row, i) =>
+					i === rowIndex ? { ...row, [fieldId]: cellValue as ExpressionOrValue<JsonValue> } : row
+				)
+			)
+		},
+		[setValue]
+	)
+
+	return { rows, addRow, removeRow, moveRow, updateCell }
+}
+
+export interface ListRowControlsProps {
+	rowIndex: number
+	rowCount: number
+	atMinimum: boolean
+	disabled?: boolean
+	hidden?: boolean
+	moveRow: (rowIndex: number, direction: -1 | 1) => void
+	removeRow: (rowIndex: number) => void
+}
+
+export function ListRowControls({
+	rowIndex,
+	rowCount,
+	atMinimum,
+	disabled,
+	hidden = false,
+	moveRow,
+	removeRow,
+}: ListRowControlsProps): React.ReactNode {
+	return (
+		<>
+			<div className={classNames('col-sm-4 col-form-label col-form-label-sm text-muted', { displayNone: hidden })}>
+				Item {rowIndex + 1}
+			</div>
+			<Grid.Col sm={8} className={classNames('d-flex gap-1', { displayNone: hidden })}>
+				<Button
+					color="secondary"
+					variant="outline"
+					size="sm"
+					onClick={() => moveRow(rowIndex, -1)}
+					disabled={disabled || rowIndex === 0}
+					title="Move up"
+				>
+					<FontAwesomeIcon icon={faArrowUp} />
+				</Button>
+				<Button
+					color="secondary"
+					variant="outline"
+					size="sm"
+					onClick={() => moveRow(rowIndex, 1)}
+					disabled={disabled || rowIndex === rowCount - 1}
+					title="Move down"
+				>
+					<FontAwesomeIcon icon={faArrowDown} />
+				</Button>
+				<Button
+					color="danger"
+					size="sm"
+					onClick={() => removeRow(rowIndex)}
+					disabled={disabled || atMinimum}
+					title="Remove item"
+				>
+					<FontAwesomeIcon icon={faTrash} />
+				</Button>
+			</Grid.Col>
+		</>
+	)
+}
+
 export interface ListInputFieldProps {
 	definition: InternalInputFieldList
 	value: Record<string, ExpressionOrValue<JsonValue>>[] | undefined
@@ -106,43 +219,11 @@ export const ListInputField = observer(function ListInputField({
 	isLocatedInGrid,
 	fieldSupportsExpression,
 	visibility = true,
-}: ListInputFieldProps): React.JSX.Element {
+}: ListInputFieldProps) {
 	const baseId = useId()
-	const rows = useMemo(() => value ?? [], [value])
-
-	const addRow = useCallback(() => {
-		setValue([...rows, newRow(definition.fields)])
-	}, [rows, definition.fields, setValue])
-
-	const removeRow = useCallback(
-		(rowIndex: number) => {
-			setValue(rows.filter((_, i) => i !== rowIndex))
-		},
-		[rows, setValue]
-	)
-
-	const moveRow = useCallback(
-		(rowIndex: number, direction: -1 | 1) => {
-			const next = rowIndex + direction
-			if (next < 0 || next >= rows.length) return
-			const updated = [...rows]
-			;[updated[rowIndex], updated[next]] = [updated[next], updated[rowIndex]]
-			setValue(updated)
-		},
-		[rows, setValue]
-	)
-
-	const updateCell = useCallback(
-		(rowIndex: number, fieldId: string, cellValue: ExpressionOrValue<JsonValue | undefined>) => {
-			setValue(
-				rows.map((row, i) => (i === rowIndex ? { ...row, [fieldId]: cellValue as ExpressionOrValue<JsonValue> } : row))
-			)
-		},
-		[rows, setValue]
-	)
-
-	const hidden = !visibility
+	const { rows, addRow, removeRow, moveRow, updateCell } = useListField(definition, value, setValue)
 	const atMinimum = definition.minItems !== undefined && rows.length <= definition.minItems
+	const hidden = !visibility
 
 	return (
 		<>
@@ -163,40 +244,15 @@ export const ListInputField = observer(function ListInputField({
 
 			{rows.map((row, rowIndex) => (
 				<Fragment key={rowIndex}>
-					<div className={classNames('col-sm-4 col-form-label col-form-label-sm text-muted', { displayNone: hidden })}>
-						Item {rowIndex + 1}
-					</div>
-					<Grid.Col sm={8} className={classNames('d-flex gap-1', { displayNone: hidden })}>
-						<Button
-							color="secondary"
-							variant="outline"
-							size="sm"
-							onClick={() => moveRow(rowIndex, -1)}
-							disabled={disabled || rowIndex === 0}
-							title="Move up"
-						>
-							<FontAwesomeIcon icon={faArrowUp} />
-						</Button>
-						<Button
-							color="secondary"
-							variant="outline"
-							size="sm"
-							onClick={() => moveRow(rowIndex, 1)}
-							disabled={disabled || rowIndex === rows.length - 1}
-							title="Move down"
-						>
-							<FontAwesomeIcon icon={faArrowDown} />
-						</Button>
-						<Button
-							color="danger"
-							size="sm"
-							onClick={() => removeRow(rowIndex)}
-							disabled={disabled || atMinimum}
-							title="Remove item"
-						>
-							<FontAwesomeIcon icon={faTrash} />
-						</Button>
-					</Grid.Col>
+					<ListRowControls
+						rowIndex={rowIndex}
+						rowCount={rows.length}
+						atMinimum={atMinimum}
+						disabled={disabled}
+						hidden={hidden}
+						moveRow={moveRow}
+						removeRow={removeRow}
+					/>
 
 					{definition.fields.map((field) => {
 						const cellRaw = row[field.id]
@@ -209,7 +265,7 @@ export const ListInputField = observer(function ListInputField({
 						const setCellValue = (v: JsonValue) => setCell({ isExpression: false, value: v })
 
 						const input = (
-							<ListCell
+							<ListInputCell
 								field={field}
 								value={cell.isExpression ? undefined : cell.value}
 								setValue={setCellValue}
@@ -222,10 +278,12 @@ export const ListInputField = observer(function ListInputField({
 							<Fragment key={field.id}>
 								<FormLabel
 									htmlFor={inputId}
-									className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: hidden })}
-									style={{ paddingInlineStart: '1.5rem' }}
+									className={classNames('col-sm-4 col-form-label col-form-label-sm ps-4', { displayNone: hidden })}
 								>
 									{field.label}
+									<InputFeatureIcons
+										{...(cell.isExpression ? ExpressionModeFeatures : (getInputFeatures(field) ?? {}))}
+									/>
 								</FormLabel>
 								<Grid.Col sm={8} className={classNames({ displayNone: hidden })}>
 									{canExpression ? (
