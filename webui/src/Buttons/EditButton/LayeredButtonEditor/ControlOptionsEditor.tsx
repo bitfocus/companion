@@ -9,8 +9,8 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
-import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { InputFeatureIcons } from '~/Controls/InputFeatures'
+import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 

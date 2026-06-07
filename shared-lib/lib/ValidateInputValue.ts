@@ -368,7 +368,7 @@ export function validateInputValue(
 								validationWarnings,
 							}
 						}
-						sanitisedRow[field.id] = cellRaw
+						sanitisedRow[field.id] = cell
 					} else {
 						const result = validateInputValue(field, cell.value, options)
 						if (result.validationError) {

@@ -1,6 +1,7 @@
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useMemo } from 'react'
+import { nanoid } from 'nanoid'
+import { useCallback, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { InternalInputFieldTable, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { Button } from './Button.js'
@@ -14,7 +15,7 @@ function columnDefault(col: SomeCompanionInputField): JsonValue {
 }
 
 function newRow(columns: SomeCompanionInputField[]): Record<string, JsonValue> {
-	const row: Record<string, JsonValue> = {}
+	const row: Record<string, JsonValue> = { _id: nanoid() }
 	for (const col of columns) row[col.id] = columnDefault(col)
 	return row
 }
@@ -86,32 +87,38 @@ export function TableInputField({ definition, value, setValue, disabled }: Table
 		return [...rows].sort((a, b) => Number(a[sortColId] ?? 0) - Number(b[sortColId] ?? 0))
 	}, [value, sortColId])
 
+	const sortedRowsRef = useRef(sortedRows)
+	sortedRowsRef.current = sortedRows
+
+	const valueRef = useRef(value)
+	valueRef.current = value
+
 	const addRow = useCallback(() => {
-		setValue([...(value ?? []), newRow(columns)])
-	}, [value, columns, setValue])
+		setValue([...(valueRef.current ?? []), newRow(columns)])
+	}, [columns, setValue])
 
 	const removeRow = useCallback(
 		(rowIndex: number) => {
-			setValue(sortedRows.filter((_, i) => i !== rowIndex))
+			setValue(sortedRowsRef.current.filter((_, i) => i !== rowIndex))
 		},
-		[sortedRows, setValue]
+		[setValue]
 	)
 
 	const updateCell = useCallback(
 		(rowIndex: number, colId: string, cellValue: JsonValue) => {
-			setValue(sortedRows.map((row, i) => (i === rowIndex ? { ...row, [colId]: cellValue } : row)))
+			setValue(sortedRowsRef.current.map((row, i) => (i === rowIndex ? { ...row, [colId]: cellValue } : row)))
 		},
-		[sortedRows, setValue]
+		[setValue]
 	)
 
 	return (
 		<div>
 			{sortedRows.length > 0 && (
-				<table className="table table-sm mb-1" style={{ tableLayout: 'auto' }}>
+				<table className="table table-sm mb-1">
 					<thead>
 						<tr>
 							{columns.map((col) => (
-								<th key={col.id} className="fw-normal text-muted" style={{ paddingInlineStart: 0 }}>
+								<th key={col.id} className="fw-normal text-muted ps-0">
 									{col.label}
 								</th>
 							))}
@@ -120,9 +127,9 @@ export function TableInputField({ definition, value, setValue, disabled }: Table
 					</thead>
 					<tbody>
 						{sortedRows.map((row, rowIndex) => (
-							<tr key={rowIndex}>
+							<tr key={(row['_id'] as string | undefined) ?? rowIndex}>
 								{columns.map((col) => (
-									<td key={col.id} style={{ paddingInlineStart: 0 }}>
+									<td key={col.id} className="ps-0">
 										<TableCell
 											col={col}
 											value={row[col.id]}
@@ -131,7 +138,7 @@ export function TableInputField({ definition, value, setValue, disabled }: Table
 										/>
 									</td>
 								))}
-								<td style={{ width: 1, paddingInlineStart: 4 }}>
+								<td className="ps-1" style={{ width: 1 }}>
 									<Button
 										color="danger"
 										size="sm"
