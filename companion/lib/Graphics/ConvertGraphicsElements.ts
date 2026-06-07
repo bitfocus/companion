@@ -819,9 +819,6 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	const orientation = helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal')
-	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent')
-
 	const segmentsRaw = (element.segments as ExpressionOrValue<JsonValue[]>).value
 	const segments: ButtonGraphicsGaugeDrawElement['segments'] = Array.isArray(segmentsRaw)
 		? segmentsRaw.map((row) => {
@@ -842,13 +839,13 @@ function convertGaugeElementForDrawing(
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
 		value: Math.round(Math.max(0, Math.min(100, helper.getNumber('value', 0))) * 10) / 10,
-		orientation,
+		orientation: helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal'),
 		reverse: helper.getBoolean('reverse', false),
 		roundedEnds: helper.getBoolean('roundedEnds', true),
 		thickness: Math.max(1, Math.min(50, helper.getNumber('thickness', 20))),
 		multiSegment: helper.getBoolean('multiSegment', true),
 		segments: segments,
-		inactiveStyle,
+		inactiveStyle: helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent'),
 		inactiveAmount: helper.getNumber('inactiveAmount', 70),
 		contentHash: '',
 	}

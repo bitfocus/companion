@@ -26,10 +26,6 @@ export interface ExpressionReferences {
 	readonly cyclicLocations: Set<string>
 }
 
-export type NormalisedRow<T extends Record<string, unknown>> = {
-	[K in keyof T]: ExpressionOrValue<JsonValue | undefined>
-}
-
 export class ElementExpressionHelper<T> {
 	readonly #parser: VariablesAndExpressionParser
 
@@ -211,6 +207,9 @@ export class ElementExpressionHelper<T> {
 		}
 	}
 
+	/**
+	 * Create a helper for a row of an internal:list or internal:table (or other child object)
+	 */
 	forRow(row: unknown): ElementExpressionHelper<Record<string, ExpressionOrValue<JsonValue | undefined>>> {
 		const normalised: Record<string, ExpressionOrValue<JsonValue | undefined>> = {}
 		if (row && typeof row === 'object' && !Array.isArray(row)) {
