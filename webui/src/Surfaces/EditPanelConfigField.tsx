@@ -15,7 +15,7 @@ import { NumberInputField } from '~/Components/NumberInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
-import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField'
+import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/InputFeatures'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: JsonValue | undefined) => void

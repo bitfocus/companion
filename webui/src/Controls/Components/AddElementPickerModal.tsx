@@ -19,7 +19,12 @@ export function AddElementPickerModal({ onSave }: AddElementPickerModalProps): R
 	const [isOpen, setIsOpen] = useState(false)
 
 	const selectedElement = selectedElementId ? styleStore.findElementById(selectedElementId) : null
-	const selectedSchema = selectedElement?.type ? elementSchemas[selectedElement.type]?.flatMap((s) => s.fields) : null
+	const selectedSchema = selectedElement?.type
+		? elementSchemas[selectedElement.type]
+				?.flatMap((s) => s.fields)
+				// Filter out some fields which are 'composite' types and shouldnt be overridden directly
+				.filter((f) => f.type !== 'internal:list' && f.type !== 'internal:table')
+		: null
 
 	const handleSave = useCallback(() => {
 		if (selectedElementId && selectedProperties.length > 0) {

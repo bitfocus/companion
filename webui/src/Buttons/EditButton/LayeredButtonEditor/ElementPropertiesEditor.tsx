@@ -1,5 +1,7 @@
+import { faPlus } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
+import { Fragment, useCallback, useContext } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -10,10 +12,13 @@ import type {
 } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion.js'
+import { Button } from '~/Components/Button.js'
 import { Form } from '~/Components/Form.js'
-import { ListInputField } from '~/Components/ListInputField.js'
+import { ListRowControls, normaliseCell, useListField } from '~/Components/ListInputField.js'
+import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
+import { getInputFeatures } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { getInputFeatures, OptionsInputControl } from '~/Controls/OptionsInputField.js'
+import { OptionsInputControl } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -155,13 +160,13 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 }) {
-	const features = getInputFeatures(field)
-
 	if (field.type === 'internal:list') {
 		return (
 			<ListSchemaFieldWrapper field={field} elementProps={elementProps} localVariablesStore={localVariablesStore} />
 		)
 	}
+
+	const features = getInputFeatures(field)
 
 	return (
 		<FormPropertyField
@@ -190,6 +195,9 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	)
 })
 
+const LIST_HEADER_VALUE = { isExpression: false as const, value: undefined }
+const noop = () => {}
+
 const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	field,
 	elementProps,
@@ -205,32 +213,100 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	const rawValue = (elementProps as unknown as Record<string, unknown>)[field.id] as
 		| ExpressionOrValue<JsonValue | undefined>
 		| undefined
-	const value = rawValue?.isExpression ? undefined : (rawValue?.value as Record<string, any>[] | undefined)
 
-	const setValue = useCallback(
-		(newValue: Record<string, any>[]) => {
+	const setListValue = useCallback(
+		(newRows: Record<string, ExpressionOrValue<JsonValue>>[]) => {
 			updateOptionMutation
 				.mutateAsync({
 					controlId,
 					elementId: elementProps.id,
 					key: field.id,
-					value: { isExpression: false, value: newValue },
+					value: { isExpression: false, value: newRows as unknown as JsonValue },
 				})
 				.catch((e) => console.error('Failed to update element', e))
 		},
 		[updateOptionMutation, controlId, elementProps.id, field.id]
 	)
 
+	const listValue = rawValue?.isExpression
+		? undefined
+		: (rawValue?.value as Record<string, ExpressionOrValue<JsonValue>>[] | undefined)
+
+	const { rows, addRow, removeRow, moveRow, updateCell } = useListField(field, listValue, setListValue)
+
+	const atMinimum = field.minItems !== undefined && rows.length <= field.minItems
+
 	return (
-		<ListInputField
-			definition={field}
-			value={value}
-			setValue={setValue}
-			disabled={false}
-			localVariablesStore={localVariablesStore}
-			entityType={null}
-			isLocatedInGrid={false}
-			fieldSupportsExpression={!field.disableAutoExpression}
-		/>
+		<>
+			<PropertyFieldRow
+				label={field.label}
+				tooltip={field.tooltip}
+				features={getInputFeatures(field)}
+				value={LIST_HEADER_VALUE}
+				setValue={noop}
+				disableAutoExpression={true}
+				localVariablesStore={localVariablesStore}
+				entityType={null}
+				isLocatedInGrid={false}
+				disabled={false}
+			>
+				{() => (
+					<>
+						<Button color="primary" size="sm" onClick={addRow}>
+							<FontAwesomeIcon icon={faPlus} className="me-1" />
+							{field.addLabel ?? 'Add item'}
+						</Button>
+						{field.description && <div className="form-text">{field.description}</div>}
+					</>
+				)}
+			</PropertyFieldRow>
+			{rows.map((row, rowIndex) => (
+				<Fragment key={rowIndex}>
+					<ListRowControls
+						rowIndex={rowIndex}
+						rowCount={rows.length}
+						atMinimum={atMinimum}
+						moveRow={moveRow}
+						removeRow={removeRow}
+					/>
+					{field.fields.map((cellField) => {
+						const cell = normaliseCell((row as Record<string, unknown>)[cellField.id] as never)
+						const setCell = (newCell: ExpressionOrValue<JsonValue | undefined>) =>
+							updateCell(rowIndex, cellField.id, newCell)
+						return (
+							<PropertyFieldRow
+								key={cellField.id}
+								label={cellField.label}
+								tooltip={cellField.tooltip}
+								features={getInputFeatures(cellField)}
+								value={cell}
+								setValue={setCell}
+								disableAutoExpression={!!cellField.disableAutoExpression}
+								localVariablesStore={localVariablesStore}
+								entityType={null}
+								isLocatedInGrid={false}
+								disabled={false}
+								labelClassName="ps-2"
+							>
+								{(fieldValue, setInnerValue, inputId) => (
+									<OptionsInputControl
+										inputId={inputId}
+										allowInternalFields={true}
+										isLocatedInGrid={false}
+										entityType={EntityModelType.Feedback}
+										option={cellField}
+										value={fieldValue.value}
+										setValue={setInnerValue}
+										readonly={false}
+										localVariablesStore={localVariablesStore}
+										features={getInputFeatures(cellField)}
+									/>
+								)}
+							</PropertyFieldRow>
+						)
+					})}
+				</Fragment>
+			))}
+		</>
 	)
 })

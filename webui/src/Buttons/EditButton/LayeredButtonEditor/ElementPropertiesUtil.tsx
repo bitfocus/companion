@@ -1,14 +1,9 @@
-import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useId } from 'react'
+import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
-import { FormLabel } from '~/Components/Form.js'
-import { Grid } from '~/Components/Grid'
-import { InlineHelpIcon } from '~/Components/InlineHelp.js'
-import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/OptionsInputField.js'
+import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
+import type { InputFeatureIconsProps } from '~/Controls/InputFeatures.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
@@ -38,9 +33,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 	children,
 }: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
-
 	const updateOptionMutation = useMutationExt(trpc.controls.styles.updateOption.mutationOptions())
-
 	const elementId = elementProps.id
 
 	const elementProp = (elementProps[property] as ExpressionOrValue<JsonValue | undefined>) || {
@@ -57,44 +50,23 @@ export const FormPropertyField = observer(function FormPropertyField({
 		[updateOptionMutation, controlId, elementId, property]
 	)
 
-	const setInnerValue = useCallback(
-		(innerValue: JsonValue | undefined) => setExpressionOrValue({ isExpression: false, value: innerValue }),
-		[setExpressionOrValue]
-	)
-
 	const isOverridden = isPropertyOverridden(elementId, property)
 
-	const inputId = useId()
-
 	return (
-		<>
-			<FormLabel htmlFor={inputId} className={'col-sm-4 col-form-label col-form-label-sm'}>
-				{label}
-				<InputFeatureIcons {...(elementProp.isExpression ? { variables: true, local: true } : features)} />
-				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
-				{isOverridden ? (
-					<span title="Value has a linked feedback override">
-						<FontAwesomeIcon icon={faLayerGroup} />
-					</span>
-				) : null}
-			</FormLabel>
-			<Grid.Col sm={8}>
-				{disableAutoExpression ? (
-					children({ value: elementProp.value }, setInnerValue, inputId)
-				) : (
-					<FieldOrExpression
-						inputId={inputId}
-						value={elementProp}
-						setValue={setExpressionOrValue}
-						localVariablesStore={localVariablesStore}
-						entityType={null}
-						isLocatedInGrid={true}
-						disabled={false}
-					>
-						{children({ value: elementProp.value }, setInnerValue, inputId)}
-					</FieldOrExpression>
-				)}
-			</Grid.Col>
-		</>
+		<PropertyFieldRow
+			label={label}
+			tooltip={tooltip}
+			features={features}
+			isOverridden={isOverridden}
+			value={elementProp}
+			setValue={setExpressionOrValue}
+			disableAutoExpression={disableAutoExpression}
+			localVariablesStore={localVariablesStore}
+			entityType={null}
+			isLocatedInGrid={true}
+			disabled={false}
+		>
+			{children}
+		</PropertyFieldRow>
 	)
 })
