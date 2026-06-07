@@ -182,6 +182,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			// Not supported here
 			break
 		default:
+			// The 'internal module' is allowed to use some special input fields, to minimise when it reacts to changes elsewhere in the system
 			if (allowInternalFields) {
 				const internalControl = InternalModuleField(
 					inputId,
@@ -194,6 +195,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 				)
 				if (internalControl) return internalControl
 			}
+			// Use default below
 			break
 	}
 
