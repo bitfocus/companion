@@ -1828,6 +1828,7 @@ __metadata:
     react-idle-timer: "npm:^5.7.3"
     react-intersection-observer: "npm:^10.0.3"
     react-markdown: "npm:^10.1.0"
+    react-resizable-panels: "npm:^4.11.2"
     react-spinners: "npm:^0.17.0"
     react-time-picker: "npm:^8.0.3"
     react-transition-group: "npm:^4.4.5"
@@ -21378,6 +21379,16 @@ __metadata:
   version: 0.18.0
   resolution: "react-refresh@npm:0.18.0"
   checksum: 10c0/34a262f7fd803433a534f50deb27a148112a81adcae440c7d1cbae7ef14d21ea8f2b3d783e858cb7698968183b77755a38b4d4b5b1d79b4f4689c2f6d358fff2
+  languageName: node
+  linkType: hard
+
+"react-resizable-panels@npm:^4.11.2":
+  version: 4.11.2
+  resolution: "react-resizable-panels@npm:4.11.2"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  checksum: 10c0/524b60cc40445980e3a9693cf1c6acc23491d57379bee4ccfef7dbb14ac757015a42eb932ad5fdcc9efb507bdb504a358cc79a414ce9ad3de6da8661768873e9
   languageName: node
   linkType: hard
 
