@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from './Expression/ExpressionParse.js'
-import type { SomeCompanionInputField } from './Model/Options.js'
+import { isExpressionOrValue, type SomeCompanionInputField } from './Model/Options.js'
 import { stringifyVariableValue } from './Model/Variables.js'
 import { assertNever } from './Util.js'
 
@@ -331,6 +331,58 @@ export function validateInputValue(
 						...result.validationWarnings.map((w) => `Row ${rowIndex}, column "${col.label}": ${w}`)
 					)
 					sanitisedRow[col.id] = result.sanitisedValue as JsonValue
+				}
+				sanitisedRows.push(sanitisedRow)
+			}
+
+			return { sanitisedValue: sanitisedRows, validationError: undefined, validationWarnings }
+		}
+
+		case 'internal:list': {
+			if (!Array.isArray(value)) {
+				return { sanitisedValue: value, validationError: 'Value must be an array', validationWarnings }
+			}
+
+			const sanitisedRows: JsonValue[] = []
+			for (let rowIndex = 0; rowIndex < value.length; rowIndex++) {
+				const row = value[rowIndex]
+				if (typeof row !== 'object' || row === null || Array.isArray(row)) {
+					return {
+						sanitisedValue: value,
+						validationError: `Row ${rowIndex} must be an object`,
+						validationWarnings,
+					}
+				}
+
+				const sanitisedRow: Record<string, JsonValue> = {}
+				for (const field of definition.fields) {
+					const cellRaw = (row as Record<string, JsonValue>)[field.id]
+					// Auto-wrap bare JsonValue for saved data predating expression support
+					const cell = isExpressionOrValue(cellRaw) ? cellRaw : { isExpression: false, value: cellRaw }
+
+					if (cell.isExpression) {
+						if (typeof cell.value !== 'string') {
+							return {
+								sanitisedValue: value,
+								validationError: `Row ${rowIndex}, field "${field.label}": Expression must be a string`,
+								validationWarnings,
+							}
+						}
+						sanitisedRow[field.id] = cell as unknown as JsonValue
+					} else {
+						const result = validateInputValue(field, cell.value as JsonValue | undefined, options)
+						if (result.validationError) {
+							return {
+								sanitisedValue: value,
+								validationError: `Row ${rowIndex}, field "${field.label}": ${result.validationError}`,
+								validationWarnings,
+							}
+						}
+						validationWarnings.push(
+							...result.validationWarnings.map((w) => `Row ${rowIndex}, field "${field.label}": ${w}`)
+						)
+						sanitisedRow[field.id] = { isExpression: false, value: result.sanitisedValue } as unknown as JsonValue
+					}
 				}
 				sanitisedRows.push(sanitisedRow)
 			}

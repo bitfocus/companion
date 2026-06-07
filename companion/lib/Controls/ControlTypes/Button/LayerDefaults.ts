@@ -140,9 +140,9 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				multiSegment: { value: true, isExpression: false },
 				thresholds: {
 					value: [
-						{ value: 0, color: 0x00ff00 },
-						{ value: 66, color: 0xffff00 },
-						{ value: 85, color: 0xff0000 },
+						{ value: { value: 0, isExpression: false }, color: { value: 0x00ff00, isExpression: false } },
+						{ value: { value: 66, isExpression: false }, color: { value: 0xffff00, isExpression: false } },
+						{ value: { value: 85, isExpression: false }, color: { value: 0xff0000, isExpression: false } },
 					],
 					isExpression: false,
 				},

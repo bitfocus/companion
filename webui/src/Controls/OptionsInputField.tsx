@@ -24,6 +24,7 @@ import { InlineHelpCustom, InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { ListInputField } from '~/Components/ListInputField.js'
 import { TableInputField } from '~/Components/TableInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
@@ -87,6 +88,22 @@ export const OptionsInputField = observer(function OptionsInputField({
 	)
 
 	const inputId = useId()
+
+	if (option.type === 'internal:list') {
+		return (
+			<ListInputField
+				definition={option}
+				value={rawValue?.value as Record<string, any>[] | undefined}
+				setValue={(val) => setValue(option.id, { isExpression: false, value: val as any })}
+				disabled={!!readonly}
+				localVariablesStore={localVariablesStore}
+				entityType={entityType}
+				isLocatedInGrid={isLocatedInGrid}
+				fieldSupportsExpression={fieldSupportsExpression && !option.disableAutoExpression}
+				visibility={visibility}
+			/>
+		)
+	}
 
 	let control = (
 		<OptionsInputControl

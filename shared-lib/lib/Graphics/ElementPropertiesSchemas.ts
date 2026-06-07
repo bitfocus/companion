@@ -539,6 +539,12 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				max: 50,
 				step: 1,
 			},
+		],
+	},
+	{
+		id: 'thresholds',
+		label: 'Colour Thresholds',
+		fields: [
 			{
 				type: 'checkbox',
 				id: 'multiSegment',
@@ -548,12 +554,13 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				default: true,
 			},
 			{
-				type: 'internal:table',
+				type: 'internal:list',
 				id: 'thresholds',
-				label: 'Colour thresholds',
-				tooltip: 'Define colour stops for the gauge. Each row specifies the value (0-100) at which that colour starts.',
-				disableAutoExpression: true,
-				columns: [
+				label: 'Thresholds',
+				tooltip:
+					'Define colour stops for the gauge. Each threshold specifies the value (0-100) at which that colour starts.',
+				addLabel: 'Add threshold',
+				fields: [
 					{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
 					{
 						id: 'color',

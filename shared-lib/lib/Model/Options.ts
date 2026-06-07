@@ -75,6 +75,7 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:vertical-alignment'
 		| 'internal:image-file'
 		| 'internal:table'
+		| 'internal:list'
 	/** The label of the field */
 	label: string
 	/** A hover tooltip for this field */
@@ -177,6 +178,13 @@ export interface InternalInputFieldTable extends CompanionInputFieldBaseExtended
 	default: Record<string, JsonValue>[]
 }
 
+export interface InternalInputFieldList extends CompanionInputFieldBaseExtended {
+	type: 'internal:list'
+	fields: SomeCompanionInputField[]
+	addLabel?: string
+	default: Record<string, JsonValue>[]
+}
+
 export type InternalInputField =
 	| InternalInputFieldTime
 	| InternalInputFieldDate
@@ -193,6 +201,7 @@ export type InternalInputField =
 	| InternalInputFieldVerticalAlignment
 	| InternalInputFieldPngImage
 	| InternalInputFieldTable
+	| InternalInputFieldList
 
 export interface CompanionInputFieldStaticTextExtended extends CompanionInputFieldBaseExtended {
 	type: 'static-text'

@@ -6,7 +6,7 @@ import {
 	getElementSchemaProperty,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
 	ButtonGraphicsBounds,
@@ -537,6 +537,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:trigger':
 			case 'internal:trigger_collection':
 			case 'internal:variable':
+			case 'internal:list':
 			case 'secret-text':
 			case 'static-text':
 			case 'custom-variable':
@@ -822,10 +823,21 @@ function convertGaugeElementForDrawing(
 	const inactiveStyle = helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent')
 
 	const thresholdsRaw = (element.thresholds as ExpressionOrValue<JsonValue[]>).value
+	// Resolve a cell that may be a plain JsonValue (old internal:table) or ExpressionOrValue (internal:list)
+	const resolveThresholdCell = (raw: unknown): number => {
+		if (isExpressionOrValue(raw)) {
+			if (raw.isExpression) {
+				const r = helper.executeExpressionAndTrackVariables(raw.value, 'number')
+				return r.ok ? Number(r.value) : 0
+			}
+			return Number(raw.value ?? 0)
+		}
+		return Number(raw ?? 0)
+	}
 	const thresholds: ButtonGraphicsGaugeDrawElement['thresholds'] = Array.isArray(thresholdsRaw)
 		? thresholdsRaw.map((row) => ({
-				value: Math.max(0, Math.min(100, Number((row as any)?.value ?? 0))),
-				color: Number((row as any)?.color ?? 0),
+				value: Math.max(0, Math.min(100, resolveThresholdCell((row as any)?.value))),
+				color: resolveThresholdCell((row as any)?.color),
 			}))
 		: []
 
