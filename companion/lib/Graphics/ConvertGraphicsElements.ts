@@ -522,7 +522,6 @@ function parseCompositeElementChildOptions(
 				break
 
 			case 'multidropdown':
-			case 'internal:table':
 			case 'internal:connection_collection':
 			case 'internal:connection_id':
 			case 'internal:custom_variable':
@@ -538,6 +537,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:trigger_collection':
 			case 'internal:variable':
 			case 'internal:list':
+			case 'internal:table':
 			case 'secret-text':
 			case 'static-text':
 			case 'custom-variable':

@@ -161,6 +161,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	localVariablesStore: LocalVariablesStore
 }) {
 	if (field.type === 'internal:list') {
+		// This wants to be flattened to make it 'transparent', so bypasses the usual rendering flow
 		return (
 			<ListSchemaFieldWrapper field={field} elementProps={elementProps} localVariablesStore={localVariablesStore} />
 		)

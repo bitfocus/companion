@@ -84,6 +84,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	const inputId = useId()
 
 	if (option.type === 'internal:list') {
+		// This wants to be flattened to make it 'transparent', so bypasses the usual rendering flow
 		return (
 			<ListInputField
 				definition={option}
