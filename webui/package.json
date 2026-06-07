@@ -68,6 +68,7 @@
     "react-idle-timer": "^5.7.3",
     "react-intersection-observer": "^10.0.3",
     "react-markdown": "^10.1.0",
+    "react-resizable-panels": "^4.11.2",
     "react-spinners": "^0.17.0",
     "react-time-picker": "^8.0.3",
     "react-transition-group": "^4.4.5",

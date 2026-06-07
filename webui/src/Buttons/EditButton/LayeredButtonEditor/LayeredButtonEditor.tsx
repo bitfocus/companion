@@ -1,6 +1,7 @@
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { Group, Panel, Separator } from 'react-resizable-panels'
 import { useLocalStorage } from 'usehooks-ts'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -152,10 +153,27 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
 	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', true)
+	const savedPanelLayout = useMemo(() => {
+		try {
+			return JSON.parse(localStorage.getItem('layeredEditor.panelSizes') ?? '') ?? undefined
+		} catch {
+			return undefined
+		}
+	}, [])
+	const savePanelLayout = useCallback(
+		// Note: This can't use useLocalStorage because it fires during the mount of the Group causing a react error
+		(layout: Record<string, number>) => localStorage.setItem('layeredEditor.panelSizes', JSON.stringify(layout)),
+		[]
+	)
 
 	return (
-		<div className="button-layer-style-editor h-100">
-			<div className="button-layer-top">
+		<Group
+			orientation="vertical"
+			className="button-layer-style-editor h-100"
+			defaultLayout={savedPanelLayout}
+			onLayoutChanged={savePanelLayout}
+		>
+			<Panel id="top" className="button-layer-top" defaultSize="30vh" minSize="200px">
 				<div className="button-layer-preview">
 					<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
 				</div>
@@ -172,9 +190,9 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						small
 					/>
 				</div>
-				<hr />
-			</div>
-			<div className="button-layer-options">
+			</Panel>
+			<Separator className="button-layer-resize-handle" />
+			<Panel id="bottom" className="button-layer-options" minSize="250px">
 				{elementProps ? (
 					<ElementPropertiesEditor
 						controlId={controlId}
@@ -188,7 +206,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						Select an element from the list above to edit its properties
 					</NonIdealState>
 				)}
-			</div>
-		</div>
+			</Panel>
+		</Group>
 	)
 })
