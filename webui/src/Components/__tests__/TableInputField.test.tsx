@@ -4,8 +4,15 @@ import { useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import { describe, expect, it, vi } from 'vitest'
 import type { InternalInputFieldTable } from '@companion-app/shared/Model/Options.js'
+import { RootAppStoreContext, type RootAppStore } from '~/Stores/RootAppStore.js'
 import { MenuPortalContext } from '../MenuPortalContext.js'
 import { TableInputField } from '../TableInputField.js'
+
+const mockStore: Partial<RootAppStore> = {
+	variablesStore: {
+		allVariableDefinitions: { get: () => [] },
+	} as unknown as RootAppStore['variablesStore'],
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -46,6 +53,7 @@ function Controlled({
 }) {
 	const [value, setValue] = useState(initialValue)
 	return (
+		<RootAppStoreContext.Provider value={mockStore as RootAppStore}>
 		<MenuPortalContext.Provider value={document.body}>
 			<TableInputField
 				definition={def}
@@ -55,8 +63,12 @@ function Controlled({
 					externalSetValue?.(rows)
 				}}
 				disabled={disabled}
+				localVariablesStore={null}
+				entityType={null}
+				isLocatedInGrid={false}
 			/>
 		</MenuPortalContext.Provider>
+		</RootAppStoreContext.Provider>
 	)
 }
 

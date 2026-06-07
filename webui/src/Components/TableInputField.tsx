@@ -3,11 +3,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
 import { useCallback, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { InternalInputFieldTable, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { getInputFeatures } from '~/Controls/InputFeatures.js'
+import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { Button } from './Button.js'
-import { ColorInputField } from './ColorInputField.js'
-import { NumberInputField } from './NumberInputField.js'
-import { TextInputFieldSimple } from './TextInputField.js'
 
 function columnDefault(col: SomeCompanionInputField): JsonValue {
 	if ('default' in col && col.default !== undefined) return col.default
@@ -24,60 +25,25 @@ function firstNumberColId(columns: SomeCompanionInputField[]): string | undefine
 	return columns.find((c) => c.type === 'number')?.id
 }
 
-interface TableCellProps {
-	col: SomeCompanionInputField
-	value: JsonValue | undefined
-	setValue: (v: JsonValue) => void
-	disabled?: boolean
-}
-
-function TableCell({ col, value, setValue, disabled }: TableCellProps): React.JSX.Element {
-	switch (col.type) {
-		case 'number':
-			return (
-				<NumberInputField
-					id={undefined}
-					value={value as number | undefined}
-					setValue={setValue}
-					min={col.min}
-					max={col.max}
-					step={col.step}
-					disabled={disabled}
-				/>
-			)
-		case 'colorpicker':
-			return (
-				<ColorInputField<'number'>
-					id={undefined}
-					value={(value as number | undefined) ?? 0}
-					setValue={setValue}
-					enableAlpha={col.enableAlpha ?? false}
-					returnType={col.returnType ?? 'number'}
-					disabled={disabled}
-				/>
-			)
-		case 'textinput':
-			return (
-				<TextInputFieldSimple
-					id={undefined}
-					value={(value as string | undefined) ?? ''}
-					setValue={setValue}
-					disabled={disabled}
-				/>
-			)
-		default:
-			return <span className="text-muted">Unsupported column type</span>
-	}
-}
-
 interface TableInputFieldProps {
 	definition: InternalInputFieldTable
 	value: Record<string, JsonValue>[] | undefined
 	setValue: (rows: Record<string, JsonValue>[]) => void
 	disabled?: boolean
+	localVariablesStore: LocalVariablesStore | null
+	entityType: EntityModelType | null
+	isLocatedInGrid: boolean
 }
 
-export function TableInputField({ definition, value, setValue, disabled }: TableInputFieldProps): React.JSX.Element {
+export function TableInputField({
+	definition,
+	value,
+	setValue,
+	disabled,
+	localVariablesStore,
+	entityType,
+	isLocatedInGrid,
+}: TableInputFieldProps): React.JSX.Element {
 	const { columns } = definition
 	const sortColId = useMemo(() => firstNumberColId(columns), [columns])
 
@@ -130,11 +96,17 @@ export function TableInputField({ definition, value, setValue, disabled }: Table
 							<tr key={(row['_id'] as string | undefined) ?? rowIndex}>
 								{columns.map((col) => (
 									<td key={col.id} className="ps-0">
-										<TableCell
-											col={col}
+										<OptionsInputControl
+											inputId={undefined}
+											allowInternalFields={false}
+											isLocatedInGrid={isLocatedInGrid}
+											entityType={entityType}
+											option={col}
 											value={row[col.id]}
 											setValue={(v) => updateCell(rowIndex, col.id, v)}
-											disabled={disabled}
+											readonly={disabled}
+											localVariablesStore={localVariablesStore}
+											features={getInputFeatures(col)}
 										/>
 									</td>
 								))}
