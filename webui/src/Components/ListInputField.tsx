@@ -2,6 +2,7 @@ import { faArrowDown, faArrowUp, faPlus, faTrash } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import { nanoid } from 'nanoid'
 import { Fragment, useCallback, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -11,6 +12,7 @@ import {
 	type InternalInputFieldList,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ExpressionModeFeatures, getInputFeatures, InputFeatureIcons } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { Button } from './Button.js'
@@ -28,9 +30,18 @@ function fieldDefault(field: SomeCompanionInputField): JsonValue {
 }
 
 function newRow(fields: SomeCompanionInputField[]): Record<string, ExpressionOrValue<JsonValue>> {
-	const row: Record<string, ExpressionOrValue<JsonValue>> = {}
+	const row: Record<string, ExpressionOrValue<JsonValue>> = {
+		_id: { isExpression: false, value: nanoid() },
+	}
 	for (const field of fields) row[field.id] = { isExpression: false, value: fieldDefault(field) }
 	return row
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function getRowId(row: Record<string, ExpressionOrValue<JsonValue>>, fallbackIndex: number): string {
+	const id = row['_id']
+	if (id && isExpressionOrValue(id)) return stringifyVariableValue(id.value) ?? String(fallbackIndex)
+	return String(fallbackIndex)
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -243,7 +254,7 @@ export const ListInputField = observer(function ListInputField({
 			</Grid.Col>
 
 			{rows.map((row, rowIndex) => (
-				<Fragment key={rowIndex}>
+				<Fragment key={getRowId(row, rowIndex)}>
 					<ListRowControls
 						rowIndex={rowIndex}
 						rowCount={rows.length}

@@ -140,9 +140,21 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				multiSegment: { value: true, isExpression: false },
 				segments: {
 					value: [
-						{ value: { value: 0, isExpression: false }, color: { value: 0x00ff00, isExpression: false } },
-						{ value: { value: 66, isExpression: false }, color: { value: 0xffff00, isExpression: false } },
-						{ value: { value: 85, isExpression: false }, color: { value: 0xff0000, isExpression: false } },
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 0, isExpression: false },
+							color: { value: 0x00ff00, isExpression: false },
+						},
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 66, isExpression: false },
+							color: { value: 0xffff00, isExpression: false },
+						},
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 85, isExpression: false },
+							color: { value: 0xff0000, isExpression: false },
+						},
 					],
 					isExpression: false,
 				},
