@@ -3,7 +3,11 @@ import { useCallback, useContext } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type {
+	ExpressionOrValue,
+	InternalInputFieldList,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion.js'
 import { Form } from '~/Components/Form.js'
@@ -152,6 +156,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	localVariablesStore: LocalVariablesStore
 }) {
 	if (field.type === 'internal:list') {
+		// This wants to be flattened to make it 'transparent', so bypasses the usual rendering flow
 		return (
 			<ListSchemaFieldWrapper field={field} elementProps={elementProps} localVariablesStore={localVariablesStore} />
 		)
