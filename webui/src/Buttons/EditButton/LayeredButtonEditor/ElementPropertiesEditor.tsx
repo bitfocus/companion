@@ -18,7 +18,7 @@ import { getRowId, ListRowControls, normaliseCell, useListField } from '~/Compon
 import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
 import { getInputFeatures } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { OptionsInputControl } from '~/Controls/OptionsInputField.js'
+import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'

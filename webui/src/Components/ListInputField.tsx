@@ -15,14 +15,12 @@ import {
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ExpressionModeFeatures, getInputFeatures, InputFeatureIcons } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { Button } from './Button.js'
-import { ColorInputField } from './ColorInputField.js'
 import { FieldOrExpression } from './FieldOrExpression.js'
 import { FormLabel } from './Form.js'
 import { Grid } from './Grid.js'
 import { InlineHelpIcon } from './InlineHelp.js'
-import { NumberInputField } from './NumberInputField.js'
-import { TextInputFieldSimple } from './TextInputField.js'
 
 function fieldDefault(field: SomeCompanionInputField): JsonValue {
 	if ('default' in field && field.default !== undefined) return field.default
@@ -48,53 +46,6 @@ export function getRowId(row: Record<string, ExpressionOrValue<JsonValue>>, fall
 export function normaliseCell(raw: JsonValue | undefined): ExpressionOrValue<JsonValue | undefined> {
 	if (isExpressionOrValue(raw)) return raw
 	return { isExpression: false, value: raw }
-}
-
-interface ListInputCellProps {
-	field: SomeCompanionInputField
-	value: JsonValue | undefined
-	setValue: (v: JsonValue) => void
-	disabled?: boolean
-	inputId: string
-}
-
-function ListInputCell({ field, value, setValue, disabled, inputId }: ListInputCellProps): React.JSX.Element {
-	switch (field.type) {
-		case 'number':
-			return (
-				<NumberInputField
-					id={inputId}
-					value={value as number | undefined}
-					setValue={setValue}
-					min={field.min}
-					max={field.max}
-					step={field.step}
-					disabled={disabled}
-				/>
-			)
-		case 'colorpicker':
-			return (
-				<ColorInputField<'number'>
-					id={inputId}
-					value={(value as number | undefined) ?? 0}
-					setValue={setValue}
-					enableAlpha={field.enableAlpha ?? false}
-					returnType={field.returnType ?? 'number'}
-					disabled={disabled}
-				/>
-			)
-		case 'textinput':
-			return (
-				<TextInputFieldSimple
-					id={inputId}
-					value={(value as string | undefined) ?? ''}
-					setValue={setValue}
-					disabled={disabled}
-				/>
-			)
-		default:
-			return <span className="text-muted">Unsupported field type</span>
-	}
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -276,12 +227,17 @@ export const ListInputField = observer(function ListInputField({
 						const setCellValue = (v: JsonValue) => setCell({ isExpression: false, value: v })
 
 						const input = (
-							<ListInputCell
-								field={field}
+							<OptionsInputControl
+								inputId={inputId}
+								allowInternalFields={false}
+								isLocatedInGrid={isLocatedInGrid}
+								entityType={entityType}
+								option={field}
 								value={cell.isExpression ? undefined : cell.value}
 								setValue={setCellValue}
-								disabled={disabled}
-								inputId={inputId}
+								readonly={disabled}
+								localVariablesStore={localVariablesStore}
+								features={getInputFeatures(field)}
 							/>
 						)
 

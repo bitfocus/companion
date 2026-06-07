@@ -8,6 +8,7 @@ export interface InputFeatureIconsProps {
 	local?: boolean
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ExpressionModeFeatures: InputFeatureIconsProps = Object.freeze({
 	variables: true,
 	local: true,

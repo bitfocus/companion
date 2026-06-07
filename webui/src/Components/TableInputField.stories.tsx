@@ -38,7 +38,15 @@ function StatefulTable({
 	const [value, setValue] = useState(initialValue)
 	return (
 		<div style={{ padding: 16, maxWidth: 400 }}>
-			<TableInputField definition={definition} value={value} setValue={setValue} disabled={disabled} />
+			<TableInputField
+				definition={definition}
+				value={value}
+				setValue={setValue}
+				disabled={disabled}
+				localVariablesStore={null}
+				entityType={null}
+				isLocatedInGrid={false}
+			/>
 			<pre style={{ marginTop: 16, fontSize: 11 }}>{JSON.stringify(value, null, 2)}</pre>
 		</div>
 	)
