@@ -93,12 +93,12 @@ export class ElementExpressionHelper<T> {
 		return result.value
 	}
 
-	getDrawText(propertyName: keyof T): string {
+	getParsedString(propertyName: keyof T, defaultValue: string): string {
 		const value = this.#getValue(propertyName)
 		if (value.isExpression) {
-			return stringifyVariableValue(this.getUnknown(propertyName, 'ERR')) ?? ''
+			return stringifyVariableValue(this.getUnknown(propertyName, defaultValue)) ?? ''
 		} else {
-			return this.parseVariablesInString(stringifyVariableValue(value.value) ?? '', 'ERR')
+			return this.parseVariablesInString(stringifyVariableValue(value.value) ?? '', defaultValue)
 		}
 	}
 

@@ -310,7 +310,7 @@ async function convertReferenceElementForDrawing(
 	const drawBounds = convertDrawBounds(helper)
 	const rotation = helper.getNumber('rotation', 0)
 
-	const locationStr = helper.getString('location', '')
+	const locationStr = helper.getParsedString('location', '')
 
 	const drawElement: ButtonGraphicsReferenceDrawElement = {
 		id: idPrefix + element.id,
@@ -663,7 +663,7 @@ function convertTextElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		text: helper.getDrawText('text') + '',
+		text: helper.getParsedString('text', 'ERR') + '',
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', ['companion-sans', 'companion-mono'], 'companion-sans'),

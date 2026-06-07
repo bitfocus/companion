@@ -2248,6 +2248,49 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.elements).toHaveLength(0)
 		})
 
+		test('resolves variable in location string when not an expression', async () => {
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [makeTextDrawEl({ id: 'ref-text', text: 'Hi' })]
+			const mockRender = createMockImageResult(referencedDrawElements)
+			const getRenderAtLocation = vi.fn(() => mockRender)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('$(test:loc)') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser({ test: { loc: '1/0/1' } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(getRenderAtLocation).toHaveBeenCalledWith({ pageNumber: 1, row: 0, column: 1 })
+			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+		})
+
+		test('tracks variables used in the location string', async () => {
+			const getRenderAtLocation = vi.fn(() => null)
+
+			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('$(test:loc)') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser({ test: { loc: '1/0/1' } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.usedVariables.has('test:loc')).toBe(true)
+		})
+
 		test('cyclicLocations is empty when no cycle exists', async () => {
 			const mockRender = createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Hi' })])
 			const getRenderAtLocation = vi.fn(() => mockRender)
