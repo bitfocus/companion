@@ -54,20 +54,20 @@ function Controlled({
 	const [value, setValue] = useState(initialValue)
 	return (
 		<RootAppStoreContext.Provider value={mockStore as RootAppStore}>
-		<MenuPortalContext.Provider value={document.body}>
-			<TableInputField
-				definition={def}
-				value={value}
-				setValue={(rows) => {
-					setValue(rows)
-					externalSetValue?.(rows)
-				}}
-				disabled={disabled}
-				localVariablesStore={null}
-				entityType={null}
-				isLocatedInGrid={false}
-			/>
-		</MenuPortalContext.Provider>
+			<MenuPortalContext.Provider value={document.body}>
+				<TableInputField
+					definition={def}
+					value={value}
+					setValue={(rows) => {
+						setValue(rows)
+						externalSetValue?.(rows)
+					}}
+					disabled={disabled}
+					localVariablesStore={null}
+					entityType={null}
+					isLocatedInGrid={false}
+				/>
+			</MenuPortalContext.Provider>
 		</RootAppStoreContext.Provider>
 	)
 }
