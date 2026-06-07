@@ -14,7 +14,7 @@ import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/Styl
 import { Accordion } from '~/Components/Accordion.js'
 import { Button } from '~/Components/Button.js'
 import { Form } from '~/Components/Form.js'
-import { ListRowControls, normaliseCell, useListField } from '~/Components/ListInputField.js'
+import { getRowId, ListRowControls, normaliseCell, useListField } from '~/Components/ListInputField.js'
 import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
 import { getInputFeatures } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -262,7 +262,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 				)}
 			</PropertyFieldRow>
 			{rows.map((row, rowIndex) => (
-				<Fragment key={rowIndex}>
+				<Fragment key={getRowId(row, rowIndex)}>
 					<ListRowControls
 						rowIndex={rowIndex}
 						rowCount={rows.length}
