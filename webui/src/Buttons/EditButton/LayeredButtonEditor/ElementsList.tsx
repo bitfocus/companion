@@ -7,7 +7,12 @@ import { useDrag, useDrop } from 'react-dnd'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { AddElementDropdownButton, RemoveElementButton, ToggleVisibilityButton } from './Buttons.js'
+import {
+	AddElementDropdownButton,
+	DuplicateElementButton,
+	RemoveElementButton,
+	ToggleVisibilityButton,
+} from './Buttons.js'
 import type { LayeredStyleStore } from './StyleStore.js'
 
 export const ElementsList = observer(function ElementsList({
@@ -176,6 +181,7 @@ const ElementListItem = observer(function ElementListItem({
 
 				<div className="element-buttons">
 					<ToggleVisibilityButton styleStore={styleStore} elementId={element.id} />
+					<DuplicateElementButton controlId={controlId} elementId={element.id} />
 					<RemoveElementButton controlId={controlId} elementId={element.id} confirmModalRef={confirmModalRef} />
 				</div>
 			</div>

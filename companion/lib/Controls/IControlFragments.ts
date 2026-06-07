@@ -41,6 +41,13 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleRemoveElement(id: string): boolean
 
 	/**
+	 * Duplicate an element in the layered style, inserting the copy immediately after the original
+	 * @param id Element id to duplicate
+	 * @returns the new element's id, or false if not possible
+	 */
+	layeredStyleDuplicateElement(id: string): string | false
+
+	/**
 	 * Move an element in the layered style
 	 * @param id Element id to move
 	 * @param parentElementId Parent element id to move the element to

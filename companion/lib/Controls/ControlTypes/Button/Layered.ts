@@ -44,6 +44,7 @@ import type {
 } from '../../IControlFragments.js'
 import { ButtonControlBase } from './Base.js'
 import { CreateElementOfType } from './LayerDefaults.js'
+import { cloneElementWithNewIds } from './LayerUtils.js'
 
 /**
  * Class for the button control with layer based rendering.
@@ -415,6 +416,28 @@ export class ControlButtonLayered
 		this.deps.events.emit('layeredStyleElementChanged', this.controlId, id)
 
 		return true
+	}
+
+	layeredStyleDuplicateElement(id: string): string | false {
+		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
+		if (!currentElementLocation) return false
+
+		const { indexOfElement, element, currentParentElementArray } = currentElementLocation
+
+		// Canvas is the fixed background element and cannot be duplicated
+		if (element.type === 'canvas') return false
+
+		const clone = cloneElementWithNewIds(element)
+
+		currentParentElementArray.splice(indexOfElement + 1, 0, clone)
+
+		this.#elementConversionCache.queueInvalidate(clone.id)
+
+		this.commitChange(true)
+
+		this.deps.events.emit('layeredStyleElementChanged', this.controlId, clone.id)
+
+		return clone.id
 	}
 
 	layeredStyleSetElementName(id: string, name: string): boolean {

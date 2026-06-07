@@ -1,6 +1,7 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
 import {
 	faCircle,
+	faCopy,
 	faCube,
 	faEye,
 	faImage,
@@ -52,6 +53,28 @@ export function RemoveElementButton({
 	return (
 		<Button size="sm" onClick={removeElement} title="Remove">
 			<FontAwesomeIcon icon={faTrash} />
+		</Button>
+	)
+}
+
+export function DuplicateElementButton({
+	controlId,
+	elementId,
+}: {
+	controlId: string
+	elementId: string
+}): React.JSX.Element {
+	const duplicateElementMutation = useMutationExt(trpc.controls.styles.duplicateElement.mutationOptions())
+
+	const duplicateElement = useCallback(() => {
+		duplicateElementMutation.mutateAsync({ controlId, elementId }).catch((e) => {
+			console.error('Failed to duplicate element', e)
+		})
+	}, [duplicateElementMutation, controlId, elementId])
+
+	return (
+		<Button size="sm" onClick={duplicateElement} title="Duplicate">
+			<FontAwesomeIcon icon={faCopy} />
 		</Button>
 	)
 }

@@ -372,6 +372,10 @@ export class ControlButtonPreset
 		throw new Error('ControlButtonPreset does not support mutations')
 	}
 
+	layeredStyleDuplicateElement(_id: string): string | false {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
 	/**
 	 * Move an element in the layered style
 	 * @param _id Element id to move

@@ -24,6 +24,22 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 				return control.layeredStyleAddElement(input.type, input.index)
 			}),
 
+		duplicateElement: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					elementId: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
+
+				return control.layeredStyleDuplicateElement(input.elementId)
+			}),
+
 		removeElement: publicProcedure
 			.input(
 				z.object({
