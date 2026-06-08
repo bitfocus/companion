@@ -150,7 +150,7 @@ export class PreviewExpressionStream {
 		contextResolution: ContextResolutionInput,
 		session: ExpressionStreamSession
 	): { overrides: VariableValues | null; extraVariableIds: ReadonlySet<string> } {
-		const parser = this.#controlsController.createVariablesAndExpressionParser(null, null)
+		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, null)
 
 		if (contextResolution.type === 'localVariable') {
 			const locationRes = this.#resolveFieldToString(contextResolution.locationValue, parser)

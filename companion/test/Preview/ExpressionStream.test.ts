@@ -220,6 +220,46 @@ describe('localVariable context resolution', () => {
 		await expect(sub.next()).rejects.toThrow('Subscription timeout')
 	})
 
+	it('resolves $(this:page)/$(this:row)/$(this:column) in locationValue using the session controlId', async () => {
+		// The resolver parser must be created with session.controlId (not null) so that
+		// this:* variables resolve against the current control's location.
+		// Regression: previously used controlId=null which left this:* unresolved.
+		const cc: ControlsController = {
+			createVariablesAndExpressionParser: vi
+				.fn()
+				.mockImplementation((controlId: string | null, overrides?: VariableValues | null) => {
+					// this:page/row/column are only available when a specific controlId is provided
+					const variables: VariableValueData = controlId ? { this: { page: 1, row: 2, column: 3 } } : {}
+					const base = createParser(variables)
+					return overrides && Object.keys(overrides).length > 0 ? base.createChildParser(overrides) : base
+				}),
+		} as unknown as ControlsController
+
+		const context = { 'this:value': 7, 'target:counter': 7 }
+		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
+		const { caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:value)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: {
+					type: 'localVariable',
+					locationValue: exprVal('$(this:page)/$(this:row)/$(this:column)'),
+					nameValue: exprVal('counter'),
+				},
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 7 })
+
+		// locationValue resolved to '1/2/3' — localVariableFor received the correct location
+		expect(lv.localVariableFor).toHaveBeenCalledWith('1/2/3', 'counter', expect.anything())
+
+		await sub.cleanup()
+	})
+
 	it('evaluates without context when localVariableFor returns null (variable not found)', async () => {
 		const cc = makeControlsControllerMock(() => ({}))
 		const lv = makeLocalVariablesMock(null, () => null) // not found
