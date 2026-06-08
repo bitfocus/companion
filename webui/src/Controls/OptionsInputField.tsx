@@ -22,7 +22,7 @@ import {
 	InputFeatureIcons,
 	type InputFeatureIconsProps,
 } from './InputFeatures.js'
-import type { LocalVariablesStore } from './LocalVariablesStore.js'
+import { DeferredParsingContextVariables, type LocalVariablesStore } from './LocalVariablesStore.js'
 import { OptionsInputControl } from './OptionsInputControl.js'
 
 interface OptionsInputFieldProps {
@@ -138,11 +138,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 				disabled={!!readonly}
 				entityType={entityType}
 				isLocatedInGrid={isLocatedInGrid}
-				extraLocalVariables={
-					option.contextVariableResolution
-						? [{ value: 'this:value', label: 'Current value of this variable' }]
-						: undefined
-				}
+				extraLocalVariables={option.contextVariableResolution ? DeferredParsingContextVariables : undefined}
 			>
 				{control}
 			</FieldOrExpression>

@@ -15,7 +15,7 @@ import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import type { InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
-import type { LocalVariablesStore } from './LocalVariablesStore.js'
+import { DeferredParsingContextVariables, type LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 
 export interface OptionsInputControlProps {
@@ -49,9 +49,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 	switch (option.type) {
 		case 'textinput': {
-			const contextVars = option.contextVariableResolution
-				? [{ value: 'this:value', label: 'Current value of this variable' }]
-				: []
+			const contextVars = option.contextVariableResolution ? DeferredParsingContextVariables : []
 			const baseLocalVariables =
 				features?.local || option.deferParsing
 					? (localVariablesStore?.getOptions(

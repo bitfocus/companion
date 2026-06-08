@@ -147,3 +147,8 @@ export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 		label: 'The id of the surface triggering this action',
 	},
 ]
+
+/** Variable picker entry injected for fields that use deferred parsing (e.g. set-value actions). */
+export const DeferredParsingContextVariables: DropdownChoiceInt[] = [
+	{ value: 'this:value', label: 'Current value of this variable' },
+]
