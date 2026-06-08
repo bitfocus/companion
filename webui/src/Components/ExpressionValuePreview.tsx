@@ -93,6 +93,29 @@ export function ExpressionValuePreview({
 	)
 }
 
+interface ExpressionPreviewResultProps {
+	data: ExpressionStreamResult
+	fieldDefinition: SomeCompanionInputField
+}
+
+export function ExpressionPreviewResult({ data, fieldDefinition }: ExpressionPreviewResultProps): React.JSX.Element {
+	if (!data.ok) {
+		return (
+			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
+				Error: {data.error}
+			</StaticAlert>
+		)
+	}
+
+	const validationResult = validateExpressionResult(fieldDefinition, data.value)
+
+	return (
+		<div className="mt-1">
+			<VariableValueDisplayPopover value={data.value} showCopy={false} invalidReason={validationResult} />
+		</div>
+	)
+}
+
 function ExpressionValuePreviewInner({
 	expression,
 	controlId,
@@ -142,21 +165,7 @@ function ExpressionValuePreviewInner({
 		)
 	}
 
-	if (!displayData.ok) {
-		return (
-			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
-				Error: {displayData.error}
-			</StaticAlert>
-		)
-	}
-
-	const validationResult = validateExpressionResult(fieldDefinition, displayData.value)
-
-	return (
-		<div className="mt-1">
-			<VariableValueDisplayPopover value={displayData.value} showCopy={false} invalidReason={validationResult} />
-		</div>
-	)
+	return <ExpressionPreviewResult data={displayData} fieldDefinition={fieldDefinition} />
 }
 
 function resolveServerContextResolution(ctx: ContextResolutionForPreview | undefined):

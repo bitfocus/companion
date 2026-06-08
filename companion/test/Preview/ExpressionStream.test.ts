@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import { describe, expect, it, vi } from 'vitest'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import { PreviewExpressionStream } from '../../lib/Preview/ExpressionStream.js'
@@ -65,7 +66,7 @@ describe('customVariable context resolution', () => {
 				expression: '$(this:value) + 1',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'customVariable', name: 'myVar' },
+				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
 		)
 
@@ -83,7 +84,7 @@ describe('customVariable context resolution', () => {
 				expression: '$(this:value)',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'customVariable', name: 'myVar' },
+				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
 		)
 
@@ -104,7 +105,7 @@ describe('customVariable context resolution', () => {
 				expression: '$(this:value) * 2',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'customVariable', name: 'myVar' },
+				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
 		)
 
@@ -129,7 +130,7 @@ describe('customVariable context resolution', () => {
 				expression: '$(this:value)',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'customVariable', name: 'myVar' },
+				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			}),
 			{ timeoutMs: 100 }
 		)
@@ -159,7 +160,7 @@ describe('localVariable context resolution', () => {
 				expression: '$(this:value) + $(target:counter)',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'localVariable', location: 'this', name: 'counter' },
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
 		)
 
@@ -178,7 +179,7 @@ describe('localVariable context resolution', () => {
 				expression: '$(this:value) + 1',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'localVariable', location: 'this', name: 'counter' },
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
 		)
 
@@ -204,7 +205,7 @@ describe('localVariable context resolution', () => {
 				expression: '$(this:value) + 1',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'localVariable', location: 'this', name: 'counter' },
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			}),
 			{ timeoutMs: 100 }
 		)
@@ -229,7 +230,7 @@ describe('localVariable context resolution', () => {
 				expression: '$(this:value)',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'localVariable', location: 'this', name: 'missing' },
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('missing') },
 			})
 		)
 
@@ -469,7 +470,7 @@ describe('session management', () => {
 				expression: '$(this:value)',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'customVariable', name: 'myVar' },
+				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
 		)
 		const sub2 = new SubscriptionTester(
@@ -477,7 +478,7 @@ describe('session management', () => {
 				expression: '$(this:value)',
 				controlId: 'ctrl1',
 				isVariableString: false,
-				contextResolution: { type: 'customVariable', name: 'other' },
+				contextResolution: { type: 'customVariable', nameValue: exprVal('other') },
 			})
 		)
 

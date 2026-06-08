@@ -155,7 +155,7 @@ export class PreviewExpressionStream {
 		if (contextResolution.type === 'localVariable') {
 			const locationRes = this.#resolveFieldToString(contextResolution.locationValue, parser)
 			const nameRes = this.#resolveFieldToString(contextResolution.nameValue, parser)
-			const extraVariableIds = new Set<string>([...locationRes.variableIds, ...nameRes.variableIds])
+			const extraVariableIds = locationRes.variableIds.union(nameRes.variableIds)
 
 			if (!locationRes.value || !nameRes.value) return { overrides: null, extraVariableIds }
 
@@ -175,7 +175,8 @@ export class PreviewExpressionStream {
 			if (!nameRes.value) return { overrides: null, extraVariableIds: nameRes.variableIds }
 
 			const customVariableId = `custom:${nameRes.value}`
-			const extraVariableIds = new Set<string>([...nameRes.variableIds, customVariableId])
+			const extraVariableIds = new Set(nameRes.variableIds)
+			extraVariableIds.add(customVariableId)
 
 			// Read the current value of the custom variable (preserves numeric type)
 			const valueResult = parser.executeExpression(`$(${customVariableId})`, undefined)
@@ -194,9 +195,7 @@ export class PreviewExpressionStream {
 		extraVariableIds: ReadonlySet<string>
 	): ExecuteExpressionResult => {
 		if (extraVariableIds.size === 0) return result
-		const variableIds = new Set(result.variableIds)
-		for (const id of extraVariableIds) variableIds.add(id)
-		return { ...result, variableIds }
+		return { ...result, variableIds: result.variableIds.union(extraVariableIds) }
 	}
 
 	#executeExpression = (session: ExpressionStreamSession): ExecuteExpressionResult => {
