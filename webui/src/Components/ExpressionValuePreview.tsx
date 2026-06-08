@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import type { ExpressionStreamResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type {
 	ContextVariableResolution,
 	ExpressionableOptionsObject,
@@ -165,7 +166,7 @@ function ExpressionValuePreviewInner({
 		)
 	}
 
-	return <ExpressionPreviewResult data={displayData} fieldDefinition={fieldDefinition} />
+	return <ExpressionPreviewResult data={displayData as ExpressionStreamResult} fieldDefinition={fieldDefinition} />
 }
 
 function resolveServerContextResolution(ctx: ContextResolutionForPreview | undefined):

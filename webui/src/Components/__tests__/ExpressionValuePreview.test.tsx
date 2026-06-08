@@ -240,7 +240,7 @@ describe('ExpressionValuePreview — static states', () => {
 		expect(container.firstChild).toBeNull()
 	})
 
-	it('renders an "Invalid expression" warning for unparseable syntax', () => {
+	it('renders an "Invalid expression" warning for unparsable syntax', () => {
 		renderPreview('1 + + +')
 		expect(screen.getByText(/invalid expression/i)).toBeInTheDocument()
 	})
