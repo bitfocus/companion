@@ -77,7 +77,7 @@ export class ElementExpressionHelper<T> {
 
 	#getValue(propertyName: keyof T): ExpressionOrValue<JsonValue | undefined> {
 		const override = this.#elementOverrides?.get(String(propertyName))
-		return override ? override : (this.#element as any)[propertyName]
+		return override ?? (this.#element as any)[propertyName] ?? { isExpression: false, value: undefined }
 	}
 
 	getUnknown(propertyName: keyof T, defaultValue: VariableValue): VariableValue | undefined {
@@ -96,7 +96,7 @@ export class ElementExpressionHelper<T> {
 	getParsedString(propertyName: keyof T, defaultValue: string): string {
 		const value = this.#getValue(propertyName)
 		if (value.isExpression) {
-			return stringifyVariableValue(this.getUnknown(propertyName, defaultValue)) ?? ''
+			return stringifyVariableValue(this.getUnknown(propertyName, defaultValue)) ?? defaultValue
 		} else {
 			return this.parseVariablesInString(stringifyVariableValue(value.value) ?? '', defaultValue)
 		}
@@ -105,14 +105,20 @@ export class ElementExpressionHelper<T> {
 	getNumber(propertyName: keyof T, defaultValue: number, scale = 1): number {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return Number(value.value) * scale
+		if (!value.isExpression) {
+			const num = Number(value.value)
+			return isNaN(num) ? defaultValue : num * scale
+		}
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'number')
 		if (!result.ok) {
 			return defaultValue
 		}
 
-		return Number(result.value) * scale
+		// Number(undefined) = NaN and typeof NaN === 'number', so ok:true can still yield NaN
+		// (e.g. when a referenced variable doesn't exist). Treat NaN as a missing value.
+		const num = Number(result.value)
+		return isNaN(num) ? defaultValue : num * scale
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
@@ -123,16 +129,15 @@ export class ElementExpressionHelper<T> {
 			return stringifyVariableValue(value.value) as TVal
 		}
 
-		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
 		if (!result.ok) {
 			return defaultValue
 		}
 
-		if (typeof result.value !== 'string') {
-			return defaultValue
-		}
-
-		return result.value as TVal
+		// stringifyVariableValue returns undefined only when result.value is undefined
+		// (e.g. the referenced variable doesn't exist). Treat that as a missing value.
+		const stringified = stringifyVariableValue(result.value)
+		return (stringified ?? defaultValue) as TVal
 	}
 
 	getEnum<TVal extends string | number>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
