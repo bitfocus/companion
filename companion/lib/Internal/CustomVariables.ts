@@ -63,7 +63,7 @@ export class InternalCustomVariables
 						allowInvalidValues: true,
 						disableSanitisation: true,
 						deferParsing: true,
-						contextVariables: [{ value: 'this:value', label: 'Current value of this variable' }],
+						contextVariableResolution: { type: 'customVariable', nameFieldId: 'name' },
 					},
 				],
 				optionsSupportExpressions: true,

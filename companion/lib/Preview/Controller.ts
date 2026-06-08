@@ -5,6 +5,7 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
 import { router } from '../UI/TRPC.js'
+import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import { PreviewElementStream } from './ElementStream.js'
 import { PreviewExpressionStream } from './ExpressionStream.js'
 import { PreviewGraphics } from './Graphics.js'
@@ -19,10 +20,11 @@ export class PreviewController {
 		graphicsController: GraphicsController,
 		pageStore: IPageStore,
 		controlsController: ControlsController,
-		controlEvents: EventEmitter<ControlCommonEvents>
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		localVariables: LocalVariablesController
 	) {
 		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController, controlEvents)
-		this.#expressionStream = new PreviewExpressionStream(controlsController)
+		this.#expressionStream = new PreviewExpressionStream(controlsController, localVariables)
 		this.#elementStream = new PreviewElementStream(
 			instanceDefinitions,
 			graphicsController,

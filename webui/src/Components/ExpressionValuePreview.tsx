@@ -3,17 +3,27 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type {
+	ContextVariableResolution,
+	ExpressionableOptionsObject,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useDebounced } from '~/Resources/util.js'
 import { StaticAlert } from './Alert.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
+type ContextResolutionForPreview =
+	| { type: 'localVariable'; location: string | null; name: string | null }
+	| { type: 'customVariable'; name: string | null }
+
 interface ExpressionValuePreviewProps {
 	expression: string
 	controlId: string | null
 	fieldDefinition: SomeCompanionInputField
+	contextResolution?: ContextResolutionForPreview
 }
 
 function isExpressionParseable(value: string): boolean {
@@ -25,10 +35,30 @@ function isExpressionParseable(value: string): boolean {
 	}
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildContextResolutionForPreview(
+	res: ContextVariableResolution | undefined,
+	allRawOptions: ExpressionableOptionsObject | undefined
+): ContextResolutionForPreview | undefined {
+	if (!res || !allRawOptions) return undefined
+	if (res.type === 'localVariable') {
+		return {
+			type: 'localVariable',
+			location: stringifyVariableValue(allRawOptions[res.locationFieldId]?.value) ?? null,
+			name: stringifyVariableValue(allRawOptions[res.nameFieldId]?.value) ?? null,
+		}
+	}
+	return {
+		type: 'customVariable',
+		name: stringifyVariableValue(allRawOptions[res.nameFieldId]?.value) ?? null,
+	}
+}
+
 export function ExpressionValuePreview({
 	expression,
 	controlId,
 	fieldDefinition,
+	contextResolution,
 }: ExpressionValuePreviewProps): React.JSX.Element | null {
 	const debouncedExpression = useDebounced(expression, 300)
 	const isParseable = useMemo(() => isExpressionParseable(debouncedExpression), [debouncedExpression])
@@ -54,17 +84,27 @@ export function ExpressionValuePreview({
 			expression={debouncedExpression}
 			controlId={controlId}
 			fieldDefinition={fieldDefinition}
+			contextResolution={contextResolution}
 		/>
 	)
 }
 
-function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }: ExpressionValuePreviewProps) {
+function ExpressionValuePreviewInner({
+	expression,
+	controlId,
+	fieldDefinition,
+	contextResolution,
+}: ExpressionValuePreviewProps) {
+	// Resolve the context resolution to a form the server accepts (non-null values only)
+	const serverContextResolution = resolveServerContextResolution(contextResolution)
+
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
 				controlId: controlId,
 				expression: expression,
 				isVariableString: false,
+				contextResolution: serverContextResolution,
 			},
 			{}
 		)
@@ -113,6 +153,18 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 			<VariableValueDisplayPopover value={displayData.value} showCopy={false} invalidReason={validationResult} />
 		</div>
 	)
+}
+
+function resolveServerContextResolution(
+	ctx: ContextResolutionForPreview | undefined
+): { type: 'localVariable'; location: string; name: string } | { type: 'customVariable'; name: string } | undefined {
+	if (!ctx) return undefined
+	if (ctx.type === 'localVariable') {
+		if (!ctx.location || !ctx.name) return undefined
+		return { type: 'localVariable', location: ctx.location, name: ctx.name }
+	}
+	if (!ctx.name) return undefined
+	return { type: 'customVariable', name: ctx.name }
 }
 
 /**

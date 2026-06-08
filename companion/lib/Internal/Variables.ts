@@ -223,7 +223,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						allowInvalidValues: true,
 						disableSanitisation: true,
 						deferParsing: true,
-						contextVariables: [{ value: 'this:value', label: 'Current value of this variable' }],
+						contextVariableResolution: { type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 					},
 				],
 

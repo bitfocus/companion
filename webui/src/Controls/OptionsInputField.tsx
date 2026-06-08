@@ -3,9 +3,13 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { type ExpressionOrValue, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
+import { buildContextResolutionForPreview, ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
@@ -33,6 +37,8 @@ interface OptionsInputFieldProps {
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
 	fieldSupportsExpression: boolean
+	/** Full options object for the entity — used to resolve sibling field values for deferred-parsing fields */
+	allRawOptions?: ExpressionableOptionsObject
 }
 
 function OptionLabel({ option, features }: { option: SomeCompanionInputField; features?: InputFeatureIconsProps }) {
@@ -57,6 +63,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 	readonly,
 	localVariablesStore,
 	fieldSupportsExpression,
+	allRawOptions,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const features = getInputFeatures(option)
 
@@ -131,7 +138,11 @@ export const OptionsInputField = observer(function OptionsInputField({
 				disabled={!!readonly}
 				entityType={entityType}
 				isLocatedInGrid={isLocatedInGrid}
-				extraLocalVariables={option.contextVariables}
+				extraLocalVariables={
+					option.contextVariableResolution
+						? [{ value: 'this:value', label: 'Current value of this variable' }]
+						: undefined
+				}
 			>
 				{control}
 			</FieldOrExpression>
@@ -157,6 +168,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 						expression={stringifyVariableValue(rawValue?.value) ?? ''}
 						controlId={controlId ?? null}
 						fieldDefinition={option}
+						contextResolution={buildContextResolutionForPreview(option.contextVariableResolution, allRawOptions)}
 					/>
 				)}
 			</FormLabel>

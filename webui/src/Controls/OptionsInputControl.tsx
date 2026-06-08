@@ -49,7 +49,9 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 	switch (option.type) {
 		case 'textinput': {
-			const contextVars = option.contextVariables ?? []
+			const contextVars = option.contextVariableResolution
+				? [{ value: 'this:value', label: 'Current value of this variable' }]
+				: []
 			const baseLocalVariables =
 				features?.local || option.deferParsing
 					? (localVariablesStore?.getOptions(

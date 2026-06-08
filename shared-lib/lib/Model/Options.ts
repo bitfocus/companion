@@ -109,11 +109,16 @@ export interface CompanionInputFieldBaseExtended {
 	deferParsing?: boolean
 
 	/**
-	 * Extra variable entries to show in the variable/expression picker for this field.
-	 * Displayed alongside regular local variables. Keys use "namespace:name" form.
+	 * Describes which sibling option fields identify the target variable for a deferred-parsing
+	 * field. Drives both the variable picker (showing $(this:value)) and the live expression preview.
+	 * Only valid alongside deferParsing: true.
 	 */
-	contextVariables?: { value: string; label: string }[]
+	contextVariableResolution?: ContextVariableResolution
 }
+
+export type ContextVariableResolution =
+	| { type: 'localVariable'; locationFieldId: string; nameFieldId: string }
+	| { type: 'customVariable'; nameFieldId: string }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
 	type: 'internal:time'
