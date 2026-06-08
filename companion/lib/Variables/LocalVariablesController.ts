@@ -10,7 +10,7 @@
  */
 
 import type { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from '@companion-module/host'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlWithEntities } from '../Controls/IControlFragments.js'
@@ -84,6 +84,27 @@ export class LocalVariablesController {
 		if (!controlId) return null
 
 		return { controlId, name }
+	}
+
+	/**
+	 * Build a variable override context for the given local variable.
+	 * Returns `this:value` (current value) and `target:<name>` for every local variable
+	 * on the same control, suitable for passing to `VariablesAndExpressionParser.createChildParser`.
+	 */
+	getLocalVariableContextFor(localVariable: LocalVariable): VariableValues | null {
+		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		if (!controlAndVariable) return null
+
+		const { control, variableEntity } = controlAndVariable
+		const result: VariableValues = { 'this:value': variableEntity.feedbackValue }
+
+		for (const entity of control.entities.getAllEntities()) {
+			const rawName = entity.rawLocalVariableName
+			if (!rawName) continue
+			result[`target:${rawName}`] = entity.feedbackValue
+		}
+
+		return result
 	}
 
 	/**

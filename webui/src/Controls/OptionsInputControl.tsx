@@ -49,21 +49,24 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 	switch (option.type) {
 		case 'textinput': {
-			const localVariables = features?.local
-				? localVariablesStore?.getOptions(
-						entityType,
-						option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-						isLocatedInGrid
-					)
-				: undefined
+			const contextVars = option.contextVariables ?? []
+			const baseLocalVariables =
+				features?.local || option.deferParsing
+					? (localVariablesStore?.getOptions(
+							entityType,
+							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+							isLocatedInGrid
+						) ?? [])
+					: []
+			const allLocalVariables = [...baseLocalVariables, ...contextVars]
 
 			return (
 				<TextInputField
 					id={inputId}
 					value={value as any}
 					placeholder={option.placeholder}
-					useVariables={features?.variables ?? false}
-					localVariables={localVariables}
+					useVariables={(features?.variables ?? false) || !!option.deferParsing}
+					localVariables={allLocalVariables.length > 0 ? allLocalVariables : undefined}
 					disabled={readonly}
 					setValue={setValue}
 					checkValid={checkValid}

@@ -126,6 +126,8 @@ function translateCommonFields(
 	| 'width'
 	| 'disableAutoExpression'
 	| 'allowInvalidValues'
+	| 'deferParsing'
+	| 'contextVariables'
 > {
 	return {
 		id: field.id,
@@ -144,5 +146,7 @@ function translateCommonFields(
 		width: undefined,
 		disableAutoExpression: true,
 		allowInvalidValues: false,
+		deferParsing: undefined,
+		contextVariables: undefined,
 	}
 }

@@ -131,6 +131,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 				disabled={!!readonly}
 				entityType={entityType}
 				isLocatedInGrid={isLocatedInGrid}
+				extraLocalVariables={option.contextVariables}
 			>
 				{control}
 			</FieldOrExpression>

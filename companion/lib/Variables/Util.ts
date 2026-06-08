@@ -77,6 +77,15 @@ export function visitEntityOptionsForVariables<T>(
 	if (definition.optionsSupportExpressions) {
 		// Modern approach: check field types
 		for (const field of definition.options) {
+			const optionValue = options[field.id]
+
+			if (field.deferParsing) {
+				// Deferred fields are passed through as-is; the action handler will parse them
+				// with an enhanced parser after resolving the target context.
+				result[field.id] = visitor(field, optionValue, null)
+				continue
+			}
+
 			const fieldType: VisitEntityOptionValueOptions = {
 				allowExpression: !field.disableAutoExpression,
 				parseVariables: false,
@@ -88,7 +97,6 @@ export function visitEntityOptionsForVariables<T>(
 				fieldType.forceExpression = true
 			}
 
-			const optionValue = options[field.id]
 			result[field.id] = visitor(field, optionValue, fieldType)
 		}
 	} else {
