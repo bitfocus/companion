@@ -11,72 +11,19 @@
 
 import EventEmitter from 'node:events'
 import z from 'zod'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import {
-	stringifyVariableValue,
-	type VariableValue,
-	type VariableValues,
-} from '@companion-app/shared/Model/Variables.js'
-import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
-import type { VariablesCache, VariableValueData } from './Util.js'
-import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
+import type { VariableValueData } from './Util.js'
+import { ThisLocationVariablesSet, VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
 	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
 	local_variables_changed: [changed: ReadonlySet<string>, fromControlId: string]
-}
-
-const ThisLocationVariables: Record<
-	ThisLocationVariable,
-	(location: ControlLocation | null | undefined) => VariableValue
-> = {
-	'this:page': (location) => location?.pageNumber,
-	'this:column': (location) => location?.column,
-	'this:row': (location) => location?.row,
-	'this:location': (location) => (location ? formatLocation(location) : undefined),
-
-	// The remaining variables simply delegate to internally-defined variables.
-	'this:page_name': (location) =>
-		location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
-	'this:active': (location) =>
-		location
-			? `$(internal:b_active_${location.pageNumber}_${location.row}_${location.column})`
-			: VARIABLE_UNKNOWN_VALUE,
-
-	'this:step': (location) =>
-		location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE,
-	'this:step_count': (location) =>
-		location
-			? `$(internal:b_step_count_${location.pageNumber}_${location.row}_${location.column})`
-			: VARIABLE_UNKNOWN_VALUE,
-
-	'this:actions_running': (location) =>
-		location
-			? `$(internal:b_actions_running_${location.pageNumber}_${location.row}_${location.column})`
-			: VARIABLE_UNKNOWN_VALUE,
-
-	'this:button_status': (location) =>
-		location
-			? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
-			: VARIABLE_UNKNOWN_VALUE,
-}
-
-const ThisLocationVariablesSet: ReadonlySet<string> = new Set(Object.keys(ThisLocationVariables))
-
-export function InjectedVariablesForLocation(controlLocation: ControlLocation | null | undefined): VariablesCache {
-	return new Map(
-		Object.entries(ThisLocationVariables).map(([variableId, computeVariable]) => [
-			variableId,
-			computeVariable(controlLocation),
-		])
-	)
 }
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
@@ -106,19 +53,34 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		return this.getVariableValue('custom', name)
 	}
 
-	createVariablesAndExpressionParser(
-		controlLocation: ControlLocation | null | undefined,
-		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+	createStandaloneParser(
+		surfaceId: string | undefined,
+		localValues: ControlEntityInstance[] | null
 	): VariablesAndExpressionParser {
-		const thisValues = InjectedVariablesForLocation(controlLocation)
+		return VariablesAndExpressionParser.forControl(this.#blinker, this.#variableValues, null, surfaceId, localValues)
+	}
 
-		return new VariablesAndExpressionParser(
+	createParserForControl(
+		controlLocation: ControlLocation | null | undefined,
+		surfaceId: string | undefined,
+		localValues: ControlEntityInstance[] | null
+	): VariablesAndExpressionParser {
+		return VariablesAndExpressionParser.forControl(
 			this.#blinker,
 			this.#variableValues,
-			thisValues,
-			localValues,
-			overrideVariableValues
+			controlLocation,
+			surfaceId,
+			localValues
+		)
+	}
+
+	createParserForSurface(surfaceId: string, surfacePageNumber: string | undefined): VariablesAndExpressionParser {
+		return VariablesAndExpressionParser.forSurface(
+			this.#blinker,
+			this.#variableValues,
+			surfaceId,
+			surfacePageNumber,
+			null
 		)
 	}
 

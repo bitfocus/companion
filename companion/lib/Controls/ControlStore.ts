@@ -1,5 +1,4 @@
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { VariablesValues } from '../Variables/Values.js'
@@ -166,15 +165,16 @@ export class ControlStore implements IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		surfaceId: string | undefined
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 
 		// If the control exists and supports entities, use its parser for local variables
-		if (control && control.supportsEntities)
-			return control.entities.createVariablesAndExpressionParser(overrideVariableValues)
+		if (control && control.supportsEntities) {
+			return control.entities.createVariablesAndExpressionParser(surfaceId)
+		}
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues)
+		return this.#variablesValues.createStandaloneParser(surfaceId, null)
 	}
 }

@@ -1,5 +1,8 @@
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
@@ -23,8 +26,83 @@ import {
 } from './Util.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
 
+type VariablesRecord<Variables extends string, Data extends object> = Record<
+	Variables,
+	(contextData: ReadonlyDeep<Data>) => VariableValue
+>
+
+type ThisLocationVariablesData = {
+	location: ControlLocation | null | undefined
+}
+
+const ThisLocationVariables: VariablesRecord<ThisLocationVariable, ThisLocationVariablesData> = {
+	'this:page': ({ location }) => location?.pageNumber,
+	'this:column': ({ location }) => location?.column,
+	'this:row': ({ location }) => location?.row,
+	'this:location': ({ location }) => (location ? formatLocation(location) : undefined),
+
+	// The remaining variables simply delegate to internally-defined variables.
+	'this:page_name': ({ location }) =>
+		location ? `$(internal:page_number_${location.pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+	'this:active': ({ location }) =>
+		location
+			? `$(internal:b_active_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+
+	'this:step': ({ location }) =>
+		location ? `$(internal:b_step_${location.pageNumber}_${location.row}_${location.column})` : VARIABLE_UNKNOWN_VALUE,
+	'this:step_count': ({ location }) =>
+		location
+			? `$(internal:b_step_count_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+
+	'this:actions_running': ({ location }) =>
+		location
+			? `$(internal:b_actions_running_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+
+	'this:button_status': ({ location }) =>
+		location
+			? `$(internal:b_status_${location.pageNumber}_${location.row}_${location.column})`
+			: VARIABLE_UNKNOWN_VALUE,
+}
+
+export const ThisLocationVariablesSet: ReadonlySet<string> = new Set(Object.keys(ThisLocationVariables))
+
+type SurfaceVariablesData = {
+	surfaceId: string | undefined
+	pageNumber: string | undefined
+}
+
+export type SurfaceVariable = 'this:surface_id' | 'this:page' | 'this:page_name'
+
+const SurfaceVariables: VariablesRecord<SurfaceVariable, SurfaceVariablesData> = {
+	'this:surface_id': ({ surfaceId }) => surfaceId,
+
+	// Reactivity is triggered manually
+	'this:page': ({ pageNumber }) => pageNumber,
+
+	// Reactivity happens for these because of references to the inner variables
+	'this:page_name': ({ pageNumber }) =>
+		pageNumber ? `$(internal:page_number_${pageNumber}_name)` : VARIABLE_UNKNOWN_VALUE,
+}
+
+type ThisLocationThroughSurfaceVariablesData = ThisLocationVariablesData & {
+	surfaceId: string | undefined
+}
+
+export type ThisLocationThroughSurfaceVariable = ThisLocationVariable | 'this:surface_id'
+
+const ThisLocationThroughSurfaceVariables: VariablesRecord<
+	ThisLocationThroughSurfaceVariable,
+	ThisLocationThroughSurfaceVariablesData
+> = {
+	...ThisLocationVariables,
+	'this:surface_id': ({ surfaceId }) => surfaceId,
+}
+
 /**
- * A class to parse and execute expressions with variables
+ * A class to parse strings and execute expressions with variables.
  * This allows for preparing any injected/lazy variables before executing multiple expressions
  */
 export class VariablesAndExpressionParser {
@@ -33,16 +111,17 @@ export class VariablesAndExpressionParser {
 	readonly #blinker: VariablesBlinker
 
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
-	readonly #thisValues: VariablesCache
+	readonly #contextVariables: Record<string, undefined | ((data: unknown) => VariableValue)>
+	readonly #contextData: unknown
 	readonly #localValues: VariablesCache = new Map()
 	readonly #overrideVariableValues: VariableValues
 
-	readonly #valueCacheAccessor: VariableValueCache = {
+	private readonly valueCacheAccessor: VariableValueCache = {
 		has: (id: string): boolean => {
-			return this.#thisValues.has(id) || this.#localValues.has(id) || this.#overrideVariableValues[id] !== undefined
+			return !!this.#contextVariables[id] || this.#localValues.has(id) || this.#overrideVariableValues[id] !== undefined
 		},
 		get: (id: string): VariableValue | undefined => {
-			if (this.#thisValues.has(id)) return this.#thisValues.get(id)
+			if (this.#contextVariables[id]) return this.#contextVariables[id](this.#contextData)
 			if (this.#localValues.has(id)) return this.#localValues.get(id)
 			return this.#overrideVariableValues[id]
 		},
@@ -51,26 +130,91 @@ export class VariablesAndExpressionParser {
 		},
 	}
 
-	constructor(
+	private constructor(
 		blinker: VariablesBlinker,
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
-		thisValues: VariablesCache,
+		contextVariables: Record<string, undefined | ((data: ReadonlyDeep<any>) => VariableValue)>,
+		contextData: any,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues
 	) {
 		this.#blinker = blinker
 		this.#rawVariableValues = rawVariableValues
-		this.#thisValues = thisValues
-		this.#overrideVariableValues = overrideVariableValues || {}
+		this.#contextVariables = contextVariables
+		this.#contextData = contextData
+		this.#overrideVariableValues = overrideVariableValues
 
 		if (localValues) this.#bindLocalVariables(localValues)
+	}
+
+	// Template arguments aren't allowed on constructors, so use a helper function
+	// to add them.
+	private static new_<ContextData extends object>(
+		blinker: VariablesBlinker,
+		rawVariableValues: ReadonlyDeep<VariableValueData>,
+		contextVariables: Record<string, undefined | ((data: ReadonlyDeep<NoInfer<ContextData>>) => VariableValue)>,
+		contextData: ReadonlyDeep<ContextData>,
+		localValues: ControlEntityInstance[] | null
+	): VariablesAndExpressionParser {
+		return new VariablesAndExpressionParser(blinker, rawVariableValues, contextVariables, contextData, localValues, {})
+	}
+
+	static forControl(
+		blinker: VariablesBlinker,
+		rawVariableValues: ReadonlyDeep<VariableValueData>,
+		controlLocation: ControlLocation | null | undefined,
+		surfaceId: string | undefined,
+		localValues: ControlEntityInstance[] | null
+	): VariablesAndExpressionParser {
+		if (surfaceId) {
+			return VariablesAndExpressionParser.new_(
+				blinker,
+				rawVariableValues,
+				ThisLocationThroughSurfaceVariables,
+				{
+					location: controlLocation,
+					surfaceId,
+				},
+				localValues
+			)
+		}
+
+		return VariablesAndExpressionParser.new_(
+			blinker,
+			rawVariableValues,
+			ThisLocationVariables,
+			{
+				location: controlLocation,
+			},
+			localValues
+		)
+	}
+
+	static forSurface(
+		blinker: VariablesBlinker,
+		rawVariableValues: ReadonlyDeep<VariableValueData>,
+		surfaceId: string,
+		surfacePageNumber: string | undefined,
+		localValues: ControlEntityInstance[] | null
+	): VariablesAndExpressionParser {
+		return VariablesAndExpressionParser.new_(
+			blinker,
+			rawVariableValues,
+			SurfaceVariables,
+			{
+				surfaceId,
+				pageNumber: surfacePageNumber,
+			},
+			localValues
+		)
 	}
 
 	createChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
 		const childParser = new VariablesAndExpressionParser(
 			this.#blinker,
 			this.#rawVariableValues,
-			this.#thisValues,
+			this.#contextVariables,
+			this.#contextData,
 			null,
 			{
 				...this.#overrideVariableValues,
@@ -106,7 +250,7 @@ export class VariablesAndExpressionParser {
 	 * @returns result of the expression
 	 */
 	executeExpression(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		return executeExpression(this.#blinker, str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
+		return executeExpression(this.#blinker, str, this.#rawVariableValues, requiredType, this.valueCacheAccessor)
 	}
 
 	/**
@@ -115,7 +259,7 @@ export class VariablesAndExpressionParser {
 	 * @returns with variables replaced with values
 	 */
 	parseVariables(str: string): ParseVariablesResult {
-		return parseVariablesInString(str, this.#rawVariableValues, this.#valueCacheAccessor, VARIABLE_UNKNOWN_VALUE)
+		return parseVariablesInString(str, this.#rawVariableValues, this.valueCacheAccessor, VARIABLE_UNKNOWN_VALUE)
 	}
 
 	/**

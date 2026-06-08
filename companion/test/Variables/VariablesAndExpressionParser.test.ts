@@ -1,4 +1,7 @@
+import type { Equal, Expect } from 'type-testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
+import { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -7,9 +10,14 @@ import {
 	exprVal,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { VariablesCache, VariableValueData, VisitEntityOptionValueOptions } from '../../lib/Variables/Util.js'
-import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import {
+	SurfaceVariable,
+	ThisLocationThroughSurfaceVariable,
+	VariablesAndExpressionParser,
+} from '../../lib/Variables/VariablesAndExpressionParser.js'
 
 const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
 
@@ -37,6 +45,23 @@ function createDefinition(
 	}
 }
 
+const ThisControlPrimitiveVariables = ['this:page', 'this:column', 'this:row', 'this:location'] as const
+
+const ThisControlComplexVariables = [
+	'this:page_name',
+	'this:active',
+	'this:step',
+	'this:step_count',
+	'this:actions_running',
+	'this:button_status',
+] as const
+
+const ThisControlVariables = [...ThisControlPrimitiveVariables, ...ThisControlComplexVariables] as const
+
+type _AllThisVariablesIncluded = Expect<Equal<(typeof ThisControlVariables)[number], ThisLocationVariable>>
+
+const SurfaceVariables = ['this:surface_id', 'this:page', 'this:page_name'] as const
+
 describe('VariablesAndExpressionParser', () => {
 	// Sample variable data for testing
 	const defaultVariables: VariableValueData = {
@@ -52,12 +77,227 @@ describe('VariablesAndExpressionParser', () => {
 
 	const createParser = (
 		variables: VariableValueData = defaultVariables,
-		thisValues: VariablesCache = new Map(),
-		localValues: null = null,
-		overrideValues: null = null
+		controlLocation: ControlLocation | null | undefined = undefined,
+		localValues: null = null
 	): VariablesAndExpressionParser => {
-		return new VariablesAndExpressionParser(null as any, variables, thisValues, localValues, overrideValues)
+		return VariablesAndExpressionParser.forControl(null as any, variables, controlLocation, undefined, localValues)
 	}
+
+	describe('for control, with this-location variables', () => {
+		it('has all ten $(this:*) keys for a valid location', () => {
+			const parser = VariablesAndExpressionParser.forControl(
+				null as any,
+				{},
+				{ pageNumber: 2, row: 3, column: 4 },
+				undefined,
+				null
+			)
+
+			const cache = parser['valueCacheAccessor']
+			for (const key of ThisControlVariables) {
+				expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+			}
+		})
+
+		it('does not have this:surface_id, does have this:page and this:page_number', () => {
+			const parser = createParser({}, { pageNumber: 2, row: 3, column: 4 })
+
+			for (const key of SurfaceVariables) {
+				expect(parser['valueCacheAccessor'].has(key)).toBe(key !== 'this:surface_id')
+			}
+		})
+
+		it('has $(this:*) keys with expected values, not through surface', () => {
+			const parser = VariablesAndExpressionParser.forControl(
+				null as any,
+				{},
+				{ pageNumber: 2, row: 3, column: 4 },
+				undefined,
+				null
+			)
+
+			const keyAndExpected = [
+				['this:page', 2],
+				['this:column', 4],
+				['this:row', 3],
+				['this:location', '2/3/4'],
+				['this:page_name', '$(internal:page_number_2_name)'],
+				['this:active', '$(internal:b_active_2_3_4)'],
+				['this:step', '$(internal:b_step_2_3_4)'],
+				['this:step_count', '$(internal:b_step_count_2_3_4)'],
+				['this:actions_running', '$(internal:b_actions_running_2_3_4)'],
+				['this:button_status', '$(internal:b_status_2_3_4)'],
+			] as const
+
+			type _VerifyThisVariablesComplete = Expect<Equal<(typeof keyAndExpected)[number][0], ThisLocationVariable>>
+
+			const cache = parser['valueCacheAccessor']
+			for (const [key, expectedValue] of keyAndExpected) {
+				expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+				expect(cache.get(key), `cache value for "${key}"`).toBe(expectedValue)
+			}
+
+			expect(cache.has('this:surface_id'), 'cache should omit this:surface_id').toBe(false)
+		})
+
+		it('has $(this:*) keys with expected values, through surface', () => {
+			const parser = VariablesAndExpressionParser.forControl(
+				null as any,
+				{},
+				{ pageNumber: 2, row: 3, column: 4 },
+				'specific-surface-id',
+				null
+			)
+
+			const keyAndExpected = [
+				['this:page', 2],
+				['this:column', 4],
+				['this:row', 3],
+				['this:location', '2/3/4'],
+				['this:page_name', '$(internal:page_number_2_name)'],
+				['this:active', '$(internal:b_active_2_3_4)'],
+				['this:step', '$(internal:b_step_2_3_4)'],
+				['this:step_count', '$(internal:b_step_count_2_3_4)'],
+				['this:actions_running', '$(internal:b_actions_running_2_3_4)'],
+				['this:button_status', '$(internal:b_status_2_3_4)'],
+				['this:surface_id', 'specific-surface-id'],
+			] as const
+
+			type _VerifyThisVariablesComplete = Expect<
+				Equal<(typeof keyAndExpected)[number][0], ThisLocationThroughSurfaceVariable>
+			>
+
+			const cache = parser['valueCacheAccessor']
+			for (const [key, expectedValue] of keyAndExpected) {
+				expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+				expect(cache.get(key), `cache value for "${key}"`).toBe(expectedValue)
+			}
+		})
+
+		it.each([null, undefined])(
+			'$0 location: primitive this:* variables are undefined, location without surface',
+			(noControlLocation) => {
+				const parser = VariablesAndExpressionParser.forControl(null as any, {}, noControlLocation, undefined, null)
+
+				const cache = parser['valueCacheAccessor']
+				for (const key of ThisControlPrimitiveVariables) {
+					expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+					expect(cache.get(key), `cache value for "${key}"`).toBeUndefined()
+				}
+			}
+		)
+
+		it.each([null, undefined])(
+			'$0 location: complex this:* variables are VARIABLE_UNKNOWN_VALUE, location without surface',
+			(noControlLocation) => {
+				const parser = VariablesAndExpressionParser.forControl(null as any, {}, noControlLocation, undefined, null)
+
+				const cache = parser['valueCacheAccessor']
+				for (const key of ThisControlComplexVariables) {
+					expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+					expect(cache.get(key), `cache value for "${key}"`).toBe(VARIABLE_UNKNOWN_VALUE)
+				}
+			}
+		)
+
+		it.each([null, undefined])(
+			'$0 location: primitive this:* variables are undefined, location with surface',
+			(noControlLocation) => {
+				const parser = VariablesAndExpressionParser.forControl(
+					null as any,
+					{},
+					noControlLocation,
+					'surfs up dude',
+					null
+				)
+
+				const cache = parser['valueCacheAccessor']
+				for (const key of ThisControlPrimitiveVariables) {
+					expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+					expect(cache.get(key), `cache value for "${key}"`).toBeUndefined()
+				}
+			}
+		)
+
+		it.each([null, undefined])(
+			'$0 location: complex this:* variables are VARIABLE_UNKNOWN_VALUE, location with surface',
+			(noControlLocation) => {
+				const parser = VariablesAndExpressionParser.forControl(
+					null as any,
+					{},
+					noControlLocation,
+					'surfs up dude',
+					null
+				)
+
+				const cache = parser['valueCacheAccessor']
+				for (const key of ThisControlComplexVariables) {
+					expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+					expect(cache.get(key), `cache value for "${key}"`).toBe(VARIABLE_UNKNOWN_VALUE)
+				}
+			}
+		)
+
+		it.each([null, undefined])(
+			'$0 location: this:surface_id is as specified, location with surface',
+			(noControlLocation) => {
+				const parser = VariablesAndExpressionParser.forControl(
+					null as any,
+					{},
+					noControlLocation,
+					'surfs up dude',
+					null
+				)
+
+				const cache = parser['valueCacheAccessor']
+				expect(cache.has('this:surface_id'), 'cache this:surface_id key').toBe(true)
+				expect(cache.get('this:surface_id'), 'cache this:surface_id value').toBe('surfs up dude')
+			}
+		)
+	})
+
+	describe('for surface expression, with only surface-relevant variables', () => {
+		it('has all three $(this:*) variables exposed in a surface expression', () => {
+			const parser = VariablesAndExpressionParser.forSurface(
+				null as any,
+				{},
+				'this surface',
+				'surface page number',
+				null
+			)
+
+			const keyAndExpected = [
+				['this:surface_id', 'this surface'],
+				['this:page', 'surface page number'],
+				['this:page_name', '$(internal:page_number_surface page number_name)'],
+			] as const
+
+			type _VerifySurfaceVariablesComplete = Expect<Equal<(typeof keyAndExpected)[number][0], SurfaceVariable>>
+
+			const cache = parser['valueCacheAccessor']
+			for (const [key, expectedValue] of keyAndExpected) {
+				expect(cache.has(key), `expected cache to have key "${key}"`).toBe(true)
+				expect(cache.get(key), `expected value of cache entry for "${key}"`).toBe(expectedValue)
+			}
+		})
+
+		it('does not contain location-related variables', () => {
+			const parser = VariablesAndExpressionParser.forSurface(
+				null as any,
+				{},
+				'this surface',
+				'surface page number',
+				null
+			)
+
+			const cache = parser['valueCacheAccessor']
+			for (const key of ThisControlVariables) {
+				expect(cache.has(key), `expected cache to have key "${key}"`).toBe(
+					key === 'this:page' || key === 'this:page_name'
+				)
+			}
+		})
+	})
 
 	describe('parseVariables', () => {
 		it('should return unchanged string when no variables present', () => {
@@ -1054,24 +1294,22 @@ describe('VariablesAndExpressionParser', () => {
 		})
 	})
 
-	describe('thisValues and overrideValues', () => {
-		it('should use thisValues when available', () => {
-			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
+	describe('contextual variables and overrideValues', () => {
+		it('should use contextual variable values when available', () => {
+			const parser = createParser({}, { pageNumber: 2, row: 3, column: 5 })
+			const result = parser.parseVariables('$(this:location)')
 
-			const parser = createParser({}, thisValues)
-			const result = parser.parseVariables('$(custom:val)')
-
-			expect(result.text).toBe('from-this')
-			expect(result.variableIds).toContain('custom:val')
+			expect(result.text).toBe('2/3/5')
+			expect(result.variableIds).toContain('this:location')
 		})
 
-		it('should prefer thisValues over rawVariables', () => {
-			const thisValues: VariablesCache = new Map([['test:var1', 'overridden']])
+		it('should prefer contextual variables over rawVariables', () => {
+			const parser = createParser(defaultVariables, { pageNumber: 6, row: 2, column: 4 }).createChildParser({
+				'this:row': 42,
+			})
+			const result = parser.parseVariables('$(this:row)')
 
-			const parser = createParser(defaultVariables, thisValues)
-			const result = parser.parseVariables('$(test:var1)')
-
-			expect(result.text).toBe('overridden')
+			expect(result.text).toBe('2')
 		})
 	})
 
@@ -1179,7 +1417,7 @@ describe('VariablesAndExpressionParser', () => {
 
 	describe('createChildParser', () => {
 		it('child inherits raw variable values from parent', () => {
-			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, defaultVariables, null, undefined, null)
 			const child = parser.createChildParser({})
 
 			const result = child.parseVariables('$(test:var1)')
@@ -1187,47 +1425,23 @@ describe('VariablesAndExpressionParser', () => {
 			expect(result.variableIds).toContain('test:var1')
 		})
 
-		it('child inherits thisValues from parent', () => {
+		it('child inherits desired contextual variable values from parent', () => {
 			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
-			const parser = new VariablesAndExpressionParser(null as any, {}, thisValues, null, null)
+			const parser = VariablesAndExpressionParser.forControl(
+				null as any,
+				{},
+				{ pageNumber: 3, row: 1, column: 3 },
+				undefined,
+				null
+			)
 			const child = parser.createChildParser({})
 
-			const result = child.parseVariables('$(custom:val)')
-			expect(result.text).toBe('from-this')
-		})
-
-		it('child inherits parent override values', () => {
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
-				'override:val': 'parent-override',
-			})
-			const child = parser.createChildParser({})
-
-			const result = child.parseVariables('$(override:val)')
-			expect(result.text).toBe('parent-override')
-		})
-
-		it('child new overrides take precedence over parent overrides', () => {
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
-				'override:val': 'parent-override',
-			})
-			const child = parser.createChildParser({ 'override:val': 'child-override' })
-
-			const result = child.parseVariables('$(override:val)')
-			expect(result.text).toBe('child-override')
-		})
-
-		it('non-overlapping parent overrides remain accessible in child', () => {
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, {
-				'override:parent-only': 'parent-value',
-			})
-			const child = parser.createChildParser({ 'override:child-only': 'child-value' })
-
-			expect(child.parseVariables('$(override:parent-only)').text).toBe('parent-value')
-			expect(child.parseVariables('$(override:child-only)').text).toBe('child-value')
+			const result = child.parseVariables('$(this:location)')
+			expect(result.text).toBe('3/1/3')
 		})
 
 		it('child overrides do not affect parent', () => {
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, {}, null, undefined, null)
 			const child = parser.createChildParser({ 'override:new': 'child-value' })
 
 			expect(parser.parseVariables('$(override:new)').text).toBe('$NA')
@@ -1242,7 +1456,7 @@ describe('VariablesAndExpressionParser', () => {
 				connectionId: 'non-internal',
 				definitionId: 'some-def',
 			} as unknown as ControlEntityInstance
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), [mockEntity], null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, {}, null, undefined, [mockEntity])
 			const child = parser.createChildParser({})
 
 			const result = child.parseVariables('$(local:myvar)')
@@ -1258,7 +1472,7 @@ describe('VariablesAndExpressionParser', () => {
 				connectionId: 'non-internal',
 				definitionId: 'some-def',
 			} as unknown as ControlEntityInstance
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), [mockEntity], null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, {}, null, undefined, [mockEntity])
 			const child = parser.createChildParser({ 'local:myvar': 'override-value' })
 
 			// localValues (inherited) take priority over overrideVariableValues
@@ -1267,7 +1481,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child executeExpression works with inherited raw variables', () => {
-			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, defaultVariables, null, undefined, null)
 			const child = parser.createChildParser({})
 
 			const result = child.executeExpression('$(test:num) + 1', undefined)
@@ -1276,7 +1490,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child executeExpression uses child override values', () => {
-			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, {}, null, undefined, null)
 			const child = parser.createChildParser({ 'custom:num': 100 })
 
 			const result = child.executeExpression('$(custom:num) * 2', undefined)
@@ -1285,7 +1499,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child override shadows parent raw variable', () => {
-			const parser = new VariablesAndExpressionParser(null as any, defaultVariables, new Map(), null, null)
+			const parser = VariablesAndExpressionParser.forControl(null as any, defaultVariables, null, undefined, null)
 			const child = parser.createChildParser({ 'test:var1': 'shadowed' })
 
 			expect(child.parseVariables('$(test:var1)').text).toBe('shadowed')
