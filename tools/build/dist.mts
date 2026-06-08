@@ -5,8 +5,7 @@ import type { PackageJson } from 'type-fest'
 import yaml from 'yaml'
 import yazl from 'yazl'
 import { $, argv, fs, usePowerShell } from 'zx'
-// @ts-expect-error Untyped webpack config
-import webpackConfig from '../../companion/webpack.config.js'
+import { companionNativeExternals } from '../companion-externals.mts'
 import { generateMiniVersionString, generateVersionString } from '../lib.mts'
 import { determinePlatformInfo } from './util.mts'
 
@@ -73,7 +72,7 @@ const buildString = await generateMiniVersionString()
 const require = createRequire(import.meta.url)
 const dependencies: PackageJson.Dependency = {}
 
-const neededDependencies = Object.keys(webpackConfig.externals)
+const neededDependencies = companionNativeExternals
 for (const name of neededDependencies) {
 	const pkgJson = require(`${name}/package.json`)
 	dependencies[name] = pkgJson.version

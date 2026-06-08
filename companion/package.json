@@ -9,7 +9,9 @@
     "dev": "run dev:inner --admin-address 127.0.0.1 --log-level debug",
     "dev:inner": "run -TB tsx --env-file-if-exists=../.env ../tools/dev.mts --extra-module-path=../module-local-dev",
     "dev:debug": "run dev:inner --admin-address 127.0.0.1 --log-level silly",
-    "build": "tsc && webpack"
+    "build": "run build:typecheck && run build:esbuild",
+    "build:esbuild": "run -TB tsx ../tools/build_esbuild.mts",
+    "build:typecheck": "tsc --noEmit"
   },
   "repository": "https://github.com/bitfocus/companion",
   "keywords": [
@@ -24,7 +26,7 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "@sentry/webpack-plugin": "^5.3.0",
+    "@sentry/esbuild-plugin": "^5.3.0",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -38,9 +40,7 @@
     "@types/ws": "^8.18.1",
     "@types/yazl": "^3.3.1",
     "supertest": "^7.2.2",
-    "typescript": "~6.0.3",
-    "webpack": "5.104.1",
-    "webpack-cli": "^7.0.2"
+    "typescript": "~6.0.3"
   },
   "dependencies": {
     "@companion-app/shared": "*",
