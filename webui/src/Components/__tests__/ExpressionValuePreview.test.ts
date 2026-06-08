@@ -17,30 +17,28 @@ describe('buildContextResolutionForPreview', () => {
 				{ type: 'customVariable', nameFieldId: 'name' },
 				{ name: exprVal('myVar') }
 			)
-			expect(result).toEqual({ type: 'customVariable', name: 'myVar' })
+			expect(result).toEqual({ type: 'customVariable', nameValue: exprVal('myVar') })
 		})
 
-		it('returns null for name when the field is absent', () => {
+		it('returns undefined nameValue when the field is absent', () => {
 			const result = buildContextResolutionForPreview({ type: 'customVariable', nameFieldId: 'name' }, {})
-			expect(result).toEqual({ type: 'customVariable', name: null })
+			expect(result).toEqual({ type: 'customVariable', nameValue: undefined })
 		})
 
-		it('stringifies the raw value when field is in expression mode', () => {
-			// Expression mode: .value holds the expression string, not the evaluated result.
-			// buildContextResolutionForPreview forwards it as-is; the server handles it.
+		it('passes expression-mode values through unchanged for the server to evaluate', () => {
 			const result = buildContextResolutionForPreview(
 				{ type: 'customVariable', nameFieldId: 'name' },
 				{ name: exprExpr('$(custom:dynamicName)') }
 			)
-			expect(result).toEqual({ type: 'customVariable', name: '$(custom:dynamicName)' })
+			expect(result).toEqual({ type: 'customVariable', nameValue: exprExpr('$(custom:dynamicName)') })
 		})
 
-		it('converts a numeric raw value to a string', () => {
+		it('passes numeric raw values through unchanged', () => {
 			const result = buildContextResolutionForPreview(
 				{ type: 'customVariable', nameFieldId: 'name' },
 				{ name: exprVal(42) }
 			)
-			expect(result).toEqual({ type: 'customVariable', name: '42' })
+			expect(result).toEqual({ type: 'customVariable', nameValue: exprVal(42) })
 		})
 
 		it('respects a non-default nameFieldId', () => {
@@ -48,7 +46,7 @@ describe('buildContextResolutionForPreview', () => {
 				{ type: 'customVariable', nameFieldId: 'variableName' },
 				{ variableName: exprVal('myCustomVar'), name: exprVal('shouldBeIgnored') }
 			)
-			expect(result).toEqual({ type: 'customVariable', name: 'myCustomVar' })
+			expect(result).toEqual({ type: 'customVariable', nameValue: exprVal('myCustomVar') })
 		})
 	})
 
@@ -61,23 +59,23 @@ describe('buildContextResolutionForPreview', () => {
 					name: exprVal('counter'),
 				}
 			)
-			expect(result).toEqual({ type: 'localVariable', location: 'this', name: 'counter' })
+			expect(result).toEqual({ type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') })
 		})
 
-		it('returns null for location when the field is absent', () => {
+		it('returns undefined locationValue when the field is absent', () => {
 			const result = buildContextResolutionForPreview(
 				{ type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 				{ name: exprVal('counter') }
 			)
-			expect(result).toEqual({ type: 'localVariable', location: null, name: 'counter' })
+			expect(result).toEqual({ type: 'localVariable', locationValue: undefined, nameValue: exprVal('counter') })
 		})
 
-		it('returns null for name when the field is absent', () => {
+		it('returns undefined nameValue when the field is absent', () => {
 			const result = buildContextResolutionForPreview(
 				{ type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 				{ location: exprVal('this') }
 			)
-			expect(result).toEqual({ type: 'localVariable', location: 'this', name: null })
+			expect(result).toEqual({ type: 'localVariable', locationValue: exprVal('this'), nameValue: undefined })
 		})
 
 		it('supports a page/row/col location string', () => {
@@ -88,15 +86,15 @@ describe('buildContextResolutionForPreview', () => {
 					name: exprVal('myVar'),
 				}
 			)
-			expect(result).toEqual({ type: 'localVariable', location: '1/2/3', name: 'myVar' })
+			expect(result).toEqual({ type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('myVar') })
 		})
 
-		it('returns null for both fields when both are absent', () => {
+		it('returns undefined for both fields when both are absent', () => {
 			const result = buildContextResolutionForPreview(
 				{ type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 				{}
 			)
-			expect(result).toEqual({ type: 'localVariable', location: null, name: null })
+			expect(result).toEqual({ type: 'localVariable', locationValue: undefined, nameValue: undefined })
 		})
 
 		it('respects non-default locationFieldId and nameFieldId', () => {
@@ -109,7 +107,7 @@ describe('buildContextResolutionForPreview', () => {
 					name: exprVal('shouldBeIgnored'),
 				}
 			)
-			expect(result).toEqual({ type: 'localVariable', location: 'this', name: 'counter' })
+			expect(result).toEqual({ type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') })
 		})
 	})
 })

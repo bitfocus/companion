@@ -1,19 +1,27 @@
 import EventEmitter from 'node:events'
+import type { JsonValue } from 'type-fest'
 import z from 'zod'
 import type {
 	ExecuteExpressionResult,
 	ExpressionStreamResult,
 } from '@companion-app/shared/Expression/ExpressionResult.js'
-import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { ExpressionOrJsonValueSchema, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 const contextResolutionSchema = z
 	.discriminatedUnion('type', [
-		z.object({ type: z.literal('localVariable'), location: z.string(), name: z.string() }),
-		z.object({ type: z.literal('customVariable'), name: z.string() }),
+		z.object({
+			type: z.literal('localVariable'),
+			locationValue: ExpressionOrJsonValueSchema,
+			nameValue: ExpressionOrJsonValueSchema,
+		}),
+		z.object({ type: z.literal('customVariable'), nameValue: ExpressionOrJsonValueSchema }),
 	])
 	.optional()
 
@@ -123,66 +131,108 @@ export class PreviewExpressionStream {
 		}
 	}
 
+	#resolveFieldToString(
+		fieldValue: ExpressionOrValue<JsonValue | undefined>,
+		parser: VariablesAndExpressionParser
+	): { value: string | undefined; variableIds: ReadonlySet<string> } {
+		try {
+			const parsed = parser.parseEntityOption(fieldValue, { allowExpression: true, parseVariables: true })
+			return {
+				value: stringifyVariableValue(parsed.value) ?? undefined,
+				variableIds: parsed.referencedVariableIds,
+			}
+		} catch {
+			return { value: undefined, variableIds: new Set() }
+		}
+	}
+
 	#resolveContextOverrides(
 		contextResolution: ContextResolutionInput,
 		session: ExpressionStreamSession
-	): VariableValues | null {
-		if (contextResolution.type === 'localVariable') {
-			if (!session.controlId) return null
+	): { overrides: VariableValues | null; extraVariableIds: ReadonlySet<string> } {
+		const parser = this.#controlsController.createVariablesAndExpressionParser(null, null)
 
-			const localVariable = this.#localVariables.localVariableFor(contextResolution.location, contextResolution.name, {
-				controlId: session.controlId,
+		if (contextResolution.type === 'localVariable') {
+			const locationRes = this.#resolveFieldToString(contextResolution.locationValue, parser)
+			const nameRes = this.#resolveFieldToString(contextResolution.nameValue, parser)
+			const extraVariableIds = new Set<string>([...locationRes.variableIds, ...nameRes.variableIds])
+
+			if (!locationRes.value || !nameRes.value) return { overrides: null, extraVariableIds }
+
+			const localVariable = this.#localVariables.localVariableFor(locationRes.value, nameRes.value, {
+				controlId: session.controlId || '',
 				location: undefined,
 			})
-			if (!localVariable) return null
+			if (!localVariable) return { overrides: null, extraVariableIds }
 
 			// Store the target controlId so onVariablesChanged can trigger re-evaluation
 			session.resolvedTargetControlId = localVariable.controlId
 
-			return this.#localVariables.getLocalVariableContextFor(localVariable)
-		}
+			return { overrides: this.#localVariables.getLocalVariableContextFor(localVariable), extraVariableIds }
+		} else if (contextResolution.type === 'customVariable') {
+			const nameRes = this.#resolveFieldToString(contextResolution.nameValue, parser)
 
-		if (contextResolution.type === 'customVariable') {
-			// Use a generic parser to read the current custom variable value (preserves numeric type)
-			const parser = this.#controlsController.createVariablesAndExpressionParser(null, null)
-			const result = parser.executeExpression(`$(custom:${contextResolution.name})`, undefined)
-			return { 'this:value': result.ok ? result.value : undefined }
-		}
+			if (!nameRes.value) return { overrides: null, extraVariableIds: nameRes.variableIds }
 
-		return null
+			const customVariableId = `custom:${nameRes.value}`
+			const extraVariableIds = new Set<string>([...nameRes.variableIds, customVariableId])
+
+			// Read the current value of the custom variable (preserves numeric type)
+			const valueResult = parser.executeExpression(`$(${customVariableId})`, undefined)
+			return {
+				overrides: { 'this:value': valueResult.ok ? valueResult.value : undefined },
+				extraVariableIds,
+			}
+		} else {
+			assertNever(contextResolution)
+			return { overrides: null, extraVariableIds: new Set() }
+		}
+	}
+
+	#withContextTracking = (
+		result: ExecuteExpressionResult,
+		extraVariableIds: ReadonlySet<string>
+	): ExecuteExpressionResult => {
+		if (extraVariableIds.size === 0) return result
+		const variableIds = new Set(result.variableIds)
+		for (const id of extraVariableIds) variableIds.add(id)
+		return { ...result, variableIds }
 	}
 
 	#executeExpression = (session: ExpressionStreamSession): ExecuteExpressionResult => {
-		const overrides = session.contextResolution
-			? this.#resolveContextOverrides(session.contextResolution, session)
-			: null
+		let overrides: VariableValues | null = null
+		let extraVariableIds: ReadonlySet<string> = new Set()
+
+		if (session.contextResolution) {
+			const resolved = this.#resolveContextOverrides(session.contextResolution, session)
+			overrides = resolved.overrides
+			extraVariableIds = resolved.extraVariableIds
+		}
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, overrides)
 
 		// TODO - make reactive to control moving?
-		const result = parser.executeExpression(session.expression, session.requiredType)
-
-		// Track the custom variable so onVariablesChanged re-evaluates when it changes
-		if (session.contextResolution?.type === 'customVariable') {
-			return {
-				...result,
-				variableIds: new Set([...result.variableIds, `custom:${session.contextResolution.name}`]),
-			}
-		}
-
-		return result
+		return this.#withContextTracking(
+			parser.executeExpression(session.expression, session.requiredType),
+			extraVariableIds
+		)
 	}
 
 	#parseVariables = (session: ExpressionStreamSession): ExecuteExpressionResult => {
-		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId)
+		let overrides: VariableValues | null = null
+		let extraVariableIds: ReadonlySet<string> = new Set()
+
+		if (session.contextResolution) {
+			const resolved = this.#resolveContextOverrides(session.contextResolution, session)
+			overrides = resolved.overrides
+			extraVariableIds = resolved.extraVariableIds
+		}
+
+		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, overrides)
 
 		// TODO - make reactive to control moving?
 		const res = parser.parseVariables(session.expression)
-		return {
-			ok: true,
-			value: res.text,
-			variableIds: res.variableIds,
-		}
+		return this.#withContextTracking({ ok: true, value: res.text, variableIds: res.variableIds }, extraVariableIds)
 	}
 }
 

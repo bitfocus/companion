@@ -6,9 +6,9 @@ import { ParseExpression } from '@companion-app/shared/Expression/ExpressionPars
 import type {
 	ContextVariableResolution,
 	ExpressionableOptionsObject,
+	ExpressionOrValue,
 	SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useDebounced } from '~/Resources/util.js'
@@ -16,8 +16,12 @@ import { StaticAlert } from './Alert.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
 type ContextResolutionForPreview =
-	| { type: 'localVariable'; location: string | null; name: string | null }
-	| { type: 'customVariable'; name: string | null }
+	| {
+			type: 'localVariable'
+			locationValue: ExpressionOrValue<JsonValue | undefined> | undefined
+			nameValue: ExpressionOrValue<JsonValue | undefined> | undefined
+	  }
+	| { type: 'customVariable'; nameValue: ExpressionOrValue<JsonValue | undefined> | undefined }
 
 interface ExpressionValuePreviewProps {
 	expression: string
@@ -44,13 +48,13 @@ export function buildContextResolutionForPreview(
 	if (res.type === 'localVariable') {
 		return {
 			type: 'localVariable',
-			location: stringifyVariableValue(allRawOptions[res.locationFieldId]?.value) ?? null,
-			name: stringifyVariableValue(allRawOptions[res.nameFieldId]?.value) ?? null,
+			locationValue: allRawOptions[res.locationFieldId],
+			nameValue: allRawOptions[res.nameFieldId],
 		}
 	}
 	return {
 		type: 'customVariable',
-		name: stringifyVariableValue(allRawOptions[res.nameFieldId]?.value) ?? null,
+		nameValue: allRawOptions[res.nameFieldId],
 	}
 }
 
@@ -155,16 +159,21 @@ function ExpressionValuePreviewInner({
 	)
 }
 
-function resolveServerContextResolution(
-	ctx: ContextResolutionForPreview | undefined
-): { type: 'localVariable'; location: string; name: string } | { type: 'customVariable'; name: string } | undefined {
+function resolveServerContextResolution(ctx: ContextResolutionForPreview | undefined):
+	| {
+			type: 'localVariable'
+			locationValue: ExpressionOrValue<JsonValue | undefined>
+			nameValue: ExpressionOrValue<JsonValue | undefined>
+	  }
+	| { type: 'customVariable'; nameValue: ExpressionOrValue<JsonValue | undefined> }
+	| undefined {
 	if (!ctx) return undefined
 	if (ctx.type === 'localVariable') {
-		if (!ctx.location || !ctx.name) return undefined
-		return { type: 'localVariable', location: ctx.location, name: ctx.name }
+		if (!ctx.locationValue || !ctx.nameValue) return undefined
+		return { type: 'localVariable', locationValue: ctx.locationValue, nameValue: ctx.nameValue }
 	}
-	if (!ctx.name) return undefined
-	return { type: 'customVariable', name: ctx.name }
+	if (!ctx.nameValue) return undefined
+	return { type: 'customVariable', nameValue: ctx.nameValue }
 }
 
 /**

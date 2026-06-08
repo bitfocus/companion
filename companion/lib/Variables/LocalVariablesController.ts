@@ -42,7 +42,9 @@ export class LocalVariablesController {
 		const control = this.#controlsStore.getControl(controlId)
 		if (!control || !control.supportsEntities) return null
 
-		const variableEntity = control.entities.getAllEntities().find((ent) => ent.rawLocalVariableName === name)
+		const variableEntity = control.entities
+			.getAllEntitiesInList('local-variables')
+			.find((ent) => ent.rawLocalVariableName === name)
 		if (!variableEntity) return null
 
 		const localVariableName = variableEntity.localVariableName
@@ -98,7 +100,7 @@ export class LocalVariablesController {
 		const { control, variableEntity } = controlAndVariable
 		const result: VariableValues = { 'this:value': variableEntity.feedbackValue }
 
-		for (const entity of control.entities.getAllEntities()) {
+		for (const entity of control.entities.getAllEntitiesInList('local-variables')) {
 			const rawName = entity.rawLocalVariableName
 			if (!rawName) continue
 			result[`target:${rawName}`] = entity.feedbackValue
