@@ -132,10 +132,7 @@ export class PreviewExpressionStream {
 
 			const localVariable = this.#localVariables.localVariableFor(contextResolution.location, contextResolution.name, {
 				controlId: session.controlId,
-				surfaceId: undefined,
 				location: undefined,
-				abortDelayed: new AbortController().signal,
-				executionMode: 'sequential',
 			})
 			if (!localVariable) return null
 

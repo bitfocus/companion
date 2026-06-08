@@ -61,7 +61,7 @@ export class LocalVariablesController {
 	localVariableFor(
 		location: JsonValue | undefined,
 		name: JsonValue | undefined,
-		extras: RunActionExtras
+		extras: Pick<RunActionExtras, 'controlId' | 'location'>
 	): LocalVariable | null {
 		if (!name) return null
 

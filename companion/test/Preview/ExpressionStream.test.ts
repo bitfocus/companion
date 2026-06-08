@@ -453,8 +453,6 @@ describe('session management', () => {
 	})
 
 	it('creates distinct sessions for different contextResolution values', async () => {
-		let callsForMyVar = 0
-		let callsForOther = 0
 		const cc: ControlsController = {
 			createVariablesAndExpressionParser: vi
 				.fn()
