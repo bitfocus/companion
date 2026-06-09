@@ -16,6 +16,7 @@ import cors from 'cors'
 import Express from 'express'
 // @ts-expect-error no types for this package
 import serveZip from 'express-serve-zip'
+import onHeaders from 'on-headers'
 import { isPackaged } from '../Resources/Util.js'
 import { createRewriteMiddleware, getCustomPrefixHeader } from './middleware/rewriteRootUrl.js'
 
@@ -53,6 +54,33 @@ function createServeStatic(
 
 		// Failed to find a folder to use
 		throw new Error('Failed to find static files to serve over http')
+	}
+}
+
+/**
+ * Create a middleware that fixes up the Cache-Control header of static responses just before
+ * headers are sent, based on the final Content-Type/path:
+ * - HTML must always be revalidated (cheap 304s via the existing ETags). Safari and iOS
+ *   home-screen web apps otherwise cache index.html beyond its 1 hour maxAge, leaving it
+ *   referencing content-hashed chunks deleted by a Companion upgrade (broken/blank page
+ *   until the cache is manually cleared).
+ * - Content-hashed build assets (vite output under assets/) never change, so are safe to
+ *   cache forever.
+ * - Everything else keeps the maxAge computed by the static server.
+ */
+function createCacheControlMiddleware(): Express.RequestHandler {
+	return (req, res, next) => {
+		onHeaders(res, () => {
+			const contentType = String(res.getHeader('content-type') || '').toLowerCase()
+			if (contentType.includes('text/html')) {
+				// no-cache (not no-store) keeps 304 revalidation working
+				res.setHeader('Cache-Control', 'no-cache')
+			} else if (req.path.startsWith('/assets/')) {
+				// Vite content-hashed filenames - safe to cache forever
+				res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+			}
+		})
+		next()
 	}
 }
 
@@ -120,18 +148,21 @@ export class UIExpress {
 		// Create rewrite middleware to replace ROOT_URL_HERE in HTML/CSS/JS files
 		const rewriteMiddleware = createRewriteMiddleware()
 
+		// Create middleware to fix up the Cache-Control header of static responses
+		const cacheControlMiddleware = createCacheControlMiddleware()
+
 		// Serve user-guide folder as static and public
-		this.app.use('/user-guide', compression(), rewriteMiddleware, docsServer)
+		this.app.use('/user-guide', compression(), cacheControlMiddleware, rewriteMiddleware, docsServer)
 		this.app.get('/user-guide', (req, res) => {
 			// Redirect to add trailing slash
 			res.redirect(301, path.join(getCustomPrefixHeader(req), '/user-guide/'))
 		})
 
 		// Serve the webui directory
-		this.app.use(compression(), rewriteMiddleware, webuiServer)
+		this.app.use(compression(), cacheControlMiddleware, rewriteMiddleware, webuiServer)
 
 		// Handle all unknown urls as accessing index.html
-		this.app.get('*all', compression(), rewriteMiddleware, async (req, res, next) => {
+		this.app.get('*all', compression(), cacheControlMiddleware, rewriteMiddleware, async (req, res, next) => {
 			if (req.url.startsWith('/user-guide/')) {
 				req.url = '/404.html'
 				res.status(404)
