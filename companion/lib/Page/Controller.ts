@@ -78,9 +78,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			this.setControlIdAt(location, null)
 		})
 
-		// Check if we need to create a default page
-		const createdDefault = this.#store._ensureDefaultPageExists()
-		if (createdDefault) {
+		// Check if we need to populate a default page
+		if (this.#store.createdDefaultPage) {
 			setImmediate(() => {
 				this.createPageDefaultNavButtons(1)
 			})
@@ -411,14 +410,14 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		const controlChanges: PageModelChangesItem['controls'] = []
 
-		// Clear cache for old controls and track changes
+		// Report each populated location as cleared
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			if (!rowObj) continue
-			for (const [col, controlId] of Object.entries(rowObj)) {
+			for (const col of Object.keys(rowObj)) {
 				controlChanges.push({
 					row: Number(row),
 					column: Number(col),
-					controlId,
+					controlId: null,
 				})
 			}
 		}
