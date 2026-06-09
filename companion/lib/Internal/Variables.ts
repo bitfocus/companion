@@ -217,9 +217,9 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						id: 'value',
 						default: '',
 						description:
-							'Supports $(this:value) for the current value, and $(target:name) for local variables at the target location.',
+							'Supports $(this:current) for the current value, and $(target:name) for local variables at the target location.',
 						expressionDescription:
-							'Supports $(this:value) for the current value, and $(target:name) for local variables at the target location. The expression result is written to the variable.',
+							'Supports $(this:current) for the current value, and $(target:name) for local variables at the target location. The expression result is written to the variable.',
 						allowInvalidValues: true,
 						disableSanitisation: true,
 						deferParsing: true,

@@ -356,7 +356,7 @@ describe('ExpressionValuePreview — subscription states (data)', () => {
 		subscriptionDataRef.current = { ok: true, value: 'ctx result' }
 		render(
 			<ExpressionValuePreview
-				expression="$(this:value)"
+				expression="$(this:current)"
 				controlId={null}
 				fieldDefinition={textField()}
 				contextResolution={{ type: 'customVariable', nameValue: exprVal('myVar') }}
@@ -376,7 +376,7 @@ describe('ExpressionValuePreview — subscription states (data)', () => {
 
 		render(
 			<ExpressionValuePreview
-				expression="$(this:value)"
+				expression="$(this:current)"
 				controlId={null}
 				fieldDefinition={textField()}
 				contextResolution={{ type: 'customVariable', nameValue: undefined }}

@@ -57,9 +57,9 @@ export class InternalCustomVariables
 						label: 'Value',
 						id: 'value',
 						default: '',
-						description: 'Supports $(this:value) for the current value of this variable.',
+						description: 'Supports $(this:current) for the current value of this variable.',
 						expressionDescription:
-							'Supports $(this:value) for the current value of this variable. The expression result is written to the variable.',
+							'Supports $(this:current) for the current value of this variable. The expression result is written to the variable.',
 						allowInvalidValues: true,
 						disableSanitisation: true,
 						deferParsing: true,
@@ -110,7 +110,7 @@ export class InternalCustomVariables
 				const variableName = stringifyVariableValue(action.options.name)
 				if (variableName) {
 					const currentValue = this.#variableController.custom.getValue(variableName)
-					const childParser = parser.createChildParser({ 'this:value': currentValue })
+					const childParser = parser.createChildParser({ 'this:current': currentValue })
 					const rawValue = action.rawEntity.rawOptions['value']
 					const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
 

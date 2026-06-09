@@ -150,5 +150,5 @@ export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 
 /** Variable picker entry injected for fields that use deferred parsing (e.g. set-value actions). */
 export const DeferredParsingContextVariables: DropdownChoiceInt[] = [
-	{ value: 'this:value', label: 'Current value of this variable' },
+	{ value: 'this:current', label: 'Current value of this variable' },
 ]

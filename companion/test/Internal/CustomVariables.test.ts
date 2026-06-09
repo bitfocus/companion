@@ -53,7 +53,7 @@ function makeVariablesController(currentValue: unknown, exists = true) {
 // ---- custom_variable_set_value ----------------------------------------------
 
 describe('custom_variable_set_value deferred parse', () => {
-	it('sets variable to expression result using $(this:value)', () => {
+	it('sets variable to expression result using $(this:current)', () => {
 		const variablesController = makeVariablesController(3)
 
 		const module = new InternalCustomVariables(variablesController as any)
@@ -61,11 +61,11 @@ describe('custom_variable_set_value deferred parse', () => {
 
 		const action = makeAction(
 			'custom_variable_set_value',
-			{ name: 'myVar', create: false, value: '$(this:value) * 2' },
+			{ name: 'myVar', create: false, value: '$(this:current) * 2' },
 			{
 				name: exprVal('myVar'),
 				create: exprVal(false),
-				value: exprExpr('$(this:value) * 2'),
+				value: exprExpr('$(this:current) * 2'),
 			}
 		)
 
@@ -74,7 +74,7 @@ describe('custom_variable_set_value deferred parse', () => {
 		expect(variablesController.custom.setValue).toHaveBeenCalledWith('myVar', 6)
 	})
 
-	it('sets variable using $(this:value) in text (non-expression) mode', () => {
+	it('sets variable using $(this:current) in text (non-expression) mode', () => {
 		const variablesController = makeVariablesController('hello')
 
 		const module = new InternalCustomVariables(variablesController as any)
@@ -82,11 +82,11 @@ describe('custom_variable_set_value deferred parse', () => {
 
 		const action = makeAction(
 			'custom_variable_set_value',
-			{ name: 'myVar', create: false, value: 'prefix $(this:value) suffix' },
+			{ name: 'myVar', create: false, value: 'prefix $(this:current) suffix' },
 			{
 				name: exprVal('myVar'),
 				create: exprVal(false),
-				value: exprVal('prefix $(this:value) suffix'),
+				value: exprVal('prefix $(this:current) suffix'),
 			}
 		)
 
@@ -103,11 +103,11 @@ describe('custom_variable_set_value deferred parse', () => {
 
 		const action = makeAction(
 			'custom_variable_set_value',
-			{ name: 'newVar', create: true, value: '$(this:value) + 10' },
+			{ name: 'newVar', create: true, value: '$(this:current) + 10' },
 			{
 				name: exprVal('newVar'),
 				create: exprVal(true),
-				value: exprExpr('$(this:value) + 10'),
+				value: exprExpr('$(this:current) + 10'),
 			}
 		)
 
@@ -138,7 +138,7 @@ describe('custom_variable_set_value deferred parse', () => {
 		expect(variablesController.custom.createVariable).not.toHaveBeenCalled()
 	})
 
-	it('uses literal value when not using $(this:value)', () => {
+	it('uses literal value when not using $(this:current)', () => {
 		const variablesController = makeVariablesController('old')
 
 		const module = new InternalCustomVariables(variablesController as any)

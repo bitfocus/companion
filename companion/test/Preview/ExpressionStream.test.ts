@@ -22,7 +22,7 @@ function createParser(variables: VariableValueData = {}): VariablesAndExpression
 /**
  * Build a mock ControlsController whose `createVariablesAndExpressionParser` returns
  * a real parser (with a fresh variable snapshot per call), applying any overrides via
- * `createChildParser` so that injected context variables like `this:value` resolve correctly.
+ * `createChildParser` so that injected context variables like `this:current` resolve correctly.
  */
 function makeControlsControllerMock(getVariables: () => VariableValueData): ControlsController {
 	return {
@@ -55,7 +55,7 @@ function createStream(controlsController: ControlsController, localVariables: Lo
 // ── custom variable context ──────────────────────────────────────────────────
 
 describe('customVariable context resolution', () => {
-	it('injects $(this:value) from the current custom variable value', async () => {
+	it('injects $(this:current) from the current custom variable value', async () => {
 		const variables = { custom: { myVar: 10 } }
 		const cc = makeControlsControllerMock(() => variables)
 		const lv = makeLocalVariablesMock(null, () => null)
@@ -63,7 +63,7 @@ describe('customVariable context resolution', () => {
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value) + 1',
+				expression: '$(this:current) + 1',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
@@ -74,14 +74,14 @@ describe('customVariable context resolution', () => {
 		await sub.cleanup()
 	})
 
-	it('returns undefined for this:value when custom variable does not exist', async () => {
+	it('returns undefined for this:current when custom variable does not exist', async () => {
 		const cc = makeControlsControllerMock(() => ({})) // no custom:myVar
 		const lv = makeLocalVariablesMock(null, () => null)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value)',
+				expression: '$(this:current)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
@@ -102,7 +102,7 @@ describe('customVariable context resolution', () => {
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value) * 2',
+				expression: '$(this:current) * 2',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
@@ -127,7 +127,7 @@ describe('customVariable context resolution', () => {
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value)',
+				expression: '$(this:current)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
@@ -149,15 +149,15 @@ describe('customVariable context resolution', () => {
 // ── local variable context ───────────────────────────────────────────────────
 
 describe('localVariable context resolution', () => {
-	it('injects this:value and target:* from the local variable context', async () => {
-		const context = { 'this:value': 5, 'target:counter': 5 }
+	it('injects this:current and target:* from the local variable context', async () => {
+		const context = { 'this:current': 5, 'target:counter': 5 }
 		const cc = makeControlsControllerMock(() => ({}))
 		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value) + $(target:counter)',
+				expression: '$(this:current) + $(target:counter)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
@@ -169,14 +169,14 @@ describe('localVariable context resolution', () => {
 	})
 
 	it('re-evaluates when the target control changes (isTargetControlChange)', async () => {
-		let context: VariableValues = { 'this:value': 3, 'target:counter': 3 }
+		let context: VariableValues = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
 		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value) + 1',
+				expression: '$(this:current) + 1',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
@@ -186,7 +186,7 @@ describe('localVariable context resolution', () => {
 		await sub.expectValue({ ok: true, value: 4 }) // 3 + 1
 
 		// Update context (simulates local variable changing on ctrl1)
-		context = { 'this:value': 9, 'target:counter': 9 }
+		context = { 'this:current': 9, 'target:counter': 9 }
 		// The resolved target controlId is 'ctrl1' (set during first resolution)
 		stream.onVariablesChanged(new Set(['local:counter']), 'ctrl1')
 
@@ -195,14 +195,14 @@ describe('localVariable context resolution', () => {
 	})
 
 	it('does NOT re-evaluate when a different control changes', async () => {
-		const context = { 'this:value': 3, 'target:counter': 3 }
+		const context = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
 		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value) + 1',
+				expression: '$(this:current) + 1',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
@@ -235,13 +235,13 @@ describe('localVariable context resolution', () => {
 				}),
 		} as unknown as ControlsController
 
-		const context = { 'this:value': 7, 'target:counter': 7 }
+		const context = { 'this:current': 7, 'target:counter': 7 }
 		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value)',
+				expression: '$(this:current)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: {
@@ -267,14 +267,14 @@ describe('localVariable context resolution', () => {
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value)',
+				expression: '$(this:current)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('missing') },
 			})
 		)
 
-		// Should still return a result, just without context (this:value unresolved)
+		// Should still return a result, just without context (this:current unresolved)
 		const result = await sub.next()
 		expect(result.ok).toBe(true)
 		await sub.cleanup()
@@ -507,7 +507,7 @@ describe('session management', () => {
 
 		const sub1 = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value)',
+				expression: '$(this:current)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
@@ -515,7 +515,7 @@ describe('session management', () => {
 		)
 		const sub2 = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(this:value)',
+				expression: '$(this:current)',
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('other') },
@@ -525,7 +525,7 @@ describe('session management', () => {
 		const r1 = await sub1.next()
 		const r2 = await sub2.next()
 
-		// Different context resolutions → different this:value injections → different results
+		// Different context resolutions → different this:current injections → different results
 		expect(r1).toEqual({ ok: true, value: 10 })
 		expect(r2).toEqual({ ok: true, value: 20 })
 

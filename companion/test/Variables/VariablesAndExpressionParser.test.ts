@@ -1292,24 +1292,24 @@ describe('VariablesAndExpressionParser', () => {
 			expect(parser.parseVariables('$(test:var1)').text).toBe('value1')
 		})
 
-		// context-variable injection (this:value / target:*) used by deferred-parse actions
-		it('injects $(this:value) via parseVariables', () => {
+		// context-variable injection (this:current / target:*) used by deferred-parse actions
+		it('injects $(this:current) via parseVariables', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
-			const child = parser.createChildParser({ 'this:value': '42' })
-			expect(child.parseVariables('$(this:value)').text).toBe('42')
+			const child = parser.createChildParser({ 'this:current': '42' })
+			expect(child.parseVariables('$(this:current)').text).toBe('42')
 		})
 
-		it('injects $(this:value) in an expression', () => {
+		it('injects $(this:current) in an expression', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
-			const child = parser.createChildParser({ 'this:value': 10 })
-			const result = child.executeExpression('$(this:value) + 1', undefined)
+			const child = parser.createChildParser({ 'this:current': 10 })
+			const result = child.executeExpression('$(this:current) + 1', undefined)
 			expect(result.ok).toBe(true)
 			if (result.ok) expect(result.value).toBe(11)
 		})
 
 		it('injects $(target:foo) via parseVariables', () => {
 			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
-			const child = parser.createChildParser({ 'this:value': 0, 'target:counter': 5 })
+			const child = parser.createChildParser({ 'this:current': 0, 'target:counter': 5 })
 			expect(child.parseVariables('count=$(target:counter)').text).toBe('count=5')
 		})
 	})

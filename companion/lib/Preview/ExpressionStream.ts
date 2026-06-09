@@ -181,7 +181,7 @@ export class PreviewExpressionStream {
 			// Read the current value of the custom variable (preserves numeric type)
 			const valueResult = parser.executeExpression(`$(${customVariableId})`, undefined)
 			return {
-				overrides: { 'this:value': valueResult.ok ? valueResult.value : undefined },
+				overrides: { 'this:current': valueResult.ok ? valueResult.value : undefined },
 				extraVariableIds,
 			}
 		} else {

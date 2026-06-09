@@ -110,7 +110,7 @@ export interface CompanionInputFieldBaseExtended {
 
 	/**
 	 * Describes which sibling option fields identify the target variable for a deferred-parsing
-	 * field. Drives both the variable picker (showing $(this:value)) and the live expression preview.
+	 * field. Drives both the variable picker (showing $(this:current)) and the live expression preview.
 	 * Only valid alongside deferParsing: true.
 	 */
 	contextVariableResolution?: ContextVariableResolution

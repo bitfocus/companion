@@ -90,7 +90,7 @@ export class LocalVariablesController {
 
 	/**
 	 * Build a variable override context for the given local variable.
-	 * Returns `this:value` (current value) and `target:<name>` for every local variable
+	 * Returns `this:current` (current value) and `target:<name>` for every local variable
 	 * on the same control, suitable for passing to `VariablesAndExpressionParser.createChildParser`.
 	 */
 	getLocalVariableContextFor(localVariable: LocalVariable): VariableValues | null {
@@ -98,7 +98,7 @@ export class LocalVariablesController {
 		if (!controlAndVariable) return null
 
 		const { control, variableEntity } = controlAndVariable
-		const result: VariableValues = { 'this:value': variableEntity.feedbackValue }
+		const result: VariableValues = { 'this:current': variableEntity.feedbackValue }
 
 		for (const entity of control.entities.getAllEntitiesInList('local-variables')) {
 			const rawName = entity.rawLocalVariableName

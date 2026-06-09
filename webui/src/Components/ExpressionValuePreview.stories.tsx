@@ -103,7 +103,7 @@ export const WithContextResolution: StoryObj = {
 				responds. See Vitest tests for full coverage of subscription states.
 			</p>
 			<ExpressionValuePreview
-				expression="$(this:value) * 2"
+				expression="$(this:current) * 2"
 				controlId={null}
 				fieldDefinition={textField}
 				contextResolution={{ type: 'customVariable', nameValue: exprVal('myCounter') }}

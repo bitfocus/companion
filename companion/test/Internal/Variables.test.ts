@@ -54,9 +54,9 @@ describe('local_variable_set_value deferred parse', () => {
 		} as unknown as LocalVariablesController
 	}
 
-	it('sets variable to expression result using $(this:value)', () => {
+	it('sets variable to expression result using $(this:current)', () => {
 		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'counter' }
-		const context = { 'this:value': 5, 'target:counter': 5 }
+		const context = { 'this:current': 5, 'target:counter': 5 }
 		const localVariables = makeLocalVariablesController(localVar, context)
 
 		const module = new InternalVariables(localVariables)
@@ -64,11 +64,11 @@ describe('local_variable_set_value deferred parse', () => {
 
 		const action = makeAction(
 			'local_variable_set_value',
-			{ location: 'this', name: 'counter', value: '$(this:value) + 1' },
+			{ location: 'this', name: 'counter', value: '$(this:current) + 1' },
 			{
 				location: exprVal('this'),
 				name: exprVal('counter'),
-				value: exprExpr('$(this:value) + 1'),
+				value: exprExpr('$(this:current) + 1'),
 			}
 		)
 
@@ -79,7 +79,7 @@ describe('local_variable_set_value deferred parse', () => {
 
 	it('sets variable using $(target:foo) in text (non-expression) mode', () => {
 		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'msg' }
-		const context = { 'this:value': '', 'target:greeting': 'hello' }
+		const context = { 'this:current': '', 'target:greeting': 'hello' }
 		const localVariables = makeLocalVariablesController(localVar, context)
 
 		const module = new InternalVariables(localVariables)
