@@ -216,10 +216,14 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Value',
 						id: 'value',
 						default: '',
-						description: 'The raw value will be written to the variable',
-						expressionDescription: 'The expression will be executed with the result written to the variable',
+						description:
+							'Supports $(this:current) for the current value, and $(target:name) for local variables at the target location.',
+						expressionDescription:
+							'Supports $(this:current) for the current value, and $(target:name) for local variables at the target location. The expression result is written to the variable.',
 						allowInvalidValues: true,
 						disableSanitisation: true,
+						deferParsing: true,
+						contextVariableResolution: { type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 					},
 				],
 
@@ -279,14 +283,23 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
+	executeAction(
+		action: ActionForInternalExecution,
+		extras: RunActionExtras,
+		parser: VariablesAndExpressionParser
+	): InternalActionResult {
 		switch (action.definitionId) {
 			case 'local_variable_set_value': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
 				if (!localVariable) break
 
-				this.#localVariables.setLocalVariable(localVariable, action.options.value)
+				const context = this.#localVariables.getLocalVariableContextFor(localVariable) ?? {}
+				const childParser = parser.createChildParser(context)
+				const rawValue = action.rawEntity.rawOptions['value']
+				const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+
+				this.#localVariables.setLocalVariable(localVariable, value)
 
 				break
 			}

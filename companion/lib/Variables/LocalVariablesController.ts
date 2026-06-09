@@ -10,7 +10,7 @@
  */
 
 import type { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from '@companion-module/host'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { ControlWithEntities } from '../Controls/IControlFragments.js'
@@ -42,7 +42,9 @@ export class LocalVariablesController {
 		const control = this.#controlsStore.getControl(controlId)
 		if (!control || !control.supportsEntities) return null
 
-		const variableEntity = control.entities.getAllEntities().find((ent) => ent.rawLocalVariableName === name)
+		const variableEntity = control.entities
+			.getAllEntitiesInList('local-variables')
+			.find((ent) => ent.rawLocalVariableName === name)
 		if (!variableEntity) return null
 
 		const localVariableName = variableEntity.localVariableName
@@ -61,7 +63,7 @@ export class LocalVariablesController {
 	localVariableFor(
 		location: JsonValue | undefined,
 		name: JsonValue | undefined,
-		extras: RunActionExtras
+		extras: Pick<RunActionExtras, 'controlId' | 'location'>
 	): LocalVariable | null {
 		if (!name) return null
 
@@ -84,6 +86,27 @@ export class LocalVariablesController {
 		if (!controlId) return null
 
 		return { controlId, name }
+	}
+
+	/**
+	 * Build a variable override context for the given local variable.
+	 * Returns `this:current` (current value) and `target:<name>` for every local variable
+	 * on the same control, suitable for passing to `VariablesAndExpressionParser.createChildParser`.
+	 */
+	getLocalVariableContextFor(localVariable: LocalVariable): VariableValues | null {
+		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		if (!controlAndVariable) return null
+
+		const { control, variableEntity } = controlAndVariable
+		const result: VariableValues = { 'this:current': variableEntity.feedbackValue }
+
+		for (const entity of control.entities.getAllEntitiesInList('local-variables')) {
+			const rawName = entity.rawLocalVariableName
+			if (!rawName) continue
+			result[`target:${rawName}`] = entity.feedbackValue
+		}
+
+		return result
 	}
 
 	/**

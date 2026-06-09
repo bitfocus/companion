@@ -100,7 +100,25 @@ export interface CompanionInputFieldBaseExtended {
 	 * If false, the default value will be used instead.
 	 */
 	allowInvalidValues?: boolean
+
+	/**
+	 * If true, this field is skipped during the standard parseEntityOptions pass.
+	 * The action handler must parse the raw value itself via action.rawEntity.rawOptions using an enhanced parser.
+	 * Only valid for internal actions that need runtime context (e.g. current variable value) before parsing.
+	 */
+	deferParsing?: boolean
+
+	/**
+	 * Describes which sibling option fields identify the target variable for a deferred-parsing
+	 * field. Drives both the variable picker (showing $(this:current)) and the live expression preview.
+	 * Only valid alongside deferParsing: true.
+	 */
+	contextVariableResolution?: ContextVariableResolution
 }
+
+export type ContextVariableResolution =
+	| { type: 'localVariable'; locationFieldId: string; nameFieldId: string }
+	| { type: 'customVariable'; nameFieldId: string }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
 	type: 'internal:time'

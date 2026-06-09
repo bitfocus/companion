@@ -3,17 +3,32 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionStreamResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type {
+	ContextVariableResolution,
+	ExpressionableOptionsObject,
+	ExpressionOrValue,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useDebounced } from '~/Resources/util.js'
 import { StaticAlert } from './Alert.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
+type ContextResolutionForPreview =
+	| {
+			type: 'localVariable'
+			locationValue: ExpressionOrValue<JsonValue | undefined> | undefined
+			nameValue: ExpressionOrValue<JsonValue | undefined> | undefined
+	  }
+	| { type: 'customVariable'; nameValue: ExpressionOrValue<JsonValue | undefined> | undefined }
+
 interface ExpressionValuePreviewProps {
 	expression: string
 	controlId: string | null
 	fieldDefinition: SomeCompanionInputField
+	contextResolution?: ContextResolutionForPreview
 }
 
 function isExpressionParseable(value: string): boolean {
@@ -25,10 +40,30 @@ function isExpressionParseable(value: string): boolean {
 	}
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
+export function buildContextResolutionForPreview(
+	res: ContextVariableResolution | undefined,
+	allRawOptions: ExpressionableOptionsObject | undefined
+): ContextResolutionForPreview | undefined {
+	if (!res || !allRawOptions) return undefined
+	if (res.type === 'localVariable') {
+		return {
+			type: 'localVariable',
+			locationValue: allRawOptions[res.locationFieldId],
+			nameValue: allRawOptions[res.nameFieldId],
+		}
+	}
+	return {
+		type: 'customVariable',
+		nameValue: allRawOptions[res.nameFieldId],
+	}
+}
+
 export function ExpressionValuePreview({
 	expression,
 	controlId,
 	fieldDefinition,
+	contextResolution,
 }: ExpressionValuePreviewProps): React.JSX.Element | null {
 	const debouncedExpression = useDebounced(expression, 300)
 	const isParseable = useMemo(() => isExpressionParseable(debouncedExpression), [debouncedExpression])
@@ -54,17 +89,50 @@ export function ExpressionValuePreview({
 			expression={debouncedExpression}
 			controlId={controlId}
 			fieldDefinition={fieldDefinition}
+			contextResolution={contextResolution}
 		/>
 	)
 }
 
-function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }: ExpressionValuePreviewProps) {
+interface ExpressionPreviewResultProps {
+	data: ExpressionStreamResult
+	fieldDefinition: SomeCompanionInputField
+}
+
+export function ExpressionPreviewResult({ data, fieldDefinition }: ExpressionPreviewResultProps): React.JSX.Element {
+	if (!data.ok) {
+		return (
+			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
+				Error: {data.error}
+			</StaticAlert>
+		)
+	}
+
+	const validationResult = validateExpressionResult(fieldDefinition, data.value)
+
+	return (
+		<div className="mt-1">
+			<VariableValueDisplayPopover value={data.value} showCopy={false} invalidReason={validationResult} />
+		</div>
+	)
+}
+
+function ExpressionValuePreviewInner({
+	expression,
+	controlId,
+	fieldDefinition,
+	contextResolution,
+}: ExpressionValuePreviewProps) {
+	// Resolve the context resolution to a form the server accepts (non-null values only)
+	const serverContextResolution = resolveServerContextResolution(contextResolution)
+
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
 				controlId: controlId,
 				expression: expression,
 				isVariableString: false,
+				contextResolution: serverContextResolution,
 			},
 			{}
 		)
@@ -98,21 +166,24 @@ function ExpressionValuePreviewInner({ expression, controlId, fieldDefinition }:
 		)
 	}
 
-	if (!displayData.ok) {
-		return (
-			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
-				Error: {displayData.error}
-			</StaticAlert>
-		)
+	return <ExpressionPreviewResult data={displayData as ExpressionStreamResult} fieldDefinition={fieldDefinition} />
+}
+
+function resolveServerContextResolution(ctx: ContextResolutionForPreview | undefined):
+	| {
+			type: 'localVariable'
+			locationValue: ExpressionOrValue<JsonValue | undefined>
+			nameValue: ExpressionOrValue<JsonValue | undefined>
+	  }
+	| { type: 'customVariable'; nameValue: ExpressionOrValue<JsonValue | undefined> }
+	| undefined {
+	if (!ctx) return undefined
+	if (ctx.type === 'localVariable') {
+		if (!ctx.locationValue || !ctx.nameValue) return undefined
+		return { type: 'localVariable', locationValue: ctx.locationValue, nameValue: ctx.nameValue }
 	}
-
-	const validationResult = validateExpressionResult(fieldDefinition, displayData.value)
-
-	return (
-		<div className="mt-1">
-			<VariableValueDisplayPopover value={displayData.value} showCopy={false} invalidReason={validationResult} />
-		</div>
-	)
+	if (!ctx.nameValue) return undefined
+	return { type: 'customVariable', nameValue: ctx.nameValue }
 }
 
 /**

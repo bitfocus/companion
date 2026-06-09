@@ -15,7 +15,7 @@ import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import type { InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
-import type { LocalVariablesStore } from './LocalVariablesStore.js'
+import { DeferredParsingContextVariables, type LocalVariablesStore } from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 
 export interface OptionsInputControlProps {
@@ -49,21 +49,24 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 
 	switch (option.type) {
 		case 'textinput': {
-			const localVariables = features?.local
-				? localVariablesStore?.getOptions(
-						entityType,
-						option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-						isLocatedInGrid
-					)
-				: undefined
+			const contextVars = option.contextVariableResolution ? DeferredParsingContextVariables : []
+			const baseLocalVariables =
+				features?.local || option.deferParsing
+					? (localVariablesStore?.getOptions(
+							entityType,
+							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+							isLocatedInGrid
+						) ?? [])
+					: []
+			const allLocalVariables = [...baseLocalVariables, ...contextVars]
 
 			return (
 				<TextInputField
 					id={inputId}
 					value={value as any}
 					placeholder={option.placeholder}
-					useVariables={features?.variables ?? false}
-					localVariables={localVariables}
+					useVariables={(features?.variables ?? false) || !!option.deferParsing}
+					localVariables={allLocalVariables.length > 0 ? allLocalVariables : undefined}
 					disabled={readonly}
 					setValue={setValue}
 					checkValid={checkValid}
