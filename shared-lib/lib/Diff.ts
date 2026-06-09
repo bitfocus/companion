@@ -23,8 +23,11 @@ export function diffObjects<T>(
 			diff.added[id] = newObject
 			isEmpty = false
 		} else {
-			diff.changed[id] = jsonPatch.compare(oldObject, newObject)
-			isEmpty = false
+			const patch = jsonPatch.compare(oldObject, newObject)
+			if (patch.length > 0) {
+				diff.changed[id] = patch
+				isEmpty = false
+			}
 		}
 	}
 
