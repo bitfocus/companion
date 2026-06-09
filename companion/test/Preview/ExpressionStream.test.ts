@@ -235,11 +235,13 @@ describe('localVariable context resolution', () => {
 		await sub.cleanup()
 	})
 
-	it('re-resolves when the target local variable is created after subscription', async () => {
+	it('re-resolves when a control appears at the target location after subscription', async () => {
 		// Regression: a localVariable context that does not resolve at subscription time never
 		// stored a resolvedTargetControlId, so onVariablesChanged could never re-trigger it and
 		// the preview stayed stale forever.
-		let localVariable: { controlId: string; name: string } | null = null // not created yet
+		// Note: localVariableFor returns null only when the location maps to no control — a missing
+		// variable on an existing control still resolves (and is covered by isTargetControlChange).
+		let localVariable: { controlId: string; name: string } | null = null // no control at the location yet
 		let context: VariableValues | null = null
 		const cc = makeControlsControllerMock(() => ({}))
 		const lv = {
@@ -257,23 +259,24 @@ describe('localVariable context resolution', () => {
 			})
 		)
 
-		// Variable does not exist yet — this:current is unresolved
+		// No control at the location yet — this:current is unresolved
 		await sub.expectValue({ ok: true, value: undefined })
 
-		// The variable is now created on ctrl-target (a local_variables_changed event arrives)
+		// A control is now created at the target location (a controlIdsMoved event arrives)
 		localVariable = { controlId: 'ctrl-target', name: 'counter' }
 		context = { 'this:current': 5, 'target:counter': 5 }
-		stream.onVariablesChanged(new Set(['counter']), 'ctrl-target')
+		stream.onControlIdsLocationChanged(['ctrl-target'])
 
 		// Resolution is retried and the expression re-evaluates with the freshly resolved context
 		await sub.expectValue({ ok: true, value: 5 })
 		await sub.cleanup()
 	})
 
-	it('re-resolves against a new control after the target is deleted and recreated elsewhere', async () => {
+	it('re-resolves against a new control after the target control is deleted and recreated', async () => {
 		// Regression: resolvedTargetControlId was never cleared when resolution later failed, so a
-		// deleted target stayed pinned to its old control — a recreation on a different control
-		// would be ignored and the preview would stay stale.
+		// deleted target stayed pinned to its old control — a replacement control appearing at the
+		// location would be ignored and the preview would stay stale.
+		// (localVariableFor returning null models the control at the location being removed.)
 		let localVariable: { controlId: string; name: string } | null = { controlId: 'ctrl-a', name: 'counter' }
 		let context: VariableValues | null = { 'this:current': 1, 'target:counter': 1 }
 		const cc = makeControlsControllerMock(() => ({}))
@@ -294,17 +297,17 @@ describe('localVariable context resolution', () => {
 
 		await sub.expectValue({ ok: true, value: 1 }) // resolved against ctrl-a
 
-		// Target deleted — resolution now fails, which must clear the stored target controlId
+		// Target control deleted — resolution now fails, which must clear the stored target controlId
 		localVariable = null
 		context = null
-		stream.onVariablesChanged(new Set(['counter']), 'ctrl-a')
+		stream.onControlIdsLocationChanged(['ctrl-a'])
 		await sub.expectValue({ ok: true, value: undefined })
 
-		// Recreated on a DIFFERENT control. Without clearing resolvedTargetControlId, the change
-		// from ctrl-b would be ignored (the target stayed pinned to ctrl-a) and stay stale.
+		// A DIFFERENT control appears at the location. Without clearing resolvedTargetControlId,
+		// the session would stay pinned to ctrl-a and never pick up ctrl-b.
 		localVariable = { controlId: 'ctrl-b', name: 'counter' }
 		context = { 'this:current': 9, 'target:counter': 9 }
-		stream.onVariablesChanged(new Set(['counter']), 'ctrl-b')
+		stream.onControlIdsLocationChanged(['ctrl-b'])
 		await sub.expectValue({ ok: true, value: 9 })
 
 		await sub.cleanup()
@@ -345,6 +348,131 @@ describe('localVariable context resolution', () => {
 
 		// locationValue resolved to '1/2/3' — localVariableFor received the correct location
 		expect(lv.localVariableFor).toHaveBeenCalledWith('1/2/3', 'counter', expect.anything())
+
+		await sub.cleanup()
+	})
+
+	it('does not retry resolution on other-control changes when a context field is unresolved', async () => {
+		// nameValue resolves to '' (field resolution failure). The field inputs are tracked in
+		// variableIds, so unlike the no-control-at-location case there is no need to retry on
+		// every control's local-variable changes.
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock(null, () => null)
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('') },
+			})
+		)
+
+		await sub.next() // consume initial
+
+		// Field resolution failed before the variable lookup
+		expect(lv.localVariableFor).not.toHaveBeenCalled()
+
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
+		const callsBefore = parserFactory.mock.calls.length
+
+		// A local-variable change on an unrelated control must not trigger a resolution retry
+		stream.onVariablesChanged(new Set(['local:whatever']), 'other-ctrl')
+		expect(parserFactory.mock.calls.length).toBe(callsBefore)
+
+		await sub.cleanup()
+	})
+
+	it('retries resolution on grid changes without emitting a duplicate when it fails again', async () => {
+		let localVariable: { controlId: string; name: string } | null = null // no control at the location yet
+		let context: VariableValues | null = null
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = {
+			localVariableFor: vi.fn().mockImplementation(() => localVariable),
+			getLocalVariableContextFor: vi.fn().mockImplementation(() => context),
+		} as unknown as LocalVariablesController
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: undefined })
+
+		const lvSpy = lv.localVariableFor as ReturnType<typeof vi.fn>
+		const callsBefore = lvSpy.mock.calls.length
+
+		// A grid change elsewhere triggers a resolution retry (the session is unresolved), which
+		// fails again with an identical result — re-evaluated, but no duplicate pushed to the client
+		stream.onControlIdsLocationChanged(['some-other-ctrl'])
+		expect(lvSpy.mock.calls.length).toBeGreaterThan(callsBefore)
+
+		// A control now exists at the target location — the NEXT value the client receives is the
+		// resolved one, proving the failed retry above did not emit a duplicate `undefined`
+		localVariable = { controlId: 'ctrl-target', name: 'counter' }
+		context = { 'this:current': 5, 'target:counter': 5 }
+		stream.onControlIdsLocationChanged(['ctrl-target'])
+		await sub.expectValue({ ok: true, value: 5 })
+
+		await sub.cleanup()
+	})
+
+	it('does not retry resolution on local-variable changes from other controls while unresolved', async () => {
+		// Grid changes (onControlIdsLocationChanged) are the retry trigger for unresolved sessions —
+		// local-variable *value* changes on unrelated controls must not cause retries.
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock(null, () => null) // no control at the location
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.next() // consume initial
+
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
+		const callsBefore = parserFactory.mock.calls.length
+
+		stream.onVariablesChanged(new Set(['local:whatever']), 'other-ctrl')
+		expect(parserFactory.mock.calls.length).toBe(callsBefore)
+
+		await sub.cleanup()
+	})
+
+	it('does not re-evaluate a session pinned to an unaffected control on grid changes', async () => {
+		const context = { 'this:current': 3, 'target:counter': 3 }
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock({ controlId: 'ctrl-a', name: 'counter' }, () => context)
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.next() // consume initial — resolved to ctrl-a
+
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
+		const callsBefore = parserFactory.mock.calls.length
+
+		// A grid change not involving ctrl-a (or the session's own ctrl1) is irrelevant
+		stream.onControlIdsLocationChanged(['ctrl-elsewhere'])
+		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
 	})
@@ -435,6 +563,59 @@ describe('no contextResolution', () => {
 		stream.onVariablesChanged(new Set(['test:val']), 'ctrl1')
 
 		await sub.expectValue({ ok: true, value: 8 })
+		await sub.cleanup()
+	})
+
+	it('re-evaluates when the session control is moved ($(this:page) etc)', async () => {
+		let variables: VariableValueData = { this: { page: 1 } }
+		const cc = makeControlsControllerMock(() => variables)
+		const lv = makeLocalVariablesMock(null, () => null)
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:page)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 1 })
+
+		// The control is moved to another page — no variables_changed fires, but the grid event does
+		variables = { this: { page: 2 } }
+		stream.onControlIdsLocationChanged(['ctrl1'])
+
+		await sub.expectValue({ ok: true, value: 2 })
+		await sub.cleanup()
+	})
+
+	it('does not emit a duplicate when a re-evaluation produces an identical result', async () => {
+		let variables = { test: { val: 5 } }
+		const cc = makeControlsControllerMock(() => variables)
+		const lv = makeLocalVariablesMock(null, () => null)
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(test:val) > 0',
+				controlId: 'ctrl1',
+				isVariableString: false,
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: true }) // 5 > 0
+
+		// Referenced variable changes, but the result is still true — re-evaluated, no emit
+		variables = { test: { val: 8 } }
+		stream.onVariablesChanged(new Set(['test:val']), null)
+
+		// Now the result actually changes — this must be the NEXT value the client receives,
+		// proving the unchanged re-evaluation above was not pushed as a duplicate `true`
+		variables = { test: { val: -1 } }
+		stream.onVariablesChanged(new Set(['test:val']), null)
+
+		await sub.expectValue({ ok: true, value: false })
 		await sub.cleanup()
 	})
 

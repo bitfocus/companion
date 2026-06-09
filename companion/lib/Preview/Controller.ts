@@ -44,6 +44,7 @@ export class PreviewController {
 
 	onControlIdsLocationChanged(controlIds: string[]): void {
 		this.#graphics.onControlIdsLocationChanged(controlIds)
+		this.#expressionStream.onControlIdsLocationChanged(controlIds)
 	}
 
 	onVariablesChanged(allChangedSet: ReadonlySet<string>, fromControlId: string | null): void {

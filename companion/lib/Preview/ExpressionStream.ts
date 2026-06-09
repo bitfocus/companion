@@ -1,4 +1,5 @@
 import EventEmitter from 'node:events'
+import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
 import type {
@@ -106,37 +107,60 @@ export class PreviewExpressionStream {
 
 	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
-			const isLocalVariableContext = session.contextResolution?.type === 'localVariable'
-
 			// Always re-evaluate when the resolved target control's local variables change
 			const isTargetControlChange =
-				!!fromControlId && isLocalVariableContext && session.resolvedTargetControlId === fromControlId
+				!!fromControlId &&
+				session.contextResolution?.type === 'localVariable' &&
+				session.resolvedTargetControlId === fromControlId
 
-			// A localVariable context whose target has not resolved yet (the variable was created
-			// after the subscription started, or was deleted and may be recreated) must retry
-			// resolution whenever any control's local variables change. Otherwise it has no
-			// resolvedTargetControlId for isTargetControlChange to match, and no overlapping
-			// variableIds, so it would stay stale forever.
-			const isUnresolvedLocalVariableContext =
-				!!fromControlId && isLocalVariableContext && session.resolvedTargetControlId === undefined
-
-			if (!isTargetControlChange && !isUnresolvedLocalVariableContext) {
+			if (!isTargetControlChange) {
 				if (fromControlId && session.controlId !== fromControlId) continue
 				if (session.latestResult.variableIds.isDisjointFrom(changed)) continue
 			}
 
 			// There is some overlap (or target control changed), re-evaluate the expression
 			// Future: this doesn't need to be done immediately, debounce it?
-
-			this.#logger.debug(
-				`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
-			)
-
-			const newValue = session.isVariableString ? this.#parseVariables(session) : this.#executeExpression(session)
-			session.latestResult = newValue
-
-			session.changes.emit('change', convertExpressionResult(newValue))
+			this.#reevaluateSession(expressionId, session)
 		}
+	}
+
+	/**
+	 * A control was created/moved/removed at a grid location.
+	 * This is what makes localVariable contexts react to their target location being (re)populated
+	 * or vacated — those changes don't touch any tracked variableIds, so onVariablesChanged cannot
+	 * catch them. It also keeps sessions for a moved control fresh ($(this:page) etc).
+	 */
+	onControlIdsLocationChanged = (controlIds: string[]): void => {
+		const changedControlIds = new Set(controlIds)
+
+		for (const [expressionId, session] of this.#sessions) {
+			// The session's own control moving changes what this:* variables resolve to
+			const ownControlMoved = !!session.controlId && changedControlIds.has(session.controlId)
+
+			// A localVariable context must re-resolve unless it is pinned to an unaffected control.
+			const targetMayHaveChanged =
+				session.contextResolution?.type === 'localVariable' &&
+				(session.resolvedTargetControlId === undefined || changedControlIds.has(session.resolvedTargetControlId))
+
+			if (!ownControlMoved && !targetMayHaveChanged) continue
+
+			this.#reevaluateSession(expressionId, session)
+		}
+	}
+
+	#reevaluateSession(expressionId: string, session: ExpressionStreamSession): void {
+		this.#logger.debug(
+			`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
+		)
+
+		const newValue = session.isVariableString ? this.#parseVariables(session) : this.#executeExpression(session)
+		const previousResult = session.latestResult
+		session.latestResult = newValue
+
+		// Skip the emit when the client-visible result is unchanged
+		if (isResultEqual(previousResult, newValue)) return
+
+		session.changes.emit('change', convertExpressionResult(newValue))
 	}
 
 	#resolveFieldToString(
@@ -166,20 +190,19 @@ export class PreviewExpressionStream {
 			const extraVariableIds = locationRes.variableIds.union(nameRes.variableIds)
 
 			if (!locationRes.value || !nameRes.value) {
-				// Resolution failed: clear any previously resolved target so a now-stale controlId
-				// stops matching isTargetControlChange and the session retries resolution instead.
+				// Field resolution failed: the field inputs are tracked in extraVariableIds, so any
+				// change to them retriggers through the normal variableIds overlap check
 				session.resolvedTargetControlId = undefined
 				return { overrides: null, extraVariableIds }
 			}
 
+			// Map the location to a control.
 			const localVariable = this.#localVariables.localVariableFor(locationRes.value, nameRes.value, {
 				controlId: session.controlId || '',
 				location: undefined,
 			})
 			if (!localVariable) {
-				// Target variable does not exist (yet, or was deleted): clear any previously resolved
-				// target so a now-stale controlId stops matching isTargetControlChange and the session
-				// retries resolution instead.
+				// No control at the resolved location
 				session.resolvedTargetControlId = undefined
 				return { overrides: null, extraVariableIds }
 			}
@@ -229,7 +252,6 @@ export class PreviewExpressionStream {
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, overrides)
 
-		// TODO - make reactive to control moving?
 		return this.#withContextTracking(
 			parser.executeExpression(session.expression, session.requiredType),
 			extraVariableIds
@@ -248,7 +270,6 @@ export class PreviewExpressionStream {
 
 		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, overrides)
 
-		// TODO - make reactive to control moving?
 		const res = parser.parseVariables(session.expression)
 		return this.#withContextTracking({ ok: true, value: res.text, variableIds: res.variableIds }, extraVariableIds)
 	}
@@ -274,4 +295,11 @@ function convertExpressionResult(result: ExecuteExpressionResult): ExpressionStr
 	} else {
 		return { ok: false, error: result.error }
 	}
+}
+
+/** Compare the client-visible portion of two results (variableIds are intentionally ignored) */
+function isResultEqual(a: ExecuteExpressionResult, b: ExecuteExpressionResult): boolean {
+	if (a.ok && b.ok) return isEqual(a.value, b.value)
+	if (!a.ok && !b.ok) return a.error === b.error
+	return false
 }
