@@ -11,6 +11,7 @@ import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import { useMemo } from 'react'
 import type { AppRouter } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
 
+import { setupConnectionLifecycle } from './ConnectionLifecycle.js'
 import { makeAbsolutePath } from './util.js'
 
 export type { AppRouter, RouterInput, RouterOutput } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
@@ -64,12 +65,8 @@ export const trpcWsClient = createWSClient({
 	},
 })
 
-// Close the WebSocket connection when the page is unloading to prevent wasteful reconnection attempts
-window.addEventListener('beforeunload', () => {
-	trpcWsClient.close().catch((err) => {
-		console.error('Error closing TRPC WebSocket client on unload:', err)
-	})
-})
+// Close the WebSocket connection on real unloads, and recover it after bfcache restores
+setupConnectionLifecycle(trpcWsClient)
 
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
