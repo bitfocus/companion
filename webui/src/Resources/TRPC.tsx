@@ -21,8 +21,40 @@ export const queryClient = new QueryClient()
 let trpcUrl = window.location.origin + makeAbsolutePath(`/trpc`)
 if (trpcUrl.startsWith('http')) trpcUrl = 'ws' + trpcUrl.slice(4)
 
+const WS_CONNECT_TIMEOUT_MS = 10_000
+
+/**
+ * WebSocket subclass that self-aborts if the connection handshake does not
+ * complete within a timeout. Works around Safari/iOS leaving sockets in
+ * CONNECTING forever (no open/error event), which permanently wedges the
+ * trpc ws client's reconnect loop (it has no connect timeout of its own).
+ * Verified against @trpc/client 11.17.0.
+ */
+class WebSocketWithConnectTimeout extends WebSocket {
+	constructor(url: string | URL, protocols?: string | string[]) {
+		super(url, protocols)
+
+		const timeout = setTimeout(() => {
+			if (this.readyState === WebSocket.CONNECTING) {
+				console.warn('WebSocket connect timed out, aborting')
+				try {
+					this.close()
+				} catch (_e) {
+					// ignore
+				}
+			}
+		}, WS_CONNECT_TIMEOUT_MS)
+
+		const clear = () => clearTimeout(timeout)
+		this.addEventListener('open', clear)
+		this.addEventListener('close', clear)
+		this.addEventListener('error', clear)
+	}
+}
+
 export const trpcWsClient = createWSClient({
 	url: trpcUrl,
+	WebSocket: WebSocketWithConnectTimeout,
 	keepAlive: {
 		enabled: true,
 	},
