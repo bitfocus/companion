@@ -106,13 +106,21 @@ export class PreviewExpressionStream {
 
 	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
-			// Always re-evaluate when the target control's local variables change
-			const isTargetControlChange =
-				fromControlId &&
-				session.contextResolution?.type === 'localVariable' &&
-				session.resolvedTargetControlId === fromControlId
+			const isLocalVariableContext = session.contextResolution?.type === 'localVariable'
 
-			if (!isTargetControlChange) {
+			// Always re-evaluate when the resolved target control's local variables change
+			const isTargetControlChange =
+				!!fromControlId && isLocalVariableContext && session.resolvedTargetControlId === fromControlId
+
+			// A localVariable context whose target has not resolved yet (the variable was created
+			// after the subscription started, or was deleted and may be recreated) must retry
+			// resolution whenever any control's local variables change. Otherwise it has no
+			// resolvedTargetControlId for isTargetControlChange to match, and no overlapping
+			// variableIds, so it would stay stale forever.
+			const isUnresolvedLocalVariableContext =
+				!!fromControlId && isLocalVariableContext && session.resolvedTargetControlId === undefined
+
+			if (!isTargetControlChange && !isUnresolvedLocalVariableContext) {
 				if (fromControlId && session.controlId !== fromControlId) continue
 				if (session.latestResult.variableIds.isDisjointFrom(changed)) continue
 			}
@@ -157,13 +165,24 @@ export class PreviewExpressionStream {
 			const nameRes = this.#resolveFieldToString(contextResolution.nameValue, parser)
 			const extraVariableIds = locationRes.variableIds.union(nameRes.variableIds)
 
-			if (!locationRes.value || !nameRes.value) return { overrides: null, extraVariableIds }
+			if (!locationRes.value || !nameRes.value) {
+				// Resolution failed: clear any previously resolved target so a now-stale controlId
+				// stops matching isTargetControlChange and the session retries resolution instead.
+				session.resolvedTargetControlId = undefined
+				return { overrides: null, extraVariableIds }
+			}
 
 			const localVariable = this.#localVariables.localVariableFor(locationRes.value, nameRes.value, {
 				controlId: session.controlId || '',
 				location: undefined,
 			})
-			if (!localVariable) return { overrides: null, extraVariableIds }
+			if (!localVariable) {
+				// Target variable does not exist (yet, or was deleted): clear any previously resolved
+				// target so a now-stale controlId stops matching isTargetControlChange and the session
+				// retries resolution instead.
+				session.resolvedTargetControlId = undefined
+				return { overrides: null, extraVariableIds }
+			}
 
 			// Store the target controlId so onVariablesChanged can trigger re-evaluation
 			session.resolvedTargetControlId = localVariable.controlId

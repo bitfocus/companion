@@ -1,4 +1,5 @@
 import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ExpressionStreamResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import { exprExpr, exprVal, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
@@ -55,6 +56,14 @@ function textField(overrides: Partial<SomeCompanionInputField> = {}): SomeCompan
 
 function renderPreview(expression: string, field = textField()) {
 	return render(<ExpressionValuePreview expression={expression} controlId={null} fieldDefinition={field} />)
+}
+
+/** Hover the value pill so the VariableValueDisplayPopover popup (which renders the invalidReason alert) opens */
+async function openValuePopover(user: ReturnType<typeof userEvent.setup>) {
+	const trigger = document.querySelector('.variable-value-display')?.parentElement
+	if (!trigger) throw new Error('value display not rendered')
+	await user.hover(trigger)
+	expect(document.querySelector('.variable-value-expanded')).toBeInTheDocument()
 }
 
 // ---------------------------------------------------------------------------
@@ -185,8 +194,9 @@ describe('ExpressionPreviewResult', () => {
 		expect(document.body.textContent).toContain('true')
 	})
 
-	it('renders undefined value without crashing', () => {
+	it('renders the unknown-value placeholder for an undefined value', () => {
 		render(<ExpressionPreviewResult data={{ ok: true, value: undefined }} fieldDefinition={textField()} />)
+		expect(document.body.textContent).toContain('$NA')
 	})
 
 	it('renders an error alert when ok is false', () => {
@@ -194,17 +204,20 @@ describe('ExpressionPreviewResult', () => {
 		expect(screen.getByText(/division by zero/)).toBeInTheDocument()
 	})
 
-	it('does not show a validation error when the value is valid for the field type', () => {
+	it('does not show a validation error when the value is valid for the field type', async () => {
+		const user = userEvent.setup()
 		render(
 			<ExpressionPreviewResult
 				data={{ ok: true, value: 50 }}
 				fieldDefinition={textField({ type: 'number', min: 0, max: 100 } as any)}
 			/>
 		)
-		expect(screen.queryByTitle(/invalid/i)).toBeNull()
+		await openValuePopover(user)
+		expect(screen.queryByRole('alert')).toBeNull()
 	})
 
-	it('shows a validation error when the value is out of range', () => {
+	it('shows a validation error when the value is out of range', async () => {
+		const user = userEvent.setup()
 		render(
 			<ExpressionPreviewResult
 				data={{ ok: true, value: 999 }}
@@ -212,9 +225,12 @@ describe('ExpressionPreviewResult', () => {
 			/>
 		)
 		expect(document.body.textContent).toContain('999')
+		await openValuePopover(user)
+		expect(screen.getByRole('alert')).toHaveTextContent('Value must be less than or equal to 10')
 	})
 
-	it('skips validation when allowInvalidValues is set', () => {
+	it('skips validation when allowInvalidValues is set', async () => {
+		const user = userEvent.setup()
 		render(
 			<ExpressionPreviewResult
 				data={{ ok: true, value: 9999 }}
@@ -222,6 +238,8 @@ describe('ExpressionPreviewResult', () => {
 			/>
 		)
 		expect(document.body.textContent).toContain('9999')
+		await openValuePopover(user)
+		expect(screen.queryByRole('alert')).toBeNull()
 	})
 })
 
@@ -380,6 +398,68 @@ describe('ExpressionValuePreview — subscription states (data)', () => {
 				controlId={null}
 				fieldDefinition={textField()}
 				contextResolution={{ type: 'customVariable', nameValue: undefined }}
+			/>
+		)
+
+		expect(optionsSpy).toHaveBeenCalledWith(
+			expect.objectContaining({ contextResolution: undefined }),
+			expect.anything()
+		)
+	})
+
+	it('passes a complete localVariable contextResolution through to the subscription', async () => {
+		const { trpc } = await import('~/Resources/TRPC.js')
+		const optionsSpy = vi.mocked(trpc.preview.expressionStream.watchExpression.subscriptionOptions)
+		optionsSpy.mockClear()
+
+		render(
+			<ExpressionValuePreview
+				expression="$(this:current)"
+				controlId={null}
+				fieldDefinition={textField()}
+				contextResolution={{ type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') }}
+			/>
+		)
+
+		expect(optionsSpy).toHaveBeenCalledWith(
+			expect.objectContaining({
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
+			}),
+			expect.anything()
+		)
+	})
+
+	it('does not pass localVariable contextResolution when locationValue is missing', async () => {
+		const { trpc } = await import('~/Resources/TRPC.js')
+		const optionsSpy = vi.mocked(trpc.preview.expressionStream.watchExpression.subscriptionOptions)
+		optionsSpy.mockClear()
+
+		render(
+			<ExpressionValuePreview
+				expression="$(this:current)"
+				controlId={null}
+				fieldDefinition={textField()}
+				contextResolution={{ type: 'localVariable', locationValue: undefined, nameValue: exprVal('counter') }}
+			/>
+		)
+
+		expect(optionsSpy).toHaveBeenCalledWith(
+			expect.objectContaining({ contextResolution: undefined }),
+			expect.anything()
+		)
+	})
+
+	it('does not pass localVariable contextResolution when nameValue is missing', async () => {
+		const { trpc } = await import('~/Resources/TRPC.js')
+		const optionsSpy = vi.mocked(trpc.preview.expressionStream.watchExpression.subscriptionOptions)
+		optionsSpy.mockClear()
+
+		render(
+			<ExpressionValuePreview
+				expression="$(this:current)"
+				controlId={null}
+				fieldDefinition={textField()}
+				contextResolution={{ type: 'localVariable', locationValue: exprVal('this'), nameValue: undefined }}
 			/>
 		)
 

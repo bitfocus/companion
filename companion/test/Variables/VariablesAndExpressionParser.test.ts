@@ -1363,5 +1363,33 @@ describe('VariablesAndExpressionParser', () => {
 			expect(result.ok).toBe(true)
 			if (result.ok) expect(result.parsedOptions.value).toBe('$(test:num) + 5')
 		})
+
+		it('ignores deferParsing on the legacy (optionsSupportExpressions: false) path', () => {
+			const definition = createDefinition({
+				// optionsSupportExpressions: false (default) — legacy path only checks useVariables
+				options: [
+					{
+						type: 'textinput',
+						label: 'Value',
+						id: 'value',
+						default: '',
+						deferParsing: true,
+						useVariables: useVariablesMinimal,
+						allowInvalidValues: true,
+						disableSanitisation: true,
+					},
+				],
+			})
+
+			const parser = new VariablesAndExpressionParser(null as any, { test: { foo: 'hello' } }, new Map(), null, null)
+			const result = parser.parseEntityOptions(definition, { value: exprVal('$(test:foo) world') })
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Variables are still substituted — deferParsing has no effect on the legacy path
+				expect(result.parsedOptions.value).toBe('hello world')
+				expect(result.referencedVariableIds.has('test:foo')).toBe(true)
+			}
+		})
 	})
 })

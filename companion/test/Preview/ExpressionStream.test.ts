@@ -15,23 +15,27 @@ import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 const t = initTRPC.context<TrpcContext>().create()
 const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
 
-function createParser(variables: VariableValueData = {}): VariablesAndExpressionParser {
-	return new VariablesAndExpressionParser(null as any, variables, new Map(), null, null)
+function createParser(
+	variables: VariableValueData = {},
+	overrides: VariableValues | null = null
+): VariablesAndExpressionParser {
+	// Mirror production's terminal construction (Values.createVariablesAndExpressionParser):
+	// overrides are applied via the constructor's overrideVariableValues arg, not createChildParser.
+	return new VariablesAndExpressionParser(null as any, variables, new Map(), null, overrides)
 }
 
 /**
  * Build a mock ControlsController whose `createVariablesAndExpressionParser` returns
- * a real parser (with a fresh variable snapshot per call), applying any overrides via
- * `createChildParser` so that injected context variables like `this:current` resolve correctly.
+ * a real parser (with a fresh variable snapshot per call), applying any overrides so that
+ * injected context variables like `this:current` resolve correctly.
  */
 function makeControlsControllerMock(getVariables: () => VariableValueData): ControlsController {
 	return {
 		createVariablesAndExpressionParser: vi
 			.fn()
-			.mockImplementation((_controlId: string | null | undefined, overrides?: VariableValues | null) => {
-				const base = createParser(getVariables())
-				return overrides && Object.keys(overrides).length > 0 ? base.createChildParser(overrides) : base
-			}),
+			.mockImplementation((_controlId: string | null | undefined, overrides?: VariableValues | null) =>
+				createParser(getVariables(), overrides ?? null)
+			),
 	} as unknown as ControlsController
 }
 
@@ -88,9 +92,10 @@ describe('customVariable context resolution', () => {
 			})
 		)
 
-		// Variable exists but is undefined — expression evaluates to undefined
+		// custom:myVar does not exist, so this:current is injected as undefined and the
+		// expression resolves to undefined.
 		const result = await sub.next()
-		expect(result.ok).toBe(true)
+		expect(result).toEqual({ ok: true, value: undefined })
 		await sub.cleanup()
 	})
 
@@ -131,18 +136,23 @@ describe('customVariable context resolution', () => {
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
-			}),
-			{ timeoutMs: 100 }
+			})
 		)
 
 		await sub.next() // consume initial
 
+		// Re-evaluation always goes through the parser factory; capture the count so we can
+		// prove the unrelated change did not trigger another evaluation.
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
+		const callsBefore = parserFactory.mock.calls.length
+
 		// Change a different variable
 		stream.onVariablesChanged(new Set(['custom:otherVar']), null)
 
-		// No re-evaluation expected; cleanup is skipped because the generator is suspended
-		// waiting for an event that will never arrive (cleanup would block indefinitely)
-		await expect(sub.next()).rejects.toThrow('Subscription timeout')
+		// No re-evaluation expected — the parser factory was not invoked again
+		expect(parserFactory.mock.calls.length).toBe(callsBefore)
+
+		await sub.cleanup()
 	})
 })
 
@@ -206,18 +216,98 @@ describe('localVariable context resolution', () => {
 				controlId: 'ctrl1',
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
-			}),
-			{ timeoutMs: 100 }
+			})
 		)
 
 		await sub.next() // consume initial
 
+		// Re-evaluation always goes through the parser factory; capture the count so we can
+		// prove the change from a different control did not trigger another evaluation.
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
+		const callsBefore = parserFactory.mock.calls.length
+
 		// Change from a different control — must not trigger re-evaluation
 		stream.onVariablesChanged(new Set(['local:counter']), 'different-ctrl')
 
-		// No re-evaluation expected; cleanup skipped — generator is suspended waiting for
-		// an event that will never arrive (cleanup would block indefinitely)
-		await expect(sub.next()).rejects.toThrow('Subscription timeout')
+		// No re-evaluation expected — the parser factory was not invoked again
+		expect(parserFactory.mock.calls.length).toBe(callsBefore)
+
+		await sub.cleanup()
+	})
+
+	it('re-resolves when the target local variable is created after subscription', async () => {
+		// Regression: a localVariable context that does not resolve at subscription time never
+		// stored a resolvedTargetControlId, so onVariablesChanged could never re-trigger it and
+		// the preview stayed stale forever.
+		let localVariable: { controlId: string; name: string } | null = null // not created yet
+		let context: VariableValues | null = null
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = {
+			localVariableFor: vi.fn().mockImplementation(() => localVariable),
+			getLocalVariableContextFor: vi.fn().mockImplementation(() => context),
+		} as unknown as LocalVariablesController
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
+			})
+		)
+
+		// Variable does not exist yet — this:current is unresolved
+		await sub.expectValue({ ok: true, value: undefined })
+
+		// The variable is now created on ctrl-target (a local_variables_changed event arrives)
+		localVariable = { controlId: 'ctrl-target', name: 'counter' }
+		context = { 'this:current': 5, 'target:counter': 5 }
+		stream.onVariablesChanged(new Set(['counter']), 'ctrl-target')
+
+		// Resolution is retried and the expression re-evaluates with the freshly resolved context
+		await sub.expectValue({ ok: true, value: 5 })
+		await sub.cleanup()
+	})
+
+	it('re-resolves against a new control after the target is deleted and recreated elsewhere', async () => {
+		// Regression: resolvedTargetControlId was never cleared when resolution later failed, so a
+		// deleted target stayed pinned to its old control — a recreation on a different control
+		// would be ignored and the preview would stay stale.
+		let localVariable: { controlId: string; name: string } | null = { controlId: 'ctrl-a', name: 'counter' }
+		let context: VariableValues | null = { 'this:current': 1, 'target:counter': 1 }
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = {
+			localVariableFor: vi.fn().mockImplementation(() => localVariable),
+			getLocalVariableContextFor: vi.fn().mockImplementation(() => context),
+		} as unknown as LocalVariablesController
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 1 }) // resolved against ctrl-a
+
+		// Target deleted — resolution now fails, which must clear the stored target controlId
+		localVariable = null
+		context = null
+		stream.onVariablesChanged(new Set(['counter']), 'ctrl-a')
+		await sub.expectValue({ ok: true, value: undefined })
+
+		// Recreated on a DIFFERENT control. Without clearing resolvedTargetControlId, the change
+		// from ctrl-b would be ignored (the target stayed pinned to ctrl-a) and stay stale.
+		localVariable = { controlId: 'ctrl-b', name: 'counter' }
+		context = { 'this:current': 9, 'target:counter': 9 }
+		stream.onVariablesChanged(new Set(['counter']), 'ctrl-b')
+		await sub.expectValue({ ok: true, value: 9 })
+
+		await sub.cleanup()
 	})
 
 	it('resolves $(this:page)/$(this:row)/$(this:column) in locationValue using the session controlId', async () => {
@@ -230,8 +320,7 @@ describe('localVariable context resolution', () => {
 				.mockImplementation((controlId: string | null, overrides?: VariableValues | null) => {
 					// this:page/row/column are only available when a specific controlId is provided
 					const variables: VariableValueData = controlId ? { this: { page: 1, row: 2, column: 3 } } : {}
-					const base = createParser(variables)
-					return overrides && Object.keys(overrides).length > 0 ? base.createChildParser(overrides) : base
+					return createParser(variables, overrides ?? null)
 				}),
 		} as unknown as ControlsController
 
@@ -274,9 +363,10 @@ describe('localVariable context resolution', () => {
 			})
 		)
 
-		// Should still return a result, just without context (this:current unresolved)
+		// Should still return a result, just without context — this:current is unresolved
+		// and resolves to undefined.
 		const result = await sub.next()
-		expect(result.ok).toBe(true)
+		expect(result).toEqual({ ok: true, value: undefined })
 		await sub.cleanup()
 	})
 })
@@ -475,19 +565,19 @@ describe('session management', () => {
 		const { caller } = createStream(cc, lv)
 
 		const input = { expression: '$(test:val)', controlId: 'ctrl1', isVariableString: false as const }
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
 
 		const sub1 = new SubscriptionTester(await caller.watchExpression(input))
-		const sub2 = new SubscriptionTester(await caller.watchExpression(input))
-
-		// Both receive the same initial value
 		await sub1.expectValue({ ok: true, value: 1 })
+
+		// The first subscriber created the session and ran the single initial evaluation.
+		const callsAfterSub1 = parserFactory.mock.calls.length
+
+		const sub2 = new SubscriptionTester(await caller.watchExpression(input))
 		await sub2.expectValue({ ok: true, value: 1 })
 
-		// The initial evaluation ran only once (session was reused for sub2)
-		const callCount = (cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>).mock.calls.length
-		// One call for expression evaluation (context resolution calls it once or twice per eval)
-		// Key point: sub2 did NOT trigger a second initial evaluation
-		expect(callCount).toBeLessThan(4) // generous upper bound — not evaluated twice
+		// sub2 reused the existing session, so it must not have invoked the parser factory again.
+		expect(parserFactory.mock.calls.length).toBe(callsAfterSub1)
 
 		await sub1.cleanup()
 		await sub2.cleanup()
@@ -497,10 +587,9 @@ describe('session management', () => {
 		const cc: ControlsController = {
 			createVariablesAndExpressionParser: vi
 				.fn()
-				.mockImplementation((_controlId: string | null | undefined, overrides?: VariableValues | null) => {
-					const base = createParser({ custom: { myVar: 10, other: 20 } })
-					return overrides && Object.keys(overrides).length > 0 ? base.createChildParser(overrides) : base
-				}),
+				.mockImplementation((_controlId: string | null | undefined, overrides?: VariableValues | null) =>
+					createParser({ custom: { myVar: 10, other: 20 } }, overrides ?? null)
+				),
 		} as unknown as ControlsController
 		const lv = makeLocalVariablesMock(null, () => null)
 		const { caller } = createStream(cc, lv)

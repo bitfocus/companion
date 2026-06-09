@@ -158,4 +158,28 @@ describe('custom_variable_set_value deferred parse', () => {
 
 		expect(variablesController.custom.setValue).toHaveBeenCalledWith('myVar', 'literal')
 	})
+
+	it('throws (and writes nothing) when the deferred value is an invalid expression', () => {
+		// The value field defers parsing to execution time, so a broken expression only fails here.
+		// The throw is contained by InternalController.executeAction's try/catch (logged, action
+		// becomes a no-op) — the contract we lock in is that it fails before any partial write.
+		const variablesController = makeVariablesController(3)
+
+		const module = new InternalCustomVariables(variablesController as any)
+		const parser = createParser()
+
+		const action = makeAction(
+			'custom_variable_set_value',
+			{ name: 'myVar', create: false, value: '$(this:current) +' },
+			{
+				name: exprVal('myVar'),
+				create: exprVal(false),
+				value: exprExpr('$(this:current) +'), // invalid expression syntax
+			}
+		)
+
+		expect(() => module.executeAction(action, fakeExtras, parser)).toThrow()
+		expect(variablesController.custom.setValue).not.toHaveBeenCalled()
+		expect(variablesController.custom.createVariable).not.toHaveBeenCalled()
+	})
 })

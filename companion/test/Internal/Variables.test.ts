@@ -120,4 +120,54 @@ describe('local_variable_set_value deferred parse', () => {
 
 		expect(localVariables.setLocalVariable).not.toHaveBeenCalled()
 	})
+
+	it('falls back to empty context when the variable is found but context is null', () => {
+		// Exercises the `getLocalVariableContextFor(...) ?? {}` fallback: the variable resolves but
+		// has no context, so the value must still be written with this:current left unresolved.
+		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'counter' }
+		const localVariables = makeLocalVariablesController(localVar, null) // found, but no context
+
+		const module = new InternalVariables(localVariables)
+		const parser = createParser()
+
+		const action = makeAction(
+			'local_variable_set_value',
+			{ location: 'this', name: 'counter', value: '$(this:current)' },
+			{
+				location: exprVal('this'),
+				name: exprVal('counter'),
+				value: exprVal('$(this:current)'),
+			}
+		)
+
+		module.executeAction(action, fakeExtras, parser)
+
+		// Variable was found, so it is still written; with no context, $(this:current) is unknown
+		expect(localVariables.setLocalVariable).toHaveBeenCalledWith(localVar, '$NA')
+	})
+
+	it('throws (and writes nothing) when the deferred value is an invalid expression', () => {
+		// The value field defers parsing to execution time, so a broken expression only fails here.
+		// The throw is contained by InternalController.executeAction's try/catch (logged, action
+		// becomes a no-op) — the contract we lock in is that it fails before any partial write.
+		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'counter' }
+		const context = { 'this:current': 5, 'target:counter': 5 }
+		const localVariables = makeLocalVariablesController(localVar, context)
+
+		const module = new InternalVariables(localVariables)
+		const parser = createParser()
+
+		const action = makeAction(
+			'local_variable_set_value',
+			{ location: 'this', name: 'counter', value: '$(this:current) +' },
+			{
+				location: exprVal('this'),
+				name: exprVal('counter'),
+				value: exprExpr('$(this:current) +'), // invalid expression syntax
+			}
+		)
+
+		expect(() => module.executeAction(action, fakeExtras, parser)).toThrow()
+		expect(localVariables.setLocalVariable).not.toHaveBeenCalled()
+	})
 })
