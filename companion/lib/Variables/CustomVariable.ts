@@ -57,7 +57,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			this.#cleanUnknownCollectionIds(validCollectionIds)
 		)
 
-		this.#custom_variables = this.#dbTable.all()
+		// Use a null prototype object, so that names like '__proto__' cannot pollute or be leaked from the prototype
+		this.#custom_variables = Object.assign(Object.create(null), this.#dbTable.all())
 
 		this.#events.setMaxListeners(0)
 	}
@@ -229,6 +230,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		this.#dbTable.set(name, this.#custom_variables[name])
 
 		this.#emitUpdateOneVariable(name)
+		this.#emitVariableDefinitionChange(name, this.#custom_variables[name])
 
 		this.#setValueInner(name, defaultVal)
 
@@ -247,6 +249,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		if (this.#events.listenerCount('update') > 0) {
 			this.#events.emit('update', [{ type: 'remove', itemId: name }])
 		}
+
+		this.#emitVariableDefinitionChange(name, null)
 
 		this.#setValueInner(name, undefined)
 	}
@@ -298,7 +302,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 
 		const namesBefore = Object.keys(this.#custom_variables)
 
-		this.#custom_variables = custom_variables || {}
+		this.#custom_variables = Object.assign(Object.create(null), custom_variables)
 
 		const changes: CustomVariableUpdate[] = []
 
@@ -338,7 +342,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	reset(): void {
 		const namesBefore = Object.keys(this.#custom_variables)
 
-		this.#custom_variables = {}
+		this.#custom_variables = Object.create(null)
 		this.#dbTable.clear()
 
 		if (this.#events.listenerCount('update') > 0 && namesBefore.length > 0) {
@@ -514,6 +518,8 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			const value = this.#variableValues.getVariableValue(CUSTOM_LABEL, name)
 			this.#logger.silly(`Set default value "${name}":${stringifyVariableValue(value)}`)
 			this.#custom_variables[name].defaultValue = value
+
+			this.#dbTable.set(name, this.#custom_variables[name])
 
 			this.#emitUpdateOneVariable(name)
 		}
