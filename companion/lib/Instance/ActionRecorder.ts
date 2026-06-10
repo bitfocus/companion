@@ -239,6 +239,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 								if (!action.options) action.options = {}
 								if (BANNED_PROPS.has(input.key)) throw new Error(`Setting option "${input.key}" is not allowed`)
 
+								action.options[input.key] = input.value
+
 								this.commitChanges([input.sessionId])
 							}
 						}),
@@ -393,6 +395,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				const newIds = this.#currentSession.connectionIds.filter((id) => id !== connectionId)
 
 				if (newIds.length !== this.#currentSession.connectionIds.length) {
+					this.#currentSession.connectionIds = newIds
+
 					this.commitChanges([this.#currentSession.id])
 				}
 			}
