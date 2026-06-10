@@ -17,6 +17,14 @@ export class FakeTableView<T> {
 		return structuredClone(this.data[key])
 	}
 
+	getOrDefault(key: string, defaultValue: T): T {
+		if (this.data[key] === undefined) {
+			this.data[key] = structuredClone(defaultValue)
+			return defaultValue
+		}
+		return structuredClone(this.data[key])
+	}
+
 	set(key: string, value: T): void {
 		this.data[key] = structuredClone(value)
 	}
@@ -40,6 +48,8 @@ export class FakeTableView<T> {
 export class FakeDataDatabase {
 	readonly tables = new Map<string, FakeTableView<any>>()
 
+	isFirstRun = true
+
 	getTableView(name: string): FakeTableView<any> {
 		let table = this.tables.get(name)
 		if (!table) {
@@ -47,6 +57,14 @@ export class FakeDataDatabase {
 			this.tables.set(name, table)
 		}
 		return table
+	}
+
+	get defaultTableView(): FakeTableView<any> {
+		return this.getTableView('main')
+	}
+
+	getIsFirstRun(): boolean {
+		return this.isFirstRun
 	}
 
 	asDataDatabase(): DataDatabase {
