@@ -1368,7 +1368,7 @@ describe('InstanceDefinitions', () => {
 		const t = initTRPC.context<TrpcContext>().create()
 		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
 
-		it('setActionDefinitions with identical data still yields update-connection (diff has empty patches)', async () => {
+		it('setActionDefinitions with identical data does not emit an update', async () => {
 			const { defs } = createInstanceDefinitions()
 			const actDef = makeActionDefinition({ label: 'Same' })
 			defs.setActionDefinitions('conn1', { act1: actDef })
@@ -1381,19 +1381,20 @@ describe('InstanceDefinitions', () => {
 			// Consume init
 			await iter.next()
 
-			// Re-set with structurally identical data
+			// Re-set with structurally identical data, then make a real change
 			defs.setActionDefinitions('conn1', { act1: makeActionDefinition({ label: 'Same' }) })
+			defs.setActionDefinitions('conn1', { act1: makeActionDefinition({ label: 'Changed' }) })
 
+			// The next event is for the real change, the identical set emitted nothing
 			const second = await iter.next()
-
-			// diffObjects returns a diff even for identical data (with empty json-patch arrays)
 			expect(second.value).toHaveProperty('type', 'update-connection')
 			expect(second.value).toHaveProperty('connectionId', 'conn1')
+			expect(JSON.stringify(second.value)).toContain('Changed')
 
 			await iter.return?.()
 		})
 
-		it('setFeedbackDefinitions with identical data still yields update-connection', async () => {
+		it('setFeedbackDefinitions with identical data does not emit an update', async () => {
 			const { defs } = createInstanceDefinitions()
 			const fbDef = makeFeedbackDefinition({ label: 'Same' })
 			defs.setFeedbackDefinitions('conn1', { fb1: fbDef })
@@ -1406,13 +1407,15 @@ describe('InstanceDefinitions', () => {
 			// Consume init
 			await iter.next()
 
-			// Re-set with structurally identical data
+			// Re-set with structurally identical data, then make a real change
 			defs.setFeedbackDefinitions('conn1', { fb1: makeFeedbackDefinition({ label: 'Same' }) })
+			defs.setFeedbackDefinitions('conn1', { fb1: makeFeedbackDefinition({ label: 'Changed' }) })
 
+			// The next event is for the real change, the identical set emitted nothing
 			const second = await iter.next()
-
 			expect(second.value).toHaveProperty('type', 'update-connection')
 			expect(second.value).toHaveProperty('connectionId', 'conn1')
+			expect(JSON.stringify(second.value)).toContain('Changed')
 
 			await iter.return?.()
 		})
