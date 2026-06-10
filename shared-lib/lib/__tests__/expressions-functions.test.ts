@@ -97,6 +97,15 @@ describe('functions', () => {
 			expect(ExpressionFunctions.toRadix(11, 2)).toBe('1011')
 			expect(ExpressionFunctions.toRadix(9, 16)).toBe('9')
 			expect(ExpressionFunctions.toRadix(11)).toBe('11')
+
+			// Non-numeric values should not throw
+			expect(ExpressionFunctions.toRadix(undefined)).toBe('NaN')
+			expect(ExpressionFunctions.toRadix(null)).toBe('0')
+			expect(ExpressionFunctions.toRadix('11', 16)).toBe('b')
+
+			// Out of range radix should be clamped, not throw
+			expect(ExpressionFunctions.toRadix(11, 1)).toBe('1011')
+			expect(ExpressionFunctions.toRadix(11, 99)).toBe('b')
 		})
 
 		it('toFixed', () => {
@@ -106,14 +115,27 @@ describe('functions', () => {
 			expect(ExpressionFunctions.toFixed(Math.PI)).toBe('3')
 			expect(ExpressionFunctions.toFixed(5, 2)).toBe('5.00')
 			expect(ExpressionFunctions.toFixed(Math.PI, -2)).toBe('3')
+
+			// Out of range dp should be clamped, not throw
+			expect(ExpressionFunctions.toFixed(Math.PI, 101)).toBe(Math.PI.toFixed(100))
 		})
 
 		it('isNumber', () => {
 			expect(ExpressionFunctions.isNumber(11)).toBe(true)
+			expect(ExpressionFunctions.isNumber(1.5)).toBe(true)
 			expect(ExpressionFunctions.isNumber('99')).toBe(true)
+			expect(ExpressionFunctions.isNumber('1.5')).toBe(true)
 			expect(ExpressionFunctions.isNumber('true')).toBe(false)
-			expect(ExpressionFunctions.isNumber('')).toBe(true)
+			expect(ExpressionFunctions.isNumber('12abc')).toBe(false)
 			expect(ExpressionFunctions.isNumber(undefined)).toBe(false)
+			expect(ExpressionFunctions.isNumber(NaN)).toBe(false)
+
+			// Values which coerce to 0 are not numbers
+			expect(ExpressionFunctions.isNumber('')).toBe(false)
+			expect(ExpressionFunctions.isNumber('  ')).toBe(false)
+			expect(ExpressionFunctions.isNumber(null)).toBe(false)
+			expect(ExpressionFunctions.isNumber([])).toBe(false)
+			expect(ExpressionFunctions.isNumber(true)).toBe(false)
 		})
 
 		it('max', () => {
@@ -141,6 +163,27 @@ describe('functions', () => {
 				const result = ExpressionFunctions.randomInt(-10, '5')
 				expect(result).toBeGreaterThanOrEqual(-10)
 				expect(result).toBeLessThanOrEqual(5)
+			}
+
+			// Inverted range should not produce out of range values
+			for (let i = 0; i < 50; i++) {
+				const result = ExpressionFunctions.randomInt(5, 0)
+				expect(result).toBeGreaterThanOrEqual(0)
+				expect(result).toBeLessThanOrEqual(5)
+			}
+		})
+
+		it('randomInt is uniform', () => {
+			// The endpoints should be approximately as likely as the interior values
+			const counts = [0, 0, 0, 0]
+			const samples = 40000
+			for (let i = 0; i < samples; i++) {
+				counts[ExpressionFunctions.randomInt(0, 3)]++
+			}
+			const expected = samples / counts.length
+			for (const count of counts) {
+				expect(count).toBeGreaterThan(expected * 0.85)
+				expect(count).toBeLessThan(expected * 1.15)
 			}
 		})
 
@@ -329,6 +372,9 @@ describe('functions', () => {
 			expect(ExpressionFunctions.bool('true')).toBe(true)
 			expect(ExpressionFunctions.bool(false)).toBe(false)
 			expect(ExpressionFunctions.bool('false')).toBe(false)
+			expect(ExpressionFunctions.bool('FALSE')).toBe(false)
+			expect(ExpressionFunctions.bool('False')).toBe(false)
+			expect(ExpressionFunctions.bool('TRUE')).toBe(true)
 			expect(ExpressionFunctions.bool('')).toBe(false)
 			expect(ExpressionFunctions.bool(undefined)).toBe(false)
 		})
@@ -453,11 +499,11 @@ describe('functions', () => {
 			// Test with empty array
 			expect(ExpressionFunctions.arrayIndexOf([], 'anything')).toBe(-1)
 
-			// Test with non-array inputs (should return false)
-			expect(ExpressionFunctions.arrayIndexOf(null, 'test')).toBe(false)
-			expect(ExpressionFunctions.arrayIndexOf(undefined, 'test')).toBe(false)
-			expect(ExpressionFunctions.arrayIndexOf('not an array', 'test')).toBe(false)
-			expect(ExpressionFunctions.arrayIndexOf(123, 'test')).toBe(false)
+			// Test with non-array inputs (should return -1, like a not-found value)
+			expect(ExpressionFunctions.arrayIndexOf(null, 'test')).toBe(-1)
+			expect(ExpressionFunctions.arrayIndexOf(undefined, 'test')).toBe(-1)
+			expect(ExpressionFunctions.arrayIndexOf('not an array', 'test')).toBe(-1)
+			expect(ExpressionFunctions.arrayIndexOf(123, 'test')).toBe(-1)
 
 			// Test strict equality (no type coercion)
 			expect(ExpressionFunctions.arrayIndexOf([1, 2, 3], '2')).toBe(-1)
@@ -483,11 +529,11 @@ describe('functions', () => {
 			// Test with empty array
 			expect(ExpressionFunctions.arrayLastIndexOf([], 'anything')).toBe(-1)
 
-			// Test with non-array inputs (should return false)
-			expect(ExpressionFunctions.arrayLastIndexOf(null, 'test')).toBe(false)
-			expect(ExpressionFunctions.arrayLastIndexOf(undefined, 'test')).toBe(false)
-			expect(ExpressionFunctions.arrayLastIndexOf('not an array', 'test')).toBe(false)
-			expect(ExpressionFunctions.arrayLastIndexOf(123, 'test')).toBe(false)
+			// Test with non-array inputs (should return -1, like a not-found value)
+			expect(ExpressionFunctions.arrayLastIndexOf(null, 'test')).toBe(-1)
+			expect(ExpressionFunctions.arrayLastIndexOf(undefined, 'test')).toBe(-1)
+			expect(ExpressionFunctions.arrayLastIndexOf('not an array', 'test')).toBe(-1)
+			expect(ExpressionFunctions.arrayLastIndexOf(123, 'test')).toBe(-1)
 
 			// Test strict equality (no type coercion)
 			expect(ExpressionFunctions.arrayLastIndexOf([1, 2, 3], '2')).toBe(-1)
@@ -887,6 +933,13 @@ describe('functions', () => {
 			expect(ExpressionFunctions.timeOffset('15:00:00', -5)).toBe('10:00:00')
 			expect(ExpressionFunctions.timeOffset('15:00:00', '-02:00:00', true)).toBe('01:00:00')
 			expect(ExpressionFunctions.timeOffset('15:00', -5)).toBe('10:00')
+
+			// 12 hour mode should handle midnight and noon, and disambiguate with AM/PM
+			expect(ExpressionFunctions.timeOffset('00:30', 0, true)).toBe('12:30')
+			expect(ExpressionFunctions.timeOffset('12:30', 0, true)).toBe('12:30')
+			expect(ExpressionFunctions.timeOffset('01:30', 0, true)).toBe('01:30')
+			expect(ExpressionFunctions.timeOffset('13:30', 0, true)).toBe('01:30')
+			expect(ExpressionFunctions.timeOffset('23:30:00', '+01:00:00', true)).toBe('12:30:00')
 		})
 
 		it('timeDiff', () => {

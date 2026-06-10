@@ -232,6 +232,7 @@ Any of the following will be interpreted as true:
 
 - any non-zero int
 - "true"
+- any non-empty string, except "false" or "0" (case-insensitive)
 
 Everything else will be false.
 
