@@ -46,17 +46,23 @@ export class ServiceRosstalk extends ServiceTcpBase {
 	 * @access protected
 	 */
 	processIncoming(_client: TcpClientInfo, data: string | Buffer): void {
-		data = data.toString()
+		// A chunk may contain multiple newline separated commands
+		for (const line of data.toString().split(/\r?\n/)) {
+			this.#processCommand(line.trim())
+		}
+	}
 
-		const matchCC = data.match(/CC ([0-9]+):([0-9]+)/)
+	#processCommand(line: string): void {
+		// Use anchored matches, so that a command surrounded by garbage is not executed
+		const matchCC = line.match(/^CC ([0-9]+):([0-9]+)$/)
 		if (matchCC) {
 			const xy = oldBankIndexToXY(parseInt(matchCC[2]))
 			if (!xy) {
-				this.logger.warn(`Invalid incoming RossTalk reference: ${data}`)
+				this.logger.warn(`Invalid incoming RossTalk reference: ${line}`)
 				return
 			}
 
-			this.#executeTrigger({
+			this.#fireButtonPressAndRelease({
 				pageNumber: parseInt(matchCC[1]),
 				row: xy[1],
 				column: xy[0],
@@ -64,9 +70,9 @@ export class ServiceRosstalk extends ServiceTcpBase {
 			return
 		}
 
-		const matchCCControl = data.match(/CC ([0-9]+)\/([0-9]+)\/([0-9]+)/)
+		const matchCCControl = line.match(/^CC ([0-9]+)\/([0-9]+)\/([0-9]+)$/)
 		if (matchCCControl) {
-			this.#executeTrigger({
+			this.#fireButtonPressAndRelease({
 				pageNumber: parseInt(matchCCControl[1]),
 				row: parseInt(matchCCControl[2]),
 				column: parseInt(matchCCControl[3]),
@@ -75,7 +81,7 @@ export class ServiceRosstalk extends ServiceTcpBase {
 		}
 	}
 
-	#executeTrigger(location: ControlLocation): void {
+	#fireButtonPressAndRelease(location: ControlLocation): void {
 		const controlId = this.#serviceApi.getControlIdAt(location)
 		if (!controlId) {
 			this.logger.info(`Ignore empty button ${formatLocation(location)}`)

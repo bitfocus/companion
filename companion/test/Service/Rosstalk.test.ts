@@ -90,6 +90,54 @@ describe('Rosstalk', () => {
 			expect(serviceApi.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')
 		})
 
+		test('command surrounded by garbage is ignored', async () => {
+			const { serviceApi, service } = createService()
+
+			service.processIncoming(null as any, 'garbage CC 12:24 more garbage')
+			service.processIncoming(null as any, 'XX CC 12/3/4')
+			service.processIncoming(null as any, 'CC 12/3/4 trailing')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
+		})
+
+		test('command with line terminator', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null as any, 'CC 12:24\r\n')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 12,
+				row: 2,
+				column: 7,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+		})
+
+		test('multiple commands in one chunk', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null as any, 'CC 12:24\nCC 13/3/4\n')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(2)
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
+				pageNumber: 12,
+				row: 2,
+				column: 7,
+			})
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 13,
+				row: 3,
+				column: 4,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
+		})
+
 		test('bad format coordinates', async () => {
 			const { serviceApi, service } = createService()
 
