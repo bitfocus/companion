@@ -6,6 +6,7 @@ import {
 	faLayerGroup,
 	faList,
 	faTrash,
+	faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -300,7 +301,17 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				style={{ minWidth: 0 }}
 				onClick={doEdit}
 			>
-				<b>{item.name}</b>
+				<b>
+					{item.name}
+					{item.isRateLimited ? (
+						<span
+							className="ms-2 text-warning"
+							title="This trigger is firing very rapidly and is being rate-limited. This is often caused by an accidental feedback loop, where the trigger's actions change a variable that re-triggers it."
+						>
+							<FontAwesomeIcon icon={faTriangleExclamation} /> Rate limited
+						</span>
+					) : null}
+				</b>
 				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
