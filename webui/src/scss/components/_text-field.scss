@@ -1,5 +1,6 @@
 @use '../variables' as *;
 @use '../common'; // updates .form-control background-color (rearranging the @use lines in App.scss doesn't work)
+@use '@coreui/coreui/scss/forms/form-control';
 
 .text-input-field {
 	// Future: replace this with css we control

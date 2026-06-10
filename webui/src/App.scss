@@ -1,7 +1,27 @@
 // IMPORTANT: 'scss/variables' MUST be the first @use rule: it loads and overrides the defaults in @coreui
 //  See Sass @use documentation: "A module will keep the same configuration ... even if it’s loaded multiple times"
 @use 'scss/variables' as *; // local definitions not related to @coreui definitions
-@use '@coreui/coreui/scss/coreui'; // note this is not strictly necessary, since it's forwarded by _variables, above.
+
+// Layout & components
+@forward '@coreui/coreui/scss/root';
+@forward '@coreui/coreui/scss/reboot';
+@forward '@coreui/coreui/scss/type';
+@forward '@coreui/coreui/scss/containers';
+@forward '@coreui/coreui/scss/forms';
+@forward '@coreui/coreui/scss/grid';
+@forward '@coreui/coreui/scss/tables';
+@forward '@coreui/coreui/scss/transitions';
+@forward '@coreui/coreui/scss/nav';
+@forward '@coreui/coreui/scss/close';
+
+@forward '@coreui/coreui/scss/header';
+@forward '@coreui/coreui/scss/sidebar';
+
+// Helpers
+@forward '@coreui/coreui/scss/helpers';
+
+// Utilities
+@forward '@coreui/coreui/scss/utilities/api';
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 

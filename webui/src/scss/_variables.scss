@@ -8,7 +8,7 @@
 $_private-header-bg: #d50215; // note: this is currently used for $primary as well as header
 // coreui doesn't define a header-brand-bg, so define it here and use it for sidebar, which coreui does define
 $header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
-@forward '@coreui/coreui/scss/coreui' with (
+@forward '@coreui/coreui/scss/variables' with (
 	$primary: $_private-header-bg,
 	$secondary: #ccc,
 	$body-bg: #333,
