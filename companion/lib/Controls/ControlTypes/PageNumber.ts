@@ -128,7 +128,12 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
-			this.deps.surfaces.devicePageSet(surfaceId, this.deps.pageStore.getFirstPageId())
+			const startupPageId = this.deps.surfaces.devicePageGetConfiguredStartup(surfaceId)
+			const pageId =
+				startupPageId && this.deps.pageStore.isPageIdValid(startupPageId)
+					? startupPageId
+					: this.deps.pageStore.getFirstPageId()
+			this.deps.surfaces.devicePageSet(surfaceId, pageId)
 		}
 	}
 
@@ -148,7 +153,7 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 			definitionId: 'set_page',
 			options: {
 				surfaceId: exprVal('self'),
-				page: exprVal(1),
+				page: exprVal('startup'),
 			},
 		})
 	}
