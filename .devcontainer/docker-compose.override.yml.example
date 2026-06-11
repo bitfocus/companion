@@ -1,0 +1,27 @@
+services:
+  companion:
+    # ----------------------------------------------------------------------
+    # Template for machine-local devcontainer overrides.
+    #
+    # The real file (docker-compose.override.yml) is gitignored, so it can
+    # NEVER be committed — edit it freely. It is created automatically from
+    # this template by `initializeCommand` in devcontainer.json if missing.
+    #
+    # Example: mount an extra host folder. Entries here are appended to the
+    # base `volumes` list, so the repo mount is preserved.
+    #
+    # volumes:
+    #   - /absolute/host/path:/workspaces/extra:cached
+    # ----------------------------------------------------------------------
+    {}
+
+    # Opt-in: USB passthrough for surfaces (Stream Decks etc). Linux hosts only.
+    # Uncomment to enable access to all USB devices, including hotplugged ones.
+    # Note: the host's udev rules decide device node permissions, so the usual
+    # Companion udev rules must be installed on the host. Hotplug events may not
+    # propagate; use rescan in the admin UI.
+    # device_cgroup_rules:
+    #   - "c 189:* rmw"
+    # volumes:
+    #   - ..:/workspaces/companion:cached
+    #   - /dev/bus/usb:/dev/bus/usb

@@ -1,0 +1,44 @@
+{
+	"name": "Companion",
+	// Compose-based so machine-local tweaks (e.g. extra mounts) can live in
+	// docker-compose.override.yml without committing them. See that file.
+	"dockerComposeFile": ["docker-compose.yml", "docker-compose.override.yml"],
+	"service": "companion",
+	"workspaceFolder": "/workspaces/companion",
+	"overrideCommand": true,
+	// docker-compose.override.yml is gitignored (your machine-local overrides).
+	// Create it from the template if missing so compose always finds it.
+	// Runs on the host; needs sh-like tooling (Git Bash on Windows).
+	"initializeCommand": "cd .devcontainer && (test -f docker-compose.override.yml || cp docker-compose.override.yml.example docker-compose.override.yml)",
+	"postCreateCommand": "COREPACK_ENABLE_DOWNLOAD_PROMPT=0 yarn install",
+	"forwardPorts": [8000, 5173, 6006, 4000, 16622, 16623],
+	"portsAttributes": {
+		"8000": {
+			"label": "Companion Admin UI"
+		},
+		"5173": {
+			"label": "WebUI dev server"
+		},
+		"6006": {
+			"label": "Storybook"
+		},
+		"4000": {
+			"label": "Docs"
+		},
+		"16622": {
+			"label": "Satellite API (TCP)"
+		},
+		"16623": {
+			"label": "Satellite API (WS)"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode", "EditorConfig.EditorConfig"]
+		}
+	},
+	"remoteUser": "node",
+	"remoteEnv": {
+		"COMPANION_UI_HOST": "127.0.0.1"
+	}
+}

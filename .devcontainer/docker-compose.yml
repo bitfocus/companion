@@ -1,0 +1,11 @@
+services:
+  companion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Bind-mount the repo into the container. Keep this in sync with
+    # `workspaceFolder` in devcontainer.json.
+    volumes:
+      - ..:/workspaces/companion:cached
+    # Keep the container alive; the actual dev process is started by VS Code.
+    command: sleep infinity

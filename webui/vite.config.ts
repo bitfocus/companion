@@ -63,6 +63,7 @@ export default defineConfig(({ mode }) => {
 		},
 		server: {
 			port: parseInt(env.COMPANION_UI_PORT || '', 10) || undefined,
+			host: env.COMPANION_UI_HOST || undefined,
 			allowedHosts: ['bs-local.com'],
 			proxy: {
 				[`${normalizedBase}/instance`]: {
