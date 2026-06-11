@@ -1,5 +1,5 @@
 import { parse } from 'marked'
-import sanitizeHtml from 'sanitize-html'
+import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 
 export function StaticTextFieldText({
 	id,
@@ -16,10 +16,7 @@ export function StaticTextFieldText({
 }): JSX.Element | null {
 	if (value && value != label) {
 		const descriptionHtml = {
-			__html: sanitizeHtml(parse(value?.trim() ?? '') as string, {
-				allowedTags: sanitizeHtml.defaults.allowedTags.concat(allowImages ? ['img'] : []),
-				disallowedTagsMode: 'escape',
-			}),
+			__html: sanitizeHtmlString(parse(value?.trim() ?? '') as string, { allowImages }),
 		}
 
 		return <div id={id} title={tooltip} dangerouslySetInnerHTML={descriptionHtml} className="static-text-content"></div>

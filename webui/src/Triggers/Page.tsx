@@ -15,7 +15,6 @@ import dayjs from 'dayjs'
 import { single as fuzzySingle } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import sanitizeHtml from 'sanitize-html'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -30,6 +29,7 @@ import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -283,10 +283,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	const descriptionHtml = useMemo(
 		() => ({
-			__html: sanitizeHtml(item.description || 'No events', {
-				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-				disallowedTagsMode: 'escape',
-			}),
+			__html: sanitizeHtmlString(item.description || 'No events'),
 		}),
 		[item.description]
 	)
