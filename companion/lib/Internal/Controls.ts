@@ -203,7 +203,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 
 			button_text: {
-				label: 'Button: Set text',
+				label: 'Button: Set text (Deprecated)',
 				description:
 					"Avoid this if you can. It's better to either set the text to a custom variable, or to use a feedback to dynamically override the text",
 				showButtonPreview: true,
@@ -219,7 +219,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				optionsSupportExpressions: true,
 			},
 			textcolor: {
-				label: 'Button: Set text color',
+				label: 'Button: Set text color (Deprecated)',
 				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
@@ -237,7 +237,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				optionsSupportExpressions: true,
 			},
 			bgcolor: {
-				label: 'Button: Set background color',
+				label: 'Button: Set background color (Deprecated)',
 				description: "Avoid this if you can. It's better to dynamically change the color with a feedback",
 				showButtonPreview: true,
 				options: [
