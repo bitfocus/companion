@@ -1,6 +1,7 @@
 import type express from 'express'
 import semver from 'semver'
 import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -86,7 +87,7 @@ import {
 } from './EntityManager.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 
-const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
+const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT } // Backwards compatibility for modules that expect feedback size
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger

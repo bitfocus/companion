@@ -294,9 +294,9 @@ export class GraphicsRenderer {
 	/**
 	 * Flatten an array of imagebuffers into a single base64 image
 	 */
-	static async drawImageBuffers(_showTopBar: boolean, imageBuffers: DrawImageBuffer[]): Promise<string> {
+	static async drawImageBuffers(showTopBar: boolean, imageBuffers: DrawImageBuffer[]): Promise<string> {
 		const imageWidth = 72
-		const imageHeight = 58 // showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72
+		const imageHeight = showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72
 
 		return GraphicsRenderer.#getCachedImage(imageWidth, imageHeight, 4, async (img) => {
 			for (const imageBuffer of imageBuffers) {

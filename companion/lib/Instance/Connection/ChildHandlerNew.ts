@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -57,7 +58,7 @@ import type {
 	UpdateFeedbackValuesMessage,
 } from './IpcTypesNew.js'
 
-const moduleFeedbackSize = { width: 72, height: 58 } // Backwards compatibility for modules that expect feedback size
+const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT } // Backwards compatibility for modules that expect feedback size
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
