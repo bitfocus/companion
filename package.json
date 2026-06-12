@@ -88,13 +88,12 @@
   "resolutions": {
     "osc/serialport": "npm:empty-npm-package@1.0.0",
     "app-builder-lib@npm:26.9.1": "patch:app-builder-lib@npm%3A26.9.1#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
-    "@xkeys-lib/core@npm:3.3.0": "patch:@xkeys-lib/core@npm%3A3.3.0#~/.yarn/patches/@xkeys-lib-core-npm-3.3.0-1a65b6423b.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "2.1.0-0-nightly-main-20260606-145024-187a8f4",
-    "@companion-module/host": "1.0.3-nightly-main-20260523-215208-95c00ff",
+    "@companion-module/base": "2.1.0-0-nightly-main-20260612-220203-a5e55f1",
+    "@companion-module/host": "1.0.3-nightly-main-20260612-220344-a5e55f1",
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
   },

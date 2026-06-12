@@ -16,7 +16,6 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	CompanionButtonStepActions,
-	CompanionPresetAction,
 	CompanionPresetDefinition,
 	CompanionPresetDefinitions,
 	CompanionPresetGroup,
@@ -25,10 +24,12 @@ import type {
 	CompanionPresetSection,
 	Complete,
 	ModuleLogger,
+	SomePresetActionEntry,
 } from '@companion-module/host'
 import { ConvertLegacyStyleToElements } from '../../../Resources/ConvertLegacyStyleToElements.js'
+import { convertPresetActionEntries, type PresetEntryConversionContext } from './PresetInternalEntities.js'
 import { ConvertLayeredPresetFeedbacksToEntities, ConvertLayerPresetElements } from './PresetsLayered.js'
-import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
+import { convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -287,20 +288,23 @@ function ConvertPresetDefinition(
 		const presetType = rawPreset.type
 		const presetName = rawPreset.name
 
+		// `internal:*` entries are allowed: the host has validated and version-gated them for new-api modules
+		const entryCtx: PresetEntryConversionContext = {
+			logger,
+			connectionId,
+			connectionUpgradeIndex,
+			allowInternalEntities: true,
+		}
+
 		switch (rawPreset.type) {
 			case 'simple': {
 				const parsedStyle = ConvertLegacyStyleToElements(
 					ConvertPresetStyleToDrawStyle(rawPreset.style),
-					convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+					convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 					rawPreset.previewStyle
 				)
 
-				const { steps, hasRotaryActions } = ConvertStepsForPreset(
-					logger,
-					connectionId,
-					connectionUpgradeIndex,
-					rawPreset.steps
-				)
+				const { steps, hasRotaryActions } = ConvertStepsForPreset(entryCtx, rawPreset.steps)
 
 				const presetDefinition: PresetDefinition = {
 					id: presetId,
@@ -335,12 +339,7 @@ function ConvertPresetDefinition(
 				return presetDefinition
 			}
 			case 'layered': {
-				const { steps, hasRotaryActions } = ConvertStepsForPreset(
-					logger,
-					connectionId,
-					connectionUpgradeIndex,
-					rawPreset.steps
-				)
+				const { steps, hasRotaryActions } = ConvertStepsForPreset(entryCtx, rawPreset.steps)
 
 				const presetDefinition: PresetDefinition = {
 					id: presetId,
@@ -357,11 +356,7 @@ function ConvertPresetDefinition(
 						style: {
 							layers: ConvertLayerPresetElements(logger, connectionId, rawPreset.canvas, rawPreset.elements),
 						},
-						feedbacks: ConvertLayeredPresetFeedbacksToEntities(
-							rawPreset.feedbacks,
-							connectionId,
-							connectionUpgradeIndex
-						),
+						feedbacks: ConvertLayeredPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 
 						steps,
 						localVariables: ConvertLocalVariablesForPreset(
@@ -390,9 +385,7 @@ function ConvertPresetDefinition(
 }
 
 function ConvertStepsForPreset(
-	logger: ModuleLogger,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined,
+	ctx: PresetEntryConversionContext,
 	rawSteps: CompanionButtonStepActions[] | undefined
 ): { steps: NormalButtonSteps; hasRotaryActions: boolean } {
 	const steps: NormalButtonSteps = {}
@@ -421,7 +414,7 @@ function ConvertStepsForPreset(
 
 				const setIdSafe = validateActionSetId(setId as any)
 				if (setIdSafe === undefined) {
-					logger.warn(`Invalid set id: ${setId}`)
+					ctx.logger.warn(`Invalid set id: ${setId}`)
 					continue
 				}
 
@@ -430,16 +423,11 @@ function ConvertStepsForPreset(
 					hasRotaryActions = true
 				}
 
-				const setActions: CompanionPresetAction[] = Array.isArray(set) ? set : set.actions
+				const setActions: SomePresetActionEntry[] = Array.isArray(set) ? set : set.actions
 				if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
 
 				if (setActions) {
-					newStep.action_sets[setIdSafe] = convertActionsDelay(
-						setActions,
-						connectionId,
-						true, // Always relative now
-						connectionUpgradeIndex
-					)
+					newStep.action_sets[setIdSafe] = convertPresetActionEntries(setActions, ctx)
 				}
 			}
 		}

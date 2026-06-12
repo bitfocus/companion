@@ -16,6 +16,7 @@ import type {
 import type { Complete } from '@companion-module/host'
 import type { Logger } from '../../Log/Controller.js'
 import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { PresetEntryConversionContext } from './Thread/PresetInternalEntities.js'
 import {
 	convertActionsDelay,
 	convertPresetFeedbacksToEntities,
@@ -143,9 +144,18 @@ function ConvertPresetDefinition(
 	try {
 		if (rawPreset.type !== 'button') return null
 
+		// Legacy modules predate `internal:*` preset entries and have no host-side validation of them,
+		// so they must never be translated to internal entities
+		const entryCtx: PresetEntryConversionContext = {
+			logger,
+			connectionId,
+			connectionUpgradeIndex,
+			allowInternalEntities: false,
+		}
+
 		const parsedStyle = ConvertLegacyStyleToElements(
 			ConvertPresetStyleToDrawStyle(rawPreset.style),
-			convertPresetFeedbacksToEntities(rawPreset.feedbacks, connectionId, connectionUpgradeIndex),
+			convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 			rawPreset.previewStyle
 		)
 
@@ -204,12 +214,7 @@ function ConvertPresetDefinition(
 					if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
 
 					if (setActions) {
-						newStep.action_sets[setIdSafe] = convertActionsDelay(
-							setActions,
-							connectionId,
-							rawPreset.options?.relativeDelay,
-							connectionUpgradeIndex
-						)
+						newStep.action_sets[setIdSafe] = convertActionsDelay(setActions, rawPreset.options?.relativeDelay, entryCtx)
 					}
 				}
 			}
