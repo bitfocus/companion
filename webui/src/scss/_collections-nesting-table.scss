@@ -267,3 +267,23 @@
 		}
 	}
 }
+
+// dnd-kit sortable feedback (used by the backups list).
+// While dragging, dnd-kit moves the row into a top-layer popover to act as the moving "feedback"
+// (tagged [data-dnd-dragging]) and leaves a clone behind in the list (tagged [data-dnd-placeholder]).
+// These selectors are top-level because the feedback element lives outside the table subtree, so
+// they cannot be nested under .collections-nesting-table. The attributes are dnd-kit specific, so
+// this does not affect the react-dnd based lists that share the .collections-nesting-table-row-item
+// class.
+.collections-nesting-table-row-item {
+	&[data-dnd-placeholder] {
+		opacity: 0.4;
+	}
+
+	&[data-dnd-dragging] {
+		background-color: #f5f2fa;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		outline: 2px solid rgba(0, 0, 0, 0.5);
+		outline-offset: -2px;
+	}
+}

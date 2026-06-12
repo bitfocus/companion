@@ -1,6 +1,6 @@
+import { useDragOperation, useDroppable } from '@dnd-kit/react'
 import classNames from 'classnames'
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { useDrop } from 'react-dnd'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -8,8 +8,7 @@ import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import useElementInnerSize from '~/Hooks/useElementClientSize.js'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import type { PresetDragItem } from './Presets/PresetDragItem.js'
+import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
@@ -251,36 +250,17 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 	}
 )
 
-interface PresetDragState {
-	isOver: boolean
-	canDrop: boolean
-}
-
 export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...props }: ButtonInfiniteGridButtonProps) {
-	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
-
-	const [{ isOver, canDrop }, drop] = useDrop<PresetDragItem, unknown, PresetDragState>({
+	const { ref: drop, isDropTarget } = useDroppable({
+		id: makeGridButtonDroppableId(props.pageNumber, props.column, props.row),
 		accept: 'preset',
-		drop: (dropData) => {
-			console.log('preset drop', dropData)
-			importPresetMutation
-				.mutateAsync({
-					connectionId: dropData.connectionId,
-					presetId: dropData.presetId,
-					location: { pageNumber: props.pageNumber, column: props.column, row: props.row },
-					variableValues: dropData.variableValues,
-				})
-				.catch(() => {
-					console.error('Preset import failed')
-				})
-		},
-		collect: (monitor) => ({
-			isOver: !!monitor.isOver(),
-			canDrop: !!monitor.canDrop(),
-		}),
 	})
 
-	return <ButtonGridIcon {...props} dropRef={drop} dropHover={isOver} canDrop={canDrop} />
+	// A preset is being dragged somewhere within the provider - highlight all valid targets
+	const { source } = useDragOperation()
+	const canDrop = source?.type === 'preset'
+
+	return <ButtonGridIcon {...props} dropRef={drop} dropHover={isDropTarget} canDrop={canDrop} />
 })
 
 type ButtonGridIconProps = ButtonGridIconBaseProps

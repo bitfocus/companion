@@ -1,9 +1,9 @@
+import { useDraggable } from '@dnd-kit/react'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
-import { useDrag } from 'react-dnd'
 import type {
 	UIPresetGroup,
 	UIPresetGroupSimple,
@@ -162,13 +162,16 @@ interface PresetIconPreviewProps {
 	variableValues: VariableValues | null
 }
 function PresetIconPreview({ connectionId, presetId, title, variableValues }: Readonly<PresetIconPreviewProps>) {
-	const [, drag] = useDrag<PresetDragItem>({
+	const dragData: PresetDragItem = {
+		connectionId,
+		presetId,
+		variableValues: variableValues,
+	}
+	const dragId = `preset:${connectionId}:${presetId}:${variableValues ? createStableObjectHash(variableValues) : 'base'}`
+	const { ref: drag, isDragSource } = useDraggable<PresetDragItem>({
+		id: dragId,
 		type: 'preset',
-		item: {
-			connectionId,
-			presetId,
-			variableValues: variableValues,
-		},
+		data: dragData,
 	})
 
 	const sub = useSubscription(
@@ -195,6 +198,7 @@ function PresetIconPreview({ connectionId, presetId, title, variableValues }: Re
 		<ButtonPreviewBase
 			fixedSize
 			dragRef={drag}
+			className={isDragSource ? 'preset-drag-source' : undefined}
 			title={title}
 			preview={sub.error ? RedImage : sub.data}
 			onClick={sub.error ? onClick : undefined}

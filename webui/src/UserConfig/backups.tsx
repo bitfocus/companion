@@ -1,3 +1,5 @@
+import { DragDropProvider } from '@dnd-kit/react'
+import { useSortable } from '@dnd-kit/react/sortable'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -5,13 +7,11 @@ import classNames from 'classnames'
 import dayjs from 'dayjs'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { useDrag, useDrop } from 'react-dnd'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Grid } from '~/Components/Grid'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
-import { checkDragState, type DragState } from '~/Resources/DragAndDrop.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
@@ -112,41 +112,43 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 		[reorderRulesMutation]
 	)
 
+	const handleDragEnd = useCallback(
+		(event: { canceled: boolean; operation: { source: { id: unknown } | null; target: { id: unknown } | null } }) => {
+			if (event.canceled) return
+			const { source, target } = event.operation
+			if (!source || !target) return
+			const sourceId = String(source.id)
+			const targetId = String(target.id)
+			if (sourceId === targetId) return
+			moveRule(sourceId, targetId)
+		},
+		[moveRule]
+	)
+
 	return (
-		<table className="table-tight table-responsive-sm collections-nesting-table" style={{ marginBottom: 10 }}>
-			<tbody>
+		<DragDropProvider onDragEnd={handleDragEnd}>
+			<div className="collections-nesting-table" style={{ marginBottom: 10 }}>
 				{backupRules.length > 0 ? (
-					backupRules.map((rule) => (
-						<BackupsTableRow key={rule.id} rule={rule} editRule={editRule} moveRule={moveRule} />
+					backupRules.map((rule, index) => (
+						<BackupsTableRow key={rule.id} rule={rule} index={index} editRule={editRule} />
 					))
 				) : (
-					<tr>
-						<td colSpan={4} className="currentlyNone">
-							<NonIdealState icon={faAdd} text="No backup rules configured. Add one to get started!" />
-						</td>
-					</tr>
+					<div className="currentlyNone">
+						<NonIdealState icon={faAdd} text="No backup rules configured. Add one to get started!" />
+					</div>
 				)}
-			</tbody>
-		</table>
+			</div>
+		</DragDropProvider>
 	)
 })
 
-interface BackupsTableRowDragData {
-	id: string
-
-	dragState: DragState | null
-}
-interface BackupsTableRowDragStatus {
-	isDragging: boolean
-}
-
 interface BackupsTableRowProps {
 	rule: BackupRulesConfig
+	index: number
 	editRule: (ruleId: string) => void
-	moveRule: (itemId: string, targetId: string) => void
 }
 
-function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
+function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const updateRuleFieldMutation = useMutationExt(trpc.importExport.backupRules.updateRuleField.mutationOptions())
@@ -177,36 +179,7 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 
 	const doEdit = useCallback(() => editRule(rule.id), [editRule, rule.id])
 
-	const ref = useRef(null)
-	const [, drop] = useDrop<BackupsTableRowDragData>({
-		accept: 'backup-rule',
-		hover(hoverItem, monitor) {
-			if (!ref.current) {
-				return
-			}
-			// Don't replace items with themselves
-			if (hoverItem.id === rule.id) {
-				return
-			}
-
-			if (!checkDragState(hoverItem, monitor, rule.id)) return
-
-			// Time to actually perform the action
-			moveRule(hoverItem.id, rule.id)
-		},
-	})
-
-	const [{ isDragging }, drag, preview] = useDrag<BackupsTableRowDragData, unknown, BackupsTableRowDragStatus>({
-		type: 'backup-rule',
-		item: {
-			id: rule.id,
-			dragState: null,
-		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
-		}),
-	})
-	preview(drop(ref))
+	const { ref, handleRef } = useSortable({ id: rule.id, index })
 
 	const matchRoute = useMatchRoute()
 	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
@@ -215,42 +188,44 @@ function BackupsTableRow({ rule, editRule, moveRule }: BackupsTableRowProps) {
 	const backupTypeLabel = backupTypes.find((type) => type.id === rule.backupType)?.label || rule.backupType
 
 	return (
-		<tr
+		<div
 			ref={ref}
 			className={classNames('collections-nesting-table-row-item', {
-				'row-dragging': isDragging,
-				'row-notdragging': !isDragging,
 				'row-selected': isSelected,
 			})}
 		>
-			<td ref={drag} className="td-reorder">
-				<FontAwesomeIcon icon={faSort} />
-				<GenericConfirmModal ref={confirmRef} />
-			</td>
-			<td onClick={doEdit} className="hand">
-				<b>{rule.name}</b>
-				<br />
-				<small>Format: {backupTypeLabel}</small>
-			</td>
-			<td onClick={doEdit} className="hand">
-				<small>Cron: {rule.cron}</small>
-				<br />
-				{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}
-			</td>
-			<td className="action-buttons">
-				<ButtonGroup className="ms-2">
-					<SwitchInputField
-						id={undefined}
-						value={rule.enabled}
-						setValue={doEnableDisable}
-						tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
-					/>
+			<div className="collections-nesting-table-row-item-grid">
+				<div ref={handleRef} className="row-reorder-handle">
+					<FontAwesomeIcon icon={faSort} />
+					<GenericConfirmModal ref={confirmRef} />
+				</div>
+				<div className="grow backup-rule-content">
+					<div onClick={doEdit} className="hand backup-rule-info">
+						<b>{rule.name}</b>
+						<br />
+						<small>Format: {backupTypeLabel}</small>
+					</div>
+					<div onClick={doEdit} className="hand backup-rule-cron">
+						<small>Cron: {rule.cron}</small>
+						<br />
+						{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}
+					</div>
+					<div className="backup-rule-actions">
+						<ButtonGroup>
+							<SwitchInputField
+								id={undefined}
+								value={rule.enabled}
+								setValue={doEnableDisable}
+								tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
+							/>
 
-					<Button onClick={doDelete} title="Delete">
-						<FontAwesomeIcon icon={faTrash} />
-					</Button>
-				</ButtonGroup>
-			</td>
-		</tr>
+							<Button onClick={doDelete} title="Delete">
+								<FontAwesomeIcon icon={faTrash} />
+							</Button>
+						</ButtonGroup>
+					</div>
+				</div>
+			</div>
+		</div>
 	)
 }
