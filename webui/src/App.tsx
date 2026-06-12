@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { DndProvider } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
-import { TouchBackend } from 'react-dnd-touch-backend'
 import { useIdleTimer } from 'react-idle-timer'
 import { PuffLoader } from 'react-spinners'
 import { Grid } from '~/Components/Grid'
@@ -24,8 +23,6 @@ import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { trpc } from './Resources/TRPC.js'
 import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
-
-const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
 export default function App(): React.JSX.Element {
 	const trpcStatus = useTRPCConnectionStatus()
@@ -96,10 +93,7 @@ export default function App(): React.JSX.Element {
 						}
 					>
 						<MonacoLoader />
-						<DndProvider
-							backend={useTouchBackend ? TouchBackend : HTML5Backend}
-							options={useTouchBackend ? { enableMouseEvents: true } : {}}
-						>
+						<DndProvider backend={HTML5Backend}>
 							<AppMain
 								connected={connected && !shouldReload}
 								loadingComplete={loadingComplete}

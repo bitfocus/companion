@@ -16,22 +16,6 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 			</tr>
 
 			<tr>
-				<td>Use TouchBackend for Drag and Drop</td>
-				<td>
-					<div className="float-right">
-						<SwitchInputField
-							id={undefined}
-							value={window.localStorage.getItem('test_touch_backend') === '1'}
-							setValue={(val) => {
-								window.localStorage.setItem('test_touch_backend', val ? '1' : '0')
-								window.location.reload()
-							}}
-						/>
-					</div>
-				</td>
-				<td>&nbsp;</td>
-			</tr>
-			<tr>
 				<td>Companion Cloud Tab (Deprecated)</td>
 				<td>
 					<div className="float-right">

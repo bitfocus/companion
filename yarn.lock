@@ -1833,7 +1833,6 @@ __metadata:
     react-date-picker: "npm:^12.0.2"
     react-dnd: "npm:^16.0.1"
     react-dnd-html5-backend: "npm:^16.0.1"
-    react-dnd-touch-backend: "npm:^16.0.1"
     react-dom: "npm:^18.3.1"
     react-error-boundary: "npm:^6.1.2"
     react-idle-timer: "npm:^5.7.3"
@@ -21176,16 +21175,6 @@ __metadata:
   dependencies:
     dnd-core: "npm:^16.0.1"
   checksum: 10c0/6e4b632a11e20211d71f5f3bedadf13ecec2fa73372fde388619838294b1375f15b717d1ce128e12c872ff7b15c32d26761d2026b33c14fc55e4fd5477c15289
-  languageName: node
-  linkType: hard
-
-"react-dnd-touch-backend@npm:^16.0.1":
-  version: 16.0.1
-  resolution: "react-dnd-touch-backend@npm:16.0.1"
-  dependencies:
-    "@react-dnd/invariant": "npm:^4.0.1"
-    dnd-core: "npm:^16.0.1"
-  checksum: 10c0/88096146939a0466d43b9b4e33a3761284e36f40e82d2dbd1ab1130d81b40110b45492fb828db7857f3822cd44f604f646de0a2285f18ccb0697b5b088fa4b22
   languageName: node
   linkType: hard
 
