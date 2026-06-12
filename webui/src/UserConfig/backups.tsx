@@ -1,5 +1,5 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
-import { useSortable } from '@dnd-kit/react/sortable'
+import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -115,18 +115,22 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 	useDragDropMonitor({
 		onDragEnd(event) {
 			if (event.canceled) return
-			const { source, target } = event.operation
-			// Only handle backup-rule drags (the provider is shared across the whole app)
-			if (!source || !target || source.type !== 'backup-rule') return
-			const sourceId = String(source.id)
-			const targetId = String(target.id)
-			if (sourceId === targetId) return
-			moveRule(sourceId, targetId)
+			const { source } = event.operation
+			// Only handle backup-rule drags (the provider is shared across the whole app).
+			// For sortables the move is described by the source's projected index, not `target`.
+			if (!source || source.type !== 'backup-rule' || !isSortable(source)) return
+			const { initialIndex, index } = source
+			if (initialIndex === index) return
+			// The dragged rule should land where the rule currently at `index` sits; the backend
+			// removes the dragged rule then re-inserts it at the target's position.
+			const targetRule = backupRules[index]
+			if (!targetRule) return
+			moveRule(String(source.id), targetRule.id)
 		},
 	})
 
 	return (
-		<div className="collections-nesting-table" style={{ marginBottom: 10 }}>
+		<div className="collections-nesting-table mb-2">
 			{backupRules.length > 0 ? (
 				backupRules.map((rule, index) => (
 					<BackupsTableRow key={rule.id} rule={rule} index={index} editRule={editRule} />
