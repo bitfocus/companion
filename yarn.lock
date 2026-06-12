@@ -1921,9 +1921,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.3-nightly-feat-internal-entities-in-presets-20260612-213333-9a4d1c0":
-  version: 1.0.3-nightly-feat-internal-entities-in-presets-20260612-213333-9a4d1c0
-  resolution: "@companion-module/host@npm:1.0.3-nightly-feat-internal-entities-in-presets-20260612-213333-9a4d1c0"
+"@companion-module/host@npm:1.0.3-nightly-feat-internal-entities-in-presets-20260612-214837-b7419f7":
+  version: 1.0.3-nightly-feat-internal-entities-in-presets-20260612-214837-b7419f7
+  resolution: "@companion-module/host@npm:1.0.3-nightly-feat-internal-entities-in-presets-20260612-214837-b7419f7"
   dependencies:
     "@companion-module/base": "npm:~2.1.0-0"
     debounce-fn: "npm:^6.0.0"
@@ -1931,7 +1931,7 @@ __metadata:
     semver: "npm:^7.7.4"
     tslib: "npm:^2.8.1"
     zod: "npm:^4.3.6"
-  checksum: 10c0/99ccfe94771fd40e162fcc13d4287e867c551bb370dfc014a3f60b127e31103e8c52503c399f9b2dadaafa4fbf96648408ba757d9777699609abbe56cda3b121
+  checksum: 10c0/0a888d7af6a3f983620a2f301d943e46b0d8093f154b5fc67ec75b00f7f43db021b1cb947c0fac7027803cb889a93b7984a9081e953ad9695fbb23f19837cc10
   languageName: node
   linkType: hard
 

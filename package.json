@@ -94,7 +94,7 @@
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
     "@companion-module/base": "2.1.0-0-nightly-feat-internal-entities-in-presets-20260612-212853-9a4d1c0",
-    "@companion-module/host": "1.0.3-nightly-feat-internal-entities-in-presets-20260612-213333-9a4d1c0",
+    "@companion-module/host": "1.0.3-nightly-feat-internal-entities-in-presets-20260612-214837-b7419f7",
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
   },
