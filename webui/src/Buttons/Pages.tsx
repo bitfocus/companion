@@ -1,8 +1,9 @@
+import { useDragDropMonitor } from '@dnd-kit/react'
+import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { useDrag, useDrop } from 'react-dnd'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -85,6 +86,22 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 		[removeMutation]
 	)
 
+	// Reordering is handled here (the dnd-kit provider is global); we filter to page-list drags.
+	// For sortables the new position is the source's projected index (1-based page number).
+	const moveMutation = useMutationExt(trpc.pages.move.mutationOptions())
+	useDragDropMonitor({
+		onDragEnd(event) {
+			if (event.canceled) return
+			const { source } = event.operation
+			if (!source || source.type !== 'page-list' || !isSortable(source)) return
+			const { initialIndex, index } = source
+			if (initialIndex === index) return
+			moveMutation.mutateAsync({ pageId: String(source.id), pageNumber: index + 1 }).catch((e) => {
+				console.error('Page move failed', e)
+			})
+		},
+	})
+
 	return (
 		<div>
 			<h5>Pages</h5>
@@ -97,52 +114,53 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 					<GenericConfirmModal ref={deleteRef} />
 					<EditPagePropertiesModal ref={editRef} includeName={false} />
 
-					<table className="table table-responsive-sm pages-list-table">
-						<thead>
-							<tr>
-								<th></th>
-								<th style={{ textAlign: 'center' }}>Number</th>
-								<th>Name</th>
-								<th>
-									<ButtonGroup className="w-full">
-										<Button color="warning" size="sm" onClick={doInsertPage} title="Insert page at start" data-page={1}>
-											<FontAwesomeIcon icon={faPlus} />
-										</Button>
-									</ButtonGroup>
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{pages.data.map((info, id) => (
-								<PageListRow
-									key={id}
-									pageNumber={id + 1}
-									info={info}
-									pageCount={pages.data.length}
-									goToPage={goToPage}
-									configurePage={configurePage}
-									doInsertPage={doInsertPage}
-									doDeletePage={doDeletePage}
-								/>
-							))}
-						</tbody>
-					</table>
+					<div className="collections-nesting-table pages-list-table">
+						<div className="collections-nesting-table-row-item">
+							<div className="collections-nesting-table-row-item-grid fw-bold">
+								<div className="row-reorder-handle invisible">
+									<FontAwesomeIcon icon={faSort} />
+								</div>
+								<div className="grow d-flex align-items-center gap-2">
+									<div className="pages-list-number">Number</div>
+									<div className="grow">Name</div>
+									<div className="ms-auto">
+										<ButtonGroup className="pages-list-actions">
+											<Button
+												color="warning"
+												size="sm"
+												onClick={doInsertPage}
+												title="Insert page at start"
+												data-page={1}
+											>
+												<FontAwesomeIcon icon={faPlus} />
+											</Button>
+										</ButtonGroup>
+									</div>
+								</div>
+							</div>
+						</div>
+						{pages.data.map((info, id) => (
+							<PageListRow
+								key={info.id}
+								index={id}
+								pageNumber={id + 1}
+								info={info}
+								pageCount={pages.data.length}
+								goToPage={goToPage}
+								configurePage={configurePage}
+								doInsertPage={doInsertPage}
+								doDeletePage={doDeletePage}
+							/>
+						))}
+					</div>
 				</Grid.Col>
 			</Grid.Row>
 		</div>
 	)
 })
 
-const PAGE_LIST_DRAG_ID = 'PAGE_LIST_DRAG'
-interface PageListDragItem {
-	pageNumber: number
-	pageId: string
-}
-interface PageListDragStatus {
-	isDragging: boolean
-}
-
 interface PageListRowProps {
+	index: number
 	pageNumber: number
 	info: PagesStoreModel
 	pageCount: number
@@ -153,6 +171,7 @@ interface PageListRowProps {
 }
 
 const PageListRow = observer(function PageListRow({
+	index,
 	pageNumber,
 	info,
 	pageCount,
@@ -162,7 +181,6 @@ const PageListRow = observer(function PageListRow({
 	doDeletePage,
 }: PageListRowProps) {
 	const setNameMutation = useMutationExt(trpc.pages.setName.mutationOptions())
-	const moveMutation = useMutationExt(trpc.pages.move.mutationOptions())
 
 	const changeName = useCallback(
 		(newName: string) => {
@@ -178,95 +196,52 @@ const PageListRow = observer(function PageListRow({
 		[setNameMutation, pageNumber]
 	)
 
-	const ref = useRef<HTMLTableRowElement>(null)
-	const [, drop] = useDrop<PageListDragItem>({
-		accept: PAGE_LIST_DRAG_ID,
-		drop(item, _monitor) {
-			// We do this one on drop, as it is costly to move the page around
-			if (!ref.current) {
-				return
-			}
-			const dragPageNumber = item.pageNumber
-			const hoverPageNumber = pageNumber
-			// Don't replace items with themselves
-			if (dragPageNumber === hoverPageNumber && item.pageId === info.id) {
-				return
-			}
-
-			// Time to actually perform the action
-			// serviceFactory.moveCard(item.stepId, item.setId, item.index, index)
-			console.log('do move', item, hoverPageNumber)
-			moveMutation
-				.mutateAsync({
-					pageId: item.pageId,
-					pageNumber: hoverPageNumber,
-				})
-				.catch((e) => {
-					console.error('Page move failed', e)
-				})
-
-			// Note: we're mutating the monitor item here!
-			// Generally it's better to avoid mutations,
-			// but it's good here for the sake of performance
-			// to avoid expensive index searches.
-			item.pageNumber = hoverPageNumber
-		},
-	})
-	const [{ isDragging }, drag, preview] = useDrag<PageListDragItem, unknown, PageListDragStatus>({
-		type: PAGE_LIST_DRAG_ID,
-		canDrag: true,
-		item: {
-			pageNumber,
-			pageId: info.id,
-		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
-		}),
-	})
-	preview(drop(ref))
+	const { ref, handleRef } = useSortable({ id: info.id, index, type: 'page-list', accept: 'page-list' })
 
 	return (
-		<tr ref={ref} className={isDragging ? 'entitylist-dragging' : ''}>
-			<td ref={drag} className="td-reorder" style={{ width: 10 }}>
-				<FontAwesomeIcon icon={faSort} />
-			</td>
-			<td style={{ width: 80, textAlign: 'center', fontWeight: 'bold' }}>{pageNumber}</td>
-			<td>
-				<TextInputFieldSimple id={undefined} value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
-			</td>
-			<td style={{ width: 100, textAlign: 'right' }}>
-				<ButtonGroup>
-					<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
-						<FontAwesomeIcon icon={faShareFromSquare} />
-					</Button>
-					{/* <Button
-						TODO: for future use, once the modal has more properties
-						color="info"
-						size="sm"
-						onClick={configurePage}
-						title="Edit page name"
-						data-page={pageNumber}
-						data-page-info={JSON.stringify(info)}
-					>
-						<FontAwesomeIcon icon={faPencil} />
-					</Button> */}
-					<Button color="warning" size="sm" onClick={doInsertPage} title="Insert page after" data-page={pageNumber + 1}>
-						<FontAwesomeIcon icon={faPlus} />
-					</Button>
+		<div ref={ref} className="collections-nesting-table-row-item">
+			<div className="collections-nesting-table-row-item-grid">
+				<div ref={handleRef} className="row-reorder-handle">
+					<FontAwesomeIcon icon={faSort} />
+				</div>
+				<div className="grow d-flex align-items-center gap-2">
+					<div className="pages-list-number fw-bold">{pageNumber}</div>
+					<div className="grow">
+						<TextInputFieldSimple
+							id={undefined}
+							value={info.name ?? ''}
+							setValue={changeName}
+							placeholder="Unnamed page"
+						/>
+					</div>
+					<ButtonGroup className="pages-list-actions ms-auto">
+						<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
+							<FontAwesomeIcon icon={faShareFromSquare} />
+						</Button>
+						<Button
+							color="warning"
+							size="sm"
+							onClick={doInsertPage}
+							title="Insert page after"
+							data-page={pageNumber + 1}
+						>
+							<FontAwesomeIcon icon={faPlus} />
+						</Button>
 
-					<Button
-						color="primary"
-						size="sm"
-						onClick={doDeletePage}
-						title="Delete page"
-						data-page={pageNumber}
-						data-name={info.name}
-						disabled={pageCount <= 1}
-					>
-						<FontAwesomeIcon icon={faTrash} />
-					</Button>
-				</ButtonGroup>
-			</td>
-		</tr>
+						<Button
+							color="primary"
+							size="sm"
+							onClick={doDeletePage}
+							title="Delete page"
+							data-page={pageNumber}
+							data-name={info.name}
+							disabled={pageCount <= 1}
+						>
+							<FontAwesomeIcon icon={faTrash} />
+						</Button>
+					</ButtonGroup>
+				</div>
+			</div>
+		</div>
 	)
 })
