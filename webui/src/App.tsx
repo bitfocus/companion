@@ -1,3 +1,4 @@
+import { DragDropProvider } from '@dnd-kit/react'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
@@ -93,13 +94,23 @@ export default function App(): React.JSX.Element {
 						}
 					>
 						<MonacoLoader />
-						<DndProvider backend={HTML5Backend}>
-							<AppMain
-								connected={connected && !shouldReload}
-								loadingComplete={loadingComplete}
-								loadingProgress={loadingProgress}
-							/>
-						</DndProvider>
+						{/*
+						 * Single global dnd-kit provider. Each feature subscribes to its own drags via
+						 * useDragDropMonitor() and filters by drag `type`, so handlers stay scoped while
+						 * dragging between different parts of the UI remains possible (one shared manager).
+						 * Feedback mode is configured per-draggable where needed (e.g. presets drag a clone
+						 * with no drop animation - see PresetIconPreview); everything else uses the defaults.
+						 * (The react-dnd DndProvider below still powers the not-yet-migrated areas.)
+						 */}
+						<DragDropProvider>
+							<DndProvider backend={HTML5Backend}>
+								<AppMain
+									connected={connected && !shouldReload}
+									loadingComplete={loadingComplete}
+									loadingProgress={loadingProgress}
+								/>
+							</DndProvider>
+						</DragDropProvider>
 					</Suspense>
 				</>
 			)}

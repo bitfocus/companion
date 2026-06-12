@@ -1,5 +1,4 @@
-import { Feedback } from '@dnd-kit/dom'
-import { DragDropProvider } from '@dnd-kit/react'
+import { useDragDropMonitor } from '@dnd-kit/react'
 import { faCalculator, faGift, faLayerGroup, faThLarge, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
@@ -118,13 +117,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
 	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
 
-	// Dropping a preset (from the Presets tab) onto a grid button imports it at that location
+	// Dropping a preset (from the Presets tab) onto a grid button imports it at that location.
+	// Subscribed via the global dnd-kit provider; we filter to preset drags by `type`.
 	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
-	const handlePresetDragEnd = useCallback(
-		(event: {
-			canceled: boolean
-			operation: { source: { type?: unknown; data: unknown } | null; target: { id: unknown } | null }
-		}) => {
+	useDragDropMonitor({
+		onDragEnd(event) {
 			if (event.canceled) return
 			const { source, target } = event.operation
 			if (!source || !target || source.type !== 'preset') return
@@ -144,8 +141,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					console.error('Preset import failed')
 				})
 		},
-		[importPresetMutation]
-	)
+	})
 
 	const {
 		contextMenuOpen,
@@ -377,87 +373,79 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	)
 
 	return (
-		<DragDropProvider
-			// Drag a clone of the preset (the original stays put in the pool) and skip the drop
-			// animation so a released preset doesn't fly back. The in-pool original is blurred via
-			// `isDragSource` while dragging - see PresetIconPreview.
-			plugins={(defaults) => [...defaults, Feedback.configure({ feedback: 'clone', dropAnimation: null })]}
-			onDragEnd={handlePresetDragEnd}
-		>
-			<Grid.Row className="buttons-page split-panels">
-				<GenericConfirmModal ref={clearModalRef} />
-				<ContextMenu
-					open={contextMenuOpen}
-					onOpenChange={setContextMenuOpen}
-					position={contextMenuPosition}
-					menuItems={contextMenuItems}
-				/>
+		<Grid.Row className="buttons-page split-panels">
+			<GenericConfirmModal ref={clearModalRef} />
+			<ContextMenu
+				open={contextMenuOpen}
+				onOpenChange={setContextMenuOpen}
+				position={contextMenuPosition}
+				menuItems={contextMenuItems}
+			/>
 
-				{/* On large screens, show the grid in its own column */}
-				{isLargeScreen && (
-					<Grid.Col xs={12} xl={6} className="primary-panel">
-						{gridPanel}
-					</Grid.Col>
-				)}
-
-				<Grid.Col xs={12} xl={6} className="secondary-panel">
-					<div className="secondary-panel-inner">
-						<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
-							<TabArea.List>
-								{!isLargeScreen && (
-									<TabArea.Tab value="grid">
-										<FontAwesomeIcon icon={faThLarge} /> Buttons
-									</TabArea.Tab>
-								)}
-								{selectedButton && (
-									<TabArea.Tab value="edit">
-										<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-										{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
-									</TabArea.Tab>
-								)}
-								<TabArea.Tab value="pages">
-									<FontAwesomeIcon icon={faLayerGroup} /> Pages
-								</TabArea.Tab>
-								<TabArea.Tab value="presets">
-									<FontAwesomeIcon icon={faGift} /> Presets
-								</TabArea.Tab>
-								<TabArea.Tab value="action-recorder">
-									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
-								</TabArea.Tab>
-							</TabArea.List>
-
-							{/* On small screens, show the grid in its own tab */}
-							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
-							<TabArea.Panel value="edit">
-								<MyErrorBoundary>
-									{selectedButton && (
-										<EditButton
-											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-											location={selectedButton}
-											onKeyUp={handleKeyDownInButtons}
-										/>
-									)}
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="pages">
-								<MyErrorBoundary>
-									<PagesList setPageNumber={setPageNumber} />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="presets">
-								<MyErrorBoundary>
-									<ConnectionPresets resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="action-recorder" className="pt-0">
-								<MyErrorBoundary>
-									<ActionRecorder />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-						</TabArea.Root>
-					</div>
+			{/* On large screens, show the grid in its own column */}
+			{isLargeScreen && (
+				<Grid.Col xs={12} xl={6} className="primary-panel">
+					{gridPanel}
 				</Grid.Col>
-			</Grid.Row>
-		</DragDropProvider>
+			)}
+
+			<Grid.Col xs={12} xl={6} className="secondary-panel">
+				<div className="secondary-panel-inner">
+					<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+						<TabArea.List>
+							{!isLargeScreen && (
+								<TabArea.Tab value="grid">
+									<FontAwesomeIcon icon={faThLarge} /> Buttons
+								</TabArea.Tab>
+							)}
+							{selectedButton && (
+								<TabArea.Tab value="edit">
+									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+								</TabArea.Tab>
+							)}
+							<TabArea.Tab value="pages">
+								<FontAwesomeIcon icon={faLayerGroup} /> Pages
+							</TabArea.Tab>
+							<TabArea.Tab value="presets">
+								<FontAwesomeIcon icon={faGift} /> Presets
+							</TabArea.Tab>
+							<TabArea.Tab value="action-recorder">
+								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
+							</TabArea.Tab>
+						</TabArea.List>
+
+						{/* On small screens, show the grid in its own tab */}
+						{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
+						<TabArea.Panel value="edit">
+							<MyErrorBoundary>
+								{selectedButton && (
+									<EditButton
+										key={`${formatLocation(selectedButton)}-${tabResetToken}`}
+										location={selectedButton}
+										onKeyUp={handleKeyDownInButtons}
+									/>
+								)}
+							</MyErrorBoundary>
+						</TabArea.Panel>
+						<TabArea.Panel value="pages">
+							<MyErrorBoundary>
+								<PagesList setPageNumber={setPageNumber} />
+							</MyErrorBoundary>
+						</TabArea.Panel>
+						<TabArea.Panel value="presets">
+							<MyErrorBoundary>
+								<ConnectionPresets resetToken={tabResetToken} />
+							</MyErrorBoundary>
+						</TabArea.Panel>
+						<TabArea.Panel value="action-recorder" className="pt-0">
+							<MyErrorBoundary>
+								<ActionRecorder />
+							</MyErrorBoundary>
+						</TabArea.Panel>
+					</TabArea.Root>
+				</div>
+			</Grid.Col>
+		</Grid.Row>
 	)
 })

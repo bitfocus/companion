@@ -1,4 +1,4 @@
-import { DragDropProvider } from '@dnd-kit/react'
+import { useDragDropMonitor } from '@dnd-kit/react'
 import { useSortable } from '@dnd-kit/react/sortable'
 import { faAdd, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -112,33 +112,31 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 		[reorderRulesMutation]
 	)
 
-	const handleDragEnd = useCallback(
-		(event: { canceled: boolean; operation: { source: { id: unknown } | null; target: { id: unknown } | null } }) => {
+	useDragDropMonitor({
+		onDragEnd(event) {
 			if (event.canceled) return
 			const { source, target } = event.operation
-			if (!source || !target) return
+			// Only handle backup-rule drags (the provider is shared across the whole app)
+			if (!source || !target || source.type !== 'backup-rule') return
 			const sourceId = String(source.id)
 			const targetId = String(target.id)
 			if (sourceId === targetId) return
 			moveRule(sourceId, targetId)
 		},
-		[moveRule]
-	)
+	})
 
 	return (
-		<DragDropProvider onDragEnd={handleDragEnd}>
-			<div className="collections-nesting-table" style={{ marginBottom: 10 }}>
-				{backupRules.length > 0 ? (
-					backupRules.map((rule, index) => (
-						<BackupsTableRow key={rule.id} rule={rule} index={index} editRule={editRule} />
-					))
-				) : (
-					<div className="currentlyNone">
-						<NonIdealState icon={faAdd} text="No backup rules configured. Add one to get started!" />
-					</div>
-				)}
-			</div>
-		</DragDropProvider>
+		<div className="collections-nesting-table" style={{ marginBottom: 10 }}>
+			{backupRules.length > 0 ? (
+				backupRules.map((rule, index) => (
+					<BackupsTableRow key={rule.id} rule={rule} index={index} editRule={editRule} />
+				))
+			) : (
+				<div className="currentlyNone">
+					<NonIdealState icon={faAdd} text="No backup rules configured. Add one to get started!" />
+				</div>
+			)}
+		</div>
 	)
 })
 
@@ -179,7 +177,7 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 
 	const doEdit = useCallback(() => editRule(rule.id), [editRule, rule.id])
 
-	const { ref, handleRef } = useSortable({ id: rule.id, index })
+	const { ref, handleRef } = useSortable({ id: rule.id, index, type: 'backup-rule', accept: 'backup-rule' })
 
 	const matchRoute = useMatchRoute()
 	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })

@@ -1,3 +1,4 @@
+import { Feedback } from '@dnd-kit/dom'
 import { useDraggable } from '@dnd-kit/react'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -17,6 +18,11 @@ import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.
 import { trpc } from '~/Resources/TRPC'
 import { assertNever, useComputed } from '~/Resources/util'
 import type { PresetDragItem } from './PresetDragItem'
+
+// Presets drag a clone (the original stays put in the pool) with no drop animation so a
+// released preset doesn't fly back. Configured per-draggable so it doesn't affect the default
+// sortable feedback (placeholder + settle animation) used everywhere else.
+const PRESET_FEEDBACK_PLUGINS = [Feedback.configure({ feedback: 'clone', dropAnimation: null })]
 
 interface PresetSectionCollapseProps {
 	section: UIPresetSection
@@ -172,6 +178,7 @@ function PresetIconPreview({ connectionId, presetId, title, variableValues }: Re
 		id: dragId,
 		type: 'preset',
 		data: dragData,
+		plugins: PRESET_FEEDBACK_PLUGINS,
 	})
 
 	const sub = useSubscription(
