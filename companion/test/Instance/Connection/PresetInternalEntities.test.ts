@@ -12,8 +12,11 @@ import {
 	convertPresetConditionEntries,
 	type PresetEntryConversionContext,
 } from '../../../lib/Instance/Connection/Thread/PresetInternalEntities.js'
-import { convertActionsDelay, convertPresetFeedbacksToEntities } from '../../../lib/Instance/Connection/Thread/PresetUtils.js'
 import { ConvertLayeredPresetFeedbacksToEntities } from '../../../lib/Instance/Connection/Thread/PresetsLayered.js'
+import {
+	convertActionsDelay,
+	convertPresetFeedbacksToEntities,
+} from '../../../lib/Instance/Connection/Thread/PresetUtils.js'
 
 // Deterministic nanoid
 let nanoidCounter = 0
@@ -107,7 +110,12 @@ describe('PresetInternalEntities', () => {
 
 		it('rejects an expression wrapper on a non-expression option with a warning', () => {
 			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:abortButton', options: { skipReleaseActions: { value: '1 > 0', isExpression: true } } } as any],
+				[
+					{
+						actionId: 'internal:abortButton',
+						options: { skipReleaseActions: { value: '1 > 0', isExpression: true } },
+					} as any,
+				],
 				ctx
 			)
 
@@ -153,7 +161,11 @@ describe('PresetInternalEntities', () => {
 			)
 
 			expect(entities).toHaveLength(4)
-			expect(entities[0]).toMatchObject({ definitionId: 'wait', connectionId: 'internal', options: { time: exprExpr('250') } })
+			expect(entities[0]).toMatchObject({
+				definitionId: 'wait',
+				connectionId: 'internal',
+				options: { time: exprExpr('250') },
+			})
 			expect(entities[1]).toMatchObject({
 				definitionId: 'mod_action',
 				connectionId: 'conn01',
