@@ -59,14 +59,14 @@ export function SelectButtonTypeDropdown({
 
 	return (
 		<Popover.Root>
-			<div className="btn-group" ref={btnGroupRef}>
+			<div className="button-group" ref={btnGroupRef}>
 				<Button color="primary" onClick={() => setButtonType('button-layered')} title="Create regular button.">
 					Create button
 				</Button>
 				<Popover.Trigger
 					color="primary"
 					caret
-					style={{ opacity: 0.7, padding: '0 0.75em' }}
+					style={{ opacity: 0.7 }}
 					aria-label="Toggle Button-Type Dropdown"
 					title="Toggle Button-Type Dropdown"
 				/>
