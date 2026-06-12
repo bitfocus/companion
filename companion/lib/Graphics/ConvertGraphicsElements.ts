@@ -614,16 +614,17 @@ async function convertImageElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	let base64Image = helper.getString<string | null>('base64Image', null)
 	// Hack: composite deprecated imageBuffers into a single base64 image
-	if (base64Image) {
-		const imageObjs = base64Image as unknown as DrawImageBuffer[]
+	let base64Image: string | null = null
+	const base64ImageRaw = helper.getUnknown('base64Image', null)
+	if (base64ImageRaw) {
+		const imageObjs = base64ImageRaw as unknown as DrawImageBuffer[]
 		if (Array.isArray(imageObjs)) {
 			// This is not very efficient, as it is not cached, but as this is a deprecated feature, it is acceptable for now
 			base64Image = (await context.drawPixelBuffers(imageObjs)) || null
 		} else {
 			// This could be a reference to the image library
-			base64Image = helper.parseVariablesInString(base64Image, 'ERR')
+			base64Image = helper.parseVariablesInString(stringifyVariableValue(base64ImageRaw) ?? '', 'ERR')
 		}
 	}
 
@@ -635,7 +636,7 @@ async function convertImageElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		base64Image,
+		base64Image: base64Image,
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit'], 'fit'),
