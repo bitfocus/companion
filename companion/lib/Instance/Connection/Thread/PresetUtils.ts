@@ -8,7 +8,6 @@ import { exprVal, optionsObjectToExpressionOptions } from '@companion-app/shared
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type {
 	CompanionButtonStyleProps,
-	CompanionPresetFeedback,
 	SomePresetActionEntry,
 	SomePresetSimpleFeedbackEntry,
 } from '@companion-module/host'
@@ -105,7 +104,7 @@ export function convertPresetFeedbacksToEntities(
 				definitionId: feedback.feedbackId,
 				options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, true)),
 				isInverted: exprVal(!!feedback.isInverted),
-				style: structuredClone((feedback as CompanionPresetFeedback).style),
+				style: structuredClone(feedback.style),
 				headline: feedback.headline,
 				upgradeIndex: ctx.connectionUpgradeIndex,
 			} as FeedbackEntityModel)

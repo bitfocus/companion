@@ -27,9 +27,9 @@ import type {
 	SomePresetActionEntry,
 } from '@companion-module/host'
 import { ConvertLegacyStyleToElements } from '../../../Resources/ConvertLegacyStyleToElements.js'
-import type { PresetEntryConversionContext } from './PresetInternalEntities.js'
+import { convertPresetActionEntries, type PresetEntryConversionContext } from './PresetInternalEntities.js'
 import { ConvertLayeredPresetFeedbacksToEntities, ConvertLayerPresetElements } from './PresetsLayered.js'
-import { convertActionsDelay, convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
+import { convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
@@ -427,11 +427,7 @@ function ConvertStepsForPreset(
 				if (!isNaN(Number(setId)) && set.options?.runWhileHeld) newStep.options.runWhileHeld.push(Number(setId))
 
 				if (setActions) {
-					newStep.action_sets[setIdSafe] = convertActionsDelay(
-						setActions,
-						true, // Always relative now
-						ctx
-					)
+					newStep.action_sets[setIdSafe] = convertPresetActionEntries(setActions, ctx)
 				}
 			}
 		}
