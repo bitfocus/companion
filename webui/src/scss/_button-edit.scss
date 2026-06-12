@@ -373,6 +373,7 @@
 			display: grid;
 			grid-template-columns: auto 1fr auto auto;
 
+			background-color: #fff;
 			border-bottom: 1px solid rgb(221, 221, 221);
 
 			align-items: center;
@@ -406,8 +407,14 @@
 				padding-right: 0.2rem;
 			}
 
-			&.dragging {
-				opacity: 0.5;
+			// dnd-kit sortable feedback (no blur - a filter on the top-layer popover breaks rendering)
+			&[data-dnd-placeholder] {
+				opacity: 0.4;
+			}
+			&[data-dnd-dragging] {
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+				outline: 2px solid rgba(0, 0, 0, 0.5);
+				outline-offset: -2px;
 			}
 
 			&.last-row {

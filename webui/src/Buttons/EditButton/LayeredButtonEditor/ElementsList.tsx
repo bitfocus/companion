@@ -1,9 +1,10 @@
+import { useDragDropMonitor, useDroppable } from '@dnd-kit/react'
+import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import React, { useRef } from 'react'
-import { useDrag, useDrop } from 'react-dnd'
+import React, { useCallback, useRef } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -15,6 +16,28 @@ import {
 } from './Buttons.js'
 import type { LayeredStyleStore } from './StyleStore.js'
 
+const DRAG_ID = 'button-element-item'
+// dnd-kit sortable `group` value for the top-level (non-nested) elements. Child groups use their
+// group element's id as the group value.
+const ROOT_GROUP = '__elements_root__'
+
+// The list is displayed reversed (top layer first) but the backend stores/indexes in data order,
+// so a sortable position has to be converted back. `groupSize` is the number of elements in the
+// target group's *data* array (including the locked canvas at top-level).
+function visualIndexToDataIndex(visualIndex: number, groupSize: number): number {
+	return groupSize - 1 - visualIndex
+}
+
+const EMPTY_GROUP_DROPPABLE_PREFIX = 'element-empty-group:'
+function emptyGroupDroppableId(groupId: string): string {
+	return EMPTY_GROUP_DROPPABLE_PREFIX + groupId
+}
+function parseEmptyGroupDroppableId(id: unknown): string | null {
+	return typeof id === 'string' && id.startsWith(EMPTY_GROUP_DROPPABLE_PREFIX)
+		? id.slice(EMPTY_GROUP_DROPPABLE_PREFIX.length)
+		: null
+}
+
 export const ElementsList = observer(function ElementsList({
 	styleStore,
 	controlId,
@@ -23,6 +46,60 @@ export const ElementsList = observer(function ElementsList({
 	controlId: string
 }) {
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
+	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
+
+	// Number of elements in a group's data array (top-level includes the locked canvas)
+	const countGroupSize = useCallback(
+		(group: string): number => {
+			if (group === ROOT_GROUP) return styleStore.elements.length
+			const element = styleStore.findElementById(group)
+			return element && element.type === 'group' ? element.children.length : 0
+		},
+		[styleStore]
+	)
+
+	const doMove = useCallback(
+		(elementId: string, parentElementId: string | null, newIndex: number) => {
+			moveElement.mutateAsync({ controlId, elementId, parentElementId, newIndex }).catch((e) => {
+				console.error('Failed to move element', e)
+			})
+		},
+		[moveElement, controlId]
+	)
+
+	useDragDropMonitor({
+		onDragEnd(event) {
+			if (event.canceled) return
+			const { source, target } = event.operation
+			if (!source || source.type !== DRAG_ID) return
+			const elementId = String(source.id)
+
+			// Dropped onto an empty group's placeholder - move to the start of that group
+			const emptyGroupId = parseEmptyGroupDroppableId(target?.id)
+			if (emptyGroupId !== null) {
+				if (emptyGroupId !== elementId) doMove(elementId, emptyGroupId, 0)
+				return
+			}
+
+			// Reorder / move between non-empty groups, described by the sortable's projected position
+			if (!isSortable(source)) return
+			const { initialIndex, index, initialGroup, group } = source
+			if (group == null) return
+			if (initialGroup === group && initialIndex === index) return
+
+			const parentElementId = group === ROOT_GROUP ? null : String(group)
+			const crossGroup = initialGroup !== group
+			const groupSize = countGroupSize(String(group)) + (crossGroup ? 1 : 0)
+			doMove(elementId, parentElementId, visualIndexToDataIndex(index, groupSize))
+		},
+	})
+
+	// Non-canvas elements are sortable; the canvas (background) is pinned at the bottom (data index 0,
+	// which the backend locks) and rendered as a static row.
+	const reversed = [...styleStore.elements].reverse()
+	const sortableElements = reversed.filter((element) => element.type !== 'canvas')
+	const canvasElements = reversed.filter((element) => element.type === 'canvas')
+
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
@@ -35,42 +112,31 @@ export const ElementsList = observer(function ElementsList({
 						<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
 					</div>
 				</div>
-				{styleStore.elements
-					.map((element, i) => (
-						<ElementListItem
-							key={element.id}
-							element={element}
-							parentElementId={null}
-							index={i}
-							depth={0}
-							styleStore={styleStore}
-							confirmModalRef={confirmModalRef}
-							controlId={controlId}
-						/>
-					))
-					.toReversed()}
+				{sortableElements.map((element, index) => (
+					<ElementListItem
+						key={element.id}
+						element={element}
+						group={ROOT_GROUP}
+						index={index}
+						depth={0}
+						styleStore={styleStore}
+						confirmModalRef={confirmModalRef}
+						controlId={controlId}
+					/>
+				))}
+				{canvasElements.map((element) => (
+					<CanvasElementRow key={element.id} element={element} styleStore={styleStore} />
+				))}
 			</div>
 		</>
 	)
 })
 
-const DRAG_ID = 'button-element-item'
-
-interface ElementListDragItem {
-	elementId: string
-	index: number
-	parentElementId: string | null
-}
-
-interface ElementListRowDragStatus {
-	isDragging: boolean
-}
-
 const ElementListItem = observer(function ElementListItem({
 	element,
 	index,
 	depth,
-	parentElementId,
+	group,
 	styleStore,
 	controlId,
 	confirmModalRef,
@@ -78,92 +144,18 @@ const ElementListItem = observer(function ElementListItem({
 	element: SomeButtonGraphicsElement
 	index: number
 	depth: number
-	parentElementId: string | null
+	group: string
 	styleStore: LayeredStyleStore
 	controlId: string
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>
 }) {
-	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
+	const { ref, handleRef } = useSortable({ id: element.id, index, type: DRAG_ID, group, transition: null })
 
-	const ref = useRef<HTMLDivElement>(null)
-	const [, drop] = useDrop<ElementListDragItem>({
-		accept: DRAG_ID,
-		drop(item, monitor) {
-			if (!ref.current) {
-				return
-			}
-
-			// Ensure the hover targets this element, and not a child element
-			if (!monitor.isOver({ shallow: true })) return
-
-			const hoverIndex = index
-			const hoverParentElementId = parentElementId
-			const hoverId = element.id
-
-			// Don't replace items with themselves
-			if (item.parentElementId === parentElementId && (item.elementId === hoverId || item.index === hoverIndex)) {
-				return
-			}
-
-			// Time to actually perform the change
-			moveElement
-				.mutateAsync({
-					controlId,
-					elementId: item.elementId,
-					parentElementId: hoverParentElementId,
-					newIndex: hoverIndex,
-				})
-				.catch((e) => {
-					console.error('Failed to move element', e)
-				})
-
-			// Note: we're mutating the monitor item here!
-			// Generally it's better to avoid mutations,
-			// but it's good here for the sake of performance
-			// to avoid expensive index searches.
-			item.index = hoverIndex
-			item.parentElementId = hoverParentElementId
-		},
-	})
-	const [{ isDragging }, drag, preview] = useDrag<ElementListDragItem, unknown, ElementListRowDragStatus>({
-		type: DRAG_ID,
-		canDrag: element.type !== 'canvas',
-		item: {
-			elementId: element.id,
-			index: index,
-			parentElementId: parentElementId,
-		},
-		collect: (monitor) => ({
-			isDragging: monitor.isDragging(),
-		}),
-	})
-	preview(drop(ref))
-
-	let commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
-	if (isDragging) commonClasses += ' dragging'
-
-	if (element.type === 'canvas') {
-		return (
-			<div
-				key={element.id}
-				ref={ref}
-				className={classNames(commonClasses, 'button-layer-elementlist-table-row last-row')}
-			>
-				<div className="td-reorder-placeholder"></div>
-
-				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
-					{element.name || 'Background'}
-				</div>
-
-				<div></div>
-			</div>
-		)
-	}
+	const commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
 
 	return (
 		<>
 			<div
-				key={element.id}
 				ref={ref}
 				className={classNames(commonClasses, 'button-layer-elementlist-table-row')}
 				style={{
@@ -171,7 +163,7 @@ const ElementListItem = observer(function ElementListItem({
 					'--elementlist-depth': depth,
 				}}
 			>
-				<div ref={drag} className="td-reorder">
+				<div ref={handleRef} className="td-reorder">
 					<FontAwesomeIcon icon={faSort} />
 				</div>
 
@@ -187,77 +179,65 @@ const ElementListItem = observer(function ElementListItem({
 			</div>
 
 			{element.type === 'group' && element.children.length === 0 && (
-				<ElementListItemPlaceholder parentElementId={element.id} controlId={controlId} />
+				<ElementGroupPlaceholder groupId={element.id} depth={depth + 1} />
 			)}
 			{element.type === 'group' &&
 				element.children
-					.map((child, i) => (
+					.toReversed()
+					.map((child, childIndex) => (
 						<ElementListItem
 							key={child.id}
 							element={child}
-							parentElementId={element.id}
-							index={i}
+							group={element.id}
+							index={childIndex}
 							depth={depth + 1}
 							styleStore={styleStore}
 							confirmModalRef={confirmModalRef}
 							controlId={controlId}
 						/>
-					))
-					.toReversed()}
+					))}
 		</>
 	)
 })
 
-const ElementListItemPlaceholder = observer(function ElementListItemPlaceholder({
-	parentElementId,
-	controlId,
+const CanvasElementRow = observer(function CanvasElementRow({
+	element,
+	styleStore,
 }: {
-	parentElementId: string | null
-	controlId: string
+	element: SomeButtonGraphicsElement
+	styleStore: LayeredStyleStore
 }) {
-	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
+	return (
+		<div className={classNames('button-layer-elementlist-table-row last-row')}>
+			<div className="td-reorder-placeholder"></div>
 
-	const ref = useRef<HTMLDivElement>(null)
-	const [, drop] = useDrop<ElementListDragItem>({
-		accept: DRAG_ID,
-		drop(item, monitor) {
-			if (!ref.current) {
-				return
-			}
+			<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
+				{element.name || 'Background'}
+			</div>
 
-			// Ensure the hover targets this element, and not a child element
-			if (!monitor.isOver({ shallow: true })) return
+			<div></div>
+		</div>
+	)
+})
 
-			const hoverParentElementId = parentElementId
-
-			// Don't allow a group to be dropped into itself
-			if (item.elementId === parentElementId) return
-
-			// Time to actually perform the change
-			moveElement
-				.mutateAsync({
-					controlId,
-					elementId: item.elementId,
-					parentElementId: hoverParentElementId,
-					newIndex: 0, // Always move to the start of the group
-				})
-				.catch((e) => {
-					console.error('Failed to move element', e)
-				})
-
-			// Note: we're mutating the monitor item here!
-			// Generally it's better to avoid mutations,
-			// but it's good here for the sake of performance
-			// to avoid expensive index searches.
-			item.index = 0
-			item.parentElementId = hoverParentElementId
-		},
-	})
-
-	drop(ref)
+const ElementGroupPlaceholder = observer(function ElementGroupPlaceholder({
+	groupId,
+	depth,
+}: {
+	groupId: string
+	depth: number
+}) {
+	const { ref } = useDroppable({ id: emptyGroupDroppableId(groupId), accept: DRAG_ID })
 
 	return (
-		<div key={`${parentElementId}-placeholder`} ref={ref} className="button-layer-elementlist-table-row">
+		<div
+			ref={ref}
+			className="button-layer-elementlist-table-row"
+			style={{
+				// @ts-expect-error custom variable
+				'--elementlist-depth': depth,
+			}}
+		>
 			<div className="td-reorder-placeholder"></div>
 
 			<div className="element-name">Empty group</div>
