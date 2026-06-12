@@ -4,32 +4,33 @@ import {
 	type ActionEntityModel,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { exprExpr, exprVal, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
+import { exprVal, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompanionButtonStyleProps, CompanionPresetAction, CompanionPresetFeedback } from '@companion-module/base'
+import type {
+	CompanionButtonStyleProps,
+	CompanionPresetFeedback,
+	SomePresetActionEntry,
+	SomePresetSimpleFeedbackEntry,
+} from '@companion-module/host'
+import {
+	convertModulePresetAction,
+	convertPresetActionEntries,
+	createWaitAction,
+	isInternalPresetEntryId,
+	tryConvertInternalSimpleFeedbackEntry,
+	type PresetEntryConversionContext,
+} from './PresetInternalEntities.js'
 
 export function convertActionsDelay(
-	actions: CompanionPresetAction[],
-	connectionId: string,
+	actions: SomePresetActionEntry[],
 	relativeDelays: boolean | undefined,
-	connectionUpgradeIndex: number | undefined
+	ctx: PresetEntryConversionContext
 ): ActionEntityModel[] {
 	if (relativeDelays) {
-		const newActions: ActionEntityModel[] = []
-
-		for (const action of actions) {
-			const delay = Number(action.delay)
-
-			// Add the wait action
-			if (!isNaN(delay) && delay > 0) {
-				newActions.push(createWaitAction(delay))
-			}
-
-			newActions.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
-		}
-
-		return newActions
+		return convertPresetActionEntries(actions, ctx)
 	} else {
+		// Note: only reachable for legacy modules, which are too old to use `internal:*` entries
+
 		let currentDelay = 0
 		let currentDelayGroupChildren: ActionEntityModel[] = []
 
@@ -53,7 +54,7 @@ export function convertActionsDelay(
 				currentDelay = delay
 			}
 
-			currentDelayGroupChildren.push(toActionInstance(action, connectionId, connectionUpgradeIndex))
+			currentDelayGroupChildren.push(convertModulePresetAction(action, ctx.connectionId, ctx.connectionUpgradeIndex))
 		}
 
 		if (delayGroups.length > 1) {
@@ -81,37 +82,37 @@ function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
 		upgradeIndex: undefined,
 	}
 }
-function createWaitAction(delay: number): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: 'internal',
-		definitionId: 'wait',
-		options: {
-			time: exprExpr(delay + ''),
-		},
-		upgradeIndex: undefined,
-	}
-}
 
 export function convertPresetFeedbacksToEntities(
-	rawFeedbacks: CompanionPresetFeedback[] | undefined,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
+	rawFeedbacks: SomePresetSimpleFeedbackEntry[] | undefined,
+	ctx: PresetEntryConversionContext
 ): FeedbackEntityModel[] {
 	if (!rawFeedbacks) return []
 
-	return rawFeedbacks.map((feedback) => ({
-		type: EntityModelType.Feedback,
-		id: nanoid(),
-		connectionId: connectionId,
-		definitionId: feedback.feedbackId,
-		options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, true)),
-		isInverted: exprVal(!!feedback.isInverted),
-		style: structuredClone(feedback.style),
-		headline: feedback.headline,
-		upgradeIndex: connectionUpgradeIndex,
-	}))
+	const feedbacks: FeedbackEntityModel[] = []
+
+	for (const feedback of rawFeedbacks) {
+		if (ctx.allowInternalEntities && isInternalPresetEntryId(feedback.feedbackId)) {
+			const entity = tryConvertInternalSimpleFeedbackEntry(feedback, ctx)
+			if (entity) feedbacks.push(entity)
+		} else {
+			// `style` is carried outside the FeedbackEntityModel type, to be converted to style
+			// overrides by ConvertLegacyStyleToElements
+			feedbacks.push({
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				connectionId: ctx.connectionId,
+				definitionId: feedback.feedbackId,
+				options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, true)),
+				isInverted: exprVal(!!feedback.isInverted),
+				style: structuredClone((feedback as CompanionPresetFeedback).style),
+				headline: feedback.headline,
+				upgradeIndex: ctx.connectionUpgradeIndex,
+			} as FeedbackEntityModel)
+		}
+	}
+
+	return feedbacks
 }
 
 export function ConvertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProps): ButtonStyleProperties {
@@ -123,21 +124,5 @@ export function ConvertPresetStyleToDrawStyle(rawStyle: CompanionButtonStyleProp
 		pngalignment: rawStyle.pngalignment ?? 'center:center',
 		png64: rawStyle.png64 ?? null,
 		show_topbar: rawStyle.show_topbar ?? 'default',
-	}
-}
-
-function toActionInstance(
-	action: CompanionPresetAction,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
-): ActionEntityModel {
-	return {
-		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: connectionId,
-		definitionId: action.actionId,
-		options: structuredClone(optionsObjectToExpressionOptions(action.options ?? {}, true)),
-		headline: action.headline,
-		upgradeIndex: connectionUpgradeIndex,
 	}
 }
