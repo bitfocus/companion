@@ -92,6 +92,20 @@
 	}
 }
 
+// dnd-kit sortable feedback for entity/event rows. Top-level because the dragged row renders in the
+// top layer (popover); no `filter: blur()` - a filter on a popover element breaks its rendering.
+.entity-row {
+	&[data-dnd-placeholder] {
+		opacity: 0.4;
+	}
+
+	&[data-dnd-dragging] {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+		outline: 2px solid rgba(0, 0, 0, 0.5);
+		outline-offset: -2px;
+	}
+}
+
 .entity-list,
 .entity-list-drag-layer {
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)

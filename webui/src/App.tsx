@@ -21,6 +21,7 @@ import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { PRIMARY_COLOR } from './Resources/Constants.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
+import { SortableHysteresis } from './Resources/SortableHysteresis.js'
 import { trpc } from './Resources/TRPC.js'
 import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
@@ -103,6 +104,7 @@ export default function App(): React.JSX.Element {
 						 * (The react-dnd DndProvider below still powers the not-yet-migrated areas.)
 						 */}
 						<DragDropProvider>
+							<SortableHysteresis />
 							<DndProvider backend={HTML5Backend}>
 								<AppMain
 									connected={connected && !shouldReload}
