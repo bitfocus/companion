@@ -63,7 +63,7 @@ export const pageUpElements: SomeButtonGraphicsElement[] = [
 		enabled: exprExpr('$(internal:_graphics_page_plusminus)'),
 		text: exprExpr('$(internal:_graphics_page_direction_flipped) ? "–" : "+"'),
 		color: exprVal(0xffffff),
-		fontsize: exprVal(30),
+		fontsize: exprVal(60),
 		fontsizeAllowShrink: exprVal(false),
 		valign: exprVal('bottom'),
 		height: exprVal(50),
@@ -73,7 +73,7 @@ export const pageUpElements: SomeButtonGraphicsElement[] = [
 		...(CreateElementOfType('text') as ButtonGraphicsTextElement),
 		text: exprVal('UP'),
 		color: exprVal(0xffc600), // Yellow color
-		fontsize: exprVal(16.5),
+		fontsize: exprVal(35),
 		fontsizeAllowShrink: exprVal(false),
 		valign: exprVal('top'),
 		y: exprVal(53),

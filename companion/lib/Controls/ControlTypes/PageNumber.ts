@@ -53,7 +53,7 @@ export const pageNumberElements: SomeButtonGraphicsElement[] = [
 				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
 				text: exprVal('PAGE'),
 				color: exprVal(0xffc600), // Yellow color
-				fontsize: exprVal(16.5),
+				fontsize: exprVal(41.25),
 				fontsizeAllowShrink: exprVal(false),
 				valign: exprVal('bottom'),
 				height: exprVal(40),
@@ -62,7 +62,7 @@ export const pageNumberElements: SomeButtonGraphicsElement[] = [
 				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
 				text: exprExpr('getVariable("this:page") || "x"'),
 				color: exprVal(0xffffff),
-				fontsize: exprVal(30),
+				fontsize: exprVal(54.5),
 				fontsizeAllowShrink: exprVal(true),
 				valign: exprVal('top'),
 				y: exprVal(45),
