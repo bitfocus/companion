@@ -119,6 +119,48 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				borderPosition: { value: 'center', isExpression: false },
 				borderOnlyArc: { value: false, isExpression: false },
 			}
+		case 'gauge':
+			return {
+				id: nanoid(),
+				name: 'Gauge',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				type: 'gauge',
+				enabled: { value: true, isExpression: false },
+				opacity: { value: 100, isExpression: false },
+				x: { value: 0, isExpression: false },
+				y: { value: 0, isExpression: false },
+				width: { value: 100, isExpression: false },
+				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
+				value: { value: 0, isExpression: false },
+				orientation: { value: 'horizontal', isExpression: false },
+				reverse: { value: false, isExpression: false },
+				roundedEnds: { value: true, isExpression: false },
+				thickness: { value: 20, isExpression: false },
+				multiSegment: { value: true, isExpression: false },
+				segments: {
+					value: [
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 0, isExpression: false },
+							color: { value: 0x00ff00, isExpression: false },
+						},
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 66, isExpression: false },
+							color: { value: 0xffff00, isExpression: false },
+						},
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 85, isExpression: false },
+							color: { value: 0xff0000, isExpression: false },
+						},
+					],
+					isExpression: false,
+				},
+				inactiveStyle: { value: 'transparent', isExpression: false },
+				inactiveAmount: { value: 70, isExpression: false },
+			}
 		case 'composite':
 			// Composite elements should not be created directly through this function
 			// They are created with custom logic in layeredStyleAddElement

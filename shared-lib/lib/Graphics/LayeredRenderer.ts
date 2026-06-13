@@ -3,6 +3,7 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
@@ -155,6 +156,9 @@ export class GraphicsLayeredButtonRenderer {
 					case 'circle':
 						elementBounds = await this.#drawCircleElement(img, drawBounds, element, skipDraw)
 						break
+					case 'gauge':
+						elementBounds = await this.#drawGaugeElement(img, drawBounds, element, skipDraw)
+						break
 					default:
 						assertNever(element)
 				}
@@ -243,8 +247,8 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		if (imageDrawn === false) {
-			await img.usingRotation(drawBounds, element.rotation, async () => {
-				await img.usingTemporaryLayer(element.opacity, async (img) => {
+			await img.usingTemporaryLayer(element.opacity, async (img) => {
+				await img.usingRotation(drawBounds, element.rotation, async () => {
 					const { x, y, width, height, maxX, maxY } = drawBounds
 
 					// Orange background
@@ -315,7 +319,7 @@ export class GraphicsLayeredButtonRenderer {
 		const marginX = 2 * marginScale * drawBounds.width
 		const marginY = 1 * marginScale * drawBounds.height
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.drawAlignedText(
 					drawBounds.x + marginX,
@@ -354,7 +358,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.box(
 					drawBounds.x,
@@ -420,7 +424,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			const midX = drawBounds.x + drawBounds.width / 2
 			const midY = drawBounds.y + drawBounds.height / 2
 			const radiusX = drawBounds.width / 2
@@ -445,6 +449,203 @@ export class GraphicsLayeredButtonRenderer {
 				element.borderOnlyArc,
 				element.borderPosition
 			)
+		})
+
+		return drawBounds
+	}
+
+	static async #drawGaugeElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsGaugeDrawElement,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		const sorted = [...element.segments].sort((a, b) => Number(a.value) - Number(b.value))
+		if (sorted.length === 0) return drawBounds
+
+		const { x, y, width, height, maxX, maxY } = drawBounds
+		const { orientation, reverse, multiSegment, inactiveStyle } = element
+
+		// Clamp gauge-level numbers to valid finite ranges so downstream math never sees NaN.
+		const value = Number.isFinite(element.value) ? Math.max(0, Math.min(100, element.value)) : 0
+		const inactiveAmount = Number.isFinite(element.inactiveAmount)
+			? Math.max(0, Math.min(100, element.inactiveAmount))
+			: 0
+
+		// Sanitize a threshold numeric field: coerce to finite, clamp to 0–100.
+		const safeThreshVal = (v: unknown): number => {
+			const n = Number(v)
+			return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0
+		}
+		// Sanitize a color field: coerce to finite, fall back to black.
+		const safeColor = (v: unknown): number => {
+			const n = Number(v)
+			return Number.isFinite(n) ? n : 0
+		}
+
+		// For single-color mode, find the highest threshold whose start <= current value
+		let singleActiveColor = safeColor(sorted[0].color)
+		if (!multiSegment) {
+			for (const t of sorted) {
+				if (safeThreshVal(t.value) <= value) singleActiveColor = safeColor(t.color)
+			}
+		}
+
+		// Convert a gauge position range [p1, p2] (0–100) to pixel box coordinates [x1, y1, x2, y2].
+		// Coordinates are rounded to the nearest integer so that adjacent segments always share an
+		// exact pixel edge and anti-aliasing does not leave a visible seam between them.
+		const segmentBox = (p1: number, p2: number): [number, number, number, number] => {
+			if (orientation === 'horizontal') {
+				return reverse
+					? [Math.round(maxX - (p2 / 100) * width), y, Math.round(maxX - (p1 / 100) * width), maxY]
+					: [Math.round(x + (p1 / 100) * width), y, Math.round(x + (p2 / 100) * width), maxY]
+			} else {
+				return reverse
+					? [x, Math.round(y + (p1 / 100) * height), maxX, Math.round(y + (p2 / 100) * height)]
+					: [x, Math.round(maxY - (p2 / 100) * height), maxX, Math.round(maxY - (p1 / 100) * height)]
+			}
+		}
+
+		const dimmedColor = (color: number): string => {
+			const { r, g, b, a } = rgbRev(color, true)
+			const factor = inactiveAmount / 100
+			if (inactiveStyle === 'transparent') {
+				return `rgba(${r}, ${g}, ${b}, ${a * factor})`
+			} else {
+				return `rgba(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)}, ${a})`
+			}
+		}
+
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
+			await img.usingRotation(drawBounds, element.rotation, async () => {
+				if (orientation === 'ring') {
+					const cx = x + width / 2
+					const cy = y + height / 2
+					const outerRadius = Math.min(width, height) / 2
+					const thicknessPx = outerRadius * (element.thickness / 100)
+					const arcRadius = outerRadius - thicknessPx / 2
+
+					// p=0 → top (−π/2); CW increases, CCW decreases
+					const posToAngle = (p: number) => -Math.PI / 2 + (reverse ? -1 : 1) * (p / 100) * (Math.PI * 2)
+
+					// Pass 1: inactive arcs.
+					// Drawn into a temporary layer so that anti-aliased arc endpoints at threshold
+					// boundaries don't accumulate alpha and produce bright seams. Each arc is
+					// painted at full opacity on the temp layer; the layer is then composited onto
+					// the main canvas at the desired transparency in a single operation.
+					const drawInactiveArcs = (target: ImageBase<any>) => {
+						for (let i = 0; i < sorted.length; i++) {
+							const segStart = safeThreshVal(sorted[i].value)
+							const segEnd = i + 1 < sorted.length ? safeThreshVal(sorted[i + 1].value) : 100
+							const color = safeColor(sorted[i].color)
+							if (segStart >= segEnd) continue
+
+							const inactiveStart = Math.max(segStart, value)
+							if (inactiveStart < segEnd) {
+								const [a1, a2] = reverse
+									? [posToAngle(segEnd), posToAngle(inactiveStart)]
+									: [posToAngle(inactiveStart), posToAngle(segEnd)]
+								// Always use the base colour at full opacity on this layer — the
+								// transparency / darkening is applied when compositing the layer.
+								target.arcStroke(cx, cy, arcRadius, a1, a2, false, {
+									color: inactiveStyle === 'transparent' ? parseColor(color) : dimmedColor(color),
+									width: thicknessPx,
+								})
+							}
+						}
+					}
+
+					if (inactiveStyle === 'transparent') {
+						await img.usingTemporaryLayer(inactiveAmount / 100, async (layer) => {
+							drawInactiveArcs(layer)
+						})
+					} else {
+						drawInactiveArcs(img)
+					}
+
+					// Pass 2: active arcs (always fully opaque, drawn directly).
+					for (let i = 0; i < sorted.length; i++) {
+						const segStart = safeThreshVal(sorted[i].value)
+						const segEnd = i + 1 < sorted.length ? safeThreshVal(sorted[i + 1].value) : 100
+						const color = safeColor(sorted[i].color)
+						if (segStart >= segEnd) continue
+
+						const activeEnd = Math.min(segEnd, value)
+						if (activeEnd > segStart) {
+							const activeColor = multiSegment ? color : singleActiveColor
+							const [a1, a2] = reverse
+								? [posToAngle(activeEnd), posToAngle(segStart)]
+								: [posToAngle(segStart), posToAngle(activeEnd)]
+							img.arcStroke(cx, cy, arcRadius, a1, a2, false, {
+								color: parseColor(activeColor),
+								width: thicknessPx,
+							})
+						}
+					}
+
+					// Rounded end-caps on the active arc, except when value=100 (complete circle has no ends)
+					if (element.roundedEnds && value > 0 && value < 100) {
+						const capRadius = thicknessPx / 2
+
+						// Cap at position 0: colour of the first active threshold
+						const startColor = multiSegment ? Number(sorted[0].color) : singleActiveColor
+						const startAngle = posToAngle(0)
+						img.circle(
+							cx + arcRadius * Math.cos(startAngle),
+							cy + arcRadius * Math.sin(startAngle),
+							capRadius,
+							capRadius,
+							0,
+							Math.PI * 2,
+							false,
+							parseColor(startColor)
+						)
+
+						// Cap at position=value: colour of whichever threshold the value falls in
+						const endThreshold = [...sorted].reverse().find((t) => Number(t.value) <= value)
+						const endColor = multiSegment
+							? endThreshold
+								? Number(endThreshold.color)
+								: Number(sorted[0].color)
+							: singleActiveColor
+						const endAngle = posToAngle(value)
+						img.circle(
+							cx + arcRadius * Math.cos(endAngle),
+							cy + arcRadius * Math.sin(endAngle),
+							capRadius,
+							capRadius,
+							0,
+							Math.PI * 2,
+							false,
+							parseColor(endColor)
+						)
+					}
+				} else {
+					for (let i = 0; i < sorted.length; i++) {
+						const segStart = safeThreshVal(sorted[i].value)
+						const segEnd = i + 1 < sorted.length ? safeThreshVal(sorted[i + 1].value) : 100
+						const color = safeColor(sorted[i].color)
+
+						if (segStart >= segEnd) continue
+
+						// Active portion: segStart → min(segEnd, value)
+						const activeEnd = Math.min(segEnd, value)
+						if (activeEnd > segStart) {
+							const activeColor = multiSegment ? color : singleActiveColor
+							img.box(...segmentBox(segStart, activeEnd), parseColor(activeColor))
+						}
+
+						// Inactive portion: max(segStart, value) → segEnd
+						const inactiveStart = Math.max(segStart, value)
+						if (inactiveStart < segEnd) {
+							img.box(...segmentBox(inactiveStart, segEnd), dimmedColor(color))
+						}
+					}
+				}
+			})
 		})
 
 		return drawBounds
