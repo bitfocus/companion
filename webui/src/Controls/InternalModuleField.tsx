@@ -11,6 +11,7 @@ import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ImageInputField } from '~/Components/ImageInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
 import { TimeInputField } from '~/Components/TimeInputField.js'
+import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { VariablePickerField } from '~/Components/VariablePickerField.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 import { useComputed } from '~/Resources/util.js'
@@ -63,6 +64,8 @@ export function InternalModuleField(
 					includeNone={option.includeNone}
 				/>
 			)
+		case 'internal:variable_value':
+			return <VariableInputGroup id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:variable':
 			return (
 				<InternalVariableDropdown

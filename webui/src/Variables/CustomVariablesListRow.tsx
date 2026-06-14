@@ -126,8 +126,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								<VariableInputGroup
 									id={currentValueFieldId}
 									value={value}
-									name={info.id}
-									setCurrentValue={customVariablesApi.setCurrentValue}
+									setValue={(val) => customVariablesApi.setCurrentValue(info.id, val)}
 								/>
 							</Grid.Col>
 
@@ -139,8 +138,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 									id={startupValueFieldId}
 									disabled={!!info.persistCurrentValue}
 									value={info.defaultValue}
-									name={info.id}
-									setCurrentValue={customVariablesApi.setStartupValue}
+									setValue={(val) => customVariablesApi.setStartupValue(info.id, val)}
 								/>
 							</Grid.Col>
 						</Grid.Row>

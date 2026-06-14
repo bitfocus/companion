@@ -63,6 +63,7 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:time'
 		| 'internal:date'
 		| 'internal:variable'
+		| 'internal:variable_value'
 		| 'internal:custom_variable'
 		| 'internal:trigger'
 		| 'internal:trigger_collection'
@@ -134,6 +135,10 @@ export interface InternalInputFieldVariable extends CompanionInputFieldBaseExten
 export interface InternalInputFieldCustomVariable extends CompanionInputFieldBaseExtended {
 	type: 'internal:custom_variable'
 	includeNone?: boolean
+}
+export interface InternalInputFieldVariableValue extends CompanionInputFieldBaseExtended {
+	type: 'internal:variable_value'
+	default: JsonValue
 }
 export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended {
 	type: 'internal:trigger'
@@ -208,6 +213,7 @@ export type InternalInputField =
 	| InternalInputFieldTime
 	| InternalInputFieldDate
 	| InternalInputFieldVariable
+	| InternalInputFieldVariableValue
 	| InternalInputFieldCustomVariable
 	| InternalInputFieldTrigger
 	| InternalInputFieldTriggerCollection

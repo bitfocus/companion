@@ -508,6 +508,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:trigger':
 			case 'internal:trigger_collection':
 			case 'internal:variable':
+			case 'internal:variable_value':
 			case 'internal:list':
 			case 'internal:table':
 			case 'secret-text':

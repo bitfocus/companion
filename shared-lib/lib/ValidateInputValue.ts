@@ -393,6 +393,7 @@ export function validateInputValue(
 		case 'internal:connection_id':
 		case 'internal:connection_collection':
 		case 'internal:custom_variable':
+		case 'internal:variable_value':
 		case 'internal:date':
 		case 'internal:page':
 		case 'internal:surface_serial':

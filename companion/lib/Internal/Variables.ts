@@ -189,7 +189,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 					{
-						type: 'textinput',
+						type: 'internal:variable_value',
 						label: 'Startup Value',
 						id: 'startup_value',
 						default: '1',

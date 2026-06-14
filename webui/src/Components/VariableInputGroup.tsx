@@ -10,18 +10,12 @@ import { VariableTypeIcon } from './VariableTypeIcon.js'
 interface VariableInputGroupProps {
 	id: string | undefined
 	value: JsonValue | undefined // The external variable value
-	setCurrentValue: (name: string, value: JsonValue | undefined) => void
-	name: string
+	setValue: (value: JsonValue | undefined) => void
 	disabled?: boolean
+	title?: string
 }
 
-const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
-	id,
-	value,
-	setCurrentValue,
-	name,
-	disabled = false,
-}) => {
+const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setValue, disabled = false, title }) => {
 	// Determine initial type
 	const isStringInitial = typeof value === 'string'
 
@@ -74,7 +68,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 				const stringified = JSON.stringify(value) ?? ''
 				setIsString(true)
 				setLocalValue(stringified)
-				setCurrentValue(name, stringified) // Update variable
+				setValue(stringified) // Update variable
 			}
 		}
 		setIsValid(true)
@@ -84,12 +78,12 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 	const handleInputChange = (val: string) => {
 		setLocalValue(val)
 		if (isString) {
-			setCurrentValue(name, val)
+			setValue(val)
 			setIsValid(true)
 		} else {
 			try {
 				const parsed = JSON5.parse(val)
-				setCurrentValue(name, parsed)
+				setValue(parsed)
 				setIsValid(true)
 			} catch {
 				// Do not update if invalid JSON
@@ -111,6 +105,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({
 
 	return (
 		<div
+			title={title}
 			style={{
 				display: 'inline-block',
 				width: '100%',
