@@ -143,42 +143,46 @@ const mainWatcher = chokidar
 	})
 
 if (devModulesPath) {
-	const allowedExtensions = ['.mjs', '.js', '.cjs', '.json']
-	const moduleWatcher = fs.watch(devModulesPath, { recursive: true, persistent: true }, (_event, filename) => {
-		if (!filename) return
-		if (filename.includes('node_modules')) return
-		if (!allowedExtensions.some((ext) => filename.endsWith(ext))) return
+	if (!fs.existsSync(devModulesPath)) {
+		console.warn(`Module watcher path does not exist: ${devModulesPath}`)
+	} else {
+		const allowedExtensions = ['.mjs', '.js', '.cjs', '.json']
+		const moduleWatcher = fs.watch(devModulesPath, { recursive: true, persistent: true }, (_event, filename) => {
+			if (!filename) return
+			if (filename.includes('node_modules')) return
+			if (!allowedExtensions.some((ext) => filename.endsWith(ext))) return
 
-		const moduleDirName = filename.split(path.sep)[0]
-		if (!moduleDirName) return
-		// Module changed
+			const moduleDirName = filename.split(path.sep)[0]
+			if (!moduleDirName) return
+			// Module changed
 
-		let fn = cachedDebounces[moduleDirName]
-		if (!fn) {
-			fn = debounceFn(
-				() => {
-					console.log('Sending reload for module:', moduleDirName)
-					if (node) {
-						node.send({
-							messageType: 'reload-extra-module',
-							fullpath: path.join(devModulesPath, moduleDirName),
-						})
+			let fn = cachedDebounces[moduleDirName]
+			if (!fn) {
+				fn = debounceFn(
+					() => {
+						console.log('Sending reload for module:', moduleDirName)
+						if (node) {
+							node.send({
+								messageType: 'reload-extra-module',
+								fullpath: path.join(devModulesPath, moduleDirName),
+							})
+						}
+					},
+					{
+						after: true,
+						before: false,
+						wait: 1000,
 					}
-				},
-				{
-					after: true,
-					before: false,
-					wait: 1000,
-				}
-			)
-			cachedDebounces[moduleDirName] = fn
-		}
+				)
+				cachedDebounces[moduleDirName] = fn
+			}
 
-		fn()
-	})
-	moduleWatcher.on('error', (error) => {
-		console.warn(`Module watcher error: ${error}`)
-	})
+			fn()
+		})
+		moduleWatcher.on('error', (error) => {
+			console.warn(`Module watcher error: ${error}`)
+		})
+	}
 }
 
 async function start() {
