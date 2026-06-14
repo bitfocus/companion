@@ -328,16 +328,16 @@
 // ---- Outline variant ----
 
 .button-outline {
-	--btn-color: #6d7d9c;
+	--btn-color: #4a4a4a;
 	--btn-bg: transparent;
-	--btn-border-color: #dee2e6;
-	--btn-hover-color: currentColor;
-	--btn-hover-bg: rgba(0, 0, 0, 0.05);
-	--btn-hover-border-color: #dee2e6;
-	--btn-active-color: currentColor;
-	--btn-active-bg: rgba(0, 0, 0, 0.05);
-	--btn-active-border-color: #dee2e6;
-	--btn-disabled-color: #6d7d9c;
+	--btn-border-color: #adb5bd;
+	--btn-hover-color: #fff;
+	--btn-hover-bg: #6c757d;
+	--btn-hover-border-color: #6c757d;
+	--btn-active-color: #fff;
+	--btn-active-bg: #6c757d;
+	--btn-active-border-color: #6c757d;
+	--btn-disabled-color: #adb5bd;
 	--btn-disabled-bg: transparent;
 	--btn-disabled-border-color: #dee2e6;
 }

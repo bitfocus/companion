@@ -21,6 +21,59 @@
 	}
 }
 
+.empty-button-type-picker {
+	container-type: inline-size; // respond to panel width, not viewport
+	max-width: 360px;
+	margin: 1.5rem auto 0;
+}
+
+.empty-button-type-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.5rem;
+
+	.empty-button-type-tile {
+		display: flex;
+		flex-direction: column; // page tiles: icon above label
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.85rem 0.5rem;
+		height: 100%; // equal-height tiles in the row
+		text-align: center;
+		line-height: 1.1;
+
+		// override `.edit-button-panel svg:not(.non-ideal-svg){font-size:1rem}` hack
+		svg {
+			font-size: 1.6rem;
+		}
+	}
+
+	.empty-button-type-tile-primary {
+		grid-column: 1 / -1; // full-width row 1
+		flex-direction: row; // regular: icon beside label
+
+		svg {
+			font-size: 1.3rem;
+		}
+	}
+
+	@container (max-width: 280px) {
+		grid-template-columns: 1fr; // stack all four vertically
+
+		.empty-button-type-tile,
+		.empty-button-type-tile-primary {
+			flex-direction: row; // consistent compact icon-beside-label
+			justify-content: flex-start;
+			text-align: left;
+
+			svg {
+				font-size: 1.3rem;
+			}
+		}
+	}
+}
+
 .nav-steps-special {
 	margin-bottom: 0px !important;
 
