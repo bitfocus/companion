@@ -92,8 +92,8 @@
 	}
 }
 
-// dnd-kit sortable feedback for entity/event rows. Top-level because the dragged row renders in the
-// top layer (popover); no `filter: blur()` - a filter on a popover element breaks its rendering.
+// dnd-kit sortable feedback for event rows (which use optimistic sorting, so the dragged row renders
+// in the top-layer popover). No `filter: blur()` - a filter on a popover element breaks its rendering.
 .entity-row {
 	&[data-dnd-placeholder] {
 		opacity: 0.4;
@@ -104,6 +104,12 @@
 		outline: 2px solid rgba(0, 0, 0, 0.5);
 		outline-offset: -2px;
 	}
+
+	// Entities have no drag clone (the preview is a DragOverlay), so the in-place source row is just
+	// dimmed while it reorders on hover.
+	&.entity-row-grabbing {
+		opacity: 0.4;
+	}
 }
 
 .entity-list,
@@ -111,7 +117,7 @@
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)
 	.entity-row {
 		background-color: white;
-		margin-bottom: 10px;
+		margin-bottom: 0.25rem;
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
@@ -164,9 +170,6 @@
 		}
 	}
 
-	.editor-grid-events {
-		margin-right: -0.75rem;
-	}
 	.editor-grid-header {
 		display: flex;
 		flex-direction: row;
@@ -264,7 +267,16 @@
 
 .entity-list {
 	background-color: #f0f0f0;
-	padding: 0 0 10px;
+	padding: 0.25rem 0;
+}
+
+// The entity DragOverlay reuses `.entity-list` so the cloned drag preview row inherits its styling, but
+// that overlay element is always in the DOM (empty when idle, floating during a drag). Drop the list's
+// page padding/background on it so it adds no height at the document root and shows no grey box behind
+// the floating preview.
+.entity-list[data-dnd-overlay] {
+	padding: 0;
+	background-color: transparent;
 }
 
 .add-dropdown-wrapper {

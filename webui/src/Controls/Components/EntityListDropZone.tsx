@@ -1,17 +1,10 @@
-import { useDeferredValue } from 'react'
-import { useDrop } from 'react-dnd'
-import type { EntityOwner, SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
-import type { DragState } from '~/Resources/DragAndDrop'
+import { pointerIntersection } from '@dnd-kit/collision'
+import { useDragOperation, useDroppable } from '@dnd-kit/react'
+import classNames from 'classnames'
+import { useContext } from 'react'
+import type { EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { useEntityEditorContext } from './EntityEditorContext'
-
-export interface EntityListDragItem {
-	entityId: string
-	listId: SomeSocketEntityLocation
-	index: number
-	ownerId: EntityOwner | null
-	dragState: DragState | null
-	elementWidth: number | undefined
-}
+import { emptyListDroppableId, EntityNestingLevelContext } from './EntityListDnd.js'
 
 interface EntityDropPlaceholderZoneProps {
 	dragId: string
@@ -27,34 +20,27 @@ export function EntityDropPlaceholderZone({
 	entityTypeLabel,
 }: EntityDropPlaceholderZoneProps): React.JSX.Element | null {
 	const { serviceFactory } = useEntityEditorContext()
+	const nestingLevel = useContext(EntityNestingLevelContext)
 
-	const [isDragging, drop] = useDrop<EntityListDragItem, unknown, boolean>({
+	// Empty lists have no sortable rows to drop onto, so this droppable is the drop target. The move
+	// itself is performed by ControlEntitiesEditor's monitor (which recognises this droppable's id).
+	const { ref, isDropTarget } = useDroppable({
+		id: emptyListDroppableId(serviceFactory.listId, ownerId),
 		accept: dragId,
-		collect: (monitor) => {
-			return monitor.canDrop()
-		},
-		hover(item, _monitor) {
-			// Can't move into itself
-			if (ownerId && item.entityId === ownerId.parentId) return
-
-			serviceFactory.moveCard(item.listId, item.entityId, ownerId, 0)
-
-			item.ownerId = ownerId
-			item.listId = serviceFactory.listId
-			item.index = 0
-		},
+		// Match the rows' pointer-based collision so this small zone is hit when the cursor is over it.
+		collisionDetector: pointerIntersection,
+		// An empty child group's zone sits inside its parent row, so it needs the deeper priority to win
+		// (same `level * 2` scheme as the rows, above the parent's children shield).
+		collisionPriority: nestingLevel * 2,
 	})
 
-	// Defer the isDragging value to ensure dragend doesn't fire prematurely
-	// See https://github.com/bitfocus/companion/issues/3115
-	// https://bugs.webkit.org/show_bug.cgi?id=134212
-	// https://issues.chromium.org/issues/41150279
-	const isDraggingDeferred = useDeferredValue(isDragging)
+	const { source } = useDragOperation()
 
-	if (!isDraggingDeferred || entityCount > 0) return null
+	// Only show when the list is empty and a matching entity is being dragged
+	if (entityCount > 0 || source?.type !== dragId) return null
 
 	return (
-		<div ref={drop} className="entitylist-dropzone">
+		<div ref={ref} className={classNames('entitylist-dropzone', { 'is-drop-target': isDropTarget })}>
 			<p>Drop {entityTypeLabel} here</p>
 		</div>
 	)

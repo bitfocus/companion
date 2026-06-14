@@ -5,6 +5,7 @@ import { Callout } from '~/Components/Callout'
 import { Grid } from '~/Components/Grid'
 import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
 import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
+import { useEntityListReorderMonitor } from '~/Controls/Components/useEntityListReorderMonitor.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { useActionRecorderActionService } from '~/Services/Controls/ControlActionsService.js'
 
@@ -15,12 +16,15 @@ interface RecorderSessionProps {
 export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const actionsService = useActionRecorderActionService(sessionId)
 
+	const recorderControlId = `action_recorder_${sessionInfo?.id ?? sessionId}`
+	useEntityListReorderMonitor(recorderControlId, EntityModelType.Action, actionsService)
+
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} design="pulse" />
 
 	return (
 		<Grid.Col xs={12} className="flex-form">
 			<EntityEditorContextProvider
-				controlId={`action_recorder_${sessionInfo.id}`}
+				controlId={recorderControlId}
 				location={undefined}
 				serviceFactory={actionsService}
 				readonly={!!sessionInfo.isRunning}

@@ -247,7 +247,7 @@ const EventEditor = observer(function EventEditor({
 
 	return (
 		<>
-			<div className="editor-grid-header editor-grid-events">
+			<div className="editor-grid-header">
 				<div className="cell-name">
 					{!service.setHeadline || !headlineExpanded || isCollapsed ? (
 						headline || name
@@ -301,7 +301,7 @@ const EventEditor = observer(function EventEditor({
 			</div>
 
 			{!isCollapsed && (
-				<div className="editor-grid editor-grid-events">
+				<div className="editor-grid">
 					<Grid.Col sm={12} className="cell-description">
 						{headlineExpanded && <p className="name">{name}</p>}
 						{eventSpec?.description || ''}

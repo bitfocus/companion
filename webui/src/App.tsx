@@ -15,6 +15,7 @@ import { Form, InputGroup } from './Components/Form.js'
 import { ProgressBar } from './Components/ProgressBar.js'
 import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
+import { EntityDragLayer } from './Controls/Components/EntityDragLayer.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
 import { MyHeader } from './Layout/Header.js'
 import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
@@ -105,6 +106,7 @@ export default function App(): React.JSX.Element {
 						 */}
 						<DragDropProvider>
 							<SortableHysteresis />
+							<EntityDragLayer />
 							<DndProvider backend={HTML5Backend}>
 								<AppMain
 									connected={connected && !shouldReload}

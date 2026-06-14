@@ -219,15 +219,16 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Reorder an entity directly in in the list
+	 * Reorder an entity directly in in the list, where newIndex is its desired final index.
 	 */
 	moveEntity(oldIndex: number, newIndex: number): ControlEntityInstance | undefined {
 		oldIndex = clamp(oldIndex, 0, this.#entities.length)
 		newIndex = clamp(newIndex, 0, this.#entities.length)
 		if (oldIndex === newIndex) return undefined
 
-		if (oldIndex < newIndex) newIndex -= 1
-
+		// Clean move-to-final-index: pop the entity then insert it at newIndex (matching the cross-group
+		// pop-then-insert path in EntityListPoolBase). No insert-before adjustment, so newIndex === the
+		// drop target's index works in both directions, including dropping at the very end of the list.
 		this.#entities.splice(newIndex, 0, ...this.#entities.splice(oldIndex, 1))
 
 		return this.#entities[newIndex]

@@ -12,8 +12,17 @@ import { useEffect } from 'react'
  * the re-swap with `event.preventDefault()` on the `dragover` event - the built-in optimistic-sorting
  * plugin checks `defaultPrevented` before applying a swap. (Replaces the old checkDragState logic.)
  *
+ * It also fully blocks optimistic sorting for entity drags (which apply their move on hover via
+ * useEntityListReorderMonitor): OptimisticSortingPlugin is registered globally, so entities can't opt
+ * out per-sortable - if it ran it would move DOM nodes across React containers (corrupting the tree)
+ * on top of the hover move. So entity drags always preventDefault here.
+ *
  * Render once inside the global DragDropProvider. Harmless for uniform-height lists.
  */
+function isEntityDrag(source: { data?: unknown } | null | undefined): boolean {
+	return (source?.data as { kind?: string } | undefined)?.kind === 'entity'
+}
+
 export function SortableHysteresis(): null {
 	const manager = useDragDropManager()
 
@@ -32,7 +41,15 @@ export function SortableHysteresis(): null {
 			manager.monitor.addEventListener('dragend', reset),
 			manager.monitor.addEventListener('dragover', (event) => {
 				const { source, target, position } = manager.dragOperation
-				if (!isSortable(source) || !isSortable(target) || source.sortable === target.sortable) return
+				if (!isSortable(source)) return
+
+				// Entities reorder via their own hover handler - never let optimistic sorting touch them
+				if (isEntityDrag(source)) {
+					event.preventDefault()
+					return
+				}
+
+				if (!isSortable(target) || source.sortable === target.sortable) return
 
 				const direction = position.direction
 				if (direction === null) return
