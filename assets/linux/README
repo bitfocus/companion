@@ -67,5 +67,11 @@ Below are the setup steps for each. Section 4 (dependencies) and section 5 (udev
    You need to repeat this whenever the generated file changes (i.e. after enabling or disabling a surface module).
 
    Automating this:
-   - Desktop: Not yet supported
+   - Desktop: Companion shows a prompt in its interface when the installed rules are out of date, and can apply them for you (it will ask for your password).
    - Headless: set the environment variable COMPANION_SYNC_UDEV_RULES_COMMAND to a command that installs and reloads the rules, and Companion will run it automatically whenever the rules change. The install script in section 1 configures this for you.
+
+6. Launching
+
+   To run companion, either run companion-launcher to get the desktop build, or run the ./companion_headless.sh script to start it headless.
+
+   If when launching it gives an error "Using GTK 2/3 and GTK 4 in the same process is not supported", you can resolve this by appending the argument: --gtk-version=3
