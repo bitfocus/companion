@@ -99,21 +99,21 @@
 		opacity: 0.4;
 	}
 
-	&[data-dnd-dragging] {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		outline: 2px solid rgba(0, 0, 0, 0.5);
-		outline-offset: -2px;
+	// Native-dragged event rows ([data-dnd-dragging]) and the entity DragOverlay preview clone
+	// (.dnd-drag-preview) share the same lifted look.
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		@include dragging-style(#fff);
 	}
 
-	// Entities have no drag clone (the preview is a DragOverlay), so the in-place source row is just
-	// dimmed while it reorders on hover.
+	// Entities have no drag clone in the list (the preview is a DragOverlay), so the in-place source row
+	// is just dimmed while it reorders on hover.
 	&.entity-row-grabbing {
 		opacity: 0.4;
 	}
 }
 
-.entity-list,
-.entity-list-drag-layer {
+.entity-list {
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)
 	.entity-row {
 		background-color: white;
@@ -142,13 +142,6 @@
 		flex: 1;
 		padding: 0.5rem;
 		min-width: 0;
-	}
-
-	.entitylist-dragging {
-		// affects both the layer in the table and the layer that floats with the cursor
-		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
-		// first arg keeps the top sharp, second make bg translucent (dragging actions in v4.3 work differently than other lists)
-		@include dragging-style(0, 0.5);
 	}
 
 	.entity-row.entity-disabled {
@@ -257,12 +250,6 @@
 			}
 		}
 	}
-}
-
-// apparently this excludes .entity-list-drag-layer
-.entity-list > .entitylist-dragging {
-	// blurs the bottom only (blurs the top one too if dragging in an action group)
-	filter: blur(1px);
 }
 
 .entity-list {
@@ -424,9 +411,7 @@
 				opacity: 0.4;
 			}
 			&[data-dnd-dragging] {
-				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-				outline: 2px solid rgba(0, 0, 0, 0.5);
-				outline-offset: -2px;
+				@include dragging-style(#fff);
 			}
 
 			&.last-row {

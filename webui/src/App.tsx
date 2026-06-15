@@ -3,15 +3,12 @@ import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useIdleTimer } from 'react-idle-timer'
 import { PuffLoader } from 'react-spinners'
 import { Grid } from '~/Components/Grid'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
-import { CollectionsNestingTableDragLayer } from './Components/CollectionsNestingTable/CollectionsNestingTableDragLayer.js'
 import { Form, InputGroup } from './Components/Form.js'
 import { ProgressBar } from './Components/ProgressBar.js'
 import { SecretTextInputField } from './Components/SecretTextInputField.js'
@@ -98,24 +95,20 @@ export default function App(): React.JSX.Element {
 					>
 						<MonacoLoader />
 						{/*
-						 * Single global dnd-kit provider. Each feature subscribes to its own drags via
-						 * useDragDropMonitor() and filters by drag `type`, so handlers stay scoped while
-						 * dragging between different parts of the UI remains possible (one shared manager).
-						 * Feedback mode is configured per-draggable where needed (e.g. presets drag a clone
-						 * with no drop animation - see PresetIconPreview); everything else uses the defaults.
-						 * (The react-dnd DndProvider below still powers the not-yet-migrated areas.)
+						 * Single global dnd-kit provider for all drag and drop. Each feature subscribes to its
+						 * own drags via useDragDropMonitor() and filters by drag `type`, so handlers stay scoped
+						 * while dragging between different parts of the UI remains possible (one shared manager).
+						 * Feedback mode is configured per-draggable where needed (e.g. presets drag a clone with
+						 * no drop animation - see PresetIconPreview); everything else uses the defaults.
 						 */}
 						<DragDropProvider>
 							<SortableHysteresis />
 							<EntityDragLayer />
-							<CollectionsNestingTableDragLayer />
-							<DndProvider backend={HTML5Backend}>
-								<AppMain
-									connected={connected && !shouldReload}
-									loadingComplete={loadingComplete}
-									loadingProgress={loadingProgress}
-								/>
-							</DndProvider>
+							<AppMain
+								connected={connected && !shouldReload}
+								loadingComplete={loadingComplete}
+								loadingProgress={loadingProgress}
+							/>
 						</DragDropProvider>
 					</Suspense>
 				</>

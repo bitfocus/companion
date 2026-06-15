@@ -8,6 +8,7 @@ import {
 	CollectionsNestingTableContextProvider,
 	type CollectionsNestingTableContextType,
 } from './CollectionsNestingTableContext.js'
+import { CollectionsNestingTableDragLayer } from './CollectionsNestingTableDragLayer.js'
 import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
 import {
 	CollectionItemsCollapseButtons,
@@ -66,6 +67,9 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 			gridLayout={gridLayout}
 		>
 			<div className="collections-nesting-table">
+				{/* Rendered here (inside the table) so the drag preview clone is styled by the real CSS */}
+				<CollectionsNestingTableDragLayer />
+
 				{!!Heading && (
 					<div className="collections-nesting-table-header">
 						<Heading />

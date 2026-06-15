@@ -280,15 +280,6 @@
 	}
 }
 
-// The grid item DragOverlay reuses `.collections-nesting-table` so the cloned tile keeps its styling,
-// but the overlay element is always in the DOM (empty when idle, floating during a drag). Strip the
-// table's own chrome so it adds no height at the document root and shows no border behind the preview.
-.collections-nesting-table[data-dnd-overlay] {
-	border: none;
-	box-shadow: none;
-	padding: 0;
-}
-
 // dnd-kit sortable feedback. While dragging, dnd-kit promotes the row to a top-layer popover as the
 // moving "feedback" (tagged [data-dnd-dragging]) and leaves a clone behind in the list (tagged
 // [data-dnd-placeholder]). These are kept top-level (not nested under .collections-nesting-table) so
@@ -300,20 +291,23 @@
 	&[data-dnd-placeholder] {
 		opacity: 0.4;
 	}
+}
 
-	&[data-dnd-dragging] {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-		outline: 2px solid rgba(0, 0, 0, 0.5);
-		outline-offset: -2px;
+// The natively-dragged feedback ([data-dnd-dragging]) and the DragOverlay preview clone
+// (.dnd-drag-preview) share the same lifted look via the dragging-style mixin; only the background
+// colour differs per element type.
+.collections-nesting-table-row-item {
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		@include dragging-style(#f5f2fa);
 	}
 }
-
-.collections-nesting-table-row-item[data-dnd-dragging] {
-	background-color: #f5f2fa;
-}
 .collections-nesting-table-row-group[data-dnd-dragging] {
-	background-color: #f0f0f0;
+	@include dragging-style(#f0f0f0);
 }
-.collections-nesting-table-grid-tile[data-dnd-dragging] {
-	background-color: #fff;
+.collections-nesting-table-grid-tile {
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		@include dragging-style(#fff);
+	}
 }
