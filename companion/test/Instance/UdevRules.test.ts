@@ -2,8 +2,8 @@ import os from 'node:os'
 import path from 'node:path'
 import { initTRPC } from '@trpc/server'
 import fs from 'fs-extra'
-import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { UdevRuleDefinition } from 'udev-generator'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
 	InstanceUdevRulesController,
 	type ExecAsyncFn,
@@ -25,9 +25,7 @@ afterEach(async () => {
 	await Promise.all(tempDirs.splice(0).map((dir) => fs.remove(dir).catch(() => null)))
 })
 
-async function setup(
-	options: Partial<InstanceUdevRulesControllerOptions> & { usbIds?: UdevRuleDefinition[] } = {}
-) {
+async function setup(options: Partial<InstanceUdevRulesControllerOptions> & { usbIds?: UdevRuleDefinition[] } = {}) {
 	const { usbIds, ...controllerOptions } = options
 
 	const generatedDir = await fs.mkdtemp(path.join(os.tmpdir(), 'companion-udev-gen-'))
@@ -131,15 +129,18 @@ describe('InstanceUdevRulesController', () => {
 			ctx: TrpcContext
 		): Promise<boolean> {
 			const { controller, generatedDir } = await setup(options)
-			await fs.writeFile(path.join(generatedDir, options.isDesktopBuild ? DESKTOP_FILENAME : HEADLESS_FILENAME), SAMPLE_RULES)
+			await fs.writeFile(
+				path.join(generatedDir, options.isDesktopBuild ? DESKTOP_FILENAME : HEADLESS_FILENAME),
+				SAMPLE_RULES
+			)
 			const status = await readStatus(controller, ctx)
 			return status.canAutoApply
 		}
 
 		it('is true on the desktop build for a local client with pkexec available', async () => {
-			expect(await readCanAutoApply({ isDesktopBuild: true }, createMockTrpcContext({ isLocalClient: () => true }))).toBe(
-				true
-			)
+			expect(
+				await readCanAutoApply({ isDesktopBuild: true }, createMockTrpcContext({ isLocalClient: () => true }))
+			).toBe(true)
 		})
 
 		it('is false for a remote client', async () => {
@@ -215,7 +216,10 @@ describe('InstanceUdevRulesController', () => {
 		})
 
 		it('does nothing on a non-linux platform', async () => {
-			const { controller, generatedDir, execAsync } = await setup({ platform: 'darwin', syncCommand: 'my-sync-command' })
+			const { controller, generatedDir, execAsync } = await setup({
+				platform: 'darwin',
+				syncCommand: 'my-sync-command',
+			})
 
 			controller.triggerRegenerate()
 			// Give any (incorrectly scheduled) async work a chance to run
