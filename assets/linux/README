@@ -29,7 +29,7 @@ Below are the setup steps for each. Section 4 (dependencies) and section 5 (udev
 
    If you'd rather not install, you can extract the download and run `companion-launcher` directly from wherever you unpacked it.
 
-   Before USB surfaces (Stream Decks, Loupedecks, X-keys, etc.) will work, you need the udev rules from section 5 installed. You currently need to perform this manually, they get generated for you into your config folder $HOME/.config/companion-nodejs/udev-rules/
+   Before USB surfaces (Stream Decks, Loupedecks, X-keys, etc.) will work, you need the udev rules from section 5 installed. Companion detects when this is needed and shows a prompt in its interface; on a desktop it can apply the rules for you with a single click.
 
    If launching fails with "Using GTK 2/3 and GTK 4 in the same process is not supported", append the argument: --gtk-version=3
 
