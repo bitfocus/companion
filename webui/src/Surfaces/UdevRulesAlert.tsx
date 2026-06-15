@@ -29,26 +29,27 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 	if (!status || !status.supported || !status.needsApply) return null
 
 	// When Companion can apply the rules itself, the Apply button is the primary action and it re-checks
-	// automatically on success. Otherwise the user applies manually, so we offer the command and a re-check.
+	// automatically on success. Otherwise the user applies manually, so we offer the command and a "I've done
+	// this" re-check. Either way the actions sit in a right-aligned row below the command.
 	return (
 		<StaticAlert color="warning" role="alert">
 			<p>
-				To use your USB surfaces, the system USB permissions need updating. This is needed because the connected surface
-				modules have changed.
+				To use your USB surfaces, the system USB permissions need updating. This is needed because the configured
+				surface modules have changed.
 			</p>
 
 			{status.canAutoApply ? (
 				<>
-					<div className="mb-2">
+					<p className="mb-1">Apply them automatically below, or run this command manually:</p>
+					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
+						{status.applyCommand}
+					</pre>
+					<div className="d-flex justify-content-end gap-2">
+						<CopyButton text={status.applyCommand} color="secondary" />
 						<Button color="primary" size="sm" onClick={applyRules} disabled={applyMutation.isPending}>
 							{applyMutation.isPending ? 'Applying…' : 'Apply USB permissions'}
 						</Button>
 					</div>
-					<p className="mb-1">Or apply them manually by running:</p>
-					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
-						{status.applyCommand}
-					</pre>
-					<CopyButton text={status.applyCommand} color="secondary" />
 				</>
 			) : (
 				<>
@@ -56,10 +57,10 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
 						{status.applyCommand}
 					</pre>
-					<div className="d-flex gap-2">
+					<div className="d-flex justify-content-end gap-2">
 						<CopyButton text={status.applyCommand} color="secondary" />
 						<Button color="secondary" size="sm" onClick={() => recheckMutation.mutate()}>
-							I've done this
+							Recheck status
 						</Button>
 					</div>
 				</>
