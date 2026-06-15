@@ -21,11 +21,19 @@ Below are the setup steps for each. Section 4 (dependencies) and section 5 (udev
 
 2. Desktop install
 
-   Extract the download and run `companion-launcher`.
+   The easiest way is to run the included installer:
+
+   $ ./install.sh
+
+   It asks whether to install system-wide (into /opt, requires your password) or just for the current user (into ~/.local/share, no password needed). It copies Companion to that location, adds it to your application menu with an icon, and checks for the dependencies in section 4.
+
+   If you'd rather not install, you can extract the download and run `companion-launcher` directly from wherever you unpacked it.
 
    Before USB surfaces (Stream Decks, Loupedecks, X-keys, etc.) will work, you need the udev rules from section 5 installed. You currently need to perform this manually, they get generated for you into your config folder $HOME/.config/companion-nodejs/udev-rules/
 
    If launching fails with "Using GTK 2/3 and GTK 4 in the same process is not supported", append the argument: --gtk-version=3
+
+   To uninstall, delete the install directory (printed by the installer), plus companion.desktop and companion.png from the matching applications/ and icons/hicolor/256x256/apps/ folders.
 
 3. Standalone headless build
 

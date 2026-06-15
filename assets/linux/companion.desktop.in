@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Companion
+GenericName=Companion
+Comment=Control devices with Bitfocus Companion
+Exec=@EXEC_PATH@ %U
+Icon=@ICON_NAME@
+Terminal=false
+Categories=AudioVideo;
+StartupWMClass=companion-launcher
+Keywords=streamdeck;loupedeck;xkeys;companion;bitfocus;
