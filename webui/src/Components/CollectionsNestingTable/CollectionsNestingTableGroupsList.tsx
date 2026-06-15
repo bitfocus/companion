@@ -1,3 +1,4 @@
+import { useDragOperation } from '@dnd-kit/react'
 import { faCompressArrowsAlt, faExpandArrowsAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -5,11 +6,11 @@ import { useCallback } from 'react'
 import { Button } from '~/Components/Button.js'
 import { usePanelCollapseHelperContext, usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { useCollectionsNestingTableContext } from './CollectionsNestingTableContext.js'
+import { collectionDragType, collectionNestDropId, type CntCollectionDragData } from './CollectionsNestingTableDnd.js'
 import { CollectionsNestingTableDropZone } from './CollectionsNestingTableDropZone.js'
 import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
 import { CollectionsNestingTableCollectionRow } from './CollectionsNestingTableGroupRow.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
-import { useCollectionListCollectionDrop } from './useCollectionDrop.js'
 
 interface CollectionsNestingTableCollectionsListProps<
 	TCollection extends CollectionsNestingTableCollection,
@@ -73,18 +74,19 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 		TItem
 	>()
 
-	const { canDrop, dragCollectionId, drop } = useCollectionListCollectionDrop(
-		collectionsApi,
-		dragId,
-		collection.id,
-		-1,
-		'contents'
-	)
+	// Track whether a collection is being dragged, so we can collapse the dragged one and offer a nest
+	// dropzone on empty collections (which have no child rows to sort into).
+	const { source } = useDragOperation()
+	const isCollectionDragging = !!collectionsApi && source?.type === collectionDragType(dragId)
+	const draggingCollectionId = isCollectionDragging ? (source.data as CntCollectionDragData).collectionId : undefined
 
 	const collapseHelper = usePanelCollapseHelperContextForPanel(null, collection.id)
 
-	const isCollapsed = collapseHelper.isCollapsed || (!!dragCollectionId && dragCollectionId === collection.id)
+	const isCollapsed = collapseHelper.isCollapsed || draggingCollectionId === collection.id
 	const itemsInCollection = groupedItems.get(collection.id) || []
+
+	const showNestDropZone =
+		isCollectionDragging && draggingCollectionId !== collection.id && collection.children.length === 0
 
 	return (
 		<>
@@ -112,8 +114,13 @@ const CollectionsNestingTableCollectionSingle = observer(function CollectionsNes
 						nestingLevel={nestingLevel + 1}
 					/>
 
-					{canDrop && (!collection.children || collection.children.length === 0) ? (
-						<CollectionsNestingTableDropZone drop={drop} itemName="collection" nestingLevel={nestingLevel + 1} />
+					{showNestDropZone ? (
+						<CollectionsNestingTableDropZone
+							droppableId={collectionNestDropId(collection.id)}
+							accept={collectionDragType(dragId)}
+							itemName="collection"
+							nestingLevel={nestingLevel + 1}
+						/>
 					) : null}
 
 					{/* Render connections in this group */}

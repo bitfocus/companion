@@ -19,8 +19,13 @@ import { useEffect } from 'react'
  *
  * Render once inside the global DragDropProvider. Harmless for uniform-height lists.
  */
-function isEntityDrag(source: { data?: unknown } | null | undefined): boolean {
-	return (source?.data as { kind?: string } | undefined)?.kind === 'entity'
+function usesHoverReorder(source: { data?: unknown } | null | undefined): boolean {
+	const data = source?.data as { kind?: string } | undefined
+	if (!data) return false
+	// These apply their move on hover (via their own monitors) instead of dnd-kit's optimistic sorting:
+	// entity rows, and CollectionsNestingTable item rows/tiles (which can be dropped into empty
+	// collections / onto headers - targets native sorting can't place into without corrupting state).
+	return data.kind === 'entity' || data.kind === 'cnt-item'
 }
 
 export function SortableHysteresis(): null {
@@ -43,8 +48,8 @@ export function SortableHysteresis(): null {
 				const { source, target, position } = manager.dragOperation
 				if (!isSortable(source)) return
 
-				// Entities reorder via their own hover handler - never let optimistic sorting touch them
-				if (isEntityDrag(source)) {
+				// Hover-reordered drags must never be touched by optimistic sorting
+				if (usesHoverReorder(source)) {
 					event.preventDefault()
 					return
 				}

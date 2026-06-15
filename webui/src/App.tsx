@@ -11,6 +11,7 @@ import { Grid } from '~/Components/Grid'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
+import { CollectionsNestingTableDragLayer } from './Components/CollectionsNestingTable/CollectionsNestingTableDragLayer.js'
 import { Form, InputGroup } from './Components/Form.js'
 import { ProgressBar } from './Components/ProgressBar.js'
 import { SecretTextInputField } from './Components/SecretTextInputField.js'
@@ -107,6 +108,7 @@ export default function App(): React.JSX.Element {
 						<DragDropProvider>
 							<SortableHysteresis />
 							<EntityDragLayer />
+							<CollectionsNestingTableDragLayer />
 							<DndProvider backend={HTML5Backend}>
 								<AppMain
 									connected={connected && !shouldReload}
