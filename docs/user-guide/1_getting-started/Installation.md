@@ -24,13 +24,6 @@ A new stable gets made from this when we are happy with it being bug free.
 The current development version. Bugs can appear here, but this gains new features frequently.  
 This is typically stable for every day use, but this is not always the case.
 
-### Experimental
-
-Use these if you want to try the cutting edge new features, and can tolerate frequent bugs.
-
-This is where we push new features that need some more testing before making it into beta, or things which are only half done.
-These versions are often behind beta in module updates.
-
 ## Installing
 
 ### Mac
@@ -57,9 +50,21 @@ If you wish to install manually on a Pi, follow the instructions below for other
 
 ### Linux (x64 and arm64)
 
-Since 3.0, the downloads can be used for both a desktop version, and a headless version. Check the README in the download for guidance on how to do this and for other system setup for both.
+The Linux download contains both a **desktop** build and a **headless** build. Pick the one that matches how you want to run Companion. Either way, see the `README` included in the download for the system dependencies and the USB permission (udev) setup.
 
-If you want a headless version, we recommend using our install script to get a CompanionPi like environment. Read more on the [manual installation](./companion-pi/manual-install) page.
+#### Desktop (with a graphical interface)
+
+Extract the download and run `companion-launcher`.
+
+To use Stream Decks and other USB surfaces, Linux needs some udev rules installed. You currently need to manually sync these when changing or update modules.
+
+If launching fails with _"Using GTK 2/3 and GTK 4 in the same process is not supported"_, add the argument `--gtk-version=3`.
+
+#### Headless (server / no graphical interface)
+
+For a headless or server install we recommend our install script, which sets up a CompanionPi like environment — it handles system dependencies, the `companion` user and group, and the udev rules automatically. Read more on the [manual installation](./companion-pi/manual-install) page.
+
+The download also includes a standalone headless build, launched with the included `companion_headless.sh` script. This is supported, but not recommended, as you have to perform all of the dependency, group and udev setup yourself — see the `README` in the download.
 
 ### Docker
 
