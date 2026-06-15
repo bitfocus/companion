@@ -24,7 +24,7 @@
     "jsep": "^1.4.0",
     "jsonpath-plus": "^10.4.0",
     "quick-lru": "^7.3.0",
-    "semver": "^7.8.2",
+    "semver": "^7.8.4",
     "type-fest": "^5.7.0",
     "unicode-segmenter": "^0.16.0",
     "zod": "^4.4.3"
