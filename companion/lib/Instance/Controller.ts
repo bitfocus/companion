@@ -11,7 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import express from 'express'
-import { type UdevRuleDefinition } from 'udev-generator'
+import type { UdevRuleDefinition } from 'udev-generator'
 import z from 'zod'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
