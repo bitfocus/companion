@@ -1,4 +1,5 @@
 import { on, type EventEmitter } from 'node:events'
+import os from 'node:os'
 import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
 import { initTRPC, TRPCError, type inferRouterInputs, type inferRouterOutputs } from '@trpc/server'
 import type * as trpcExpress from '@trpc/server/adapters/express'
@@ -13,6 +14,13 @@ export interface TrpcContext {
 	clientId: string
 	clientIp: string | undefined
 
+	/**
+	 * Whether this client is connecting from the same machine as Companion.
+	 * Lazily evaluated and cached for the lifetime of the context.
+	 * Note: This is not guaranteed to be 100% accurate at all times.
+	 */
+	isLocalClient: () => boolean
+
 	pendingImport?: {
 		object: ExportFullv6 | ExportPageModelv6
 		timeout: null
@@ -22,11 +30,47 @@ export interface TrpcContext {
 export const createTrpcExpressContext = ({ req, res: _res }: trpcExpress.CreateExpressContextOptions): TrpcContext => ({
 	clientId: nanoid(),
 	clientIp: req.ip,
+	isLocalClient: makeIsLocalClient(req.ip),
 }) // no context
 export const createTrpcWsContext = ({ req, res: _res }: trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
 	clientId: nanoid(),
 	clientIp: req.socket.remoteAddress,
+	isLocalClient: makeIsLocalClient(req.socket.remoteAddress),
 }) // no context
+
+/**
+ * Build a lazily-cached predicate for whether `clientIp` is on the same machine as Companion.
+ * Returns true for loopback addresses and for any address belonging to one of this machine's own
+ * network interfaces (so opening the UI on the host's LAN address still counts as local).
+ */
+function makeIsLocalClient(clientIp: string | undefined): () => boolean {
+	let cached: boolean | undefined
+	return () => {
+		if (cached === undefined) cached = computeIsLocalClient(clientIp)
+		return cached
+	}
+}
+export function computeIsLocalClient(clientIp: string | undefined): boolean {
+	if (!clientIp) return false
+
+	try {
+		const normalize = (ip: string) => ip.replace(/^::ffff:/, '').replace(/%.*$/, '')
+		const normalized = normalize(clientIp)
+		if (normalized === '127.0.0.1' || normalized === '::1') return true
+
+		const interfaces = os.networkInterfaces()
+		for (const addresses of Object.values(interfaces)) {
+			if (!addresses) continue
+			for (const addr of addresses) {
+				if (normalize(addr.address) === normalized) return true
+			}
+		}
+		return false
+	} catch {
+		// If we fail to get the network interfaces for some reason, assume it's not local.
+		return false
+	}
+}
 
 /**
  * Initialization of tRPC backend

@@ -29,7 +29,7 @@ Below are the setup steps for each. Section 4 (dependencies) and section 5 (udev
 
    If you'd rather not install, you can extract the download and run `companion-launcher` directly from wherever you unpacked it.
 
-   Before USB surfaces (Stream Decks, Loupedecks, X-keys, etc.) will work, you need the udev rules from section 5 installed. You currently need to perform this manually, they get generated for you into your config folder $HOME/.config/companion-nodejs/udev-rules/
+   Before USB surfaces (Stream Decks, Loupedecks, X-keys, etc.) will work, you need the udev rules from section 5 installed. Companion detects when this is needed and shows a prompt in its interface; on a desktop it can apply the rules for you with a single click.
 
    If launching fails with "Using GTK 2/3 and GTK 4 in the same process is not supported", append the argument: --gtk-version=3
 
@@ -67,5 +67,11 @@ Below are the setup steps for each. Section 4 (dependencies) and section 5 (udev
    You need to repeat this whenever the generated file changes (i.e. after enabling or disabling a surface module).
 
    Automating this:
-   - Desktop: Not yet supported
+   - Desktop: Companion shows a prompt in its interface when the installed rules are out of date, and can apply them for you (it will ask for your password).
    - Headless: set the environment variable COMPANION_SYNC_UDEV_RULES_COMMAND to a command that installs and reloads the rules, and Companion will run it automatically whenever the rules change. The install script in section 1 configures this for you.
+
+6. Launching
+
+   To run companion, either run companion-launcher to get the desktop build, or run the ./companion_headless.sh script to start it headless.
+
+   If when launching it gives an error "Using GTK 2/3 and GTK 4 in the same process is not supported", you can resolve this by appending the argument: --gtk-version=3

@@ -22,6 +22,7 @@ import type { InstanceConfigStore } from '../../lib/Instance/ConfigStore.js'
 import { InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import { EventDefinitions } from '../../lib/Resources/EventDefinitions.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
+import { createMockTrpcContext } from '../Util.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 // Deterministic nanoid
@@ -1096,7 +1097,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('createTrpcRouter', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		function createCaller(defs: InstanceDefinitions) {
 			const trpcRouter = defs.createTrpcRouter()
@@ -1366,7 +1367,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('no-op and diff event emission', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		it('setActionDefinitions with identical data does not emit an update', async () => {
 			const { defs } = createInstanceDefinitions()
@@ -1474,7 +1475,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('simplifyPresetsForUi (via TRPC)', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		it('assigns sequential order values to presets', async () => {
 			const { defs } = createInstanceDefinitions()
@@ -1506,7 +1507,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('forgetConnection events via TRPC', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		it('emits forget-connection on feedbacks subscription', async () => {
 			const { defs } = createInstanceDefinitions()

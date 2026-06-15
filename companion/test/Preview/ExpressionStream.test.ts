@@ -8,12 +8,13 @@ import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import type { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import { createMockTrpcContext } from '../Util.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 // ── test infrastructure ──────────────────────────────────────────────────────
 
 const t = initTRPC.context<TrpcContext>().create()
-const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+const testCtx: TrpcContext = createMockTrpcContext()
 
 function createParser(
 	variables: VariableValueData = {},

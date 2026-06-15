@@ -56,7 +56,7 @@ The Linux download contains both a **desktop** build and a **headless** build. P
 
 Extract the download and run `companion-launcher`.
 
-To use Stream Decks and other USB surfaces, Linux needs some udev rules installed. You currently need to manually sync these when changing or update modules.
+To use Stream Decks and other USB surfaces, Linux needs some udev rules installed. Companion will prompt you inside its interface when this needs doing, and on a desktop it can apply them for you. See the `README` for details.
 
 If launching fails with _"Using GTK 2/3 and GTK 4 in the same process is not supported"_, add the argument `--gtk-version=3`.
 

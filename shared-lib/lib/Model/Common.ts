@@ -17,6 +17,27 @@ export interface AppUpdateInfo {
 	link: string | undefined
 }
 
+/**
+ * Status of the Linux udev rules that grant access to USB surfaces.
+ * On non-Linux platforms `supported` is false and nothing else is meaningful.
+ */
+export interface UdevRulesStatus {
+	/** Whether udev rules are relevant on this platform (linux only) */
+	supported: boolean
+	/** Which build/file is in use */
+	mode: 'desktop' | 'headless'
+	/** Whether the installed rules are out of date and need (re)applying */
+	needsApply: boolean
+	/** Absolute path to the generated rules file */
+	generatedPath: string
+	/** Absolute path the rules should be installed to */
+	installedPath: string
+	/** A shell command the user can run manually to apply the rules */
+	applyCommand: string
+	/** Whether Companion can apply the rules itself (desktop, pkexec available, local client) */
+	canAutoApply: boolean
+}
+
 export interface ControlLocation {
 	pageNumber: number
 	row: number
