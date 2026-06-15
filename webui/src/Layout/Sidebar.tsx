@@ -270,7 +270,8 @@ export const MySidebar = memo(function MySidebar() {
 
 	const toggleUnfoldable = useCallback(() => {
 		setUnfoldable((val) => {
-			if (!val) setTempNarrow(true) // if new value is true, make sidebar narrow so it folds now
+			// enabling folding → fold now; disabling folding → unfold now
+			setTempNarrow(!val)
 			return !val
 		})
 	}, [setUnfoldable])
@@ -514,9 +515,7 @@ export const MySidebar = memo(function MySidebar() {
 						</SidebarMenuItemGroup>
 					</ul>
 				)}
-				{!narrowMode && (
-					<SidebarFooter toggleUnfoldable={toggleUnfoldable} onContextMenu={contextState.onContextMenu} />
-				)}
+				{!narrowMode && <SidebarFooter onContextMenu={contextState.onContextMenu} />}
 			</SidebarRoot>
 		</NarrowModeContext.Provider>
 	)
@@ -663,30 +662,22 @@ function SidebarRoot({
 
 			if (target.closest('.block-collapse')) return // ignore clicks on certain elements
 
+			// The footer toggler only opens the context menu now; folding is toggled from there (see toggleUnfoldable).
+			if (target.closest('.sidebar-footer2')) return
+
 			// If the user clicked on the text of a sidebar "button", it's not a nav-link so we need to
 			// search up the DOM for a nav-link to capture all possibilities.
 			const navLink = target.closest('.nav-link')
 			const navGroupToggle = navLink?.closest('.nav-group-toggle')
 			if (!navLink || navGroupToggle) return // only act for click on sidebar elements (excludes the context-menu, blank areas,...)
 
-			// unfoldToggler: true if clicked in the "toggleFoldandVersion" area
-			const unfoldToggler = target.closest('.sidebar-footer2') // the latter isn't strictly necessary, but makes the intent clear
-			if (unfoldToggler && !target.closest('.nav-icon-wrapper')) return // ignore clicks on version text, etc.
-
 			// if we got here the user clicked on a nav-link, not a non-active area, group-toggle or context-menu item
 			if (mobileMode) {
 				// Mobile mode ("hamburger" toggle reveals sidebar; click on item hides sidebar)
 				setVisibleMobile(false)
-			} else if ((unfoldable && !unfoldToggler) || (!unfoldable && unfoldToggler)) {
-				// In folding mode make the sidebar temporarily narrow so it folds after the user clicks
-				// note: we reverse the logic for clicks on the sidebar toggler, because the toggler will have flipped the state by the time this runs so:
-				// unfoldable && !unfoldToggler: User clicked a _nav-link_ while in folding mode → collapse
-				// !unfoldable && unfoldToggler: User clicked the _toggler_ to enable folding → collapse now
+			} else if (unfoldable) {
+				// In folding mode, clicking a nav-link makes the sidebar temporarily narrow so it folds after the click.
 				setTimeout(() => setNarrow(true), 0) // we need to defer this action or navigation can fail due to an apparent race with re-rendering the sidebar.
-			} else if (unfoldable && unfoldToggler) {
-				// user clicked the toggler to get out of unfolding mode, unfold immediately
-				// without this condition, if the user "folded" the sidebar and then immediately clicked again, the sidebar would remain narrow until the user moved off of it.
-				setNarrow(false)
 			}
 		},
 		[setNarrow, mobileMode, unfoldable]
