@@ -52,6 +52,18 @@ program
 	.option('--syslog-port <string>', 'Port on syslog server to write to')
 	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
 	.option('--syslog-localhost <string>', 'Hostname of this machine')
+	.option(
+		'--enable-shell-command-action',
+		'Enable the internal "run shell command" action, which can run arbitrary commands on this computer'
+	)
+	.option(
+		'--enable-remote-custom-modules',
+		'Allow remote (non-loopback) clients to import custom modules. Local clients are always allowed'
+	)
+	.option(
+		'--trusted-proxies <value>',
+		'Configure the Express "trust proxy" setting so the real client ip is used when running behind a reverse proxy'
+	)
 	.option('--no-notifications', "Don't show version-related notifications in the header.")
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
@@ -230,6 +242,9 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
+	const isEnvTruthy = (value: string | undefined): boolean =>
+		['1', 'true', 'yes'].includes((value ?? '').toLowerCase().trim())
+
 	const registry = new Registry({
 		configDir,
 		modulesDirs: {
@@ -245,6 +260,11 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
 		machineId,
 		notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
+		enableShellCommandAction:
+			!!options.enableShellCommandAction || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_ACTION),
+		enableRemoteCustomModules:
+			!!options.enableRemoteCustomModules || isEnvTruthy(process.env.COMPANION_ENABLE_REMOTE_CUSTOM_MODULES),
+		trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
 	})
 
 	registry

@@ -266,39 +266,50 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			exec: {
 				label: 'System: Run shell command (local)',
 				description: undefined,
-				options: [
-					{
-						type: 'textinput',
-						label: 'Command',
-						id: 'path',
-						useVariables: CompanionFieldVariablesSupport.InternalParser,
-					},
-					{
-						type: 'textinput',
-						label: 'Working Directory',
-						id: 'cwd',
-						useVariables: CompanionFieldVariablesSupport.InternalParser,
-						description:
-							'Optional. If not set, the command will be run with the current working directory of companion',
-					},
-					{
-						type: 'number',
-						label: 'Timeout (ms, between 500 and 20000)',
-						id: 'timeout',
-						default: 5000,
-						min: 500,
-						max: 20000,
-						clampValues: true,
-					},
-					{
-						type: 'internal:custom_variable',
-						label: 'Target Variable (stdout)',
-						id: 'targetVariable',
-						includeNone: true,
-						expressionDescription:
-							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
-					},
-				],
+				options: this.#appInfo.enableShellCommandAction
+					? [
+							{
+								type: 'textinput',
+								label: 'Command',
+								id: 'path',
+								useVariables: CompanionFieldVariablesSupport.InternalParser,
+							},
+							{
+								type: 'textinput',
+								label: 'Working Directory',
+								id: 'cwd',
+								useVariables: CompanionFieldVariablesSupport.InternalParser,
+								description:
+									'Optional. If not set, the command will be run with the current working directory of companion',
+							},
+							{
+								type: 'number',
+								label: 'Timeout (ms, between 500 and 20000)',
+								id: 'timeout',
+								default: 5000,
+								min: 500,
+								max: 20000,
+								clampValues: true,
+							},
+							{
+								type: 'internal:custom_variable',
+								label: 'Target Variable (stdout)',
+								id: 'targetVariable',
+								includeNone: true,
+								expressionDescription:
+									'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
+							},
+						]
+					: [
+							{
+								type: 'static-text',
+								id: 'disabled',
+								label: 'Disabled',
+								value:
+									'Running shell commands is disabled. This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
+									'Enable it in the Companion launcher settings, or for headless installs pass --enable-shell-command-action / set COMPANION_ENABLE_SHELL_COMMAND_ACTION=1.',
+							},
+						],
 				optionsSupportExpressions: true,
 			},
 			custom_log: {
@@ -342,6 +353,12 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<InternalActionResult> {
 		switch (action.definitionId) {
 			case 'exec': {
+				if (!this.#appInfo.enableShellCommandAction) {
+					this.#logger.warn(
+						'Rejected shell command action: the "run shell command" feature is disabled. Enable it in the launcher settings or via --enable-shell-command-action / COMPANION_ENABLE_SHELL_COMMAND_ACTION.'
+					)
+					break
+				}
 				if (action.options.path) {
 					const command = stringifyVariableValue(action.options.path)
 					const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined

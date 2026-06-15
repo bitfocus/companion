@@ -141,6 +141,11 @@ if (!lock) {
 		syslog_port: 514,
 		syslog_use_tcp: false,
 		syslog_local_hostname: '',
+
+		// Dangerous features - disabled by default, see the docs before enabling
+		enable_shell_command_action: false,
+		enable_remote_custom_modules: false,
+		trusted_proxies: '',
 	}
 
 	try {
@@ -621,6 +626,21 @@ if (!lock) {
 					if (uiConfig.get('enable_syslog')) doRestartApp = true
 				}
 
+				if (configData.enable_shell_command_action !== undefined) {
+					uiConfig.set('enable_shell_command_action', configData.enable_shell_command_action)
+					doRestartApp = true
+				}
+
+				if (configData.enable_remote_custom_modules !== undefined) {
+					uiConfig.set('enable_remote_custom_modules', configData.enable_remote_custom_modules)
+					doRestartApp = true
+				}
+
+				if (configData.trusted_proxies !== undefined) {
+					uiConfig.set('trusted_proxies', configData.trusted_proxies)
+					doRestartApp = true
+				}
+
 				// Refresh config info to all windows
 				sendAppInfo()
 
@@ -974,6 +994,9 @@ if (!lock) {
 						uiConfig.get('enable_syslog') && uiConfig.get('syslog_local_hostname')
 							? `--syslog-localhost="${uiConfig.get('syslog_local_hostname')}"`
 							: undefined,
+						uiConfig.get('enable_shell_command_action') ? '--enable-shell-command-action' : undefined,
+						uiConfig.get('enable_remote_custom_modules') ? '--enable-remote-custom-modules' : undefined,
+						uiConfig.get('trusted_proxies') ? `--trusted-proxies=${uiConfig.get('trusted_proxies')}` : undefined,
 					].filter((v) => !!v),
 				{
 					name: `Companion process`,

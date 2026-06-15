@@ -1,4 +1,5 @@
 import type React from 'react'
+import { DangerousFeaturesSection } from './sections/DangerousFeatures'
 import { DeveloperSection } from './sections/Developer'
 import { GeneralSection } from './sections/General'
 import { SyslogSection } from './sections/Syslog'
@@ -24,5 +25,10 @@ export const SectionDefinitions: SectionDefinition[] = [
 		title: 'Syslog',
 		id: 'syslog',
 		component: SyslogSection,
+	},
+	{
+		title: 'Dangerous Features',
+		id: 'dangerous-features',
+		component: DangerousFeaturesSection,
 	},
 ]

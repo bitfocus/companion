@@ -126,7 +126,7 @@ export class UIUpdate {
 						})
 						.optional()
 				)
-				.query(({ input }) => {
+				.query(({ input, ctx }) => {
 					let osName = os.type()
 					if (/windows/i.test(osName)) {
 						osName = os.version()
@@ -135,6 +135,11 @@ export class UIUpdate {
 						appVersion: this.#appInfo.appVersion,
 						appBuild: this.#appInfo.appBuild,
 						os: input?.all ? `${osName} (v${os.release()}; ${os.arch()})` : undefined,
+
+						// Dangerous features (read-only - these can only be changed via launcher/CLI/env)
+						shellCommandActionEnabled: this.#appInfo.enableShellCommandAction,
+						// Computed per requesting client: local clients are always allowed
+						customModuleImportAllowed: this.#appInfo.enableRemoteCustomModules || ctx.isLocalClient(),
 					}
 				}),
 

@@ -1,9 +1,10 @@
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import CryptoJS from 'crypto-js'
 import { useCallback, useContext, useEffect, useState } from 'react'
-import { DismissableAlert } from '~/Components/Alert'
+import { DismissableAlert, StaticAlert } from '~/Components/Alert'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { base64EncodeUint8Array } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -191,6 +192,23 @@ export function ImportModules(): React.JSX.Element {
 			notifier,
 		]
 	)
+
+	// Importing custom modules is a dangerous feature. Local clients are always allowed; remote
+	// clients are only allowed when the feature is enabled. This is computed per-client by the server.
+	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
+	const importAllowed = versionInfo.data?.customModuleImportAllowed ?? true
+
+	if (!importAllowed) {
+		return (
+			<div className="import-module">
+				<StaticAlert color="info">
+					Importing custom modules from a remote computer is disabled. You can import from the computer running
+					Companion, or enable remote custom module imports in the Companion launcher settings (or for headless installs
+					with <code>--enable-remote-custom-modules</code> / <code>COMPANION_ENABLE_REMOTE_CUSTOM_MODULES=1</code>).
+				</StaticAlert>
+			</div>
+		)
+	}
 
 	return (
 		<div className="import-module">

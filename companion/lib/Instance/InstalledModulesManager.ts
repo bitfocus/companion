@@ -16,7 +16,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { publicProcedure, router } from '../UI/TRPC.js'
+import { publicProcedure, router, type TrpcContext } from '../UI/TRPC.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { MAX_MODULE_BUNDLE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from './Constants.js'
 import type { InstanceModules } from './Modules.js'
@@ -51,7 +51,14 @@ export class InstanceInstalledModulesManager {
 	readonly #multipartUploader = new MultipartUploader(
 		'Instance/UserModulesManager',
 		MAX_MODULE_BUNDLE_TAR_SIZE,
-		async (_name, data, _userData, updateProgress) => {
+		async (_name, data, _userData, updateProgress, ctx) => {
+			if (!this.#isCustomModuleImportAllowed(ctx)) {
+				this.#logger.warn(`Rejected module bundle import from remote client ${ctx.clientIp ?? 'unknown'}`)
+				throw new Error(
+					'Importing custom modules is only allowed from the local machine. To allow remote clients, enable it in the launcher settings or via --enable-remote-custom-modules / COMPANION_ENABLE_REMOTE_CUSTOM_MODULES.'
+				)
+			}
+
 			const decompressedData = await gunzipP(data)
 			if (!decompressedData) {
 				this.#logger.error(`Failed to decompress module data`)
@@ -106,6 +113,20 @@ export class InstanceInstalledModulesManager {
 		this.#modulesManager = modulesManager
 		this.#modulesStore = modulesStore
 		this.#configStore = configStore
+	}
+
+	/**
+	 * Whether the given client is allowed to import a custom module.
+	 * Local (loopback) clients are always allowed; remote clients are only allowed when the
+	 * "remote custom modules" dangerous feature is enabled.
+	 *
+	 * Note: store module installs are intentionally NOT gated here - they are checksum-verified
+	 * published code.
+	 * TODO - in future, also gate store modules based on the permissions they declare in their
+	 * manifest (child-process / native-addons / filesystem), to shrink the remaining attack surface.
+	 */
+	#isCustomModuleImportAllowed(ctx: TrpcContext): boolean {
+		return this.#appInfo.enableRemoteCustomModules || ctx.isLocalClient()
 	}
 
 	/**
@@ -223,8 +244,13 @@ export class InstanceInstalledModulesManager {
 						tarBuffer: z.string(),
 					})
 				)
-				.mutation(async ({ input }) => {
+				.mutation(async ({ input, ctx }) => {
 					// this.#logger.debug('modules:install-module-tar', data)
+
+					if (!this.#isCustomModuleImportAllowed(ctx)) {
+						this.#logger.warn(`Rejected custom module import from remote client ${ctx.clientIp ?? 'unknown'}`)
+						return 'Importing custom modules is only allowed from the local machine. To allow remote clients, enable it in the launcher settings.'
+					}
 
 					const tarBuffer = Buffer.from(input.tarBuffer, 'base64')
 

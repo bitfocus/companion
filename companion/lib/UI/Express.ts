@@ -90,10 +90,23 @@ export class UIExpress {
 	#legacyApiRouter = Express.Router()
 	#connectionApiRouter = Express.Router()
 
-	constructor(internalApiRouter: Express.Router) {
+	constructor(internalApiRouter: Express.Router, trustedProxies: string | undefined) {
 		this.app.use(cors())
 
-		// this.app.set('trust proxy', 'loopback') // TODO - set this from an env variable
+		// Configure how the client ip is determined when running behind a reverse proxy.
+		// Without this, a proxied request appears to originate from the proxy (often loopback),
+		// which would make remote clients look local to features that trust loopback.
+		if (trustedProxies) {
+			// Accept comma separated lists of addresses/subnets, or special values like 'loopback'
+			const trimmed = trustedProxies.trim()
+			if (trimmed) {
+				const parts = trimmed
+					.split(',')
+					.map((v) => v.trim())
+					.filter((v) => !!v)
+				this.app.set('trust proxy', parts.length > 1 ? parts : parts[0])
+			}
+		}
 
 		this.app.use((_req, res, next) => {
 			res.set('X-App', 'Bitfocus Companion')

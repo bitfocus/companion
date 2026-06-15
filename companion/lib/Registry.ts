@@ -167,7 +167,15 @@ export class Registry {
 	constructor(
 		baseAppInfo: Pick<
 			AppInfo,
-			'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'notifications'
+			| 'configDir'
+			| 'modulesDirs'
+			| 'builtinModuleDirs'
+			| 'udevRulesDir'
+			| 'machineId'
+			| 'notifications'
+			| 'enableShellCommandAction'
+			| 'enableRemoteCustomModules'
+			| 'trustedProxies'
 		>
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
@@ -537,4 +545,10 @@ export interface AppInfo {
 	appBuild: string
 	pkgInfo: PackageJson
 	notifications: boolean
+	/** Whether the internal "run shell command" action is enabled */
+	enableShellCommandAction: boolean
+	/** Whether remote (non-loopback) clients are allowed to import custom modules */
+	enableRemoteCustomModules: boolean
+	/** Express "trust proxy" value, so the real client ip can be determined behind a reverse proxy */
+	trustedProxies: string | undefined
 }
