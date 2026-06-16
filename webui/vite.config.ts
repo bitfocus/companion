@@ -68,14 +68,17 @@ export default defineConfig(({ mode }) => {
 			proxy: {
 				[`${normalizedBase}/instance`]: {
 					target: `http://${upstreamUrl}`,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
 				[`${normalizedBase}/connections/instance`]: {
 					target: `http://${upstreamUrl}`,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
 				[`${normalizedBase}/int`]: {
 					target: `http://${upstreamUrl}`,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
 				[`${normalizedBase}/user-guide`]: {
@@ -98,11 +101,13 @@ export default defineConfig(({ mode }) => {
 				[`${normalizedBase}/trpc`]: {
 					target: `ws://${upstreamUrl}`,
 					ws: true,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
 				[`${normalizedBase}/_deps`]: {
 					target: `ws://${upstreamUrl}`,
 					ws: true,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
 			},

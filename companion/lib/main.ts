@@ -52,6 +52,18 @@ program
 	.option('--syslog-port <string>', 'Port on syslog server to write to')
 	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
 	.option('--syslog-localhost <string>', 'Hostname of this machine')
+	.option(
+		'--enable-shell-command-support',
+		'Allow running shell commands on this computer (e.g. the internal "run shell command" action)'
+	)
+	.option(
+		'--enable-restricted-modules',
+		'Allow loading modules that are otherwise held back for safety, e.g. importing custom modules from remote (non-loopback) clients. Local clients can always import'
+	)
+	.option(
+		'--trusted-proxies <value>',
+		'Configure the Express "trust proxy" setting so the real client ip is used when running behind a reverse proxy'
+	)
 	.option('--no-notifications', "Don't show version-related notifications in the header.")
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
@@ -230,6 +242,9 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		}
 	}
 
+	const isEnvTruthy = (value: string | undefined): boolean =>
+		['1', 'true', 'yes'].includes((value ?? '').toLowerCase().trim())
+
 	const registry = new Registry({
 		configDir,
 		modulesDirs: {
@@ -244,7 +259,14 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		},
 		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
 		machineId,
-		notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
+		options: {
+			notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
+			enableShellCommandSupport:
+				!!options.enableShellCommandSupport || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT),
+			enableRestrictedModules:
+				!!options.enableRestrictedModules || isEnvTruthy(process.env.COMPANION_ENABLE_RESTRICTED_MODULES),
+			trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
+		},
 	})
 
 	registry

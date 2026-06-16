@@ -329,6 +329,26 @@ export function isPackaged(): boolean {
 }
 
 /**
+ * Whether Companion is running under the desktop Electron launcher (which has a settings UI).
+ * The launcher sets the COMPANION_IPC_PARENT env var when spawning the Companion process.
+ */
+export function isRunningUnderLauncher(): boolean {
+	return !!process.env.COMPANION_IPC_PARENT
+}
+
+/**
+ * Build a message describing how to enable one of the "dangerous features", tailored to how
+ * Companion is being run - either via the desktop launcher (which has a settings UI), or headless
+ * (where the cli flag / env var must be used).
+ */
+export function describeHowToEnableDangerousFeature(cliFlag: string, envVar: string): string {
+	if (isRunningUnderLauncher()) {
+		return `You can enable it in the Companion launcher settings, under "Dangerous Features".`
+	}
+	return `You can enable it by starting Companion with ${cliFlag}, or by setting the ${envVar} environment variable.`
+}
+
+/**
  * Lazy compute a value
  * @param fn Function to compute the value
  * @returns Function that returns the computed value, only computed once

@@ -1,5 +1,6 @@
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import CryptoJS from 'crypto-js'
 import { useCallback, useContext, useEffect, useState } from 'react'
@@ -192,18 +193,46 @@ export function ImportModules(): React.JSX.Element {
 		]
 	)
 
+	// Importing custom modules is a dangerous feature. Local clients are always allowed; remote
+	// clients are only allowed when the feature is enabled. This is computed per-client by the server.
+	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
+	const importAllowed = versionInfo.data?.customModuleImportAllowed ?? true
+	const runningUnderLauncher = versionInfo.data?.runningUnderLauncher ?? false
+
+	// When disabled, the buttons remain visible but inert, with this explanation shown as a tooltip
+	const importDisabledTooltip = importAllowed
+		? undefined
+		: 'Importing custom modules from a remote computer is disabled. Import from the computer running Companion, or ' +
+			(runningUnderLauncher
+				? 'enable remote custom module imports in the Companion launcher settings, under "Dangerous Features".'
+				: 'start Companion with --enable-restricted-modules (or set COMPANION_ENABLE_RESTRICTED_MODULES=1) to allow remote clients.')
+
+	const disabledButtonStyle = importAllowed ? undefined : { opacity: 0.65, cursor: 'not-allowed' as const }
+
 	return (
 		<div className="import-module">
-			<label className="button button-warning button-file">
+			<label className="button button-warning button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import module package
-				<input type="file" onChange={loadModuleFile} style={{ display: 'none' }} accept=".tgz" />
+				<input
+					type="file"
+					onChange={loadModuleFile}
+					style={{ display: 'none' }}
+					accept=".tgz"
+					disabled={!importAllowed}
+				/>
 			</label>
 			&nbsp;
-			<label className="button button-info button-file">
+			<label className="button button-info button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import offline module bundle
-				<input type="file" onChange={loadModuleBundle} style={{ display: 'none' }} accept=".tgz,.gz" />
+				<input
+					type="file"
+					onChange={loadModuleBundle}
+					style={{ display: 'none' }}
+					accept=".tgz,.gz"
+					disabled={!importAllowed}
+				/>
 			</label>
 			{importError ? (
 				<DismissableAlert color="warning" onClose={() => setImportError(null)}>

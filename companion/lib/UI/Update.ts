@@ -18,6 +18,7 @@ import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { isRunningUnderLauncher } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from './TRPC.js'
 import { compileUpdatePayload } from './UpdatePayload.js'
 
@@ -84,7 +85,7 @@ export class UIUpdate {
 				}
 
 				this.#logger.debug(`fresh update data received ${JSON.stringify(res.data)}`)
-				if (!this.#appInfo.notifications) {
+				if (!this.#appInfo.options.notifications) {
 					this.#logger.debug(
 						'Notification display has been disabled by the command-line: not showing the update message.'
 					)
@@ -126,7 +127,7 @@ export class UIUpdate {
 						})
 						.optional()
 				)
-				.query(({ input }) => {
+				.query(({ input, ctx }) => {
 					let osName = os.type()
 					if (/windows/i.test(osName)) {
 						osName = os.version()
@@ -135,6 +136,13 @@ export class UIUpdate {
 						appVersion: this.#appInfo.appVersion,
 						appBuild: this.#appInfo.appBuild,
 						os: input?.all ? `${osName} (v${os.release()}; ${os.arch()})` : undefined,
+
+						// Dangerous features (read-only - these can only be changed via launcher/CLI/env)
+						shellCommandSupportEnabled: this.#appInfo.options.enableShellCommandSupport,
+						// Computed per requesting client: local clients are always allowed
+						customModuleImportAllowed: this.#appInfo.options.enableRestrictedModules || ctx.isLocalClient(),
+						// So the UI can tailor "how to enable" hints to how Companion is being run
+						runningUnderLauncher: isRunningUnderLauncher(),
 					}
 				}),
 

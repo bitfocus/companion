@@ -11,6 +11,9 @@ export interface LauncherConfig {
 	syslog_port: number
 	syslog_use_tcp: boolean
 	syslog_local_hostname: string
+	enable_shell_command_support: boolean
+	enable_restricted_modules: boolean
+	trusted_proxies: string
 }
 
 export interface AppInfo {
