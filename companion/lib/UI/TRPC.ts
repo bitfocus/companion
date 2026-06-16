@@ -5,6 +5,7 @@ import { initTRPC, TRPCError, type inferRouterInputs, type inferRouterOutputs } 
 import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { nanoid } from 'nanoid'
+import proxyaddr from 'proxy-addr'
 import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
 import LogController from '../Log/Controller.js'
 import type { Registry } from '../Registry.js'
@@ -26,17 +27,47 @@ export interface TrpcContext {
 		timeout: null
 	}
 }
+/**
+ * Parse the `trustedProxies` config string (comma or semicolon separated) into the list form used
+ * by both express ("trust proxy") and proxy-addr.
+ */
+export function parseTrustedProxies(trustedProxies: string | undefined): string[] {
+	return (trustedProxies ?? '')
+		.split(/[,;]/)
+		.map((v) => v.trim())
+		.filter((v) => !!v)
+}
+
 // created for each request
+// The express side already resolves req.ip via express's "trust proxy" setting, so we can use it directly.
 export const createTrpcExpressContext = ({ req, res: _res }: trpcExpress.CreateExpressContextOptions): TrpcContext => ({
 	clientId: nanoid(),
 	clientIp: req.ip,
 	isLocalClient: makeIsLocalClient(req.ip),
 }) // no context
-export const createTrpcWsContext = ({ req, res: _res }: trpcWs.CreateWSSContextFnOptions): TrpcContext => ({
-	clientId: nanoid(),
-	clientIp: req.socket.remoteAddress,
-	isLocalClient: makeIsLocalClient(req.socket.remoteAddress),
-}) // no context
+
+/**
+ * Build the websocket context creator.
+ *
+ * Unlike http requests, a websocket upgrade does not pass through express, so express's "trust proxy"
+ * setting does not apply to it. To determine the real client ip behind a reverse proxy we have to
+ * resolve X-Forwarded-For ourselves, using the same proxy-addr module (and trust config) that express
+ * uses. When no trusted proxies are configured, X-Forwarded-For is ignored and the socket address is
+ * used (so it can't be spoofed by untrusted clients).
+ */
+export function createTrpcWsContextFactory(trustedProxies: string | undefined) {
+	const trustedParts = parseTrustedProxies(trustedProxies)
+	const trust = trustedParts.length > 0 ? proxyaddr.compile(trustedParts) : undefined
+
+	return ({ req, res: _res }: trpcWs.CreateWSSContextFnOptions): TrpcContext => {
+		const clientIp = trust ? proxyaddr(req, trust) : req.socket.remoteAddress
+		return {
+			clientId: nanoid(),
+			clientIp,
+			isLocalClient: makeIsLocalClient(clientIp),
+		}
+	} // no context
+}
 
 /**
  * Build a lazily-cached predicate for whether `clientIp` is on the same machine as Companion.

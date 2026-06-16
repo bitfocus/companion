@@ -16,7 +16,7 @@ import { nanoid } from 'nanoid'
 import { WebSocketServer } from 'ws'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
-import { createTrpcWsContext, type AppRouter } from './TRPC.js'
+import { createTrpcWsContextFactory, type AppRouter } from './TRPC.js'
 
 /**
  * Check whether an HTTP upgrade request url is for the trpc WebSocket endpoint.
@@ -44,7 +44,10 @@ export class UIHandler {
 	})
 	#broadcastDisconnect?: () => void
 
-	constructor(_appInfo: AppInfo, http: HttpServer) {
+	readonly #appInfo: AppInfo
+
+	constructor(appInfo: AppInfo, http: HttpServer) {
+		this.#appInfo = appInfo
 		this.#http = http
 	}
 
@@ -64,7 +67,7 @@ export class UIHandler {
 		const handler = applyWSSHandler({
 			wss: this.#wss as any,
 			router: trpcRouter,
-			createContext: createTrpcWsContext,
+			createContext: createTrpcWsContextFactory(this.#appInfo.options.trustedProxies),
 			// Enable heartbeat messages to keep connection open (disabled by default)
 			keepAlive: {
 				enabled: true,

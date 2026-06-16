@@ -52,6 +52,10 @@ if (rawAdminPort && !argv['admin-port']) {
 if (!process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT) {
 	process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT = '1'
 }
+if (!process.env.COMPANION_TRUSTED_PROXIES) {
+	// Allow vite as a proxy
+	process.env.COMPANION_TRUSTED_PROXIES = 'loopback'
+}
 
 const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
 if (inspectIndex !== -1) {
