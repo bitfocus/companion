@@ -17,6 +17,11 @@ export const SectionDefinitions: SectionDefinition[] = [
 		component: GeneralSection,
 	},
 	{
+		title: 'Dangerous Features',
+		id: 'dangerous-features',
+		component: DangerousFeaturesSection,
+	},
+	{
 		title: 'Developer',
 		id: 'developer',
 		component: DeveloperSection,
@@ -25,10 +30,5 @@ export const SectionDefinitions: SectionDefinition[] = [
 		title: 'Syslog',
 		id: 'syslog',
 		component: SyslogSection,
-	},
-	{
-		title: 'Dangerous Features',
-		id: 'dangerous-features',
-		component: DangerousFeaturesSection,
 	},
 ]
