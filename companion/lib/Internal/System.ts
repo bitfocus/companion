@@ -16,7 +16,7 @@ import { promisify } from 'node:util'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import systeminformation from 'systeminformation'
-import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
+import { CompanionFieldVariablesSupport, type IsVisibleUiFn } from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
 	type VariableDefinition,
@@ -263,57 +263,69 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
+		const shellCommandEnabled = this.#appInfo.options.enableShellCommandAction
+		// When disabled, the real fields are kept (so their defaults still populate and any
+		// already-configured values are never pruned), but hidden in the UI behind a placeholder.
+		const hideWhenDisabled: IsVisibleUiFn | undefined = shellCommandEnabled
+			? undefined
+			: { type: 'expression', fn: 'false' }
+
 		const actions: Record<string, InternalActionDefinition> = {
 			exec: {
 				label: 'System: Run shell command (local)',
 				description: undefined,
-				options: this.#appInfo.options.enableShellCommandAction
-					? [
-							{
-								type: 'textinput',
-								label: 'Command',
-								id: 'path',
-								useVariables: CompanionFieldVariablesSupport.InternalParser,
-							},
-							{
-								type: 'textinput',
-								label: 'Working Directory',
-								id: 'cwd',
-								useVariables: CompanionFieldVariablesSupport.InternalParser,
-								description:
-									'Optional. If not set, the command will be run with the current working directory of companion',
-							},
-							{
-								type: 'number',
-								label: 'Timeout (ms, between 500 and 20000)',
-								id: 'timeout',
-								default: 5000,
-								min: 500,
-								max: 20000,
-								clampValues: true,
-							},
-							{
-								type: 'internal:custom_variable',
-								label: 'Target Variable (stdout)',
-								id: 'targetVariable',
-								includeNone: true,
-								expressionDescription:
-									'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
-							},
-						]
-					: [
-							{
-								type: 'static-text',
-								id: 'disabled',
-								label: 'Disabled',
-								value:
-									'Running shell commands is disabled. This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
-									describeHowToEnableDangerousFeature(
-										'--enable-shell-command-action',
-										'COMPANION_ENABLE_SHELL_COMMAND_ACTION'
-									),
-							},
-						],
+				options: [
+					...(shellCommandEnabled
+						? []
+						: [
+								{
+									type: 'static-text' as const,
+									id: 'disabled',
+									label: 'Disabled',
+									value:
+										'Running shell commands is disabled. This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
+										describeHowToEnableDangerousFeature(
+											'--enable-shell-command-action',
+											'COMPANION_ENABLE_SHELL_COMMAND_ACTION'
+										),
+								},
+							]),
+					{
+						type: 'textinput',
+						label: 'Command',
+						id: 'path',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+						isVisibleUi: hideWhenDisabled,
+					},
+					{
+						type: 'textinput',
+						label: 'Working Directory',
+						id: 'cwd',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+						description:
+							'Optional. If not set, the command will be run with the current working directory of companion',
+						isVisibleUi: hideWhenDisabled,
+					},
+					{
+						type: 'number',
+						label: 'Timeout (ms, between 500 and 20000)',
+						id: 'timeout',
+						default: 5000,
+						min: 500,
+						max: 20000,
+						clampValues: true,
+						isVisibleUi: hideWhenDisabled,
+					},
+					{
+						type: 'internal:custom_variable',
+						label: 'Target Variable (stdout)',
+						id: 'targetVariable',
+						includeNone: true,
+						expressionDescription:
+							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
+						isVisibleUi: hideWhenDisabled,
+					},
+				],
 				optionsSupportExpressions: true,
 			},
 			custom_log: {
