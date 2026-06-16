@@ -17,8 +17,11 @@ describe('EntityListHeightCache', () => {
 	it('throws when used outside a provider', () => {
 		// React logs the render error to console.error; silence it for clean test output
 		const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-		expect(() => renderHook(() => useEntityListHeightCache())).toThrow(/EntityListHeightCacheProvider/)
-		spy.mockRestore()
+		try {
+			expect(() => renderHook(() => useEntityListHeightCache())).toThrow(/EntityListHeightCacheProvider/)
+		} finally {
+			spy.mockRestore()
+		}
 	})
 
 	it('returns the default estimate when nothing is cached', () => {
