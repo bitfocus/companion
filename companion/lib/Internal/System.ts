@@ -26,6 +26,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { describeHowToEnableDangerousFeature } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type {
 	ActionForInternalExecution,
@@ -307,7 +308,10 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 								label: 'Disabled',
 								value:
 									'Running shell commands is disabled. This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
-									'Enable it in the Companion launcher settings, or for headless installs pass --enable-shell-command-action / set COMPANION_ENABLE_SHELL_COMMAND_ACTION=1.',
+									describeHowToEnableDangerousFeature(
+										'--enable-shell-command-action',
+										'COMPANION_ENABLE_SHELL_COMMAND_ACTION'
+									),
 							},
 						],
 				optionsSupportExpressions: true,
@@ -355,7 +359,11 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			case 'exec': {
 				if (!this.#appInfo.enableShellCommandAction) {
 					this.#logger.warn(
-						'Rejected shell command action: the "run shell command" feature is disabled. Enable it in the launcher settings or via --enable-shell-command-action / COMPANION_ENABLE_SHELL_COMMAND_ACTION.'
+						'Rejected shell command action: the "run shell command" feature is disabled. ' +
+							describeHowToEnableDangerousFeature(
+								'--enable-shell-command-action',
+								'COMPANION_ENABLE_SHELL_COMMAND_ACTION'
+							)
 					)
 					break
 				}

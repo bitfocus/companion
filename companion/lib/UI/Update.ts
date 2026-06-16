@@ -18,6 +18,7 @@ import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
 import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { isRunningUnderLauncher } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from './TRPC.js'
 import { compileUpdatePayload } from './UpdatePayload.js'
 
@@ -140,6 +141,8 @@ export class UIUpdate {
 						shellCommandActionEnabled: this.#appInfo.enableShellCommandAction,
 						// Computed per requesting client: local clients are always allowed
 						customModuleImportAllowed: this.#appInfo.enableRemoteCustomModules || ctx.isLocalClient(),
+						// So the UI can tailor "how to enable" hints to how Companion is being run
+						runningUnderLauncher: isRunningUnderLauncher(),
 					}
 				}),
 

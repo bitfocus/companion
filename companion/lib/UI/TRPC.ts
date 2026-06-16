@@ -26,7 +26,6 @@ export interface TrpcContext {
 		timeout: null
 	}
 }
-
 // created for each request
 export const createTrpcExpressContext = ({ req, res: _res }: trpcExpress.CreateExpressContextOptions): TrpcContext => ({
 	clientId: nanoid(),

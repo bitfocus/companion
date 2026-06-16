@@ -197,14 +197,22 @@ export function ImportModules(): React.JSX.Element {
 	// clients are only allowed when the feature is enabled. This is computed per-client by the server.
 	const versionInfo = useQuery(trpc.appInfo.version.queryOptions())
 	const importAllowed = versionInfo.data?.customModuleImportAllowed ?? true
+	const runningUnderLauncher = versionInfo.data?.runningUnderLauncher ?? false
 
 	if (!importAllowed) {
 		return (
 			<div className="import-module">
 				<StaticAlert color="info">
 					Importing custom modules from a remote computer is disabled. You can import from the computer running
-					Companion, or enable remote custom module imports in the Companion launcher settings (or for headless installs
-					with <code>--enable-remote-custom-modules</code> / <code>COMPANION_ENABLE_REMOTE_CUSTOM_MODULES=1</code>).
+					Companion, or enable remote custom module imports{' '}
+					{runningUnderLauncher ? (
+						<>in the Companion launcher settings, under "Dangerous Features".</>
+					) : (
+						<>
+							by starting Companion with <code>--enable-remote-custom-modules</code>, or by setting the{' '}
+							<code>COMPANION_ENABLE_REMOTE_CUSTOM_MODULES</code> environment variable.
+						</>
+					)}
 				</StaticAlert>
 			</div>
 		)
