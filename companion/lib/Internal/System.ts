@@ -267,7 +267,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			exec: {
 				label: 'System: Run shell command (local)',
 				description: undefined,
-				options: this.#appInfo.enableShellCommandAction
+				options: this.#appInfo.options.enableShellCommandAction
 					? [
 							{
 								type: 'textinput',
@@ -357,7 +357,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<InternalActionResult> {
 		switch (action.definitionId) {
 			case 'exec': {
-				if (!this.#appInfo.enableShellCommandAction) {
+				if (!this.#appInfo.options.enableShellCommandAction) {
 					this.#logger.warn(
 						'Rejected shell command action: the "run shell command" feature is disabled. ' +
 							describeHowToEnableDangerousFeature(

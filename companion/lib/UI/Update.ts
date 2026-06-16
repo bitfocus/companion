@@ -85,7 +85,7 @@ export class UIUpdate {
 				}
 
 				this.#logger.debug(`fresh update data received ${JSON.stringify(res.data)}`)
-				if (!this.#appInfo.notifications) {
+				if (!this.#appInfo.options.notifications) {
 					this.#logger.debug(
 						'Notification display has been disabled by the command-line: not showing the update message.'
 					)
@@ -138,9 +138,9 @@ export class UIUpdate {
 						os: input?.all ? `${osName} (v${os.release()}; ${os.arch()})` : undefined,
 
 						// Dangerous features (read-only - these can only be changed via launcher/CLI/env)
-						shellCommandActionEnabled: this.#appInfo.enableShellCommandAction,
+						shellCommandActionEnabled: this.#appInfo.options.enableShellCommandAction,
 						// Computed per requesting client: local clients are always allowed
-						customModuleImportAllowed: this.#appInfo.enableRemoteCustomModules || ctx.isLocalClient(),
+						customModuleImportAllowed: this.#appInfo.options.enableRemoteCustomModules || ctx.isLocalClient(),
 						// So the UI can tailor "how to enable" hints to how Companion is being run
 						runningUnderLauncher: isRunningUnderLauncher(),
 					}

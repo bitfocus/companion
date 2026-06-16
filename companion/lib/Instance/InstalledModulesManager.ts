@@ -129,7 +129,7 @@ export class InstanceInstalledModulesManager {
 	 * published code and assumed to be safe
 	 */
 	#isCustomModuleImportAllowed(ctx: TrpcContext): boolean {
-		return this.#appInfo.enableRemoteCustomModules || ctx.isLocalClient()
+		return this.#appInfo.options.enableRemoteCustomModules || ctx.isLocalClient()
 	}
 
 	/**

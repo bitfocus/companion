@@ -97,11 +97,11 @@ export class UIExpress {
 		// Without this, a proxied request appears to originate from the proxy (often loopback),
 		// which would make remote clients look local to features that trust loopback.
 		if (trustedProxies) {
-			// Accept comma separated lists of addresses/subnets, or special values like 'loopback'
+			// Accept comma or semicolon separated lists of addresses/subnets, or special values like 'loopback'
 			const trimmed = trustedProxies.trim()
 			if (trimmed) {
 				const parts = trimmed
-					.split(',')
+					.split(/[,;]/)
 					.map((v) => v.trim())
 					.filter((v) => !!v)
 				this.app.set('trust proxy', parts.length > 1 ? parts : parts[0])

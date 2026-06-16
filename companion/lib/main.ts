@@ -259,12 +259,14 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		},
 		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
 		machineId,
-		notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
-		enableShellCommandAction:
-			!!options.enableShellCommandAction || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_ACTION),
-		enableRemoteCustomModules:
-			!!options.enableRemoteCustomModules || isEnvTruthy(process.env.COMPANION_ENABLE_REMOTE_CUSTOM_MODULES),
-		trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
+		options: {
+			notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
+			enableShellCommandAction:
+				!!options.enableShellCommandAction || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_ACTION),
+			enableRemoteCustomModules:
+				!!options.enableRemoteCustomModules || isEnvTruthy(process.env.COMPANION_ENABLE_REMOTE_CUSTOM_MODULES),
+			trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
+		},
 	})
 
 	registry
