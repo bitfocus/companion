@@ -1,10 +1,15 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
+import { defaultFallbackInView } from 'react-intersection-observer'
 import { afterEach } from 'vitest'
 
 afterEach(() => {
 	cleanup()
 })
+
+// react-intersection-observer's useInView has no IntersectionObserver in jsdom; treat everything
+// as in-view so visibility-gated content (and its subscriptions) renders during tests.
+defaultFallbackInView(true)
 
 // @tanstack/react-virtual and @base-ui/react use ResizeObserver in jsdom where it doesn't exist
 class ResizeObserverStub {

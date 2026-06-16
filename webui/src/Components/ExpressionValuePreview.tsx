@@ -1,5 +1,6 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useInView } from 'react-intersection-observer'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
@@ -126,6 +127,11 @@ function ExpressionValuePreviewInner({
 	// Resolve the context resolution to a form the server accepts (non-null values only)
 	const serverContextResolution = resolveServerContextResolution(contextResolution)
 
+	// Only run the (potentially expensive) subscription while this preview is on screen.
+	// The DOM stays mounted either way, so the last-known value remains visible and there is no
+	// layout change as the preview scrolls in and out of view.
+	const { ref: inViewRef, inView } = useInView({ rootMargin: '200px 0px' })
+
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{
@@ -134,7 +140,7 @@ function ExpressionValuePreviewInner({
 				isVariableString: false,
 				contextResolution: serverContextResolution,
 			},
-			{}
+			{ enabled: inView }
 		)
 	)
 
@@ -144,29 +150,33 @@ function ExpressionValuePreviewInner({
 		lastDataRef.current = sub.data
 	}
 
-	// Only show spinner after 200ms of no data
+	// Only show spinner after 200ms of no data (and only while subscribed/visible)
 	const [showSpinner, setShowSpinner] = useState(false)
 	useEffect(() => {
-		if (sub.data) {
+		if (sub.data || !inView) {
 			setShowSpinner(false)
 			return
 		}
 		const timer = setTimeout(() => setShowSpinner(true), 200)
 		return () => clearTimeout(timer)
-	}, [sub.data])
+	}, [sub.data, inView])
 
 	const displayData = sub.data ?? lastDataRef.current
 
+	let content: React.JSX.Element | null
 	if (!displayData) {
-		if (!showSpinner) return null
-		return (
+		content = showSpinner ? (
 			<div className="mt-1">
 				<PulseLoader size="0.5rem" title="Loading preview" />
 			</div>
-		)
+		) : null
+	} else {
+		content = <ExpressionPreviewResult data={displayData as ExpressionStreamResult} fieldDefinition={fieldDefinition} />
 	}
 
-	return <ExpressionPreviewResult data={displayData as ExpressionStreamResult} fieldDefinition={fieldDefinition} />
+	// Always render an anchor element so the intersection observer has a stable target to watch,
+	// even when there is nothing to display yet.
+	return <div ref={inViewRef}>{content}</div>
 }
 
 function resolveServerContextResolution(ctx: ContextResolutionForPreview | undefined):
