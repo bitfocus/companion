@@ -16,8 +16,17 @@ import {
 // Must be hoisted so the mock factory can capture the ref before imports run.
 const subscriptionDataRef = vi.hoisted(() => ({ current: undefined as ExpressionStreamResult | undefined }))
 
+// Lets each test control whether the preview is considered on-screen.
+const inViewRef = vi.hoisted(() => ({ current: true }))
+
 vi.mock('@trpc/tanstack-react-query', () => ({
 	useSubscription: vi.fn(() => ({ data: subscriptionDataRef.current })),
+}))
+
+vi.mock('react-intersection-observer', () => ({
+	useInView: () => ({ ref: () => {}, inView: inViewRef.current }),
+	// test-setup.ts calls this; keep it defined so the mock doesn't break setup
+	defaultFallbackInView: () => {},
 }))
 
 // Reset subscription mock implementation before each test so that mockReturnValue
@@ -26,6 +35,7 @@ beforeEach(async () => {
 	const { useSubscription } = await import('@trpc/tanstack-react-query')
 	vi.mocked(useSubscription).mockImplementation(() => ({ data: subscriptionDataRef.current }) as any)
 	subscriptionDataRef.current = undefined
+	inViewRef.current = true
 })
 
 vi.mock('~/Resources/TRPC.js', () => ({
@@ -467,5 +477,52 @@ describe('ExpressionValuePreview — subscription states (data)', () => {
 			expect.objectContaining({ contextResolution: undefined }),
 			expect.anything()
 		)
+	})
+})
+
+// ---------------------------------------------------------------------------
+// ExpressionValuePreview — in-view subscription gating
+// ---------------------------------------------------------------------------
+
+describe('ExpressionValuePreview — in-view gating', () => {
+	it('enables the subscription while the preview is on screen', async () => {
+		const { trpc } = await import('~/Resources/TRPC.js')
+		const optionsSpy = vi.mocked(trpc.preview.expressionStream.watchExpression.subscriptionOptions)
+		optionsSpy.mockClear()
+
+		inViewRef.current = true
+		renderPreview('1 + 2')
+
+		expect(optionsSpy).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ enabled: true }))
+	})
+
+	it('disables the subscription while the preview is off screen', async () => {
+		const { trpc } = await import('~/Resources/TRPC.js')
+		const optionsSpy = vi.mocked(trpc.preview.expressionStream.watchExpression.subscriptionOptions)
+		optionsSpy.mockClear()
+
+		inViewRef.current = false
+		renderPreview('1 + 2')
+
+		expect(optionsSpy).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ enabled: false }))
+	})
+
+	it('keeps showing the last value after scrolling out of view (DOM stays mounted)', async () => {
+		const { useSubscription } = await import('@trpc/tanstack-react-query')
+		const mockedSub = vi.mocked(useSubscription)
+
+		// On screen with data
+		inViewRef.current = true
+		mockedSub.mockReturnValue({ data: { ok: true, value: 'visible result' } } as any)
+		const { rerender } = render(
+			<ExpressionValuePreview expression="1 + 2" controlId={null} fieldDefinition={textField()} />
+		)
+		expect(document.body.textContent).toContain('visible result')
+
+		// Scrolled off screen: subscription stops delivering, but the last value remains visible
+		inViewRef.current = false
+		mockedSub.mockReturnValue({ data: undefined } as any)
+		rerender(<ExpressionValuePreview expression="1 + 2" controlId={null} fieldDefinition={textField()} />)
+		expect(document.body.textContent).toContain('visible result')
 	})
 })
