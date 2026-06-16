@@ -209,8 +209,8 @@ export function ImportModules(): React.JSX.Element {
 						<>in the Companion launcher settings, under "Dangerous Features".</>
 					) : (
 						<>
-							by starting Companion with <code>--enable-remote-custom-modules</code>, or by setting the{' '}
-							<code>COMPANION_ENABLE_REMOTE_CUSTOM_MODULES</code> environment variable.
+							by starting Companion with <code>--enable-restricted-modules</code>, or by setting the{' '}
+							<code>COMPANION_ENABLE_RESTRICTED_MODULES</code> environment variable.
 						</>
 					)}
 				</StaticAlert>

@@ -53,12 +53,12 @@ program
 	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
 	.option('--syslog-localhost <string>', 'Hostname of this machine')
 	.option(
-		'--enable-shell-command-action',
-		'Enable the internal "run shell command" action, which can run arbitrary commands on this computer'
+		'--enable-shell-command-support',
+		'Allow running shell commands on this computer (e.g. the internal "run shell command" action)'
 	)
 	.option(
-		'--enable-remote-custom-modules',
-		'Allow remote (non-loopback) clients to import custom modules. Local clients are always allowed'
+		'--enable-restricted-modules',
+		'Allow loading modules that are otherwise held back for safety, e.g. importing custom modules from remote (non-loopback) clients. Local clients can always import'
 	)
 	.option(
 		'--trusted-proxies <value>',
@@ -261,10 +261,10 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 		machineId,
 		options: {
 			notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
-			enableShellCommandAction:
-				!!options.enableShellCommandAction || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_ACTION),
-			enableRemoteCustomModules:
-				!!options.enableRemoteCustomModules || isEnvTruthy(process.env.COMPANION_ENABLE_REMOTE_CUSTOM_MODULES),
+			enableShellCommandSupport:
+				!!options.enableShellCommandSupport || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT),
+			enableRestrictedModules:
+				!!options.enableRestrictedModules || isEnvTruthy(process.env.COMPANION_ENABLE_RESTRICTED_MODULES),
 			trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
 		},
 	})

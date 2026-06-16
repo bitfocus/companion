@@ -138,9 +138,9 @@ export class UIUpdate {
 						os: input?.all ? `${osName} (v${os.release()}; ${os.arch()})` : undefined,
 
 						// Dangerous features (read-only - these can only be changed via launcher/CLI/env)
-						shellCommandActionEnabled: this.#appInfo.options.enableShellCommandAction,
+						shellCommandSupportEnabled: this.#appInfo.options.enableShellCommandSupport,
 						// Computed per requesting client: local clients are always allowed
-						customModuleImportAllowed: this.#appInfo.options.enableRemoteCustomModules || ctx.isLocalClient(),
+						customModuleImportAllowed: this.#appInfo.options.enableRestrictedModules || ctx.isLocalClient(),
 						// So the UI can tailor "how to enable" hints to how Companion is being run
 						runningUnderLauncher: isRunningUnderLauncher(),
 					}

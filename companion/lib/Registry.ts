@@ -552,10 +552,13 @@ export interface AppInfo {
 export interface AppOptions {
 	/** Whether to show version-related notifications in the header */
 	notifications: boolean
-	/** Whether the internal "run shell command" action is enabled */
-	enableShellCommandAction: boolean
-	/** Whether remote (non-loopback) clients are allowed to import custom modules */
-	enableRemoteCustomModules: boolean
+	/** Whether running shell commands on this computer is allowed (e.g. the internal "run shell command" action) */
+	enableShellCommandSupport: boolean
+	/**
+	 * Whether modules that are otherwise held back for safety may be loaded - e.g. importing custom
+	 * modules from remote (non-loopback) clients. Local clients can always import.
+	 */
+	enableRestrictedModules: boolean
 	/** Express "trust proxy" value, so the real client ip can be determined behind a reverse proxy */
 	trustedProxies: string | undefined
 }

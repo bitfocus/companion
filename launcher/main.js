@@ -143,8 +143,8 @@ if (!lock) {
 		syslog_local_hostname: '',
 
 		// Dangerous features - disabled by default, see the docs before enabling
-		enable_shell_command_action: false,
-		enable_remote_custom_modules: false,
+		enable_shell_command_support: false,
+		enable_restricted_modules: false,
 		trusted_proxies: '',
 	}
 
@@ -626,13 +626,13 @@ if (!lock) {
 					if (uiConfig.get('enable_syslog')) doRestartApp = true
 				}
 
-				if (configData.enable_shell_command_action !== undefined) {
-					uiConfig.set('enable_shell_command_action', configData.enable_shell_command_action)
+				if (configData.enable_shell_command_support !== undefined) {
+					uiConfig.set('enable_shell_command_support', configData.enable_shell_command_support)
 					doRestartApp = true
 				}
 
-				if (configData.enable_remote_custom_modules !== undefined) {
-					uiConfig.set('enable_remote_custom_modules', configData.enable_remote_custom_modules)
+				if (configData.enable_restricted_modules !== undefined) {
+					uiConfig.set('enable_restricted_modules', configData.enable_restricted_modules)
 					doRestartApp = true
 				}
 
@@ -994,8 +994,8 @@ if (!lock) {
 						uiConfig.get('enable_syslog') && uiConfig.get('syslog_local_hostname')
 							? `--syslog-localhost="${uiConfig.get('syslog_local_hostname')}"`
 							: undefined,
-						uiConfig.get('enable_shell_command_action') ? '--enable-shell-command-action' : undefined,
-						uiConfig.get('enable_remote_custom_modules') ? '--enable-remote-custom-modules' : undefined,
+						uiConfig.get('enable_shell_command_support') ? '--enable-shell-command-support' : undefined,
+						uiConfig.get('enable_restricted_modules') ? '--enable-restricted-modules' : undefined,
 						uiConfig.get('trusted_proxies') ? `--trusted-proxies=${uiConfig.get('trusted_proxies')}` : undefined,
 					].filter((v) => !!v),
 				{

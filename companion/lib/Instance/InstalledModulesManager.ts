@@ -57,10 +57,7 @@ export class InstanceInstalledModulesManager {
 				this.#logger.warn(`Rejected module bundle import from remote client ${ctx.clientIp ?? 'unknown'}`)
 				throw new Error(
 					'Importing custom modules is only allowed from the local machine. ' +
-						describeHowToEnableDangerousFeature(
-							'--enable-remote-custom-modules',
-							'COMPANION_ENABLE_REMOTE_CUSTOM_MODULES'
-						)
+						describeHowToEnableDangerousFeature('--enable-restricted-modules', 'COMPANION_ENABLE_RESTRICTED_MODULES')
 				)
 			}
 
@@ -123,13 +120,13 @@ export class InstanceInstalledModulesManager {
 	/**
 	 * Whether the given client is allowed to import a custom module.
 	 * Local (loopback) clients are always allowed; remote clients are only allowed when the
-	 * "remote custom modules" dangerous feature is enabled.
+	 * "restricted modules" dangerous feature is enabled.
 	 *
 	 * Note: store module installs are intentionally NOT gated here - they are checksum-verified
 	 * published code and assumed to be safe
 	 */
 	#isCustomModuleImportAllowed(ctx: TrpcContext): boolean {
-		return this.#appInfo.options.enableRemoteCustomModules || ctx.isLocalClient()
+		return this.#appInfo.options.enableRestrictedModules || ctx.isLocalClient()
 	}
 
 	/**
@@ -254,10 +251,7 @@ export class InstanceInstalledModulesManager {
 						this.#logger.warn(`Rejected custom module import from remote client ${ctx.clientIp ?? 'unknown'}`)
 						return (
 							'Importing custom modules is only allowed from the local machine. ' +
-							describeHowToEnableDangerousFeature(
-								'--enable-remote-custom-modules',
-								'COMPANION_ENABLE_REMOTE_CUSTOM_MODULES'
-							)
+							describeHowToEnableDangerousFeature('--enable-restricted-modules', 'COMPANION_ENABLE_RESTRICTED_MODULES')
 						)
 					}
 

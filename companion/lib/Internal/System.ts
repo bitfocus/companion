@@ -263,7 +263,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
-		const shellCommandEnabled = this.#appInfo.options.enableShellCommandAction
+		const shellCommandEnabled = this.#appInfo.options.enableShellCommandSupport
 		// When disabled, the real fields are kept (so their defaults still populate and any
 		// already-configured values are never pruned), but hidden in the UI behind a placeholder.
 		const hideWhenDisabled: IsVisibleUiFn | undefined = shellCommandEnabled
@@ -283,10 +283,10 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 									id: 'disabled',
 									label: 'Disabled',
 									value:
-										'Running shell commands is disabled. This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
+										'Running shell commands is disabled.<br/>This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
 										describeHowToEnableDangerousFeature(
-											'--enable-shell-command-action',
-											'COMPANION_ENABLE_SHELL_COMMAND_ACTION'
+											'<code>--enable-shell-command-support</code>',
+											'<code>COMPANION_ENABLE_SHELL_COMMAND_SUPPORT</code>'
 										),
 								},
 							]),
@@ -369,12 +369,12 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<InternalActionResult> {
 		switch (action.definitionId) {
 			case 'exec': {
-				if (!this.#appInfo.options.enableShellCommandAction) {
+				if (!this.#appInfo.options.enableShellCommandSupport) {
 					this.#logger.warn(
 						'Rejected shell command action: the "run shell command" feature is disabled. ' +
 							describeHowToEnableDangerousFeature(
-								'--enable-shell-command-action',
-								'COMPANION_ENABLE_SHELL_COMMAND_ACTION'
+								'--enable-shell-command-support',
+								'COMPANION_ENABLE_SHELL_COMMAND_SUPPORT'
 							)
 					)
 					break

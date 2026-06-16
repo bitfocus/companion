@@ -12,25 +12,25 @@ export function DangerousFeaturesSection(): JSX.Element {
 	const { config } = state.data!
 
 	// Local state for form inputs
-	const [enableShellCommandAction, setEnableShellCommandAction] = useState(config.enable_shell_command_action)
-	const [enableRemoteCustomModules, setEnableRemoteCustomModules] = useState(config.enable_remote_custom_modules)
+	const [enableShellCommandSupport, setEnableShellCommandSupport] = useState(config.enable_shell_command_support)
+	const [enableRestrictedModules, setEnableRestrictedModules] = useState(config.enable_restricted_modules)
 	const [trustedProxies, setTrustedProxies] = useState(config.trusted_proxies || '')
 
 	// Update local state when config changes
 	useEffect(() => {
-		setEnableShellCommandAction(config.enable_shell_command_action)
-		setEnableRemoteCustomModules(config.enable_remote_custom_modules)
+		setEnableShellCommandSupport(config.enable_shell_command_support)
+		setEnableRestrictedModules(config.enable_restricted_modules)
 		setTrustedProxies(config.trusted_proxies || '')
-	}, [config.enable_shell_command_action, config.enable_remote_custom_modules, config.trusted_proxies])
+	}, [config.enable_shell_command_support, config.enable_restricted_modules, config.trusted_proxies])
 
-	const handleEnableShellCommandActionChange = (checked: boolean) => {
-		setEnableShellCommandAction(checked)
-		updateConfig({ enable_shell_command_action: checked })
+	const handleEnableShellCommandSupportChange = (checked: boolean) => {
+		setEnableShellCommandSupport(checked)
+		updateConfig({ enable_shell_command_support: checked })
 	}
 
-	const handleEnableRemoteCustomModulesChange = (checked: boolean) => {
-		setEnableRemoteCustomModules(checked)
-		updateConfig({ enable_remote_custom_modules: checked })
+	const handleEnableRestrictedModulesChange = (checked: boolean) => {
+		setEnableRestrictedModules(checked)
+		updateConfig({ enable_restricted_modules: checked })
 	}
 
 	const handleTrustedProxiesBlur = () => {
@@ -53,31 +53,32 @@ export function DangerousFeaturesSection(): JSX.Element {
 
 				<div className="space-y-4">
 					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="enable-shell-command-action">Run shell command action</Label>
+						<Label htmlFor="enable-shell-command-support">Shell command support</Label>
 						<div className="flex items-center col-span-3">
 							<input
 								type="checkbox"
-								id="enable-shell-command-action"
-								checked={enableShellCommandAction}
-								onChange={(e) => handleEnableShellCommandActionChange(e.target.checked)}
+								id="enable-shell-command-support"
+								checked={enableShellCommandSupport}
+								onChange={(e) => handleEnableShellCommandSupportChange(e.target.checked)}
 								className="rounded"
 							/>
 							<p className="text-sm text-muted-foreground ml-2">
-								Allows the internal "Run shell command (local)" action to execute commands on this computer.
+								Allows running shell commands on this computer (e.g. the internal "Run shell command" action).
 							</p>
 						</div>
 
-						<Label htmlFor="enable-remote-custom-modules">Remote custom module import</Label>
+						<Label htmlFor="enable-restricted-modules">Restricted modules</Label>
 						<div className="flex items-center col-span-3">
 							<input
 								type="checkbox"
-								id="enable-remote-custom-modules"
-								checked={enableRemoteCustomModules}
-								onChange={(e) => handleEnableRemoteCustomModulesChange(e.target.checked)}
+								id="enable-restricted-modules"
+								checked={enableRestrictedModules}
+								onChange={(e) => handleEnableRestrictedModulesChange(e.target.checked)}
 								className="rounded"
 							/>
 							<p className="text-sm text-muted-foreground ml-2">
-								Allows remote clients to import custom modules. Importing from this computer is always allowed.
+								Allows loading modules that are otherwise held back for safety, such as importing custom modules from
+								remote clients. Importing from this computer is always allowed.
 							</p>
 						</div>
 
