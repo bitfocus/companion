@@ -49,10 +49,10 @@ if (rawAdminPort && !argv['admin-port']) {
 }
 
 // Populate a default for this env var
-if (!process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT) {
+if (process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT === undefined) {
 	process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT = '1'
 }
-if (!process.env.COMPANION_TRUSTED_PROXIES) {
+if (process.env.COMPANION_TRUSTED_PROXIES === undefined) {
 	// Allow vite as a proxy
 	process.env.COMPANION_TRUSTED_PROXIES = 'loopback'
 }
