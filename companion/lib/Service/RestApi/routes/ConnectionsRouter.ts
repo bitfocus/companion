@@ -21,6 +21,7 @@ import {
 	ConfigFieldsResponseExample,
 	ConnectionCreateBodySchema,
 	ConnectionPatchBodySchema,
+	ConnectionPatchResponseExample,
 	ConnectionResponseSchema,
 } from '../schemas/connections.js'
 
@@ -590,7 +591,11 @@ export function registerConnectionPaths(): void {
 		responses: {
 			200: {
 				description: 'Updated connection',
-				content: { 'application/json': { schema: createSuccessSchema(ConnectionResponseSchema) } },
+				content: {
+					'application/json': {
+						schema: createSuccessSchema(ConnectionResponseSchema.meta({ example: ConnectionPatchResponseExample })),
+					},
+				},
 			},
 			...errorResponses,
 		},

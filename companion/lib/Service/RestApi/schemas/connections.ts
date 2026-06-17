@@ -34,6 +34,12 @@ const ConnectionResponseExample = {
 	secrets: {},
 }
 
+export const ConnectionPatchResponseExample = {
+	...ConnectionResponseExample,
+	label: 'ATEM Program',
+	updatePolicy: InstanceVersionUpdatePolicy.Manual,
+}
+
 /** Schema for a connection in API responses — used for both validation and stripping */
 export const ConnectionResponseSchema = z
 	.object({
