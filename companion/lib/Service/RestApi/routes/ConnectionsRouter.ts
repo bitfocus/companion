@@ -18,6 +18,7 @@ import {
 import {
 	buildConnectionResponse,
 	ConfigFieldResponseSchema,
+	ConfigFieldsResponseExample,
 	ConnectionCreateBodySchema,
 	ConnectionPatchBodySchema,
 	ConnectionResponseSchema,
@@ -559,7 +560,13 @@ export function registerConnectionPaths(): void {
 		responses: {
 			200: {
 				description: 'Config field definitions',
-				content: { 'application/json': { schema: createSuccessSchema(z.array(ConfigFieldResponseSchema)) } },
+				content: {
+					'application/json': {
+						schema: createSuccessSchema(
+							z.array(ConfigFieldResponseSchema).meta({ example: ConfigFieldsResponseExample })
+						),
+					},
+				},
 			},
 			409: {
 				description: 'Connection is not running',

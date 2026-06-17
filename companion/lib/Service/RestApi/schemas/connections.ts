@@ -153,6 +153,47 @@ const DropdownChoiceSchema = z.object({
 	label: z.string().describe('Display label for the choice.').meta({ example: 'Auto' }),
 })
 
+export const ConfigFieldsResponseExample = [
+	{
+		id: 'bonjourHost',
+		type: 'bonjour-device',
+		label: 'Device',
+	},
+	{
+		id: 'host',
+		type: 'textinput',
+		label: 'Target IP',
+		default: '',
+		regex: '/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/',
+	},
+	{
+		id: 'modelID',
+		type: 'dropdown',
+		label: 'Model',
+		default: 0,
+		choices: [
+			{ id: 0, label: 'Auto Detect' },
+			{ id: 33, label: 'Mini Extreme ISO G2' },
+		],
+	},
+	{
+		id: 'fadeFps',
+		type: 'number',
+		label: 'Framerate for fades',
+		tooltip: 'Higher is smoother, but has higher impact on system performance',
+		default: 10,
+		min: 5,
+		max: 60,
+		step: 1,
+	},
+	{
+		id: 'enableCameraControl',
+		type: 'checkbox',
+		label: 'Enable Camera Control',
+		default: false,
+	},
+]
+
 /** Schema for a config field definition in API responses */
 export const ConfigFieldResponseSchema = z.object({
 	id: z.string().describe('Config field id used as the key in config or secrets objects.').meta({ example: 'host' }),
