@@ -1,27 +1,27 @@
 import Express from 'express'
 import z from 'zod'
-import { requireScope, hasScope, type ApiToken } from '../RestApiAuth.js'
+import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import type { InstanceController } from '../../../Instance/Controller.js'
+import type { Logger } from '../../../Log/Controller.js'
 import { RestApiError } from '../errors.js'
+import { registry } from '../registry.js'
+import { hasScope, requireScope, type ApiToken } from '../RestApiAuth.js'
 import {
-	successResponse,
 	collectionResponse,
-	createSuccessSchema,
 	createCollectionSchema,
+	createSuccessSchema,
 	ErrorResponseSchema,
+	successResponse,
 } from '../schemas/common.js'
 import {
-	ConnectionResponseSchema,
+	buildConnectionResponse,
+	ConfigFieldResponseSchema,
 	ConnectionCreateBodySchema,
 	ConnectionPatchBodySchema,
-	ConfigFieldResponseSchema,
-	buildConnectionResponse,
+	ConnectionResponseSchema,
 } from '../schemas/connections.js'
-import { registry } from '../registry.js'
-import type { InstanceController } from '../../../Instance/Controller.js'
-import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { Logger } from '../../../Log/Controller.js'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 
 /**
  * Create the connections router for /api/connections/v1
@@ -64,7 +64,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			return
 		}
 
-		const { module, label, versionId, enabled } = parsed.data
+		const { module, label, versionId, disabled } = parsed.data
 
 		// Validate the module exists before attempting to create
 		if (!instanceController.modules.hasModule(ModuleInstanceType.Connection, module.type)) {
@@ -89,7 +89,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			const [id] = instanceController.addConnectionWithLabel(module, label, {
 				versionId: versionId ?? null,
 				updatePolicy: InstanceVersionUpdatePolicy.Stable,
-				disabled: enabled === false,
+				disabled: disabled ?? false,
 			})
 
 			// Re-fetch from client JSON so response goes through the same path as GET
@@ -149,7 +149,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			return
 		}
 
-		const { label, enabled, config, secrets, updatePolicy } = parsed.data
+		const { label, disabled, config, secrets, updatePolicy } = parsed.data
 
 		// Require 'secrets' scope to update secrets
 		if (secrets) {
@@ -177,7 +177,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			connectionId,
 			{
 				label: label ?? null,
-				enabled: enabled ?? null,
+				enabled: disabled === undefined ? null : !disabled,
 				config: config ?? null,
 				secrets: secrets ?? null,
 				updatePolicy: updatePolicy ?? null,

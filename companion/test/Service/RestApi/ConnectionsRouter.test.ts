@@ -436,6 +436,60 @@ describe('REST API v1 — Connections', () => {
 			})
 		})
 
+		test('creates a disabled connection', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			const newConfig: InstanceConfig = {
+				moduleInstanceType: ModuleInstanceType.Connection,
+				moduleId: 'obs-websocket',
+				moduleVersionId: null,
+				label: 'New OBS',
+				config: {},
+				secrets: undefined,
+				isFirstInit: true,
+				lastUpgradeIndex: 0,
+				enabled: false,
+				sortOrder: 2,
+				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			}
+
+			instanceController.modules.hasModule.mockReturnValue(true)
+			instanceController.addConnectionWithLabel.mockReturnValue(['new-id', newConfig])
+			instanceController.getInstanceConfigOfType.mockReturnValue(newConfig)
+			instanceController.getConnectionClientJson.mockReturnValue({
+				'new-id': {
+					id: 'new-id',
+					label: 'New OBS',
+					moduleId: 'obs-websocket',
+					moduleVersionId: null,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
+					enabled: false,
+					sortOrder: 2,
+					moduleType: ModuleInstanceType.Connection,
+					hasRecordActionsHandler: false,
+					collectionId: null,
+				},
+			})
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+
+			const res = await supertest(app)
+				.post('/api/connections/v1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({
+					module: { type: 'obs-websocket' },
+					label: 'New OBS',
+					disabled: true,
+				})
+
+			expect(res.status).toBe(201)
+			expect(res.body.data.enabled).toBe(false)
+			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledWith({ type: 'obs-websocket' }, 'New OBS', {
+				versionId: null,
+				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+				disabled: true,
+			})
+		})
+
 		test('returns 400 for invalid body', async () => {
 			const { app, validToken } = createService()
 
@@ -546,7 +600,7 @@ describe('REST API v1 — Connections', () => {
 			)
 		})
 
-		test('updates connection enabled state', async () => {
+		test('updates connection disabled state', async () => {
 			const { app, instanceController, validToken } = createService()
 
 			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
@@ -561,10 +615,22 @@ describe('REST API v1 — Connections', () => {
 			const res = await supertest(app)
 				.patch('/api/connections/v1/conn-1')
 				.set('Authorization', `Bearer ${validToken}`)
-				.send({ enabled: false })
+				.send({ disabled: true })
 
 			expect(res.status).toBe(200)
 			expect(res.body.data.enabled).toBe(false)
+			expect(instanceController.setConnectionLabelAndConfig).toHaveBeenCalledWith(
+				'conn-1',
+				{
+					label: null,
+					enabled: false,
+					config: null,
+					secrets: null,
+					updatePolicy: null,
+					upgradeIndex: null,
+				},
+				{ patchConfig: true, patchSecrets: true }
+			)
 		})
 
 		test('returns 404 for unknown connection', async () => {
@@ -603,7 +669,7 @@ describe('REST API v1 — Connections', () => {
 			const res = await supertest(app)
 				.patch('/api/connections/v1/conn-1')
 				.set('Authorization', `Bearer ${validToken}`)
-				.send({ enabled: 'not-a-boolean' })
+				.send({ disabled: 'not-a-boolean' })
 
 			expect(res.status).toBe(400)
 			expect(res.body.error.code).toBe('BAD_REQUEST')
@@ -808,7 +874,7 @@ describe('REST API v1 — Connections', () => {
 			const res = await supertest(app)
 				.patch('/api/connections/v1/conn-1')
 				.set('Authorization', `Bearer ${validToken}`)
-				.send({ label: 'New Label', enabled: false })
+				.send({ label: 'New Label', disabled: true })
 
 			expect(res.status).toBe(200)
 		})

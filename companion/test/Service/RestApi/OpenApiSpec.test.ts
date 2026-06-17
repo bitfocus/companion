@@ -1,12 +1,12 @@
-import { describe, test, expect, beforeAll } from 'vitest'
-import { mockDeep } from 'vitest-mock-extended'
 import express from 'express'
 import Express from 'express'
 import supertest from 'supertest'
+import { beforeAll, describe, expect, test } from 'vitest'
+import { mockDeep } from 'vitest-mock-extended'
+import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { generateOpenApiDocument } from '../../../lib/Service/RestApi/openapi.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
-import type { InstanceController } from '../../../lib/Instance/Controller.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -137,7 +137,17 @@ describe('OpenAPI Spec Generation', () => {
 			// Each item should have connection fields
 			const itemSchema = schema200.properties.data.items
 			expect(itemSchema).toBeDefined()
-			const expectedFields = ['id', 'label', 'moduleId', 'moduleVersionId', 'updatePolicy', 'enabled', 'sortOrder', 'collectionId', 'status']
+			const expectedFields = [
+				'id',
+				'label',
+				'moduleId',
+				'moduleVersionId',
+				'updatePolicy',
+				'enabled',
+				'sortOrder',
+				'collectionId',
+				'status',
+			]
 			for (const field of expectedFields) {
 				expect(itemSchema.properties?.[field]).toBeDefined()
 			}
@@ -148,10 +158,11 @@ describe('OpenAPI Spec Generation', () => {
 			const bodySchema = (postOp?.requestBody as any)?.content?.['application/json']?.schema
 			expect(bodySchema).toBeDefined()
 
-			const expectedFields = ['module', 'label']
+			const expectedFields = ['module', 'label', 'disabled']
 			for (const field of expectedFields) {
 				expect(bodySchema.properties?.[field]).toBeDefined()
 			}
+			expect(bodySchema.properties?.enabled).toBeUndefined()
 			expect(bodySchema.required).toContain('module')
 			expect(bodySchema.required).toContain('label')
 		})
@@ -161,10 +172,11 @@ describe('OpenAPI Spec Generation', () => {
 			const bodySchema = (patchOp?.requestBody as any)?.content?.['application/json']?.schema
 			expect(bodySchema).toBeDefined()
 
-			const expectedFields = ['label', 'enabled', 'config', 'updatePolicy']
+			const expectedFields = ['label', 'disabled', 'config', 'updatePolicy']
 			for (const field of expectedFields) {
 				expect(bodySchema.properties?.[field]).toBeDefined()
 			}
+			expect(bodySchema.properties?.enabled).toBeUndefined()
 			// All fields should be optional (no required array, or empty)
 			expect(bodySchema.required ?? []).toEqual([])
 		})

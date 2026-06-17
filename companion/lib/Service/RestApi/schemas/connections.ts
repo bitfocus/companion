@@ -1,6 +1,6 @@
 import z from 'zod'
-import { InstanceVersionUpdatePolicy, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { InstanceVersionUpdatePolicy, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 
 /** Schema for connection status info */
@@ -26,29 +26,33 @@ export const ConnectionResponseSchema = z.object({
 })
 
 /** Schema for creating a new connection */
-export const ConnectionCreateBodySchema = z.object({
-	module: z.object({
-		type: z.string(),
-		product: z.string().optional(),
-	}),
-	label: z.string(),
-	versionId: z.string().nullable().optional(),
-	enabled: z.boolean().optional(),
-})
+export const ConnectionCreateBodySchema = z
+	.object({
+		module: z.object({
+			type: z.string(),
+			product: z.string().optional(),
+		}),
+		label: z.string(),
+		versionId: z.string().nullable().optional(),
+		disabled: z.boolean().optional(),
+	})
+	.strict()
 
 /**
  * Schema for partially updating a connection.
  * Both `config` and `secrets` use merge semantics — only the keys you send are updated,
  * existing keys are preserved.
  */
-export const ConnectionPatchBodySchema = z.object({
-	label: z.string().optional(),
-	enabled: z.boolean().optional(),
-	config: z.record(z.string(), z.unknown()).optional(),
-	secrets: z.record(z.string(), z.unknown()).optional(),
-	updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
-	collectionId: z.string().nullable().optional(),
-})
+export const ConnectionPatchBodySchema = z
+	.object({
+		label: z.string().optional(),
+		disabled: z.boolean().optional(),
+		config: z.record(z.string(), z.unknown()).optional(),
+		secrets: z.record(z.string(), z.unknown()).optional(),
+		updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
+		collectionId: z.string().nullable().optional(),
+	})
+	.strict()
 
 /** Schema for a dropdown choice */
 const DropdownChoiceSchema = z.object({
