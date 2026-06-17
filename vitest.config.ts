@@ -37,6 +37,14 @@ export default defineConfig({
 					],
 				},
 			},
+
+			{
+				test: {
+					name: 'config-tool',
+					root: 'config-tool',
+					exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
+				},
+			},
 		],
 		// reporters: ['default', 'html'],
 		// coverage: {
