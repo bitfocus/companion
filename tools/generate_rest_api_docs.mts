@@ -201,7 +201,7 @@ function exampleValue(schema: SchemaObject | undefined, fieldName = 'value'): un
 }
 
 function renderJsonExample(title: string, value: unknown): string {
-	return [`**${title}:**`, '', '```json', JSON.stringify(value, null, '\t'), '```'].join('\n')
+	return [`**${title}:**`, '', '```json', JSON.stringify(value, null, 2), '```'].join('\n')
 }
 
 function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operation): string {
@@ -214,29 +214,16 @@ function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operatio
 
 	lines.push('**Example:**')
 	lines.push('')
-	lines.push('```bash')
-	lines.push(
-		[
-			'curl',
-			`-X ${method.toUpperCase()}`,
-			'-H "Authorization: Bearer cpn_admin"',
-			requestSchema ? '-H "Content-Type: application/json"' : undefined,
-			requestSchema ? `-d '${JSON.stringify(requestExample)}'` : undefined,
-			`http://localhost:8000/api${examplePath}`,
-		]
-			.filter(Boolean)
-			.join(` \\\n\t`)
-	)
-	lines.push('```')
+	lines.push(`\`${method.toUpperCase()} /api${examplePath}\``)
 
 	if (requestSchema) {
 		lines.push('')
-		lines.push(renderJsonExample('Request body example', requestExample))
+		lines.push(renderJsonExample('Request body', requestExample))
 	}
 
 	if (responseSchema) {
 		lines.push('')
-		lines.push(renderJsonExample('Response body example', exampleValue(responseSchema)))
+		lines.push(renderJsonExample('Response body', exampleValue(responseSchema)))
 	}
 
 	return lines.join('\n')
