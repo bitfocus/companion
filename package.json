@@ -1,7 +1,7 @@
 {
   "name": "@companion-app/workspace",
   "version": "5.0.0",
-  "packageManager": "yarn@4.16.0",
+  "packageManager": "yarn@4.17.0",
   "workspaces": [
     "companion",
     "shared-lib",
@@ -69,7 +69,7 @@
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
+    "eslint-plugin-react-refresh": "^0.5.3",
     "husky": "^9.1.7",
     "json-schema-to-typescript": "^15.0.4",
     "lint-staged": "^17.0.7",

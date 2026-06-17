@@ -10,7 +10,7 @@
     "@tailwindcss/vite": "^4.3.1",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.18.0",
@@ -22,8 +22,7 @@
     "terser": "^5.48.0",
     "typescript": "~6.0.3",
     "usehooks-ts": "^3.1.1",
-    "vite": "^7.3.5",
-    "vite-tsconfig-paths": "^6.1.1"
+    "vite": "^8.0.16"
   },
   "scripts": {
     "start": "vite --port 5177",

@@ -5,7 +5,6 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import { normalizeBasePath } from '../tools/webui-dev-utils'
 
 const buildFile = fs
@@ -51,15 +50,10 @@ export default defineConfig(({ mode }) => {
 			outDir: 'build',
 			chunkSizeWarningLimit: 1 * 1000 * 1000, // Disable warning about large chunks
 			sourcemap: true,
+			cssMinify: 'esbuild', // default (lightningcss) downlevels properties in a way that breaks backwards compatibility
 		},
-		// esbuild 0.27.7 introduced lowering of destructuring for Safari 10-14.0 / iOS 10-14.4
-		// (due to a real but rare Safari bug), but it can't actually perform the lowering.
-		// This tells esbuild to treat destructuring as natively supported, matching the
-		// behaviour of esbuild <0.27.7. See https://github.com/vitejs/vite/pull/22346
-		esbuild: {
-			supported: {
-				destructuring: true,
-			},
+		resolve: {
+			tsconfigPaths: true,
 		},
 		server: {
 			port: parseInt(env.COMPANION_UI_PORT || '', 10) || undefined,
@@ -113,7 +107,6 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		plugins: [
-			tsconfigPaths(),
 			tanstackRouter({
 				virtualRouteConfig: './src/routes/-routes.ts',
 				addExtensions: true,

@@ -2,7 +2,6 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import reactPlugin from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
 	publicDir: 'public',
@@ -13,7 +12,6 @@ export default defineConfig({
 		sourcemap: true,
 	},
 	plugins: [
-		tsconfigPaths(),
 		reactPlugin(),
 		tailwindcss(),
 		// process.env.VITE_SENTRY_DSN
@@ -26,6 +24,7 @@ export default defineConfig({
 		// 	: undefined,
 	],
 	resolve: {
+		tsconfigPaths: true,
 		alias: {
 			'~': path.resolve(import.meta.dirname, './src'),
 		},
