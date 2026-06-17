@@ -16,6 +16,6 @@ export function parseGridButtonDroppableId(id: unknown): ControlLocation | null 
 	const pageNumber = Number(parts[1])
 	const column = Number(parts[2])
 	const row = Number(parts[3])
-	if (isNaN(pageNumber) || isNaN(column) || isNaN(row)) return null
+	if (!Number.isInteger(pageNumber) || !Number.isInteger(column) || !Number.isInteger(row)) return null
 	return { pageNumber, column, row }
 }

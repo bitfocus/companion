@@ -38,7 +38,7 @@ export function DragCloneOverlay({
 			dropAnimation={null}
 			disabled={(source) => disabled(source as DragCloneSource | null)}
 		>
-			{(source) => <DragPreviewClone element={(source as DragCloneSource).element} />}
+			{(source) => <DragPreviewClone element={(source as DragCloneSource | null)?.element} />}
 		</DragOverlay>
 	)
 }
