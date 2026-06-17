@@ -21,9 +21,9 @@ export const ConnectionStatusSchema = z
 	.meta({ example: { category: 'ok', level: 'info', message: 'Connected' } })
 
 const ConnectionResponseExample = {
-	id: 'obs',
-	label: 'OBS',
-	moduleId: 'obs-websocket',
+	id: 'KJA1isEECHRDBTFjx-7tf',
+	label: 'ATEM',
+	moduleId: 'bmd-atem',
 	moduleVersionId: null,
 	updatePolicy: InstanceVersionUpdatePolicy.Stable,
 	enabled: true,
@@ -37,12 +37,12 @@ const ConnectionResponseExample = {
 /** Schema for a connection in API responses — used for both validation and stripping */
 export const ConnectionResponseSchema = z
 	.object({
-		id: z.string().describe('Unique connection instance id.').meta({ example: 'obs' }),
-		label: z.string().describe('Display name shown for the connection in Companion.').meta({ example: 'OBS' }),
+		id: z.string().describe('Unique connection instance id.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
+		label: z.string().describe('Display name shown for the connection in Companion.').meta({ example: 'ATEM' }),
 		moduleId: z
 			.string()
 			.describe('Connection module id, such as "bmd-atem" or "obs-websocket".')
-			.meta({ example: 'obs-websocket' }),
+			.meta({ example: 'bmd-atem' }),
 		moduleVersionId: z.string().nullable().describe('Installed module version id used by this connection.'),
 		updatePolicy: z
 			.enum(InstanceVersionUpdatePolicy)
@@ -63,8 +63,8 @@ export const ConnectionCreateBodySchema = z
 		moduleId: z
 			.string()
 			.describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".')
-			.meta({ example: 'obs-websocket' }),
-		label: z.string().describe('Display name for the new connection.').meta({ example: 'OBS' }),
+			.meta({ example: 'bmd-atem' }),
+		label: z.string().describe('Display name for the new connection.').meta({ example: 'ATEM' }),
 		versionId: z
 			.string()
 			.nullable()
@@ -85,8 +85,8 @@ export const ConnectionCreateBodySchema = z
 	.strict()
 	.meta({
 		example: {
-			moduleId: 'obs-websocket',
-			label: 'OBS',
+			moduleId: 'bmd-atem',
+			label: 'ATEM',
 			versionId: null,
 			updatePolicy: InstanceVersionUpdatePolicy.Stable,
 			disabled: false,
@@ -100,7 +100,7 @@ export const ConnectionCreateBodySchema = z
  */
 export const ConnectionPatchBodySchema = z
 	.object({
-		label: z.string().optional().describe('New display name for the connection.').meta({ example: 'OBS Program' }),
+		label: z.string().optional().describe('New display name for the connection.').meta({ example: 'ATEM Program' }),
 		disabled: z
 			.boolean()
 			.optional()
@@ -137,7 +137,7 @@ export const ConnectionPatchBodySchema = z
 	.strict()
 	.meta({
 		example: {
-			label: 'OBS Program',
+			label: 'ATEM Program',
 			disabled: false,
 			config: {},
 			secrets: {},
@@ -203,7 +203,7 @@ export const ConfigFieldResponseSchema = z.object({
 		.string()
 		.optional()
 		.describe('Short help text shown for the config field.')
-		.meta({ example: 'OBS host name' }),
+		.meta({ example: 'Target switcher IP' }),
 	description: z.string().optional().describe('Longer help text for the config field.'),
 	default: z.unknown().optional().describe('Default value for the config field.'),
 	min: z.number().optional().describe('Minimum numeric value allowed.'),

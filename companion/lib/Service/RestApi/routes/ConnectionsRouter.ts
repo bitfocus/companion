@@ -456,7 +456,7 @@ const connectionIdParam = z.object({
 	connectionId: z
 		.string()
 		.describe('Connection instance id, as returned by the list or create connection endpoints.')
-		.meta({ example: 'obs' }),
+		.meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
 })
 
 const errorResponses = {
@@ -626,13 +626,16 @@ export function registerConnectionPaths(): void {
 						schema: createSuccessSchema(
 							z
 								.object({
-									id: z.string().describe('Connection instance id that was restarted.').meta({ example: 'obs' }),
+									id: z
+										.string()
+										.describe('Connection instance id that was restarted.')
+										.meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
 									message: z
 										.string()
 										.describe('Confirmation message for the restart request.')
 										.meta({ example: 'Restart triggered' }),
 								})
-								.meta({ example: { id: 'obs', message: 'Restart triggered' } })
+								.meta({ example: { id: 'KJA1isEECHRDBTFjx-7tf', message: 'Restart triggered' } })
 						),
 					},
 				},

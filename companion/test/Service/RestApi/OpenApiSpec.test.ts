@@ -173,11 +173,11 @@ describe('OpenAPI Spec Generation', () => {
 			const bodySchema = (postOp?.requestBody as any)?.content?.['application/json']?.schema
 			expect(bodySchema.example).toEqual(
 				expect.objectContaining({
-					moduleId: 'obs-websocket',
-					label: 'OBS',
+					moduleId: 'bmd-atem',
+					label: 'ATEM',
 				})
 			)
-			expect(bodySchema.properties?.moduleId.example).toBe('obs-websocket')
+			expect(bodySchema.properties?.moduleId.example).toBe('bmd-atem')
 		})
 
 		test('Connection response schema includes examples', () => {
@@ -185,8 +185,8 @@ describe('OpenAPI Spec Generation', () => {
 			const responseSchema = (postOp?.responses['201'] as any)?.content?.['application/json']?.schema
 			expect(responseSchema.example?.data).toEqual(
 				expect.objectContaining({
-					id: 'obs',
-					moduleId: 'obs-websocket',
+					id: 'KJA1isEECHRDBTFjx-7tf',
+					moduleId: 'bmd-atem',
 				})
 			)
 		})
