@@ -168,6 +168,29 @@ describe('OpenAPI Spec Generation', () => {
 			expect(bodySchema.required).toContain('label')
 		})
 
+		test('ConnectionCreateBody schema includes examples', () => {
+			const postOp = doc.paths?.['/connections/v1']?.post
+			const bodySchema = (postOp?.requestBody as any)?.content?.['application/json']?.schema
+			expect(bodySchema.example).toEqual(
+				expect.objectContaining({
+					moduleId: 'obs-websocket',
+					label: 'OBS',
+				})
+			)
+			expect(bodySchema.properties?.moduleId.example).toBe('obs-websocket')
+		})
+
+		test('Connection response schema includes examples', () => {
+			const postOp = doc.paths?.['/connections/v1']?.post
+			const responseSchema = (postOp?.responses['201'] as any)?.content?.['application/json']?.schema
+			expect(responseSchema.example?.data).toEqual(
+				expect.objectContaining({
+					id: 'obs',
+					moduleId: 'obs-websocket',
+				})
+			)
+		})
+
 		test('ConnectionPatchBody schema has expected optional properties', () => {
 			const patchOp = doc.paths?.['/connections/v1/{connectionId}']?.patch
 			const bodySchema = (patchOp?.requestBody as any)?.content?.['application/json']?.schema

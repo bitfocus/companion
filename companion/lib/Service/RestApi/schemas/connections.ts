@@ -4,44 +4,94 @@ import { InstanceVersionUpdatePolicy, type InstanceConfig } from '@companion-app
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 
 /** Schema for connection status info */
-export const ConnectionStatusSchema = z.object({
-	category: z.string().nullable().describe('Status category reported by the connection module.'),
-	level: z.string().nullable().describe('Severity level of the current connection status.'),
-	message: z.string().nullable().describe('Human-readable status message from the connection module.'),
-})
+export const ConnectionStatusSchema = z
+	.object({
+		category: z
+			.string()
+			.nullable()
+			.describe('Status category reported by the connection module.')
+			.meta({ example: 'ok' }),
+		level: z.string().nullable().describe('Severity level of the current connection status.').meta({ example: 'info' }),
+		message: z
+			.string()
+			.nullable()
+			.describe('Human-readable status message from the connection module.')
+			.meta({ example: 'Connected' }),
+	})
+	.meta({ example: { category: 'ok', level: 'info', message: 'Connected' } })
+
+const ConnectionResponseExample = {
+	id: 'obs',
+	label: 'OBS',
+	moduleId: 'obs-websocket',
+	moduleVersionId: null,
+	updatePolicy: InstanceVersionUpdatePolicy.Stable,
+	enabled: true,
+	sortOrder: 1,
+	collectionId: null,
+	status: { category: 'ok', level: 'info', message: 'Connected' },
+	config: {},
+	secrets: {},
+}
 
 /** Schema for a connection in API responses — used for both validation and stripping */
-export const ConnectionResponseSchema = z.object({
-	id: z.string().describe('Unique connection instance id.'),
-	label: z.string().describe('Display name shown for the connection in Companion.'),
-	moduleId: z.string().describe('Connection module id, such as "bmd-atem" or "obs-websocket".'),
-	moduleVersionId: z.string().nullable().describe('Installed module version id used by this connection.'),
-	updatePolicy: z.enum(InstanceVersionUpdatePolicy).describe('Module version update policy for this connection.'),
-	enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.'),
-	sortOrder: z.number().describe('Sort position of the connection in the Companion UI.'),
-	collectionId: z.string().nullable().describe('Connection collection id, or null when not in a collection.'),
-	status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
-	config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
-	secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
-})
+export const ConnectionResponseSchema = z
+	.object({
+		id: z.string().describe('Unique connection instance id.').meta({ example: 'obs' }),
+		label: z.string().describe('Display name shown for the connection in Companion.').meta({ example: 'OBS' }),
+		moduleId: z
+			.string()
+			.describe('Connection module id, such as "bmd-atem" or "obs-websocket".')
+			.meta({ example: 'obs-websocket' }),
+		moduleVersionId: z.string().nullable().describe('Installed module version id used by this connection.'),
+		updatePolicy: z
+			.enum(InstanceVersionUpdatePolicy)
+			.describe('Module version update policy for this connection.')
+			.meta({ example: InstanceVersionUpdatePolicy.Stable }),
+		enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.').meta({ example: true }),
+		sortOrder: z.number().describe('Sort position of the connection in the Companion UI.').meta({ example: 1 }),
+		collectionId: z.string().nullable().describe('Connection collection id, or null when not in a collection.'),
+		status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
+		config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
+		secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
+	})
+	.meta({ example: ConnectionResponseExample })
 
 /** Schema for creating a new connection */
 export const ConnectionCreateBodySchema = z
 	.object({
-		moduleId: z.string().describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".'),
-		label: z.string().describe('Display name for the new connection.'),
+		moduleId: z
+			.string()
+			.describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".')
+			.meta({ example: 'obs-websocket' }),
+		label: z.string().describe('Display name for the new connection.').meta({ example: 'OBS' }),
 		versionId: z
 			.string()
 			.nullable()
 			.default(null)
-			.describe('Specific module version to use. Use null or omit to use the latest compatible stable version.'),
+			.describe('Specific module version to use. Use null or omit to use the latest compatible stable version.')
+			.meta({ example: null }),
 		updatePolicy: z
 			.enum(InstanceVersionUpdatePolicy)
 			.default(InstanceVersionUpdatePolicy.Stable)
-			.describe('Module version update policy for the new connection.'),
-		disabled: z.boolean().default(false).describe('Whether the new connection should be created disabled.'),
+			.describe('Module version update policy for the new connection.')
+			.meta({ example: InstanceVersionUpdatePolicy.Stable }),
+		disabled: z
+			.boolean()
+			.default(false)
+			.describe('Whether the new connection should be created disabled.')
+			.meta({ example: false }),
 	})
 	.strict()
+	.meta({
+		example: {
+			moduleId: 'obs-websocket',
+			label: 'OBS',
+			versionId: null,
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			disabled: false,
+		},
+	})
 
 /**
  * Schema for partially updating a connection.
@@ -50,42 +100,69 @@ export const ConnectionCreateBodySchema = z
  */
 export const ConnectionPatchBodySchema = z
 	.object({
-		label: z.string().optional().describe('New display name for the connection.'),
-		disabled: z.boolean().optional().describe('Set true to disable the connection, or false to enable it.'),
+		label: z.string().optional().describe('New display name for the connection.').meta({ example: 'OBS Program' }),
+		disabled: z
+			.boolean()
+			.optional()
+			.describe('Set true to disable the connection, or false to enable it.')
+			.meta({ example: false }),
 		config: z
 			.record(z.string(), z.unknown())
 			.optional()
-			.describe('Non-secret config values to merge into the connection config.'),
+			.describe('Non-secret config values to merge into the connection config.')
+			.meta({ example: {} }),
 		secrets: z
 			.record(z.string(), z.unknown())
 			.optional()
-			.describe('Secret config values to merge into the connection secrets.'),
-		updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional().describe('Module version update policy to apply.'),
+			.describe('Secret config values to merge into the connection secrets.')
+			.meta({ example: {} }),
+		updatePolicy: z
+			.enum(InstanceVersionUpdatePolicy)
+			.optional()
+			.describe('Module version update policy to apply.')
+			.meta({ example: InstanceVersionUpdatePolicy.Manual }),
 		versionId: z
 			.string()
 			.nullable()
 			.optional()
-			.describe('Specific module version to use. Use null to use the latest compatible stable version.'),
+			.describe('Specific module version to use. Use null to use the latest compatible stable version.')
+			.meta({ example: null }),
 		collectionId: z
 			.string()
 			.nullable()
 			.optional()
-			.describe('Collection id to move the connection into, or null to remove it.'),
+			.describe('Collection id to move the connection into, or null to remove it.')
+			.meta({ example: null }),
 	})
 	.strict()
+	.meta({
+		example: {
+			label: 'OBS Program',
+			disabled: false,
+			config: {},
+			secrets: {},
+			updatePolicy: InstanceVersionUpdatePolicy.Manual,
+			versionId: null,
+			collectionId: null,
+		},
+	})
 
 /** Schema for a dropdown choice */
 const DropdownChoiceSchema = z.object({
-	id: z.union([z.string(), z.number()]).describe('Choice value sent in connection config.'),
-	label: z.string().describe('Display label for the choice.'),
+	id: z.union([z.string(), z.number()]).describe('Choice value sent in connection config.').meta({ example: 'auto' }),
+	label: z.string().describe('Display label for the choice.').meta({ example: 'Auto' }),
 })
 
 /** Schema for a config field definition in API responses */
 export const ConfigFieldResponseSchema = z.object({
-	id: z.string().describe('Config field id used as the key in config or secrets objects.'),
-	type: z.string().describe('Companion config field type.'),
-	label: z.string().describe('Display label for the config field.'),
-	tooltip: z.string().optional().describe('Short help text shown for the config field.'),
+	id: z.string().describe('Config field id used as the key in config or secrets objects.').meta({ example: 'host' }),
+	type: z.string().describe('Companion config field type.').meta({ example: 'textinput' }),
+	label: z.string().describe('Display label for the config field.').meta({ example: 'Host' }),
+	tooltip: z
+		.string()
+		.optional()
+		.describe('Short help text shown for the config field.')
+		.meta({ example: 'OBS host name' }),
 	description: z.string().optional().describe('Longer help text for the config field.'),
 	default: z.unknown().optional().describe('Default value for the config field.'),
 	min: z.number().optional().describe('Minimum numeric value allowed.'),

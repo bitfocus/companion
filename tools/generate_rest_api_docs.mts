@@ -17,7 +17,7 @@ interface Parameter {
 	name: string
 	in: string
 	required?: boolean
-	schema?: { type?: string }
+	schema?: { type?: string; example?: unknown }
 	description?: string
 }
 
@@ -30,6 +30,7 @@ interface SchemaObject {
 	enum?: string[]
 	description?: string
 	default?: unknown
+	example?: unknown
 	additionalProperties?: SchemaObject | boolean
 }
 
@@ -170,6 +171,7 @@ function renderRequestBody(body: RequestBody): string {
 
 function exampleValue(schema: SchemaObject | undefined, fieldName = 'value'): unknown {
 	if (!schema) return null
+	if (schema.example !== undefined) return schema.example
 	if (schema.default !== undefined) return schema.default
 	if (schema.nullable) return null
 	if (schema.enum?.length) return schema.enum[0]
@@ -190,10 +192,6 @@ function exampleValue(schema: SchemaObject | undefined, fieldName = 'value'): un
 		case 'integer':
 			return 1
 		case 'string':
-			if (fieldName === 'moduleId') return 'obs-websocket'
-			if (fieldName === 'label') return 'OBS'
-			if (fieldName === 'connectionId' || fieldName === 'id') return 'obs'
-			if (fieldName.endsWith('Id')) return 'default'
 			return 'string'
 		default:
 			return null
@@ -204,12 +202,16 @@ function renderJsonExample(title: string, value: unknown): string {
 	return [`**${title}:**`, '', '```json', JSON.stringify(value, null, 2), '```'].join('\n')
 }
 
-function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operation): string {
+function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operation, params: Parameter[]): string {
 	const lines: string[] = []
 	const requestSchema = op.requestBody?.content?.['application/json']?.schema
 	const responseEntry = op.responses ? getDocumentedResponse(op.responses) : undefined
 	const responseSchema = responseEntry?.[1].content?.['application/json']?.schema
-	const examplePath = apiPath.replaceAll('{connectionId}', 'obs')
+	const examplePath = params.reduce((pathStr, param) => {
+		if (param.in !== 'path') return pathStr
+
+		return pathStr.replaceAll(`{${param.name}}`, String(param.schema?.example ?? 'string'))
+	}, apiPath)
 	const requestExample = requestSchema ? exampleValue(requestSchema) : undefined
 
 	lines.push('**Example:**')
@@ -363,7 +365,7 @@ for (const [tag, operations] of tagGroups) {
 			lines.push('')
 		}
 
-		lines.push(renderEndpointExample(method, apiPath, op))
+		lines.push(renderEndpointExample(method, apiPath, op, allParams))
 		lines.push('')
 
 		// Successful response

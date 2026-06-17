@@ -452,7 +452,10 @@ async function validateConfigAndSecrets(
 }
 
 const connectionIdParam = z.object({
-	connectionId: z.string().describe('Connection instance id, as returned by the list or create connection endpoints.'),
+	connectionId: z
+		.string()
+		.describe('Connection instance id, as returned by the list or create connection endpoints.')
+		.meta({ example: 'obs' }),
 })
 
 const errorResponses = {
@@ -477,11 +480,16 @@ export function registerConnectionPaths(): void {
 		security: [{ bearerAuth: [] }],
 		request: {
 			query: z.object({
-				include_config: z.enum(['true', 'false']).optional().describe('Include connection config in response'),
+				include_config: z
+					.enum(['true', 'false'])
+					.optional()
+					.describe('Include connection config in response')
+					.meta({ example: 'true' }),
 				include_secrets: z
 					.enum(['true', 'false'])
 					.optional()
-					.describe('Include connection secrets in response (requires include_config=true)'),
+					.describe('Include connection secrets in response (requires include_config=true)')
+					.meta({ example: 'false' }),
 			}),
 		},
 		responses: {
@@ -523,7 +531,11 @@ export function registerConnectionPaths(): void {
 		request: {
 			params: connectionIdParam,
 			query: z.object({
-				include_secrets: z.enum(['true', 'false']).optional().describe('Include connection secrets in response'),
+				include_secrets: z
+					.enum(['true', 'false'])
+					.optional()
+					.describe('Include connection secrets in response')
+					.meta({ example: 'false' }),
 			}),
 		},
 		responses: {
@@ -605,10 +617,15 @@ export function registerConnectionPaths(): void {
 				content: {
 					'application/json': {
 						schema: createSuccessSchema(
-							z.object({
-								id: z.string().describe('Connection instance id that was restarted.'),
-								message: z.string().describe('Confirmation message for the restart request.'),
-							})
+							z
+								.object({
+									id: z.string().describe('Connection instance id that was restarted.').meta({ example: 'obs' }),
+									message: z
+										.string()
+										.describe('Confirmation message for the restart request.')
+										.meta({ example: 'Restart triggered' }),
+								})
+								.meta({ example: { id: 'obs', message: 'Restart triggered' } })
 						),
 					},
 				},
