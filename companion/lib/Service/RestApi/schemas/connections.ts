@@ -126,7 +126,7 @@ export const ConnectionPatchBodySchema = z
 			.record(z.string(), z.unknown())
 			.optional()
 			.describe('Non-secret config values to merge into the connection config.')
-			.meta({ example: {} }),
+			.meta({ example: { host: '10.50.0.20', fadeFps: 10 } }),
 		secrets: z
 			.record(z.string(), z.unknown())
 			.optional()
@@ -155,7 +155,7 @@ export const ConnectionPatchBodySchema = z
 		example: {
 			label: 'ATEM Program',
 			disabled: false,
-			config: {},
+			config: { host: '10.50.0.20', fadeFps: 10 },
 			secrets: {},
 			updatePolicy: InstanceVersionUpdatePolicy.Manual,
 			versionId: null,

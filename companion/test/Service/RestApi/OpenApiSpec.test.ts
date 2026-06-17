@@ -196,6 +196,23 @@ describe('OpenAPI Spec Generation', () => {
 			)
 		})
 
+		test('GET and PATCH connection response schemas include config examples', () => {
+			const getOp = doc.paths?.['/connections/v1/{connectionId}']?.get
+			const patchOp = doc.paths?.['/connections/v1/{connectionId}']?.patch
+			const getResponseSchema = (getOp?.responses['200'] as any)?.content?.['application/json']?.schema
+			const patchResponseSchema = (patchOp?.responses['200'] as any)?.content?.['application/json']?.schema
+
+			for (const responseSchema of [getResponseSchema, patchResponseSchema]) {
+				expect(responseSchema.example?.data.config).toEqual(
+					expect.objectContaining({
+						host: '10.50.0.20',
+						modelID: 0,
+						fadeFps: 10,
+					})
+				)
+			}
+		})
+
 		test('ConnectionPatchBody schema has expected optional properties', () => {
 			const patchOp = doc.paths?.['/connections/v1/{connectionId}']?.patch
 			const bodySchema = (patchOp?.requestBody as any)?.content?.['application/json']?.schema
