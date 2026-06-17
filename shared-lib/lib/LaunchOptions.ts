@@ -39,12 +39,21 @@ export interface LaunchOption {
 
 const LOG_LEVELS = ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'] as const
 
-function validatePort(value: unknown): string | undefined {
-	if (value === null || value === undefined || value === '') return undefined
-	const port = Number(value)
-	if (!Number.isInteger(port) || port <= 0 || port > 65535) return `Must be a port number between 1 and 65535`
-	return undefined
+function makePortValidator(min: number, max = 65535, note = ''): (value: unknown) => string | undefined {
+	return (value) => {
+		if (value === null || value === undefined || value === '') return undefined
+		const port = Number(value)
+		if (!Number.isInteger(port) || port < min || port > max)
+			return `Must be a port number between ${min} and ${max}${note}`
+		return undefined
+	}
 }
+
+// The admin ui binds/listens on this port. Headless installs run as an unprivileged user, so
+// ports below 1024 (the privileged range) cannot be bound.
+const validateAdminPort = makePortValidator(1024, 65535, ' (ports below 1024 require root privileges)')
+// The server ignores syslog ports of 100 or below (companion/lib/main.ts), so reject them here too.
+const validateSyslogPort = makePortValidator(101)
 
 /** The config-tool-managed launch options. Order here is the order they appear in `--help` and the config file. */
 export const LAUNCH_OPTIONS: readonly LaunchOption[] = [
@@ -54,7 +63,7 @@ export const LAUNCH_OPTIONS: readonly LaunchOption[] = [
 		default: 8000,
 		short: 'Set the port the admin ui should bind to',
 		cliFlag: '--admin-port <number>',
-		validate: validatePort,
+		validate: validateAdminPort,
 	},
 	{
 		key: 'adminInterface',
@@ -99,7 +108,7 @@ export const LAUNCH_OPTIONS: readonly LaunchOption[] = [
 		type: 'number',
 		short: 'Port on syslog server to write to',
 		cliFlag: '--syslog-port <string>',
-		validate: validatePort,
+		validate: validateSyslogPort,
 	},
 	{
 		key: 'syslogTcp',

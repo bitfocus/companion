@@ -18,6 +18,10 @@ export interface CoerceResult {
 export function coerceValue(option: LaunchOption, raw: unknown): CoerceResult {
 	if (raw === null || raw === undefined || raw === '') return { value: null }
 
+	// No option accepts a structured value; reject lists/objects rather than stringifying them
+	// into nonsense like "[object Object]" that would silently become an invalid launch argument.
+	if (typeof raw === 'object') return { value: null, error: `Expected a single value, not a list or object` }
+
 	switch (option.type) {
 		case 'boolean': {
 			if (typeof raw === 'boolean') return { value: raw }

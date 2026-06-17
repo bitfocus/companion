@@ -43,6 +43,12 @@ describe('coerceValue', () => {
 		expect(coerceValue(enumOpt, 'debug').value).toBe('debug')
 		expect(coerceValue(enumOpt, 'silly').error).toBeDefined()
 	})
+
+	it('rejects lists and objects instead of stringifying them', () => {
+		expect(coerceValue(stringOpt, { a: 1 }).error).toBeDefined()
+		expect(coerceValue(stringOpt, ['a', 'b']).error).toBeDefined()
+		expect(coerceValue(numberOpt, [5]).error).toBeDefined()
+	})
 })
 
 describe('validateValue', () => {

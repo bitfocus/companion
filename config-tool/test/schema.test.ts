@@ -34,6 +34,17 @@ describe('launch options schema', () => {
 			expect(launchOptionFlagName(option)).toMatch(/^--[a-z][a-z-]*$/)
 		}
 	})
+
+	it('admin port rejects privileged (<1024) ports; syslog port rejects values the server ignores (<=100)', () => {
+		const adminPort = LAUNCH_OPTIONS.find((o) => o.key === 'adminPort')!
+		expect(adminPort.validate?.(80), 'privileged port').toBeDefined()
+		expect(adminPort.validate?.(8000)).toBeUndefined()
+		expect(adminPort.validate?.(70000)).toBeDefined()
+
+		const syslogPort = LAUNCH_OPTIONS.find((o) => o.key === 'syslogPort')!
+		expect(syslogPort.validate?.(50)).toBeDefined()
+		expect(syslogPort.validate?.(514)).toBeUndefined()
+	})
 })
 
 describe('presentation metadata', () => {

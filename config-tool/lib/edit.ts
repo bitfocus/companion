@@ -52,8 +52,16 @@ async function editOne(config: ConfigFile, option: LaunchOption): Promise<boolea
 	let value: string | number | boolean | null
 
 	if (option.type === 'boolean') {
-		const current = typeof raw === 'boolean' ? raw : option.default === true
-		value = await confirm({ message: meta.label, default: current })
+		// A three-way choice so the value can be returned to "default" (unset), like the other types.
+		value = await select<boolean | null>({
+			message: meta.label,
+			default: typeof raw === 'boolean' ? raw : null,
+			choices: [
+				{ name: `default (${option.default === true ? 'enabled' : 'disabled'})`, value: null },
+				{ name: 'enabled', value: true },
+				{ name: 'disabled', value: false },
+			],
+		})
 	} else if (option.type === 'enum' && option.enumValues) {
 		value = await select<string | null>({
 			message: meta.label,

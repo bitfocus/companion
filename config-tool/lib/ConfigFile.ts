@@ -32,7 +32,10 @@ export class ConfigFile {
 			const doc = parseDocument(text)
 			// Empty or non-map document: start fresh (an empty file has no comments to preserve anyway)
 			if (!(doc.contents instanceof YAMLMap)) {
-				return new ConfigFile(filePath, true, new Document(new YAMLMap()))
+				if (text.trim() === '') {
+					return new ConfigFile(filePath, true, new Document(new YAMLMap()))
+				}
+				throw new Error(`Invalid config at ${filePath}: top-level YAML node must be a mapping/object`)
 			}
 			return new ConfigFile(filePath, true, doc)
 		}
