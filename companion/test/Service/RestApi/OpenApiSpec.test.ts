@@ -187,6 +187,11 @@ describe('OpenAPI Spec Generation', () => {
 				expect.objectContaining({
 					id: 'KJA1isEECHRDBTFjx-7tf',
 					moduleId: 'bmd-atem',
+					config: expect.objectContaining({
+						host: '10.50.0.20',
+						modelID: 0,
+						fadeFps: 10,
+					}),
 				})
 			)
 		})

@@ -20,6 +20,16 @@ export const ConnectionStatusSchema = z
 	})
 	.meta({ example: { category: 'ok', level: 'info', message: 'Connected' } })
 
+const AtemConfigExample = {
+	host: '10.50.0.20',
+	modelID: 0,
+	presets: 0,
+	fadeFps: 10,
+	enableCameraControl: true,
+	pollTimecode: false,
+	bonjourHost: null,
+}
+
 const ConnectionResponseExample = {
 	id: 'KJA1isEECHRDBTFjx-7tf',
 	label: 'ATEM',
@@ -30,7 +40,7 @@ const ConnectionResponseExample = {
 	sortOrder: 1,
 	collectionId: null,
 	status: { category: 'ok', level: 'info', message: 'Connected' },
-	config: {},
+	config: AtemConfigExample,
 	secrets: {},
 }
 
