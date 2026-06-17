@@ -451,7 +451,9 @@ async function validateConfigAndSecrets(
 	return Object.keys(errors).length > 0 ? { status: 'invalid', errors } : { status: 'ok' }
 }
 
-const connectionIdParam = z.object({ connectionId: z.string() })
+const connectionIdParam = z.object({
+	connectionId: z.string().describe('Connection instance id, as returned by the list or create connection endpoints.'),
+})
 
 const errorResponses = {
 	400: { description: 'Bad request', content: { 'application/json': { schema: ErrorResponseSchema } } },
@@ -602,7 +604,12 @@ export function registerConnectionPaths(): void {
 				description: 'Restart triggered',
 				content: {
 					'application/json': {
-						schema: createSuccessSchema(z.object({ id: z.string(), message: z.string() })),
+						schema: createSuccessSchema(
+							z.object({
+								id: z.string().describe('Connection instance id that was restarted.'),
+								message: z.string().describe('Confirmation message for the restart request.'),
+							})
+						),
 					},
 				},
 			},

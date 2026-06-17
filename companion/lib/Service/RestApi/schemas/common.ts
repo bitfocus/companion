@@ -2,17 +2,17 @@ import z from 'zod'
 
 /** Pagination metadata in list responses */
 export const PaginationMetaSchema = z.object({
-	total: z.number(),
-	limit: z.number(),
-	offset: z.number(),
+	total: z.number().describe('Total number of resources available.'),
+	limit: z.number().describe('Maximum number of resources returned by this response.'),
+	offset: z.number().describe('Number of resources skipped before this response.'),
 })
 
 /** Error body schema for OpenAPI docs */
 export const ErrorResponseSchema = z.object({
 	error: z.object({
-		code: z.string(),
-		message: z.string(),
-		details: z.unknown().optional(),
+		code: z.string().describe('Machine-readable error code.'),
+		message: z.string().describe('Human-readable error message.'),
+		details: z.unknown().optional().describe('Additional structured details about the error.'),
 	}),
 })
 

@@ -29,6 +29,8 @@ interface SchemaObject {
 	nullable?: boolean
 	enum?: string[]
 	description?: string
+	default?: unknown
+	additionalProperties?: SchemaObject | boolean
 }
 
 interface MediaContent {
@@ -72,33 +74,48 @@ function ensureDir(dir: string): void {
 	fs.mkdirSync(dir, { recursive: true })
 }
 
-function schemaToTable(schema: SchemaObject, indent = 0): string {
+function escapeTableCell(value: string): string {
+	return value.replace(/\|/g, '\\|').replace(/\n/g, ' ')
+}
+
+function typeToMarkdown(schema: SchemaObject): string {
+	if (schema.enum) return schema.enum.map((v) => `\`${v}\``).join(' \\| ')
+
+	let type = schema.type ?? 'object'
+	if (type === 'array' && schema.items) {
+		type = `${schema.items.type ?? 'object'}[]`
+	}
+	if (schema.additionalProperties && type === 'object') {
+		type = 'object'
+	}
+	if (schema.nullable) type += ' | null'
+
+	return `\`${escapeTableCell(type)}\``
+}
+
+function schemaToTable(schema: SchemaObject, options: { showRequired: boolean }, indent = 0): string {
 	if (!schema.properties) return ''
 
 	const rows: string[] = []
 	if (indent === 0) {
-		rows.push('| Field | Type | Required | Description |')
-		rows.push('|-------|------|----------|-------------|')
+		rows.push(options.showRequired ? '| Field | Type | Required | Description |' : '| Field | Type | Description |')
+		rows.push(options.showRequired ? '|-------|------|----------|-------------|' : '|-------|------|-------------|')
 	}
 
 	const required = new Set(schema.required ?? [])
 
 	for (const [name, prop] of Object.entries(schema.properties)) {
-		let type = prop.type ?? 'object'
-		if (prop.nullable) type += ' \\| null'
-		if (prop.enum) type = prop.enum.map((v) => `\`${v}\``).join(' \\| ')
-		if (type === 'array' && prop.items) {
-			const itemType = prop.items.type ?? 'object'
-			type = `${itemType}[]`
-		}
-
 		const prefix = indent > 0 ? '&nbsp;'.repeat(indent * 2) + '↳ ' : ''
 		const req = required.has(name) ? 'Yes' : 'No'
-		const desc = prop.description ?? ''
-		rows.push(`| ${prefix}\`${name}\` | \`${type}\` | ${req} | ${desc} |`)
+		const desc = escapeTableCell(prop.description ?? '')
+		if (options.showRequired) {
+			rows.push(`| ${prefix}\`${name}\` | ${typeToMarkdown(prop)} | ${req} | ${desc} |`)
+		} else {
+			rows.push(`| ${prefix}\`${name}\` | ${typeToMarkdown(prop)} | ${desc} |`)
+		}
 
 		if (prop.properties) {
-			rows.push(schemaToTable(prop, indent + 1))
+			rows.push(schemaToTable(prop, options, indent + 1))
 		}
 	}
 
@@ -107,7 +124,8 @@ function schemaToTable(schema: SchemaObject, indent = 0): string {
 
 function renderResponse(code: string, resp: ResponseObject): string {
 	const lines: string[] = []
-	lines.push(`**\`${code}\`** — ${resp.description ?? ''}`)
+	const responseLabel = code === '200' ? '**Successful response** (`200`)' : '**Successful response**'
+	lines.push(`${responseLabel} — ${resp.description ?? ''}`)
 
 	const jsonContent = resp.content?.['application/json']
 	if (jsonContent?.schema) {
@@ -119,17 +137,24 @@ function renderResponse(code: string, resp: ResponseObject): string {
 				lines.push('')
 				lines.push('Response body (collection):')
 				lines.push('')
-				lines.push(schemaToTable(dataSchema.items))
+				lines.push(schemaToTable(dataSchema.items, { showRequired: false }))
 			} else if (dataSchema.properties) {
 				lines.push('')
 				lines.push('Response body:')
 				lines.push('')
-				lines.push(schemaToTable(dataSchema))
+				lines.push(schemaToTable(dataSchema, { showRequired: false }))
 			}
 		}
 	}
 
 	return lines.join('\n')
+}
+
+function getDocumentedResponse(responses: Record<string, ResponseObject>): [string, ResponseObject] | undefined {
+	const okResponse = responses['200']
+	if (okResponse) return ['200', okResponse]
+
+	return Object.entries(responses).find(([code]) => code.startsWith('2'))
 }
 
 function renderRequestBody(body: RequestBody): string {
@@ -138,8 +163,82 @@ function renderRequestBody(body: RequestBody): string {
 	if (jsonContent?.schema) {
 		lines.push('**Request body** (`application/json`):')
 		lines.push('')
-		lines.push(schemaToTable(jsonContent.schema))
+		lines.push(schemaToTable(jsonContent.schema, { showRequired: true }))
 	}
+	return lines.join('\n')
+}
+
+function exampleValue(schema: SchemaObject | undefined, fieldName = 'value'): unknown {
+	if (!schema) return null
+	if (schema.default !== undefined) return schema.default
+	if (schema.nullable) return null
+	if (schema.enum?.length) return schema.enum[0]
+	if (schema.type === 'array') return [exampleValue(schema.items, fieldName)]
+	if (schema.properties) {
+		const result: Record<string, unknown> = {}
+		for (const [name, prop] of Object.entries(schema.properties)) {
+			result[name] = exampleValue(prop, name)
+		}
+		return result
+	}
+	if (schema.additionalProperties) return {}
+
+	switch (schema.type) {
+		case 'boolean':
+			return fieldName.startsWith('include_') ? true : false
+		case 'number':
+		case 'integer':
+			return 1
+		case 'string':
+			if (fieldName === 'moduleId') return 'obs-websocket'
+			if (fieldName === 'label') return 'OBS'
+			if (fieldName === 'connectionId' || fieldName === 'id') return 'obs'
+			if (fieldName.endsWith('Id')) return 'default'
+			return 'string'
+		default:
+			return null
+	}
+}
+
+function renderJsonExample(title: string, value: unknown): string {
+	return [`**${title}:**`, '', '```json', JSON.stringify(value, null, '\t'), '```'].join('\n')
+}
+
+function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operation): string {
+	const lines: string[] = []
+	const requestSchema = op.requestBody?.content?.['application/json']?.schema
+	const responseEntry = op.responses ? getDocumentedResponse(op.responses) : undefined
+	const responseSchema = responseEntry?.[1].content?.['application/json']?.schema
+	const examplePath = apiPath.replaceAll('{connectionId}', 'obs')
+	const requestExample = requestSchema ? exampleValue(requestSchema) : undefined
+
+	lines.push('**Example:**')
+	lines.push('')
+	lines.push('```bash')
+	lines.push(
+		[
+			'curl',
+			`-X ${method.toUpperCase()}`,
+			'-H "Authorization: Bearer cpn_admin"',
+			requestSchema ? '-H "Content-Type: application/json"' : undefined,
+			requestSchema ? `-d '${JSON.stringify(requestExample)}'` : undefined,
+			`http://localhost:8000/api${examplePath}`,
+		]
+			.filter(Boolean)
+			.join(` \\\n\t`)
+	)
+	lines.push('```')
+
+	if (requestSchema) {
+		lines.push('')
+		lines.push(renderJsonExample('Request body example', requestExample))
+	}
+
+	if (responseSchema) {
+		lines.push('')
+		lines.push(renderJsonExample('Response body example', exampleValue(responseSchema)))
+	}
+
 	return lines.join('\n')
 }
 
@@ -162,6 +261,27 @@ function readStaticMarkdown(fileName: string): string {
 	return fs.readFileSync(path.join(STATIC_DOCS_DIR, fileName), 'utf8').trim()
 }
 
+function writeCategoryIndexDoc(): void {
+	const lines: string[] = []
+
+	lines.push('---')
+	lines.push('title: REST API')
+	lines.push('sidebar_position: 0')
+	lines.push('---')
+	lines.push('')
+	lines.push("import DocCardList from '@theme/DocCardList'")
+	lines.push('')
+	lines.push('# REST API')
+	lines.push('')
+	lines.push(readStaticMarkdown(CATEGORY_INTRO_FILE))
+	lines.push('')
+	lines.push('<DocCardList />')
+	lines.push('')
+
+	fs.writeFileSync(path.join(OUT_DIR, 'index.md'), lines.join('\n'))
+	console.log('Generated: rest-api/index.md')
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
 const doc = generateOpenApiDocument()
@@ -176,8 +296,8 @@ fs.writeFileSync(
 			label: 'REST API',
 			position: 1,
 			link: {
-				type: 'generated-index',
-				description: readStaticMarkdown(CATEGORY_INTRO_FILE),
+				type: 'doc',
+				id: 'remote-control/rest-api/index',
 			},
 		},
 		null,
@@ -216,12 +336,6 @@ for (const [tag, operations] of tagGroups) {
 	lines.push('')
 	lines.push(`# ${tag}`)
 	lines.push('')
-	lines.push(':::info Auto-generated')
-	lines.push('This page is auto-generated from the OpenAPI specification. Do not edit manually.')
-	lines.push(':::')
-	lines.push('')
-	lines.push('All endpoints require a **Bearer token** in the `Authorization` header.')
-	lines.push('')
 
 	for (const { method, path: apiPath, op, pathParams } of operations) {
 		const verb = method.toUpperCase()
@@ -244,12 +358,14 @@ for (const [tag, operations] of tagGroups) {
 		// Path parameters
 		const allParams = [...pathParams, ...(op.parameters ?? [])]
 		if (allParams.length > 0) {
-			lines.push('**Path parameters:**')
+			lines.push('**Parameters:**')
 			lines.push('')
-			lines.push('| Parameter | Type | Description |')
-			lines.push('|-----------|------|-------------|')
+			lines.push('| Parameter | In | Type | Description |')
+			lines.push('|-----------|----|------|-------------|')
 			for (const param of allParams) {
-				lines.push(`| \`${param.name}\` | \`${param.schema?.type ?? 'string'}\` | ${param.description ?? ''} |`)
+				lines.push(
+					`| \`${param.name}\` | ${param.in} | \`${param.schema?.type ?? 'string'}\` | ${escapeTableCell(param.description ?? '')} |`
+				)
 			}
 			lines.push('')
 		}
@@ -260,12 +376,14 @@ for (const [tag, operations] of tagGroups) {
 			lines.push('')
 		}
 
-		// Responses
+		lines.push(renderEndpointExample(method, apiPath, op))
+		lines.push('')
+
+		// Successful response
 		if (op.responses) {
-			lines.push('**Responses:**')
-			lines.push('')
-			for (const [code, resp] of Object.entries(op.responses)) {
-				lines.push(renderResponse(code, resp as ResponseObject))
+			const responseEntry = getDocumentedResponse(op.responses)
+			if (responseEntry) {
+				lines.push(renderResponse(responseEntry[0], responseEntry[1] as ResponseObject))
 				lines.push('')
 			}
 		}
@@ -278,6 +396,7 @@ for (const [tag, operations] of tagGroups) {
 	console.log(`Generated: rest-api/${slug}.md (${operations.length} endpoints)`)
 }
 
+writeCategoryIndexDoc()
 const staticDocCount = copyStaticMarkdownDocs()
 
-console.log(`\nDone! Generated ${tagGroups.size + staticDocCount} files in ${OUT_DIR}`)
+console.log(`\nDone! Generated ${tagGroups.size + staticDocCount + 1} files in ${OUT_DIR}`)

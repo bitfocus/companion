@@ -5,31 +5,31 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 
 /** Schema for connection status info */
 export const ConnectionStatusSchema = z.object({
-	category: z.string().nullable(),
-	level: z.string().nullable(),
-	message: z.string().nullable(),
+	category: z.string().nullable().describe('Status category reported by the connection module.'),
+	level: z.string().nullable().describe('Severity level of the current connection status.'),
+	message: z.string().nullable().describe('Human-readable status message from the connection module.'),
 })
 
 /** Schema for a connection in API responses — used for both validation and stripping */
 export const ConnectionResponseSchema = z.object({
-	id: z.string(),
-	label: z.string(),
-	moduleId: z.string(),
-	moduleVersionId: z.string().nullable(),
-	updatePolicy: z.enum(InstanceVersionUpdatePolicy),
-	enabled: z.boolean(),
-	sortOrder: z.number(),
-	collectionId: z.string().nullable(),
-	status: ConnectionStatusSchema.nullable(),
-	config: z.record(z.string(), z.unknown()).optional(),
-	secrets: z.record(z.string(), z.unknown()).optional(),
+	id: z.string().describe('Unique connection instance id.'),
+	label: z.string().describe('Display name shown for the connection in Companion.'),
+	moduleId: z.string().describe('Connection module id, such as "bmd-atem" or "obs-websocket".'),
+	moduleVersionId: z.string().nullable().describe('Installed module version id used by this connection.'),
+	updatePolicy: z.enum(InstanceVersionUpdatePolicy).describe('Module version update policy for this connection.'),
+	enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.'),
+	sortOrder: z.number().describe('Sort position of the connection in the Companion UI.'),
+	collectionId: z.string().nullable().describe('Connection collection id, or null when not in a collection.'),
+	status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
+	config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
+	secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
 })
 
 /** Schema for creating a new connection */
 export const ConnectionCreateBodySchema = z
 	.object({
 		moduleId: z.string().describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".'),
-		label: z.string(),
+		label: z.string().describe('Display name for the new connection.'),
 		versionId: z
 			.string()
 			.nullable()
@@ -50,48 +50,58 @@ export const ConnectionCreateBodySchema = z
  */
 export const ConnectionPatchBodySchema = z
 	.object({
-		label: z.string().optional(),
-		disabled: z.boolean().optional(),
-		config: z.record(z.string(), z.unknown()).optional(),
-		secrets: z.record(z.string(), z.unknown()).optional(),
-		updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
+		label: z.string().optional().describe('New display name for the connection.'),
+		disabled: z.boolean().optional().describe('Set true to disable the connection, or false to enable it.'),
+		config: z
+			.record(z.string(), z.unknown())
+			.optional()
+			.describe('Non-secret config values to merge into the connection config.'),
+		secrets: z
+			.record(z.string(), z.unknown())
+			.optional()
+			.describe('Secret config values to merge into the connection secrets.'),
+		updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional().describe('Module version update policy to apply.'),
 		versionId: z
 			.string()
 			.nullable()
 			.optional()
 			.describe('Specific module version to use. Use null to use the latest compatible stable version.'),
-		collectionId: z.string().nullable().optional(),
+		collectionId: z
+			.string()
+			.nullable()
+			.optional()
+			.describe('Collection id to move the connection into, or null to remove it.'),
 	})
 	.strict()
 
 /** Schema for a dropdown choice */
 const DropdownChoiceSchema = z.object({
-	id: z.union([z.string(), z.number()]),
-	label: z.string(),
+	id: z.union([z.string(), z.number()]).describe('Choice value sent in connection config.'),
+	label: z.string().describe('Display label for the choice.'),
 })
 
 /** Schema for a config field definition in API responses */
 export const ConfigFieldResponseSchema = z.object({
-	id: z.string(),
-	type: z.string(),
-	label: z.string(),
-	tooltip: z.string().optional(),
-	description: z.string().optional(),
-	default: z.unknown().optional(),
-	min: z.number().optional(),
-	max: z.number().optional(),
-	step: z.number().optional(),
-	range: z.boolean().optional(),
-	minLength: z.number().optional(),
-	regex: z.string().optional(),
-	placeholder: z.string().optional(),
-	multiline: z.boolean().optional(),
-	choices: z.array(DropdownChoiceSchema).optional(),
-	allowCustom: z.boolean().optional(),
-	minSelection: z.number().optional(),
-	maxSelection: z.number().optional(),
-	enableAlpha: z.boolean().optional(),
-	returnType: z.string().optional(),
+	id: z.string().describe('Config field id used as the key in config or secrets objects.'),
+	type: z.string().describe('Companion config field type.'),
+	label: z.string().describe('Display label for the config field.'),
+	tooltip: z.string().optional().describe('Short help text shown for the config field.'),
+	description: z.string().optional().describe('Longer help text for the config field.'),
+	default: z.unknown().optional().describe('Default value for the config field.'),
+	min: z.number().optional().describe('Minimum numeric value allowed.'),
+	max: z.number().optional().describe('Maximum numeric value allowed.'),
+	step: z.number().optional().describe('Numeric step size.'),
+	range: z.boolean().optional().describe('Whether the field accepts a numeric range.'),
+	minLength: z.number().optional().describe('Minimum string length allowed.'),
+	regex: z.string().optional().describe('Regular expression that string values must match.'),
+	placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
+	multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
+	choices: z.array(DropdownChoiceSchema).optional().describe('Allowed choices for dropdown-style fields.'),
+	allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+	minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
+	maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
+	enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
+	returnType: z.string().optional().describe('Value type returned by the field.'),
 })
 
 export type ConnectionResponse = z.infer<typeof ConnectionResponseSchema>

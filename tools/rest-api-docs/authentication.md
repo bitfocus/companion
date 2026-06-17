@@ -6,10 +6,6 @@ description: How to authenticate with the REST API
 
 # Authentication
 
-:::info Auto-generated
-This page is copied from the static REST API docs source.
-:::
-
 The REST API uses **Bearer token** authentication. Include your token in every request:
 
 ```
