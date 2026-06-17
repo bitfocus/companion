@@ -104,6 +104,12 @@
 	&[data-dnd-dragging],
 	&.dnd-drag-preview {
 		@include dragging-style(#fff);
+
+		// On the lifted/floating feedback the reorder handle's grey background reads as an odd stripe
+		// against the lifted card - blend it in so the floating row looks like one clean surface.
+		.entity-row-reorder {
+			background-color: transparent;
+		}
 	}
 
 	// Entities have no drag clone in the list (the preview is a DragOverlay), so the in-place source row

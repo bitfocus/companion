@@ -300,6 +300,12 @@
 	&[data-dnd-dragging],
 	&.dnd-drag-preview {
 		@include dragging-style(#f5f2fa);
+
+		// On the lifted/floating feedback the reorder handle's grey background reads as an odd stripe
+		// against the lifted card - blend it in so the floating row looks like one clean surface.
+		.row-reorder-handle {
+			background-color: transparent;
+		}
 	}
 }
 .collections-nesting-table-row-group[data-dnd-dragging] {
