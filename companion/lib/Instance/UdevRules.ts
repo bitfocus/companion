@@ -180,6 +180,11 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 
 		if (!base.supported) return base
 
+		// When a sync command is configured (the headless tooling), it owns applying the rules and installs
+		// them to its own location. Comparing the generated file against the system rules dir would always
+		// report a false mismatch, so don't attempt the check - the sync command keeps things in sync.
+		if (this.#syncCommand) return base
+
 		const [generated, installed] = await Promise.all([
 			fs.readFile(generatedPath, 'utf8').catch(() => ''),
 			fs.readFile(installedPath, 'utf8').catch(() => ''),

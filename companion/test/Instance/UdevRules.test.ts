@@ -103,6 +103,16 @@ describe('InstanceUdevRulesController', () => {
 			expect(status.needsApply).toBe(false)
 		})
 
+		it('does not need applying when a sync command is configured', async () => {
+			// The sync command installs the rules to its own location, so the system rules dir comparison
+			// would always report a false mismatch. With a sync command set, the check is skipped entirely.
+			const { controller, generatedDir } = await setup({ syncCommand: 'my-sync-command' })
+			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
+
+			const status = await readStatus(controller)
+			expect(status.needsApply).toBe(false)
+		})
+
 		it('uses the desktop file for the desktop build', async () => {
 			const { controller, generatedDir } = await setup({ isDesktopBuild: true })
 			await fs.writeFile(path.join(generatedDir, DESKTOP_FILENAME), SAMPLE_RULES)
