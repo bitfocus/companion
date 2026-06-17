@@ -730,6 +730,90 @@ describe('REST API v1 — Connections', () => {
 			)
 		})
 
+		test('updates connection version', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
+			instanceController.modules.getModuleManifest.mockReturnValue({} as any)
+			instanceController.setConnectionLabelAndConfig.mockReturnValue({ ok: true })
+			instanceController.setModuleVersionAndActivate.mockReturnValue(true)
+
+			const updatedConfigs = createConnectionConfigs()
+			updatedConfigs['conn-1'].moduleVersionId = 'v2.0.0'
+			instanceController.getConnectionClientJson.mockReturnValueOnce(updatedConfigs)
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+			instanceController.getInstanceConfigOfType.mockReturnValue(createInstanceConfigs()['conn-1'])
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/conn-1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({ versionId: 'v2.0.0' })
+
+			expect(res.status).toBe(200)
+			expect(res.body.data.moduleVersionId).toBe('v2.0.0')
+			expect(instanceController.modules.getModuleManifest).toHaveBeenCalledWith(
+				ModuleInstanceType.Connection,
+				'obs-websocket',
+				'v2.0.0'
+			)
+			expect(instanceController.setConnectionLabelAndConfig).toHaveBeenCalledWith(
+				'conn-1',
+				{
+					label: null,
+					enabled: null,
+					config: null,
+					secrets: null,
+					updatePolicy: null,
+					upgradeIndex: null,
+				},
+				{ patchConfig: true, patchSecrets: true }
+			)
+			expect(instanceController.setModuleVersionAndActivate).toHaveBeenCalledWith('conn-1', 'v2.0.0', null)
+		})
+
+		test('updates connection version to latest stable', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
+			instanceController.setConnectionLabelAndConfig.mockReturnValue({ ok: true })
+			instanceController.setModuleVersionAndActivate.mockReturnValue(true)
+
+			const updatedConfigs = createConnectionConfigs()
+			updatedConfigs['conn-1'].moduleVersionId = null
+			instanceController.getConnectionClientJson.mockReturnValueOnce(updatedConfigs)
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+			instanceController.getInstanceConfigOfType.mockReturnValue(createInstanceConfigs()['conn-1'])
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/conn-1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({ versionId: null })
+
+			expect(res.status).toBe(200)
+			expect(res.body.data.moduleVersionId).toBeNull()
+			expect(instanceController.modules.getModuleManifest).not.toHaveBeenCalled()
+			expect(instanceController.setModuleVersionAndActivate).toHaveBeenCalledWith('conn-1', null, null)
+		})
+
+		test('returns 400 for unknown connection version', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
+			instanceController.modules.getModuleManifest.mockReturnValue(undefined)
+			instanceController.modulesStore.fetchModuleVersionInfo.mockResolvedValue(null)
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/conn-1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({ versionId: 'v99.0.0' })
+
+			expect(res.status).toBe(400)
+			expect(res.body.error.code).toBe('BAD_REQUEST')
+			expect(res.body.error.message).toContain('v99.0.0')
+			expect(instanceController.setConnectionLabelAndConfig).not.toHaveBeenCalled()
+			expect(instanceController.setModuleVersionAndActivate).not.toHaveBeenCalled()
+		})
+
 		test('returns 404 for unknown connection', async () => {
 			const { app, instanceController, validToken } = createService()
 

@@ -55,6 +55,11 @@ export const ConnectionPatchBodySchema = z
 		config: z.record(z.string(), z.unknown()).optional(),
 		secrets: z.record(z.string(), z.unknown()).optional(),
 		updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
+		versionId: z
+			.string()
+			.nullable()
+			.optional()
+			.describe('Specific module version to use. Use null to use the latest compatible stable version.'),
 		collectionId: z.string().nullable().optional(),
 	})
 	.strict()

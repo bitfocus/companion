@@ -145,7 +145,8 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 		const { connectionId } = req.params
 
 		const clientConnections = instanceController.getConnectionClientJson(true)
-		if (!clientConnections[connectionId]) {
+		const currentConnection = clientConnections[connectionId]
+		if (!currentConnection) {
 			next(RestApiError.notFound('Connection not found'))
 			return
 		}
@@ -156,7 +157,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			return
 		}
 
-		const { label, disabled, config, secrets, updatePolicy } = parsed.data
+		const { label, disabled, config, secrets, updatePolicy, versionId } = parsed.data
 
 		// Require 'secrets' scope to update secrets
 		if (secrets) {
@@ -180,6 +181,25 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			}
 		}
 
+		if (versionId) {
+			const versionInfo =
+				instanceController.modules.getModuleManifest(
+					ModuleInstanceType.Connection,
+					currentConnection.moduleId,
+					versionId
+				) ??
+				(await instanceController.modulesStore.fetchModuleVersionInfo(
+					ModuleInstanceType.Connection,
+					currentConnection.moduleId,
+					versionId,
+					true
+				))
+			if (!versionInfo) {
+				next(RestApiError.badRequest(`Unknown version "${versionId}" for module "${currentConnection.moduleId}"`))
+				return
+			}
+		}
+
 		const result = instanceController.setConnectionLabelAndConfig(
 			connectionId,
 			{
@@ -196,6 +216,14 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 		if (!result.ok) {
 			next(RestApiError.badRequest(result.message))
 			return
+		}
+
+		if (versionId !== undefined) {
+			const versionResult = instanceController.setModuleVersionAndActivate(connectionId, versionId, null)
+			if (!versionResult) {
+				next(RestApiError.badRequest('Failed to update connection version'))
+				return
+			}
 		}
 
 		// Re-fetch updated data — only echo back secrets if they were part of the update

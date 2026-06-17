@@ -173,7 +173,7 @@ describe('OpenAPI Spec Generation', () => {
 			const bodySchema = (patchOp?.requestBody as any)?.content?.['application/json']?.schema
 			expect(bodySchema).toBeDefined()
 
-			const expectedFields = ['label', 'disabled', 'config', 'updatePolicy']
+			const expectedFields = ['label', 'disabled', 'config', 'updatePolicy', 'versionId']
 			for (const field of expectedFields) {
 				expect(bodySchema.properties?.[field]).toBeDefined()
 			}
