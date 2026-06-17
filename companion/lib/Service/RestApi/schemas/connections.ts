@@ -28,13 +28,18 @@ export const ConnectionResponseSchema = z.object({
 /** Schema for creating a new connection */
 export const ConnectionCreateBodySchema = z
 	.object({
-		module: z.object({
-			type: z.string(),
-			product: z.string().optional(),
-		}),
+		moduleId: z.string().describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".'),
 		label: z.string(),
-		versionId: z.string().nullable().optional(),
-		disabled: z.boolean().default(false),
+		versionId: z
+			.string()
+			.nullable()
+			.default(null)
+			.describe('Specific module version to use. Use null or omit to use the latest compatible stable version.'),
+		updatePolicy: z
+			.enum(InstanceVersionUpdatePolicy)
+			.default(InstanceVersionUpdatePolicy.Stable)
+			.describe('Module version update policy for the new connection.'),
+		disabled: z.boolean().default(false).describe('Whether the new connection should be created disabled.'),
 	})
 	.strict()
 

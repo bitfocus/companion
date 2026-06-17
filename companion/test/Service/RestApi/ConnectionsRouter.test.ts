@@ -166,7 +166,7 @@ describe('REST API v1 — Connections', () => {
 			const res = await supertest(app)
 				.post('/api/connections/v1')
 				.set('Authorization', `Bearer ${readOnlyToken}`)
-				.send({ module: { type: 'obs' }, label: 'test' })
+				.send({ moduleId: 'obs', label: 'test' })
 			expect(res.status).toBe(403)
 			expect(res.body.error.code).toBe('FORBIDDEN')
 		})
@@ -377,11 +377,13 @@ describe('REST API v1 — Connections', () => {
 	describe('POST /connections', () => {
 		test('defaults disabled to false', () => {
 			const parsed = ConnectionCreateBodySchema.parse({
-				module: { type: 'obs-websocket' },
+				moduleId: 'obs-websocket',
 				label: 'New OBS',
 			})
 
 			expect(parsed.disabled).toBe(false)
+			expect(parsed.updatePolicy).toBe(InstanceVersionUpdatePolicy.Stable)
+			expect(parsed.versionId).toBeNull()
 		})
 
 		test('creates a new connection', async () => {
@@ -421,14 +423,12 @@ describe('REST API v1 — Connections', () => {
 			})
 			instanceController.getInstanceStatus.mockReturnValue(undefined)
 
-			const res = await supertest(app)
-				.post('/api/connections/v1')
-				.set('Authorization', `Bearer ${validToken}`)
-				.send({
-					module: { type: 'obs-websocket' },
-					label: 'New OBS',
-					versionId: 'v2.0.0',
-				})
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'obs-websocket',
+				label: 'New OBS',
+				versionId: 'v2.0.0',
+				updatePolicy: InstanceVersionUpdatePolicy.Manual,
+			})
 
 			expect(res.status).toBe(201)
 			expect(res.headers.location).toBe('/api/connections/v1/new-id')
@@ -441,6 +441,71 @@ describe('REST API v1 — Connections', () => {
 			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledTimes(1)
 			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledWith({ type: 'obs-websocket' }, 'New OBS', {
 				versionId: 'v2.0.0',
+				updatePolicy: InstanceVersionUpdatePolicy.Manual,
+				disabled: false,
+			})
+		})
+
+		test('creates a connection for a store-known module that is not installed', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			const newConfig: InstanceConfig = {
+				moduleInstanceType: ModuleInstanceType.Connection,
+				moduleId: 'bmd-atem',
+				moduleVersionId: null,
+				label: 'New ATEM',
+				config: {},
+				secrets: undefined,
+				isFirstInit: true,
+				lastUpgradeIndex: 0,
+				enabled: true,
+				sortOrder: 2,
+				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			}
+
+			instanceController.modules.hasModule.mockReturnValue(false)
+			instanceController.modulesStore.fetchModuleVersionInfo.mockResolvedValue({
+				id: '1.0.0',
+				releaseChannel: 'stable',
+				releasedAt: 0,
+				tarUrl: 'https://example.com/bmd-atem.tgz',
+				tarSha: 'sha',
+				deprecationReason: null,
+				apiVersion: '1.12.0',
+				helpUrl: null,
+			})
+			instanceController.addConnectionWithLabel.mockReturnValue(['new-id', newConfig])
+			instanceController.getInstanceConfigOfType.mockReturnValue(newConfig)
+			instanceController.getConnectionClientJson.mockReturnValue({
+				'new-id': {
+					id: 'new-id',
+					label: 'New ATEM',
+					moduleId: 'bmd-atem',
+					moduleVersionId: null,
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
+					enabled: true,
+					sortOrder: 2,
+					moduleType: ModuleInstanceType.Connection,
+					hasRecordActionsHandler: false,
+					collectionId: null,
+				},
+			})
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'bmd-atem',
+				label: 'New ATEM',
+			})
+
+			expect(res.status).toBe(201)
+			expect(instanceController.modulesStore.fetchModuleVersionInfo).toHaveBeenCalledWith(
+				ModuleInstanceType.Connection,
+				'bmd-atem',
+				null,
+				true
+			)
+			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledWith({ type: 'bmd-atem' }, 'New ATEM', {
+				versionId: null,
 				updatePolicy: InstanceVersionUpdatePolicy.Stable,
 				disabled: false,
 			})
@@ -482,14 +547,11 @@ describe('REST API v1 — Connections', () => {
 			})
 			instanceController.getInstanceStatus.mockReturnValue(undefined)
 
-			const res = await supertest(app)
-				.post('/api/connections/v1')
-				.set('Authorization', `Bearer ${validToken}`)
-				.send({
-					module: { type: 'obs-websocket' },
-					label: 'New OBS',
-					disabled: true,
-				})
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'obs-websocket',
+				label: 'New OBS',
+				disabled: true,
+			})
 
 			expect(res.status).toBe(201)
 			expect(res.body.data.enabled).toBe(false)
@@ -512,18 +574,16 @@ describe('REST API v1 — Connections', () => {
 			expect(res.body.error.code).toBe('BAD_REQUEST')
 		})
 
-		test('returns 400 for unknown module type', async () => {
+		test('returns 400 for unknown module id', async () => {
 			const { app, instanceController, validToken } = createService()
 
 			instanceController.modules.hasModule.mockReturnValue(false)
+			instanceController.modulesStore.fetchModuleVersionInfo.mockResolvedValue(null)
 
-			const res = await supertest(app)
-				.post('/api/connections/v1')
-				.set('Authorization', `Bearer ${validToken}`)
-				.send({
-					module: { type: 'nonexistent' },
-					label: 'test',
-				})
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'nonexistent',
+				label: 'test',
+			})
 
 			expect(res.status).toBe(400)
 			expect(res.body.error.code).toBe('BAD_REQUEST')
@@ -537,14 +597,11 @@ describe('REST API v1 — Connections', () => {
 			instanceController.modules.hasModule.mockReturnValue(true)
 			instanceController.modules.getModuleManifest.mockReturnValue(undefined)
 
-			const res = await supertest(app)
-				.post('/api/connections/v1')
-				.set('Authorization', `Bearer ${validToken}`)
-				.send({
-					module: { type: 'obs-websocket' },
-					label: 'test',
-					versionId: 'v99.0.0',
-				})
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'obs-websocket',
+				label: 'test',
+				versionId: 'v99.0.0',
+			})
 
 			expect(res.status).toBe(400)
 			expect(res.body.error.code).toBe('BAD_REQUEST')
@@ -560,13 +617,10 @@ describe('REST API v1 — Connections', () => {
 				throw new Error('Label already in use')
 			})
 
-			const res = await supertest(app)
-				.post('/api/connections/v1')
-				.set('Authorization', `Bearer ${validToken}`)
-				.send({
-					module: { type: 'obs-websocket' },
-					label: 'test',
-				})
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'obs-websocket',
+				label: 'test',
+			})
 
 			expect(res.status).toBe(400)
 			expect(res.body.error.message).toBe('Label already in use')

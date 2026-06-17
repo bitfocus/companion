@@ -1,6 +1,6 @@
 import Express from 'express'
 import z from 'zod'
-import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { InstanceController } from '../../../Instance/Controller.js'
@@ -57,38 +57,45 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 	/**
 	 * POST /connections — Create a new connection
 	 */
-	router.post('/', requireScope('write'), (req, res, next) => {
+	router.post('/', requireScope('write'), async (req, res, next) => {
 		const parsed = ConnectionCreateBodySchema.safeParse(req.body)
 		if (!parsed.success) {
 			next(RestApiError.badRequest('Invalid request body', parsed.error.format()))
 			return
 		}
 
-		const { module, label, versionId, disabled } = parsed.data
+		const { moduleId, label, versionId, updatePolicy, disabled } = parsed.data
 
 		// Validate the module exists before attempting to create
-		if (!instanceController.modules.hasModule(ModuleInstanceType.Connection, module.type)) {
-			next(RestApiError.badRequest(`Unknown module type: "${module.type}"`))
+		const isInstalledModule = instanceController.modules.hasModule(ModuleInstanceType.Connection, moduleId)
+		const storeVersionInfo = !isInstalledModule
+			? await instanceController.modulesStore.fetchModuleVersionInfo(
+					ModuleInstanceType.Connection,
+					moduleId,
+					versionId,
+					true
+				)
+			: null
+		if (!isInstalledModule && !storeVersionInfo) {
+			next(RestApiError.badRequest(`Unknown module id: "${moduleId}"`))
 			return
 		}
 
 		// Validate the specific version exists if provided
 		if (versionId) {
-			const versionInfo = instanceController.modules.getModuleManifest(
-				ModuleInstanceType.Connection,
-				module.type,
-				versionId
-			)
+			const versionInfo =
+				instanceController.modules.getModuleManifest(ModuleInstanceType.Connection, moduleId, versionId) ??
+				storeVersionInfo
 			if (!versionInfo) {
-				next(RestApiError.badRequest(`Unknown version "${versionId}" for module "${module.type}"`))
+				next(RestApiError.badRequest(`Unknown version "${versionId}" for module "${moduleId}"`))
 				return
 			}
 		}
 
 		try {
-			const [id] = instanceController.addConnectionWithLabel(module, label, {
-				versionId: versionId ?? null,
-				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			const [id] = instanceController.addConnectionWithLabel({ type: moduleId }, label, {
+				versionId,
+				updatePolicy,
 				disabled,
 			})
 
@@ -461,7 +468,8 @@ export function registerConnectionPaths(): void {
 		path: '/connections/v1',
 		tags: ['Connections'],
 		summary: 'Create a connection',
-		description: 'Create a new connection instance for a given module type.',
+		description:
+			'Create a new connection instance for a given connection module id. If the module is not installed, Companion queues installation of the latest compatible stable version by default.',
 		security: [{ bearerAuth: [] }],
 		request: {
 			body: { content: { 'application/json': { schema: ConnectionCreateBodySchema } }, required: true },

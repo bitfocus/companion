@@ -158,12 +158,13 @@ describe('OpenAPI Spec Generation', () => {
 			const bodySchema = (postOp?.requestBody as any)?.content?.['application/json']?.schema
 			expect(bodySchema).toBeDefined()
 
-			const expectedFields = ['module', 'label', 'disabled']
+			const expectedFields = ['moduleId', 'label', 'versionId', 'updatePolicy', 'disabled']
 			for (const field of expectedFields) {
 				expect(bodySchema.properties?.[field]).toBeDefined()
 			}
+			expect(bodySchema.properties?.module).toBeUndefined()
 			expect(bodySchema.properties?.enabled).toBeUndefined()
-			expect(bodySchema.required).toContain('module')
+			expect(bodySchema.required).toContain('moduleId')
 			expect(bodySchema.required).toContain('label')
 		})
 
