@@ -12,7 +12,10 @@ import {
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
-import { ConnectionCreateBodySchema } from '../../../lib/Service/RestApi/schemas/connections.js'
+import {
+	ConnectionCreateBodySchema,
+	ConnectionPatchBodySchema,
+} from '../../../lib/Service/RestApi/schemas/connections.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -628,6 +631,12 @@ describe('REST API v1 — Connections', () => {
 	})
 
 	describe('PATCH /connections/:connectionId', () => {
+		test('defaults disabled to false', () => {
+			const parsed = ConnectionPatchBodySchema.parse({})
+
+			expect(parsed.disabled).toBe(false)
+		})
+
 		test('updates connection label', async () => {
 			const { app, instanceController, validToken } = createService()
 
@@ -688,6 +697,39 @@ describe('REST API v1 — Connections', () => {
 				{
 					label: null,
 					enabled: false,
+					config: null,
+					secrets: null,
+					updatePolicy: null,
+					upgradeIndex: null,
+				},
+				{ patchConfig: true, patchSecrets: true }
+			)
+		})
+
+		test('updates connection disabled state to false', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
+			instanceController.setConnectionLabelAndConfig.mockReturnValue({ ok: true })
+
+			const updatedConfigs = createConnectionConfigs()
+			updatedConfigs['conn-2'].enabled = true
+			instanceController.getConnectionClientJson.mockReturnValueOnce(updatedConfigs)
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+			instanceController.getInstanceConfigOfType.mockReturnValue(createInstanceConfigs()['conn-2'])
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/conn-2')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({ disabled: false })
+
+			expect(res.status).toBe(200)
+			expect(res.body.data.enabled).toBe(true)
+			expect(instanceController.setConnectionLabelAndConfig).toHaveBeenCalledWith(
+				'conn-2',
+				{
+					label: null,
+					enabled: true,
 					config: null,
 					secrets: null,
 					updatePolicy: null,

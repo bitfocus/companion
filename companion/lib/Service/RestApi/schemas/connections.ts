@@ -51,7 +51,7 @@ export const ConnectionCreateBodySchema = z
 export const ConnectionPatchBodySchema = z
 	.object({
 		label: z.string().optional(),
-		disabled: z.boolean().optional(),
+		disabled: z.boolean().default(false),
 		config: z.record(z.string(), z.unknown()).optional(),
 		secrets: z.record(z.string(), z.unknown()).optional(),
 		updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
