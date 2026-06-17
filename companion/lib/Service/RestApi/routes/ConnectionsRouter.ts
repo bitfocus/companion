@@ -89,7 +89,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			const [id] = instanceController.addConnectionWithLabel(module, label, {
 				versionId: versionId ?? null,
 				updatePolicy: InstanceVersionUpdatePolicy.Stable,
-				disabled: disabled ?? false,
+				disabled,
 			})
 
 			// Re-fetch from client JSON so response goes through the same path as GET

@@ -34,7 +34,7 @@ export const ConnectionCreateBodySchema = z
 		}),
 		label: z.string(),
 		versionId: z.string().nullable().optional(),
-		disabled: z.boolean().optional(),
+		disabled: z.boolean().default(false),
 	})
 	.strict()
 
