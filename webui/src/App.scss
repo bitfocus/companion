@@ -76,14 +76,7 @@
 @use 'scss/expression';
 @use 'scss/image-library';
 
-// dnd-kit's DragOverlay element (tagged [data-dnd-overlay]) is always in the DOM - empty when idle, the
-// floating preview clone during a drag. dnd-kit keeps it hidden/positioned via an *injected* stylesheet,
-// but that stylesheet is only injected once the overlay registers with the Feedback plugin, which happens
-// in a deferred React effect (see DragCloneOverlay). At the very start of a drag React has already mounted
-// the cloned preview inside the overlay, but the stylesheet isn't there yet, so for a frame the overlay
-// renders in normal flow with full content - flashing at the top of the page and pushing the rest of the
-// layout around. This bundled rule is always present, so it reliably hides the overlay whenever it isn't
-// the active, positioned drag feedback (i.e. lacks [data-dnd-dragging]).
+// ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two
 [data-dnd-overlay]:not([data-dnd-dragging]) {
 	display: none !important;
 }

@@ -1,5 +1,3 @@
-// Pages list (div based, dnd-kit sortable). Reuses .collections-nesting-table* row primitives
-// and bootstrap utilities; these rules just refine the column widths and header.
 .pages-list-table {
 	// The first row is the header
 	> .collections-nesting-table-row-item:first-child {

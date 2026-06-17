@@ -226,9 +226,6 @@ export class ControlEntityList {
 		newIndex = clamp(newIndex, 0, this.#entities.length)
 		if (oldIndex === newIndex) return undefined
 
-		// Clean move-to-final-index: pop the entity then insert it at newIndex (matching the cross-group
-		// pop-then-insert path in EntityListPoolBase). No insert-before adjustment, so newIndex === the
-		// drop target's index works in both directions, including dropping at the very end of the list.
 		this.#entities.splice(newIndex, 0, ...this.#entities.splice(oldIndex, 1))
 
 		return this.#entities[newIndex]
