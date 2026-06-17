@@ -157,7 +157,6 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 		}
 
 		const { label, disabled, config, secrets, updatePolicy } = parsed.data
-		const hasDisabledUpdate = typeof req.body === 'object' && req.body !== null && Object.hasOwn(req.body, 'disabled')
 
 		// Require 'secrets' scope to update secrets
 		if (secrets) {
@@ -185,7 +184,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			connectionId,
 			{
 				label: label ?? null,
-				enabled: hasDisabledUpdate ? !disabled : null,
+				enabled: disabled === undefined ? null : !disabled,
 				config: config ?? null,
 				secrets: secrets ?? null,
 				updatePolicy: updatePolicy ?? null,

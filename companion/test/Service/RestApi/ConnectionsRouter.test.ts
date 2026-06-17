@@ -12,10 +12,7 @@ import {
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
-import {
-	ConnectionCreateBodySchema,
-	ConnectionPatchBodySchema,
-} from '../../../lib/Service/RestApi/schemas/connections.js'
+import { ConnectionCreateBodySchema } from '../../../lib/Service/RestApi/schemas/connections.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -631,12 +628,6 @@ describe('REST API v1 — Connections', () => {
 	})
 
 	describe('PATCH /connections/:connectionId', () => {
-		test('defaults disabled to false', () => {
-			const parsed = ConnectionPatchBodySchema.parse({})
-
-			expect(parsed.disabled).toBe(false)
-		})
-
 		test('updates connection label', async () => {
 			const { app, instanceController, validToken } = createService()
 
