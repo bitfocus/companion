@@ -10,6 +10,7 @@ import path from 'path'
 import { generateOpenApiDocument } from '../companion/lib/Service/RestApi/openapi.js'
 
 const OUT_DIR = path.resolve(import.meta.dirname, '../docs/user-guide/5_remote-control/rest-api')
+const STATIC_DOCS_DIR = path.resolve(import.meta.dirname, 'rest-api-docs')
 
 interface Parameter {
 	name: string
@@ -141,6 +142,21 @@ function renderRequestBody(body: RequestBody): string {
 	return lines.join('\n')
 }
 
+function copyStaticMarkdownDocs(): number {
+	const entries = fs.readdirSync(STATIC_DOCS_DIR, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))
+	let fileCount = 0
+
+	for (const entry of entries) {
+		if (!entry.isFile() || !entry.name.endsWith('.md')) continue
+
+		fs.copyFileSync(path.join(STATIC_DOCS_DIR, entry.name), path.join(OUT_DIR, entry.name))
+		console.log(`Generated: rest-api/${entry.name}`)
+		fileCount++
+	}
+
+	return fileCount
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 
 const doc = generateOpenApiDocument()
@@ -258,54 +274,6 @@ for (const [tag, operations] of tagGroups) {
 	console.log(`Generated: rest-api/${slug}.md (${operations.length} endpoints)`)
 }
 
-// Write an authentication overview page
-const authLines: string[] = []
-authLines.push('---')
-authLines.push('title: Authentication')
-authLines.push('sidebar_position: 0')
-authLines.push('description: How to authenticate with the REST API')
-authLines.push('---')
-authLines.push('')
-authLines.push('# Authentication')
-authLines.push('')
-authLines.push(':::info Auto-generated')
-authLines.push('This page is auto-generated from the OpenAPI specification. Do not edit manually.')
-authLines.push(':::')
-authLines.push('')
-authLines.push('The REST API uses **Bearer token** authentication. Include your token in every request:')
-authLines.push('')
-authLines.push('```')
-authLines.push('Authorization: Bearer <token>')
-authLines.push('```')
-authLines.push('')
-authLines.push('## Development Tokens')
-authLines.push('')
-authLines.push('Static tokens are available for development and testing:')
-authLines.push('')
-authLines.push('| Token | Scopes | Description |')
-authLines.push('|-------|--------|-------------|')
-authLines.push('| `cpn_read` | read | Read-only access |')
-authLines.push('| `cpn_write` | read, write | Read and write access |')
-authLines.push('| `cpn_execute` | read, execute | Read and execute access |')
-authLines.push('| `cpn_admin` | admin (all) | Full admin access |')
-authLines.push('')
-authLines.push('## Scopes')
-authLines.push('')
-authLines.push('| Scope | Grants |')
-authLines.push('|-------|--------|')
-authLines.push('| `read` | Read resources (GET endpoints) |')
-authLines.push('| `write` | Create, update, delete resources (implies `read`) |')
-authLines.push('| `execute` | Trigger actions like restart (implies `read`) |')
-authLines.push('| `admin` | Full access (implies all scopes) |')
-authLines.push('')
-authLines.push('## Enabling the REST API')
-authLines.push('')
-authLines.push('The REST API must be enabled in Companion settings (`rest_api_enabled`). **A restart is required** after changing this setting.')
-authLines.push('')
-authLines.push('When enabled, interactive documentation is available at `/api/docs` (Swagger UI).')
-authLines.push('')
+const staticDocCount = copyStaticMarkdownDocs()
 
-fs.writeFileSync(path.join(OUT_DIR, 'authentication.md'), authLines.join('\n'))
-console.log('Generated: rest-api/authentication.md')
-
-console.log(`\nDone! Generated ${tagGroups.size + 1} files in ${OUT_DIR}`)
+console.log(`\nDone! Generated ${tagGroups.size + staticDocCount} files in ${OUT_DIR}`)
