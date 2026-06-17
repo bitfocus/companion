@@ -11,6 +11,7 @@ import { generateOpenApiDocument } from '../companion/lib/Service/RestApi/openap
 
 const OUT_DIR = path.resolve(import.meta.dirname, '../docs/user-guide/5_remote-control/rest-api')
 const STATIC_DOCS_DIR = path.resolve(import.meta.dirname, 'rest-api-docs')
+const CATEGORY_INTRO_FILE = '_category-intro.md'
 
 interface Parameter {
 	name: string
@@ -147,7 +148,7 @@ function copyStaticMarkdownDocs(): number {
 	let fileCount = 0
 
 	for (const entry of entries) {
-		if (!entry.isFile() || !entry.name.endsWith('.md')) continue
+		if (!entry.isFile() || !entry.name.endsWith('.md') || entry.name.startsWith('_')) continue
 
 		fs.copyFileSync(path.join(STATIC_DOCS_DIR, entry.name), path.join(OUT_DIR, entry.name))
 		console.log(`Generated: rest-api/${entry.name}`)
@@ -155,6 +156,10 @@ function copyStaticMarkdownDocs(): number {
 	}
 
 	return fileCount
+}
+
+function readStaticMarkdown(fileName: string): string {
+	return fs.readFileSync(path.join(STATIC_DOCS_DIR, fileName), 'utf8').trim()
 }
 
 // ── Main ─────────────────────────────────────────────────────────────
@@ -172,8 +177,7 @@ fs.writeFileSync(
 			position: 1,
 			link: {
 				type: 'generated-index',
-				description:
-					'Auto-generated documentation for the Companion REST API. Enable the REST API in settings and restart Companion to use these endpoints. Interactive docs are also available at /api/docs (Swagger UI) when the API is enabled.',
+				description: readStaticMarkdown(CATEGORY_INTRO_FILE),
 			},
 		},
 		null,
