@@ -389,6 +389,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		},
 		options?: {
 			skipNotifyConnection?: boolean
+			patchConfig?: boolean // If true, only config keys defined in the object are updated (shallow merge)
 			patchSecrets?: boolean // If true, only secrets defined in the object are updated
 		}
 	): { ok: true } | { ok: false; message: string } {
@@ -411,7 +412,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			connectionConfig.isFirstInit = false
 
 			// Update the config blob
-			connectionConfig.config = values.config
+			if (options?.patchConfig) {
+				// Patch the config, only updating those keys that are defined
+				connectionConfig.config = {
+					...(connectionConfig.config as any),
+					...values.config,
+				}
+			} else {
+				connectionConfig.config = values.config
+			}
 		}
 
 		if (values.secrets) {

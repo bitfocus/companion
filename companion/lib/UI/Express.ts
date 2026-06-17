@@ -89,6 +89,7 @@ function createCacheControlMiddleware(): Express.RequestHandler {
 export class UIExpress {
 	readonly app = Express()
 	#apiRouter = Express.Router()
+	#restApiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
 	#connectionApiRouter = Express.Router()
 
@@ -147,12 +148,19 @@ export class UIExpress {
 			res.redirect(301, `/instance${req.url}`)
 		})
 
+		// Use the router #restApiRouter for the new REST API, mounted before the legacy /api routes
+		this.app.use('/api', async (r, s, n) => this.#restApiRouter(r, s, n))
+
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		// CORS is enabled here as this is part of the intentionally cross-origin accessible HTTP api.
 		this.app.use('/api', cors(), async (r, s, n) => this.#apiRouter(r, s, n))
 
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use(async (r, s, n) => this.#legacyApiRouter(r, s, n))
+
+		this.app.use(['/api', '/trpc', '/socket.io'], (_req, res) => {
+			res.status(404).send()
+		})
 
 		function getResourcePath(subpath: string): string {
 			if (!isPackaged()) {
@@ -197,6 +205,13 @@ export class UIExpress {
 				return webuiServer(req, res, next)
 			}
 		})
+	}
+
+	/**
+	 * Set a new router as the REST API router
+	 */
+	set restApiRouter(router: Express.Router) {
+		this.#restApiRouter = router
 	}
 
 	/**

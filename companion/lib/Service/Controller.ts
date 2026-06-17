@@ -13,6 +13,7 @@ import { ServiceHttpApi } from './HttpApi.js'
 import { ServiceHttps } from './Https.js'
 import { ServiceOscListener } from './OscListener.js'
 import type { ServiceOscSender } from './OscSender.js'
+import { RestApiService } from './RestApi/RestApiService.js'
 import { ServiceRosstalk } from './Rosstalk.js'
 import { ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 import { ServiceSatelliteTcp } from './SatelliteTcp.js'
@@ -38,6 +39,7 @@ import { ServiceUdp } from './Udp.js'
  */
 export class ServiceController {
 	readonly httpApi: ServiceHttpApi
+	readonly restApi: RestApiService
 	readonly https: ServiceHttps
 	readonly oscSender: ServiceOscSender
 	readonly oscListener: ServiceOscListener
@@ -62,6 +64,7 @@ export class ServiceController {
 		express: UIExpress
 	) {
 		this.httpApi = new ServiceHttpApi(serviceApi, userconfig, express)
+		this.restApi = new RestApiService(instanceController, userconfig, express)
 		this.https = new ServiceHttps(userconfig, express, io)
 		this.oscSender = oscSender
 		this.oscListener = new ServiceOscListener(serviceApi, userconfig)

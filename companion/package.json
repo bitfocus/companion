@@ -35,6 +35,7 @@
     "@types/semver": "^7.7.1",
     "@types/socketcluster-client": "^20.0.0",
     "@types/supertest": "^7.2.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/tar-fs": "^2.0.4",
     "@types/tar-stream": "^3.1.4",
     "@types/winston-syslog": "^2.4.4",
@@ -45,6 +46,7 @@
     "typescript-7": "npm:typescript@rc"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@companion-app/shared": "*",
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1",
     "@companion-module/host": "1.0.3",
@@ -87,6 +89,7 @@
     "semver": "^7.8.5",
     "socketcluster-client": "^20.0.1",
     "supports-color": "^10.2.2",
+    "swagger-ui-express": "^5.0.1",
     "systeminformation": "^5.31.7",
     "tar-fs": "^3.1.2",
     "tar-stream": "^3.2.0",

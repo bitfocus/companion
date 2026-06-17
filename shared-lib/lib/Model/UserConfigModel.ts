@@ -20,6 +20,8 @@ export type UserConfigModel = {
 	http_api_enabled: boolean
 	http_legacy_api_enabled: boolean
 
+	rest_api_enabled: boolean
+
 	tcp_enabled: boolean
 	tcp_listen_port: number
 	tcp_legacy_api_enabled: boolean
