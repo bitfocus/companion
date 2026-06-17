@@ -34,7 +34,7 @@ const ConnectionResponseExample = {
 	id: 'KJA1isEECHRDBTFjx-7tf',
 	label: 'ATEM',
 	moduleId: 'bmd-atem',
-	moduleVersionId: null,
+	moduleVersionId: '1.2.0',
 	updatePolicy: InstanceVersionUpdatePolicy.Stable,
 	enabled: true,
 	sortOrder: 1,
@@ -59,7 +59,13 @@ export const ConnectionResponseSchema = z
 			.string()
 			.describe('Connection module id, such as "bmd-atem" or "obs-websocket".')
 			.meta({ example: 'bmd-atem' }),
-		moduleVersionId: z.string().nullable().describe('Installed module version id used by this connection.'),
+		moduleVersionId: z
+			.string()
+			.nullable()
+			.describe(
+				'Module version id used by this connection, such as "1.2.0". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.'
+			)
+			.meta({ example: '1.2.0' }),
 		updatePolicy: z
 			.enum(InstanceVersionUpdatePolicy)
 			.describe('Module version update policy for this connection.')
@@ -85,7 +91,9 @@ export const ConnectionCreateBodySchema = z
 			.string()
 			.nullable()
 			.default(null)
-			.describe('Specific module version to use. Use null or omit to use the latest compatible stable version.')
+			.describe(
+				'Specific module version to use. Omit or use null to use the newest compatible stable version. If the module is not installed, Companion queues installation of that version.'
+			)
 			.meta({ example: null }),
 		updatePolicy: z
 			.enum(InstanceVersionUpdatePolicy)
@@ -141,8 +149,10 @@ export const ConnectionPatchBodySchema = z
 			.string()
 			.nullable()
 			.optional()
-			.describe('Specific module version to use. Use null to use the latest compatible stable version.')
-			.meta({ example: null }),
+			.describe(
+				'Specific module version to use, such as "1.2.0". Omit to leave the current version unchanged. Use null to switch to the newest compatible stable version.'
+			)
+			.meta({ example: '1.2.0' }),
 		collectionId: z
 			.string()
 			.nullable()
@@ -158,7 +168,7 @@ export const ConnectionPatchBodySchema = z
 			config: { host: '10.50.0.20', fadeFps: 10 },
 			secrets: {},
 			updatePolicy: InstanceVersionUpdatePolicy.Manual,
-			versionId: null,
+			versionId: '1.2.0',
 			collectionId: null,
 		},
 	})
