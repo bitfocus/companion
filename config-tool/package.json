@@ -1,0 +1,28 @@
+{
+  "name": "@companion-app/config-tool",
+  "version": "5.0.0",
+  "description": "Interactive configuration tool for headless Companion installs",
+  "type": "module",
+  "private": true,
+  "main": "lib/main.ts",
+  "scripts": {
+    "build:typecheck": "tsc --noEmit",
+    "dev": "COMPANION_CONFIG_FILE=../.cache/config-tool/config.yaml run -TB tsx lib/main.ts",
+    "dev:init": "run dev init",
+    "dev:generate": "run dev generate",
+    "dev:validate": "run dev validate"
+  },
+  "engines": {
+    "node": ">=26.3.0 <27"
+  },
+  "author": "Bitfocus AS",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  },
+  "dependencies": {
+    "@companion-app/shared": "*",
+    "@inquirer/prompts": "^7.2.0",
+    "yaml": "^2.9.0"
+  }
+}

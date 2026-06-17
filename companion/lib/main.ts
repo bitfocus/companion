@@ -19,6 +19,7 @@ import { nanoid } from 'nanoid'
 import { type SyslogTransportOptions } from 'winston-syslog'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
+import { registerLaunchOptions } from './LaunchOptionsCli.js'
 import { Registry } from './Registry.js'
 import { DISABLE_IPv6, GLOBAL_BIND_ADDRESS } from './Resources/Constants.js'
 import { isPackaged } from './Resources/Util.js'
@@ -31,40 +32,20 @@ program.command('check-launches', { hidden: true }).action(() => {
 	process.exit(89)
 })
 
+// Server-only flags that the headless `config-tool` does not manage. These are declared here
+// rather than in the shared list, since the config tool never reads or generates them.
 program
 	.option('--list-interfaces', 'List the available network interfaces that can be passed to --admin-interface')
-	.option('--admin-port <number>', 'Set the port the admin ui should bind to', '8000')
-	.option(
-		'--admin-interface <string>',
-		'Set the interface the admin ui should bind to. The first ip on this interface will be used'
-	)
-	.option('--admin-address <string>', 'Set the ip address the admin ui should bind to (default: "0.0.0.0")')
 	.option(
 		'--config-dir <string>',
 		'Use the specified directory for storing configuration. The default path varies by system, and is different to 2.2 (the old path will be used if existing config is found)'
 	)
-	.option('--extra-module-path <string>', 'Search an extra directory for modules to load')
 	.option('--machine-id <string>', 'Unique id for this installation')
-	.option('--log-level <string>', 'Log level to output to console')
 	.option('--disable-admin-password', 'Disables password lockout for the admin UI')
-	.option('--syslog-enable', 'Enable syslog transport')
-	.option('--syslog-host <string>', 'Syslog server to write to (default: localhost)')
-	.option('--syslog-port <string>', 'Port on syslog server to write to')
-	.option('--syslog-tcp', 'Use TCP for transport (default: udp)')
-	.option('--syslog-localhost <string>', 'Hostname of this machine')
-	.option(
-		'--enable-shell-command-support',
-		'Allow running shell commands on this computer (e.g. the internal "run shell command" action)'
-	)
-	.option(
-		'--enable-restricted-modules',
-		'Allow loading modules that are otherwise held back for safety, e.g. importing custom modules from remote (non-loopback) clients. Local clients can always import'
-	)
-	.option(
-		'--trusted-proxies <value>',
-		'Configure the Express "trust proxy" setting so the real client ip is used when running behind a reverse proxy'
-	)
-	.option('--no-notifications', "Don't show version-related notifications in the header.")
+
+// Register the config-tool-managed options from the shared single-source-of-truth list. This
+// keeps the flags the server accepts in sync with what the `config-tool` package generates.
+registerLaunchOptions(program)
 
 program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const options = program.opts()

@@ -142,6 +142,9 @@ await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
 // Do this last so webpack can find resources (esp. package.json)
 // (note currently this isn't needed since we've disabled URL processing, but in the future this may help...)
 // Build application
+// Tell the esbuild step which platform we are targeting, so the linux-only headless
+// config-tool is only bundled for linux builds.
+process.env.COMPANION_BUILD_PLATFORM = platformInfo.nodePlatform
 await $`yarn workspace @companion-app/shared build:ts`
 await $`yarn workspace companion build`
 

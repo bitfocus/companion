@@ -136,6 +136,18 @@ export default [
 			'n/prefer-node-protocol': 'error',
 		},
 	},
+	{
+		files: ['config-tool/**/*.ts'],
+		rules: {
+			// Confusing import issues currently
+			'n/no-missing-import': [
+				'error',
+				{
+					allowModules: ['@companion-app/shared'],
+				},
+			],
+		},
+	},
 
 	// Add prettier at the end to give it final say on formatting
 	eslintPluginPrettierRecommended,
@@ -167,6 +179,7 @@ export default [
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',
+			'config-tool/test/**/*',
 			'webui/test/**/*',
 			'.cache/*',
 		],

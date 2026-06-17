@@ -3,6 +3,7 @@
 	"include": [
 		"vitest.config.mts",
 		"companion/test/**/*",
+		"config-tool/test/**/*",
 		"shared-lib/lib/**/*spec.ts",
 		"shared-lib/lib/**/*test.ts",
 		"shared-lib/lib/**/__tests__/*",
@@ -23,5 +24,5 @@
 		"noEmit": true,
 		"skipLibCheck": true
 	},
-	"references": [{ "path": "./companion" }, { "path": "./shared-lib" }]
+	"references": [{ "path": "./companion" }, { "path": "./config-tool" }, { "path": "./shared-lib" }]
 }

@@ -1,0 +1,36 @@
+{
+	"include": ["lib/**/*.ts"],
+	"exclude": ["node_modules/**"],
+	"compilerOptions": {
+		"outDir": "./dist",
+		"rootDir": "./lib",
+		"paths": {
+			"*": ["./node_modules/*"]
+		},
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"composite": true,
+
+		"target": "es2024",
+		"noImplicitAny": true,
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"importHelpers": false,
+		"listFiles": false,
+		"traceResolution": false,
+		"pretty": true,
+		"lib": ["es2024"],
+		"types": ["node"],
+		"strict": true,
+		"forceConsistentCasingInFileNames": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true
+	},
+	"references": [{ "path": "../shared-lib" }]
+}

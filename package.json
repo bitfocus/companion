@@ -4,6 +4,7 @@
   "packageManager": "yarn@4.17.0",
   "workspaces": [
     "companion",
+    "config-tool",
     "shared-lib",
     "webui",
     "launcher",
