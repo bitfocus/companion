@@ -675,7 +675,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				type: 'checkbox',
 				id: 'markerEnabled',
 				label: 'Show marker',
-				tooltip: 'Draw a marker line at the marker value (e.g. bind the value to a peak variable for peak-hold).',
+				tooltip: 'Draw a marker line at the current value, across the full width of the fill.',
 				default: false,
 			},
 			{

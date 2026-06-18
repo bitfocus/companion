@@ -231,14 +231,19 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * draws a line between two given points
 	 */
 	line(x1: number, y1: number, x2: number, y2: number, style: LineStyle): void {
+		const oldLineCap = this.context2d.lineCap
 		this.context2d.lineWidth = style.width ?? 1
 		this.context2d.strokeStyle = style.color
 		this.context2d.lineCap = style.cap ?? 'butt'
-		this.context2d.beginPath()
-		this.context2d.moveTo(x1, y1)
-		this.context2d.lineTo(x2, y2)
-		this.context2d.closePath()
-		this.context2d.stroke()
+		try {
+			this.context2d.beginPath()
+			this.context2d.moveTo(x1, y1)
+			this.context2d.lineTo(x2, y2)
+			this.context2d.closePath()
+			this.context2d.stroke()
+		} finally {
+			this.context2d.lineCap = oldLineCap
+		}
 	}
 
 	/**
@@ -404,12 +409,17 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		lineStyle: LineStyle
 	): void {
 		if (radius <= 0 || lineStyle.width <= 0) return
+		const oldLineCap = this.context2d.lineCap
 		this.context2d.beginPath()
 		this.context2d.arc(x, y, radius, startAngle, endAngle, anticlockwise)
 		this.context2d.strokeStyle = lineStyle.color
 		this.context2d.lineWidth = lineStyle.width
 		this.context2d.lineCap = lineStyle.cap ?? 'butt'
-		this.context2d.stroke()
+		try {
+			this.context2d.stroke()
+		} finally {
+			this.context2d.lineCap = oldLineCap
+		}
 	}
 
 	/**
