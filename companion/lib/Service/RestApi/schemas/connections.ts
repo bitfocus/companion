@@ -220,33 +220,35 @@ export const ConfigFieldsResponseExample = [
 	},
 ]
 
-/** Schema for a config field definition in API responses */
-export const ConfigFieldResponseSchema = z.object({
-	id: z.string().describe('Config field id used as the key in config or secrets objects.').meta({ example: 'host' }),
-	type: z.string().describe('Companion config field type.').meta({ example: 'textinput' }),
-	label: z.string().describe('Display label for the config field.').meta({ example: 'Host' }),
-	tooltip: z
-		.string()
-		.optional()
-		.describe('Short help text shown for the config field.')
-		.meta({ example: 'Target switcher IP' }),
-	description: z.string().optional().describe('Longer help text for the config field.'),
-	default: z.unknown().optional().describe('Default value for the config field.'),
-	min: z.number().optional().describe('Minimum numeric value allowed.'),
-	max: z.number().optional().describe('Maximum numeric value allowed.'),
-	step: z.number().optional().describe('Numeric step size.'),
-	range: z.boolean().optional().describe('Whether the field accepts a numeric range.'),
-	minLength: z.number().optional().describe('Minimum string length allowed.'),
-	regex: z.string().optional().describe('Regular expression that string values must match.'),
-	placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
-	multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
-	choices: z.array(DropdownChoiceSchema).optional().describe('Allowed choices for dropdown-style fields.'),
-	allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
-	minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
-	maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
-	enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
-	returnType: z.string().optional().describe('Value type returned by the field.'),
-})
+/** Schema for a raw config field definition in API responses */
+export const ConfigFieldResponseSchema = z
+	.object({
+		id: z.string().describe('Config field id used as the key in config or secrets objects.').meta({ example: 'host' }),
+		type: z.string().describe('Companion config field type.').meta({ example: 'textinput' }),
+		label: z.string().describe('Display label for the config field.').meta({ example: 'Host' }),
+		tooltip: z
+			.string()
+			.optional()
+			.describe('Short help text shown for the config field.')
+			.meta({ example: 'Target switcher IP' }),
+		description: z.string().optional().describe('Longer help text for the config field.'),
+		default: z.unknown().optional().describe('Default value for the config field.'),
+		min: z.number().optional().describe('Minimum numeric value allowed.'),
+		max: z.number().optional().describe('Maximum numeric value allowed.'),
+		step: z.number().optional().describe('Numeric step size.'),
+		range: z.boolean().optional().describe('Whether the field accepts a numeric range.'),
+		minLength: z.number().optional().describe('Minimum string length allowed.'),
+		regex: z.string().optional().describe('Regular expression that string values must match.'),
+		placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
+		multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
+		choices: z.array(DropdownChoiceSchema).optional().describe('Allowed choices for dropdown-style fields.'),
+		allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+		minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
+		maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
+		enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
+		returnType: z.string().optional().describe('Value type returned by the field.'),
+	})
+	.catchall(z.unknown())
 
 export type ConnectionResponse = z.infer<typeof ConnectionResponseSchema>
 export type ConnectionCreateBody = z.infer<typeof ConnectionCreateBodySchema>
@@ -276,9 +278,9 @@ export function buildConnectionResponse(
 	}
 
 	if (instanceConfig) {
-		response.config = (instanceConfig.config as Record<string, unknown>) ?? {}
+		response.config = instanceConfig.config ?? {}
 		if (includeSecrets) {
-			response.secrets = (instanceConfig.secrets as Record<string, unknown>) ?? {}
+			response.secrets = instanceConfig.secrets ?? {}
 		}
 	}
 

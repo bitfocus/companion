@@ -1075,6 +1075,7 @@ describe('REST API v1 — Connections', () => {
 						label: 'Host',
 						default: 'localhost',
 						placeholder: 'IP or hostname',
+						isVisible: true,
 					},
 					{ id: 'port', type: 'number' as const, label: 'Port', default: 4455, min: 1, max: 65535, step: 1 },
 					{
@@ -1108,6 +1109,7 @@ describe('REST API v1 — Connections', () => {
 				label: 'Host',
 				default: 'localhost',
 				placeholder: 'IP or hostname',
+				isVisible: true,
 			})
 
 			expect(res.body.data[1]).toEqual({

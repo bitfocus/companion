@@ -265,7 +265,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			return
 		}
 
-		const configFields = fields.filter((f) => f.type !== 'static-text').map((field) => buildConfigFieldResponse(field))
+		const configFields = fields.filter((field) => field.type !== 'static-text')
 
 		res.json(successResponse(configFields))
 	})
@@ -311,70 +311,6 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 	})
 
 	return router
-}
-
-/**
- * Build an API-friendly representation of a config field definition.
- */
-function buildConfigFieldResponse(field: SomeCompanionInputField): Record<string, unknown> {
-	const base: Record<string, unknown> = {
-		id: field.id,
-		type: field.type,
-		label: field.label,
-	}
-
-	if (field.tooltip) base.tooltip = field.tooltip
-	if (field.description) base.description = field.description
-
-	switch (field.type) {
-		case 'textinput':
-			if (field.default !== undefined) base.default = field.default
-			if (field.minLength !== undefined) base.minLength = field.minLength
-			if (field.regex) base.regex = field.regex
-			if (field.placeholder) base.placeholder = field.placeholder
-			if (field.multiline) base.multiline = field.multiline
-			break
-		case 'secret-text':
-			if (field.default !== undefined) base.default = field.default
-			if (field.minLength !== undefined) base.minLength = field.minLength
-			if (field.regex) base.regex = field.regex
-			break
-		case 'number':
-			base.default = field.default
-			base.min = field.min
-			base.max = field.max
-			if (field.step !== undefined) base.step = field.step
-			if (field.range) base.range = field.range
-			break
-		case 'checkbox':
-			base.default = field.default
-			break
-		case 'dropdown':
-			base.default = field.default
-			base.choices = field.choices
-			if (field.allowCustom) base.allowCustom = field.allowCustom
-			if (field.regex) base.regex = field.regex
-			break
-		case 'multidropdown':
-			base.default = field.default
-			base.choices = field.choices
-			if (field.minSelection !== undefined) base.minSelection = field.minSelection
-			if (field.maxSelection !== undefined) base.maxSelection = field.maxSelection
-			if (field.allowCustom) base.allowCustom = field.allowCustom
-			if (field.regex) base.regex = field.regex
-			break
-		case 'colorpicker':
-			base.default = field.default
-			if (field.enableAlpha) base.enableAlpha = field.enableAlpha
-			if (field.returnType) base.returnType = field.returnType
-			break
-		case 'bonjour-device':
-		case 'custom-variable':
-		case 'expression':
-			break
-	}
-
-	return base
 }
 
 type ValidationResult =
