@@ -76,8 +76,14 @@ export const builtinFunctionCompletions: Array<{
 		detail: 'randomInt(min, max)',
 		documentation: 'Returns a random integer between min and max',
 	},
-	{ name: 'log', detail: 'log(number)', documentation: 'Returns the natural logarithm of a number' },
+	{
+		name: 'log',
+		detail: 'log(number, [base])',
+		documentation: 'Returns the logarithm of a number (natural log if no base given)',
+	},
 	{ name: 'log10', detail: 'log10(number)', documentation: 'Returns the base-10 logarithm of a number' },
+	{ name: 'exp', detail: 'exp(number)', documentation: 'Returns e raised to the power of a number' },
+	{ name: 'sqrt', detail: 'sqrt(number)', documentation: 'Returns the square root of a number' },
 
 	// String operations
 	{ name: 'trim', detail: 'trim(string)', documentation: 'Removes whitespace from both ends of a string' },
@@ -288,7 +294,7 @@ export const builtinFunctionCompletions: Array<{
 ]
 
 const keywords = ['return', 'undefined']
-const typeKeywords = ['true', 'false', 'null']
+const typeKeywords = ['true', 'false', 'null', 'PI']
 
 const companionExpressionLanguageConfiguration: languages.LanguageConfiguration = {
 	comments: {

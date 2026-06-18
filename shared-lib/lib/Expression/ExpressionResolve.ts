@@ -52,7 +52,7 @@ export function ResolveExpression(
 	}
 
 	const resolverState: ResolverState = {
-		values: Object.create(null),
+		values: Object.assign(Object.create(null), { PI: Math.PI }),
 		isComplete: false,
 	}
 
