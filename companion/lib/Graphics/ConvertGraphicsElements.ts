@@ -84,10 +84,7 @@ const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>
 // borderPosition is shared across box/line/circle — all use the same choices from borderFields.
 const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
 const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
-const GAUGE_INACTIVE_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['inactiveStyle']>(
-	'gauge',
-	'inactiveStyle'
-)
+const GAUGE_TRACK_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['trackStyle']>('gauge', 'trackStyle')
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,
@@ -821,13 +818,16 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	const segmentsRaw = (element.segments as ExpressionOrValue<JsonValue[]>).value
-	const segments: ButtonGraphicsGaugeDrawElement['segments'] = Array.isArray(segmentsRaw)
-		? segmentsRaw.map((row) => {
+	// Colour stops carry values in the authored Min..Max domain; the renderer normalises them to
+	// track positions. Values are intentionally not clamped here so the renderer can map them.
+	const stopsRaw = (element.stops as ExpressionOrValue<JsonValue[]>).value
+	const stops: ButtonGraphicsGaugeDrawElement['stops'] = Array.isArray(stopsRaw)
+		? stopsRaw.map((row) => {
 				const rowHelper = helper.forRow(row)
 				return {
-					value: Math.max(0, Math.min(100, rowHelper.getNumber('value', 0))),
+					value: rowHelper.getNumber('value', 0),
 					color: rowHelper.getNumber('color', 0),
+					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
 		: []
@@ -840,15 +840,27 @@ function convertGaugeElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		value: Math.round(Math.max(0, Math.min(100, helper.getNumber('value', 0))) * 10) / 10,
+		// Value-mapping fields are kept in the authored domain; the renderer normalises to 0–100.
+		value: helper.getNumber('value', 0),
+		min: helper.getNumber('min', 0),
+		max: helper.getNumber('max', 100),
+		origin: helper.getNumber('origin', 0),
+		symmetric: helper.getBoolean('symmetric', false),
 		orientation: helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal'),
 		reverse: helper.getBoolean('reverse', false),
+		trackWidth: Math.max(0, Math.min(100, helper.getNumber('trackWidth', 100))),
+		startAngle: helper.getNumber('startAngle', 0),
+		endAngle: helper.getNumber('endAngle', 360),
+		ringWidth: Math.max(1, Math.min(50, helper.getNumber('ringWidth', 20))),
 		roundedEnds: helper.getBoolean('roundedEnds', true),
-		thickness: Math.max(1, Math.min(50, helper.getNumber('thickness', 20))),
-		multiSegment: helper.getBoolean('multiSegment', true),
-		segments: segments,
-		inactiveStyle: helper.getTolerantEnum('inactiveStyle', GAUGE_INACTIVE_STYLE_CHOICES, 'transparent'),
-		inactiveAmount: helper.getNumber('inactiveAmount', 70),
+		fillEnabled: helper.getBoolean('fillEnabled', true),
+		multiColour: helper.getBoolean('multiColour', true),
+		stops: stops,
+		markerEnabled: helper.getBoolean('markerEnabled', false),
+		markerColor: helper.getNumber('markerColor', 0xffffff),
+		markerWidth: Math.max(1, Math.min(100, helper.getNumber('markerWidth', 15))),
+		trackStyle: helper.getTolerantEnum('trackStyle', GAUGE_TRACK_STYLE_CHOICES, 'transparent'),
+		trackAmount: Math.max(0, Math.min(100, helper.getNumber('trackAmount', 70))),
 		contentHash: '',
 	}
 

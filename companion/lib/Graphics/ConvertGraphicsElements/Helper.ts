@@ -171,13 +171,22 @@ export class ElementExpressionHelper<T> {
 		const trimmed = String(raw ?? '')
 			.trim()
 			.toLowerCase()
+		// An empty/whitespace-only input has no first character to match against, so
+		// `startsWith(undefined)` would coerce to `startsWith('undefined')` and never match.
+		// Fall back to the default explicitly instead.
+		if (trimmed.length === 0) return defaultValue
 		return values.find((v) => v.toLowerCase().startsWith(trimmed[0])) ?? defaultValue
 	}
 
 	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return Boolean(value.value)
+		if (!value.isExpression) {
+			// A missing property must fall back to the default (e.g. a boolean field added to the
+			// schema after an element was saved), not coerce `undefined` to `false`.
+			if (value.value === null || value.value === undefined) return defaultValue
+			return Boolean(value.value)
+		}
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'boolean')
 		if (!result.ok) {

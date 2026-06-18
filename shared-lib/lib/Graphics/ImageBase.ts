@@ -46,6 +46,10 @@ export interface LineStyle {
 	 * Line width in pixels
 	 */
 	width: number
+	/**
+	 * Line cap style (defaults to 'butt')
+	 */
+	cap?: CanvasLineCap
 }
 
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
@@ -229,6 +233,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	line(x1: number, y1: number, x2: number, y2: number, style: LineStyle): void {
 		this.context2d.lineWidth = style.width ?? 1
 		this.context2d.strokeStyle = style.color
+		this.context2d.lineCap = style.cap ?? 'butt'
 		this.context2d.beginPath()
 		this.context2d.moveTo(x1, y1)
 		this.context2d.lineTo(x2, y2)
@@ -403,7 +408,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		this.context2d.arc(x, y, radius, startAngle, endAngle, anticlockwise)
 		this.context2d.strokeStyle = lineStyle.color
 		this.context2d.lineWidth = lineStyle.width
-		this.context2d.lineCap = 'butt'
+		this.context2d.lineCap = lineStyle.cap ?? 'butt'
 		this.context2d.stroke()
 	}
 
