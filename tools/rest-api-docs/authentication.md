@@ -8,7 +8,7 @@ description: How to authenticate with the REST API
 
 The REST API uses **Bearer token** authentication. Include your token in every request:
 
-```
+```http
 Authorization: Bearer <token>
 ```
 
