@@ -175,19 +175,6 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 			}
 		}
 
-		// Validate config/secrets values against module field definitions
-		if (config || secrets) {
-			const validationResult = await validateConfigAndSecrets(instanceController, connectionId, config, secrets)
-			if (validationResult.status === 'unavailable') {
-				next(RestApiError.conflict(validationResult.message))
-				return
-			}
-			if (validationResult.status === 'invalid') {
-				next(RestApiError.badRequest('Config validation failed', validationResult.errors))
-				return
-			}
-		}
-
 		if (versionId) {
 			const versionInfo =
 				instanceController.modules.getModuleManifest(
@@ -203,6 +190,27 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 				))
 			if (!versionInfo) {
 				next(RestApiError.badRequest(`Unknown version "${versionId}" for module "${currentConnection.moduleId}"`))
+				return
+			}
+		}
+
+		if (versionId !== undefined) {
+			const versionResult = instanceController.setModuleVersionAndActivate(connectionId, versionId, null)
+			if (!versionResult) {
+				next(RestApiError.badRequest('Failed to update connection version'))
+				return
+			}
+		}
+
+		// Validate config/secrets values against module field definitions
+		if (config || secrets) {
+			const validationResult = await validateConfigAndSecrets(instanceController, connectionId, config, secrets)
+			if (validationResult.status === 'unavailable') {
+				next(RestApiError.conflict(validationResult.message))
+				return
+			}
+			if (validationResult.status === 'invalid') {
+				next(RestApiError.badRequest('Config validation failed', validationResult.errors))
 				return
 			}
 		}
@@ -223,14 +231,6 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 		if (!result.ok) {
 			next(RestApiError.badRequest(result.message))
 			return
-		}
-
-		if (versionId !== undefined) {
-			const versionResult = instanceController.setModuleVersionAndActivate(connectionId, versionId, null)
-			if (!versionResult) {
-				next(RestApiError.badRequest('Failed to update connection version'))
-				return
-			}
 		}
 
 		// Re-fetch updated data — only echo back secrets if they were part of the update

@@ -771,6 +771,53 @@ describe('REST API v1 — Connections', () => {
 			expect(instanceController.setModuleVersionAndActivate).toHaveBeenCalledWith('conn-1', 'v2.0.0', null)
 		})
 
+		test('updates connection version before validating config', async () => {
+			const { app, instanceController, validToken } = createService()
+			const callOrder: string[] = []
+
+			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
+			instanceController.modules.getModuleManifest.mockReturnValue({} as any)
+			instanceController.setModuleVersionAndActivate.mockImplementation(() => {
+				callOrder.push('version')
+				return true
+			})
+
+			const mockInstance = {
+				requestConfigFields: async () => {
+					callOrder.push('config-fields')
+					return [{ id: 'host', type: 'textinput' as const, label: 'Host', default: '' }]
+				},
+			}
+			instanceController.processManager.getConnectionChild.mockReturnValue(mockInstance as any)
+			instanceController.setConnectionLabelAndConfig.mockReturnValue({ ok: true })
+
+			const updatedConfigs = createConnectionConfigs()
+			updatedConfigs['conn-1'].moduleVersionId = 'v2.0.0'
+			instanceController.getConnectionClientJson.mockReturnValueOnce(updatedConfigs)
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+			instanceController.getInstanceConfigOfType.mockReturnValue(createInstanceConfigs()['conn-1'])
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/conn-1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({ versionId: 'v2.0.0', config: { host: 'localhost' } })
+
+			expect(res.status).toBe(200)
+			expect(callOrder).toEqual(['version', 'config-fields'])
+			expect(instanceController.setConnectionLabelAndConfig).toHaveBeenCalledWith(
+				'conn-1',
+				{
+					label: null,
+					enabled: null,
+					config: { host: 'localhost' },
+					secrets: null,
+					updatePolicy: null,
+					upgradeIndex: null,
+				},
+				{ patchConfig: true, patchSecrets: true }
+			)
+		})
+
 		test('updates connection version to latest stable', async () => {
 			const { app, instanceController, validToken } = createService()
 
