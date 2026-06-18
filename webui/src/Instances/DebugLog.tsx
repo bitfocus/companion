@@ -87,7 +87,15 @@ export function InstanceDebugLog({
 	}, [])
 
 	const doExportLog = useCallback(() => {
-		const csv = csvStringify(linesBuffer.map((line) => [line.level, line.message]))
+		const csv = csvStringify([
+			['Date', 'Type', 'Source', 'Log'],
+			...linesBuffer.map((line) => [
+				line.time ? new Date(line.time).toISOString() : '',
+				line.level,
+				line.source ?? '',
+				line.message,
+			]),
+		])
 
 		const blob = new Blob([csv], { type: 'text/csv' })
 		const link = document.createElement('a')

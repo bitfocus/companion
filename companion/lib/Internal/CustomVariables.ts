@@ -18,6 +18,7 @@ import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
 	ActionForVisitor,
@@ -56,10 +57,13 @@ export class InternalCustomVariables
 						label: 'Value',
 						id: 'value',
 						default: '',
-						description: 'The raw value will be written to the variable',
-						expressionDescription: 'The expression will be executed with the result written to the variable',
+						description: 'Supports $(this:current) for the current value of this variable.',
+						expressionDescription:
+							'Supports $(this:current) for the current value of this variable. The expression result is written to the variable.',
 						allowInvalidValues: true,
 						disableSanitisation: true,
+						deferParsing: true,
+						contextVariableResolution: { type: 'customVariable', nameFieldId: 'name' },
 					},
 				],
 				optionsSupportExpressions: true,
@@ -96,15 +100,24 @@ export class InternalCustomVariables
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): InternalActionResult {
+	executeAction(
+		action: ActionForInternalExecution,
+		_extras: RunActionExtras,
+		parser: VariablesAndExpressionParser
+	): InternalActionResult {
 		switch (action.definitionId) {
 			case 'custom_variable_set_value': {
 				const variableName = stringifyVariableValue(action.options.name)
 				if (variableName) {
+					const currentValue = this.#variableController.custom.getValue(variableName)
+					const childParser = parser.createChildParser({ 'this:current': currentValue })
+					const rawValue = action.rawEntity.rawOptions['value']
+					const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+
 					if (this.#variableController.custom.hasCustomVariable(variableName)) {
-						this.#variableController.custom.setValue(variableName, action.options.value)
+						this.#variableController.custom.setValue(variableName, value)
 					} else if (action.options.create) {
-						this.#variableController.custom.createVariable(variableName, action.options.value)
+						this.#variableController.custom.createVariable(variableName, value)
 					} else {
 						this.#logger.warn(`Custom variable "${variableName}" not found`)
 					}

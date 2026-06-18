@@ -25,14 +25,10 @@ export function SidebarHeader(): React.JSX.Element {
 }
 
 export interface SidebarFooterProps {
-	toggleUnfoldable: () => void
 	onContextMenu: MouseEventHandler<HTMLDivElement>
 }
 
-export const SidebarFooter = observer(function SidebarFooter({
-	toggleUnfoldable,
-	onContextMenu,
-}: SidebarFooterProps): React.JSX.Element {
+export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: SidebarFooterProps): React.JSX.Element {
 	const { versionName, versionBuild: versionSubheading } = useCompanionVersion()
 	const { mobileMode } = useSidebarState()
 
@@ -46,9 +42,9 @@ export const SidebarFooter = observer(function SidebarFooter({
 				) : (
 					<span
 						className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
-						onClick={toggleUnfoldable}
+						onClick={onContextMenu}
 						onContextMenu={onContextMenu}
-						title="Right click for more sidebar options"
+						title="Click for more sidebar options"
 					>
 						<span className="nav-icon sidebar-toggler"></span>
 					</span>

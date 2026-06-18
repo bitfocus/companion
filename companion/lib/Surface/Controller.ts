@@ -1800,6 +1800,14 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
+	 * Get the configured startup page id of a surface, ignoring use_last_page
+	 */
+	devicePageGetConfiguredStartup(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
+		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
+		return surfaceGroup?.groupConfig.startup_page_id
+	}
+
+	/**
 	 * Get the groupId for a surfaceId (or groupId)
 	 */
 	getGroupIdFromDeviceId(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {

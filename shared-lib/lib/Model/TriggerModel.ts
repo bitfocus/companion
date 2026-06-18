@@ -27,6 +27,11 @@ export interface ClientTriggerData extends TriggerOptions {
 	lastExecuted: number | null
 	description: string
 	collectionEnabled?: boolean
+	/**
+	 * Whether this trigger is currently being rate-limited because it is firing too rapidly
+	 * from variable changes (e.g. an accidental feedback loop). Best-effort UI hint.
+	 */
+	isRateLimited?: boolean
 }
 
 export type TriggersUpdate =

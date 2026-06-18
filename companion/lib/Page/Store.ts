@@ -504,7 +504,6 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	 */
 	_movePageInOrder(fromIndex: number, toIndex: number): void {
 		if (fromIndex === toIndex) return
-		if (fromIndex < toIndex) toIndex -= 1
 
 		const pageId = this.#pageIds[fromIndex]
 		this.#pageIds.splice(fromIndex, 1)

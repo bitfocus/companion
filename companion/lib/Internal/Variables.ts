@@ -15,7 +15,9 @@ import { LocalVariableNameOption } from '@companion-app/shared/LocalVariable.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import { isPackaged } from '../Resources/Util.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
@@ -69,7 +71,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	}
 
 	getFeedbackDefinitions(): Record<string, InternalFeedbackDefinition> {
-		return {
+		const feedbacks: Record<string, InternalFeedbackDefinition> = {
 			variable_value: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Variable: Check value',
@@ -187,7 +189,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 					{
-						type: 'textinput',
+						type: 'internal:variable_value',
 						label: 'Startup Value',
 						id: 'startup_value',
 						default: '1',
@@ -201,6 +203,29 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				optionsSupportExpressions: true,
 			},
 		}
+
+		if (!isPackaged()) {
+			feedbacks.debug_expression_value = {
+				feedbackType: FeedbackEntitySubType.Advanced,
+				label: '(Debug) Evaluate Expression',
+				description: 'Evaluate an expression and use the result as the feedback value',
+				feedbackStyle: undefined,
+				showInvert: false,
+				options: [
+					{
+						type: 'expression',
+						label: 'Expression',
+						id: 'expression',
+						default: '{}',
+						disableAutoExpression: true,
+						allowInvalidValues: true,
+					},
+				],
+				optionsSupportExpressions: true,
+			}
+		}
+
+		return feedbacks
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
@@ -216,10 +241,14 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						label: 'Value',
 						id: 'value',
 						default: '',
-						description: 'The raw value will be written to the variable',
-						expressionDescription: 'The expression will be executed with the result written to the variable',
+						description:
+							'Supports $(this:current) for the current value, and $(target:name) for local variables at the target location.',
+						expressionDescription:
+							'Supports $(this:current) for the current value, and $(target:name) for local variables at the target location. The expression result is written to the variable.',
 						allowInvalidValues: true,
 						disableSanitisation: true,
+						deferParsing: true,
+						contextVariableResolution: { type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 					},
 				],
 
@@ -246,7 +275,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	executeFeedback(
 		feedback: FeedbackForInternalExecution,
 		parser: VariablesAndExpressionParser
-	): boolean | ExecuteFeedbackResultWithReferences | void {
+	): boolean | CompanionFeedbackButtonStyleResult | ExecuteFeedbackResultWithReferences | void {
 		if (feedback.definitionId == 'variable_value') {
 			const variableName = stringifyVariableValue(feedback.options.variable)
 			if (!variableName) return false
@@ -273,20 +302,33 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			return !!feedback.options.expression
 		} else if (feedback.definitionId == 'expression_value') {
 			return feedback.options.expression as any
+		} else if (feedback.definitionId == 'debug_expression_value') {
+			const value = feedback.options.expression
+			// Advanced feedbacks must return a style object
+			return typeof value === 'object' && value !== null ? (value as CompanionFeedbackButtonStyleResult) : {}
 		} else if (feedback.definitionId == 'user_value') {
 			// Not used
 			return false
 		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
+	executeAction(
+		action: ActionForInternalExecution,
+		extras: RunActionExtras,
+		parser: VariablesAndExpressionParser
+	): InternalActionResult {
 		switch (action.definitionId) {
 			case 'local_variable_set_value': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
 				if (!localVariable) break
 
-				this.#localVariables.setLocalVariable(localVariable, action.options.value)
+				const context = this.#localVariables.getLocalVariableContextFor(localVariable) ?? {}
+				const childParser = parser.createChildParser(context)
+				const rawValue = action.rawEntity.rawOptions['value']
+				const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+
+				this.#localVariables.setLocalVariable(localVariable, value)
 
 				break
 			}

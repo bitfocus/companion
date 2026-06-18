@@ -12,7 +12,7 @@ export class UIController {
 	readonly update: UIUpdate
 
 	constructor(appInfo: AppInfo, internalApiRouter: express.Router) {
-		this.express = new UIExpress(internalApiRouter)
+		this.express = new UIExpress(internalApiRouter, appInfo.options.trustedProxies)
 		this.server = new UIServer(this.express.app)
 		this.io = new UIHandler(appInfo, this.server)
 		this.update = new UIUpdate(appInfo)

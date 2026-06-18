@@ -22,6 +22,7 @@ import type { InstanceConfigStore } from '../../lib/Instance/ConfigStore.js'
 import { InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import { EventDefinitions } from '../../lib/Resources/EventDefinitions.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
+import { createMockTrpcContext } from '../Util.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 // Deterministic nanoid
@@ -1096,7 +1097,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('createTrpcRouter', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		function createCaller(defs: InstanceDefinitions) {
 			const trpcRouter = defs.createTrpcRouter()
@@ -1366,9 +1367,9 @@ describe('InstanceDefinitions', () => {
 
 	describe('no-op and diff event emission', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
-		it('setActionDefinitions with identical data still yields update-connection (diff has empty patches)', async () => {
+		it('setActionDefinitions with identical data does not emit an update', async () => {
 			const { defs } = createInstanceDefinitions()
 			const actDef = makeActionDefinition({ label: 'Same' })
 			defs.setActionDefinitions('conn1', { act1: actDef })
@@ -1381,19 +1382,20 @@ describe('InstanceDefinitions', () => {
 			// Consume init
 			await iter.next()
 
-			// Re-set with structurally identical data
+			// Re-set with structurally identical data, then make a real change
 			defs.setActionDefinitions('conn1', { act1: makeActionDefinition({ label: 'Same' }) })
+			defs.setActionDefinitions('conn1', { act1: makeActionDefinition({ label: 'Changed' }) })
 
+			// The next event is for the real change, the identical set emitted nothing
 			const second = await iter.next()
-
-			// diffObjects returns a diff even for identical data (with empty json-patch arrays)
 			expect(second.value).toHaveProperty('type', 'update-connection')
 			expect(second.value).toHaveProperty('connectionId', 'conn1')
+			expect(JSON.stringify(second.value)).toContain('Changed')
 
 			await iter.return?.()
 		})
 
-		it('setFeedbackDefinitions with identical data still yields update-connection', async () => {
+		it('setFeedbackDefinitions with identical data does not emit an update', async () => {
 			const { defs } = createInstanceDefinitions()
 			const fbDef = makeFeedbackDefinition({ label: 'Same' })
 			defs.setFeedbackDefinitions('conn1', { fb1: fbDef })
@@ -1406,13 +1408,15 @@ describe('InstanceDefinitions', () => {
 			// Consume init
 			await iter.next()
 
-			// Re-set with structurally identical data
+			// Re-set with structurally identical data, then make a real change
 			defs.setFeedbackDefinitions('conn1', { fb1: makeFeedbackDefinition({ label: 'Same' }) })
+			defs.setFeedbackDefinitions('conn1', { fb1: makeFeedbackDefinition({ label: 'Changed' }) })
 
+			// The next event is for the real change, the identical set emitted nothing
 			const second = await iter.next()
-
 			expect(second.value).toHaveProperty('type', 'update-connection')
 			expect(second.value).toHaveProperty('connectionId', 'conn1')
+			expect(JSON.stringify(second.value)).toContain('Changed')
 
 			await iter.return?.()
 		})
@@ -1471,7 +1475,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('simplifyPresetsForUi (via TRPC)', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		it('assigns sequential order values to presets', async () => {
 			const { defs } = createInstanceDefinitions()
@@ -1503,7 +1507,7 @@ describe('InstanceDefinitions', () => {
 
 	describe('forgetConnection events via TRPC', () => {
 		const t = initTRPC.context<TrpcContext>().create()
-		const testCtx: TrpcContext = { clientId: 'test-client', clientIp: '127.0.0.1' }
+		const testCtx: TrpcContext = createMockTrpcContext()
 
 		it('emits forget-connection on feedbacks subscription', async () => {
 			const { defs } = createInstanceDefinitions()

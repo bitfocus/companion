@@ -140,6 +140,11 @@ export class ControlTrigger
 	#collectionEnabled: boolean = false
 
 	/**
+	 * Whether this trigger is currently being rate-limited due to rapid variable-driven firing
+	 */
+	#isRateLimited: boolean = false
+
+	/**
 	 * @param registry - the application core
 	 * @param eventBus - the main trigger event bus
 	 * @param controlId - id of the control
@@ -170,7 +175,9 @@ export class ControlTrigger
 		this.#eventBus = eventBus
 		this.#timerEvents = new TriggersEventTimer(eventBus, controlId, this.executeActions.bind(this))
 		this.#miscEvents = new TriggersEventMisc(eventBus, controlId, this.executeActions.bind(this))
-		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this))
+		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this), (limited) =>
+			this.#setVariableRateLimited(limited)
+		)
 
 		this.options = structuredClone(ControlTrigger.DefaultOptions)
 		this.events = []
@@ -377,7 +384,18 @@ export class ControlTrigger
 			lastExecuted: this.#lastExecuted,
 			description: eventStrings.join('<br />'),
 			collectionEnabled: this.#collectionEnabled,
+			isRateLimited: this.#isRateLimited,
 		}
+	}
+
+	/**
+	 * Update whether this trigger is currently being rate-limited, and notify the client if it changed
+	 */
+	#setVariableRateLimited(limited: boolean): void {
+		if (this.#isRateLimited === limited) return
+
+		this.#isRateLimited = limited
+		this.#sendTriggerJsonChange()
 	}
 
 	/**

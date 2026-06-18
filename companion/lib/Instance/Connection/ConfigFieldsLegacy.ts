@@ -273,6 +273,8 @@ function translateCommonFields(
 	| 'isVisibleUi'
 	| 'disableAutoExpression'
 	| 'allowInvalidValues'
+	| 'deferParsing'
+	| 'contextVariableResolution'
 > {
 	return {
 		id: field.id,
@@ -283,6 +285,8 @@ function translateCommonFields(
 		isVisibleUi: translateIsVisibleFn(field),
 		disableAutoExpression: true, // Expressions not supported from 1.x modules
 		allowInvalidValues: false, // Shouldn't matter as expressions not supported from 1.x modules, but play it safe
+		deferParsing: undefined,
+		contextVariableResolution: undefined,
 	}
 }
 

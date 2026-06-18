@@ -1,7 +1,6 @@
+import { DragDropProvider } from '@dnd-kit/react'
 import type { Decorator, Meta, StoryObj } from '@storybook/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
 import { useArgs } from 'storybook/preview-api'
 import { mockRootAppStore } from '../../.storybook/mockRootAppStore'
 import { ImageLibraryStore } from '../Stores/ImageLibraryStore'
@@ -60,7 +59,7 @@ const mockStore = {
 } as unknown as RootAppStore
 
 const withProviders: Decorator = (Story) => (
-	<DndProvider backend={HTML5Backend}>
+	<DragDropProvider>
 		<QueryClientProvider client={queryClient}>
 			<RootAppStoreContext.Provider value={mockStore}>
 				<div style={{ width: 600, height: 400 }}>
@@ -68,7 +67,7 @@ const withProviders: Decorator = (Story) => (
 				</div>
 			</RootAppStoreContext.Provider>
 		</QueryClientProvider>
-	</DndProvider>
+	</DragDropProvider>
 )
 
 const meta = {
@@ -94,7 +93,7 @@ export const WithSelection: Story = {
 }
 
 const withEmptyLibrary: Decorator = (Story) => (
-	<DndProvider backend={HTML5Backend}>
+	<DragDropProvider>
 		<QueryClientProvider client={queryClient}>
 			<RootAppStoreContext.Provider
 				value={{ ...mockRootAppStore, imageLibrary: new ImageLibraryStore() } as unknown as RootAppStore}
@@ -104,7 +103,7 @@ const withEmptyLibrary: Decorator = (Story) => (
 				</div>
 			</RootAppStoreContext.Provider>
 		</QueryClientProvider>
-	</DndProvider>
+	</DragDropProvider>
 )
 
 export const Empty: Story = {

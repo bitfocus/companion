@@ -53,7 +53,7 @@ export const pageNumberElements: SomeButtonGraphicsElement[] = [
 				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
 				text: exprVal('PAGE'),
 				color: exprVal(0xffc600), // Yellow color
-				fontsize: exprVal(16.5),
+				fontsize: exprVal(41.25),
 				fontsizeAllowShrink: exprVal(false),
 				valign: exprVal('bottom'),
 				height: exprVal(40),
@@ -62,7 +62,7 @@ export const pageNumberElements: SomeButtonGraphicsElement[] = [
 				...(CreateElementOfType('text') as ButtonGraphicsTextElement),
 				text: exprExpr('getVariable("this:page") || "x"'),
 				color: exprVal(0xffffff),
-				fontsize: exprVal(30),
+				fontsize: exprVal(54.5),
 				fontsizeAllowShrink: exprVal(true),
 				valign: exprVal('top'),
 				y: exprVal(45),
@@ -128,7 +128,12 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 	 */
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {
 		if (pressed && surfaceId) {
-			this.deps.surfaces.devicePageSet(surfaceId, this.deps.pageStore.getFirstPageId())
+			const startupPageId = this.deps.surfaces.devicePageGetConfiguredStartup(surfaceId)
+			const pageId =
+				startupPageId && this.deps.pageStore.isPageIdValid(startupPageId)
+					? startupPageId
+					: this.deps.pageStore.getFirstPageId()
+			this.deps.surfaces.devicePageSet(surfaceId, pageId)
 		}
 	}
 
@@ -148,7 +153,7 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 			definitionId: 'set_page',
 			options: {
 				surfaceId: exprVal('self'),
-				page: exprVal(1),
+				page: exprVal('startup'),
 			},
 		})
 	}

@@ -16,6 +16,7 @@ import { trpc } from '~/Resources/TRPC'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
+import { UdevRulesAlert } from './UdevRulesAlert'
 
 export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.Element {
 	const twoPanelMode = useTwoPanelMode()
@@ -120,6 +121,8 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 							{scanError}
 						</StaticAlert>
 					)}
+
+					<UdevRulesAlert />
 
 					<ButtonGroup>
 						<Button color="warning" size="sm" onClick={refreshUSB}>

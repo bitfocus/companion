@@ -89,6 +89,8 @@ typings/
 
 # dotenv environment variables file
 .env
+.devcontainer/docker-compose.override.yml
+.devcontainer/devcontainer-lock.json
 
 # next.js build output
 .next
@@ -108,3 +110,5 @@ typings/
 
 #ignore copilot files
 .github/copilot-instructions.md
+.claude/
+/AGENTS.md

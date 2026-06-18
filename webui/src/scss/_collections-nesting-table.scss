@@ -24,10 +24,15 @@
 
 		.row-reorder-handle {
 			cursor: ns-resize;
-		}
-
-		&.row-dragging {
-			@include dragging-style();
+			// Make the whole first cell the grab target (not just the icon): stretch to the full row
+			// height and extend over the row padding so it reaches the edges, like the events handle.
+			align-self: stretch;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			margin: -5px 0 -5px -10px;
+			padding: 0 10px;
+			background-color: #f7f7f7;
 		}
 
 		&.row-selected {
@@ -38,7 +43,12 @@
 			}
 		}
 
-		&.row-notdragging:hover {
+		// Items drag via a DragOverlay (dnd-kit doesn't move/clone the source), so dim the source row.
+		&.row-dragging {
+			opacity: 0.4;
+		}
+
+		&:hover:not(.row-selected):not(.row-dragging) {
 			background-color: rgba(200, 200, 200, 0.1);
 		}
 
@@ -102,10 +112,6 @@
 			margin-right: 0.25rem;
 		}
 
-		&.row-dragging {
-			@include dragging-style();
-		}
-
 		// &.row-selected {
 		// 	background-color: rgba(200, 200, 200, 0.35);
 
@@ -128,6 +134,11 @@
 			margin: 0;
 			padding: 0.75rem;
 			width: 100%;
+		}
+
+		&.is-drop-target p {
+			border-color: #007bff;
+			background-color: rgba(0, 123, 255, 0.05);
 		}
 	}
 
@@ -158,7 +169,9 @@
 		}
 	}
 
-	// Grid layout styles
+	// Grid layout styles. Each collection keeps its own grid container (so the per-collection grouping
+	// and nesting indentation are preserved); grid item drags use a hover-move rather than dnd-kit's
+	// optimistic sorting so moving a tile between these containers never reparents DOM (which crashed).
 	.collections-nesting-table-grid-container {
 		// This can be overridden by usages of the table, to change the minimum width of grid tiles
 		--collection-nesting-table-grid-tile-min-width: 200px;
@@ -167,30 +180,24 @@
 		grid-template-columns: repeat(auto-fill, minmax(var(--collection-nesting-table-grid-tile-min-width), 1fr));
 		gap: 1rem;
 		padding: 1rem;
+		position: relative;
+
+		// Separate each collection's grid from whatever follows (a sibling collection's tiles, or the
+		// loose items of the parent collection rendered after its children). Drawn as an absolutely
+		// positioned line so it reaches the table's left edge instead of following the nesting indent.
+		&::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: calc(var(--collection-nesting-level) * -20px);
+			right: 0;
+			height: 1px;
+			background-color: #ddd;
+		}
 
 		// Add left offset for nested groups based on nesting level
 		&.collections-nesting-table-grid-nested {
 			margin-left: calc(var(--collection-nesting-level) * 20px);
-			position: relative;
-
-			// Add border that spans full width (ignoring left margin)
-			&::after {
-				content: '';
-				position: absolute;
-				bottom: 0;
-				left: calc(var(--collection-nesting-level) * -20px);
-				right: 0;
-				height: 1px;
-				background-color: #ddd;
-			}
-		}
-
-		.collections-nesting-table-grid-end-spacer {
-			// This is set by the component to auto-size the spacer
-			--collection-nesting-table-grid-end-spacer-span: 0;
-
-			grid-column: span var(--collection-nesting-table-grid-end-spacer-span);
-			grid-column-end: -1;
 		}
 	}
 
@@ -202,6 +209,9 @@
 		color: #6c757d;
 		font-style: italic;
 		text-align: center;
+
+		// Bottom separator, matching the grid containers, so an empty collection is still delineated
+		border-bottom: 1px solid #ddd;
 
 		strong {
 			font-weight: 500;
@@ -232,8 +242,10 @@
 			box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 		}
 
+		// Grid items drag via a DragOverlay (dnd-kit doesn't move/clone the source), so dim the source
+		// tile in place to show which one is being dragged.
 		&.tile-dragging {
-			opacity: 0.5;
+			opacity: 0.4;
 		}
 
 		.tile-drag-handle {
@@ -265,5 +277,43 @@
 			display: flex;
 			flex-direction: column;
 		}
+	}
+}
+
+// dnd-kit sortable feedback. While dragging, dnd-kit promotes the row to a top-layer popover as the
+// moving "feedback" (tagged [data-dnd-dragging]) and leaves a clone behind in the list (tagged
+// [data-dnd-placeholder]). These are kept top-level (not nested under .collections-nesting-table) so
+// they apply regardless of where dnd-kit positions the feedback element, and a solid background is set
+// because dnd-kit resets the element's background while it's a popover.
+.collections-nesting-table-row-item,
+.collections-nesting-table-row-group,
+.collections-nesting-table-grid-tile {
+	&[data-dnd-placeholder] {
+		opacity: 0.4;
+	}
+}
+
+// The natively-dragged feedback ([data-dnd-dragging]) and the DragOverlay preview clone
+// (.dnd-drag-preview) share the same lifted look via the dragging-style mixin; only the background
+// colour differs per element type.
+.collections-nesting-table-row-item {
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		@include dragging-style(#f5f2fa);
+
+		// On the lifted/floating feedback the reorder handle's grey background reads as an odd stripe
+		// against the lifted card - blend it in so the floating row looks like one clean surface.
+		.row-reorder-handle {
+			background-color: transparent;
+		}
+	}
+}
+.collections-nesting-table-row-group[data-dnd-dragging] {
+	@include dragging-style(#f0f0f0);
+}
+.collections-nesting-table-grid-tile {
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		@include dragging-style(#fff);
 	}
 }

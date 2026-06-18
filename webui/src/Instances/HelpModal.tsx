@@ -2,10 +2,10 @@ import { Marked } from 'marked'
 import { baseUrl } from 'marked-base-url'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
-import sanitizeHtml from 'sanitize-html'
 import semver from 'semver'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { Modal } from '~/Components/Modal'
+import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -83,15 +83,7 @@ export const HelpModal = observer(
 
 		const html = content
 			? {
-					__html: sanitizeHtml(marked.parse(content.markdown) as string, {
-						allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-						disallowedTagsMode: 'escape',
-						transformTags: {
-							a: (tagName, attribs) => {
-								return { tagName, attribs: { ...attribs, target: '_blank', rel: 'noopener noreferrer' } }
-							},
-						},
-					}),
+					__html: sanitizeHtmlString(marked.parse(content.markdown) as string, { allowImages: true }),
 				}
 			: undefined
 

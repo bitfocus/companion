@@ -1,16 +1,22 @@
-@use 'variables' as *;
-
 .pages-list-table {
-	.entitylist-dragging {
-		@include dragging-style();
+	// The first row is the header
+	> .collections-nesting-table-row-item:first-child {
+		background-color: #f0f0f0;
 	}
 
-	td.td-reorder {
-		padding-right: 10px;
-		padding-left: 10px;
-		vertical-align: middle;
+	.pages-list-number {
+		width: 5rem;
+		text-align: center;
+	}
 
-		// as narrow as possible
-		width: 0;
+	// Fixed-width action column so the header's single "add" button lines up with, and matches the
+	// width of, the three action buttons in each row (the buttons fill the group equally).
+	.pages-list-actions {
+		flex: 0 0 auto;
+		width: 6.5rem;
+
+		> * {
+			flex: 1 1 0;
+		}
 	}
 }

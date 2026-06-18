@@ -6,7 +6,9 @@ import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { useComputed } from '~/Resources/util'
 import { Button } from './Button'
 import { ExpressionInputField } from './ExpressionInputField'
 
@@ -20,6 +22,9 @@ interface FieldOrExpressionProps {
 	entityType: EntityModelType | null
 	isLocatedInGrid: boolean
 
+	/** Extra variable entries to append to the expression-mode variable picker */
+	extraLocalVariables?: DropdownChoiceInt[]
+
 	children: React.ReactNode
 }
 export const FieldOrExpression = observer(function FieldOrExpression({
@@ -30,6 +35,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 	disabled,
 	entityType,
 	isLocatedInGrid,
+	extraLocalVariables,
 	children,
 }: FieldOrExpressionProps) {
 	const setExpression = useCallback(
@@ -64,6 +70,14 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 		[setIsExpression, value.isExpression]
 	)
 
+	const expressionLocalVariables = useComputed(
+		() => [
+			...(localVariablesStore?.getOptions(entityType, true, isLocatedInGrid) ?? []),
+			...(extraLocalVariables ?? []),
+		],
+		[localVariablesStore, extraLocalVariables, entityType, isLocatedInGrid]
+	)
+
 	return (
 		<div className="field-with-expression">
 			<div className="expression-field">
@@ -72,7 +86,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 						id={inputId}
 						setValue={setExpression}
 						value={stringifyVariableValue(value.value) ?? ''}
-						localVariables={localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)}
+						localVariables={expressionLocalVariables.length > 0 ? expressionLocalVariables : undefined}
 						disabled={disabled}
 					/>
 				) : (

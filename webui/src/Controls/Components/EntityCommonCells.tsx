@@ -11,7 +11,6 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -27,6 +26,7 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { TextInputFieldSimple } from '../../Components/TextInputField.js'
+import VariableInputGroup from '../../Components/VariableInputGroup.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { OptionsInputField } from '../OptionsInputField.js'
@@ -173,6 +173,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
 								fieldSupportsExpression={entityDefinition.optionsSupportExpressions && !opt.disableAutoExpression}
+								allRawOptions={entity.options || {}}
 							/>
 						</MyErrorBoundary>
 					))}
@@ -231,16 +232,14 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 			</FormLabel>
 			<Grid.Col sm={8}>
 				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
-					<TextInputFieldSimple
+					<VariableInputGroup
 						id={invertFieldId}
 						disabled={!entity.variableName || readonly}
-						value={
-							stringifyVariableValue(
-								entity.variableName ? localVariablesStore.getValue(entity.variableName) : undefined
-							) ?? ''
+						title={
+							!entity.variableName ? 'The variable must have a name before it can have a current value' : undefined
 						}
+						value={entity.variableName ? localVariablesStore.getValue(entity.variableName) : undefined}
 						setValue={service.setVariableValue}
-						// setValid?: (valid: boolean) => void
 					/>
 				) : entity.variableName ? (
 					<LocalVariableCurrentValue controlId={controlId} name={entity.variableName} />

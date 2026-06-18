@@ -295,24 +295,22 @@ export class GraphicsRenderer {
 	 * Flatten an array of imagebuffers into a single base64 image
 	 */
 	static async drawImageBuffers(showTopBar: boolean, imageBuffers: DrawImageBuffer[]): Promise<string> {
-		return GraphicsRenderer.#getCachedImage(
-			72,
-			showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72,
-			4,
-			async (img) => {
-				for (const imageBuffer of imageBuffers) {
-					if (imageBuffer.buffer) {
-						const x = imageBuffer.x ?? 0
-						const y = imageBuffer.y ?? 0
-						const width = imageBuffer.width || 72
-						const height = imageBuffer.height || 72
+		const imageWidth = 72
+		const imageHeight = showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72
 
-						img.drawPixelBuffer(x, y, width, height, imageBuffer.buffer, imageBuffer.pixelFormat, imageBuffer.drawScale)
-					}
+		return GraphicsRenderer.#getCachedImage(imageWidth, imageHeight, 4, async (img) => {
+			for (const imageBuffer of imageBuffers) {
+				if (imageBuffer.buffer) {
+					const x = imageBuffer.x ?? 0
+					const y = imageBuffer.y ?? 0
+					const width = imageBuffer.width || imageWidth
+					const height = imageBuffer.height || imageHeight
+
+					img.drawPixelBuffer(x, y, width, height, imageBuffer.buffer, imageBuffer.pixelFormat, imageBuffer.drawScale)
 				}
-
-				return img.toDataURLSync()
 			}
-		)
+
+			return img.toDataURLSync()
+		})
 	}
 }

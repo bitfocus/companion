@@ -1,38 +1,76 @@
-# Quickstart guide
+# Companion for Linux
 
-1. Headless Companion
+This download contains two builds:
 
-   If you want to run companion on a headless machine, consider using the CompanionPi install script
+- Desktop - has a graphical interface, launched with `companion-launcher`
+- Standalone headless - no graphical interface, launched with `./companion_headless.sh` (for servers and embedded use)
 
-   This can be run with:
+Below are the setup steps for each. Section 4 (dependencies) and section 5 (udev / USB permissions) apply to both.
+
+---
+
+1. Headless install (recommended for servers)
+
+   If you want to run Companion on a headless machine, we recommend using the CompanionPi install script:
+
    $ curl https://raw.githubusercontent.com/bitfocus/companion-pi/main/install.sh | bash
 
-   The benefit of this approach is that it will setup and manage any required dependencies, udev rules for you, and provide you with an easy script to run to perform an update.
+   It sets everything up for you: system dependencies, a `companion` user and group, the udev rules, and an easy update script. It works on Debian and Ubuntu based systems, on both x64 and arm64.
 
-   Alternatively, you are able to set it up yourself and define a systemd unit to launch it or do whatever you wish. For examples on how to do this, check the scripts in the CompanionPi repository https://github.com/bitfocus/companion-pi#other-debianubuntu
+   If you'd rather set things up yourself, use the standalone headless build in section 3.
 
-2. Required Dependencies
+2. Desktop install
 
-   Companion requires some dependencies that aren't included by default on some Debian and Ubuntu installations.
+   The easiest way is to run the included installer:
+
+   $ ./install.sh
+
+   It asks whether to install system-wide (into /opt, requires your password) or just for the current user (into ~/.local/share, no password needed). It copies Companion to that location, adds it to your application menu with an icon, and checks for the dependencies in section 4.
+
+   If you'd rather not install, you can extract the download and run `companion-launcher` directly from wherever you unpacked it.
+
+   Before USB surfaces (Stream Decks, Loupedecks, X-keys, etc.) will work, you need the udev rules from section 5 installed. Companion detects when this is needed and shows a prompt in its interface; on a desktop it can apply the rules for you with a single click.
+
+   If launching fails with "Using GTK 2/3 and GTK 4 in the same process is not supported", append the argument: --gtk-version=3
+
+   To uninstall, delete the install directory (printed by the installer), plus companion.desktop and companion.png from the matching applications/ and icons/hicolor/256x256/apps/ folders.
+
+3. Standalone headless build
+
+   The `./companion_headless.sh` script in this download starts the standalone headless build - Companion without the graphical interface. This is supported, but is not recommended - you must perform the dependency, group and udev setup (sections 4 and 5) yourself, and you get none of the automation the install script in section 1 provides. Prefer the install script unless you have a specific reason not to.
+
+   You'll typically want to define a systemd unit to launch it however you wish. For examples, see the scripts in the CompanionPi repository:
+   https://github.com/bitfocus/companion-pi#other-debianubuntu
+
+4. Required dependencies
+
+   Companion requires some dependencies that aren't included by default on some Debian and Ubuntu installations:
 
    $ apt-get update
    $ apt-get install -y libusb-1.0-0-dev libudev-dev libfontconfig1
 
-3. Udev rules
+5. Udev rules (USB permissions)
 
-   For Companion to be able to access your Streamdecks, Loupedecks, xkeys or other supported USB devices, some udev rules must be setup.
+   For Companion to access your Stream Decks, Loupedecks, X-keys and other supported USB surfaces, some udev rules must be installed into /etc/udev/rules.d/.
 
-   Since Companion 4.3 surfaces are integrated through modules. This means we can't provide a statically generated udev rules file.
+   Since Companion 4.3, surfaces are integrated through modules, so we cannot ship a fixed udev rules file - the required USB device ids change as you enable and disable surface modules. Instead, Companion generates the rules on the fly into its config folder (in the `udev-rules` directory) and keeps them up to date as modules change.
 
-   Instead, Companion will generate one on the fly as modules get installed and uninstalled in the config folder.  
-   Our headless tooling will handle loading that for you, but if setting up manually, whenever changing the surface integrations will
-   want to copy that file into /etc/udev/rules.d/ and run
+   There are two generated files, for the two ways of running:
+   - 50-companion-desktop.rules - for the desktop build. Uses udev's `uaccess` tag, so the logged-in graphical user is granted access automatically. No special group is needed.
+   - 50-companion-headless.rules - for the headless build. Grants access to a group called `companion`, so Companion must be run as a member of that group (this is what the install script sets up).
+
+   To apply the rules for your build, copy the matching file into /etc/udev/rules.d/ and reload:
    $ udevadm control --reload-rules
-   And replugging any usb devices that Companion should be able to use.
+   $ udevadm trigger
+   then replug any USB devices Companion should use.
 
-   The headless rules expect companion to be run as a member of a group called `companion`. This is necessary to assign usb permissions correctly, unless you modify the rules file.
+   You need to repeat this whenever the generated file changes (i.e. after enabling or disabling a surface module).
 
-4. Launching
+   Automating this:
+   - Desktop: Companion shows a prompt in its interface when the installed rules are out of date, and can apply them for you (it will ask for your password).
+   - Headless: set the environment variable COMPANION_SYNC_UDEV_RULES_COMMAND to a command that installs and reloads the rules, and Companion will run it automatically whenever the rules change. The install script in section 1 configures this for you.
+
+6. Launching
 
    To run companion, either run companion-launcher to get the desktop build, or run the ./companion_headless.sh script to start it headless.
 

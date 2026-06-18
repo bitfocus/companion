@@ -1291,5 +1291,105 @@ describe('VariablesAndExpressionParser', () => {
 			expect(child.parseVariables('$(test:var1)').text).toBe('shadowed')
 			expect(parser.parseVariables('$(test:var1)').text).toBe('value1')
 		})
+
+		// context-variable injection (this:current / target:*) used by deferred-parse actions
+		it('injects $(this:current) via parseVariables', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const child = parser.createChildParser({ 'this:current': '42' })
+			expect(child.parseVariables('$(this:current)').text).toBe('42')
+		})
+
+		it('injects $(this:current) in an expression', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const child = parser.createChildParser({ 'this:current': 10 })
+			const result = child.executeExpression('$(this:current) + 1', undefined)
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.value).toBe(11)
+		})
+
+		it('injects $(target:foo) via parseVariables', () => {
+			const parser = new VariablesAndExpressionParser(null as any, {}, new Map(), null, null)
+			const child = parser.createChildParser({ 'this:current': 0, 'target:counter': 5 })
+			expect(child.parseVariables('count=$(target:counter)').text).toBe('count=5')
+		})
+	})
+
+	describe('deferParsing field passthrough', () => {
+		function makeDeferredDefinition(): ClientEntityDefinition {
+			return {
+				entityType: EntityModelType.Action,
+				label: 'Test',
+				sortKey: null,
+				description: undefined,
+				optionsToMonitorForInvalidations: null,
+				feedbackType: null,
+				feedbackStyle: undefined,
+				hasLifecycleFunctions: true,
+				hasLearn: false,
+				learnTimeout: undefined,
+				showInvert: false,
+				actionHasResult: false,
+				feedbackAffectedProperties: undefined,
+				optionsSupportExpressions: true,
+				showButtonPreview: false,
+				supportsChildGroups: [],
+				options: [
+					{
+						type: 'textinput',
+						label: 'Value',
+						id: 'value',
+						default: '',
+						deferParsing: true,
+						allowInvalidValues: true,
+						disableSanitisation: true,
+					},
+				],
+			}
+		}
+
+		it('passes through a variable-string value without substitution', () => {
+			const parser = new VariablesAndExpressionParser(null as any, { test: { foo: 'hello' } }, new Map(), null, null)
+			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprVal('$(test:foo) world') })
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.value).toBe('$(test:foo) world')
+				expect(result.referencedVariableIds.size).toBe(0)
+			}
+		})
+
+		it('passes through an expression string without evaluation', () => {
+			const parser = new VariablesAndExpressionParser(null as any, { test: { num: 10 } }, new Map(), null, null)
+			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprExpr('$(test:num) + 5') })
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.parsedOptions.value).toBe('$(test:num) + 5')
+		})
+
+		it('ignores deferParsing on the legacy (optionsSupportExpressions: false) path', () => {
+			const definition = createDefinition({
+				// optionsSupportExpressions: false (default) — legacy path only checks useVariables
+				options: [
+					{
+						type: 'textinput',
+						label: 'Value',
+						id: 'value',
+						default: '',
+						deferParsing: true,
+						useVariables: useVariablesMinimal,
+						allowInvalidValues: true,
+						disableSanitisation: true,
+					},
+				],
+			})
+
+			const parser = new VariablesAndExpressionParser(null as any, { test: { foo: 'hello' } }, new Map(), null, null)
+			const result = parser.parseEntityOptions(definition, { value: exprVal('$(test:foo) world') })
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// Variables are still substituted — deferParsing has no effect on the legacy path
+				expect(result.parsedOptions.value).toBe('hello world')
+				expect(result.referencedVariableIds.has('test:foo')).toBe(true)
+			}
+		})
 	})
 })

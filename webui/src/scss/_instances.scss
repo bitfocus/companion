@@ -1,3 +1,5 @@
+@use '@coreui/coreui/scss/mixins/breakpoints';
+
 @use 'variables' as *;
 
 .float_right {
@@ -60,14 +62,25 @@
 
 	& > div {
 		// column
-		margin-bottom: 10px;
+		margin-bottom: 0.5rem;
 	}
 
 	label {
 		justify-content: left;
 		font-weight: bold;
 		font-size: 1em;
-		margin-bottom: 0.15rem;
+		margin-bottom: 0.5rem;
+
+		&.col-form-label {
+			margin-bottom: 0.5rem;
+		}
+
+		@include breakpoints.media-breakpoint-only('xs') {
+			&.col-form-label {
+				// Respect the override
+				margin-bottom: 0;
+			}
+		}
 	}
 }
 

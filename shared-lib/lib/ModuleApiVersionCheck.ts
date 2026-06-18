@@ -5,7 +5,7 @@ import { assertNever } from './Util.js'
 export const MODULE_BASE_VERSIONS = [
 	'1.14.0',
 	'2.0.0',
-	'2.1.0-0-nightly-main-20260606-145024-187a8f4', // DEV version
+	'2.1.0-0-nightly-main-20260612-220203-a5e55f1', // DEV version
 ]
 export const SURFACE_BASE_VERSION = '1.2.0'
 

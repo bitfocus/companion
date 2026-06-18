@@ -328,16 +328,16 @@
 // ---- Outline variant ----
 
 .button-outline {
-	--btn-color: #6d7d9c;
+	--btn-color: #4a4a4a;
 	--btn-bg: transparent;
-	--btn-border-color: #dee2e6;
-	--btn-hover-color: currentColor;
-	--btn-hover-bg: rgba(0, 0, 0, 0.05);
-	--btn-hover-border-color: #dee2e6;
-	--btn-active-color: currentColor;
-	--btn-active-bg: rgba(0, 0, 0, 0.05);
-	--btn-active-border-color: #dee2e6;
-	--btn-disabled-color: #6d7d9c;
+	--btn-border-color: #adb5bd;
+	--btn-hover-color: #fff;
+	--btn-hover-bg: #6c757d;
+	--btn-hover-border-color: #6c757d;
+	--btn-active-color: #fff;
+	--btn-active-bg: #6c757d;
+	--btn-active-border-color: #6c757d;
+	--btn-disabled-color: #adb5bd;
 	--btn-disabled-bg: transparent;
 	--btn-disabled-border-color: #dee2e6;
 }
@@ -872,6 +872,11 @@
 
 // ---- Button Group ----
 
+// base-ui inserts invisible focus-guard spans before and after a popup trigger while its
+// popup is open, so first/last in a group must be determined ignoring those elements
+$group-first: ':nth-child(1 of :not([data-base-ui-focus-guard]))';
+$group-last: ':nth-last-child(1 of :not([data-base-ui-focus-guard]))';
+
 .button-group,
 .button-group-vertical {
 	position: relative;
@@ -894,15 +899,15 @@
 .button-group {
 	border-radius: 0.375rem;
 
-	> :not(:first-child) > .button,
-	> .button:not(:first-child) {
+	> :not(#{$group-first}) > .button,
+	> .button:not(#{$group-first}) {
 		border-start-start-radius: 0;
 		border-end-start-radius: 0;
 		border-inline-start-color: color-mix(in srgb, var(--btn-bg, currentColor) 75%, black);
 	}
 
-	> :not(:last-child) > .button,
-	> .button:not(:last-child):not(.dropdown-toggle) {
+	> :not(#{$group-last}) > .button,
+	> .button:not(#{$group-last}):not(.dropdown-toggle) {
 		border-start-end-radius: 0;
 		border-end-end-radius: 0;
 		border-inline-end-width: 0;
@@ -919,15 +924,15 @@
 		width: 100%;
 	}
 
-	> :not(:first-child) > .button,
-	> .button:not(:first-child) {
+	> :not(#{$group-first}) > .button,
+	> .button:not(#{$group-first}) {
 		border-start-start-radius: 0;
 		border-start-end-radius: 0;
 		border-block-start-color: color-mix(in srgb, var(--btn-bg, currentColor) 75%, black);
 	}
 
-	> :not(:last-child) > .button,
-	> .button:not(:last-child) {
+	> :not(#{$group-last}) > .button,
+	> .button:not(#{$group-last}) {
 		border-end-start-radius: 0;
 		border-end-end-radius: 0;
 		border-block-end-width: 0;

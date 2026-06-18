@@ -10,6 +10,21 @@ interface VariableChangeEvent {
 }
 
 /**
+ * Minimum interval between variable-change-driven executions of a single trigger.
+ * The first change in an idle period fires immediately (leading edge); rapid bursts
+ * or feedback loops are capped to roughly one execution per this interval, keeping
+ * Companion responsive. See issue #3312.
+ */
+const VARIABLE_TRIGGER_THROTTLE_MS = 50
+
+/**
+ * How long after the last throttled execution the "rate limited" flag is cleared.
+ * The flag stays set for the duration of a loop (each throttled execution resets this
+ * timer) and clears shortly after the loop stops.
+ */
+const RATE_LIMIT_CLEAR_MS = 1000
+
+/**
  * This is the runner for variables based trigger events
  *
  * @author Håkon Nessjøen <haakon@bitfocus.io>
@@ -46,6 +61,11 @@ export class TriggersEventVariables {
 	readonly #executeActions: (nowTime: number, source: TriggerExecutionSource) => void
 
 	/**
+	 * Report whether this trigger is currently being rate-limited
+	 */
+	readonly #setRateLimited: (limited: boolean) => void
+
+	/**
 	 * The logger for this class
 	 */
 	readonly #logger: Logger
@@ -55,16 +75,38 @@ export class TriggersEventVariables {
 	 */
 	#variableChangeEvents: VariableChangeEvent[] = []
 
+	/**
+	 * Time of the last execution, used to throttle the rate of variable-driven executions
+	 */
+	#lastExecutedAt = 0
+
+	/**
+	 * Timer for a pending coalesced (trailing) execution, when one is scheduled
+	 */
+	#trailingTimer: NodeJS.Timeout | null = null
+
+	/**
+	 * Whether the trigger is currently flagged as being rate-limited
+	 */
+	#isRateLimited = false
+
+	/**
+	 * Timer to clear the rate-limited flag once the rapid firing stops
+	 */
+	#rateLimitClearTimer: NodeJS.Timeout | null = null
+
 	constructor(
 		eventBus: TriggerEvents,
 		controlId: string,
-		executeActions: (nowTime: number, source: TriggerExecutionSource) => void
+		executeActions: (nowTime: number, source: TriggerExecutionSource) => void,
+		setRateLimited: (limited: boolean) => void
 	) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Variables/${controlId}`)
 
 		this.#eventBus = eventBus
 		this.#controlId = controlId
 		this.#executeActions = executeActions
+		this.#setRateLimited = setRateLimited
 
 		this.#eventBus.on('variables_changed', this.#onVariablesChanged)
 	}
@@ -74,6 +116,19 @@ export class TriggersEventVariables {
 	 */
 	destroy(): void {
 		this.#eventBus.off('variables_changed', this.#onVariablesChanged)
+
+		if (this.#trailingTimer) {
+			clearTimeout(this.#trailingTimer)
+			this.#trailingTimer = null
+		}
+		if (this.#rateLimitClearTimer) {
+			clearTimeout(this.#rateLimitClearTimer)
+			this.#rateLimitClearTimer = null
+		}
+		if (this.#isRateLimited) {
+			this.#isRateLimited = false
+			this.#setRateLimited(false)
+		}
 	}
 
 	/**
@@ -101,17 +156,72 @@ export class TriggersEventVariables {
 			}
 
 			if (execute) {
-				const nowTime = Date.now()
-
-				setImmediate(() => {
-					try {
-						this.#executeActions(nowTime, TriggerExecutionSource.Other)
-					} catch (e: any) {
-						this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
-					}
-				})
+				this.#scheduleExecution()
 			}
 		}
+	}
+
+	/**
+	 * Schedule an execution of the trigger actions, throttled to avoid runaway feedback loops.
+	 * A single change in an idle period fires immediately (leading edge); changes arriving within
+	 * the throttle window are coalesced into a single trailing execution at the end of the window.
+	 */
+	#scheduleExecution(): void {
+		const now = Date.now()
+		const sinceLast = now - this.#lastExecutedAt
+
+		if (sinceLast >= VARIABLE_TRIGGER_THROTTLE_MS && !this.#trailingTimer) {
+			// Leading edge - enough time has passed, so fire immediately
+			this.#runExecute(now)
+		} else {
+			// Within the throttle window - we are rate-limiting this trigger
+			this.#markRateLimited()
+
+			if (!this.#trailingTimer) {
+				// Schedule a single coalesced execution at the end of the window
+				this.#trailingTimer = setTimeout(
+					() => {
+						this.#trailingTimer = null
+						this.#runExecute(Date.now())
+					},
+					Math.max(0, VARIABLE_TRIGGER_THROTTLE_MS - sinceLast)
+				)
+			}
+			// else: a trailing execution is already pending, so coalesce into it (do nothing)
+		}
+	}
+
+	/**
+	 * Run the trigger actions now, recording the time for throttling purposes
+	 */
+	#runExecute(now: number): void {
+		this.#lastExecutedAt = now
+
+		if (!this.#enabled) return // Re-check, as this may run after a delay
+
+		try {
+			this.#executeActions(now, TriggerExecutionSource.Other)
+		} catch (e: any) {
+			this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+		}
+	}
+
+	/**
+	 * Flag the trigger as being rate-limited, and (re)start the timer to clear the flag once
+	 * the rapid firing stops
+	 */
+	#markRateLimited(): void {
+		if (!this.#isRateLimited) {
+			this.#isRateLimited = true
+			this.#setRateLimited(true)
+		}
+
+		if (this.#rateLimitClearTimer) clearTimeout(this.#rateLimitClearTimer)
+		this.#rateLimitClearTimer = setTimeout(() => {
+			this.#rateLimitClearTimer = null
+			this.#isRateLimited = false
+			this.#setRateLimited(false)
+		}, RATE_LIMIT_CLEAR_MS)
 	}
 
 	/**

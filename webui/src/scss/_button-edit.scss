@@ -21,6 +21,59 @@
 	}
 }
 
+.empty-button-type-picker {
+	container-type: inline-size; // respond to panel width, not viewport
+	max-width: 360px;
+	margin: 1.5rem auto 0;
+}
+
+.empty-button-type-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.5rem;
+
+	.empty-button-type-tile {
+		display: flex;
+		flex-direction: column; // page tiles: icon above label
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.85rem 0.5rem;
+		height: 100%; // equal-height tiles in the row
+		text-align: center;
+		line-height: 1.1;
+
+		// override `.edit-button-panel svg:not(.non-ideal-svg){font-size:1rem}` hack
+		svg {
+			font-size: 1.6rem;
+		}
+	}
+
+	.empty-button-type-tile-primary {
+		grid-column: 1 / -1; // full-width row 1
+		flex-direction: row; // regular: icon beside label
+
+		svg {
+			font-size: 1.3rem;
+		}
+	}
+
+	@container (max-width: 280px) {
+		grid-template-columns: 1fr; // stack all four vertically
+
+		.empty-button-type-tile,
+		.empty-button-type-tile-primary {
+			flex-direction: row; // consistent compact icon-beside-label
+			justify-content: flex-start;
+			text-align: left;
+
+			svg {
+				font-size: 1.3rem;
+			}
+		}
+	}
+}
+
 .nav-steps-special {
 	margin-bottom: 0px !important;
 
@@ -39,12 +92,38 @@
 	}
 }
 
-.entity-list,
-.entity-list-drag-layer {
+// dnd-kit sortable feedback for event rows (which use optimistic sorting, so the dragged row renders
+// in the top-layer popover). No `filter: blur()` - a filter on a popover element breaks its rendering.
+.entity-row {
+	&[data-dnd-placeholder] {
+		opacity: 0.4;
+	}
+
+	// Native-dragged event rows ([data-dnd-dragging]) and the entity DragOverlay preview clone
+	// (.dnd-drag-preview) share the same lifted look.
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		@include dragging-style(#fff);
+
+		// On the lifted/floating feedback the reorder handle's grey background reads as an odd stripe
+		// against the lifted card - blend it in so the floating row looks like one clean surface.
+		.entity-row-reorder {
+			background-color: transparent;
+		}
+	}
+
+	// Entities have no drag clone in the list (the preview is a DragOverlay), so the in-place source row
+	// is just dimmed while it reorders on hover.
+	&.entity-row-grabbing {
+		opacity: 0.4;
+	}
+}
+
+.entity-list {
 	// Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues)
 	.entity-row {
 		background-color: white;
-		margin-bottom: 10px;
+		margin-bottom: 0.25rem;
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
@@ -71,13 +150,6 @@
 		min-width: 0;
 	}
 
-	.entitylist-dragging {
-		// affects both the layer in the table and the layer that floats with the cursor
-		// (.entity-list-drag-layer is technically the top layer, but trying to style it separately didn't work as expected)
-		// first arg keeps the top sharp, second make bg translucent (dragging actions in v4.3 work differently than other lists)
-		@include dragging-style(0, 0.5);
-	}
-
 	.entity-row.entity-disabled {
 		.cell-name,
 		.form-label2 {
@@ -97,9 +169,6 @@
 		}
 	}
 
-	.editor-grid-events {
-		margin-right: -0.75rem;
-	}
 	.editor-grid-header {
 		display: flex;
 		flex-direction: row;
@@ -189,15 +258,18 @@
 	}
 }
 
-// apparently this excludes .entity-list-drag-layer
-.entity-list > .entitylist-dragging {
-	// blurs the bottom only (blurs the top one too if dragging in an action group)
-	filter: blur(1px);
-}
-
 .entity-list {
 	background-color: #f0f0f0;
-	padding: 0 0 10px;
+	padding: 0.25rem 0;
+}
+
+// The entity DragOverlay reuses `.entity-list` so the cloned drag preview row inherits its styling, but
+// that overlay element is always in the DOM (empty when idle, floating during a drag). Drop the list's
+// page padding/background on it so it adds no height at the document root and shows no grey box behind
+// the floating preview.
+.entity-list[data-dnd-overlay] {
+	padding: 0;
+	background-color: transparent;
 }
 
 .add-dropdown-wrapper {
@@ -306,6 +378,7 @@
 			display: grid;
 			grid-template-columns: auto 1fr auto auto;
 
+			background-color: #fff;
 			border-bottom: 1px solid rgb(221, 221, 221);
 
 			align-items: center;
@@ -339,8 +412,12 @@
 				padding-right: 0.2rem;
 			}
 
-			&.dragging {
-				opacity: 0.5;
+			// dnd-kit sortable feedback (no blur - a filter on the top-layer popover breaks rendering)
+			&[data-dnd-placeholder] {
+				opacity: 0.4;
+			}
+			&[data-dnd-dragging] {
+				@include dragging-style(#fff);
 			}
 
 			&.last-row {

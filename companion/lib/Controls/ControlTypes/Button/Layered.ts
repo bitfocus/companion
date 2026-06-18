@@ -402,7 +402,10 @@ export class ControlButtonLayered
 		const currentElementLocation = this.#findElementIndexAndParent(this.#drawElements, null, id)
 		if (!currentElementLocation) return false
 
-		const { indexOfElement, currentParentElementArray } = currentElementLocation
+		const { indexOfElement, element, currentParentElementArray } = currentElementLocation
+
+		// Canvas is the fixed background element and cannot be removed
+		if (element.type === 'canvas') return false
 
 		currentParentElementArray.splice(indexOfElement, 1)
 

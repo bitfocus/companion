@@ -1,4 +1,4 @@
-import { faFileArrowDown, faFileArrowUp, faFileLines } from '@fortawesome/free-solid-svg-icons'
+import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useContext, useRef } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -18,8 +18,8 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
+import { CreateButtonTypeButtons } from './CreateButtonTypeButtons.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
-import { SelectButtonTypeDropdown } from './SelectButtonTypeDropdown.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -67,16 +67,18 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 			) : (
 				<>
 					<Grid.Col sm={12}>
-						<ButtonPreviewBase fixedSize={100} preview={previewImage} right={true} />
-						<MyErrorBoundary>
-							<SelectButtonTypeDropdown location={location} resetModalRef={resetModalRef} configRef={undefined} />
-						</MyErrorBoundary>
+						<div className="d-flex mb-0">
+							<div className="flex-grow-1 min-w-0 d-flex flex-column gap-1"></div>
+							<ButtonPreviewBase fixedSize={100} preview={previewImage} />
+						</div>
 
-						<h4>Empty button</h4>
-						<p className="mt-3">
-							To get started, click button above to create a regular button, or use the drop down to make a special
-							button.
-						</p>
+						<NonIdealState icon={faSquarePlus} className="px-3">
+							<h4 className="mt-1">Empty button</h4>
+							<p className="mt-3">Choose a button type to get started.</p>
+							<MyErrorBoundary>
+								<CreateButtonTypeButtons location={location} />
+							</MyErrorBoundary>
+						</NonIdealState>
 					</Grid.Col>
 				</>
 			)}

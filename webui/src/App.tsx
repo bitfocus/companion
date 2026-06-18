@@ -1,10 +1,8 @@
+import { DragDropProvider } from '@dnd-kit/react'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
-import { DndProvider } from 'react-dnd'
-import { HTML5Backend } from 'react-dnd-html5-backend'
-import { TouchBackend } from 'react-dnd-touch-backend'
 import { useIdleTimer } from 'react-idle-timer'
 import { PuffLoader } from 'react-spinners'
 import { Grid } from '~/Components/Grid'
@@ -15,17 +13,17 @@ import { Form, InputGroup } from './Components/Form.js'
 import { ProgressBar } from './Components/ProgressBar.js'
 import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
+import { EntityDragLayer } from './Controls/Components/EntityDragLayer.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
 import { MyHeader } from './Layout/Header.js'
 import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { PRIMARY_COLOR } from './Resources/Constants.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
+import { SortableHysteresis } from './Resources/SortableHysteresis.js'
 import { trpc } from './Resources/TRPC.js'
 import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
-
-const useTouchBackend = window.localStorage.getItem('test_touch_backend') === '1'
 
 export default function App(): React.JSX.Element {
 	const trpcStatus = useTRPCConnectionStatus()
@@ -96,16 +94,22 @@ export default function App(): React.JSX.Element {
 						}
 					>
 						<MonacoLoader />
-						<DndProvider
-							backend={useTouchBackend ? TouchBackend : HTML5Backend}
-							options={useTouchBackend ? { enableMouseEvents: true } : {}}
-						>
+						{/*
+						 * Single global dnd-kit provider for all drag and drop. Each feature subscribes to its
+						 * own drags via useDragDropMonitor() and filters by drag `type`, so handlers stay scoped
+						 * while dragging between different parts of the UI remains possible (one shared manager).
+						 * Feedback mode is configured per-draggable where needed (e.g. presets drag a clone with
+						 * no drop animation - see PresetIconPreview); everything else uses the defaults.
+						 */}
+						<DragDropProvider>
+							<SortableHysteresis />
+							<EntityDragLayer />
 							<AppMain
 								connected={connected && !shouldReload}
 								loadingComplete={loadingComplete}
 								loadingProgress={loadingProgress}
 							/>
-						</DndProvider>
+						</DragDropProvider>
 					</Suspense>
 				</>
 			)}

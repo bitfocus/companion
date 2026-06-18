@@ -14,6 +14,7 @@ import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import { EntityEditorContextProvider } from './Components/EntityEditorContext.js'
 import { EditableEntityList } from './Components/EntityList.js'
+import { useEntityListReorderMonitor } from './Components/useEntityListReorderMonitor.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 import { findAllEntityIdsDeep } from './Util.js'
 
@@ -53,6 +54,8 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	const serviceFactory = useControlEntitiesEditorService(controlId, listId, confirmModal)
 
 	const entityIds = useMemo(() => findAllEntityIdsDeep(entities ?? []), [entities])
+
+	useEntityListReorderMonitor(controlId, entityType, serviceFactory)
 
 	return (
 		<div className={classNames('entity-category', className)}>

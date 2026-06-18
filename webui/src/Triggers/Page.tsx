@@ -6,6 +6,7 @@ import {
 	faLayerGroup,
 	faList,
 	faTrash,
+	faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -14,7 +15,6 @@ import dayjs from 'dayjs'
 import { single as fuzzySingle } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
-import sanitizeHtml from 'sanitize-html'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -29,6 +29,7 @@ import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -282,10 +283,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	const descriptionHtml = useMemo(
 		() => ({
-			__html: sanitizeHtml(item.description || 'No events', {
-				allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
-				disallowedTagsMode: 'escape',
-			}),
+			__html: sanitizeHtmlString(item.description || 'No events'),
 		}),
 		[item.description]
 	)
@@ -300,7 +298,17 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				style={{ minWidth: 0 }}
 				onClick={doEdit}
 			>
-				<b>{item.name}</b>
+				<b>
+					{item.name}
+					{item.isRateLimited ? (
+						<span
+							className="ms-2 text-warning"
+							title="This trigger is firing very rapidly and is being rate-limited. This is often caused by an accidental feedback loop, where the trigger's actions change a variable that re-triggers it."
+						>
+							<FontAwesomeIcon icon={faTriangleExclamation} /> Rate limited
+						</span>
+					) : null}
+				</b>
 				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>

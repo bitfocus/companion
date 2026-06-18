@@ -127,15 +127,27 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	ceil: (v) => Math.ceil(v),
 	abs: (v) => Math.abs(v),
 	fromRadix: (v, radix) => parseInt(v, radix || 10),
-	toRadix: (v, radix) => v.toString(radix || 10),
-	toFixed: (v, dp) => Number(v).toFixed(Math.max(0, dp || 0)),
-	isNumber: (v) => !isNaN(v),
+	toRadix: (v, radix) => {
+		// Clamp the radix to the integer range supported by toString, to avoid a RangeError
+		radix = Math.min(36, Math.max(2, Math.floor(Number(radix)) || 10))
+		return Number(v).toString(radix)
+	},
+	// Clamp dp to the range supported by Number#toFixed, to avoid a RangeError
+	toFixed: (v, dp) => Number(v).toFixed(Math.min(100, Math.max(0, dp || 0))),
+	isNumber: (v) => {
+		if (typeof v === 'number' || typeof v === 'bigint') return !Number.isNaN(v)
+		// Reject blank strings, which Number() would coerce to 0
+		if (typeof v === 'string') return v.trim() !== '' && !isNaN(Number(v))
+		return false
+	},
 	max: (...args) => Math.max(...args),
 	min: (...args) => Math.min(...args),
 	randomInt: (min = 0, max = 10) => {
 		min = Number(min)
 		max = Number(max)
-		return min + Math.round(Math.random() * (max - min))
+		if (max < min) [min, max] = [max, min]
+		// Use floor over a [0, n+1) range so that min and max are as likely as interior values
+		return min + Math.floor(Math.random() * (max - min + 1))
 	},
 	log: (v) => Math.log(v),
 	log10: (v) => Math.log10(v),
@@ -206,7 +218,10 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	},
 
 	// Bool operations
-	bool: (v) => !!v && v !== 'false' && v !== '0',
+	bool: (v) => {
+		if (typeof v === 'string') v = v.toLowerCase()
+		return !!v && v !== 'false' && v !== '0'
+	},
 
 	// Object/array operations
 	jsonpath: (obj, path) => {
@@ -254,11 +269,11 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		return arr.includes(val)
 	},
 	arrayIndexOf: (arr, val, offset) => {
-		if (!Array.isArray(arr)) return false
+		if (!Array.isArray(arr)) return -1
 		return arr.indexOf(val, offset)
 	},
 	arrayLastIndexOf: (arr, val, offset) => {
-		if (!Array.isArray(arr)) return false
+		if (!Array.isArray(arr)) return -1
 		return arr.lastIndexOf(val, offset ?? arr.length)
 	},
 
@@ -316,7 +331,9 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 			date.setHours(date.getHours() + diff)
 		}
 
-		const displayHours = pad(date.getHours() > 12 && hr12 ? date.getHours() - 12 : date.getHours(), '0', 2)
+		const hours24 = date.getHours()
+		// In 12 hour mode, map 0 -> 12 (midnight) and 13-23 -> 1-11, and append an AM/PM marker
+		const displayHours = pad(hr12 ? (hours24 % 12 === 0 ? 12 : hours24 % 12) : hours24, '0', 2)
 		const displayMinutes = pad(date.getMinutes(), '0', 2)
 		const displaySeconds = pad(date.getSeconds(), '0', 2)
 

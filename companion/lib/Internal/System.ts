@@ -16,7 +16,7 @@ import { promisify } from 'node:util'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import systeminformation from 'systeminformation'
-import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
+import { CompanionFieldVariablesSupport, type IsVisibleUiFn } from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
 	type VariableDefinition,
@@ -26,6 +26,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { describeHowToEnableDangerousFeature } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type {
 	ActionForInternalExecution,
@@ -262,16 +263,39 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
+		const shellCommandEnabled = this.#appInfo.options.enableShellCommandSupport
+		// When disabled, the real fields are kept (so their defaults still populate and any
+		// already-configured values are never pruned), but hidden in the UI behind a placeholder.
+		const hideWhenDisabled: IsVisibleUiFn | undefined = shellCommandEnabled
+			? undefined
+			: { type: 'expression', fn: 'false' }
+
 		const actions: Record<string, InternalActionDefinition> = {
 			exec: {
 				label: 'System: Run shell command (local)',
 				description: undefined,
 				options: [
+					...(shellCommandEnabled
+						? []
+						: [
+								{
+									type: 'static-text' as const,
+									id: 'disabled',
+									label: 'Disabled',
+									value:
+										'Running shell commands is disabled.<br/>This is a dangerous feature that allows running arbitrary commands on this computer, so it must be enabled explicitly. ' +
+										describeHowToEnableDangerousFeature(
+											'<code>--enable-shell-command-support</code>',
+											'<code>COMPANION_ENABLE_SHELL_COMMAND_SUPPORT</code>'
+										),
+								},
+							]),
 					{
 						type: 'textinput',
 						label: 'Command',
 						id: 'path',
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
+						isVisibleUi: hideWhenDisabled,
 					},
 					{
 						type: 'textinput',
@@ -280,6 +304,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 						description:
 							'Optional. If not set, the command will be run with the current working directory of companion',
+						isVisibleUi: hideWhenDisabled,
 					},
 					{
 						type: 'number',
@@ -289,6 +314,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						min: 500,
 						max: 20000,
 						clampValues: true,
+						isVisibleUi: hideWhenDisabled,
 					},
 					{
 						type: 'internal:custom_variable',
@@ -297,6 +323,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						includeNone: true,
 						expressionDescription:
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
+						isVisibleUi: hideWhenDisabled,
 					},
 				],
 				optionsSupportExpressions: true,
@@ -342,6 +369,16 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 	async executeAction(action: ActionForInternalExecution, _extras: RunActionExtras): Promise<InternalActionResult> {
 		switch (action.definitionId) {
 			case 'exec': {
+				if (!this.#appInfo.options.enableShellCommandSupport) {
+					this.#logger.warn(
+						'Rejected shell command action: the "run shell command" feature is disabled. ' +
+							describeHowToEnableDangerousFeature(
+								'--enable-shell-command-support',
+								'COMPANION_ENABLE_SHELL_COMMAND_SUPPORT'
+							)
+					)
+					break
+				}
 				if (action.options.path) {
 					const command = stringifyVariableValue(action.options.path)
 					const cwdRaw = stringifyVariableValue(action.options.cwd) || undefined

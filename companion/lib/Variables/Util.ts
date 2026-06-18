@@ -77,6 +77,15 @@ export function visitEntityOptionsForVariables<T>(
 	if (definition.optionsSupportExpressions) {
 		// Modern approach: check field types
 		for (const field of definition.options) {
+			const optionValue = options[field.id]
+
+			if (field.deferParsing) {
+				// Deferred fields are passed through as-is; the action handler will parse them
+				// with an enhanced parser after resolving the target context.
+				result[field.id] = visitor(field, optionValue, null)
+				continue
+			}
+
 			const fieldType: VisitEntityOptionValueOptions = {
 				allowExpression: !field.disableAutoExpression,
 				parseVariables: false,
@@ -88,7 +97,6 @@ export function visitEntityOptionsForVariables<T>(
 				fieldType.forceExpression = true
 			}
 
-			const optionValue = options[field.id]
 			result[field.id] = visitor(field, optionValue, fieldType)
 		}
 	} else {
@@ -185,8 +193,10 @@ export function parseVariablesInString(
 		if (value === undefined) value = undefinedValue
 
 		// Pass a function, to avoid special interpreting of `$$` and other sequences
+		// Replace all occurrences of this reference in one pass, so that the iteration limit
+		// guards against unbounded recursion rather than capping the total number of references
 		const cachedValueConst = stringifyVariableValue(value) ?? ''
-		string = string.replace(fullReference, () => cachedValueConst)
+		string = string.replaceAll(fullReference, () => cachedValueConst)
 	}
 
 	return {
@@ -210,12 +220,18 @@ export function replaceAllVariables(string: string, newLabel: string, preserveLa
 				break
 			}
 
-			// ensure we don't try and match the same thing again
-			fromIndex = matches.index + fromIndex + 1
+			// Index of this match within the current string
+			const matchIndex = fromIndex + matches.index
 
 			if (!preserveLabels.has(matches[1])) {
-				string = string.replace(matches[0], `$(${newLabel}:${matches[2]})`)
+				// Splice the replacement in at the exact match position, so that identical
+				// earlier (preserved) occurrences are not replaced by mistake
+				string =
+					string.slice(0, matchIndex) + `$(${newLabel}:${matches[2]})` + string.slice(matchIndex + matches[0].length)
 			}
+
+			// ensure we don't try and match the same thing again, but allow matching nested variables
+			fromIndex = matchIndex + 1
 		}
 	}
 

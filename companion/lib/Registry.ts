@@ -167,7 +167,7 @@ export class Registry {
 	constructor(
 		baseAppInfo: Pick<
 			AppInfo,
-			'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'notifications'
+			'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'options'
 		>
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
@@ -257,7 +257,8 @@ export class Registry {
 			this.graphics,
 			pageStore,
 			this.controls,
-			controlEvents
+			controlEvents,
+			localVariables
 		)
 
 		this.internalModule.init(
@@ -522,6 +523,9 @@ export class Registry {
 	}
 }
 
+/**
+ * Immutable facts about this Companion installation - where it lives, its identity and build.
+ */
 export interface AppInfo {
 	/** The current config directory */
 	configDir: string
@@ -535,5 +539,26 @@ export interface AppInfo {
 	appVersion: string
 	appBuild: string
 	pkgInfo: PackageJson
+
+	/** How the user chose to run this instance (cli flags / env / launcher settings) */
+	options: AppOptions
+}
+
+/**
+ * Launch-time configuration for this Companion instance, chosen via cli flags, env vars or the
+ * launcher settings. Unlike the rest of AppInfo, these are user choices rather than facts about
+ * the installation.
+ */
+export interface AppOptions {
+	/** Whether to show version-related notifications in the header */
 	notifications: boolean
+	/** Whether running shell commands on this computer is allowed (e.g. the internal "run shell command" action) */
+	enableShellCommandSupport: boolean
+	/**
+	 * Whether modules that are otherwise held back for safety may be loaded - e.g. importing custom
+	 * modules from remote (non-loopback) clients. Local clients can always import.
+	 */
+	enableRestrictedModules: boolean
+	/** Express "trust proxy" value, so the real client ip can be determined behind a reverse proxy */
+	trustedProxies: string | undefined
 }

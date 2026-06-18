@@ -11,6 +11,7 @@ import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query'
 import { useMemo } from 'react'
 import type { AppRouter } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
 
+import { setupConnectionLifecycle } from './ConnectionLifecycle.js'
 import { makeAbsolutePath } from './util.js'
 
 export type { AppRouter, RouterInput, RouterOutput } from '../../../companion/lib/UI/TRPC.js' // Type only import the router
@@ -21,8 +22,40 @@ export const queryClient = new QueryClient()
 let trpcUrl = window.location.origin + makeAbsolutePath(`/trpc`)
 if (trpcUrl.startsWith('http')) trpcUrl = 'ws' + trpcUrl.slice(4)
 
+const WS_CONNECT_TIMEOUT_MS = 10_000
+
+/**
+ * WebSocket subclass that self-aborts if the connection handshake does not
+ * complete within a timeout. Works around Safari/iOS leaving sockets in
+ * CONNECTING forever (no open/error event), which permanently wedges the
+ * trpc ws client's reconnect loop (it has no connect timeout of its own).
+ * Verified against @trpc/client 11.17.0.
+ */
+class WebSocketWithConnectTimeout extends WebSocket {
+	constructor(url: string | URL, protocols?: string | string[]) {
+		super(url, protocols)
+
+		const timeout = setTimeout(() => {
+			if (this.readyState === WebSocket.CONNECTING) {
+				console.warn('WebSocket connect timed out, aborting')
+				try {
+					this.close()
+				} catch (_e) {
+					// ignore
+				}
+			}
+		}, WS_CONNECT_TIMEOUT_MS)
+
+		const clear = () => clearTimeout(timeout)
+		this.addEventListener('open', clear)
+		this.addEventListener('close', clear)
+		this.addEventListener('error', clear)
+	}
+}
+
 export const trpcWsClient = createWSClient({
 	url: trpcUrl,
+	WebSocket: WebSocketWithConnectTimeout,
 	keepAlive: {
 		enabled: true,
 	},
@@ -32,12 +65,8 @@ export const trpcWsClient = createWSClient({
 	},
 })
 
-// Close the WebSocket connection when the page is unloading to prevent wasteful reconnection attempts
-window.addEventListener('beforeunload', () => {
-	trpcWsClient.close().catch((err) => {
-		console.error('Error closing TRPC WebSocket client on unload:', err)
-	})
-})
+// Close the WebSocket connection on real unloads, and recover it after bfcache restores
+setupConnectionLifecycle(trpcWsClient)
 
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [

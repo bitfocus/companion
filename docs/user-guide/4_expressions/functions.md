@@ -19,19 +19,27 @@ Find the length of the item passed in.
 - For JSON or other objects, it will return the number of properties
 - For numbers it will return the length of the string representation
 
+eg `length("hello")` gives `5`, `length([5, 10, 15])` gives `3`, `length({a: 1, b: 2})` gives `2`
+
 ### Numeric operations
 
 **round(val)**
 
 Rounds a number to the nearest whole number.
 
+eg `round(4.5)` gives `5`, `round(4.4)` gives `4`
+
 **floor(val)**
 
 Rounds down a number to a whole number.
 
+eg `floor(4.9)` gives `4`
+
 **ceil(val)**
 
 Rounds up a number to a whole number.
+
+eg `ceil(4.1)` gives `5`
 
 **abs(val)**
 
@@ -56,21 +64,31 @@ eg `toRadix(15, 16)` gives `"f"`
 
 Convert a number to a fixed precision string, with the specified number of digits after the decimal place.
 
+eg `toFixed(3.14159, 2)` gives `"3.14"`, `toFixed(3, 2)` gives `"3.00"`
+
 **isNumber(val)**
 
 Check if the value is a number.
+
+eg `isNumber(5)` and `isNumber("5")` give `true`, `isNumber("five")` gives `false`
 
 **max(val, val2, [val3, ...])**
 
 Finds the largest of the provided values.
 
+eg `max(3, 7, 5)` gives `7`. A common use is to stop a value going below a limit: `max(0, $(custom:countdown))` never goes below 0.
+
 **min(val, val2, [val3, ...])**
 
 Finds the smallest of the provided values.
 
+eg `min(3, 7, 5)` gives `3`. Combine with `max` to clamp a value to a range: `min(100, max(0, $(custom:level)))` keeps the value between 0 and 100.
+
 **randomInt(min, max)**
 
 Generate a random integer in the specified range (inclusive).
+
+eg `randomInt(1, 6)` gives a dice roll between 1 and 6.
 
 **log(v)**
 
@@ -86,13 +104,17 @@ Calculate the base 10 logarithm of a number.
 
 Trims any whitespace at the beginning and end of the string.
 
+eg `trim("  hello  ")` gives `"hello"`
+
 **strlen(val)**
 
-Find the length of the given string. For Unicode strings this will count the bytes not the graphemes.
+Find the length of the given string. For Unicode strings this will count the code units not the graphemes, so emoji and some other characters count as more than one.
 
 **substr(val, indexStart, indexEnd)**
 
-substr() extracts characters from indexStart up to but not including indexEnd. For Unicode strings, this will count based on the bytes not the graphemes.
+substr() extracts characters from indexStart up to but not including indexEnd. For Unicode strings, this will count based on the code units not the graphemes.
+
+eg `substr("Companion", 0, 3)` gives `"Com"`, `substr("Companion", -3)` gives `"ion"`
 
 - If indexStart &gt;= str.length, an empty string is returned.
 - If indexStart &lt; 0, the index is counted from the end of the string. More formally, in this case, the substring starts at max(indexStart + str.length, 0).
@@ -109,13 +131,19 @@ If you don't want the behaviour of negative numbers, you can use `max(0, index)`
 
 Split a string based on a separator
 
+eg `split("1:30:45", ":")` gives `["1", "30", "45"]`, so `split($(internal:time_hms), ":")[0]` gives the current hour
+
 **join(arr, separator)**
 
 Join an array of values into a single string separated by the specified separator
 
+eg `join([1, 30, 45], ":")` gives `"1:30:45"`
+
 **concat(str1, str2)**
 
 Combine one or more values into a single string
+
+eg `concat("Cam ", $(custom:camera))` gives `"Cam 2"` when the variable is `2`. Remember that the `+` operator only adds numbers, so this (or a template string) is how to join text.
 
 **includes(val, find)**
 
@@ -125,7 +153,7 @@ eg `includes("Companion is great!", "great")` gives `true`
 
 **indexOf(val, find, offset)**
 
-Find the index of the first occurrence of a value within the provided string. For Unicode strings, this will count based on the bytes not the graphemes.
+Find the index of the first occurrence of a value within the provided string. For Unicode strings, this will count based on the code units not the graphemes.
 
 Optionally provide an offset to begin the search from, otherwise it starts from position 0 (the beginning).
 
@@ -133,7 +161,7 @@ If the value isn't found, it will return -1, otherwise the index of the first oc
 
 **lastIndexOf(val, find, offset)**
 
-Find the index of the last occurrence of a value within the provided string, searching from the end. For Unicode strings, this will count based on the bytes not the graphemes.
+Find the index of the last occurrence of a value within the provided string, searching from the end. For Unicode strings, this will count based on the code units not the graphemes.
 
 Optionally provide an offset to begin the search from, searching from the end.
 
@@ -143,9 +171,13 @@ If the value isn't found, it will return -1, otherwise the index of the last occ
 
 Converts all characters in a string to uppercase
 
+eg `toUpperCase($(custom:scene_name))` gives `"INTERVIEW"` when the variable is `Interview`
+
 **toLowerCase(val)**
 
 Converts all characters in a string to lowercase
+
+eg `toLowerCase("Interview")` gives `"interview"`
 
 **replaceAll(val, find, replace)**
 
@@ -181,13 +213,13 @@ eg `decodeURI('hello%20world&1')` gives `"hello world&1"`
 
 Encodes a string as a valid component of a Uniform Resource Identifier (URI)
 
-eg `encodeURIComponent('hello world&1')` gives `"test%20123%261"`
+eg `encodeURIComponent('hello world&1')` gives `"hello%20world%261"`
 
 **decodeURIComponent(str)**
 
 Gets the unencoded version of an encoded component of a Uniform Resource Identifier (URI)
 
-eg `decodeURIComponent('test%20123%261')` gives `"hello world&1"`
+eg `decodeURIComponent('hello%20world%261')` gives `"hello world&1"`
 
 ### Variable operations
 
@@ -230,20 +262,27 @@ Convert a value into a boolean.
 
 Any of the following will be interpreted as true:
 
-- any non-zero int
-- "true"
+- any non-zero number
+- any non-empty string, except `"false"` and `"0"`
 
-Everything else will be false.
+Everything else (`0`, `""`, `"false"`, `"0"`, `false`, `null` and `undefined`) will be false.
+
+This is particularly useful for variables which hold their value as text — in a plain condition the text `"false"` would count as true, but `bool($(obs:streaming))` gives the expected result.
 
 ### Object/Array operations
 
 **jsonpath(obj, path)**
 
-Perform a jsonpath lookup on an object or array.
+Perform a jsonpath lookup on an object or array. This is useful for extracting values from connections which expose complex data as a single variable.
 
-The input can either be an object or an stringified object. The output will match the input format
+The input can either be an object or a stringified object. The output will match the input format
 
-You can see examples of how to use this at: https://jsonpath.com/
+eg with a variable holding `{ "scenes": [{ "name": "Camera 1" }, { "name": "Slides" }] }`:
+
+- `jsonpath($(custom:state), '$.scenes[0].name')` gives `"Camera 1"`
+- `jsonpath($(custom:state), '$.scenes[*].name')` gives `["Camera 1", "Slides"]`
+
+You can see more examples of how to use this at: https://jsonpath.com/
 
 **jsonparse(str)**
 
@@ -314,6 +353,8 @@ The following components are allowed:
 - `a` - AM/PM decorator
 
 Using multiple characters to control padding length (e.g., `HHH` for 3-digit hours, `ssss` for 4-digit seconds). Milliseconds (`S`) support 1-3 digits.
+
+eg `secondsToTimestamp(685, 'mm:ss')` gives `"11:25"`, and `secondsToTimestamp($(custom:remaining), 'HH:mm:ss')` formats a countdown variable as a clock.
 
 By default, time components show modulo values (e.g., hours modulo 24, minutes modulo 60). To show the total value instead, wrap the unit in brackets `[unit]`. For example, `[HH]:mm:ss` will display total hours instead of hours modulo 24, and `[mm]:ss` will display total minutes instead of minutes modulo 60. Only one unit can be marked as largest per format string, and only `H`, `h`, `m`, or `s` can be used as the largest unit.
 

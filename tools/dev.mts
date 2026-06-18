@@ -48,6 +48,15 @@ if (rawAdminPort && !argv['admin-port']) {
 	process.argv.push('--admin-port', String(rawAdminPort))
 }
 
+// Populate a default for this env var
+if (process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT === undefined) {
+	process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT = '1'
+}
+if (process.env.COMPANION_TRUSTED_PROXIES === undefined) {
+	// Allow vite as a proxy
+	process.env.COMPANION_TRUSTED_PROXIES = 'loopback'
+}
+
 const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
 if (inspectIndex !== -1) {
 	const inspectArg = process.argv[inspectIndex]

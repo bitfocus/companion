@@ -35,24 +35,28 @@ import type {
 	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
 	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
 	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
-	CompanionPresetLayeredFeedback,
 	ExpressionOrValue as ExpressionOrValueModule,
 	JsonValue,
 	ModuleLogger,
 	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
+	SomePresetLayeredFeedbackEntry,
 } from '@companion-module/host'
+import {
+	isInternalPresetEntryId,
+	tryConvertInternalLayeredFeedbackEntry,
+	type PresetEntryConversionContext,
+} from './PresetInternalEntities.js'
 
 export function ConvertLayeredPresetFeedbacksToEntities(
-	rawFeedbacks: CompanionPresetLayeredFeedback[] | undefined,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
+	rawFeedbacks: SomePresetLayeredFeedbackEntry[] | undefined,
+	ctx: PresetEntryConversionContext
 ): FeedbackEntityModel[] {
 	if (!rawFeedbacks) return []
 
 	const feedbacks: FeedbackEntityModel[] = []
 
 	for (const feedback of rawFeedbacks) {
-		const styleOverrides: FeedbackEntityStyleOverride[] = feedback.styleOverrides
+		const styleOverrides: FeedbackEntityStyleOverride[] = (feedback.styleOverrides ?? [])
 			.filter((override) => isExpressionOrValue(override.override))
 			.map((override) => ({
 				overrideId: nanoid(),
@@ -62,17 +66,22 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 			}))
 		if (styleOverrides.length === 0) continue
 
-		feedbacks.push({
-			type: EntityModelType.Feedback,
-			id: nanoid(),
-			connectionId: connectionId,
-			definitionId: feedback.feedbackId,
-			options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, false)),
-			isInverted: exprVal(!!feedback.isInverted),
-			styleOverrides: structuredClone(styleOverrides),
-			headline: feedback.headline,
-			upgradeIndex: connectionUpgradeIndex,
-		})
+		if (ctx.allowInternalEntities && isInternalPresetEntryId(feedback.feedbackId)) {
+			const entity = tryConvertInternalLayeredFeedbackEntry(feedback, styleOverrides, ctx)
+			if (entity) feedbacks.push(entity)
+		} else {
+			feedbacks.push({
+				type: EntityModelType.Feedback,
+				id: nanoid(),
+				connectionId: ctx.connectionId,
+				definitionId: feedback.feedbackId,
+				options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, true)),
+				isInverted: exprVal(!!feedback.isInverted),
+				styleOverrides: structuredClone(styleOverrides),
+				headline: feedback.headline,
+				upgradeIndex: ctx.connectionUpgradeIndex,
+			})
+		}
 	}
 
 	return feedbacks

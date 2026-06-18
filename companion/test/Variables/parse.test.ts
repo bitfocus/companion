@@ -120,6 +120,22 @@ describe('variable parsing', () => {
 		})
 	})
 
+	test('many variable references', () => {
+		const variables = {
+			abc: {
+				def: 'val1',
+				second: 'val2',
+			},
+		}
+
+		// More references than the iteration limit, all should be resolved
+		const input = '$(abc:def),$(abc:second),'.repeat(150)
+		expect(parseVariablesInString(input, variables, new Map(), VARIABLE_UNKNOWN_VALUE)).toMatchObject({
+			text: 'val1,val2,'.repeat(150),
+			variableIds: new Set(['abc:def', 'abc:second']),
+		})
+	})
+
 	test('infinite referencing variable', () => {
 		const variables = {
 			abc: {

@@ -9,14 +9,9 @@
  * this program.
  */
 
-import { exec } from 'node:child_process'
 import { EventEmitter } from 'node:events'
-import path from 'node:path'
-import { promisify } from 'node:util'
 import express from 'express'
-import fs from 'fs-extra'
-import pDebounce from 'p-debounce'
-import { UdevRuleGenerator } from 'udev-generator'
+import type { UdevRuleDefinition } from 'udev-generator'
 import z from 'zod'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
@@ -56,11 +51,7 @@ import { InstanceProcessManager } from './ProcessManager.js'
 import { InstanceStatus } from './Status.js'
 import { SurfaceInstanceCollections } from './Surface/Collections.js'
 import { createSurfacesTrpcRouter } from './Surface/TrpcRouter.js'
-
-const execAsync = promisify(exec)
-
-// This environment variable can be set to a command that will be run whenever udev rules are regenerated
-const SYNC_UDEV_RULES_COMMAND = process.env.COMPANION_SYNC_UDEV_RULES_COMMAND
+import { InstanceUdevRulesController } from './UdevRules.js'
 
 type CreateConnectionData = {
 	type: string
@@ -91,7 +82,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	readonly #surfacesController: SurfaceController
 	readonly #connectionCollectionsController: ConnectionsCollections
 	readonly #surfaceInstanceCollectionsController: SurfaceInstanceCollections
-	readonly #udevRulesDir: string
+	readonly #udevRules: InstanceUdevRulesController
 
 	readonly #configStore: InstanceConfigStore
 
@@ -131,7 +122,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#surfacesController = surfaces
 		this.#controlsStore = controlsStore
-		this.#udevRulesDir = appInfo.udevRulesDir
+		this.#udevRules = new InstanceUdevRulesController(appInfo.udevRulesDir, () => this.#collectSurfaceUsbIds())
 
 		this.#configStore = new InstanceConfigStore(db, (instanceIds, updateProcessManager) => {
 			// Ensure any changes to collectionId update the enabled state
@@ -231,7 +222,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#broadcastConnectionChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection))
 		this.#broadcastSurfaceInstanceChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface))
 
-		this.#triggerRegenerateUdevRules()
+		this.#udevRules.triggerRegenerate()
 	}
 
 	getAllConnectionIds(): string[] {
@@ -722,7 +713,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#logger.silly(`surface_instance_added: ${id}`)
 		this.emit('surface_instance_added', id)
 
-		this.#triggerRegenerateUdevRules()
+		this.#udevRules.triggerRegenerate()
 
 		return [id, config]
 	}
@@ -772,7 +763,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		this.status.forgetInstanceStatus(instanceId)
 		this.#configStore.forgetInstance(instanceId)
-		this.#triggerRegenerateUdevRules()
+		this.#udevRules.triggerRegenerate()
 
 		this.emit('surface_instance_deleted', instanceId)
 
@@ -944,7 +935,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (config.enabled) {
 			this.#queueUpdateInstanceState(instanceId, false, true)
 		} else if (config.moduleInstanceType === ModuleInstanceType.Surface) {
-			this.#triggerRegenerateUdevRules()
+			this.#udevRules.triggerRegenerate()
 		}
 
 		return true
@@ -1092,7 +1083,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 		} else if (config.moduleInstanceType === ModuleInstanceType.Surface) {
 			// Ensure the udev rules are up to date
-			this.#triggerRegenerateUdevRules()
+			this.#udevRules.triggerRegenerate()
 		}
 
 		if (changed || forceCommitChanges) {
@@ -1158,6 +1149,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						yield { time, source, level, message }
 					}
 				}),
+
+			udevRules: this.#udevRules.createTrpcRouter(),
 		})
 	}
 
@@ -1179,81 +1172,24 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return result
 	}
 
-	#triggerRegenerateUdevRules = (): void => {
-		if (process.platform !== 'linux') return
-		this.#regenerateUdevRules().catch((e) => {
-			this.#logger.warn(`Error regenerating udev rules: `, e)
-		})
-	}
+	/** Gather the USB ids of all enabled surface modules, used to generate the udev rules */
+	#collectSurfaceUsbIds(): UdevRuleDefinition[] {
+		const usbIds: UdevRuleDefinition[] = []
 
-	#regenerateUdevRules = pDebounce(
-		async () => {
-			if (process.platform !== 'linux') return
+		for (const config of this.#configStore.getAllInstanceConfigs().values()) {
+			if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
 
-			this.#logger.info('Regenerating udev rules for surface modules')
+			// Find the manifest of the module
+			const manifest = this.modules.getModuleManifest(
+				ModuleInstanceType.Surface,
+				config.moduleId,
+				config.moduleVersionId
+			)
+			if (!manifest || manifest.manifest.type !== 'surface') continue
 
-			const generator = new UdevRuleGenerator()
-
-			for (const config of this.#configStore.getAllInstanceConfigs().values()) {
-				if (config.moduleInstanceType !== ModuleInstanceType.Surface) continue
-
-				// Find the manifest of the module
-				const manifest = this.modules.getModuleManifest(
-					ModuleInstanceType.Surface,
-					config.moduleId,
-					config.moduleVersionId
-				)
-				if (!manifest || manifest.manifest.type !== 'surface') continue
-
-				// Add the rules
-				generator.addRules(manifest.manifest.usbIds || [])
-			}
-
-			const desktopFile = generator.generateFile({ mode: 'desktop' })
-			const headlessFile = generator.generateFile({ mode: 'headless', userGroup: 'companion' })
-
-			await fs.mkdirp(this.#udevRulesDir)
-
-			// Read existing files to check for changes
-			const headlessPath = path.join(this.#udevRulesDir, '50-companion-headless.rules')
-			const desktopPath = path.join(this.#udevRulesDir, '50-companion-desktop.rules')
-
-			const [existingHeadless, existingDesktop] = await Promise.all([
-				fs.readFile(headlessPath, 'utf8').catch(() => ''),
-				fs.readFile(desktopPath, 'utf8').catch(() => ''),
-			])
-
-			// Only write files if they have changed
-			let hasChanges = false
-			if (existingHeadless !== headlessFile) {
-				await fs.writeFile(headlessPath, headlessFile, 'utf8')
-				hasChanges = true
-			}
-			if (existingDesktop !== desktopFile) {
-				await fs.writeFile(desktopPath, desktopFile, 'utf8')
-				hasChanges = true
-			}
-
-			if (hasChanges) {
-				this.#logger.debug('Udev rules for surface modules regenerated')
-
-				// If setup, run the sync command to apply the new rules
-				if (SYNC_UDEV_RULES_COMMAND) {
-					try {
-						this.#logger.info(`Running udev sync command: ${SYNC_UDEV_RULES_COMMAND}`)
-						await execAsync(SYNC_UDEV_RULES_COMMAND)
-						this.#logger.info('Udev rules synced successfully')
-					} catch (e) {
-						this.#logger.error(`Failed to sync udev rules: ${stringifyError(e)}`)
-					}
-				}
-			} else {
-				this.#logger.debug('Udev rules unchanged, skipping regeneration')
-			}
-		},
-		50,
-		{
-			before: false,
+			if (manifest.manifest.usbIds) usbIds.push(...manifest.manifest.usbIds)
 		}
-	)
+
+		return usbIds
+	}
 }

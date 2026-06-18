@@ -5,6 +5,7 @@
 		{ "path": "./tsconfig.tools.json" },
 		{ "path": "./companion" },
 		{ "path": "./shared-lib" },
+		{ "path": "./config-tool" },
 		{ "path": "./webui" },
 		{ "path": "./launcher-ui" },
 		{ "path": "./docs" }
