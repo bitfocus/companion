@@ -39,6 +39,11 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 		const includeConfig = req.query.include_config === 'true'
 		const includeSecrets = req.query.include_secrets === 'true'
 
+		if (includeSecrets && !includeConfig) {
+			next(RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'"))
+			return
+		}
+
 		if (includeSecrets && !hasScope(token.scopes, 'secrets')) {
 			next(RestApiError.forbidden("Insufficient scope: requires 'secrets'"))
 			return
