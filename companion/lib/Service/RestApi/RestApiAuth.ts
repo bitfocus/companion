@@ -37,12 +37,13 @@ export interface ApiTokenStore {
 export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) {
 	return (req: Express.Request, _res: Express.Response, next: Express.NextFunction): void => {
 		const authHeader = req.headers.authorization
-		if (!authHeader || !authHeader.startsWith('Bearer ')) {
+		const match = authHeader?.match(/^Bearer\s+(.+)$/i)
+		if (!match) {
 			next(RestApiError.unauthorized('Missing or invalid Authorization header'))
 			return
 		}
 
-		const plainToken = authHeader.slice(7)
+		const plainToken = match[1].trim()
 		const token = tokenStore.findByToken(plainToken)
 		if (!token) {
 			next(RestApiError.unauthorized('Invalid API token'))
