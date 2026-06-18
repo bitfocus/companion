@@ -609,6 +609,21 @@ describe('REST API v1 — Connections', () => {
 			expect(instanceController.addConnectionWithLabel).not.toHaveBeenCalled()
 		})
 
+		test('returns 400 for empty version id', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			const res = await supertest(app).post('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send({
+				moduleId: 'obs-websocket',
+				label: 'test',
+				versionId: '',
+			})
+
+			expect(res.status).toBe(400)
+			expect(res.body.error.code).toBe('BAD_REQUEST')
+			expect(instanceController.addConnectionWithLabel).not.toHaveBeenCalled()
+			expect(instanceController.modulesStore.fetchModuleVersionInfo).not.toHaveBeenCalled()
+		})
+
 		test('returns 400 when addConnectionWithLabel throws', async () => {
 			const { app, instanceController, validToken } = createService()
 
@@ -857,6 +872,23 @@ describe('REST API v1 — Connections', () => {
 			expect(res.status).toBe(400)
 			expect(res.body.error.code).toBe('BAD_REQUEST')
 			expect(res.body.error.message).toContain('v99.0.0')
+			expect(instanceController.setConnectionLabelAndConfig).not.toHaveBeenCalled()
+			expect(instanceController.setModuleVersionAndActivate).not.toHaveBeenCalled()
+		})
+
+		test('returns 400 for empty connection version', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/conn-1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({ versionId: '' })
+
+			expect(res.status).toBe(400)
+			expect(res.body.error.code).toBe('BAD_REQUEST')
+			expect(instanceController.modules.getModuleManifest).not.toHaveBeenCalled()
 			expect(instanceController.setConnectionLabelAndConfig).not.toHaveBeenCalled()
 			expect(instanceController.setModuleVersionAndActivate).not.toHaveBeenCalled()
 		})

@@ -44,6 +44,8 @@ const ConnectionResponseExample = {
 	secrets: {},
 }
 
+const VersionIdSchema = z.string().min(1, 'versionId cannot be empty')
+
 export const ConnectionPatchResponseExample = {
 	...ConnectionResponseExample,
 	label: 'ATEM Program',
@@ -87,9 +89,7 @@ export const ConnectionCreateBodySchema = z
 			.describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".')
 			.meta({ example: 'bmd-atem' }),
 		label: z.string().describe('Display name for the new connection.').meta({ example: 'ATEM' }),
-		versionId: z
-			.string()
-			.nullable()
+		versionId: VersionIdSchema.nullable()
 			.default(null)
 			.describe(
 				'Specific module version to use. Omit or use null to use the newest compatible stable version. If the module is not installed, Companion queues installation of that version.'
@@ -145,9 +145,7 @@ export const ConnectionPatchBodySchema = z
 			.optional()
 			.describe('Module version update policy to apply.')
 			.meta({ example: InstanceVersionUpdatePolicy.Manual }),
-		versionId: z
-			.string()
-			.nullable()
+		versionId: VersionIdSchema.nullable()
 			.optional()
 			.describe(
 				'Specific module version to use, such as "1.2.0". Omit to leave the current version unchanged. Use null to switch to the newest compatible stable version.'
