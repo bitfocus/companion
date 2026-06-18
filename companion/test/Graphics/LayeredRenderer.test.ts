@@ -1064,10 +1064,10 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('gauge element', () => {
-		const DEFAULT_SEGMENTS: ButtonGraphicsGaugeDrawElement['segments'] = [
-			{ value: 0, color: 0x00ff00 },
-			{ value: 66, color: 0xffff00 },
-			{ value: 85, color: 0xff0000 },
+		const DEFAULT_STOPS: ButtonGraphicsGaugeDrawElement['stops'] = [
+			{ value: 0, color: 0x00ff00, gradient: false },
+			{ value: 66, color: 0xffff00, gradient: false },
+			{ value: 85, color: 0xff0000, gradient: false },
 		]
 
 		function makeGaugeElement(overrides: Partial<ButtonGraphicsGaugeDrawElement> = {}): ButtonGraphicsGaugeDrawElement {
@@ -1081,14 +1081,25 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				height: 1,
 				rotation: 0,
 				value: 50,
+				min: 0,
+				max: 100,
+				origin: 0,
+				symmetric: false,
 				orientation: 'horizontal',
 				reverse: false,
+				trackWidth: 100,
+				startAngle: 0,
+				endAngle: 360,
+				ringWidth: 20,
 				roundedEnds: true,
-				thickness: 20,
-				multiSegment: true,
-				segments: DEFAULT_SEGMENTS,
-				inactiveStyle: 'transparent',
-				inactiveAmount: 70,
+				fillEnabled: true,
+				multiColour: true,
+				stops: DEFAULT_STOPS,
+				markerEnabled: false,
+				markerColor: 0xffffff,
+				markerWidth: 15,
+				trackStyle: 'transparent',
+				trackAmount: 70,
 				...overrides,
 			}
 		}
@@ -1127,22 +1138,22 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, reverse: true }))).toMatchImageSnapshot()
 		})
 
-		test('multiSegment=false - single colour for entire active region', async () => {
-			await expect(await drawGauge(makeGaugeElement({ value: 75, multiSegment: false }))).toMatchImageSnapshot()
+		test('multiColour=false - single colour for entire active region', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75, multiColour: false }))).toMatchImageSnapshot()
 		})
 
-		test('inactiveStyle=dimmed - inactive portions darkened', async () => {
+		test('trackStyle=dimmed - inactive portions darkened', async () => {
 			await expect(
-				await drawGauge(makeGaugeElement({ value: 50, inactiveStyle: 'dimmed', inactiveAmount: 70 }))
+				await drawGauge(makeGaugeElement({ value: 50, trackStyle: 'dimmed', trackAmount: 70 }))
 			).toMatchImageSnapshot()
 		})
 
-		test('inactiveAmount=0 - inactive portions invisible', async () => {
-			await expect(await drawGauge(makeGaugeElement({ value: 50, inactiveAmount: 0 }))).toMatchImageSnapshot()
+		test('trackAmount=0 - inactive portions invisible', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 0 }))).toMatchImageSnapshot()
 		})
 
-		test('inactiveAmount=100 - inactive same as active colour', async () => {
-			await expect(await drawGauge(makeGaugeElement({ value: 50, inactiveAmount: 100 }))).toMatchImageSnapshot()
+		test('trackAmount=100 - inactive same as active colour', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 100 }))).toMatchImageSnapshot()
 		})
 
 		test('orientation=vertical reverse=false - fills from bottom', async () => {
@@ -1155,13 +1166,13 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			).toMatchImageSnapshot()
 		})
 
-		test('empty segments - nothing drawn', async () => {
-			await expect(await drawGauge(makeGaugeElement({ segments: [] }))).toMatchImageSnapshot()
+		test('empty stops - nothing drawn', async () => {
+			await expect(await drawGauge(makeGaugeElement({ stops: [] }))).toMatchImageSnapshot()
 		})
 
 		test('single segment - full bar one colour', async () => {
 			await expect(
-				await drawGauge(makeGaugeElement({ value: 50, segments: [{ value: 0, color: 0x0088ff }] }))
+				await drawGauge(makeGaugeElement({ value: 50, stops: [{ value: 0, color: 0x0088ff }] }))
 			).toMatchImageSnapshot()
 		})
 
@@ -1212,23 +1223,23 @@ describe('GraphicsLayeredButtonRenderer', () => {
 		})
 
 		test('ring value=75 dimmed inactive - both halves clearly visible', async () => {
-			await expect(await drawRing({ value: 75, inactiveStyle: 'dimmed', inactiveAmount: 40 })).toMatchImageSnapshot()
+			await expect(await drawRing({ value: 75, trackStyle: 'dimmed', trackAmount: 40 })).toMatchImageSnapshot()
 		})
 
 		test('ring reverse=true value=75 - counter-clockwise', async () => {
 			await expect(await drawRing({ value: 75, reverse: true })).toMatchImageSnapshot()
 		})
 
-		test('ring thin thickness=8', async () => {
-			await expect(await drawRing({ value: 75, thickness: 8 })).toMatchImageSnapshot()
+		test('ring thin ringWidth=8', async () => {
+			await expect(await drawRing({ value: 75, ringWidth: 8 })).toMatchImageSnapshot()
 		})
 
-		test('ring thick thickness=40', async () => {
-			await expect(await drawRing({ value: 75, thickness: 40 })).toMatchImageSnapshot()
+		test('ring thick ringWidth=40', async () => {
+			await expect(await drawRing({ value: 75, ringWidth: 40 })).toMatchImageSnapshot()
 		})
 
-		test('ring multiSegment=false value=75 - single colour active', async () => {
-			await expect(await drawRing({ value: 75, multiSegment: false })).toMatchImageSnapshot()
+		test('ring multiColour=false value=75 - single colour active', async () => {
+			await expect(await drawRing({ value: 75, multiColour: false })).toMatchImageSnapshot()
 		})
 
 		test('ring roundedEnds=false value=75 - flat ends', async () => {
@@ -1239,18 +1250,154 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawRing({ value: 50 }, { w: 72, h: 58 })).toMatchImageSnapshot()
 		})
 
-		test('unsorted segments - sorted before rendering', async () => {
+		test('unsorted stops - sorted before rendering', async () => {
 			await expect(
 				await drawGauge(
 					makeGaugeElement({
 						value: 75,
-						segments: [
+						stops: [
 							{ value: 85, color: 0xff0000 },
 							{ value: 0, color: 0x00ff00 },
 							{ value: 66, color: 0xffff00 },
 						],
 					})
 				)
+			).toMatchImageSnapshot()
+		})
+
+		// --- Value mapping: min / max / origin / symmetric ---
+
+		test('min/max maps an arbitrary range onto the gauge', async () => {
+			// Audio-style range: value 0 sits ~91% of the way along -232..24
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 0, min: -232, max: 24 }))
+			).toMatchImageSnapshot()
+		})
+
+		test('origin at midpoint - pan fills right of centre', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 75, origin: 50, stops: [{ value: 0, color: 0x00aaff }] }))
+			).toMatchImageSnapshot()
+		})
+
+		test('origin at midpoint - pan fills left of centre', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 25, origin: 50, stops: [{ value: 0, color: 0x00aaff }] }))
+			).toMatchImageSnapshot()
+		})
+
+		test('symmetric - fill grows both ways from origin (stereo width)', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({ value: 60, origin: 50, symmetric: true, stops: [{ value: 0, color: 0x00ff88 }] })
+				)
+			).toMatchImageSnapshot()
+		})
+
+		// --- Track width: fill is wider than the (narrowed) track ---
+
+		test('trackWidth=40 - fill wider than track', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 60, trackWidth: 40 }))).toMatchImageSnapshot()
+		})
+
+		test('vertical trackWidth=50 - narrow track, full-width fill', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 60, orientation: 'vertical', trackWidth: 50 }))
+			).toMatchImageSnapshot()
+		})
+
+		test('ring trackWidth=50 - track narrower than fill within ring width', async () => {
+			await expect(await drawRing({ value: 75, trackWidth: 50 })).toMatchImageSnapshot()
+		})
+
+		// --- Fill toggle ---
+
+		test('fillEnabled=false - only the track renders', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75, fillEnabled: false }))).toMatchImageSnapshot()
+		})
+
+		// --- Gradient stops ---
+
+		test('gradient stop - blends toward the next stop colour', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 100,
+						stops: [
+							{ value: 0, color: 0x00ff00, gradient: true },
+							{ value: 100, color: 0xff0000, gradient: false },
+						],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		test('first stop not at zero - anchored so no gap forms', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 100,
+						stops: [
+							{ value: 40, color: 0x00ff00 },
+							{ value: 80, color: 0xff0000 },
+						],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		// --- Marker ---
+
+		test('marker - line at value, rounded caps with roundedEnds', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, markerEnabled: true, markerColor: 0xffffff }))
+			).toMatchImageSnapshot()
+		})
+
+		test('marker - flat caps when roundedEnds=false', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({ value: 50, markerEnabled: true, markerColor: 0xffffff, roundedEnds: false })
+				)
+			).toMatchImageSnapshot()
+		})
+
+		test('marker - mirrors in symmetric mode', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 60,
+						origin: 50,
+						symmetric: true,
+						markerEnabled: true,
+						markerColor: 0xffffff,
+						stops: [{ value: 0, color: 0x00ff88 }],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		test('ring marker - arc bead following the curve', async () => {
+			await expect(
+				await drawRing({ value: 50, markerEnabled: true, markerColor: 0xffffff, markerWidth: 25 })
+			).toMatchImageSnapshot()
+		})
+
+		// --- Circular start/end angle (gap positioning) ---
+
+		test('ring partial arc - gap at the bottom (270° arc)', async () => {
+			await expect(await drawRing({ value: 75, startAngle: 225, endAngle: 135 })).toMatchImageSnapshot()
+		})
+
+		test('ring partial arc - rounded track ends follow roundedEnds', async () => {
+			await expect(
+				await drawRing({ value: 40, startAngle: 225, endAngle: 135, roundedEnds: true })
+			).toMatchImageSnapshot()
+		})
+
+		test('ring partial arc - flat track ends when roundedEnds=false', async () => {
+			await expect(
+				await drawRing({ value: 40, startAngle: 225, endAngle: 135, roundedEnds: false })
 			).toMatchImageSnapshot()
 		})
 	})
