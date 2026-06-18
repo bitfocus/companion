@@ -1,3 +1,4 @@
+import { createRequire } from 'module'
 import express from 'express'
 import Express from 'express'
 import supertest from 'supertest'
@@ -7,6 +8,9 @@ import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { generateOpenApiDocument } from '../../../lib/Service/RestApi/openapi.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../../../package.json') as { version: string }
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -24,7 +28,7 @@ describe('OpenAPI Spec Generation', () => {
 	test('generates a valid OpenAPI 3.0.3 document', () => {
 		expect(doc.openapi).toBe('3.0.3')
 		expect(doc.info.title).toBe('Bitfocus Companion REST API')
-		expect(doc.info.version).toBe('4.3.0')
+		expect(doc.info.version).toBe(version)
 	})
 
 	test('includes server definition', () => {
