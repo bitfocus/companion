@@ -2474,9 +2474,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('symmetric / fillEnabled / multiColour booleans pass through', async () => {
 			const el = gaugeDrawEl(
-				await convertGauge(
-					makeGaugeEl({ symmetric: val(true), fillEnabled: val(false), multiColour: val(false) })
-				)
+				await convertGauge(makeGaugeEl({ symmetric: val(true), fillEnabled: val(false), multiColour: val(false) }))
 			)
 			expect(el.symmetric).toBe(true)
 			expect(el.fillEnabled).toBe(false)
@@ -2521,9 +2519,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('trackStyle tolerant matching', async () => {
-			expect(
-				gaugeDrawEl(await convertGauge(makeGaugeEl({ trackStyle: val('  transparent') as any }))).trackStyle
-			).toBe('transparent')
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackStyle: val('  transparent') as any }))).trackStyle).toBe(
+				'transparent'
+			)
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackStyle: val('d') as any }))).trackStyle).toBe('dimmed')
 		})
 

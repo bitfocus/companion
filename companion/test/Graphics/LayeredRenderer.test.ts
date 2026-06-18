@@ -1269,9 +1269,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 		test('min/max maps an arbitrary range onto the gauge', async () => {
 			// Audio-style range: value 0 sits ~91% of the way along -232..24
-			await expect(
-				await drawGauge(makeGaugeElement({ value: 0, min: -232, max: 24 }))
-			).toMatchImageSnapshot()
+			await expect(await drawGauge(makeGaugeElement({ value: 0, min: -232, max: 24 }))).toMatchImageSnapshot()
 		})
 
 		test('origin at midpoint - pan fills right of centre', async () => {
@@ -1356,9 +1354,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 		test('marker - flat caps when roundedEnds=false', async () => {
 			await expect(
-				await drawGauge(
-					makeGaugeElement({ value: 50, markerEnabled: true, markerColor: 0xffffff, roundedEnds: false })
-				)
+				await drawGauge(makeGaugeElement({ value: 50, markerEnabled: true, markerColor: 0xffffff, roundedEnds: false }))
 			).toMatchImageSnapshot()
 		})
 

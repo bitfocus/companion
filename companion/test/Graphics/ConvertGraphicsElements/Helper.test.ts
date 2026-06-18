@@ -521,6 +521,14 @@ describe('ElementExpressionHelper', () => {
 			expect(helper.getBoolean('boolProp', true)).toBe(false)
 		})
 
+		test('undefined (missing property) falls back to defaultValue', () => {
+			// A boolean field added to the schema after an element was saved is absent (undefined)
+			// and must use its default rather than coercing to false.
+			const { helper } = makeHelper(makeEl({ boolProp: val(undefined as any) }))
+			expect(helper.getBoolean('boolProp', true)).toBe(true)
+			expect(helper.getBoolean('boolProp', false)).toBe(false)
+		})
+
 		test('empty string is falsy', () => {
 			const { helper } = makeHelper(makeEl({ boolProp: val('' as any) }))
 			expect(helper.getBoolean('boolProp', true)).toBe(false)

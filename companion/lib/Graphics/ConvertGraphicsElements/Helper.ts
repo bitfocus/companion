@@ -182,9 +182,10 @@ export class ElementExpressionHelper<T> {
 		const value = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
-			// A missing property must fall back to the default (e.g. a boolean field added to the
-			// schema after an element was saved), not coerce `undefined` to `false`.
-			if (value.value === null || value.value === undefined) return defaultValue
+			// A missing property (added to the schema after an element was saved) surfaces as
+			// `undefined` and must fall back to the default rather than coercing to `false`.
+			// An explicit `null`/`0`/`''` is still treated as falsy.
+			if (value.value === undefined) return defaultValue
 			return Boolean(value.value)
 		}
 
