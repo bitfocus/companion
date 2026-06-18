@@ -149,7 +149,11 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 
 	return (
 		<div
-			ref={props.dropRef}
+			// dnd-kit clones the element holding the drag ref into a top-layer popover as the drag
+			// feedback. It must be the outer .button-control (which carries the `.fixed` sizing for
+			// its child .button-border) - putting it on the inner element detaches it from `.fixed`
+			// and the `padding-bottom: 100%` aspect hack then resolves against the viewport.
+			ref={props.dragRef ?? props.dropRef}
 			className={classnames(classes, props.className)}
 			style={props.style}
 			onMouseDown={() => props.onClick?.(true)}
@@ -176,7 +180,6 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 		>
 			<div
 				className="button-border"
-				ref={props.dragRef}
 				style={{
 					backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined,
 				}}

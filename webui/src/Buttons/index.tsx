@@ -1,3 +1,4 @@
+import { useDragDropMonitor } from '@dnd-kit/react'
 import { faCalculator, faGift, faLayerGroup, faThLarge, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
@@ -17,8 +18,10 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { EditButton } from './EditButton/EditButton.js'
+import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
+import type { PresetDragItem } from './Presets/PresetDragItem.js'
 import { ConnectionPresets } from './Presets/Presets.js'
 import { useButtonContextMenu } from './useButtonContextMenu.js'
 
@@ -113,6 +116,32 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
 	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
 	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
+
+	// Dropping a preset (from the Presets tab) onto a grid button imports it at that location.
+	// Subscribed via the global dnd-kit provider; we filter to preset drags by `type`.
+	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
+	useDragDropMonitor({
+		onDragEnd(event) {
+			if (event.canceled) return
+			const { source, target } = event.operation
+			if (!source || !target || source.type !== 'preset') return
+
+			const location = parseGridButtonDroppableId(target.id)
+			if (!location) return
+
+			const dropData = source.data as PresetDragItem
+			importPresetMutation
+				.mutateAsync({
+					connectionId: dropData.connectionId,
+					presetId: dropData.presetId,
+					location,
+					variableValues: dropData.variableValues,
+				})
+				.catch(() => {
+					console.error('Preset import failed')
+				})
+		},
+	})
 
 	const {
 		contextMenuOpen,

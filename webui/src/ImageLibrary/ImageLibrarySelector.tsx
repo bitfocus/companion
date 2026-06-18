@@ -22,7 +22,7 @@ interface ImageLibrarySelectorProps {
 	onSelectImage: (imageName: string) => void
 	/** Pass the real collections API to enable drag-drop reordering. Defaults to read-only. */
 	collectionsApi?: NestingCollectionsApi
-	/** dragId must be unique per DndProvider scope. Defaults to 'image-library-selector'. */
+	/** dragId must be unique across the app's drag-and-drop. Defaults to 'image-library-selector'. */
 	dragId?: string
 }
 

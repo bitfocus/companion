@@ -1,3 +1,4 @@
+import { useDragOperation } from '@dnd-kit/react'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { capitalize } from 'lodash-es'
@@ -7,13 +8,14 @@ import {
 	CollectionsNestingTableContextProvider,
 	type CollectionsNestingTableContextType,
 } from './CollectionsNestingTableContext.js'
+import { CollectionsNestingTableDragLayer } from './CollectionsNestingTableDragLayer.js'
 import { CollectionsNestingTableCollectionContents } from './CollectionsNestingTableGroupContents.js'
 import {
 	CollectionItemsCollapseButtons,
 	CollectionsNestingTableCollectionsList,
 } from './CollectionsNestingTableGroupsList.js'
 import type { CollectionsNestingTableCollection, CollectionsNestingTableItem } from './Types.js'
-import { useCollectionsListItemDrop } from './useItemDrop.js'
+import { useCollectionsNestingTableReorderMonitor } from './useCollectionsNestingTableReorderMonitor.js'
 
 interface CollectionsNestingTableProps<
 	TCollection extends CollectionsNestingTableCollection,
@@ -46,7 +48,12 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 }: CollectionsNestingTableProps<TCollection, TItem>) {
 	const { groupedItems, ungroupedItems } = getGroupedItems(items, collections)
 
-	const { isDragging } = useCollectionsListItemDrop(collectionsApi, dragId, null, null, 0, gridLayout ?? false) // Assuming null for root level collections
+	// Persist drag operations (both items and collections) on drop
+	useCollectionsNestingTableReorderMonitor(dragId, collectionsApi)
+
+	// Whether an item drag is in progress, so the Ungrouped section reveals itself as a drop target
+	const { source } = useDragOperation()
+	const isDragging = !!collectionsApi && source?.type === dragId
 
 	return (
 		<CollectionsNestingTableContextProvider
@@ -60,6 +67,9 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 			gridLayout={gridLayout}
 		>
 			<div className="collections-nesting-table">
+				{/* Rendered here (inside the table) so the drag preview clone is styled by the real CSS */}
+				<CollectionsNestingTableDragLayer />
+
 				{!!Heading && (
 					<div className="collections-nesting-table-header">
 						<Heading />

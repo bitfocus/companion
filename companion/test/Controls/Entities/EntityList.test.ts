@@ -1765,8 +1765,9 @@ describe('moveEntity', () => {
 
 		list.moveEntity(0, 2)
 
+		// newIndex is the desired final index: '1' is popped then inserted at index 2
 		const ids = list.getAllEntities().map((e) => e.id)
-		expect(ids).toEqual(['2', '1', '3'])
+		expect(ids).toEqual(['2', '3', '1'])
 	})
 
 	test('move up', () => {

@@ -76,6 +76,11 @@
 @use 'scss/expression';
 @use 'scss/image-library';
 
+// ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two
+[data-dnd-overlay]:not([data-dnd-dragging]) {
+	display: none !important;
+}
+
 //@debug "$primary = #{$primary}"; // should be red (#d50215), not the coreui default blue (#5856d6).
 
 body {

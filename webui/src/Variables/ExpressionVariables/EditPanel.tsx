@@ -24,6 +24,7 @@ import { EntityManageChildGroups } from '~/Controls/Components/EntityChildGroup'
 import { EntityCommonCells } from '~/Controls/Components/EntityCommonCells'
 import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
+import { useEntityListReorderMonitor } from '~/Controls/Components/useEntityListReorderMonitor.js'
 import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore'
 import { findAllEntityIdsDeep } from '~/Controls/Util.js'
@@ -182,6 +183,7 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const serviceFactory = useControlEntitiesEditorService(controlId, 'feedbacks', confirmModal)
+	useEntityListReorderMonitor(controlId, EntityModelType.Feedback, serviceFactory)
 
 	const entityIds = useMemo(() => findAllEntityIdsDeep(entity ? [entity] : []), [entity])
 
@@ -287,6 +289,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const serviceFactory = useControlEntitiesEditorService(controlId, 'local-variables', confirmModal)
+	useEntityListReorderMonitor(controlId, EntityModelType.Feedback, serviceFactory)
 
 	const entityIds = useMemo(() => findAllEntityIdsDeep(localVariables), [localVariables])
 

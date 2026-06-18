@@ -1530,7 +1530,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.10.3, @babel/runtime@npm:^7.12.13, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.25.9, @babel/runtime@npm:^7.29.2, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
+"@babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.10.3, @babel/runtime@npm:^7.12.13, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.25.9, @babel/runtime@npm:^7.29.2, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
   version: 7.29.2
   resolution: "@babel/runtime@npm:7.29.2"
   checksum: 10c0/30b80a0140d16467792e1bbeb06f655b0dab70407da38dfac7fedae9c859f9ae9d846ef14ad77bd3814c064295fe9b1bc551f1541ea14646ae9f22b71a8bc17a
@@ -1767,6 +1767,9 @@ __metadata:
     "@base-ui/react": "npm:^1.5.0"
     "@companion-app/shared": "npm:*"
     "@coreui/coreui": "npm:^5.6.1"
+    "@dnd-kit/dom": "npm:^0.4.0"
+    "@dnd-kit/helpers": "npm:^0.4.0"
+    "@dnd-kit/react": "npm:^0.4.0"
     "@floating-ui/react": "npm:^0.27.19"
     "@fontsource/fira-code": "npm:^5.2.7"
     "@fontsource/roboto": "npm:^5.2.10"
@@ -1828,9 +1831,6 @@ __metadata:
     quick-lru: "npm:^7.3.0"
     react: "npm:^18.3.1"
     react-date-picker: "npm:^12.0.2"
-    react-dnd: "npm:^16.0.1"
-    react-dnd-html5-backend: "npm:^16.0.1"
-    react-dnd-touch-backend: "npm:^16.0.1"
     react-dom: "npm:^18.3.1"
     react-error-boundary: "npm:^6.1.2"
     react-idle-timer: "npm:^5.7.3"
@@ -2606,6 +2606,86 @@ __metadata:
   version: 0.5.7
   resolution: "@discoveryjs/json-ext@npm:0.5.7"
   checksum: 10c0/e10f1b02b78e4812646ddf289b7d9f2cb567d336c363b266bd50cd223cf3de7c2c74018d91cd2613041568397ef3a4a2b500aba588c6e5bd78c38374ba68f38c
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/abstract@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/abstract@npm:0.4.0"
+  dependencies:
+    "@dnd-kit/geometry": "npm:^0.4.0"
+    "@dnd-kit/state": "npm:^0.4.0"
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/aabe218c13e371f2760a3620b71a69b863af77ceb1b147515abef0ed9078f83bc37ae600cad98db6884d9f445c5b8cf9b8cbe4a381ce43aaf886b53a640895a6
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/collision@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/collision@npm:0.4.0"
+  dependencies:
+    "@dnd-kit/abstract": "npm:^0.4.0"
+    "@dnd-kit/geometry": "npm:^0.4.0"
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/8f6895cdc2742e6720426fdd59439791aa73eecc1e57578a737981b31bd79c3feafc11977c5e5e320c21cc6d01dd60cdcefa17dbeaccf12b65617f2bda359d0f
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/dom@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/dom@npm:0.4.0"
+  dependencies:
+    "@dnd-kit/abstract": "npm:^0.4.0"
+    "@dnd-kit/collision": "npm:^0.4.0"
+    "@dnd-kit/geometry": "npm:^0.4.0"
+    "@dnd-kit/state": "npm:^0.4.0"
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/53450a4c504872863b9e5dcdf113be189144bdfb4f7ed13da98eab5cf6d5921f16b6504a22623923fdefa27d5c4025c73c2d1f9fc3e68feb6d3ce20b8afe88d0
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/geometry@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/geometry@npm:0.4.0"
+  dependencies:
+    "@dnd-kit/state": "npm:^0.4.0"
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/1a3e5eb87c3ffc6927a6a91b0a776c638a75bb1a267c69de096096875f39557023ffd423243a763198c421fceed09d939ae7570c3cbadabdd5d75d7ec7b460e7
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/helpers@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/helpers@npm:0.4.0"
+  dependencies:
+    "@dnd-kit/abstract": "npm:^0.4.0"
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/9540eebcbc7ef64e90e6a5870b3d02a0934963a2bf9c699ad363f46f1067becb8a5d70d85fbcc24e8f4a2e8a20ae2d2a2fbb6f38f93492f680f14daeb99785d8
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/react@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/react@npm:0.4.0"
+  dependencies:
+    "@dnd-kit/abstract": "npm:^0.4.0"
+    "@dnd-kit/dom": "npm:^0.4.0"
+    "@dnd-kit/state": "npm:^0.4.0"
+    tslib: "npm:^2.6.2"
+  peerDependencies:
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  checksum: 10c0/1cc4f2c098a61ae77459db1b0ab1db29111464525797a32dfa6464f40ab1ebdce469dd4ff56719e0d79053e13f84f0ef7ae642063306c3adbdc2d51d3e123500
+  languageName: node
+  linkType: hard
+
+"@dnd-kit/state@npm:^0.4.0":
+  version: 0.4.0
+  resolution: "@dnd-kit/state@npm:0.4.0"
+  dependencies:
+    "@preact/signals-core": "npm:^1.10.0"
+    tslib: "npm:^2.6.2"
+  checksum: 10c0/22ced96e6477095c5a2e6176438f6b56bb343e5cf52a2bbe2eeeda2f31d8ba25b848c1e6b5c79112e3dcaf53add1fdc598a21e0bbf7486a5f3c06001a4db5791
   languageName: node
   linkType: hard
 
@@ -6096,6 +6176,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@preact/signals-core@npm:^1.10.0":
+  version: 1.14.2
+  resolution: "@preact/signals-core@npm:1.14.2"
+  checksum: 10c0/898e6e22a5d2a11bd3d5b109c8d9bacff0e9bc9f23c01455901b7feab8c441dc03fdd53cfd7b5f9275b0df052fcaeb8c8928f537cebb190d9e02a6f2a3ac441e
+  languageName: node
+  linkType: hard
+
 "@prisma/instrumentation@npm:7.6.0":
   version: 7.6.0
   resolution: "@prisma/instrumentation@npm:7.6.0"
@@ -6104,27 +6191,6 @@ __metadata:
   peerDependencies:
     "@opentelemetry/api": ^1.8
   checksum: 10c0/ed505510164e3be0abf5476f178bef534e7011934e694df16256ee3fc046a64268afe3af8f04f3fd2795d0040ed43a4c81d39b2e859885338b750f6eff4c1f3b
-  languageName: node
-  linkType: hard
-
-"@react-dnd/asap@npm:^5.0.1":
-  version: 5.0.2
-  resolution: "@react-dnd/asap@npm:5.0.2"
-  checksum: 10c0/0063db616db9801c9be18f11a912c3e214f87e714b1e4bf9462952af7ead65cba0b43e1f7c34bc8748811b6926e74d929e5e126f85ebb91b870faf809ceb5177
-  languageName: node
-  linkType: hard
-
-"@react-dnd/invariant@npm:^4.0.1":
-  version: 4.0.2
-  resolution: "@react-dnd/invariant@npm:4.0.2"
-  checksum: 10c0/b303cc53fc5074cefb2a76b45b9c73ebb5d35630b18f5dc282ed9a9ac9b0287b9da1f6ac63acfdea2341b8f8187f615afc12d5eb14ec6015964f5c1b167332e2
-  languageName: node
-  linkType: hard
-
-"@react-dnd/shallowequal@npm:^4.0.1":
-  version: 4.0.2
-  resolution: "@react-dnd/shallowequal@npm:4.0.2"
-  checksum: 10c0/9a352fd176752e5d9c2797d598aca034b7829111ae0c992d80f40d5f068fcd6a039b1841c741dfa1ab67a36a00664310aec4f0ce216e4112f80875c9fe6fd8dc
   languageName: node
   linkType: hard
 
@@ -12373,17 +12439,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dnd-core@npm:^16.0.1":
-  version: 16.0.1
-  resolution: "dnd-core@npm:16.0.1"
-  dependencies:
-    "@react-dnd/asap": "npm:^5.0.1"
-    "@react-dnd/invariant": "npm:^4.0.1"
-    redux: "npm:^4.2.0"
-  checksum: 10c0/6b852c576c88b0a42e618efb37e046334f5e9914b8d38ad139933dd9595b6caf2a484953a6301094d23119c17479549553d71e92fd77fa37318122ea1e579f65
-  languageName: node
-  linkType: hard
-
 "dns-packet@npm:^5.2.2":
   version: 5.6.1
   resolution: "dns-packet@npm:5.6.1"
@@ -15171,7 +15226,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hoist-non-react-statics@npm:^3.1.0, hoist-non-react-statics@npm:^3.3.2":
+"hoist-non-react-statics@npm:^3.1.0":
   version: 3.3.2
   resolution: "hoist-non-react-statics@npm:3.3.2"
   dependencies:
@@ -21080,50 +21135,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dnd-html5-backend@npm:^16.0.1":
-  version: 16.0.1
-  resolution: "react-dnd-html5-backend@npm:16.0.1"
-  dependencies:
-    dnd-core: "npm:^16.0.1"
-  checksum: 10c0/6e4b632a11e20211d71f5f3bedadf13ecec2fa73372fde388619838294b1375f15b717d1ce128e12c872ff7b15c32d26761d2026b33c14fc55e4fd5477c15289
-  languageName: node
-  linkType: hard
-
-"react-dnd-touch-backend@npm:^16.0.1":
-  version: 16.0.1
-  resolution: "react-dnd-touch-backend@npm:16.0.1"
-  dependencies:
-    "@react-dnd/invariant": "npm:^4.0.1"
-    dnd-core: "npm:^16.0.1"
-  checksum: 10c0/88096146939a0466d43b9b4e33a3761284e36f40e82d2dbd1ab1130d81b40110b45492fb828db7857f3822cd44f604f646de0a2285f18ccb0697b5b088fa4b22
-  languageName: node
-  linkType: hard
-
-"react-dnd@npm:^16.0.1":
-  version: 16.0.1
-  resolution: "react-dnd@npm:16.0.1"
-  dependencies:
-    "@react-dnd/invariant": "npm:^4.0.1"
-    "@react-dnd/shallowequal": "npm:^4.0.1"
-    dnd-core: "npm:^16.0.1"
-    fast-deep-equal: "npm:^3.1.3"
-    hoist-non-react-statics: "npm:^3.3.2"
-  peerDependencies:
-    "@types/hoist-non-react-statics": ">= 3.3.1"
-    "@types/node": ">= 12"
-    "@types/react": ">= 16"
-    react: ">= 16.14"
-  peerDependenciesMeta:
-    "@types/hoist-non-react-statics":
-      optional: true
-    "@types/node":
-      optional: true
-    "@types/react":
-      optional: true
-  checksum: 10c0/d069435750f0d6653cfa2b951cac8abb3583fb144ff134a20176608877d9c5964c63384ebbacaa0fdeef819b592a103de0d8e06f3b742311d64a029ffed0baa3
-  languageName: node
-  linkType: hard
-
 "react-docgen-typescript@npm:^2.2.2":
   version: 2.4.0
   resolution: "react-docgen-typescript@npm:2.4.0"
@@ -21558,15 +21569,6 @@ __metadata:
     indent-string: "npm:^4.0.0"
     strip-indent: "npm:^3.0.0"
   checksum: 10c0/d64a6b5c0b50eb3ddce3ab770f866658a2b9998c678f797919ceb1b586bab9259b311407280bd80b804e2a7c7539b19238ae6a2a20c843f1a7fcff21d48c2eae
-  languageName: node
-  linkType: hard
-
-"redux@npm:^4.2.0":
-  version: 4.2.1
-  resolution: "redux@npm:4.2.1"
-  dependencies:
-    "@babel/runtime": "npm:^7.9.2"
-  checksum: 10c0/136d98b3d5dbed1cd6279c8c18a6a74c416db98b8a432a46836bdd668475de6279a2d4fd9d1363f63904e00f0678a8a3e7fa532c897163340baf1e71bb42c742
   languageName: node
   linkType: hard
 

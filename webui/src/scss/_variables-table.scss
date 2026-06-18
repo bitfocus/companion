@@ -48,10 +48,6 @@
 	overflow-y: auto;
 	overflow-x: hidden;
 
-	.variable-dragging {
-		@include dragging-style();
-	}
-
 	.variable-description {
 		word-break: normal;
 		padding: $variable-padding;
