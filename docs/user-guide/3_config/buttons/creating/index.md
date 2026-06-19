@@ -4,19 +4,22 @@ sidebar_position: 1
 description: Create buttons using presets or manual styling and configuration.
 ---
 
-There are two ways of setting up buttons
+There are two ways of setting up buttons.
 
 ## Using presets
 
 The fastest way to define buttons is to use the presets.
 
-Presets are ready made buttons with text, actions and feedback so you don't need to spend time making everything from scratch. They can be drag and dropped onto your button layout.  
-Not every module provides presets, and you are able to do a lot more by defining the actions on the buttons yourself, but presets can be a good starting point for those buttons.  
+Presets are ready made buttons with text, actions and feedback so you don't need to spend time making
+everything from scratch. They can be drag and dropped onto your button layout.  
+Not every module provides presets, and you are able to do a lot more by defining the actions on the
+buttons yourself, but presets can be a good starting point for those buttons.  
 Once you have placed a preset, it is editable just like a manually defined button.
 
 These can be found in the **Presets** tab on the right side of the button grid.
 
-If one of your modules supports presets, it will be listed in this tab for you to select, just like below.
+If one of your modules supports presets, it will be listed in this tab for you to select, just like
+below.
 
 _An example of modules currently loaded with premade presets_  
 ![Preset Modules](images/preset-modules.png?raw=true 'Preset Modules')
@@ -31,64 +34,62 @@ Drag the preset buttons onto a page's button when in the Button Layout view.
 Keep in mind you may still need to configure the preset after adding it to a button.
 
 :::note
-Presets are pre-made by the module author, you can't create your own. You can build your own library of presets on other pages, which can be exported and reimported instead.
+Presets are pre-made by the module author, you can't create your own. You can build your own library
+of presets on other pages, which can be exported and reimported instead.
 
-If you think additional presets may be helpful, you can request them on the module's GitHub Issues page. You can find a link to this in the [Connections page](../../connections.md)
+If you think additional presets may be helpful, you can request them on the module's GitHub Issues
+page. You can find a link to this in the [Connections page](../../connections.md)
 :::
 
 ## Manually defining
 
 1. Click on the button space you want the button to be located on.
 2. Set the button's type:
-   - **Regular button**: Can trigger one or more actions. You can also click **Create button** instead of the dropdown to do this
-   - **Page up**: Can move up to the next page set of buttons.
-   - **Page number**: Shows the current page number/name.  
-      Pressing this button will return to the home page of the surface (by default page 1).
-   - **Page down**: Can move down to the previous page set of buttons.
+   - **Regular button**: Can trigger one or more actions. You can also click **Create button**
+     instead of the dropdown to do this.
+   - **Page up**: Moves the surface up to the next page.
+   - **Page number**: Shows the current page number/name. Pressing it returns the surface to its
+     **startup page**.
+   - **Page down**: Moves the surface down to the previous page.
 
 ![Selecting type](images/selecting-type.png?raw=true 'Selecting type')
 
-### Button styling
+### Customising the page buttons
 
-There are several ways you can make your button stand out, including:
+The **Page up**, **Page number** and **Page down** buttons are special buttons with built-in
+behaviour. If you'd like to change how one of them looks or behaves, click **Edit** (the pencil icon)
+to **Convert to Normal Button**. This turns the special button into a regular button with the
+equivalent actions already filled in, which you can then restyle and customise freely.
 
-- Defining the button text.
-- Adjusting the font's size.
-- Adding a PNG image to be used as a button's background. Text can be added on top.
-- Setting the alignment of the text.
-- Setting the alignment of the PNG image.
-- Changing the text's color.
-- Changing the button's background color.
-- Change whether the topbar is shown on the button. This can be changed per button, or globally in the settings.
+This is a one-way conversion and can't be undone.
 
-There are also some behaviour options:
+### Styling the button
 
-- Change how the current step of the button changes when multiple steps are defined [Steps](./steps.md).
-- Enable rotary actions for this button, to support the dials on a Stream Deck + (or other surfaces).
+A button's appearance is built from layered graphics elements — text, images, shapes and more. This is
+covered in its own section: [Button styling](./button-styling/index.md).
 
-![Button config](images/button-config.png?raw=true 'Button config')
+A live preview of the button is shown in the top corner of the editor and updates in real time, so you
+can see your changes immediately on the Emulator and on any connected surfaces.
 
-### Creating a button
+### Behaviour options
 
-Enter your button's text in the **Button text** field, then select the alignment and font size. Text and background colors can also be changed.
+As well as its appearance, a button has a couple of behaviour options:
 
-You can force a newline in a label by typing `\n` where you want the newline to appear.
+- **Step progression** — how the button moves between steps when you've defined more than one. See
+  [Steps](./steps.md).
+- **Rotary actions** — enable this to support the dials/encoders on a Stream Deck + (and other
+  surfaces with rotation).
 
-You can write the text either as a string optionally using variables, or it can be written using the expression syntax. Clicking the button to the right of the text field will change the mode.
+### Adding actions
 
-A live preview of the button will be shown on the top right corner. Button information will update in real-time in the Emulator and on any connected Surfaces.
+Add actions to the button from the **Add Press/on action** drop-down menu. You can add multiple
+actions and use the **internal: Wait** action to delay when certain things happen (delay times are in
+milliseconds, so 1000ms = 1 second). See [Actions](./actions.md) for the full details.
 
-Add actions to the button from the **Add Press/on action** drop-down menu.
+## Notes
 
-You can add multiple actions and use the **internal: Wait** Action to delay when certain things happen. Delay times are in milliseconds. 1000ms = 1 second.
-
-You can hide the topbar with the dropdown. This can be configured globally in the settings, or overridden per button.
-
-![Button with topbar](images/button-with-topbar.png?raw=true 'Button with topbar') ![Button without topbar](images/button-without-topbar.png?raw=true 'Button without topbar')  
-_Same 72x72px image, but with and without the topbar_
-
-### Adding a PNG
-
-Make a 72x58px PNG image or use a 72x72px PNG, but it will get cropped to fit 72x58px by the topbar. Unless you disable the bar in the settings tab. See the [Settings](../../settings.md#buttons) section below.
-
-Click the red **Browse** button and choose the PNG file you want to use. The picture will appear on the top right preview of the button. Text can be applied over the image.
+Every button has a **Notes** field (look for the _Notes…_ box near the top of the button editor).
+Anything you type here is just for you — it's an internal reminder that never appears on the button
+itself. It's a great place to jot down why a button is set up the way it is, which is invaluable when
+you come back to a complex show months later. The same notes field is also available on
+[triggers](../../triggers.md) and expression variables.

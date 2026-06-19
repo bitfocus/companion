@@ -29,7 +29,7 @@ This is typically stable for every day use, but this is not always the case.
 ### Mac
 
 :::note
-As of 4.2 we only support macOS 12 and newer.
+As of 5.0 we support macOS 13.5 and newer.
 :::
 
 Unzip the download, drag Companion.app into your Applications folder
@@ -37,7 +37,7 @@ Unzip the download, drag Companion.app into your Applications folder
 ### Windows (x64)
 
 :::note
-As of 3.0 we only support Windows 10 and newer.
+As of 3.0 we support Windows 10 and newer.
 :::
 
 Download, install and run!
