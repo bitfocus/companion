@@ -357,7 +357,7 @@ describe('IpcWrapper', () => {
 				})
 			)
 
-			const err = await wrapperA.sendWithCb('throwsError').catch((e) => e)
+			const err = await wrapperA.sendWithCb('throwsError', undefined).catch((e) => e)
 			expect(err).toBeInstanceOf(Error)
 			expect(err.name).toBe('CustomError')
 			expect(err.message).toBe('remote failure')
