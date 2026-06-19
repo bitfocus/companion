@@ -149,8 +149,11 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		// Use floor over a [0, n+1) range so that min and max are as likely as interior values
 		return min + Math.floor(Math.random() * (max - min + 1))
 	},
-	log: (v) => Math.log(v),
+	log: (v, base) => (base === undefined ? Math.log(v) : Math.log(v) / Math.log(base)),
 	log10: (v) => Math.log10(v),
+	exp: (v) => Math.exp(v),
+	sqrt: (v) => Math.sqrt(v),
+	pow: (base, exponent) => Math.pow(base, exponent),
 
 	// String operations
 	trim: (v) => toString(v).trim(),

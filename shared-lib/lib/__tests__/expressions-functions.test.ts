@@ -197,6 +197,13 @@ describe('functions', () => {
 			expect(ExpressionFunctions.log(undefined)).toBe(NaN)
 		})
 
+		it('log with base', () => {
+			expect(ExpressionFunctions.log(8, 2)).toBeCloseTo(3)
+			expect(ExpressionFunctions.log(1000, 10)).toBeCloseTo(3)
+			expect(ExpressionFunctions.log('100', 10)).toBeCloseTo(2)
+			expect(ExpressionFunctions.log(8)).toBeCloseTo(Math.log(8)) // base omitted = natural
+		})
+
 		it('log10', () => {
 			expect(ExpressionFunctions.log10(1)).toBe(0)
 			expect(ExpressionFunctions.log10(10)).toBe(1)
@@ -206,6 +213,28 @@ describe('functions', () => {
 			expect(ExpressionFunctions.log10(-1)).toBe(NaN)
 			expect(ExpressionFunctions.log10('100')).toBe(2)
 			expect(ExpressionFunctions.log10(undefined)).toBe(NaN)
+		})
+
+		it('exp', () => {
+			expect(ExpressionFunctions.exp(0)).toBe(1)
+			expect(ExpressionFunctions.exp(1)).toBeCloseTo(Math.E)
+			expect(ExpressionFunctions.exp('2')).toBeCloseTo(Math.E * Math.E)
+			expect(ExpressionFunctions.exp(undefined)).toBe(NaN)
+		})
+
+		it('sqrt', () => {
+			expect(ExpressionFunctions.sqrt(9)).toBe(3)
+			expect(ExpressionFunctions.sqrt('16')).toBe(4)
+			expect(ExpressionFunctions.sqrt(-1)).toBe(NaN)
+			expect(ExpressionFunctions.sqrt(undefined)).toBe(NaN)
+		})
+
+		it('pow', () => {
+			expect(ExpressionFunctions.pow(2, 10)).toBe(1024)
+			expect(ExpressionFunctions.pow(9, 0.5)).toBe(3)
+			expect(ExpressionFunctions.pow('2', '3')).toBe(8)
+			expect(ExpressionFunctions.pow(2, -1)).toBe(0.5)
+			expect(ExpressionFunctions.pow(2, undefined)).toBe(NaN)
 		})
 	})
 

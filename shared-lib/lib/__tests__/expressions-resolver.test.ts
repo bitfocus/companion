@@ -93,6 +93,20 @@ describe('resolver', function () {
 		})
 	})
 
+	describe('builtin constants', function () {
+		it('should resolve PI', function () {
+			expect(resolve(parse('PI'), defaultGetValue)).toBeCloseTo(Math.PI)
+		})
+
+		it('should be usable in expressions', function () {
+			expect(resolve(parse('2 * PI'), defaultGetValue)).toBeCloseTo(2 * Math.PI)
+		})
+
+		it('should be overridable by an explicit assignment', function () {
+			expect(resolve(parse('PI = 5 ; PI'), defaultGetValue)).toBe(5)
+		})
+	})
+
 	describe('expressions with symbol/variable operands', function () {
 		it('should handle symbol and literal operands', function () {
 			const postfix = parse('$(internal:a) + 1')

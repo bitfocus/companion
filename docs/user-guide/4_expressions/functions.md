@@ -90,13 +90,37 @@ Generate a random integer in the specified range (inclusive).
 
 eg `randomInt(1, 6)` gives a dice roll between 1 and 6.
 
-**log(v)**
+**log(v, [base])**
 
-Calculate the natural logarithm of a number.
+Calculate the logarithm of a number. With no base, returns the natural logarithm (base e). With a base, returns the logarithm to that base.
+
+eg `log(8, 2)` gives `3`, `log(1000, 10)` gives `3`
 
 **log10(v)**
 
 Calculate the base 10 logarithm of a number.
+
+eg `log10(1000)` gives `3`
+
+**exp(v)**
+
+Calculate e raised to the power of a number (the inverse of the natural logarithm).
+
+eg `exp(0)` gives `1`. The value of e itself is `exp(1)`.
+
+**sqrt(v)**
+
+Calculate the square root of a number.
+
+eg `sqrt(9)` gives `3`
+
+**pow(base, exponent)**
+
+Calculate the base raised to the power of the exponent. Equivalent to the `**` operator, but available as a function for clarity and for those used to other languages.
+
+eg `pow(2, 10)` gives `1024`
+
+The constant `PI` is also available as a value, eg `2 * PI`.
 
 ### String operations
 
