@@ -153,6 +153,7 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 	log10: (v) => Math.log10(v),
 	exp: (v) => Math.exp(v),
 	sqrt: (v) => Math.sqrt(v),
+	pow: (base, exponent) => Math.pow(base, exponent),
 
 	// String operations
 	trim: (v) => toString(v).trim(),

@@ -114,6 +114,12 @@ Calculate the square root of a number.
 
 eg `sqrt(9)` gives `3`
 
+**pow(base, exponent)**
+
+Calculate the base raised to the power of the exponent. Equivalent to the `**` operator, but available as a function for clarity and for those used to other languages.
+
+eg `pow(2, 10)` gives `1024`
+
 The constant `PI` is also available as a value, eg `2 * PI`.
 
 ### String operations

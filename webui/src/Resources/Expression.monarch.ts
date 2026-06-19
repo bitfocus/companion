@@ -84,6 +84,7 @@ export const builtinFunctionCompletions: Array<{
 	{ name: 'log10', detail: 'log10(number)', documentation: 'Returns the base-10 logarithm of a number' },
 	{ name: 'exp', detail: 'exp(number)', documentation: 'Returns e raised to the power of a number' },
 	{ name: 'sqrt', detail: 'sqrt(number)', documentation: 'Returns the square root of a number' },
+	{ name: 'pow', detail: 'pow(base, exponent)', documentation: 'Returns the base raised to the power of the exponent' },
 
 	// String operations
 	{ name: 'trim', detail: 'trim(string)', documentation: 'Removes whitespace from both ends of a string' },

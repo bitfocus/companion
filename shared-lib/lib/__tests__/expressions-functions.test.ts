@@ -228,6 +228,14 @@ describe('functions', () => {
 			expect(ExpressionFunctions.sqrt(-1)).toBe(NaN)
 			expect(ExpressionFunctions.sqrt(undefined)).toBe(NaN)
 		})
+
+		it('pow', () => {
+			expect(ExpressionFunctions.pow(2, 10)).toBe(1024)
+			expect(ExpressionFunctions.pow(9, 0.5)).toBe(3)
+			expect(ExpressionFunctions.pow('2', '3')).toBe(8)
+			expect(ExpressionFunctions.pow(2, -1)).toBe(0.5)
+			expect(ExpressionFunctions.pow(2, undefined)).toBe(NaN)
+		})
 	})
 
 	describe('string', () => {
