@@ -35,7 +35,7 @@ import type {
 	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
 	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
 	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
-	ExpressionOrValue as ExpressionOrValueModule,
+	CompanionGraphicsElementValue,
 	JsonValue,
 	ModuleLogger,
 	SomeButtonGraphicsElement as SomeButtonGraphicsElementModule,
@@ -62,7 +62,7 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 				overrideId: nanoid(),
 				elementId: override.elementId,
 				elementProperty: override.elementProperty,
-				override: override.override,
+				override: convertModuleExpressionOrValue(override.override, { isExpression: false, value: undefined }),
 			}))
 		if (styleOverrides.length === 0) continue
 
@@ -145,8 +145,8 @@ function convertLayeredPresetElement(
 				...convertElementBasicProperties(element, 'Group', forceNewIds),
 
 				...convertElementSize(element),
-				rotation: { value: 0, isExpression: false }, // TODO - presets
-				squareCoords: { value: false, isExpression: false },
+				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
+				squareCoords: convertModuleExpressionOrValue(element.squareCoords, { value: false, isExpression: false }),
 
 				children: element.children
 					.map((child) => convertLayeredPresetElement(logger, connectionId, child, forceNewIds))
@@ -174,8 +174,15 @@ function convertLayeredPresetElement(
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				text: convertModuleExpressionOrValue(element.text, { value: '', isExpression: false }),
-				...convertModuleFontsize(element.fontsize as ExpressionOrValueModule<string> | undefined),
-				font: { value: 'companion-sans', isExpression: false }, // Future: expose to presets
+				fontsize: convertModuleExpressionOrValue(element.fontsize, {
+					value: FONTSIZE_SHRINK_DEFAULT,
+					isExpression: false,
+				}),
+				fontsizeAllowShrink: convertModuleExpressionOrValue(element.fontsizeAllowShrink, {
+					value: true,
+					isExpression: false,
+				}),
+				font: convertModuleExpressionOrValue(element.font, { value: 'companion-sans', isExpression: false }),
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
 				valign: convertModuleExpressionOrValue(element.valign, { value: 'center', isExpression: false }),
@@ -268,36 +275,12 @@ function convertElementBasicProperties(
 	}
 }
 
-function convertModuleFontsize(value: ExpressionOrValueModule<string> | undefined): {
-	fontsize: ExpressionOrValue<number>
-	fontsizeAllowShrink: ExpressionOrValue<boolean>
-} {
-	if (!isExpressionOrValue(value)) {
-		return {
-			fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
-			fontsizeAllowShrink: { value: true, isExpression: false },
-		}
-	}
-	if (value.isExpression) {
-		// If its an expression, it must be prepared for this new structure, so its easy to handle
-		// TODO - adjust this once API has been updated
-		return {
-			fontsize: { value: value.value, isExpression: true },
-			fontsizeAllowShrink: { value: false, isExpression: false },
-		}
-	}
-	const isAuto = value.value === 'auto' || Number.isNaN(Number(value.value))
-	return {
-		fontsize: { value: isAuto ? FONTSIZE_SHRINK_DEFAULT : Number(value.value), isExpression: false },
-		fontsizeAllowShrink: { value: isAuto, isExpression: false },
-	}
-}
-
 function convertModuleExpressionOrValue<T>(
-	value: ExpressionOrValueModule<T> | undefined,
+	value: CompanionGraphicsElementValue<T> | undefined,
 	defaultValue: ExpressionOrValue<T>
 ): ExpressionOrValue<T> {
-	if (!isExpressionOrValue(value)) return defaultValue
+	if (value === undefined) return defaultValue
+	if (!isExpressionOrValue(value)) return { isExpression: false, value: value }
 
 	if (value.isExpression) {
 		return { value: value.value, isExpression: true }
