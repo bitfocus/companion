@@ -54,6 +54,8 @@ interface PendingCallback {
 	reject: (e: any) => void
 	signal: AbortSignal | undefined
 	abortHandler: (() => void) | undefined
+	/** Host-side call site, captured synchronously so a remote error can be stitched onto it */
+	callstackError: Error
 }
 
 export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound extends { [key: string]: any }> {
@@ -75,6 +77,14 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 		this.#defaultTimeout = defaultTimeout
 	}
 
+	/**
+	 * Replace the inbound handler table. Used to swap to a different set of handlers once a
+	 * connection has progressed past a restricted phase (e.g. after registration).
+	 */
+	replaceHandlers(handlers: IpcEventHandlers<TInbound>): void {
+		this.#handlers = handlers
+	}
+
 	async sendWithCb<T extends keyof TOutbound>(
 		name: T,
 		msg: ParamsIfReturnIsValid<TOutbound[T]>[0],
@@ -94,6 +104,9 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 			reject: promise.reject,
 			signal: signal,
 			abortHandler: undefined,
+			// Capture the host call site now, while the stack is meaningful, so a remote
+			// failure can be stitched onto it in deserializeError()
+			callstackError: new Error(`IPC call "${String(name)}" failed`),
 		}
 
 		// Reset the id when it gets really high
@@ -203,7 +216,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 							direction: 'response',
 							callbackId: callbackId,
 							success: false,
-							payload: err instanceof Error ? JSON.stringify(err, Object.getOwnPropertyNames(err)) : err,
+							payload: serializeError(err),
 						})
 					}
 				)
@@ -240,14 +253,7 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 				if (msg.success) {
 					callbacks.resolve(data)
 				} else {
-					let err: any = data
-					if (data && typeof data === 'object' && 'message' in data) {
-						const errData = data as any
-
-						err = new Error(errData.message)
-						if (errData.stack) err.stack = errData.stack
-					}
-					callbacks.reject(err)
+					callbacks.reject(deserializeError(data, callbacks.callstackError))
 				}
 
 				break
@@ -258,4 +264,58 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 				break
 		}
 	}
+}
+
+/**
+ * Serialize a rejected value for transport over IPC. Errors become a structured object so the
+ * receiver can faithfully reconstruct name/message/stack (plus any custom enumerable properties
+ * the module attached); non-Error values are passed through untouched.
+ */
+function serializeError(err: unknown): unknown {
+	if (!(err instanceof Error)) return err
+
+	const out: Record<string, unknown> = {
+		name: err.name,
+		message: err.message,
+		stack: err.stack,
+	}
+	// Preserve any extra own properties (e.g. error codes) that modules sometimes attach.
+	const errProps = err as unknown as Record<string, unknown>
+	for (const key of Object.keys(err)) {
+		if (!(key in out)) out[key] = errProps[key]
+	}
+	return out
+}
+
+/**
+ * Reconstruct an Error from an IPC error payload produced by serializeError() on the other end.
+ * Errors arrive as structured objects; a module that threw a non-Error value (e.g. `throw 'boom'`)
+ * arrives as that raw value, which we wrap so callers always reject with a real Error rather than a
+ * bare string. Anything else is passed through untouched.
+ *
+ * The remote stack only shows where the error was thrown inside the child. `callstackError` carries
+ * the host-side call site (captured synchronously in sendWithCb); we append its frames so the final
+ * stack shows both the remote failure and the host call that triggered it.
+ */
+function deserializeError(data: unknown, callstackError: Error): unknown {
+	let err: Error | undefined
+	if (data && typeof data === 'object' && 'message' in data) {
+		const errData = data as { name?: unknown; message?: unknown; stack?: unknown }
+		err = new Error(String(errData.message))
+		if (typeof errData.name === 'string') err.name = errData.name
+		if (typeof errData.stack === 'string') err.stack = errData.stack
+	} else if (typeof data === 'string') {
+		err = new Error(data)
+	}
+
+	// Couldn't interpret the payload as an error — pass it through untouched.
+	if (!err) return data
+
+	// Strip the synthetic header line ("Error: IPC call ... failed") and keep just the host frames.
+	const hostFrames = callstackError.stack?.replace(/^.*?\n/, '')
+	if (hostFrames) {
+		err.stack = `${err.stack ?? `${err.name}: ${err.message}`}\n    --- via IPC call ---\n${hostFrames}`
+	}
+
+	return err
 }
