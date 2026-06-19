@@ -143,9 +143,9 @@ describe('ElementExpressionHelper', () => {
 		})
 
 		test('tracks variable IDs even when expression type check fails', () => {
-			// Numeric variable with requiredType:'boolean' forces ok:false (no coercion for boolean)
+			// Numeric variable with requiredType:'object' forces ok:false (no coercion for object)
 			const { helper, usedVariables } = makeHelper(makeEl(), { ns: { x: 10 } })
-			const result = helper.executeExpressionAndTrackVariables('$(ns:x)', 'boolean')
+			const result = helper.executeExpressionAndTrackVariables('$(ns:x)', 'object')
 			expect(result.ok).toBe(false)
 			expect(usedVariables.has('ns:x')).toBe(true)
 		})
@@ -495,10 +495,15 @@ describe('ElementExpressionHelper', () => {
 			expect(helper.getBoolean('boolProp', false)).toBe(true)
 		})
 
-		test('returns defaultValue when expression returns non-boolean (type mismatch)', () => {
-			// $(ns:x) is a number; requiredType:'boolean' causes failure since there is no boolean coercion
+		test('coerces truthy non-boolean expression result to true', () => {
+			// $(ns:x) is a number; requiredType:'boolean' coerces it via Boolean()
 			const { helper } = makeHelper(makeEl({ boolProp: expr('$(ns:x)') }), { ns: { x: 1 } })
-			expect(helper.getBoolean('boolProp', false)).toBe(false)
+			expect(helper.getBoolean('boolProp', false)).toBe(true)
+		})
+
+		test('coerces falsy non-boolean expression result to false', () => {
+			const { helper } = makeHelper(makeEl({ boolProp: expr('$(ns:x)') }), { ns: { x: 0 } })
+			expect(helper.getBoolean('boolProp', true)).toBe(false)
 		})
 
 		test('returns defaultValue when expression has syntax error', () => {

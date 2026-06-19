@@ -657,22 +657,21 @@ describe('no contextResolution', () => {
 		await sub.cleanup()
 	})
 
-	it('requiredType: boolean fails when expression is not boolean', async () => {
+	it('requiredType: boolean coerces a non-boolean expression result', async () => {
 		const cc = makeControlsControllerMock(() => ({ test: { num: 42 } }))
 		const lv = makeLocalVariablesMock(null, () => null)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
-				expression: '$(test:num)', // number, not boolean
+				expression: '$(test:num)', // number, coerced to boolean
 				controlId: 'ctrl1',
 				isVariableString: false,
 				requiredType: 'boolean',
 			})
 		)
 
-		const result = await sub.next()
-		expect(result.ok).toBe(false)
+		await sub.expectValue({ ok: true, value: true })
 		await sub.cleanup()
 	})
 })
