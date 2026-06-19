@@ -48,10 +48,6 @@
     "yarn": "^4.14",
     "node": ">=26.3.0 <27"
   },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx}": "eslint",
-    "*.{json,css,scss,md,yaml,yml}": "prettier --check"
-  },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch",
@@ -79,7 +75,8 @@
     "prettier": "^3.8.4",
     "socket": "^1.1.119",
     "tsx": "^4.22.4",
-    "typescript": "~6.0.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
+    "typescript-7": "npm:typescript@rc",
     "typescript-eslint": "^8.61.0",
     "vitest": "^4.1.8",
     "vitest-mock-extended": "^4.0.0",

@@ -41,7 +41,8 @@
     "@types/ws": "^8.18.1",
     "@types/yazl": "^3.3.1",
     "supertest": "^7.2.2",
-    "typescript": "~6.0.3"
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
+    "typescript-7": "npm:typescript@rc"
   },
   "dependencies": {
     "@companion-app/shared": "*",

@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@types/semver": "^7.7.1",
-    "typescript": "~6.0.3"
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
+    "typescript-7": "npm:typescript@rc"
   }
 }

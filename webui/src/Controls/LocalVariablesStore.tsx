@@ -24,7 +24,7 @@ export class LocalVariablesStore {
 	}
 
 	setEntities(localVariables: SomeEntityModel[]): void {
-		this.#variables.replace(localVariables.map((v) => [v.id, v]))
+		this.#variables.replace(localVariables.map((v): [string, SomeEntityModel] => [v.id, v]))
 	}
 
 	setValues(values: VariableValues): void {
