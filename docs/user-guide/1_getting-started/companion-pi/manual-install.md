@@ -49,6 +49,11 @@ The install script performs the following steps:
 
 If you want to understand the full scope of the changes, you can read the [install script](https://github.com/bitfocus/companion-pi/blob/main/install.sh).
 
+## Configuring the server
+
+Launch-level options such as the admin port, logging and the security features are managed with the
+`config-tool`. See [Headless configuration](./config-tool.md) for details.
+
 ## Customisation
 
 You are free to customise the installation as you wish, but care should be taken to avoid breaking the updater or making changes that the updater will replace during the next update.

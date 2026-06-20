@@ -24,6 +24,16 @@ If your Stream Deck is missing from this list, you might need to close the Elgat
 
 If any of your surfaces are not in the configured surfaces list, press the **Rescan USB** button. You can avoid needing to do this by enabling **Watch for new USB Devices** in the settings panel on the right.
 
+:::note[Linux USB permissions]
+
+On Linux, USB surfaces need some udev rules installed before Companion can use them, and these rules
+depend on which surface modules you have enabled. When the rules need updating, Companion shows an
+alert on the Surfaces page. On a desktop install it can apply the rules for you; on a headless install
+the [install script](../1_getting-started/companion-pi/manual-install.md) sets them up. See the
+`README` included with the Linux download for the manual steps.
+
+:::
+
 ![Surfaces](images/surfaces.png?raw=true 'Surfaces')
 
 Here you can see all your current surfaces, both local and connected over Satellite, as well as any available emulators.

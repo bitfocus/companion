@@ -105,6 +105,22 @@ Be careful to avoid creating cyclical loops between local variables, Companion w
 The value of these variables cannot be read from outside of their parent, but for any 'User Value' variables it can be updated from elsewhere
 :::
 
+### Setting a local variable on another button
+
+A 'User Value' local variable can be updated from elsewhere using the internal actions for setting
+local variables. As well as targeting the current button, you can point these actions at **another
+button** by giving its location (for example `1/0/0`, or an expression like
+`$(this:page)/0/0`) and the variable's name.
+
+When you set the value, the expression has access to a couple of helpers relating to the **target**
+button:
+
+- `$(this:current)` — the target variable's current value (handy for toggling or incrementing it).
+- `$(target:name)` — another local variable at the target location.
+
+For example, to increment a counter called `count` on the button at `1/0/0`, target that location and
+variable and set the value expression to `$(this:current) + 1`.
+
 Additionally, in some places there are some builtin local variables under the `$(this:` name. Some of these are
 
 - Page number of the button

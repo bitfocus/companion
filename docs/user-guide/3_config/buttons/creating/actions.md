@@ -1,6 +1,6 @@
 ---
 title: Actions
-sidebar_position: 2
+sidebar_position: 3
 description: Define button behavior with press, release, and duration actions.
 ---
 
@@ -43,3 +43,21 @@ These groups have a few modes of execution
   This allows for programming complex sequences that must be done in a particular order without relying on small delays
 
 ![Action Group Sequential](images/action-group-sequential.png?raw=true 'Action Group Sequential')
+
+## Storing an action's result
+
+Some module actions return a result — for example fetching a value from a device, or running a query.
+For these actions you'll see a **Store Action Result** option, which lets you capture that result for
+use elsewhere instead of discarding it.
+
+You can store the result into either:
+
+- a **Local variable** — choose a button location (such as `$(this:page)/$(this:row)/$(this:column)`
+  for this button) and the local variable name to write to, or
+- a **Custom variable** — choose an existing [custom variable](../../variables.md#custom-variables),
+  with an option to create it if it doesn't exist yet.
+
+Once stored, the value is just a normal variable you can reference in button text, feedbacks or other
+actions. This only appears on actions that actually return a result; most actions don't.
+
+{/* Future: a screenshot would be good here */}
