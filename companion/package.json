@@ -53,7 +53,7 @@
     "@julusian/image-rs": "^2.1.1",
     "@julusian/segfault-raub": "^2.3.2",
     "@napi-rs/canvas": "^1.0.0",
-    "@sentry/node": "^10.57.0",
+    "@sentry/node": "^10.58.0",
     "@trpc/server": "^11.17.0",
     "bufferutil": "npm:@julusian/bufferutil@^4.1.0",
     "colord": "^2.9.3",
