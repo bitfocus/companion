@@ -3,12 +3,27 @@ import z from 'zod'
 import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
+import { JsonObjectSchema, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Logger } from '../../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
+
+/**
+ * Ensure every field has a unique id.
+ *
+ * Some modules incorrectly reuse the same id for multiple `static-text` fields. This breaks React (duplicate keys),
+ * but since these fields are purely visual and have no value, we can safely give each one a unique but stable id by
+ * suffixing it with its index in the array.
+ */
+function ensureUniqueFieldIds(fields: SomeCompanionInputField[]): SomeCompanionInputField[] {
+	return fields.map((field, index) => {
+		if (field.type !== 'static-text') return field
+
+		return { ...field, id: `${field.id}_${index}` }
+	})
+}
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createConnectionsTrpcRouter(
@@ -106,7 +121,7 @@ export function createConnectionsTrpcRouter(
 					const fields = await instance.requestConfigFields()
 
 					const result: ClientEditInstanceConfig = {
-						fields: fields,
+						fields: ensureUniqueFieldIds(fields),
 						useNewLayout: instance.usesNewConfigLayout,
 						config: instanceConf.config,
 						secrets: instanceConf.secrets || {},
