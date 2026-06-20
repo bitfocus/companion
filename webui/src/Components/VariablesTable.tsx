@@ -1,4 +1,4 @@
-import { faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { toJS } from 'mobx'
@@ -71,11 +71,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	})
 
 	if (variableDefinitions.length === 0) {
-		return (
-			<StaticAlert color="warning" role="alert">
-				Connection has no variables
-			</StaticAlert>
-		)
+		return <NonIdealState icon={faExclamationTriangle} text="Connection has no variables" className="mt-2" />
 	}
 
 	const totalCount = variableDefinitions.length
