@@ -511,6 +511,13 @@ describe('ElementExpressionHelper', () => {
 			expect(helper.getBoolean('boolProp', true)).toBe(true)
 		})
 
+		test('returns defaultValue when expression resolves to a missing value (e.g. disabled connection)', () => {
+			// A variable from a disabled connection resolves to undefined; it must not be coerced to
+			// false, so a default-true property (e.g. an element's `enabled`) stays enabled.
+			const { helper } = makeHelper(makeEl({ boolProp: expr('$(ns:missing)') }))
+			expect(helper.getBoolean('boolProp', true)).toBe(true)
+		})
+
 		test('numeric 0 is falsy', () => {
 			const { helper } = makeHelper(makeEl({ boolProp: val(0 as any) }))
 			expect(helper.getBoolean('boolProp', true)).toBe(false)

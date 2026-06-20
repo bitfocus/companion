@@ -224,4 +224,28 @@ describe('executeExpression', () => {
 		const res = executeExpression(mockBlinker, "getVariable('test:something')", {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 'something', variableIds: new Set(['test:something', 'another:value']) })
 	})
+
+	describe("requiredType: 'boolean'", () => {
+		test('coerces a truthy number to true', () => {
+			const res = executeExpression(mockBlinker, '1', {}, 'boolean', new Map())
+			expect(res).toMatchObject({ ok: true, value: true })
+		})
+
+		test('coerces a falsy number to false', () => {
+			const res = executeExpression(mockBlinker, '0', {}, 'boolean', new Map())
+			expect(res).toMatchObject({ ok: true, value: false })
+		})
+
+		test('passes through an actual boolean', () => {
+			const res = executeExpression(mockBlinker, '1 == 1', {}, 'boolean', new Map())
+			expect(res).toMatchObject({ ok: true, value: true })
+		})
+
+		test('does not coerce a missing value (e.g. variable from a disabled connection) to false', () => {
+			// A variable that does not exist resolves to undefined. It must not be coerced to `false`,
+			// otherwise consumers cannot fall back to their default. Instead it should fail the type check.
+			const res = executeExpression(mockBlinker, '$(test:missing)', {}, 'boolean', new Map())
+			expect(res).toMatchObject({ ok: false, variableIds: new Set(['test:missing']) })
+		})
+	})
 })

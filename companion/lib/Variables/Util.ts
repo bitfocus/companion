@@ -374,7 +374,11 @@ export function executeExpression(
 				value = Number(value)
 				break
 			case 'boolean':
-				value = Boolean(value)
+				// A missing value (e.g. a variable from a disabled connection) is left as-is so the
+				// type check below yields ok:false and consumers use their default, instead of
+				// coercing undefined/null to a hard `false`. Mirrors the NaN/undefined handling
+				// that getNumber/getString already apply.
+				if (value !== null && value !== undefined) value = Boolean(value)
 				break
 		}
 
