@@ -11,9 +11,10 @@
 
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
-import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
 	type VariableDefinition,
@@ -300,7 +301,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'good', label: 'OK' },
 							{ id: 'warning', label: 'Warning' },
 							{ id: 'error', label: 'Error' },
-							{ id: null as any, label: 'Disabled' },
+							{ id: 'null', label: 'Disabled' },
 						],
 					},
 				],
@@ -336,6 +337,15 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 				optionsSupportExpressions: false,
 			},
+		}
+	}
+
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
+		// The 'Disabled' choice of instance_custom_state used to be stored as `null`, which the
+		// dropdown in the UI cannot represent or select. Migrate it to the string 'null'.
+		if (feedback.definitionId === 'instance_custom_state' && feedback.options.state?.value === null) {
+			feedback.options.state = exprVal('null')
+			return feedback
 		}
 	}
 
@@ -430,7 +440,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			const instanceId = stringifyVariableValue(feedback.options.instance_id)
 			if (!instanceId) return false
 
-			const selected_status = this.#instanceStatuses[instanceId]?.category ?? null
+			const selected_status = this.#instanceStatuses[instanceId]?.category ?? 'null'
 
 			return selected_status == feedback.options.state
 		} else if (feedback.definitionId === 'connection_collection_enabled') {
