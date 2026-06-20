@@ -1,5 +1,6 @@
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import dayjs from 'dayjs'
@@ -21,13 +22,6 @@ interface LogConfig {
 
 interface ClientLogLineExt extends Omit<ClientLogLine, 'time'> {
 	time: number | null
-}
-
-const LogsOnDiskInfoLine: ClientLogLineExt = {
-	time: null,
-	level: 'debug',
-	source: 'log',
-	message: 'You can view older logs in the configuration folder',
 }
 
 export const LogPanel = memo(function LogPanel() {
@@ -171,6 +165,19 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 
 	const parentRef = useRef<HTMLDivElement>(null)
 
+	const { data: appInfo } = useQuery(trpc.appInfo.version.queryOptions())
+	const infoLine = useMemo<ClientLogLineExt>(
+		() => ({
+			time: null,
+			level: 'debug',
+			source: 'log',
+			message: appInfo?.logsDir
+				? `You can view older logs on disk at: ${appInfo.logsDir}`
+				: 'For older logs check the console output or system logs where Companion was started (e.g. `docker logs`, `journalctl`).',
+		}),
+		[appInfo?.logsDir]
+	)
+
 	const messages = useMemo(() => {
 		return history.filter((msg) => msg.level === 'error' || !!config[msg.level as keyof LogConfig])
 	}, [history, config])
@@ -214,7 +221,7 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 							ref={virtualizer.measureElement}
 							className={virtualRow.index % 2 ? 'ListItemOdd' : 'ListItemEven'}
 						>
-							<LogLineInner line={virtualRow.index === 0 ? LogsOnDiskInfoLine : messages[virtualRow.index - 1]} />
+							<LogLineInner line={virtualRow.index === 0 ? infoLine : messages[virtualRow.index - 1]} />
 						</div>
 					))}
 				</div>

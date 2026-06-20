@@ -167,7 +167,7 @@ export class Registry {
 	constructor(
 		baseAppInfo: Pick<
 			AppInfo,
-			'configDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'options'
+			'configDir' | 'logsDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'options'
 		>
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
@@ -529,6 +529,8 @@ export class Registry {
 export interface AppInfo {
 	/** The current config directory */
 	configDir: string
+	/** The directory where rotated log files are stored on disk. Only set when running under the launcher. */
+	logsDir: string | undefined
 	/** The base directory for storing installed modules */
 	modulesDirs: Record<ModuleInstanceType, string>
 	/** The builtin module directories */

@@ -137,6 +137,9 @@ export class UIUpdate {
 						appBuild: this.#appInfo.appBuild,
 						os: input?.all ? `${osName} (v${os.release()}; ${os.arch()})` : undefined,
 
+						// The on-disk logs folder, when available (only when running under the launcher)
+						logsDir: this.#appInfo.logsDir,
+
 						// Dangerous features (read-only - these can only be changed via launcher/CLI/env)
 						shellCommandSupportEnabled: this.#appInfo.options.enableShellCommandSupport,
 						// Computed per requesting client: local clients are always allowed

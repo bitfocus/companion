@@ -22,7 +22,7 @@ import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { registerLaunchOptions } from './LaunchOptionsCli.js'
 import { Registry } from './Registry.js'
 import { DISABLE_IPv6, GLOBAL_BIND_ADDRESS } from './Resources/Constants.js'
-import { isPackaged } from './Resources/Util.js'
+import { isPackaged, isRunningUnderLauncher } from './Resources/Util.js'
 
 const program = new Command()
 
@@ -228,6 +228,9 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 
 	const registry = new Registry({
 		configDir,
+		// The launcher writes rotated log files into `logs` alongside the config dirs.
+		// Only populated when running under the launcher, as that is the only case where these files exist.
+		logsDir: isRunningUnderLauncher() ? path.join(rootConfigDir, 'logs') : undefined,
 		modulesDirs: {
 			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
 			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
