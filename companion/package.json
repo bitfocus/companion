@@ -60,7 +60,7 @@
     "commander": "^15.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
-    "csv-stringify": "^6.7.0",
+    "csv-stringify": "^6.8.0",
     "dayjs": "^1.11.21",
     "debounce-fn": "^6.0.0",
     "emberplus-connection": "^0.2.4",
