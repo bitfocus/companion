@@ -35,7 +35,7 @@ running). If Companion isn't currently running, your changes will apply the next
 
 The settings are stored in a simple **YAML** file at:
 
-```
+```bash
 /etc/companion/config.yaml
 ```
 
@@ -44,7 +44,7 @@ safe to edit by hand. To remove a setting and fall back to its built-in default,
 set it to `null`).
 
 If you edit the file by hand rather than using `sudo companion-config`, restart Companion yourself
-afterwards for the changes to take effect:
+afterward for the changes to take effect:
 
 ```bash
 sudo systemctl restart companion

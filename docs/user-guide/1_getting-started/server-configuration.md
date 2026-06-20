@@ -81,4 +81,4 @@ accept the risk.
 ## Advanced
 
 - **Header notifications** — whether to show version-related notifications in the admin interface
-  header. You can turn these off if you don't want update prompts.
+  header. You can turn these off if you don't want to see update prompts.
