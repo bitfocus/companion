@@ -49,6 +49,4 @@ In the element's **Source** section, set the **Location** to the button you want
 expressions, so you can reference a button dynamically — for example
 `$(this:page)/0/0` to always mirror the top-left button of the current page.
 
-**📸 Screenshot TODO:** A Reference element mirroring another button, showing the Source/Location field.
-
-![Reference element](http://example.com/images/reference-element.png?raw=true)
+![Reference element](images/reference-element.png?raw=true)

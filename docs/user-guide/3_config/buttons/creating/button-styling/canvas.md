@@ -1,19 +1,25 @@
 ---
 title: The canvas & button indicators
 sidebar_position: 5
-description: The Background layer, the topbar, status icons and button state indicators.
+description: The Canvas layer, the topbar, status icons and button state indicators.
 ---
 
 # The canvas & button indicators
 
-Every button's stack of [elements](./index.md) sits on top of a special **Background** layer, right at
-the bottom of the elements list. Unlike the other elements, the Background is always present and can't
-be deleted or reordered — it's the canvas your design is drawn onto, and it controls the "chrome"
-around the button: the topbar and the status icons.
+Every button's stack of [elements](./index.md) sits on top of a special **Canvas** layer, right at the
+bottom of the elements list. Unlike the other elements, the Canvas is always present and can't be
+deleted or reordered — it's the surface your design is drawn onto, and it controls the "chrome" around
+the button: the topbar and the status icons.
+
+:::note
+Don't confuse the Canvas with the **Background** element. The Background is just an ordinary
+[Box](./index.md) that new buttons start with, sitting just above the Canvas — you can recolour, move
+or delete it like any other element. The Canvas is the fixed layer underneath it.
+:::
 
 ## Decoration (the topbar)
 
-Select the **Background** layer and you'll find a **Decoration** dropdown. This controls the bar along
+Select the **Canvas** layer and you'll find a **Decoration** dropdown. This controls the bar along
 the top of the button:
 
 - **Follow default** — use the global setting from [Settings](../../../settings.md#buttons). This is
@@ -34,9 +40,9 @@ bar** mode) or a coloured border is drawn (in **Border when pressed** mode). Thi
 but it stays on if a button is pressed without being released — for example if an action used **Button
 Trigger Press** without a matching **Button Trigger Release**.
 
-**📸 Screenshot TODO:** Background layer selected, showing the Decoration + Show status icons dropdowns.
+**📸 Screenshot TODO:** Canvas layer selected, showing the Decoration + Show status icons dropdowns.
 
-![Background layer options](http://example.com/images/background-layer-options.png?raw=true)
+![Canvas layer options](http://example.com/images/canvas-layer-options.png?raw=true)
 
 ## Status icons
 

@@ -12,6 +12,8 @@ you like. You can stack a Text element on top of an Image element to label it.
 As well as the shared **Layer** and **Position & Size** sections (see
 [Button styling](./index.md#element-properties)), an Image element has a **Content** section.
 
+![Image element properties](images/image-element-properties.png?raw=true)
+
 ## Choosing the image
 
 The **Image** field is a picker. There are two ways to give it an image:
@@ -26,9 +28,7 @@ The **Image** field is a picker. There are two ways to give it an image:
 A library image is referenced by name using the `$(image:name)` syntax, so you can also type or paste
 a reference into an expression if you prefer.
 
-**📸 Screenshot TODO:** Image element picker, showing library reference vs upload.
-
-![Image picker](http://example.com/images/image-picker.png?raw=true)
+![Image picker](images/image-picker.png?raw=true)
 
 ## Fitting and positioning
 

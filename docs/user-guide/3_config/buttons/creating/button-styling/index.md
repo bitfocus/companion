@@ -28,9 +28,10 @@ When you edit a button you'll see two things:
 - The **elements list** — the stack of elements that make up the button. Elements at the top of the
   list are drawn on top of the ones below them, just like layers in an image editor.
 
-At the very bottom of every button's stack is the **Background** layer. This is always present and
-can't be deleted — it controls the topbar, status icons and the empty-button look. See
-[The canvas & button indicators](./canvas.md) for more on it.
+At the very bottom of every button's stack is the **Canvas** layer. This is always present and
+can't be deleted — it controls the topbar, status icons and the empty-button look. (New buttons also
+start with an ordinary **Background** box sitting just above it, which you _can_ edit or delete.) See
+[The canvas & button indicators](./canvas.md) for more on both.
 
 ![Layered button editor](images/layered-button-editor.png?raw=true 'Layered button editor')
 
@@ -71,11 +72,21 @@ Each row in the elements list has a few controls:
 
 ## Element properties
 
-Select an element to edit its properties. The properties are grouped into collapsible **sections** so the panel stays tidy. Every element (except the Background) shares two sections:
+Select an element to edit its properties.
 
-**📸 Screenshot TODO:** An element's accordion property sections (Layer / Position & Size / Content).
+By default the panel is in **Simple** mode (the toggle sits in the bottom-left of the editor, and your
+choice is remembered between sessions). Simple mode shows just the handful of properties you change
+most often — for a Text element, for example, that's the text itself, its size, colour and alignment —
+with a note at the bottom reminding you that _some fields are hidden in simple mode_. Turn **Simple**
+off to reveal the full set of properties.
 
-![Element property sections](http://example.com/images/element-property-sections.png?raw=true)
+Simple mode trims the panel for the elements that have a lot of properties (Text, Image and Box); the
+other element types always show their full set.
+
+![Element property sections](./images/element-property-sections.png?raw=true)
+
+With **Simple** mode turned off, the properties are grouped into collapsible **sections** so the panel
+stays tidy. Every element (except the Canvas) shares two sections:
 
 ### Layer
 

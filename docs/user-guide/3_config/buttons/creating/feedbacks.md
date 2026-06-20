@@ -17,6 +17,8 @@ A **feedback** lets a button change its own appearance automatically, based on w
 how a button can turn red when a camera goes live, show a different label when a mixer channel is
 muted, or light up while a layer is on air — all without you touching anything.
 
+![Feedback list](images/feedback-list.png?raw=true)
+
 Some feedbacks come from your [connections](../../connections.md) (the module reports the device's
 state), and Companion also has built-in feedbacks for generic logic, such as "change the style when
 this variable has a certain value".
@@ -57,9 +59,7 @@ When you add a style override to a feedback, you:
 3. Set the value to apply. While the feedback is active, those properties take over from whatever the
    element is normally set to.
 
-**📸 Screenshot TODO:** Feedback "Add Element Properties" override picker (choosing element + properties).
-
-![Add Element Properties](http://example.com/images/feedback-add-element-properties.png?raw=true)
+![Add Element Properties](images/feedback-add-element-properties.png?raw=true)
 
 You can add several element/property overrides to a single feedback, and you can reorder feedbacks by
 dragging the sort handle. They're applied from the top down, so a feedback **lower** in the list wins
@@ -80,6 +80,8 @@ Say you want a button's text to turn red when a custom variable `alarm` is true:
 3. Set the colour to red.
 
 Now the text is red whenever `alarm` is true, and returns to its normal colour when it isn't.
+
+![Feedback example result](images/feedback-example-result.png?raw=true)
 
 :::tip[Upgrading from Companion 4.x? Here's what changed]
 You used to set a feedback's style on a single flat button style — "make the button's background red".
@@ -102,6 +104,8 @@ looking exactly as they did before.
 
 Some modules also provide feedbacks that draw a complete generated image, typically to show a complex
 status in a well-arranged way.
+
+![Module style feedback](images/feedback-advanced-example.png?raw=true)
 
 :::note
 A few older module feedbacks are limited in what they can change. If you find a module's feedbacks too
