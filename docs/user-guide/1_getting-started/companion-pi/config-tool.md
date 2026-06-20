@@ -26,6 +26,10 @@ This must be run as **root** (hence `sudo`). It opens an interactive editor in y
 options grouped into pages — Network, Logging, Syslog, Security, Paths and Advanced. Use it to change
 the admin port, logging, the security toggles and so on.
 
+**📸 Screenshot TODO:** The config-tool interactive editor running in a terminal.
+
+![config-tool](http://example.com/images/config-tool.png?raw=true)
+
 When you save your changes, Companion **restarts automatically** to pick them up (if the service is
 running). If Companion isn't currently running, your changes will apply the next time it starts.
 

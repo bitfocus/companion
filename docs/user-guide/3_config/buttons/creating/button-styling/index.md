@@ -32,6 +32,8 @@ At the very bottom of every button's stack is the **Background** layer. This is 
 can't be deleted — it controls the topbar, status icons and the empty-button look. See
 [The canvas & button indicators](./canvas.md) for more on it.
 
+![Layered button editor](images/layered-button-editor.png?raw=true 'Layered button editor')
+
 ### Adding an element
 
 Click **Add element** and pick a type. The built-in element types are:
@@ -70,6 +72,10 @@ Each row in the elements list has a few controls:
 ## Element properties
 
 Select an element to edit its properties. The properties are grouped into collapsible **sections** so the panel stays tidy. Every element (except the Background) shares two sections:
+
+**📸 Screenshot TODO:** An element's accordion property sections (Layer / Position & Size / Content).
+
+![Element property sections](http://example.com/images/element-property-sections.png?raw=true)
 
 ### Layer
 

@@ -49,6 +49,10 @@ A common pattern is to set a comfortable **Text Size** and turn on **Shrink to f
 hold variable-length text (like a track name or a timer), so short values look bold and long values
 still fit.
 
+**📸 Screenshot TODO:** Text element properties — Font dropdown, Text Size + Shrink to fit.
+
+![Text element properties](http://example.com/images/text-element-properties.png?raw=true)
+
 :::tip
 Because the size is a percentage of the _element_, not the whole button, you can make a small Text
 element in one corner and the text will scale to that element. Resize the element in **Position &

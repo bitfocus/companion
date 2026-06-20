@@ -24,10 +24,7 @@ below.
 _An example of modules currently loaded with premade presets_  
 ![Preset Modules](images/preset-modules.png?raw=true 'Preset Modules')
 
-_An example of categories of presets you might meet in a single module_  
-![Preset Folders](images/preset-folders.png?raw=true 'Preset Folders')
-
-_Here is an example of presets made for an ATEM ME1 program_  
+_Here is an example of presets made for an ATEM ME1_  
 ![Preset Buttons](images/preset-buttons.png?raw=true 'Preset Buttons')
 
 Drag the preset buttons onto a page's button when in the Button Layout view.
@@ -63,6 +60,8 @@ equivalent actions already filled in, which you can then restyle and customise f
 
 This is a one-way conversion and can't be undone.
 
+![Convert to Normal Button](images/convert-to-normal-button.png?raw=true)
+
 ### Styling the button
 
 A button's appearance is built from layered graphics elements — text, images, shapes and more. This is
@@ -93,3 +92,5 @@ Anything you type here is just for you — it's an internal reminder that never 
 itself. It's a great place to jot down why a button is set up the way it is, which is invaluable when
 you come back to a complex show months later. The same notes field is also available on
 [triggers](../../triggers.md) and expression variables.
+
+![Button notes](images/button-notes.png?raw=true)

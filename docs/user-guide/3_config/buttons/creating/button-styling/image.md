@@ -26,6 +26,10 @@ The **Image** field is a picker. There are two ways to give it an image:
 A library image is referenced by name using the `$(image:name)` syntax, so you can also type or paste
 a reference into an expression if you prefer.
 
+**📸 Screenshot TODO:** Image element picker, showing library reference vs upload.
+
+![Image picker](http://example.com/images/image-picker.png?raw=true)
+
 ## Fitting and positioning
 
 - **Fill Mode** controls how the image is scaled to the element's size:

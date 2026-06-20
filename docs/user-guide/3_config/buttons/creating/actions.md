@@ -59,3 +59,7 @@ You can store the result into either:
 
 Once stored, the value is just a normal variable you can reference in button text, feedbacks or other
 actions. This only appears on actions that actually return a result; most actions don't.
+
+**📸 Screenshot TODO:** An action's Store Action Result option (storing into a local/custom variable).
+
+![Store Action Result](http://example.com/images/store-action-result.png?raw=true)

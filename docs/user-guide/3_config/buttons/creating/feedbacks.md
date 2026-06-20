@@ -57,6 +57,10 @@ When you add a style override to a feedback, you:
 3. Set the value to apply. While the feedback is active, those properties take over from whatever the
    element is normally set to.
 
+**📸 Screenshot TODO:** Feedback "Add Element Properties" override picker (choosing element + properties).
+
+![Add Element Properties](http://example.com/images/feedback-add-element-properties.png?raw=true)
+
 You can add several element/property overrides to a single feedback, and you can reorder feedbacks by
 dragging the sort handle. They're applied from the top down, so a feedback **lower** in the list wins
 if two feedbacks change the same property.
