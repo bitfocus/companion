@@ -32,9 +32,7 @@ putting an arrow inside a group with **Square Aspect Ratio** turned on, the arro
 tall or wide surfaces. This is exactly how Companion's built-in page navigation buttons keep their
 arrows looking right.
 
-**📸 Screenshot TODO:** A Group with Square Aspect Ratio enabled (e.g. an arrow keeping its shape).
-
-![Group with Square Aspect Ratio](http://example.com/images/group-square-aspect-ratio.png?raw=true)
+![Group with Square Aspect Ratio](images/group-square-aspect-ratio.png?raw=true)
 
 ## Reference
 

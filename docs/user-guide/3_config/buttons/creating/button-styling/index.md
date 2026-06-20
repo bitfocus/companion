@@ -29,9 +29,8 @@ When you edit a button you'll see two things:
   list are drawn on top of the ones below them, just like layers in an image editor.
 
 At the very bottom of every button's stack is the **Canvas** layer. This is always present and
-can't be deleted — it controls the topbar, status icons and the empty-button look. (New buttons also
-start with an ordinary **Background** box sitting just above it, which you _can_ edit or delete.) See
-[The canvas & button indicators](./canvas.md) for more on both.
+can't be deleted — it controls the topbar, status icons and the empty-button look. See
+[The canvas & button indicators](./canvas.md) for more on it.
 
 ![Layered button editor](images/layered-button-editor.png?raw=true 'Layered button editor')
 

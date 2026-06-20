@@ -22,9 +22,7 @@ There are two ways to get images into the library:
 Any standard image format works (PNG, JPEG, SVG and so on). For button backgrounds, square images
 (such as 72×72px or larger) generally look best, since Companion scales them to fit the button.
 
-**📸 Screenshot TODO:** Image Library page — upload / drag-and-drop.
-
-![Image Library upload](http://example.com/images/image-library-upload.png?raw=true)
+![Image Library edit](images/image-library-edit.png?raw=true)
 
 ## Managing images
 
@@ -40,9 +38,7 @@ For each image in the library you can:
 
 You can also organise images into **collections** to keep large libraries tidy.
 
-**📸 Screenshot TODO:** Image Library — rename/replace an image and collections.
-
-![Image Library managing](http://example.com/images/image-library-managing.png?raw=true)
+![Image Library managing](images/image-library-managing.png?raw=true)
 
 ## Using a library image on a button
 

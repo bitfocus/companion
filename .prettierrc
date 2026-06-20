@@ -13,6 +13,10 @@
 			"options": {
 				"singleQuote": false
 			}
+		},
+		{
+			"files": "docs/**/*.md",
+			"options": { "parser": "mdx" }
 		}
 	],
 	"plugins": ["@ianvs/prettier-plugin-sort-imports"],

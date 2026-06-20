@@ -34,10 +34,6 @@ the [install script](../1_getting-started/companion-pi/manual-install.md) sets t
 
 :::
 
-**📸 Screenshot TODO:** The Linux udev rules alert shown on the Surfaces page.
-
-![udev rules alert](http://example.com/images/surfaces-udev-alert.png?raw=true)
-
 ![Surfaces](images/surfaces.png?raw=true 'Surfaces')
 
 Here you can see all your current surfaces, both local and connected over Satellite, as well as any available emulators.
