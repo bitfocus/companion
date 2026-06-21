@@ -188,7 +188,10 @@ if (process.env.ELECTRON !== '0') {
 			},
 			nsis: {
 				include: 'installer.nsh',
-				artifactName: 'companion-win64.exe',
+				artifactName:
+					platformInfo.electronBuilderArch === electronBuilder.Arch.arm64
+						? 'companion-winarm64.exe'
+						: 'companion-win64.exe',
 				createStartMenuShortcut: true,
 				perMachine: false,
 				oneClick: false,

@@ -4554,13 +4554,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/segfault-raub@npm:^2.3.2":
-  version: 2.3.2
-  resolution: "@julusian/segfault-raub@npm:2.3.2"
+"@julusian/segfault-raub@npm:^2.3.3":
+  version: 2.3.3
+  resolution: "@julusian/segfault-raub@npm:2.3.3"
   dependencies:
     node-gyp: "npm:latest"
     pkg-prebuilds: "npm:^1.0.0"
-  checksum: 10c0/6c55e43f4cca27280b2d8e7d1b3cbee5b3c2d5c2ea58607b5d10a5f2a12d762c714e994f7571d6bc1a0eaec0f8eef5a8e4b731a32220cd19d824e44c60e58104
+  checksum: 10c0/92ba703d2ca8f749935d42c0684cb14244fbd54b4f0790e2ca6735803a51f26767dd2c0bb6ea11df1a4cdaefab912d8df34a6d6596ae33b7d4aec7bcc20b3189
   languageName: node
   linkType: hard
 
@@ -4755,9 +4755,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@napi-rs/canvas-win32-arm64-msvc@npm:1.0.0":
+"@napi-rs/canvas-win32-arm64-msvc@npm:@julusian/canvas-win32-arm64-msvc@1.0.0":
   version: 1.0.0
-  resolution: "@napi-rs/canvas-win32-arm64-msvc@npm:1.0.0"
+  resolution: "@julusian/canvas-win32-arm64-msvc@npm:1.0.0"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -11290,7 +11290,7 @@ __metadata:
     "@companion-surface/host": "npm:1.3.2"
     "@julusian/bonjour-service": "npm:^1.4.2"
     "@julusian/image-rs": "npm:^2.1.1"
-    "@julusian/segfault-raub": "npm:^2.3.2"
+    "@julusian/segfault-raub": "npm:^2.3.3"
     "@napi-rs/canvas": "npm:^1.0.0"
     "@sentry/esbuild-plugin": "npm:^5.3.0"
     "@sentry/node": "npm:^10.58.0"

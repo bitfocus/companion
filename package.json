@@ -93,7 +93,8 @@
     "@companion-module/base": "2.1.0-0-nightly-main-20260619-194259-9fec278",
     "@companion-module/host": "1.0.3-nightly-main-20260619-194405-9fec278",
     "node-gyp": "^12.3.0",
-    "monaco-editor/dompurify": "npm:dompurify@^3.3.3"
+    "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
+    "@napi-rs/canvas-win32-arm64-msvc@npm:1.0.0": "npm:@julusian/canvas-win32-arm64-msvc@1.0.0"
   },
   "dependenciesMeta": {
     "@sentry/cli": {
