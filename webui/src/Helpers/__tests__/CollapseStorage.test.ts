@@ -95,17 +95,17 @@ describe('evictDeadOwnedKeys', () => {
 	test('keeps owner-less (fixed) and legacy keys', () => {
 		const fixed = seed('action_recorder', { lastUsedAt: 1 })
 		const legacy = seed('actions_bank:gone_entities', { raw: JSON.stringify({ defaultExpandedAt: {}, ids: {} }) })
-		const unparseable = seed('garbage', { raw: 'not json' })
+		const unparsable = seed('garbage', { raw: 'not json' })
 
 		evictDeadOwnedKeys(live)
 
 		expect(window.localStorage.getItem(fixed)).not.toBeNull()
 		expect(window.localStorage.getItem(legacy)).not.toBeNull()
-		expect(window.localStorage.getItem(unparseable)).not.toBeNull()
+		expect(window.localStorage.getItem(unparsable)).not.toBeNull()
 	})
 
 	test('uses owner metadata not string parsing (control id containing underscores)', () => {
-		// The embedded id contains underscores; a naive `_`-split parser would mis-extract it.
+		// The embedded id contains underscores; a naive `_`-split parser would be incorrect.
 		const liveWithUnderscore: LiveIdSets = { controls: new Set(['bank:ab_cd_ef']), connections: new Set() }
 		const key = seed('actions_bank:ab_cd_ef_entities', {
 			owner: { kind: 'control', id: 'bank:ab_cd_ef' },

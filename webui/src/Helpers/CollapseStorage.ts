@@ -60,7 +60,7 @@ function enumerateCollapseEntries(): ParsedEntry[] {
 				}
 			}
 		} catch (_e) {
-			// Unparseable value: treat as a key with no metadata (kept by known-id eviction,
+			// Unparsable value: treat as a key with no metadata (kept by known-id eviction,
 			// evicted first by the size cap as it has no lastUsedAt).
 		}
 
