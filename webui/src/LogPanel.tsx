@@ -9,6 +9,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { Button, ButtonGroup, LinkButtonExternal } from './Components/Button'
@@ -30,7 +31,7 @@ export const LogPanel = memo(function LogPanel() {
 
 	// Save the config when it changes
 	useEffect(() => {
-		window.localStorage.setItem('debug_config', JSON.stringify(config))
+		safeSetLocalStorage('debug_config', JSON.stringify(config))
 	}, [config])
 
 	const clearLogMutation = useMutationExt(trpc.logs.clear.mutationOptions())
@@ -257,7 +258,7 @@ function loadConfig(): LogConfig {
 			warn: true,
 		}
 
-		window.localStorage.setItem('debug_config', JSON.stringify(config))
+		safeSetLocalStorage('debug_config', JSON.stringify(config))
 
 		return config
 	}

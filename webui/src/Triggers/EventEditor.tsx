@@ -56,7 +56,10 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 	const eventsService = useControlEventsEditorService(controlId, confirmModal)
 
 	const eventIds = useMemo(() => events.map((ev) => ev.id), [events])
-	const panelCollapseHelper = usePanelCollapseHelperLite(`events_${controlId}`, eventIds)
+	const panelCollapseHelper = usePanelCollapseHelperLite(`events_${controlId}`, eventIds, false, {
+		kind: 'control',
+		id: controlId,
+	})
 
 	const dragId = `events_${controlId}`
 	useDragDropMonitor({

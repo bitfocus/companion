@@ -116,6 +116,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 			storageId={`preset-sections-${selectedConnectionId}`}
 			knownPanelIds={allSectionIds}
 			defaultCollapsed={true}
+			evictionOwner={{ kind: 'connection', id: selectedConnectionId }}
 		>
 			<div>
 				<h5>Presets</h5>

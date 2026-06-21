@@ -1,4 +1,5 @@
 import { action, observable, type IObservableArray } from 'mobx'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 
 export class RecentlyUsedIdsStore {
 	readonly #localStorageKey: string
@@ -33,6 +34,6 @@ export class RecentlyUsedIdsStore {
 		this.recentIds.splice(this.#targetLength, newLength - this.#targetLength)
 
 		// Update storage
-		window.localStorage.setItem(this.#localStorageKey, JSON.stringify(this.recentIds.toJSON()))
+		safeSetLocalStorage(this.#localStorageKey, JSON.stringify(this.recentIds.toJSON()))
 	})
 }

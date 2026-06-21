@@ -1,5 +1,6 @@
 import classNames from 'classnames'
 import { useCallback, useEffect, useState } from 'react'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { Button, type ButtonColor } from './Button'
 
 export interface TableVisibilityHelper<T extends Record<string, any>> {
@@ -23,7 +24,7 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 		}
 
 		// setup defaults
-		window.localStorage.setItem(localStorageKey, JSON.stringify(defaultValue))
+		safeSetLocalStorage(localStorageKey, JSON.stringify(defaultValue))
 
 		return structuredClone(defaultValue)
 	})
@@ -40,7 +41,7 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 
 	// Save the config when it changes
 	useEffect(() => {
-		window.localStorage.setItem(localStorageKey, JSON.stringify(visibility))
+		safeSetLocalStorage(localStorageKey, JSON.stringify(visibility))
 	}, [localStorageKey, visibility])
 
 	return {

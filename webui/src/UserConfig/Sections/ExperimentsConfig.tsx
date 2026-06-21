@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { StaticAlert } from '~/Components/Alert.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 
@@ -23,7 +24,7 @@ export const ExperimentsConfig = observer(function ExperimentsConfig(_props: Use
 							id={undefined}
 							value={window.localStorage.getItem('show_companion_cloud') === '1'}
 							setValue={(val) => {
-								window.localStorage.setItem('show_companion_cloud', val ? '1' : '0')
+								safeSetLocalStorage('show_companion_cloud', val ? '1' : '0')
 								window.location.reload()
 							}}
 						/>

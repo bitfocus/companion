@@ -12,6 +12,7 @@ import { ContextMenu } from '~/Components/ContextMenu.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
 import { TabArea } from '~/Components/TabArea.js'
+import { safeSetSessionStorage } from '~/Helpers/SafeStorage.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -39,7 +40,7 @@ function useUrlPageNumber(): number | null {
 
 function navigateToButtonsPage(navigate: UseNavigateResult<'/buttons'>, pageNumber: number): void {
 	void navigate({ to: `/buttons/${pageNumber}` })
-	window.sessionStorage.setItem(SESSION_STORAGE_LAST_BUTTONS_PAGE, pageNumber.toString())
+	safeSetSessionStorage(SESSION_STORAGE_LAST_BUTTONS_PAGE, pageNumber.toString())
 }
 
 function getLastPageNumber(): number {
