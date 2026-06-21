@@ -91,8 +91,6 @@ export class UIExpress {
 	#connectionApiRouter = Express.Router()
 
 	constructor(internalApiRouter: Express.Router, trustedProxies: string | undefined) {
-		this.app.use(cors())
-
 		// Configure how the client ip is determined when running behind a reverse proxy.
 		// Without this, a proxied request appears to originate from the proxy (often loopback),
 		// which would make remote clients look local to features that trust loopback.
@@ -128,7 +126,8 @@ export class UIExpress {
 		})
 
 		// Use the router #connectionApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
-		this.app.use('/instance', async (r, s, n) => this.#connectionApiRouter(r, s, n))
+		// CORS is enabled here as this is part of the intentionally cross-origin accessible HTTP api.
+		this.app.use('/instance', cors(), async (r, s, n) => this.#connectionApiRouter(r, s, n))
 
 		// Redirect /connections/instance to /instance.
 		// This is to maintain compatibility with modules which used relative links from the edit panel, as the path of those changed in 4.1
@@ -137,7 +136,8 @@ export class UIExpress {
 		})
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
-		this.app.use('/api', async (r, s, n) => this.#apiRouter(r, s, n))
+		// CORS is enabled here as this is part of the intentionally cross-origin accessible HTTP api.
+		this.app.use('/api', cors(), async (r, s, n) => this.#apiRouter(r, s, n))
 
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use(async (r, s, n) => this.#legacyApiRouter(r, s, n))
