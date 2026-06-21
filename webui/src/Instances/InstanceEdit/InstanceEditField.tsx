@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
 import { ColorInputField } from '~/Components/ColorInputField'
 import { DropdownInputField } from '~/Components/DropdownInputField'
@@ -29,8 +29,9 @@ export function InstanceEditField({
 	moduleType,
 	instanceId,
 }: InstanceEditFieldProps): React.JSX.Element {
+	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validity,
 		[definition]
 	)
 

@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
 import { Button } from './Button'
 import { InputGroup } from './Form'
+import { computeInputValidity, InputValidityIcon } from './InputValidity.js'
 
 interface SecretTextInputFieldProps {
 	id: string | undefined
@@ -15,7 +16,7 @@ interface SecretTextInputFieldProps {
 	className?: string
 	inputClassName?: string
 	setValue: (value: string) => void
-	checkValid?: boolean | ((value: string) => boolean)
+	checkValid?: boolean | ((value: string) => boolean | undefined)
 	immediateValue?: boolean
 }
 
@@ -57,27 +58,32 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 	const toggleShowSecretValue = useCallback(() => setShowSecretValue((prev) => !prev), [])
 
 	const showValue = ((immediateValue ? null : tmpValue) ?? value ?? '').toString()
-	const valueIsInvalid = typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(showValue)
+	const validity = computeInputValidity(checkValid, showValue)
+	const valueIsInvalid = validity === 'invalid'
 
 	return (
 		<InputGroup className={className}>
-			<Input
-				id={id}
-				type={showSecretValue ? 'text' : 'password'}
-				className={classNames(
-					'text-input-field',
-					{
-						'invalid-value': valueIsInvalid,
-					},
-					inputClassName
-				)}
-				value={showValue}
-				title={tooltip}
-				placeholder={placeholder}
-				onChange={doOnChange}
-				onFocus={focusStoreValue}
-				onBlur={blurClearValue}
-			/>
+			<span className="input-validity-wrapper">
+				<Input
+					id={id}
+					type={showSecretValue ? 'text' : 'password'}
+					className={classNames(
+						'text-input-field',
+						{
+							'invalid-value': valueIsInvalid,
+							'has-validity-icon': validity !== 'unknown',
+						},
+						inputClassName
+					)}
+					value={showValue}
+					title={tooltip}
+					placeholder={placeholder}
+					onChange={doOnChange}
+					onFocus={focusStoreValue}
+					onBlur={blurClearValue}
+				/>
+				<InputValidityIcon validity={validity} />
+			</span>
 			<Button
 				color="secondary"
 				className="input-group-borders border-start-0"

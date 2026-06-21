@@ -59,6 +59,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: '',
 					validationError: 'Value must be at least 1 characters long',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 
@@ -67,6 +68,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: '',
 					validationError: 'Value must be at least 1 characters long',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 
@@ -75,6 +77,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: 'hello',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 			})
 		})
@@ -114,11 +117,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(expressionDefinition, '1 + 2')).toEqual({
 					sanitisedValue: '1 + 2',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(expressionDefinition, '$(internal:a) + 1')).toEqual({
 					sanitisedValue: '$(internal:a) + 1',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -128,12 +133,14 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(expressionDefinition, '(((')).toEqual({
 					sanitisedValue: '(((',
 					validationError: 'Expression is not valid',
+					validity: false,
 					validationWarnings: [],
 				})
 				// Unclosed string
 				expect(validateInputValue(expressionDefinition, '"unclosed')).toEqual({
 					sanitisedValue: '"unclosed',
 					validationError: 'Expression is not valid',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -152,11 +159,13 @@ describe('validateInputValue', () => {
 					sanitisedValue: 'hello',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 				expect(validateInputValue(regexDefinition, 'WORLD')).toEqual({
 					sanitisedValue: 'WORLD',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 			})
 
@@ -165,11 +174,13 @@ describe('validateInputValue', () => {
 					sanitisedValue: '123',
 					validationError: 'Value does not match regex: /^[a-z]+$/i',
 					validationWarnings: [],
+					validity: false,
 				})
 				expect(validateInputValue(regexDefinition, 'hello123')).toEqual({
 					sanitisedValue: 'hello123',
 					validationError: 'Value does not match regex: /^[a-z]+$/i',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 		})
@@ -187,6 +198,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: '123',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 			})
 
@@ -201,11 +213,13 @@ describe('validateInputValue', () => {
 					sanitisedValue: 'true',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 				expect(validateInputValue(boolRegex, false)).toEqual({
 					sanitisedValue: 'false',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 			})
 
@@ -234,6 +248,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: '',
 					validationError: 'Value does not match regex: /^.+$/',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 		})
@@ -253,6 +268,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: '',
 					validationError: 'Value must be at least 1 characters long',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 
@@ -261,6 +277,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: '',
 					validationError: 'Value must be at least 1 characters long',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 
@@ -269,6 +286,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: 'secret',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 			})
 		})
@@ -286,6 +304,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: 'ABCD1234',
 					validationError: undefined,
 					validationWarnings: [],
+					validity: true,
 				})
 			})
 
@@ -294,6 +313,7 @@ describe('validateInputValue', () => {
 					sanitisedValue: 'short',
 					validationError: 'Value does not match regex: /^[A-Z0-9]{8}$/',
 					validationWarnings: [],
+					validity: false,
 				})
 			})
 		})
@@ -314,6 +334,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, undefined)).toEqual({
 					sanitisedValue: undefined,
 					validationError: 'A value must be provided',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -322,6 +343,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, '')).toEqual({
 					sanitisedValue: '',
 					validationError: 'A value must be provided',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -331,6 +353,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, null)).toEqual({
 					sanitisedValue: null,
 					validationError: 'A value must be provided',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -339,6 +362,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 0)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -349,6 +373,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -357,6 +382,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, '50')).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -365,6 +391,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 'abc')).toEqual({
 					sanitisedValue: 'abc',
 					validationError: 'Value must be a number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -373,6 +400,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, NaN)).toEqual({
 					sanitisedValue: NaN,
 					validationError: 'Value must be a number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -381,11 +409,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, true)).toEqual({
 					sanitisedValue: 1,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(definition, false)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -396,16 +426,19 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 0)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(definition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(definition, 100)).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -414,6 +447,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, -1)).toEqual({
 					sanitisedValue: -1,
 					validationError: 'Value must be greater than or equal to 0',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -422,6 +456,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 101)).toEqual({
 					sanitisedValue: 101,
 					validationError: 'Value must be less than or equal to 100',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -450,6 +485,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(noMinDefinition, -1000)).toEqual({
 					sanitisedValue: -1000,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -458,6 +494,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(noMaxDefinition, 1000)).toEqual({
 					sanitisedValue: 1000,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -478,6 +515,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, -10)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 0'],
 				})
 			})
@@ -486,6 +524,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 150)).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 100'],
 				})
 			})
@@ -494,6 +533,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -506,11 +546,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(clampAndAllowInvalid, -10)).toEqual({
 					sanitisedValue: -10,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value is below 0'],
 				})
 				expect(validateInputValue(clampAndAllowInvalid, 150)).toEqual({
 					sanitisedValue: 150,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value is above 100'],
 				})
 			})
@@ -527,11 +569,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(noClampDefinition, -10)).toEqual({
 					sanitisedValue: -10,
 					validationError: 'Value must be greater than or equal to 0',
+					validity: false,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(noClampDefinition, 150)).toEqual({
 					sanitisedValue: 150,
 					validationError: 'Value must be less than or equal to 100',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -549,11 +593,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(minOnlyDefinition, -5)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 0'],
 				})
 				expect(validateInputValue(minOnlyDefinition, 1000)).toEqual({
 					sanitisedValue: 1000,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -571,11 +617,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(maxOnlyDefinition, -1000)).toEqual({
 					sanitisedValue: -1000,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(maxOnlyDefinition, 200)).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 100'],
 				})
 			})
@@ -584,6 +632,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 'abc')).toEqual({
 					sanitisedValue: 'abc',
 					validationError: 'Value must be a number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -592,6 +641,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, undefined)).toEqual({
 					sanitisedValue: undefined,
 					validationError: 'A value must be provided',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -600,11 +650,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, '150')).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 100'],
 				})
 				expect(validateInputValue(definition, '-5')).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 0'],
 				})
 			})
@@ -625,6 +677,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(invertedDefinition, 50)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was clamped to 100', 'Value was clamped to 0'],
 				})
 			})
@@ -645,6 +698,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, -10)).toEqual({
 					sanitisedValue: -10,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value is below 0'],
 				})
 			})
@@ -653,6 +707,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 150)).toEqual({
 					sanitisedValue: 150,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value is above 100'],
 				})
 			})
@@ -661,6 +716,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -679,6 +735,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(invertedDefinition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value is below 100', 'Value is above 0'],
 				})
 			})
@@ -699,11 +756,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 50.6)).toEqual({
 					sanitisedValue: 51,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was rounded to nearest integer'],
 				})
 				expect(validateInputValue(definition, 50.4)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was rounded to nearest integer'],
 				})
 			})
@@ -712,6 +771,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 50)).toEqual({
 					sanitisedValue: 50,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -721,12 +781,14 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 100.4)).toEqual({
 					sanitisedValue: 100,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was rounded to nearest integer'],
 				})
 				// 100.6 rounds to 101, which exceeds max — range error
 				expect(validateInputValue(definition, 100.6)).toEqual({
 					sanitisedValue: 101,
 					validationError: 'Value must be less than or equal to 100',
+					validity: false,
 					validationWarnings: ['Value was rounded to nearest integer'],
 				})
 			})
@@ -802,11 +864,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(numberDefinition, 16777215)).toEqual({
 					sanitisedValue: 16777215,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(numberDefinition, 0)).toEqual({
 					sanitisedValue: 0,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -815,6 +879,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(numberDefinition, '16777215')).toEqual({
 					sanitisedValue: '16777215',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -823,6 +888,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(numberDefinition, '#ffffff')).toEqual({
 					sanitisedValue: '#ffffff',
 					validationError: 'Value must be a number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -831,6 +897,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(numberDefinition, undefined)).toEqual({
 					sanitisedValue: undefined,
 					validationError: 'Value must be a number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -850,11 +917,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(stringDefinition, '#ffffff')).toEqual({
 					sanitisedValue: '#ffffff',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(stringDefinition, 'rgb(255,255,255)')).toEqual({
 					sanitisedValue: 'rgb(255,255,255)',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -863,6 +932,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(stringDefinition, 16777215)).toEqual({
 					sanitisedValue: 16777215,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -871,16 +941,19 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(stringDefinition, true)).toEqual({
 					sanitisedValue: true,
 					validationError: 'Value must be a string or number',
+					validity: false,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(stringDefinition, ['#fff'])).toEqual({
 					sanitisedValue: ['#fff'],
 					validationError: 'Value must be a string or number',
+					validity: false,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(stringDefinition, { color: '#fff' })).toEqual({
 					sanitisedValue: { color: '#fff' },
 					validationError: 'Value must be a string or number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -889,6 +962,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(stringDefinition, undefined)).toEqual({
 					sanitisedValue: undefined,
 					validationError: 'Value must be a string or number',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -912,6 +986,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, undefined)).toEqual({
 				sanitisedValue: '',
 				validationError: 'Value is not in the list of choices',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -920,11 +995,13 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, 'option1')).toEqual({
 				sanitisedValue: 'option1',
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, 'option2')).toEqual({
 				sanitisedValue: 'option2',
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -933,6 +1010,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, 'option3')).toEqual({
 				sanitisedValue: 'option3',
 				validationError: 'Value is not in the list of choices',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -942,6 +1020,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 123)).toEqual({
 					sanitisedValue: 123,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -950,6 +1029,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, '123')).toEqual({
 					sanitisedValue: 123,
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -965,6 +1045,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(customDefinition, 'custom_value')).toEqual({
 					sanitisedValue: 'custom_value',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -973,6 +1054,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(customDefinition, 999)).toEqual({
 					sanitisedValue: '999',
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -988,6 +1070,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, 'custom_value')).toEqual({
 						sanitisedValue: 'custom_value',
 						validationError: undefined,
+						validity: true,
 						validationWarnings: [],
 					})
 				})
@@ -996,6 +1079,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, 'invalid_value')).toEqual({
 						sanitisedValue: 'invalid_value',
 						validationError: 'Value does not match regex: /^custom_/',
+						validity: false,
 						validationWarnings: [],
 					})
 				})
@@ -1004,6 +1088,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, 'option1')).toEqual({
 						sanitisedValue: 'option1',
 						validationError: undefined,
+						validity: true,
 						validationWarnings: [],
 					})
 				})
@@ -1029,6 +1114,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, undefined)).toEqual({
 				sanitisedValue: [],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1037,11 +1123,13 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, { option1: true })).toEqual({
 				sanitisedValue: { option1: true },
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, '')).toEqual({
 				sanitisedValue: '',
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1051,6 +1139,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 'option1')).toEqual({
 					sanitisedValue: ['option1'],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was coerced into an array'],
 				})
 			})
@@ -1059,6 +1148,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 123)).toEqual({
 					sanitisedValue: [123],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: ['Value was coerced into an array'],
 				})
 			})
@@ -1067,6 +1157,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, true)).toEqual({
 					sanitisedValue: [true],
 					validationError: 'The following selected values are not valid: true',
+					validity: false,
 					validationWarnings: ['Value was coerced into an array'],
 				})
 			})
@@ -1075,6 +1166,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, 'invalid')).toEqual({
 					sanitisedValue: ['invalid'],
 					validationError: 'The following selected values are not valid: invalid',
+					validity: false,
 					validationWarnings: ['Value was coerced into an array'],
 				})
 			})
@@ -1084,6 +1176,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [])).toEqual({
 				sanitisedValue: [],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1092,16 +1185,19 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, ['option1'])).toEqual({
 				sanitisedValue: ['option1'],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, ['option1', 'option2'])).toEqual({
 				sanitisedValue: ['option1', 'option2'],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, ['option1', 'option2', 'option3'])).toEqual({
 				sanitisedValue: ['option1', 'option2', 'option3'],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1110,6 +1206,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, ['option1', 'invalid'])).toEqual({
 				sanitisedValue: ['option1', 'invalid'],
 				validationError: 'The following selected values are not valid: invalid',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1119,11 +1216,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, [123])).toEqual({
 					sanitisedValue: [123],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(definition, ['option1', 123])).toEqual({
 					sanitisedValue: ['option1', 123],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -1132,6 +1231,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(definition, ['123'])).toEqual({
 					sanitisedValue: [123],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -1148,6 +1248,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(constrainedDefinition, [])).toEqual({
 					sanitisedValue: [],
 					validationError: 'Must select at least 1 items',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -1156,6 +1257,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(constrainedDefinition, ['option1', 'option2', 'option3'])).toEqual({
 					sanitisedValue: ['option1', 'option2', 'option3'],
 					validationError: 'Must select at most 2 items',
+					validity: false,
 					validationWarnings: [],
 				})
 			})
@@ -1164,11 +1266,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(constrainedDefinition, ['option1'])).toEqual({
 					sanitisedValue: ['option1'],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(constrainedDefinition, ['option1', 'option2'])).toEqual({
 					sanitisedValue: ['option1', 'option2'],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -1184,11 +1288,13 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(customDefinition, ['custom_value'])).toEqual({
 					sanitisedValue: ['custom_value'],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 				expect(validateInputValue(customDefinition, ['option1', 'custom_value'])).toEqual({
 					sanitisedValue: ['option1', 'custom_value'],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -1197,6 +1303,7 @@ describe('validateInputValue', () => {
 				expect(validateInputValue(customDefinition, [999])).toEqual({
 					sanitisedValue: ['999'],
 					validationError: undefined,
+					validity: true,
 					validationWarnings: [],
 				})
 			})
@@ -1212,6 +1319,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, ['custom_value'])).toEqual({
 						sanitisedValue: ['custom_value'],
 						validationError: undefined,
+						validity: true,
 						validationWarnings: [],
 					})
 				})
@@ -1221,6 +1329,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, ['invalid_value'])).toEqual({
 						sanitisedValue: ['invalid_value'],
 						validationError: 'The following selected values are not valid: invalid_value',
+						validity: false,
 						validationWarnings: [],
 					})
 				})
@@ -1229,6 +1338,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, ['option1'])).toEqual({
 						sanitisedValue: ['option1'],
 						validationError: undefined,
+						validity: true,
 						validationWarnings: [],
 					})
 				})
@@ -1238,6 +1348,7 @@ describe('validateInputValue', () => {
 					expect(validateInputValue(customWithRegex, ['invalid1', 'option1', 'invalid2'])).toEqual({
 						sanitisedValue: ['invalid1', 'option1', 'invalid2'],
 						validationError: 'The following selected values are not valid: invalid1, invalid2',
+						validity: false,
 						validationWarnings: [],
 					})
 				})
@@ -1359,16 +1470,19 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, 'not-an-array')).toEqual({
 				sanitisedValue: 'not-an-array',
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, 42)).toEqual({
 				sanitisedValue: 42,
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, { value: 0, color: 0 })).toEqual({
 				sanitisedValue: { value: 0, color: 0 },
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1377,6 +1491,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [])).toEqual({
 				sanitisedValue: [],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1385,16 +1500,19 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, ['not-a-row'])).toEqual({
 				sanitisedValue: ['not-a-row'],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, [42])).toEqual({
 				sanitisedValue: [42],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, [[]])).toEqual({
 				sanitisedValue: [[]],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1403,6 +1521,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: 50, color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: 50, color: 0x00ff00 }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1421,6 +1540,7 @@ describe('validateInputValue', () => {
 					{ value: 85, color: 0xff0000 },
 				],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1429,6 +1549,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: 150, color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: 150, color: 0x00ff00 }],
 				validationError: 'Row 0, column "Value": Value must be less than or equal to 100',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1445,6 +1566,7 @@ describe('validateInputValue', () => {
 					{ value: -5, color: 0xffff00 },
 				],
 				validationError: 'Row 1, column "Value": Value must be greater than or equal to 0',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1467,6 +1589,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(clampDef, [{ value: 150, color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: 100, color: 0x00ff00 }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: ['Row 0, column "Value": Value was clamped to 100'],
 			})
 		})
@@ -1475,6 +1598,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: '75', color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: 75, color: 0x00ff00 }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1483,6 +1607,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, null)).toEqual({
 				sanitisedValue: null,
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1491,6 +1616,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [null])).toEqual({
 				sanitisedValue: [null],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1499,6 +1625,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{}])).toEqual({
 				sanitisedValue: [{}],
 				validationError: 'Row 0, column "Value": A value must be provided',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1531,21 +1658,25 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, 'not-an-array')).toEqual({
 				sanitisedValue: 'not-an-array',
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, 42)).toEqual({
 				sanitisedValue: 42,
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, null)).toEqual({
 				sanitisedValue: null,
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, { value: 0, color: 0 })).toEqual({
 				sanitisedValue: { value: 0, color: 0 },
 				validationError: 'Value must be an array',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1554,6 +1685,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [])).toEqual({
 				sanitisedValue: [],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1562,21 +1694,25 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, ['not-a-row'])).toEqual({
 				sanitisedValue: ['not-a-row'],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, [42])).toEqual({
 				sanitisedValue: [42],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, [null])).toEqual({
 				sanitisedValue: [null],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, [[]])).toEqual({
 				sanitisedValue: [[]],
 				validationError: 'Row 0 must be an object',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1585,6 +1721,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: 50, color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: val(50), color: val(0x00ff00) }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1593,6 +1730,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: val(50), color: val(0x00ff00) }])).toEqual({
 				sanitisedValue: [{ value: val(50), color: val(0x00ff00) }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1602,6 +1740,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [row])).toEqual({
 				sanitisedValue: [{ value: expr('$(internal:time_s)'), color: val(0x00ff00) }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1611,6 +1750,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [row])).toEqual({
 				sanitisedValue: [{ value: expr('$(a:b)'), color: expr('$(c:d)') }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1620,6 +1760,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [row])).toEqual({
 				sanitisedValue: [row],
 				validationError: 'Row 0, field "Value": Expression must be a string',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1628,6 +1769,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: 150, color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: 150, color: 0x00ff00 }],
 				validationError: 'Row 0, field "Value": Value must be less than or equal to 100',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1644,6 +1786,7 @@ describe('validateInputValue', () => {
 					{ value: -5, color: 0xffff00 },
 				],
 				validationError: 'Row 1, field "Value": Value must be greater than or equal to 0',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1666,6 +1809,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(clampDef, [{ value: 150, color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: val(100), color: val(0x00ff00) }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: ['Row 0, field "Value": Value was clamped to 100'],
 			})
 		})
@@ -1674,6 +1818,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: '75', color: 0x00ff00 }])).toEqual({
 				sanitisedValue: [{ value: val(75), color: val(0x00ff00) }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1692,6 +1837,7 @@ describe('validateInputValue', () => {
 					{ value: val(85), color: val(0xff0000) },
 				],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1700,6 +1846,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{ value: 50, color: val(0x00ff00) }])).toEqual({
 				sanitisedValue: [{ value: val(50), color: val(0x00ff00) }],
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1708,6 +1855,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, [{}])).toEqual({
 				sanitisedValue: [{}],
 				validationError: 'Row 0, field "Value": A value must be provided',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1726,6 +1874,7 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, { some: 'object' })).toEqual({
 				sanitisedValue: '{"some":"object"}',
 				validationError: 'Value is not in the list of choices',
+				validity: false,
 				validationWarnings: [],
 			})
 		})
@@ -1742,11 +1891,13 @@ describe('validateInputValue', () => {
 			expect(validateInputValue(definition, Number.MAX_SAFE_INTEGER)).toEqual({
 				sanitisedValue: Number.MAX_SAFE_INTEGER,
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 			expect(validateInputValue(definition, Infinity)).toEqual({
 				sanitisedValue: Infinity,
 				validationError: undefined,
+				validity: true,
 				validationWarnings: [],
 			})
 		})
@@ -1795,5 +1946,103 @@ describe('validateInputValue', () => {
 				validationWarnings: [],
 			})
 		})
+	})
+})
+
+describe('validateInputValue validity', () => {
+	it('textinput with a regex returns true/false per the value', () => {
+		const definition: CompanionInputFieldTextInputExtended = {
+			id: 'test',
+			type: 'textinput',
+			label: 'Test',
+			regex: '/^\\d+$/',
+		}
+		expect(validateInputValue(definition, '123').validity).toBe(true)
+		expect(validateInputValue(definition, 'abc').validity).toBe(false)
+	})
+
+	it('textinput with a minLength returns true/false per the value', () => {
+		const definition: CompanionInputFieldTextInputExtended = {
+			id: 'test',
+			type: 'textinput',
+			label: 'Test',
+			minLength: 3,
+		}
+		expect(validateInputValue(definition, 'abcd').validity).toBe(true)
+		expect(validateInputValue(definition, 'ab').validity).toBe(false)
+	})
+
+	it('textinput with no constraints is unknown (undefined) regardless of value', () => {
+		const definition: CompanionInputFieldTextInputExtended = { id: 'test', type: 'textinput', label: 'Test' }
+		expect(validateInputValue(definition, 'anything').validity).toBeUndefined()
+		expect(validateInputValue(definition, '').validity).toBeUndefined()
+	})
+
+	it('textinput with disableSanitisation is unknown even with a regex', () => {
+		const definition: CompanionInputFieldTextInputExtended = {
+			id: 'test',
+			type: 'textinput',
+			label: 'Test',
+			regex: '/^\\d+$/',
+			disableSanitisation: true,
+		}
+		// disableSanitisation skips all checks, so the value is both error-free and unknown
+		const result = validateInputValue(definition, 'not-a-number')
+		expect(result.validity).toBeUndefined()
+		expect(result.validationError).toBeUndefined()
+	})
+
+	it('textinput with an empty or uncompilable regex is unknown (the regex is ignored)', () => {
+		const emptyRegex: CompanionInputFieldTextInputExtended = { id: 'test', type: 'textinput', label: 'Test', regex: '' }
+		const badRegex: CompanionInputFieldTextInputExtended = {
+			id: 'test',
+			type: 'textinput',
+			label: 'Test',
+			regex: 'not-a-regex',
+		}
+		expect(validateInputValue(emptyRegex, 'anything').validity).toBeUndefined()
+		const badResult = validateInputValue(badRegex, 'anything')
+		expect(badResult.validity).toBeUndefined()
+		// And the value is accepted (no error) - validity and validationError stay consistent
+		expect(badResult.validationError).toBeUndefined()
+	})
+
+	it('secret-text with a regex returns true/false per the value', () => {
+		const definition: CompanionInputFieldSecretExtended = {
+			id: 'test',
+			type: 'secret-text',
+			label: 'Test',
+			regex: '/^\\d+$/',
+		}
+		expect(validateInputValue(definition, '123').validity).toBe(true)
+		expect(validateInputValue(definition, 'abc').validity).toBe(false)
+	})
+
+	it('secret-text with no constraints is unknown (undefined)', () => {
+		const definition: CompanionInputFieldSecretExtended = { id: 'test', type: 'secret-text', label: 'Test' }
+		expect(validateInputValue(definition, 'anything').validity).toBeUndefined()
+	})
+
+	it('fields that always validate report true/false (e.g. number range)', () => {
+		const definition: CompanionInputFieldNumberExtended = {
+			id: 'test',
+			type: 'number',
+			label: 'Test',
+			default: 0,
+			min: 0,
+			max: 10,
+		}
+		expect(validateInputValue(definition, 5).validity).toBe(true)
+		expect(validateInputValue(definition, 50).validity).toBe(false)
+	})
+
+	it('fields with nothing to validate report unknown (undefined)', () => {
+		const checkbox: CompanionInputFieldCheckboxExtended = {
+			id: 'test',
+			type: 'checkbox',
+			label: 'Test',
+			default: false,
+		}
+		expect(validateInputValue(checkbox, true).validity).toBeUndefined()
 	})
 })

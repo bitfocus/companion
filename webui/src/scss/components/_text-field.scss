@@ -19,8 +19,62 @@
 		color: red;
 	}
 
+	&.has-validity-icon {
+		// Leave room for the validity tick/cross overlay
+		padding-right: 1.75rem;
+	}
+
 	&.no-focus {
 		outline: none;
 		box-shadow: none;
+	}
+}
+
+// Wrapper that overlays a validity tick/cross on the right edge of a text input
+.input-validity-wrapper {
+	position: relative;
+	display: flex;
+	flex: 1 1 auto;
+	width: 100%;
+	min-width: 0;
+
+	> .text-input-field {
+		width: 100%;
+	}
+}
+
+.input-validity-icon {
+	position: absolute;
+	top: 50%;
+	right: 0.5rem;
+	transform: translateY(-50%);
+	width: 1em;
+	height: 1em;
+	pointer-events: none;
+
+	&--valid {
+		color: var(--cui-success);
+	}
+
+	&--invalid {
+		color: var(--cui-danger);
+	}
+}
+
+// When the wrapper sits inside an input group (e.g. the secret field), keep the
+// inner input's borders joined to its neighbours just like a direct child would be
+.input-group2 > .input-validity-wrapper {
+	&:focus-within {
+		z-index: 5;
+	}
+
+	&:not(:last-child) > .text-input-field {
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+	}
+
+	&:not(:first-child) > .text-input-field {
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
 	}
 }
