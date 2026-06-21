@@ -34,9 +34,7 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 	const runtimeArch = useX64Fallback ? 'x64' : platformInfo.nodeArch
 
 	// Download and cache build of nodejs
-	const tarFilename = `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${downloadArch}.${
-		isZip ? 'zip' : 'tar.gz'
-	}`
+	const tarFilename = `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${downloadArch}.${isZip ? 'zip' : 'tar.gz'}`
 	const tarPath = path.join(cacheDir, tarFilename)
 	if (!(await fs.pathExists(tarPath))) {
 		const tarUrl = `https://nodejs.org/download/release/v${nodeVersion}/${tarFilename}`
