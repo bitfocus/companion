@@ -109,6 +109,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		})
 		this.#surfaceController.on('group_page', () => debounceUpdateVariables())
 		this.#surfaceController.on('surface_locked', () => debounceUpdateVariables())
+		this.#surfaceController.on('surface-config', () => debounceUpdateVariables())
 
 		this.#surfaceController.on('group-add', () => {
 			debounceUpdateVariableDefinitions()
@@ -208,6 +209,10 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						name: `surface_${surfaceId}_locked`,
 					},
 					{
+						description: `Surface brightness: ${surface.displayName}`,
+						name: `surface_${surfaceId}_brightness`,
+					},
+					{
 						description: `Surface location: ${surface.displayName}`,
 						name: `surface_${surfaceId}_location`,
 					},
@@ -238,6 +243,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				const surfaceId = surface.id.replaceAll(':', '_') // TODO - more chars
 				values[`surface_${surfaceId}_name`] = surface.name || surface.id
 				values[`surface_${surfaceId}_locked`] = surface.locked
+				values[`surface_${surfaceId}_brightness`] = surface.brightness ?? 100
 				values[`surface_${surfaceId}_location`] = surface.location ?? 'Local'
 
 				const surfacePageId = this.#surfaceController.devicePageGet(surface.id)

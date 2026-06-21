@@ -353,17 +353,18 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * @param brightness 0-100
 	 */
 	setBrightness(brightness: number): void {
-		if (this.panel) {
-			if (this.panel.setConfig) {
-				const config = {
-					...this.#surfaceConfig.config,
-					brightness: brightness,
-				}
+		const config = {
+			...this.#surfaceConfig.config,
+			brightness: brightness,
+		}
+		this.#surfaceConfig.config = config
 
-				setImmediate(() => {
-					this.panel.setConfig(config)
-				})
-			}
+		this.#saveConfig()
+
+		if (this.panel && this.panel.setConfig) {
+			setImmediate(() => {
+				this.panel.setConfig(config)
+			})
 		}
 	}
 

@@ -50,6 +50,7 @@ export interface ClientSurfaceItem {
 
 	size: RowsAndColumns | null
 	rotation: SurfaceRotation | null
+	brightness: number | null
 	offset: RowsAndColumns | null
 }
 
