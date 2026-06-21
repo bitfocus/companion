@@ -101,7 +101,11 @@ describe('isOriginAllowed', () => {
 	test('uses the first X-Forwarded-Host value from a comma-separated list', () => {
 		expect(
 			isOriginAllowed(
-				{ origin: 'https://public.example.com', host: 'internal:3000', 'x-forwarded-host': 'public.example.com, proxy' },
+				{
+					origin: 'https://public.example.com',
+					host: 'internal:3000',
+					'x-forwarded-host': 'public.example.com, proxy',
+				},
 				withProxy
 			)
 		).toBe(true)
@@ -110,7 +114,11 @@ describe('isOriginAllowed', () => {
 	test('uses the first X-Forwarded-Host value from an array', () => {
 		expect(
 			isOriginAllowed(
-				{ origin: 'https://public.example.com', host: 'internal:3000', 'x-forwarded-host': ['public.example.com', 'proxy'] },
+				{
+					origin: 'https://public.example.com',
+					host: 'internal:3000',
+					'x-forwarded-host': ['public.example.com', 'proxy'],
+				},
 				withProxy
 			)
 		).toBe(true)
