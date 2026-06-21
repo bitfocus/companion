@@ -46,7 +46,7 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.14",
-    "node": ">=26.3.0 <27"
+    "node": ">=26.3.1 <27"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
