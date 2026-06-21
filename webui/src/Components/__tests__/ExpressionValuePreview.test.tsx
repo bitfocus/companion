@@ -251,6 +251,25 @@ describe('ExpressionPreviewResult', () => {
 		await openValuePopover(user)
 		expect(screen.queryByRole('alert')).toBeNull()
 	})
+
+	it('shows a compact valid indicator instead of the value when statusOnly is set', () => {
+		render(
+			<ExpressionPreviewResult data={{ ok: true, value: 'hello world' }} fieldDefinition={textField()} statusOnly />
+		)
+		expect(document.body.textContent).toContain('Valid')
+		expect(document.body.textContent).not.toContain('hello world')
+	})
+
+	it('still renders an error alert when statusOnly is set', () => {
+		render(
+			<ExpressionPreviewResult
+				data={{ ok: false, error: 'division by zero' }}
+				fieldDefinition={textField()}
+				statusOnly
+			/>
+		)
+		expect(screen.getByText(/division by zero/)).toBeInTheDocument()
+	})
 })
 
 // ---------------------------------------------------------------------------

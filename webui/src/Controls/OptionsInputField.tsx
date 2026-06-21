@@ -16,6 +16,7 @@ import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ListInputField } from '~/Components/ListInputField.js'
 import { TableInputField } from '~/Components/TableInputField.js'
+import { useOptionalEntityEditorContext } from './Components/EntityEditorContext.js'
 import {
 	ExpressionModeFeatures,
 	getInputFeatures,
@@ -66,6 +67,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 	allRawOptions,
 }: Readonly<OptionsInputFieldProps>): React.JSX.Element {
 	const features = getInputFeatures(option)
+
+	const previewStatusOnly = useOptionalEntityEditorContext()?.previewStatusOnly ?? false
 
 	const isExpression = option.type === 'expression'
 	let isInExpressionMode = isExpression
@@ -165,6 +168,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 						controlId={controlId ?? null}
 						fieldDefinition={option}
 						contextResolution={buildContextResolutionForPreview(option.contextVariableResolution, allRawOptions)}
+						statusOnly={previewStatusOnly}
 					/>
 				)}
 			</FormLabel>

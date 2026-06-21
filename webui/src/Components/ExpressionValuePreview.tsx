@@ -30,6 +30,8 @@ interface ExpressionValuePreviewProps {
 	controlId: string | null
 	fieldDefinition: SomeCompanionInputField
 	contextResolution?: ContextResolutionForPreview
+	/** When set, shows a compact validity status (valid / invalid / error) instead of the value, which is displayed elsewhere */
+	statusOnly?: boolean
 }
 
 function isExpressionParseable(value: string): boolean {
@@ -65,6 +67,7 @@ export function ExpressionValuePreview({
 	controlId,
 	fieldDefinition,
 	contextResolution,
+	statusOnly,
 }: ExpressionValuePreviewProps): React.JSX.Element | null {
 	const debouncedExpression = useDebounced(expression, 300)
 	const isParseable = useMemo(() => isExpressionParseable(debouncedExpression), [debouncedExpression])
@@ -74,15 +77,17 @@ export function ExpressionValuePreview({
 	}
 
 	if (!isParseable) {
-		return (
+		const invalidWarning = (
 			<StaticAlert
 				color="warning"
-				className="mt-1 mb-0"
+				className="mt-2 mb-0"
 				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
 			>
 				Invalid expression
 			</StaticAlert>
 		)
+		// In status-only mode, keep the indicator on its own line below the label, consistent with the valid/error states
+		return statusOnly ? <div>{invalidWarning}</div> : invalidWarning
 	}
 
 	return (
@@ -91,6 +96,7 @@ export function ExpressionValuePreview({
 			controlId={controlId}
 			fieldDefinition={fieldDefinition}
 			contextResolution={contextResolution}
+			statusOnly={statusOnly}
 		/>
 	)
 }
@@ -98,13 +104,34 @@ export function ExpressionValuePreview({
 interface ExpressionPreviewResultProps {
 	data: ExpressionStreamResult
 	fieldDefinition: SomeCompanionInputField
+	/** When set, shows a compact validity status instead of the value (which is displayed elsewhere) */
+	statusOnly?: boolean
 }
 
-export function ExpressionPreviewResult({ data, fieldDefinition }: ExpressionPreviewResultProps): React.JSX.Element {
+export function ExpressionPreviewResult({
+	data,
+	fieldDefinition,
+	statusOnly,
+}: ExpressionPreviewResultProps): React.JSX.Element | null {
 	if (!data.ok) {
 		return (
 			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
 				Error: {data.error}
+			</StaticAlert>
+		)
+	}
+
+	// The value itself is shown elsewhere (e.g. the panel's "Current Value" row). Rather than duplicate it,
+	// confirm the expression evaluates cleanly. Styled identically to the "Invalid expression" pill so the
+	// spot keeps the same footprint as you move between valid and invalid states.
+	if (statusOnly) {
+		return (
+			<StaticAlert
+				color="success"
+				className="mt-2 mb-0"
+				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
+			>
+				Valid expression
 			</StaticAlert>
 		)
 	}
@@ -123,6 +150,7 @@ function ExpressionValuePreviewInner({
 	controlId,
 	fieldDefinition,
 	contextResolution,
+	statusOnly,
 }: ExpressionValuePreviewProps) {
 	// Resolve the context resolution to a form the server accepts (non-null values only)
 	const serverContextResolution = resolveServerContextResolution(contextResolution)
@@ -165,13 +193,21 @@ function ExpressionValuePreviewInner({
 
 	let content: React.JSX.Element | null
 	if (!displayData) {
-		content = showSpinner ? (
-			<div className="mt-1">
-				<PulseLoader size="0.5rem" title="Loading preview" />
-			</div>
-		) : null
+		// In status-only mode there is no value to wait for, so don't show a loading spinner
+		content =
+			showSpinner && !statusOnly ? (
+				<div className="mt-1">
+					<PulseLoader size="0.5rem" title="Loading preview" />
+				</div>
+			) : null
 	} else {
-		content = <ExpressionPreviewResult data={displayData as ExpressionStreamResult} fieldDefinition={fieldDefinition} />
+		content = (
+			<ExpressionPreviewResult
+				data={displayData as ExpressionStreamResult}
+				fieldDefinition={fieldDefinition}
+				statusOnly={statusOnly}
+			/>
+		)
 	}
 
 	// Always render an anchor element so the intersection observer has a stable target to watch,

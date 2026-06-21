@@ -11,6 +11,8 @@ export interface EntityEditorContextType {
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 	localVariablePrefix: string | null
+	/** When set, inline expression previews show a compact validity status instead of the value (shown elsewhere) */
+	previewStatusOnly?: boolean
 }
 
 const EntityEditorContext = createContext<EntityEditorContextType | null>(null)
@@ -19,6 +21,11 @@ export function useEntityEditorContext(): EntityEditorContextType {
 	const ctx = useContext(EntityEditorContext)
 	if (!ctx) throw new Error('useEntityEditorContext must be used within a EntityEditorProvider')
 	return ctx
+}
+
+/** Like useEntityEditorContext, but returns null instead of throwing when used outside a provider */
+export function useOptionalEntityEditorContext(): EntityEditorContextType | null {
+	return useContext(EntityEditorContext)
 }
 
 type EntityEditorContextProviderProps = EntityEditorContextType
@@ -30,6 +37,7 @@ export function EntityEditorContextProvider({
 	readonly,
 	localVariablesStore,
 	localVariablePrefix,
+	previewStatusOnly,
 	children,
 }: React.PropsWithChildren<EntityEditorContextProviderProps>): React.JSX.Element {
 	const value = useMemo<EntityEditorContextType>(() => {
@@ -40,8 +48,9 @@ export function EntityEditorContextProvider({
 			readonly,
 			localVariablesStore,
 			localVariablePrefix,
+			previewStatusOnly,
 		}
-	}, [controlId, location, serviceFactory, readonly, localVariablesStore, localVariablePrefix])
+	}, [controlId, location, serviceFactory, readonly, localVariablesStore, localVariablePrefix, previewStatusOnly])
 
 	return <EntityEditorContext.Provider value={value}>{children}</EntityEditorContext.Provider>
 }

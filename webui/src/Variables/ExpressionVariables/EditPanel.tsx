@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
+import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
@@ -196,6 +197,7 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 				readonly={false}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={null}
+				previewStatusOnly
 			>
 				<PanelCollapseHelperProvider storageId={`feedbacks_${controlId}_entities`} knownPanelIds={entityIds}>
 					<GenericConfirmModal ref={confirmModal} />
@@ -346,13 +348,23 @@ function ExpressionVariableCurrentValue({ name }: { name: string }) {
 		)
 	)
 
-	if (!sub.data) {
+	// Retain the last successfully-computed value, so the row keeps showing it while a transient
+	// expression error is reported inline at the field instead of being duplicated here.
+	const lastGoodValue = useRef<JsonValue | undefined>(undefined)
+	const hasLastGoodValue = useRef(false)
+	if (sub.data?.ok) {
+		lastGoodValue.current = sub.data.value
+		hasLastGoodValue.current = true
+	}
+
+	if (!sub.data && !hasLastGoodValue.current) {
 		return <LoadingBar />
 	}
 
-	if (!sub.data.ok) {
-		return <StaticAlert color="danger">Error: {sub.data.error}</StaticAlert>
+	if (!hasLastGoodValue.current) {
+		// Errored before ever producing a value - the error itself is shown at the field
+		return <small className="text-muted">No value</small>
 	}
 
-	return <VariableValueDisplay value={sub.data.value} />
+	return <VariableValueDisplay value={lastGoodValue.current} />
 }
