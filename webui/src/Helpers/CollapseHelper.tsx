@@ -2,6 +2,7 @@
 import { observable, runInAction } from 'mobx'
 import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 
 interface CollapsedState {
 	// @deprecated
@@ -70,7 +71,7 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 
 	#writeState() {
 		if (!this.#storageId) return // In-memory mode, no persistence
-		window.localStorage.setItem(
+		safeSetLocalStorage(
 			this.#storageId,
 			JSON.stringify({
 				defaultExpandedAt: Object.fromEntries(this.#defaultExpandedAt.toJSON()),

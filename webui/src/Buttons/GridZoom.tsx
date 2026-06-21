@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 
 export const ZOOM_MIN = 20
 export const ZOOM_MAX = 200
@@ -13,7 +14,7 @@ export interface GridZoomController {
 
 function storeZoomValue(id: string, value: number) {
 	// Cache the value for future page loads
-	window.localStorage.setItem(`grid-zoom-scale:${id}`, value + '')
+	safeSetLocalStorage(`grid-zoom-scale:${id}`, value + '')
 }
 
 export function useGridZoom(id: string): [GridZoomController, number] {

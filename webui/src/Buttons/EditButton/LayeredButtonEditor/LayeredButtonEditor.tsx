@@ -9,6 +9,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { ButtonEditorTabs, type ButtonEditorExtraTabs } from '../ButtonEditorTabs.js'
@@ -162,7 +163,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	}, [])
 	const savePanelLayout = useCallback(
 		// Note: This can't use useLocalStorage because it fires during the mount of the Group causing a react error
-		(layout: Record<string, number>) => localStorage.setItem('layeredEditor.panelSizes', JSON.stringify(layout)),
+		(layout: Record<string, number>) => safeSetLocalStorage('layeredEditor.panelSizes', JSON.stringify(layout)),
 		[]
 	)
 

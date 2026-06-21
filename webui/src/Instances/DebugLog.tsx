@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Grid } from '~/Components/Grid'
+import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'
@@ -116,7 +117,7 @@ export function InstanceDebugLog({
 	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(instanceId ?? ''))
 	// Save the config when it changes
 	useEffect(() => {
-		window.localStorage.setItem(`module_debug:${instanceId}`, JSON.stringify(config))
+		safeSetLocalStorage(`module_debug:${instanceId}`, JSON.stringify(config))
 	}, [config, instanceId])
 
 	const doToggleConfig = useCallback((key: keyof DebugConfig) => {
@@ -293,7 +294,7 @@ function loadConfig(instanceId: string): DebugConfig {
 			console: true,
 		}
 
-		window.localStorage.setItem(saveId, JSON.stringify(config))
+		safeSetLocalStorage(saveId, JSON.stringify(config))
 
 		return config
 	}
