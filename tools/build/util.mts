@@ -51,6 +51,14 @@ export function determinePlatformInfo(platform: string | undefined): PlatformInf
 			nodePlatform: 'win32',
 			runtimeArch: 'x64',
 		})
+	} else if (platform === 'win-arm64' || platform === 'win32-arm64') {
+		return expandMissing({
+			electronBuilderPlatform: 'win',
+			electronBuilderArch: electronBuilder.Arch.arm64,
+			runtimePlatform: 'win',
+			nodePlatform: 'win32',
+			runtimeArch: 'arm64',
+		})
 	} else if (platform === 'linux-x64') {
 		return expandMissing({
 			electronBuilderPlatform: 'linux',

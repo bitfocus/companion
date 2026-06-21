@@ -26,8 +26,15 @@ export async function fetchNodejs(platformInfo: PlatformInfo) {
 async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: string) {
 	const isZip = platformInfo.runtimePlatform === 'win'
 
+	// Node.js published no win-arm64 builds before v20; fall back to x64 (Windows emulation).
+	const majorVersion = Number(nodeVersion.split('.')[0])
+	const useX64Fallback =
+		platformInfo.runtimePlatform === 'win' && platformInfo.runtimeArch === 'arm64' && majorVersion < 20
+	const downloadArch = useX64Fallback ? 'x64' : platformInfo.runtimeArch
+	const runtimeArch = useX64Fallback ? 'x64' : platformInfo.nodeArch
+
 	// Download and cache build of nodejs
-	const tarFilename = `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}.${
+	const tarFilename = `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${downloadArch}.${
 		isZip ? 'zip' : 'tar.gz'
 	}`
 	const tarPath = path.join(cacheDir, tarFilename)
@@ -48,7 +55,7 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 	}
 
 	// Extract nodejs and discard 'junk'
-	const runtimeDir = path.join(cacheRuntimeDir, `${platformInfo.nodePlatform}-${platformInfo.nodeArch}-${nodeVersion}`)
+	const runtimeDir = path.join(cacheRuntimeDir, `${platformInfo.nodePlatform}-${runtimeArch}-${nodeVersion}`)
 	if (!(await fs.pathExists(runtimeDir))) {
 		if (isZip) {
 			const tmpDir = path.join(cacheRuntimeDir, `tmp-${nodeVersion}`)
@@ -59,7 +66,7 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 				await $`unzip ${toPosix(tarPath)} -d ${toPosix(tmpDir)}`
 			}
 			await fs.move(
-				path.join(tmpDir, `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${platformInfo.runtimeArch}`),
+				path.join(tmpDir, `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${downloadArch}`),
 				runtimeDir
 			)
 			await fs.remove(tmpDir)
