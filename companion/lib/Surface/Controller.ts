@@ -1035,6 +1035,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				size: config.gridSize || null,
 				rotation: config?.config?.rotation,
+				brightness: config?.config?.brightness,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
