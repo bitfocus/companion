@@ -560,7 +560,7 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-arm64:
-    runs-on: windows-11-arm
+    runs-on: ${{ (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-11-arm'}}
     needs: check-types
     timeout-minutes: 60
 
@@ -594,6 +594,7 @@ jobs:
           CI: 1
 
       - name: build & package (unsigned)
+        if: ${{ runner.environment != 'self-hosted' }}
         run: |
           yarn tsx tools/build/complete.mts win32-arm64
         env:
@@ -601,6 +602,23 @@ jobs:
           SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
           VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
+
+      - name: build & package (signed)
+        if: ${{ runner.environment == 'self-hosted' }}
+        run: |
+          yarn tsx tools/build/complete.mts win32-arm64
+        env:
+          CI: 1
+          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
+          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
+          CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
+          BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
+          # the wincert machine has issues using the default cache location
+          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+          NODE_OPTIONS: --max_old_space_size=4096
+          # x64 host cannot execute an arm64 node binary; the native windows-11-arm build is the launch gate
+          SKIP_LAUNCH_CHECK: true
 
       - name: Determine files to upload
         id: filenames
