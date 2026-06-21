@@ -199,7 +199,11 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 				localVariablePrefix={null}
 				previewStatusOnly
 			>
-				<PanelCollapseHelperProvider storageId={`feedbacks_${controlId}_entities`} knownPanelIds={entityIds}>
+				<PanelCollapseHelperProvider
+					storageId={`feedbacks_${controlId}_entities`}
+					knownPanelIds={entityIds}
+					evictionOwner={{ kind: 'control', id: controlId }}
+				>
 					<GenericConfirmModal ref={confirmModal} />
 
 					{!entity ? (
@@ -305,7 +309,11 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix="local"
 			>
-				<PanelCollapseHelperProvider storageId={`localVariables_${controlId}_entities`} knownPanelIds={entityIds}>
+				<PanelCollapseHelperProvider
+					storageId={`localVariables_${controlId}_entities`}
+					knownPanelIds={entityIds}
+					evictionOwner={{ kind: 'control', id: controlId }}
+				>
 					<GenericConfirmModal ref={confirmModal} />
 
 					<EditableEntityList

@@ -6,6 +6,7 @@ import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
 import { PuffLoader } from 'react-spinners'
 import { Grid } from '~/Components/Grid'
+import { useEvictDeadCollapseState } from '~/Helpers/useEvictDeadCollapseState.js'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
@@ -125,6 +126,9 @@ interface AppMainProps {
 
 const AppMain = observer(function AppMain({ connected, loadingComplete, loadingProgress }: AppMainProps) {
 	const { userConfig, showWizard } = useContext(RootAppStoreContext)
+
+	// Once everything has loaded, prune collapse-state keys for controls/connections that no longer exist
+	useEvictDeadCollapseState(loadingComplete)
 
 	const [unlocked, setUnlocked] = useState(false)
 

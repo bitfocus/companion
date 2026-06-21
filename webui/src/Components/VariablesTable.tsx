@@ -32,6 +32,10 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	const variableValues = useVariablesValuesForLabel(label)
 
+	// Note: intentionally no evictionOwner. The `label` space mixes connection labels with
+	// built-ins (internal/custom/expression) from different stores, so there is no single
+	// authoritative live set to safely confirm a label is dead. These keys are low-volume
+	// (one per label) and are bounded by the size-capped eviction backstop instead.
 	const panelCollapseHelper = usePanelCollapseHelperLite(
 		`variables-table:${label}`,
 		Array.from(variableValues.keys()),

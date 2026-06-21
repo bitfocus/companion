@@ -70,6 +70,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 				<PanelCollapseHelperProvider
 					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}
 					knownPanelIds={entityIds}
+					evictionOwner={{ kind: 'control', id: controlId }}
 				>
 					<GenericConfirmModal ref={confirmModal} />
 

@@ -12,11 +12,17 @@ import 'intersection-observer'
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
+import { evictBySizeIfNeeded } from '~/Helpers/CollapseStorage.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import './Resources/TRPC.js' // Ensure TRPC is loaded ASAP
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen.js'
+
+// Relieve any pre-existing collapse-state bloat in localStorage before first render, so that
+// writes don't immediately fail with QuotaExceededError. (The owner-based sweep runs later,
+// once the stores have loaded.)
+evictBySizeIfNeeded()
 
 if (process.env.NODE_ENV === 'development') {
 	const defineProperties = Object.defineProperties

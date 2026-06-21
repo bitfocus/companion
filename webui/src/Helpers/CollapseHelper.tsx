@@ -4,11 +4,26 @@ import { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { useDeepCompareEffect } from 'use-deep-compare'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 
+/**
+ * Identifies the entity that "owns" a collapse-state key, so the startup eviction
+ * sweep can delete keys whose owning control/connection no longer exists.
+ * Keys without an owner (fixed UI sections) are never evicted by the known-ID sweep.
+ * See CollapseStorage.ts.
+ */
+export type CollapseEvictionOwner = {
+	kind: 'control' | 'connection'
+	id: string
+}
+
 interface CollapsedState {
 	// @deprecated
 	defaultCollapsed?: boolean
 	defaultExpandedAt: Record<string, boolean | undefined> | undefined
 	ids: Record<string, boolean | undefined>
+	// When this key was last written/loaded. Used by size-capped eviction.
+	lastUsedAt: number | undefined
+	// Which entity owns this key, for known-id eviction. Absent for fixed keys.
+	owner: CollapseEvictionOwner | undefined
 }
 
 export type PanelCollapseDefaultCollapsed = boolean | ((panelId: string) => boolean)
@@ -27,13 +42,19 @@ export interface PanelCollapseHelper {
 class PanelCollapseHelperStore implements PanelCollapseHelper {
 	readonly #storageId: string | null
 	readonly #defaultCollapsed: PanelCollapseDefaultCollapsed
+	readonly #owner: CollapseEvictionOwner | undefined
 
 	readonly #defaultExpandedAt = observable.map<string | null, boolean>()
 	readonly #ids = observable.map<string, boolean>()
 
-	constructor(storageId: string | null, defaultCollapsed: PanelCollapseDefaultCollapsed = false) {
+	constructor(
+		storageId: string | null,
+		defaultCollapsed: PanelCollapseDefaultCollapsed = false,
+		owner: CollapseEvictionOwner | undefined
+	) {
 		this.#storageId = storageId ? `companion_ui_collapsed_${storageId}` : null
 		this.#defaultCollapsed = defaultCollapsed
+		this.#owner = owner
 
 		// Try loading the old state (skip if in-memory mode)
 		if (this.#storageId) {
@@ -61,6 +82,9 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 						for (const [key, value] of Object.entries(parsedState.ids)) {
 							if (typeof value === 'boolean') this.#ids.set(key, value)
 						}
+
+						// Refresh lastUsedAt (and backfill owner metadata) so this key counts as recently used
+						this.#writeState()
 					}
 				} catch (_e) {
 					// Ignore
@@ -76,6 +100,8 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 			JSON.stringify({
 				defaultExpandedAt: Object.fromEntries(this.#defaultExpandedAt.toJSON()),
 				ids: Object.fromEntries(this.#ids.toJSON()),
+				lastUsedAt: Date.now(),
+				owner: this.#owner,
 			} satisfies CollapsedState)
 		)
 	}
@@ -206,13 +232,15 @@ export function PanelCollapseHelperProvider({
 	storageId,
 	knownPanelIds,
 	defaultCollapsed,
+	evictionOwner,
 	children,
 }: React.PropsWithChildren<{
 	storageId: string
 	knownPanelIds: string[]
 	defaultCollapsed?: boolean
+	evictionOwner?: CollapseEvictionOwner
 }>): JSX.Element {
-	const helper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed)
+	const helper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed, evictionOwner)
 
 	return <PanelCollapseHelperContext.Provider value={helper}>{children}</PanelCollapseHelperContext.Provider>
 }
@@ -220,9 +248,21 @@ export function PanelCollapseHelperProvider({
 export function usePanelCollapseHelper(
 	storageId: string | null,
 	knownPanelIds: string[],
-	defaultCollapsed: PanelCollapseDefaultCollapsed = false
+	defaultCollapsed: PanelCollapseDefaultCollapsed = false,
+	evictionOwner?: CollapseEvictionOwner
 ): PanelCollapseHelper {
-	const store = useMemo(() => new PanelCollapseHelperStore(storageId, defaultCollapsed), [storageId, defaultCollapsed])
+	// Depend on the owner's primitive fields rather than the (inline) object reference
+	const ownerKind = evictionOwner?.kind
+	const ownerId = evictionOwner?.id
+	const store = useMemo(
+		() =>
+			new PanelCollapseHelperStore(
+				storageId,
+				defaultCollapsed,
+				ownerKind && ownerId ? { kind: ownerKind, id: ownerId } : undefined
+			),
+		[storageId, defaultCollapsed, ownerKind, ownerId]
+	)
 
 	// Clear out any unknown panel IDs
 	useDeepCompareEffect(() => {
@@ -244,12 +284,13 @@ export interface PanelCollapseHelperLite {
 export function usePanelCollapseHelperLite(
 	storageId: string,
 	knownPanelIds: string[],
-	defaultCollapsed = false
+	defaultCollapsed = false,
+	evictionOwner?: CollapseEvictionOwner
 ): PanelCollapseHelperLite {
 	const panelIdsRef = useRef<string[]>(knownPanelIds)
 	panelIdsRef.current = knownPanelIds
 
-	const collapseHelper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed)
+	const collapseHelper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed, evictionOwner)
 
 	return useMemo(
 		() => ({
