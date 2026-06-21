@@ -187,6 +187,7 @@ if (process.env.ELECTRON !== '0') {
 				},
 			},
 			nsis: {
+				include: 'installer.nsh',
 				artifactName: 'companion-win64.exe',
 				createStartMenuShortcut: true,
 				perMachine: false,

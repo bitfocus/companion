@@ -22,4 +22,5 @@ extend-exclude = [
   "**/*.companionconfig",
   "assets/linux/*.rules",
   "shared-lib/lib/OpenApi/",
+  "launcher/assets/installer.nsh",
 ]
