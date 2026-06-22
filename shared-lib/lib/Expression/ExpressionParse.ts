@@ -1,4 +1,5 @@
 import * as acorn from 'acorn'
+import { ValidateExpression } from './ExpressionValidate.js'
 import { companionVariablesAcornPlugin } from './Plugins/CompanionVariables.js'
 
 // An acorn parser extended to understand Companion's `$(label:name)` variable references
@@ -20,12 +21,18 @@ export type SomeExpressionNode = acorn.Node
  * Parse an expression into executable nodes
  */
 export function ParseExpression(expression: string): SomeExpressionNode {
+	let parsed: SomeExpressionNode
 	try {
-		return ExpressionAcornParser.parse(expression, PARSE_OPTIONS)
+		parsed = ExpressionAcornParser.parse(expression, PARSE_OPTIONS)
 	} catch (e) {
 		// Normalise acorn's SyntaxError into a plain Error (preserving its message + position)
 		throw new Error(e instanceof Error ? e.message : String(e))
 	}
+
+	// Reject any syntax the evaluator does not support, with a clear error
+	ValidateExpression(parsed)
+
+	return parsed
 }
 
 /**

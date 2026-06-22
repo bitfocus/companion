@@ -60,10 +60,16 @@ export function companionVariablesAcornPlugin(BaseParser: typeof acorn.Parser): 
 		}
 
 		parseStatement(context: any, topLevel: any, exports: any): any {
-			// In the Companion expression dialect a statement-position `{` is always an object literal,
-			// never a block statement. (Standard JS treats a leading `{` as a block; the dialect doesn't
-			// have bare blocks, and object literals at the start of an expression are common.)
-			if (this.type === tokTypes.braceL) {
+			// A top-level statement that starts with `{` is parsed as an object literal, not a block.
+			// This is not a deliberate language rule: jsep (the previous parser) was expression-only and
+			// could never produce a block, so `{...}` always meant an object. We preserve that for
+			// backward compatibility - and because a leading object literal is meaningful as the
+			// expression's (implicit) result value, e.g. `{ 1: 'on', 2: 'off' }[$(internal:state)]`.
+			//
+			// Gated to `topLevel`, so nested `{}` (e.g. `if`/`for`/`while` bodies, once control flow
+			// lands) are still parsed as real blocks. The only thing given up is a bare standalone block
+			// at the top level, which has no useful meaning in this dialect.
+			if (topLevel && this.type === tokTypes.braceL) {
 				const node = this.startNode()
 				const expr = this.parseExpression()
 				return this.parseExpressionStatement(node, expr)

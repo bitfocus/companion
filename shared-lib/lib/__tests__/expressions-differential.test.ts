@@ -280,11 +280,10 @@ describe.skip('documented behavioural differences from the legacy jsep parser', 
 		expect(runNew('void 0').ok).toBe(false)
 	})
 
-	it('NEW: regex literals now parse (to be handled by the validation pass in a later phase)', () => {
+	it('regex literals are rejected by both (for different reasons)', () => {
 		// OLD: `/` was always division, so `/ab/` was a syntax error
-		// NEW: acorn parses `/ab/` as a RegExp literal. The evaluator returns the RegExp for now;
-		//      this should be explicitly rejected by the Phase 2 validation pass.
+		// NEW: acorn parses `/ab/` as a RegExp literal, which the validation pass rejects
 		expect(runLegacy('/ab/').ok).toBe(false)
-		expect(runNew('/ab/').ok).toBe(true)
+		expect(runNew('/ab/').ok).toBe(false)
 	})
 })
