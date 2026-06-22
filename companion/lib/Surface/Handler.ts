@@ -353,6 +353,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * @param brightness 0-100
 	 */
 	setBrightness(brightness: number): void {
+		if (!Number.isFinite(brightness)) return
+
 		const config = {
 			...this.#surfaceConfig.config,
 			brightness: brightness,
