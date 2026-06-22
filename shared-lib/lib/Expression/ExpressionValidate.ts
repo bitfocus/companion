@@ -31,6 +31,8 @@ const ALLOWED_NODE_TYPES = new Set<string>([
 	'ObjectExpression',
 	'Property',
 	'MemberExpression',
+	'ChainExpression',
+	'SpreadElement',
 	'ReturnStatement',
 	'VariableDeclaration',
 	'VariableDeclarator',
@@ -83,10 +85,8 @@ const ALLOWED_DECLARATION_KINDS = new Set(['let', 'const'])
 
 /** Friendlier messages for some commonly-hit rejected node types. */
 const FRIENDLY_REJECTIONS: Record<string, string> = {
-	ChainExpression: 'Optional chaining (`?.`) is not supported',
 	AwaitExpression: '`await` is not supported',
 	YieldExpression: '`yield` is not supported',
-	SpreadElement: 'Spread (`...`) is not supported',
 	ThisExpression: '`this` is not supported',
 	TaggedTemplateExpression: 'Tagged template literals are not supported',
 }
@@ -161,8 +161,9 @@ function checkNode(node: any): void {
 
 		case 'CallExpression':
 			// Only bare function calls (`fn(...)`) are supported, not method calls or computed callees.
-			// (Optional calls `a?.()` arrive wrapped in a ChainExpression, which is rejected separately.)
 			if (node.callee?.type !== 'Identifier') fail('Only direct function calls are supported', node.callee ?? node)
+			// Optional calls (`fn?.()`) don't fit the name-based function model
+			if (node.optional) fail('Optional function calls (`?.()`) are not supported', node)
 			break
 
 		case 'Property':

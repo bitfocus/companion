@@ -392,6 +392,72 @@ describe('resolver', function () {
 		})
 	})
 
+	describe('optional chaining', () => {
+		const getValue = (props: GetVariableValueProps): any => {
+			switch (props.variableId) {
+				case 'my:obj':
+					return { k: 'v', nested: { deep: 1 } }
+				case 'my:null':
+					return null
+				case 'my:arr':
+					return [{ name: 'first' }]
+			}
+			return undefined
+		}
+
+		it('reads through a present value', () => {
+			expect(resolve(parse('$(my:obj)?.k'), getValue)).toBe('v')
+			expect(resolve(parse('$(my:obj)?.nested?.deep'), getValue)).toBe(1)
+		})
+
+		it('short-circuits to undefined on a nullish value', () => {
+			expect(resolve(parse('$(my:null)?.k'), getValue)).toBe(undefined)
+			expect(resolve(parse('$(my:null)?.k?.deep'), getValue)).toBe(undefined)
+			expect(resolve(parse('a = null; a?.b'), defaultGetValue)).toBe(undefined)
+		})
+
+		it('works with computed optional access', () => {
+			expect(resolve(parse('$(my:arr)?.[0]?.name'), getValue)).toBe('first')
+			expect(resolve(parse('$(my:null)?.[0]'), getValue)).toBe(undefined)
+		})
+	})
+
+	describe('spread', () => {
+		const getValue = (props: GetVariableValueProps): any => {
+			switch (props.variableId) {
+				case 'my:arr':
+					return [10, 20, 30]
+				case 'my:obj':
+					return { a: 1, b: 2 }
+			}
+			return undefined
+		}
+
+		it('spreads into array literals', () => {
+			expect(resolve(parse('[...[1, 2], 3]'), defaultGetValue)).toEqual([1, 2, 3])
+			expect(resolve(parse('[0, ...$(my:arr)]'), getValue)).toEqual([0, 10, 20, 30])
+			expect(resolve(parse("[...'ab']"), defaultGetValue)).toEqual(['a', 'b'])
+		})
+
+		it('spreads into object literals (later keys win)', () => {
+			expect(resolve(parse('{ ...{ a: 1 }, b: 2 }'), defaultGetValue)).toEqual({ a: 1, b: 2 })
+			expect(resolve(parse('{ a: 1, ...{ a: 2 } }'), defaultGetValue)).toEqual({ a: 2 })
+			expect(resolve(parse('{ ...$(my:obj), c: 3 }'), getValue)).toEqual({ a: 1, b: 2, c: 3 })
+		})
+
+		it('spreads into function call arguments', () => {
+			const result = resolve(parse('sum(...[1, 2, 3], 4)'), defaultGetValue, {
+				sum: (...args: number[]) => args.reduce((a, b) => a + b, 0),
+			})
+			expect(result).toBe(10)
+		})
+
+		it('throws when spreading a non-iterable value', () => {
+			expect(() => resolve(parse('[...5]'), defaultGetValue)).toThrow(/not iterable/)
+			expect(() => resolve(parse('[...null]'), defaultGetValue)).toThrow(/null or undefined/)
+		})
+	})
+
 	describe('return', () => {
 		it('return value', () => {
 			const result = resolve(parse('return 1'), defaultGetValue)

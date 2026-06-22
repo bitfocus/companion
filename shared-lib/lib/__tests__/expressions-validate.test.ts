@@ -49,6 +49,17 @@ describe('expression validation (subset by rejection)', () => {
 			'return 5',
 			'undefined',
 			'null',
+
+			// optional chaining
+			'$(my:obj)?.k',
+			'a?.b',
+			'a?.[b]',
+			'$(my:arr)?.[0]?.name',
+
+			// spread
+			'[...[1, 2], 3]',
+			'{ ...{ a: 1 }, b: 2 }',
+			'max(...[1, 2, 3])',
 		]
 		for (const expr of supported) {
 			it(`accepts: ${JSON.stringify(expr)}`, () => {
@@ -90,16 +101,12 @@ describe('expression validation (subset by rejection)', () => {
 			['123n', /BigInt literals are not supported/],
 
 			// member/call restrictions
-			['a?.b', /Optional chaining/],
 			['[].map(x)', /Only direct function calls are supported/],
+			['fn?.()', /Optional function calls/],
 
 			// declarations
 			['var a = 1', /Unsupported variable declaration "var"/],
 			['const [a, b] = c', /Destructuring declarations are not supported/],
-
-			// spread / objects
-			['[...a]', /Spread \(`\.\.\.`\) is not supported/],
-			['({ ...a })', /Spread \(`\.\.\.`\) is not supported/],
 		]
 		for (const [expr, pattern] of rejected) {
 			it(`rejects: ${JSON.stringify(expr)}`, () => {

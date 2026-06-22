@@ -176,7 +176,15 @@ export function ResolveExpression(
 
 				const fn = functions[nodeName]
 				if (!fn || typeof fn !== 'function') throw new Error(`Unsupported function "${nodeName}"`)
-				const args = node.arguments.map((arg: any) => resolve(arg))
+
+				const args: any[] = []
+				for (const arg of node.arguments) {
+					if (arg.type === 'SpreadElement') {
+						args.push(...spreadIterable(resolve(arg.argument)))
+					} else {
+						args.push(resolve(arg))
+					}
+				}
 				return fn(...args)
 			}
 
@@ -221,17 +229,26 @@ export function ResolveExpression(
 			case 'ArrayExpression': {
 				const vals = []
 				for (const elm of node.elements) {
-					if (elm) vals.push(resolve(elm))
+					if (!elm) continue // holes (`[1, , 3]`)
+					if (elm.type === 'SpreadElement') {
+						vals.push(...spreadIterable(resolve(elm.argument)))
+					} else {
+						vals.push(resolve(elm))
+					}
 				}
 				return vals
 			}
+
+			case 'ChainExpression':
+				// Wrapper acorn places around an optional chain (`a?.b`); the inner expression does the work
+				return resolve(node.expression)
 
 			case 'MemberExpression': {
 				const object = resolve(node.object)
 				const property = resolveMemberProperty(node)
 
-				// propagate null
-				if (object == null) return object
+				// propagate null - `a?.b` short-circuits to undefined, `a.b` keeps the existing lenient null
+				if (object == null) return node.optional ? undefined : object
 				if (BANNED_PROPS.has(String(property))) throw new Error(`Access to property "${property}" is not allowed`)
 
 				// Only expose own, enumerable (data) properties: object keys and array indices.
@@ -244,6 +261,18 @@ export function ResolveExpression(
 			case 'ObjectExpression': {
 				const obj: Record<any, any> = {}
 				for (const prop of node.properties) {
+					if (prop.type === 'SpreadElement') {
+						// Object spread (`{ ...a }`): copy own enumerable properties, like the data-only member model.
+						// Uses direct assignment of own keys (not Object.assign) so it cannot trigger prototype pollution.
+						const source = resolve(prop.argument)
+						if (source != null) {
+							for (const sourceKey of Object.keys(source)) {
+								if (!BANNED_PROPS.has(sourceKey)) obj[sourceKey] = source[sourceKey]
+							}
+						}
+						continue
+					}
+
 					if (prop.type !== 'Property') throw new Error(`Invalid property type in object: ${prop.type}`)
 
 					// Non-computed identifier keys (`{ a: 1 }`, `{ a }`) are literal property names, not variable lookups
@@ -361,6 +390,18 @@ export function ResolveExpression(
 	}
 
 	return resolve(node)
+}
+
+/**
+ * Expand a value used in a spread (`...value`) into an array of items.
+ * Arrays, strings and other iterables are supported; anything else is an error, matching JS.
+ */
+function spreadIterable(value: any): any[] {
+	if (value == null) throw new Error('Cannot spread a null or undefined value')
+	if (Array.isArray(value)) return value
+	if (typeof value === 'string') return Array.from(value)
+	if (typeof value[Symbol.iterator] === 'function') return Array.from(value)
+	throw new Error('Spread value is not iterable')
 }
 
 /**
