@@ -137,6 +137,12 @@ If you prefer, you can write `return` to make the result explicit, and to stop e
 
 Temporary variables only exist while the expression is being evaluated — they are not visible anywhere else, and are not related to custom variables.
 
+:::tip
+
+If a statement ends with a value and the next line begins with `` ` ``, `(` or `[`, the two lines can be read as a single statement (for example a template string on its own line after a calculation becomes part of the line above). When in doubt, end statements with a semicolon (`;`) — it removes the ambiguity.
+
+:::
+
 You can also declare variables explicitly with `let` and `const`. A bare assignment like `myval = ...` writes to an existing variable if one is in scope, or creates one otherwise; `let` always creates a new variable in the current block, and `const` does the same but prevents it being reassigned:
 
 ```
