@@ -348,7 +348,7 @@ If the value isn't found, it will return -1, otherwise the index of the last occ
 
 ### Array iteration operations
 
-These run a function (usually an arrow function `x => ...`) over each element of an array. The callback receives the element and its index. They are most powerful combined with arrow functions — see [Control flow and scripting](index.md#functions).
+These run a function (usually an arrow function `x => ...`) over each element of an array. The callback receives the element and its index. They are most powerful combined with arrow functions — see [Advanced expressions](scripting.md#functions).
 
 **arrayMap(arr, fn)**
 

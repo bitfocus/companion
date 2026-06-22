@@ -143,14 +143,7 @@ If a statement ends with a value and the next line begins with `` ` ``, `(` or `
 
 :::
 
-You can also declare variables explicitly with `let` and `const`. A bare assignment like `myval = ...` writes to an existing variable if one is in scope, or creates one otherwise; `let` always creates a new variable in the current block, and `const` does the same but prevents it being reassigned:
-
-```
-const taxRate = 0.2
-let total = $(custom:subtotal)
-total = total + total * taxRate
-total
-```
+You can also declare variables explicitly with `let` and `const`, which matters once you start using blocks and functions. How variables are created, updated and scoped is covered in [Advanced expressions](scripting.md#variables-and-scope).
 
 ### Comments
 
@@ -188,45 +181,9 @@ $(custom:settings)?.timeout ?? 1000
 { ...$(custom:defaults), label: 'override' }
 ```
 
-## Control flow and scripting
+## Going further
 
-For more involved logic, expressions support familiar control-flow statements. These are most useful in longer multi-line expressions, for example when computing a custom variable.
-
-### Conditions and loops
-
-`if` / `else if` / `else` choose between branches, and `for`, `for...of` and `while` repeat work:
-
-```
-let total = 0
-for (const item of $(custom:cart)) {
-	total = total + item.price
-}
-total
-```
-
-A condition is true unless it is `0`, an empty string, `null`, `undefined` or `NaN` — the same rule as the ternary `?:` operator. `break` exits a loop early and `continue` skips to the next iteration.
-
-A statement like `if` or `for` does not by itself produce a value, so when you want a result, end the expression with an expression (often the variable you accumulated into), or use `return`.
-
-### Functions
-
-You can define small functions with arrow syntax and call them, including recursively:
-
-```
-const double = x => x * 2
-double(21)
-```
-
-These pair naturally with the collection functions, which run a function over each element of an array — see [`arrayMap`, `arrayFilter`, `arrayReduce` and friends](functions.md#array-iteration-operations):
-
-```
-let prices = arrayMap($(custom:cart), item => item.price)
-arrayReduce(prices, (sum, price) => sum + price, 0)
-```
-
-### Execution limits
-
-To protect Companion from a mistake such as an accidental infinite loop, every expression runs under a budget on the number of operations and the depth of nested function calls. An expression that exceeds the budget is aborted and treated as invalid, the same as a syntax error. The budget is generous — ordinary expressions never come close — but it does mean a `while (true)` with no exit will fail rather than hang.
+Beyond the building blocks above, expressions can do real scripting — declaring variables, control flow (`if`, loops), defining your own functions, and processing arrays. If you need more than a single formula, see **[Advanced expressions](scripting.md)**.
 
 ## Worked examples
 
@@ -314,7 +271,7 @@ If you find a case where an expression fails to evaluate because of one of the v
 
 :::note Changes in Companion 5.0
 
-The expression engine was rebuilt on a standard JavaScript parser in 5.0, adding control flow, functions and the collection helpers described above. A few previously-accepted quirks changed as a result:
+The expression engine was rebuilt on a standard JavaScript parser in 5.0, adding control flow, functions and collection helpers (see [Advanced expressions](scripting.md)). A few previously-accepted quirks changed as a result:
 
 - Statements must now be separated by a newline or `;` — two statements with no separator (e.g. `10 + 10 20 30`) are no longer accepted.
 - `return` must be on the same line as its value; a line break directly after `return` now ends the expression with no value.
