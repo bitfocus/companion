@@ -13,9 +13,78 @@ export const BANNED_PROPS = new Set([
 	'__lookupSetter__',
 ])
 
-interface ResolverState {
-	values: Record<string, any>
-	isComplete: boolean
+// Execution budget. These are deliberately generous but finite, so a worst-case script (infinite loop,
+// runaway recursion) fails fast instead of stalling the process. Reset per top-level evaluation.
+// Configurable per call site via ResolveExpressionOptions - e.g. cheap/hot paths like option visibility
+// checks can pass a much lower limit.
+export const DEFAULT_MAX_OPERATIONS = 1_000_000
+export const DEFAULT_MAX_CALL_DEPTH = 250
+
+export interface ResolveExpressionOptions {
+	/** Maximum number of loop iterations + function calls before aborting (default DEFAULT_MAX_OPERATIONS) */
+	maxOperations?: number
+	/** Maximum closure call-stack depth before aborting (default DEFAULT_MAX_CALL_DEPTH) */
+	maxCallDepth?: number
+}
+
+/** Thrown when the execution budget is exceeded. Not catchable by user code (the dialect has no try/catch). */
+class ExpressionBudgetError extends Error {}
+
+// Control-flow signals, implemented as thrown sentinels caught at the appropriate boundary.
+class ReturnSignal {
+	constructor(public readonly value: any) {}
+}
+class BreakSignal {}
+class ContinueSignal {}
+
+interface Binding {
+	value: any
+	isConst: boolean
+}
+
+/**
+ * A lexical scope with a parent pointer. Lookups walk the chain.
+ *  - `let`/`const` declare in the current scope (may shadow a parent).
+ *  - a bare assignment writes to the nearest existing binding, or implicitly declares in the current scope.
+ */
+class Environment {
+	private readonly bindings = new Map<string, Binding>()
+
+	constructor(private readonly parent: Environment | null = null) {}
+
+	private owner(name: string): Environment | null {
+		let env: Environment | null = this
+		while (env) {
+			if (env.bindings.has(name)) return env
+			env = env.parent
+		}
+		return null
+	}
+
+	has(name: string): boolean {
+		return this.owner(name) !== null
+	}
+
+	get(name: string): any {
+		return this.owner(name)?.bindings.get(name)?.value
+	}
+
+	declare(name: string, value: any, isConst: boolean): void {
+		if (this.bindings.has(name)) throw new Error(`Identifier "${name}" has already been declared`)
+		this.bindings.set(name, { value, isConst })
+	}
+
+	assign(name: string, value: any): void {
+		const owner = this.owner(name)
+		if (owner) {
+			const binding = owner.bindings.get(name)!
+			if (binding.isConst) throw new Error(`Assignment to constant "${name}"`)
+			binding.value = value
+		} else {
+			// Implicit declaration in the current scope
+			this.bindings.set(name, { value, isConst: false })
+		}
+	}
 }
 
 export interface GetVariableValueProps {
@@ -27,9 +96,13 @@ export interface GetVariableValueProps {
 export function ResolveExpression(
 	node: SomeExpressionNode,
 	getVariableValueRaw: (props: GetVariableValueProps) => VariableValue | undefined,
-	functionsRaw: Record<string, (...args: any[]) => any> = {}
+	functionsRaw: Record<string, (...args: any[]) => any> = {},
+	options: ResolveExpressionOptions = {}
 ): VariableValue | undefined {
 	if (!node) throw new Error('Invalid expression')
+
+	const maxOperations = options.maxOperations ?? DEFAULT_MAX_OPERATIONS
+	const maxCallDepth = options.maxCallDepth ?? DEFAULT_MAX_CALL_DEPTH
 
 	const getVariableValue = (variableIdOrLabel: string, nameOrUndefined?: string) => {
 		if (nameOrUndefined !== undefined) {
@@ -51,47 +124,188 @@ export function ResolveExpression(
 		getVariable: getVariableValue,
 	})
 
-	const resolverState: ResolverState = {
-		values: Object.assign(Object.create(null), { PI: Math.PI }),
-		isComplete: false,
+	// Per-evaluation execution budget
+	let operations = 0
+	let callDepth = 0
+	const tickOperation = () => {
+		if (++operations > maxOperations)
+			throw new ExpressionBudgetError('Expression evaluation exceeded the maximum number of operations')
 	}
 
-	// Resolve the property name of a MemberExpression/Property, honouring `computed`.
+	const rootEnv = new Environment(null)
+	rootEnv.declare('PI', Math.PI, false)
+
+	// Resolve the property name of a MemberExpression, honouring `computed`.
 	// For non-computed access (`a.b`) the property is an Identifier name, not a value to evaluate.
-	const resolveMemberProperty = (node: any): any => {
-		if (node.computed) return resolve(node.property)
+	const resolveMemberProperty = (node: any, env: Environment): any => {
+		if (node.computed) return evalNode(node.property, env)
 		if (node.property.type === 'Identifier') return node.property.name
-		return resolve(node.property)
+		return evalNode(node.property, env)
 	}
 
-	const resolve = (rawNode: any): any => {
+	// Build a closure (arrow function) value: a real JS function so it can also be passed to builtins.
+	const makeClosure = (fnNode: any, defEnv: Environment): ((...args: any[]) => any) => {
+		const params: any[] = fnNode.params
+		const body = fnNode.body
+		const isExpressionBody: boolean = fnNode.expression
+
+		return (...args: any[]): any => {
+			tickOperation()
+			if (callDepth >= maxCallDepth)
+				throw new ExpressionBudgetError('Expression evaluation exceeded the maximum call depth')
+			callDepth++
+			try {
+				const fnEnv = new Environment(defEnv)
+				for (let i = 0; i < params.length; i++) fnEnv.declare(params[i].name, args[i], false)
+
+				if (isExpressionBody) return evalNode(body, fnEnv)
+
+				try {
+					evalNode(body, fnEnv)
+				} catch (e) {
+					if (e instanceof ReturnSignal) return e.value
+					throw e
+				}
+				return undefined
+			} finally {
+				callDepth--
+			}
+		}
+	}
+
+	// Run a loop body once, returning 'break' if the loop should stop. `continue` falls through normally.
+	const runLoopBody = (body: any, env: Environment): 'break' | undefined => {
+		tickOperation()
+		try {
+			evalNode(body, env)
+		} catch (e) {
+			if (e instanceof BreakSignal) return 'break'
+			if (e instanceof ContinueSignal) return undefined
+			throw e
+		}
+		return undefined
+	}
+
+	const bindForOfTarget = (left: any, value: any, env: Environment): void => {
+		if (left.type === 'VariableDeclaration') {
+			const declarator = left.declarations[0]
+			env.declare(declarator.id.name, value, left.kind === 'const')
+		} else if (left.type === 'Identifier') {
+			env.assign(left.name, value)
+		} else {
+			throw new Error(`Unsupported for...of target "${left.type}"`)
+		}
+	}
+
+	const evalNode = (rawNode: any, env: Environment): any => {
 		const node = rawNode
 		switch (node.type) {
 			case 'Program': {
-				let result
-				for (const statement of node.body) {
-					result = resolve(statement)
-					if (resolverState.isComplete) return result
+				try {
+					let result
+					for (const statement of node.body) result = evalNode(statement, env)
+					return result
+				} catch (e) {
+					if (e instanceof ReturnSignal) return e.value
+					if (e instanceof BreakSignal || e instanceof ContinueSignal)
+						throw new Error('Illegal break/continue statement')
+					throw e
 				}
-				return result
+			}
+
+			case 'BlockStatement': {
+				const blockEnv = new Environment(env)
+				for (const statement of node.body) evalNode(statement, blockEnv)
+				return undefined
 			}
 
 			case 'ExpressionStatement':
-				return resolve(node.expression)
+				return evalNode(node.expression, env)
 
 			case 'EmptyStatement':
 				return undefined
+
+			case 'IfStatement': {
+				if (evalNode(node.test, env)) {
+					evalNode(node.consequent, env)
+				} else if (node.alternate) {
+					evalNode(node.alternate, env)
+				}
+				return undefined
+			}
+
+			case 'WhileStatement': {
+				while (evalNode(node.test, env)) {
+					if (runLoopBody(node.body, env) === 'break') break
+				}
+				return undefined
+			}
+
+			case 'ForStatement': {
+				const forEnv = new Environment(env)
+				if (node.init) evalNode(node.init, forEnv)
+
+				// Per-iteration scoping for `let`/`const` loop variables, so closures created in the body
+				// capture that iteration's value (matching JS `let` semantics). Each iteration runs in a
+				// fresh environment seeded with copies of the loop bindings.
+				const isLetDeclaration = node.init?.type === 'VariableDeclaration' && node.init.kind !== 'var'
+				const perIterationNames: string[] = isLetDeclaration
+					? node.init.declarations.map((declarator: any) => declarator.id.name)
+					: []
+				const isConst = node.init?.type === 'VariableDeclaration' && node.init.kind === 'const'
+
+				const nextIterationEnv = (previous: Environment): Environment => {
+					if (perIterationNames.length === 0) return previous
+					const fresh = new Environment(env)
+					for (const name of perIterationNames) fresh.declare(name, previous.get(name), isConst)
+					return fresh
+				}
+
+				let runningEnv = nextIterationEnv(forEnv)
+				while (node.test ? evalNode(node.test, runningEnv) : true) {
+					if (runLoopBody(node.body, runningEnv) === 'break') break
+					runningEnv = nextIterationEnv(runningEnv)
+					if (node.update) evalNode(node.update, runningEnv)
+				}
+				return undefined
+			}
+
+			case 'ForOfStatement': {
+				const iterable = spreadIterable(evalNode(node.right, env))
+				for (const item of iterable) {
+					const iterEnv = new Environment(env)
+					bindForOfTarget(node.left, item, iterEnv)
+					if (runLoopBody(node.body, iterEnv) === 'break') break
+				}
+				return undefined
+			}
+
+			case 'ReturnStatement':
+				// These sentinels are control-flow signals, not errors (kept lightweight, no stack capture)
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw new ReturnSignal(node.argument ? evalNode(node.argument, env) : undefined)
+
+			case 'BreakStatement':
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw new BreakSignal()
+
+			case 'ContinueStatement':
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw new ContinueSignal()
+
+			case 'ArrowFunctionExpression':
+				return makeClosure(node, env)
 
 			case 'Literal':
 				return node.value
 
 			case 'Identifier':
-				return resolverState.values[node.name]
+				return env.get(node.name)
 
 			case 'UnaryExpression': {
 				if (!node.prefix) throw new Error('Unexpected Unary non-prefix')
 
-				const arg = resolve(node.argument)
+				const arg = evalNode(node.argument, env)
 
 				switch (node.operator) {
 					case '-':
@@ -108,8 +322,8 @@ export function ResolveExpression(
 			}
 
 			case 'BinaryExpression': {
-				const left = resolve(node.left)
-				const right = resolve(node.right)
+				const left = evalNode(node.left, env)
+				const right = evalNode(node.right, env)
 				switch (node.operator) {
 					case '+':
 						return Number(left) + Number(right)
@@ -158,8 +372,8 @@ export function ResolveExpression(
 			case 'LogicalExpression': {
 				// Note: both sides are evaluated eagerly, matching the previous jsep-based behaviour
 				// (these operators used to be plain BinaryExpressions resolved the same way).
-				const left = resolve(node.left)
-				const right = resolve(node.right)
+				const left = evalNode(node.left, env)
+				const right = evalNode(node.right, env)
 				switch (node.operator) {
 					case '||':
 						return left || right
@@ -173,24 +387,26 @@ export function ResolveExpression(
 			}
 
 			case 'CallExpression': {
-				const nodeName: string = node.callee.name
-
-				const fn = functions[nodeName]
-				if (!fn || typeof fn !== 'function') throw new Error(`Unsupported function "${nodeName}"`)
+				const name: string = node.callee.name
 
 				const args: any[] = []
 				for (const arg of node.arguments) {
 					if (arg.type === 'SpreadElement') {
-						args.push(...spreadIterable(resolve(arg.argument)))
+						args.push(...spreadIterable(evalNode(arg.argument, env)))
 					} else {
-						args.push(resolve(arg))
+						args.push(evalNode(arg, env))
 					}
 				}
+
+				// A user-defined function (arrow) bound in scope takes precedence over a builtin
+				const scoped = env.has(name) ? env.get(name) : undefined
+				const fn = typeof scoped === 'function' ? scoped : functions[name]
+				if (typeof fn !== 'function') throw new Error(`Unsupported function "${name}"`)
 				return fn(...args)
 			}
 
 			case 'ConditionalExpression':
-				return resolve(node.test) ? resolve(node.consequent) : resolve(node.alternate)
+				return evalNode(node.test, env) ? evalNode(node.consequent, env) : evalNode(node.alternate, env)
 
 			case 'CompanionVariable': {
 				if (node.name === undefined) throw new Error('Missing variable identifier')
@@ -210,7 +426,7 @@ export function ResolveExpression(
 					if (!quasi.tail) {
 						const expression = node.expressions[i]
 
-						let value = resolve(expression)
+						let value = evalNode(expression, env)
 						if (value === undefined) value = VARIABLE_UNKNOWN_VALUE
 						result += value
 					}
@@ -222,7 +438,7 @@ export function ResolveExpression(
 			case 'SequenceExpression': {
 				let result
 				for (const expression of node.expressions) {
-					result = resolve(expression)
+					result = evalNode(expression, env)
 				}
 				return result
 			}
@@ -232,9 +448,9 @@ export function ResolveExpression(
 				for (const elm of node.elements) {
 					if (!elm) continue // holes (`[1, , 3]`)
 					if (elm.type === 'SpreadElement') {
-						vals.push(...spreadIterable(resolve(elm.argument)))
+						vals.push(...spreadIterable(evalNode(elm.argument, env)))
 					} else {
-						vals.push(resolve(elm))
+						vals.push(evalNode(elm, env))
 					}
 				}
 				return vals
@@ -242,11 +458,11 @@ export function ResolveExpression(
 
 			case 'ChainExpression':
 				// Wrapper acorn places around an optional chain (`a?.b`); the inner expression does the work
-				return resolve(node.expression)
+				return evalNode(node.expression, env)
 
 			case 'MemberExpression': {
-				const object = resolve(node.object)
-				const property = resolveMemberProperty(node)
+				const object = evalNode(node.object, env)
+				const property = resolveMemberProperty(node, env)
 
 				// propagate null - `a?.b` short-circuits to undefined, `a.b` keeps the existing lenient null
 				if (object == null) return node.optional ? undefined : object
@@ -265,7 +481,7 @@ export function ResolveExpression(
 					if (prop.type === 'SpreadElement') {
 						// Object spread (`{ ...a }`): copy own enumerable properties, like the data-only member model.
 						// Uses direct assignment of own keys (not Object.assign) so it cannot trigger prototype pollution.
-						const source = resolve(prop.argument)
+						const source = evalNode(prop.argument, env)
 						if (source != null) {
 							for (const sourceKey of Object.keys(source)) {
 								if (!BANNED_PROPS.has(sourceKey)) obj[sourceKey] = source[sourceKey]
@@ -279,58 +495,49 @@ export function ResolveExpression(
 					// Non-computed identifier keys (`{ a: 1 }`, `{ a }`) are literal property names, not variable lookups
 					let key
 					if (prop.computed) {
-						key = resolve(prop.key)
+						key = evalNode(prop.key, env)
 					} else if (prop.key.type === 'Identifier') {
 						key = prop.key.name
 					} else {
-						key = resolve(prop.key)
+						key = evalNode(prop.key, env)
 					}
 
 					// Block `__proto__`/`constructor`/etc. as keys so an object literal can't reach or
 					// reassign a prototype (e.g. `{ __proto__: x }` or `{ ['__proto__']: x }`).
 					if (BANNED_PROPS.has(String(key))) throw new Error(`Assignment to property "${key}" is not allowed`)
 
-					const value = prop.value && resolve(prop.value)
+					const value = prop.value && evalNode(prop.value, env)
 
 					obj[key] = value
 				}
 				return obj
 			}
 
-			case 'ReturnStatement': {
-				if (resolverState.isComplete) throw new Error('Cannot return inside a return')
-
-				resolverState.isComplete = true
-
-				return node.argument ? resolve(node.argument) : undefined
-			}
-
 			case 'VariableDeclaration': {
-				// Minimal support: bind declarators into the flat value store (no block scoping yet).
+				const isConst = node.kind === 'const'
 				let result
 				for (const declarator of node.declarations) {
 					if (declarator.id.type !== 'Identifier')
 						throw new Error(`Unsupported variable declaration target "${declarator.id.type}"`)
 
-					const value = declarator.init ? resolve(declarator.init) : undefined
-					resolverState.values[declarator.id.name] = value
+					const value = declarator.init ? evalNode(declarator.init, env) : undefined
+					env.declare(declarator.id.name, value, isConst)
 					result = value
 				}
 				return result
 			}
 
 			case 'AssignmentExpression': {
-				const rightValue = resolve(node.right)
+				const rightValue = evalNode(node.right, env)
 
 				const left = node.left
 				if (left.type === 'Identifier') {
-					const newValue = mutateValueForAssignment(node.operator, resolverState.values[left.name], rightValue)
-
-					resolverState.values[left.name] = newValue
+					const newValue = mutateValueForAssignment(node.operator, env.get(left.name), rightValue)
+					env.assign(left.name, newValue)
 					return newValue
 				} else if (left.type === 'MemberExpression') {
-					const object = resolve(left.object)
-					const property = resolveMemberProperty(left)
+					const object = evalNode(left.object, env)
+					const property = resolveMemberProperty(left, env)
 					assertAssignableMember(object, property, 'Assignment to property')
 
 					const newValue = mutateValueForAssignment(node.operator, object[property], rightValue)
@@ -345,44 +552,23 @@ export function ResolveExpression(
 			case 'UpdateExpression': {
 				const arg = node.argument
 				if (arg.type === 'Identifier') {
-					const operator = node.operator
-					switch (node.operator) {
-						case '++':
-							if (node.prefix) {
-								return ++resolverState.values[arg.name]
-							} else {
-								return resolverState.values[arg.name]++
-							}
-						case '--':
-							if (node.prefix) {
-								return --resolverState.values[arg.name]
-							} else {
-								return resolverState.values[arg.name]--
-							}
-						default:
-							throw new Error(`Unsupported assignment operator "${operator}"`)
-					}
+					const delta = node.operator === '++' ? 1 : -1
+					const oldValue = Number(env.get(arg.name))
+					const newValue = oldValue + delta
+					env.assign(arg.name, newValue)
+					return node.prefix ? newValue : oldValue
 				} else if (arg.type === 'MemberExpression') {
-					const object = resolve(arg.object)
-					const property = resolveMemberProperty(arg)
+					const object = evalNode(arg.object, env)
+					const property = resolveMemberProperty(arg, env)
 					assertAssignableMember(object, property, 'Update of property')
 
-					const operator = node.operator
 					switch (node.operator) {
 						case '++':
-							if (node.prefix) {
-								return ++object[property]
-							} else {
-								return object[property]++
-							}
+							return node.prefix ? ++object[property] : object[property]++
 						case '--':
-							if (node.prefix) {
-								return --object[property]
-							} else {
-								return object[property]--
-							}
+							return node.prefix ? --object[property] : object[property]--
 						default:
-							throw new Error(`Unsupported assignment operator "${operator}"`)
+							throw new Error(`Unsupported update operator "${node.operator}"`)
 					}
 				} else {
 					throw new Error(`Cannot update ${arg.type}`)
@@ -394,7 +580,7 @@ export function ResolveExpression(
 		}
 	}
 
-	return resolve(node)
+	return evalNode(node, rootEnv)
 }
 
 /**
@@ -418,7 +604,7 @@ function assertAssignableMember(object: any, property: any, action: string): voi
 }
 
 /**
- * Expand a value used in a spread (`...value`) into an array of items.
+ * Expand a value used in a spread (`...value`) or iterated in `for...of` into an array of items.
  * Arrays, strings and other iterables are supported; anything else is an error, matching JS.
  */
 function spreadIterable(value: any): any[] {

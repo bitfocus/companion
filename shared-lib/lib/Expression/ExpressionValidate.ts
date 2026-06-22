@@ -16,6 +16,14 @@ const ALLOWED_NODE_TYPES = new Set<string>([
 	'Program',
 	'ExpressionStatement',
 	'EmptyStatement',
+	'BlockStatement',
+	'IfStatement',
+	'WhileStatement',
+	'ForStatement',
+	'ForOfStatement',
+	'BreakStatement',
+	'ContinueStatement',
+	'ArrowFunctionExpression',
 	'Literal',
 	'Identifier',
 	'UnaryExpression',
@@ -177,6 +185,22 @@ function checkNode(node: any): void {
 
 		case 'VariableDeclarator':
 			if (node.id?.type !== 'Identifier') fail('Destructuring declarations are not supported', node.id ?? node)
+			break
+
+		case 'ArrowFunctionExpression':
+			if (node.async) fail('Async functions are not supported', node)
+			for (const param of node.params) {
+				if (param.type !== 'Identifier') fail('Only simple arrow function parameters are supported', param)
+			}
+			break
+
+		case 'ForOfStatement':
+			if (node.await) fail('`for await` is not supported', node)
+			break
+
+		case 'BreakStatement':
+		case 'ContinueStatement':
+			if (node.label) fail('Labelled break/continue is not supported', node)
 			break
 
 		default:

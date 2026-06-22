@@ -163,8 +163,7 @@ const corpus: string[] = [
 	'[1, 2,]',
 	'{a: 1,}',
 
-	// sequence/comma at top level is rejected by both? (kept out - see documented differences)
-	'const a = 1; a = 2; a',
+	// comma/sequence assignment chain
 	'a = 1, b = 2, a + b',
 
 	// nested ternary (right-associative)
@@ -278,6 +277,13 @@ describe.skip('documented behavioural differences from the legacy jsep parser', 
 
 		expect(runLegacy('void 0')).toEqual({ ok: true, value: 0 })
 		expect(runNew('void 0').ok).toBe(false)
+	})
+
+	it('CHANGED: `const` is now enforced (reassignment errors)', () => {
+		// OLD: `const`/`let` were parsed as throwaway identifiers, so `const a = 1; a = 2` just reassigned (2)
+		// NEW: real declarations - reassigning a `const` throws
+		expect(runLegacy('const a = 1; a = 2; a')).toEqual({ ok: true, value: 2 })
+		expect(runNew('const a = 1; a = 2; a').ok).toBe(false)
 	})
 
 	it('regex literals are rejected by both (for different reasons)', () => {

@@ -60,6 +60,21 @@ describe('expression validation (subset by rejection)', () => {
 			'[...[1, 2], 3]',
 			'{ ...{ a: 1 }, b: 2 }',
 			'max(...[1, 2, 3])',
+
+			// control flow
+			'if (1) { 2 } else { 3 }',
+			'while (false) { 1 }',
+			'for (let i = 0; i < 3; i = i + 1) { i }',
+			'for (const x of [1, 2, 3]) { x }',
+			'let total = 0; for (const x of [1, 2, 3]) { total = total + x }; total',
+			'while (true) { break }',
+			'for (const x of [1, 2]) { if (x) { continue } }',
+
+			// arrow functions
+			'x => x + 1',
+			'(a, b) => a + b',
+			'x => { return x * 2 }',
+			'let add = (a, b) => a + b; add(2, 3)',
 		]
 		for (const expr of supported) {
 			it(`accepts: ${JSON.stringify(expr)}`, () => {
@@ -70,16 +85,17 @@ describe('expression validation (subset by rejection)', () => {
 
 	describe('rejects unsupported syntax', () => {
 		const rejected: Array<[string, RegExp]> = [
-			// functions
-			['x => x + 1', /Unsupported syntax "ArrowFunctionExpression"/],
+			// functions (arrows are supported; `function` is not)
 			['function f() { return 1 }', /Unsupported syntax "FunctionDeclaration"/],
 			['(function () { return 1 })', /Unsupported syntax "FunctionExpression"/],
+			['async x => x', /Async functions are not supported/],
+			['([a, b]) => a', /Only simple arrow function parameters are supported/],
 
-			// control flow (planned for a later phase, not supported yet)
-			['if (1) { 2 }', /Unsupported syntax "IfStatement"/],
-			['for (;;) { 1 }', /Unsupported syntax "ForStatement"/],
-			['while (true) { 1 }', /Unsupported syntax "WhileStatement"/],
-			['for (const x of [1]) { x }', /Unsupported syntax "ForOfStatement"/],
+			// other control-flow forms that remain unsupported
+			['do { 1 } while (true)', /Unsupported syntax "DoWhileStatement"/],
+			['for (const k in {}) { k }', /Unsupported syntax "ForInStatement"/],
+			['switch (1) { case 1: break }', /Unsupported syntax "SwitchStatement"/],
+			['foo: for (;;) { break foo }', /Unsupported syntax "LabeledStatement"/],
 
 			// error handling / classes / modules
 			['try { 1 } catch (e) { 2 }', /Unsupported syntax "TryStatement"/],
