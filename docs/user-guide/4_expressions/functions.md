@@ -346,6 +346,46 @@ Optionally provide an offset to begin the search from, searching from the end.
 
 If the value isn't found, it will return -1, otherwise the index of the last occurrence. The beginning is position 0.
 
+### Array iteration operations
+
+These run a function (usually an arrow function `x => ...`) over each element of an array. The callback receives the element and its index. They are most powerful combined with arrow functions — see [Control flow and scripting](index.md#functions).
+
+**arrayMap(arr, fn)**
+
+Return a new array with `fn` applied to every element. `arrayMap([1, 2, 3], x => x * 2)` gives `[2, 4, 6]`.
+
+**arrayFilter(arr, fn)**
+
+Return a new array containing only the elements for which `fn` returns true. `arrayFilter([1, 2, 3, 4], x => x % 2 === 0)` gives `[2, 4]`.
+
+**arrayReduce(arr, fn, initial)**
+
+Combine all elements into a single value. `fn` receives the running accumulator and the current element. `arrayReduce([1, 2, 3, 4], (sum, x) => sum + x, 0)` gives `10`.
+
+**arrayForEach(arr, fn)**
+
+Run `fn` for each element, for its side effects (such as building up a value). Returns nothing.
+
+**arrayFind(arr, fn)** / **arrayFindIndex(arr, fn)**
+
+Return the first element (or its index) for which `fn` returns true, or `undefined` / `-1` if none match.
+
+**arraySome(arr, fn)** / **arrayEvery(arr, fn)**
+
+Return whether `fn` returns true for at least one element (`arraySome`) or for all elements (`arrayEvery`).
+
+**arraySort(arr, fn)**
+
+Return a sorted copy of the array (the original is not changed). Without a comparator the elements are sorted as strings; provide `fn(a, b)` returning a negative, zero or positive number to control the order. `arraySort([3, 1, 2], (a, b) => a - b)` gives `[1, 2, 3]`.
+
+**arrayReverse(arr)**
+
+Return a reversed copy of the array.
+
+**objectKeys(obj)** / **objectValues(obj)**
+
+Return the keys or values of an object (or array) as an array.
+
 ### Time operations
 
 **unixNow()**

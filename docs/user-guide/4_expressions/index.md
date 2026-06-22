@@ -126,16 +126,25 @@ Template strings are the easiest way to build text out of multiple values. They 
 
 ### Multiple lines and temporary variables
 
-Longer expressions can be split across multiple lines, assigning intermediate results to temporary variables. The value of the last statement is the result of the expression:
+Longer expressions can be split across multiple statements, separated by a newline or a semicolon (`;`), assigning intermediate results to temporary variables. The value of the last statement is the result of the expression:
 
 ```
 myval = $(custom:a) + $(custom:b)
 myval / 2
 ```
 
-If you prefer, you can write `return` before the final statement to make the result explicit — `return myval / 2` behaves the same as the example above.
+If you prefer, you can write `return` to make the result explicit, and to stop early — `return myval / 2` ends the expression with that value. Note that `return` and its value must be on the same line.
 
 Temporary variables only exist while the expression is being evaluated — they are not visible anywhere else, and are not related to custom variables.
+
+You can also declare variables explicitly with `let` and `const`. A bare assignment like `myval = ...` writes to an existing variable if one is in scope, or creates one otherwise; `let` always creates a new variable in the current block, and `const` does the same but prevents it being reassigned:
+
+```
+const taxRate = 0.2
+let total = $(custom:subtotal)
+total = total + total * taxRate
+total
+```
 
 ### Comments
 
@@ -164,6 +173,54 @@ $(custom:settings).timeout
 ```
 
 For querying deeper structures, see the [`jsonpath` function](functions.md#objectarray-operations).
+
+You can also use optional chaining (`?.`) to safely read from a value that might be missing, and the spread operator (`...`) to combine arrays or objects:
+
+```
+$(custom:settings)?.timeout ?? 1000
+[...$(custom:list_a), ...$(custom:list_b)]
+{ ...$(custom:defaults), label: 'override' }
+```
+
+## Control flow and scripting
+
+For more involved logic, expressions support familiar control-flow statements. These are most useful in longer multi-line expressions, for example when computing a custom variable.
+
+### Conditions and loops
+
+`if` / `else if` / `else` choose between branches, and `for`, `for...of` and `while` repeat work:
+
+```
+let total = 0
+for (const item of $(custom:cart)) {
+	total = total + item.price
+}
+total
+```
+
+A condition is true unless it is `0`, an empty string, `null`, `undefined` or `NaN` — the same rule as the ternary `?:` operator. `break` exits a loop early and `continue` skips to the next iteration.
+
+A statement like `if` or `for` does not by itself produce a value, so when you want a result, end the expression with an expression (often the variable you accumulated into), or use `return`.
+
+### Functions
+
+You can define small functions with arrow syntax and call them, including recursively:
+
+```
+const double = x => x * 2
+double(21)
+```
+
+These pair naturally with the collection functions, which run a function over each element of an array — see [`arrayMap`, `arrayFilter`, `arrayReduce` and friends](functions.md#array-iteration-operations):
+
+```
+let prices = arrayMap($(custom:cart), item => item.price)
+arrayReduce(prices, (sum, price) => sum + price, 0)
+```
+
+### Execution limits
+
+To protect Companion from a mistake such as an accidental infinite loop, every expression runs under a budget on the number of operations and the depth of nested function calls. An expression that exceeds the budget is aborted and treated as invalid, the same as a syntax error. The budget is generous — ordinary expressions never come close — but it does mean a `while (true)` with no exit will fail rather than hang.
 
 ## Worked examples
 
@@ -245,5 +302,16 @@ If you find a case where an expression fails to evaluate because of one of the v
 
 ## Notes
 
-- The parser is slightly more permissive than JavaScript about statement separation; multiple statements may appear on a single line.
+- The expression language is a subset of JavaScript. Most JavaScript you write will work, but features such as classes, regular-expression literals and `try`/`catch` are not available, and only arrow functions (`x => ...`) are supported, not the `function` keyword.
+- Multiple statements must be separated by a newline or a semicolon (`;`).
 - These features can be combined into long and complex expressions. More functionality will be added over time — let us know if something you need is missing.
+
+:::note Changes in Companion 5.0
+
+The expression engine was rebuilt on a standard JavaScript parser in 5.0, adding control flow, functions and the collection helpers described above. A few previously-accepted quirks changed as a result:
+
+- Statements must now be separated by a newline or `;` — two statements with no separator (e.g. `10 + 10 20 30`) are no longer accepted.
+- `return` must be on the same line as its value; a line break directly after `return` now ends the expression with no value.
+- Object property access with a dot (`$(custom:obj).name`) now works the same as bracket access (`$(custom:obj)['name']`); previously only bracket access returned a value.
+
+:::

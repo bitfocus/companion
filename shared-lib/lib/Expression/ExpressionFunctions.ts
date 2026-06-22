@@ -7,6 +7,10 @@ function toString(v: any): string {
 	return v + ''
 }
 
+function assertFunction(fn: any, name: string): void {
+	if (typeof fn !== 'function') throw new Error(`${name}() requires a function as its callback argument`)
+}
+
 function toDate(v: any): Date | null {
 	let d: Date | undefined
 	if (v instanceof Date) d = v
@@ -279,6 +283,63 @@ export const ExpressionFunctions: Record<string, (...args: any[]) => any> = {
 		if (!Array.isArray(arr)) return -1
 		return arr.lastIndexOf(val, offset ?? arr.length)
 	},
+
+	// Array iteration. Callbacks receive (value, index). When the callback is an expression-defined
+	// arrow function, each invocation is counted against the execution budget (closures self-meter),
+	// so a callback over a large array is bounded just like a loop.
+	// Named with `array`/`object` prefixes for consistency with arrayIncludes/arrayIndexOf/etc.
+	arrayMap: (arr, fn) => {
+		if (!Array.isArray(arr)) return undefined
+		assertFunction(fn, 'arrayMap')
+		return arr.map((value, index) => fn(value, index))
+	},
+	arrayFilter: (arr, fn) => {
+		if (!Array.isArray(arr)) return undefined
+		assertFunction(fn, 'arrayFilter')
+		return arr.filter((value, index) => fn(value, index))
+	},
+	arrayReduce: (arr, fn, initial) => {
+		if (!Array.isArray(arr)) return undefined
+		assertFunction(fn, 'arrayReduce')
+		return arr.reduce((accumulator, value, index) => fn(accumulator, value, index), initial)
+	},
+	arrayForEach: (arr, fn) => {
+		if (Array.isArray(arr)) {
+			assertFunction(fn, 'arrayForEach')
+			arr.forEach((value, index) => fn(value, index))
+		}
+		return undefined
+	},
+	arrayFind: (arr, fn) => {
+		if (!Array.isArray(arr)) return undefined
+		assertFunction(fn, 'arrayFind')
+		return arr.find((value, index) => fn(value, index))
+	},
+	arrayFindIndex: (arr, fn) => {
+		if (!Array.isArray(arr)) return -1
+		assertFunction(fn, 'arrayFindIndex')
+		return arr.findIndex((value, index) => fn(value, index))
+	},
+	arraySome: (arr, fn) => {
+		if (!Array.isArray(arr)) return false
+		assertFunction(fn, 'arraySome')
+		return arr.some((value, index) => fn(value, index))
+	},
+	arrayEvery: (arr, fn) => {
+		if (!Array.isArray(arr)) return false
+		assertFunction(fn, 'arrayEvery')
+		return arr.every((value, index) => fn(value, index))
+	},
+	arraySort: (arr, fn) => {
+		if (!Array.isArray(arr)) return undefined
+		const copy = [...arr]
+		if (fn === undefined) return copy.sort()
+		assertFunction(fn, 'arraySort')
+		return copy.sort((a, b) => Number(fn(a, b)))
+	},
+	arrayReverse: (arr) => (Array.isArray(arr) ? [...arr].reverse() : undefined),
+	objectKeys: (obj) => (obj && typeof obj === 'object' ? Object.keys(obj) : []),
+	objectValues: (obj) => (obj && typeof obj === 'object' ? Object.values(obj) : []),
 
 	// Time operations
 	unixNow: () => Date.now(),
