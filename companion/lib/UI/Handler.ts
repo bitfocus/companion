@@ -11,12 +11,13 @@
 
 import type { Server as HttpServer } from 'node:http'
 import type { Server as HttpsServer } from 'node:https'
+import net from 'node:net'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
 import { nanoid } from 'nanoid'
 import { WebSocketServer } from 'ws'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
-import { createTrpcWsContextFactory, parseTrustedProxies, type AppRouter } from './TRPC.js'
+import { createTrpcWsContextFactory, makeIsTrustedProxyAddress, type AppRouter } from './TRPC.js'
 
 /**
  * Check whether an HTTP upgrade request url is for the trpc WebSocket endpoint.
@@ -91,6 +92,70 @@ export function isOriginAllowed(
 	return originHost === normalizeHostHeader(expectedHostHeader)
 }
 
+/**
+ * Whether a socket peer address is loopback (the request physically arrived over 127.0.0.0/8 or ::1).
+ * Node may report an IPv4-mapped IPv6 address (`::ffff:127.0.0.1`) for loopback, so we strip that prefix.
+ */
+function isLoopbackAddress(address: string | undefined): boolean {
+	if (!address) return false
+	const addr = address
+		.trim()
+		.toLowerCase()
+		.replace(/^::ffff:/, '')
+	return addr === '::1' || addr.startsWith('127.')
+}
+
+/**
+ * Whether a `Host` header authority (`host[:port]`) names loopback - i.e. `localhost`, a `127.x` address
+ * or `[::1]`. Returns false for anything else (including a real hostname like `evil.com`).
+ */
+function isLoopbackHostname(host: string): boolean {
+	let hostname: string
+	try {
+		// Wrap in a url so port/IPv6-bracket parsing is handled for us. `hostname` is lowercased.
+		hostname = new URL(`http://${host.trim()}`).hostname.toLowerCase()
+	} catch (_e) {
+		return false
+	}
+	if (hostname === 'localhost') return true
+	// URL keeps IPv6 literals in brackets (e.g. `[::1]`); strip them to get the raw address.
+	const ip = hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname
+	// Reject anything that is not a real IP literal - a domain like `127.evil.com` returns 0 here.
+	if (net.isIP(ip) === 0) return false
+	return isLoopbackAddress(ip)
+}
+
+/**
+ * Anti-DNS-rebinding guard, scoped to loopback connections only. Returns true if the request should
+ * be allowed through.
+ *
+ * A loopback rebinding attack works by serving a page from `http://evil.com:PORT`, then repointing
+ * `evil.com` DNS to `127.0.0.1`: the browser then connects to loopback Companion but sends
+ * `Host: evil.com`, and (being same-origin from the browser's view) can read the response - bypassing
+ * CORS entirely. The legitimate loopback UI always sends a loopback `Host` (`localhost`/`127.0.0.1`),
+ * so on a loopback connection we require the `Host` to itself be loopback.
+ *
+ * Non-loopback (LAN/remote) connections are not checked: rebinding to a specific internal IP+port is
+ * impractical, and policing it would need a hostname allowlist. Requests from a trusted proxy are also
+ * skipped - the proxy connects over (often loopback) but legitimately forwards external hosts, and we
+ * can't distinguish that from a rebind without a hostname allowlist. Note that if loopback itself is
+ * configured as a trusted proxy, all loopback connections skip the check (unavoidable - the local
+ * proxy and a local browser are indistinguishable at that point).
+ */
+export function isLoopbackHostAllowed(
+	remoteAddress: string | undefined,
+	host: string | undefined,
+	options: { isTrustedProxy: boolean }
+): boolean {
+	// Requests genuinely forwarded by a trusted proxy legitimately carry an external Host - skip them.
+	if (options.isTrustedProxy) return true
+	// Only police connections that physically arrived over loopback - those are the only ones a
+	// localhost rebinding attack can reach.
+	if (!isLoopbackAddress(remoteAddress)) return true
+	if (!host) return false
+	return isLoopbackHostname(host)
+}
+
 export class UIHandler {
 	readonly #logger = LogController.createLogger('UI/Handler')
 
@@ -105,15 +170,15 @@ export class UIHandler {
 	readonly #appInfo: AppInfo
 
 	/**
-	 * Whether a trusted proxy is configured. When true, `X-Forwarded-Host` is trusted for the Origin
-	 * check on WebSocket upgrades (matching how the trpc ws context resolves X-Forwarded-For).
+	 * Whether a given peer address is one of the configured trusted proxies. Used both to decide whether
+	 * to trust `X-Forwarded-Host` for the WebSocket Origin check, and for the DNS-rebinding guard.
 	 */
-	readonly #trustForwardedHost: boolean
+	readonly #isTrustedProxyAddress: (address: string | undefined) => boolean
 
 	constructor(appInfo: AppInfo, http: HttpServer) {
 		this.#appInfo = appInfo
 		this.#http = http
-		this.#trustForwardedHost = parseTrustedProxies(appInfo.options.trustedProxies).length > 0
+		this.#isTrustedProxyAddress = makeIsTrustedProxyAddress(appInfo.options.trustedProxies)
 	}
 
 	/**
@@ -165,10 +230,30 @@ export class UIHandler {
 	#bindToHttpServer(httpServer: HttpServer): void {
 		httpServer.on('upgrade', (request, socket, head) => {
 			if (matchUpgradePathname(request.url)) {
-				// Reject cross-origin upgrades to prevent Cross-Site WebSocket Hijacking. The trpc api has no
-				// authentication, so without this any web page the user visits could drive the entire api.
-				if (!isOriginAllowed(request.headers, { trustForwardedHost: this.#trustForwardedHost })) {
+				// Whether this upgrade arrived from a trusted proxy peer. Resolved once and reused below.
+				const isTrustedProxy = this.#isTrustedProxyAddress(request.socket.remoteAddress)
+
+				// Reject cross-origin upgrades to prevent Cross-Site WebSocket Hijacking.
+				// Only trust X-Forwarded-Host when this request actually arrived from a trusted proxy peer -
+				// otherwise a client connecting directly could spoof it to make its Origin look same-origin.
+				if (!isOriginAllowed(request.headers, { trustForwardedHost: isTrustedProxy })) {
 					this.#logger.warn(`Rejected tRPC WebSocket upgrade from disallowed origin "${request.headers.origin}"`)
+					try {
+						if (socket.writable) socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n')
+					} catch (_e) {
+						// Socket may already be destroyed
+					}
+					socket.destroy()
+					return
+				}
+
+				// Reject loopback connections whose Host names a non-loopback domain - the signature of a
+				// DNS rebinding attack against localhost. Without this, rebinding bypasses the Origin check
+				// above (Origin and Host both become the attacker's domain, so they match).
+				if (!isLoopbackHostAllowed(request.socket.remoteAddress, request.headers.host, { isTrustedProxy })) {
+					this.#logger.warn(
+						`Rejected tRPC WebSocket upgrade from loopback with disallowed host "${request.headers.host}"`
+					)
 					try {
 						if (socket.writable) socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n')
 					} catch (_e) {
