@@ -123,6 +123,10 @@ describe('expression validation (subset by rejection)', () => {
 			// declarations
 			['var a = 1', /Unsupported variable declaration "var"/],
 			['const [a, b] = c', /Destructuring declarations are not supported/],
+
+			// for...of targets
+			['for (a.b of [1, 2]) { a.b }', /Unsupported for\.\.\.of target/],
+			['for ([a] of [[1]]) { a }', /Unsupported for\.\.\.of target/],
 		]
 		for (const [expr, pattern] of rejected) {
 			it(`rejects: ${JSON.stringify(expr)}`, () => {

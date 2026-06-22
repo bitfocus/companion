@@ -175,7 +175,7 @@ For querying deeper structures, see the [`jsonpath` function](functions.md#objec
 
 You can also use optional chaining (`?.`) to safely read from a value that might be missing, and the spread operator (`...`) to combine arrays or objects:
 
-```
+```js
 $(custom:settings)?.timeout ?? 1000
 [...$(custom:list_a), ...$(custom:list_b)]
 { ...$(custom:defaults), label: 'override' }

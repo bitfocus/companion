@@ -543,7 +543,7 @@ export function ResolveExpression(
 					const newValue = mutateValueForAssignment(node.operator, object[property], rightValue)
 
 					object[property] = newValue
-					return rightValue
+					return newValue
 				} else {
 					throw new Error(`Cannot assign to an ${left.type}`)
 				}

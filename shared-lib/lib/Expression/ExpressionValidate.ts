@@ -196,6 +196,8 @@ function checkNode(node: any): void {
 
 		case 'ForOfStatement':
 			if (node.await) fail('`for await` is not supported', node)
+			if (node.left?.type !== 'Identifier' && node.left?.type !== 'VariableDeclaration')
+				fail('Unsupported for...of target (use a variable or `let`/`const` declaration)', node.left ?? node)
 			break
 
 		case 'BreakStatement':

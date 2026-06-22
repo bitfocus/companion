@@ -556,6 +556,11 @@ describe('resolver', function () {
 			expect(result).toEqual([4, 7, 6])
 		})
 
+		it('member += returns the new value', () => {
+			const result = resolve(parse('a = [4,5,6]\nreturn (a[1] += 2)'), defaultGetValue)
+			expect(result).toEqual(7)
+		})
+
 		it('no return', () => {
 			const result = resolve(parse('a=[4,5,6]\na[1] = 1'), defaultGetValue)
 			expect(result).toEqual(1)
