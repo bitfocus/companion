@@ -234,7 +234,11 @@ export function ResolveExpression(
 				if (object == null) return object
 				if (BANNED_PROPS.has(String(property))) throw new Error(`Access to property "${property}" is not allowed`)
 
-				return object?.[property]
+				// Only expose own, enumerable (data) properties: object keys and array indices.
+				// Built-in/inherited members such as `length` or array/string methods are not accessible.
+				if (!Object.prototype.propertyIsEnumerable.call(object, property as PropertyKey)) return undefined
+
+				return object[property]
 			}
 
 			case 'ObjectExpression': {

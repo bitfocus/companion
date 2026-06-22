@@ -352,6 +352,46 @@ describe('resolver', function () {
 		})
 	})
 
+	describe('property access', () => {
+		const getObjVar = (props: GetVariableValueProps): any => {
+			switch (props.variableId) {
+				case 'my:obj':
+					return { k: 'v', n: 42 }
+				case 'my:arr':
+					return [10, 20, 30]
+			}
+			return undefined
+		}
+
+		it('non-computed data property on an object', () => {
+			expect(resolve(parse('$(my:obj).k'), getObjVar)).toBe('v')
+			expect(resolve(parse('{a: 1, b: 2}.b'), defaultGetValue)).toBe(2)
+		})
+
+		it('computed and non-computed access agree for data properties', () => {
+			expect(resolve(parse("$(my:obj)['k']"), getObjVar)).toBe('v')
+			expect(resolve(parse('$(my:obj).k'), getObjVar)).toBe('v')
+		})
+
+		it('array index access works', () => {
+			expect(resolve(parse('$(my:arr)[1]'), getObjVar)).toBe(20)
+			expect(resolve(parse('[10, 20, 30][2]'), defaultGetValue)).toBe(30)
+		})
+
+		it('built-in/inherited properties are NOT accessible', () => {
+			// `length` is an own-but-non-enumerable property; methods are inherited
+			expect(resolve(parse('$(my:arr).length'), getObjVar)).toBe(undefined)
+			expect(resolve(parse("$(my:arr)['length']"), getObjVar)).toBe(undefined)
+			expect(resolve(parse('[1, 2, 3].length'), defaultGetValue)).toBe(undefined)
+			expect(resolve(parse("'abc'.length"), defaultGetValue)).toBe(undefined)
+			expect(resolve(parse('[1, 2, 3].map'), defaultGetValue)).toBe(undefined)
+		})
+
+		it('string index access still works', () => {
+			expect(resolve(parse("'abc'[0]"), defaultGetValue)).toBe('a')
+		})
+	})
+
 	describe('return', () => {
 		it('return value', () => {
 			const result = resolve(parse('return 1'), defaultGetValue)

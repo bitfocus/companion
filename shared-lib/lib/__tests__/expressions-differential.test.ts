@@ -192,6 +192,12 @@ const corpus: string[] = [
 	// empty object literal at statement start
 	'{}',
 	'{}["x"]',
+
+	// built-in/inherited properties are not accessible in either parser (both yield undefined)
+	'[1, 2, 3].length',
+	"'abc'.length",
+	'$(my:arr).length',
+	'[1, 2, 3].map',
 ]
 
 describe('differential: acorn pipeline vs legacy jsep pipeline', () => {
@@ -229,17 +235,16 @@ describe.skip('documented behavioural differences from the legacy jsep parser', 
 		expect(runNew('10 + 10 20 30').ok).toBe(false)
 	})
 
-	it('FIXED: non-computed member/property access now works', () => {
+	it('FIXED: non-computed access to a data property now works', () => {
 		// OLD: `.prop` access silently returned undefined; only `['prop']` worked
-		// NEW: `.prop` resolves like JS (so `.length`, `$(x).foo`, etc. now work)
+		// NEW: `obj.prop` resolves the data property like JS, matching `obj['prop']`
+		// NOTE: this is limited to own enumerable (data) properties - built-in/inherited members
+		// such as `.length` or array/string methods remain inaccessible in both parsers (see corpus).
 		expect(runLegacy('$(my:obj).k')).toEqual({ ok: true, value: undefined })
 		expect(runNew('$(my:obj).k')).toEqual({ ok: true, value: 'v' })
 
-		expect(runLegacy('[1,2,3].length')).toEqual({ ok: true, value: undefined })
-		expect(runNew('[1,2,3].length')).toEqual({ ok: true, value: 3 })
-
-		expect(runLegacy("'abc'.length")).toEqual({ ok: true, value: undefined })
-		expect(runNew("'abc'.length")).toEqual({ ok: true, value: 3 })
+		expect(runLegacy('$(my:obj).n')).toEqual({ ok: true, value: undefined })
+		expect(runNew('$(my:obj).n')).toEqual({ ok: true, value: 42 })
 	})
 
 	it('CHANGED: `return` followed by a newline now returns undefined (JS ASI)', () => {
