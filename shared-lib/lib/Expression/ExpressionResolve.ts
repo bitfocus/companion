@@ -45,10 +45,11 @@ export function ResolveExpression(
 		}
 	}
 
-	const functions: typeof functionsRaw = {
-		...functionsRaw,
+	// Null-prototype map so that only the provided builtins are callable - a call like `constructor()`
+	// or `toString()` must not resolve to an inherited Object.prototype method.
+	const functions: typeof functionsRaw = Object.assign(Object.create(null), functionsRaw, {
 		getVariable: getVariableValue,
-	}
+	})
 
 	const resolverState: ResolverState = {
 		values: Object.assign(Object.create(null), { PI: Math.PI }),
@@ -285,6 +286,10 @@ export function ResolveExpression(
 						key = resolve(prop.key)
 					}
 
+					// Block `__proto__`/`constructor`/etc. as keys so an object literal can't reach or
+					// reassign a prototype (e.g. `{ __proto__: x }` or `{ ['__proto__']: x }`).
+					if (BANNED_PROPS.has(String(key))) throw new Error(`Assignment to property "${key}" is not allowed`)
+
 					const value = prop.value && resolve(prop.value)
 
 					obj[key] = value
@@ -326,7 +331,7 @@ export function ResolveExpression(
 				} else if (left.type === 'MemberExpression') {
 					const object = resolve(left.object)
 					const property = resolveMemberProperty(left)
-					if (BANNED_PROPS.has(String(property))) throw new Error(`Assignment to property "${property}" is not allowed`)
+					assertAssignableMember(object, property, 'Assignment to property')
 
 					const newValue = mutateValueForAssignment(node.operator, object[property], rightValue)
 
@@ -360,7 +365,7 @@ export function ResolveExpression(
 				} else if (arg.type === 'MemberExpression') {
 					const object = resolve(arg.object)
 					const property = resolveMemberProperty(arg)
-					if (BANNED_PROPS.has(String(property))) throw new Error(`Update of property "${property}" is not allowed`)
+					assertAssignableMember(object, property, 'Update of property')
 
 					const operator = node.operator
 					switch (node.operator) {
@@ -390,6 +395,26 @@ export function ResolveExpression(
 	}
 
 	return resolve(node)
+}
+
+/**
+ * Whether `key` is a canonical array index (a non-negative integer below 2^32 - 1 whose string form
+ * round-trips). Arrays only allow assignment to indices, never to `length`, methods or other named props.
+ */
+function isArrayIndex(key: any): boolean {
+	const num = typeof key === 'number' ? key : Number(key)
+	return Number.isInteger(num) && num >= 0 && num < 4294967295 && String(num) === String(key)
+}
+
+/**
+ * Guard a member write (`obj.x = ...`, `++obj.x`): reject prototype-related keys, and restrict arrays
+ * to integer-index assignment so writes match the (own-enumerable, index-only) read model.
+ * `action` is e.g. "Assignment to property" / "Update of property".
+ */
+function assertAssignableMember(object: any, property: any, action: string): void {
+	if (BANNED_PROPS.has(String(property))) throw new Error(`${action} "${property}" is not allowed`)
+	if (Array.isArray(object) && !isArrayIndex(property))
+		throw new Error(`${action} "${property}" on an array is not allowed`)
 }
 
 /**
