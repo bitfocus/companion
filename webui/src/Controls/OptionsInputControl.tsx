@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { ColorInputField } from '~/Components/ColorInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
@@ -43,7 +43,8 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	localVariablesStore,
 	features,
 }: Readonly<OptionsInputControlProps>): React.JSX.Element {
-	const checkValid = useCallback((value: JsonValue | undefined) => checkInputValueIsGood(option, value), [option])
+	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
+	const checkValid = useCallback((value: JsonValue | undefined) => validateInputValue(option, value).validity, [option])
 
 	if (!option) return <p>Bad option</p>
 

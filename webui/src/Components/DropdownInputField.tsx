@@ -23,7 +23,7 @@ interface DropdownInputFieldProps {
 	setValue: (value: DropdownChoiceId) => void
 	disabled?: boolean
 	onBlur?: () => void
-	checkValid?: (value: DropdownChoiceId) => boolean
+	checkValid?: (value: DropdownChoiceId) => boolean | undefined
 	searchLabelsOnly?: boolean
 }
 
@@ -169,7 +169,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		<div
 			className={classNames(
 				'dropdown-field',
-				{ 'dropdown-field-invalid': !isKnownValue || (!!checkValid && !checkValid(localDisplayValue)) },
+				{ 'dropdown-field-invalid': !isKnownValue || checkValid?.(localDisplayValue) === false },
 				className
 			)}
 			title={tooltip}

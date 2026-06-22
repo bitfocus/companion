@@ -4,7 +4,7 @@ import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
@@ -46,8 +46,9 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 	isVisible,
 }: EditPanelConfigFieldProps) {
 	const id = definition.id
+	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validity,
 		[definition]
 	)
 	const setValue2 = useCallback((val: JsonValue | undefined) => setValue(id, val), [setValue, id])

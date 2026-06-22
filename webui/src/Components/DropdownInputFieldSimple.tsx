@@ -16,7 +16,7 @@ interface SimpleDropdownInputFieldProps {
 	value: DropdownChoiceId
 	setValue: (value: DropdownChoiceId) => void
 	disabled?: boolean
-	checkValid?: (value: DropdownChoiceId) => boolean
+	checkValid?: (value: DropdownChoiceId) => boolean | undefined
 	noOptionsMessage?: string
 	badOptionPrefix?: string
 	onBlur?: React.FocusEventHandler<HTMLButtonElement>
@@ -73,7 +73,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 			className={classNames(
 				'dropdown-field',
 				{
-					'dropdown-field-invalid': !isKnownValue || (!!checkValid && !checkValid(value)),
+					'dropdown-field-invalid': !isKnownValue || checkValid?.(value) === false,
 				},
 				className
 			)}

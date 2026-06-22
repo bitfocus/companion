@@ -15,7 +15,7 @@ interface NumberInputFieldProps {
 	setValue: (value: number) => void
 	onBlur?: (e: React.FocusEvent<HTMLElement>) => void
 	disabled?: boolean
-	checkValid?: boolean | ((value: number) => boolean)
+	checkValid?: boolean | ((value: number) => boolean | undefined)
 	// When true, show the min value as a visual -∞ when value <= min
 	showMinAsNegativeInfinity?: boolean
 	// When true, show the max value as a visual ∞ when value >= max
@@ -82,7 +82,8 @@ export function NumberInputField({
 		showOverlayValue = '∞'
 	}
 
-	const valueIsInvalid = typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(numericEffective)
+	// checkValid is tri-state: false = invalid, true/undefined = not invalid (undefined means unknown)
+	const valueIsInvalid = (typeof checkValid === 'function' ? checkValid(numericEffective) : checkValid) === false
 
 	const input = (
 		<NumberField.Root

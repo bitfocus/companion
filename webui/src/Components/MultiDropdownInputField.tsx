@@ -24,7 +24,7 @@ interface MultiDropdownInputFieldProps {
 	regex?: string
 	value: DropdownChoiceId[]
 	setValue: (value: DropdownChoiceId[]) => void
-	checkValid?: (value: DropdownChoiceId[]) => boolean
+	checkValid?: (value: DropdownChoiceId[]) => boolean | undefined
 	disabled?: boolean
 	onBlur?: () => void
 }
@@ -159,7 +159,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		<div
 			className={classNames(
 				'dropdown-field',
-				{ 'dropdown-field-invalid': !!checkValid && !checkValid(currentValue.map((v) => v.id)) },
+				{ 'dropdown-field-invalid': checkValid?.(currentValue.map((v) => v.id)) === false },
 				className
 			)}
 			title={tooltip}

@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { checkInputValueIsGood } from '@companion-app/shared/ValidateInputValue.js'
+import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField'
 
 interface InstanceSecretFieldProps {
@@ -19,7 +19,7 @@ export function InstanceSecretField({
 	value,
 }: InstanceSecretFieldProps): React.JSX.Element {
 	const checkValid = useCallback(
-		(value: JsonValue | undefined) => checkInputValueIsGood(definition, value),
+		(value: JsonValue | undefined) => validateInputValue(definition, value).validity,
 		[definition]
 	)
 

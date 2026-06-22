@@ -6,6 +6,7 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { DropdownChoiceInt } from './DropdownChoices.js'
 import { VariableSuggestionPopup } from './DropdownInputField/Popup.js'
+import { computeInputValidity, InputValidityIcon } from './InputValidity.js'
 
 interface TextInputFieldSimpleProps {
 	id: string | undefined
@@ -14,7 +15,7 @@ interface TextInputFieldSimpleProps {
 	value: string
 	className?: string
 	setValue: (value: string) => void
-	checkValid?: boolean | ((value: string) => boolean)
+	checkValid?: boolean | ((value: string) => boolean | undefined)
 	disabled?: boolean
 	/**
 	 * When provided, enables the variable suggestion popup with these options.
@@ -79,7 +80,8 @@ export function TextInputFieldSimple({
 	)
 
 	const showValue = ((immediateValue ? null : tmpValue) ?? value ?? '').toString()
-	const valueIsInvalid = typeof checkValid === 'boolean' ? !checkValid : !!checkValid && !checkValid(showValue)
+	const validity = computeInputValidity(checkValid, showValue, useVariables)
+	const valueIsInvalid = validity === 'invalid'
 
 	const { isPickerOpen, searchValue, setIsForceHidden } = useIsPickerOpen(useVariables ? showValue : '', cursorPosition)
 
@@ -156,7 +158,11 @@ export function TextInputFieldSimple({
 			id={id}
 			ref={inputRef}
 			type="text"
-			className={classNames('text-input-field', { 'invalid-value': valueIsInvalid }, className)}
+			className={classNames(
+				'text-input-field',
+				{ 'invalid-value': valueIsInvalid, 'has-validity-icon': validity !== 'unknown' },
+				className
+			)}
 			render={multiline ? <textarea rows={2} /> : undefined}
 			disabled={disabled}
 			value={showValue}
@@ -180,18 +186,19 @@ export function TextInputFieldSimple({
 		/>
 	)
 
-	if (!useVariables) return input
-
 	return (
-		<div ref={wrapperRef}>
+		<div ref={wrapperRef} className="input-validity-wrapper">
 			{input}
-			<VariableSuggestionPopup
-				open={isPickerOpen}
-				anchorRef={wrapperRef}
-				items={filteredItems}
-				focusedIndex={focusedIndex}
-				onSelect={onVariableSelect}
-			/>
+			<InputValidityIcon validity={validity} />
+			{useVariables && (
+				<VariableSuggestionPopup
+					open={isPickerOpen}
+					anchorRef={wrapperRef}
+					items={filteredItems}
+					focusedIndex={focusedIndex}
+					onSelect={onVariableSelect}
+				/>
+			)}
 		</div>
 	)
 }
