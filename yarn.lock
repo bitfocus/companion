@@ -1783,6 +1783,7 @@ __metadata:
     "@jsep-plugin/object": "npm:^1.2.2"
     "@jsep-plugin/template": "npm:^1.0.5"
     "@types/semver": "npm:^7.7.1"
+    acorn: "npm:^8.16.0"
     colord: "npm:^2.9.3"
     jsep: "npm:^1.4.0"
     jsonpath-plus: "npm:^10.4.0"

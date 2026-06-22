@@ -1,5 +1,8 @@
 import type jsep from 'jsep'
 
+// Snapshot of the original jsep assignment/update plugin, kept only for differential testing against the
+// new acorn-based parser. Not used by production code.
+
 const PLUS_CODE = 43 // +
 const MINUS_CODE = 45 // -
 
@@ -38,9 +41,6 @@ const assignmentOperators = new Set([
 const updateOperators = [PLUS_CODE, MINUS_CODE]
 const assignmentPrecedence = 0.9
 
-/**
- * Forked from https://github.com/EricSmekens/jsep/blob/master/packages/assignment/src/index.js to fix an issue with --1 throwing an error
- */
 export const AssignmentPlugin: jsep.IPlugin = {
 	name: 'assignment',
 
@@ -94,9 +94,6 @@ export const AssignmentPlugin: jsep.IPlugin = {
 
 		jsep.hooks.add('after-expression', function gobbleAssignment(this: any, env: any) {
 			if (env.node) {
-				// Note: Binaries can be chained in a single expression to respect
-				// operator precedence (i.e. a = b = 1 + 2 + 3)
-				// Update all binary assignment nodes in the tree
 				updateBinariesToAssignments(env.node)
 			}
 		})

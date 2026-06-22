@@ -1,8 +1,33 @@
-import jsep from 'jsep'
 import { describe, expect, it } from 'vitest'
 import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
 import { ResolveExpression as resolve, type GetVariableValueProps } from '../Expression/ExpressionResolve.js'
 import type { VariableValue } from '../Model/Variables.js'
+
+// The operators the evaluator implements. (Previously enumerated from jsep's tables; now that we parse
+// with acorn these are listed explicitly.)
+const BINARY_OPERATORS = [
+	'+',
+	'-',
+	'*',
+	'/',
+	'%',
+	'^',
+	'**',
+	'>>',
+	'<<',
+	'>=',
+	'<=',
+	'>',
+	'<',
+	'==',
+	'!=',
+	'===',
+	'!==',
+	'&',
+	'|',
+]
+const LOGICAL_OPERATORS = ['||', '&&', '??']
+const UNARY_OPERATORS = ['-', '+', '!', '~']
 
 const defaultGetValue = (_props: GetVariableValueProps): VariableValue | undefined => {
 	throw new Error('Not implemented')
@@ -10,24 +35,20 @@ const defaultGetValue = (_props: GetVariableValueProps): VariableValue | undefin
 
 describe('resolver', function () {
 	describe('ensure each binary operator is implemented', function () {
-		for (const op of Object.keys(jsep.binary_ops)) {
-			if (op) {
-				it(`should handle "${op}" operator`, function () {
-					const result = resolve(parse(`a = 1 ; a ${op} 2`), defaultGetValue)
-					expect(typeof result).toMatch(/^(number|boolean)$/)
-				})
-			}
+		for (const op of [...BINARY_OPERATORS, ...LOGICAL_OPERATORS]) {
+			it(`should handle "${op}" operator`, function () {
+				const result = resolve(parse(`a = 1 ; a ${op} 2`), defaultGetValue)
+				expect(typeof result).toMatch(/^(number|boolean)$/)
+			})
 		}
 	})
 
 	describe('ensure each unary operator is implemented', function () {
-		for (const op of Object.keys(jsep.unary_ops)) {
-			if (op) {
-				it(`should handle "${op}" operator`, function () {
-					const result = resolve(parse(`${op}2`), defaultGetValue)
-					expect(typeof result).toMatch(/^(number|boolean)$/)
-				})
-			}
+		for (const op of UNARY_OPERATORS) {
+			it(`should handle "${op}" operator`, function () {
+				const result = resolve(parse(`${op}2`), defaultGetValue)
+				expect(typeof result).toMatch(/^(number|boolean)$/)
+			})
 		}
 	})
 
@@ -180,12 +201,14 @@ describe('resolver', function () {
 
 		it('should detect missing operands', function () {
 			const fn = () => resolve(parse('1 +'), defaultGetValue)
-			expect(fn).toThrow(/Expected expression after/)
+			expect(fn).toThrow()
 		})
 
-		it('should treat extraneous operands as multiple statements', function () {
-			const value = resolve(parse('10 + 10 20 30'), defaultGetValue)
-			expect(value).toEqual(30)
+		it('should reject extraneous operands (no-separator multi-statement quirk dropped in 5.0)', function () {
+			// Previously this was silently treated as multiple statements and returned 30.
+			// A real parser rejects it; the quirk is intentionally removed.
+			const fn = () => resolve(parse('10 + 10 20 30'), defaultGetValue)
+			expect(fn).toThrow()
 		})
 	})
 
