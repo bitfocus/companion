@@ -369,6 +369,15 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	}
 
 	/**
+	 * Adjust the brightness of the panel by a relative amount
+	 * @param adjustment -100 to 100
+	 */
+	adjustBrightness(adjustment: number): void {
+		const newBrightness = Math.min(100, Math.max(0, this.#surfaceConfig.config.brightness + adjustment))
+		this.setBrightness(newBrightness)
+	}
+
+	/**
 	 * Set the position offset of the surface
 	 * @param xOffset
 	 * @param yOffset
