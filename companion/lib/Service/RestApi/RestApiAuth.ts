@@ -1,6 +1,6 @@
 import type Express from 'express'
-import { RestApiError } from './errors.js'
 import type { Logger } from '../../Log/Controller.js'
+import { RestApiError } from './errors.js'
 
 export type ApiTokenScope = 'read' | 'write' | 'execute' | 'secrets' | 'admin'
 
@@ -9,6 +9,14 @@ export interface ApiToken {
 	name: string
 	token: string
 	scopes: ApiTokenScope[]
+}
+
+declare global {
+	namespace Express {
+		interface Request {
+			apiToken?: ApiToken
+		}
+	}
 }
 
 /** Maps HTTP method + route semantics to the required scope */
@@ -51,7 +59,7 @@ export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) 
 		}
 
 		// Attach token to request for scope checks
-		;(req as any).apiToken = token
+		req.apiToken = token
 
 		logger.debug(`API request authenticated: token="${token.name}" path=${req.path}`)
 		next()
@@ -63,7 +71,7 @@ export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) 
  */
 export function requireScope(scope: RequiredScope) {
 	return (req: Express.Request, _res: Express.Response, next: Express.NextFunction): void => {
-		const token = (req as any).apiToken as ApiToken | undefined
+		const token = req.apiToken
 		if (!token) {
 			next(RestApiError.unauthorized())
 			return
