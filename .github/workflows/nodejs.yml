@@ -58,7 +58,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: linux-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -159,7 +159,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: linux-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -267,7 +267,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: macos-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -365,7 +365,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: macos-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -465,7 +465,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: windows-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -576,7 +576,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: windows-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
