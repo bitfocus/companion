@@ -303,7 +303,10 @@ describe('executeFeedback - variable_value', () => {
 	})
 
 	it('returns false when no variable is configured', () => {
-		const result = module.executeFeedback(makeFeedback('variable_value', { variable: '', op: 'eq', value: '5' }), createParser())
+		const result = module.executeFeedback(
+			makeFeedback('variable_value', { variable: '', op: 'eq', value: '5' }),
+			createParser()
+		)
 		expect(result).toBe(false)
 	})
 })
@@ -346,7 +349,9 @@ describe('executeFeedback - expression based', () => {
 	})
 
 	it('debug_expression_value coerces non-objects to an empty style', () => {
-		expect(module.executeFeedback(makeFeedback('debug_expression_value', { expression: 'not-an-object' }), createParser())).toEqual({})
+		expect(
+			module.executeFeedback(makeFeedback('debug_expression_value', { expression: 'not-an-object' }), createParser())
+		).toEqual({})
 		expect(
 			module.executeFeedback(makeFeedback('debug_expression_value', { expression: { color: 1 } }), createParser())
 		).toEqual({ color: 1 })
@@ -369,7 +374,13 @@ describe('definitions', () => {
 	it('exposes the variable feedbacks (debug feedback only when not packaged)', () => {
 		const keys = Object.keys(module.getFeedbackDefinitions())
 		expect(keys).toEqual(
-			expect.arrayContaining(['variable_value', 'variable_variable', 'check_expression', 'expression_value', 'user_value'])
+			expect.arrayContaining([
+				'variable_value',
+				'variable_variable',
+				'check_expression',
+				'expression_value',
+				'user_value',
+			])
 		)
 	})
 })
@@ -388,7 +399,11 @@ describe('visitReferences', () => {
 
 	it('visits both variable names of variable_variable feedbacks', () => {
 		const visitor = { visitVariableName: vi.fn(), visitString: vi.fn() } as any
-		const feedback = { id: 'fb2', type: 'variable_variable', options: { variable: 'custom:a', variable2: 'custom:b' } } as any
+		const feedback = {
+			id: 'fb2',
+			type: 'variable_variable',
+			options: { variable: 'custom:a', variable2: 'custom:b' },
+		} as any
 
 		module.visitReferences(visitor, [], [feedback])
 

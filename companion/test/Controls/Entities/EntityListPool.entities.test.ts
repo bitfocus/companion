@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
 import { actionModel, createPool, downSet, feedbackModel } from './EntityListPoolTestHelpers.js'
 

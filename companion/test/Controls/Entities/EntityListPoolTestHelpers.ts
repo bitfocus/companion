@@ -6,11 +6,11 @@ import {
 	FeedbackEntityModel,
 	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
 import type {
 	ControlEntityListChangeProps,
 	ControlEntityListPoolProps,
 } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
+import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
 
 /**
  * Shared harness for exercising `ControlEntityListPoolButton` (and the `ControlEntityListPoolBase`

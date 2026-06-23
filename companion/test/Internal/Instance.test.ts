@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EntityModelType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
-import type { ActionForInternalExecution } from '../../lib/Internal/Types.js'
 import { InternalInstance } from '../../lib/Internal/Instance.js'
+import type { ActionForInternalExecution } from '../../lib/Internal/Types.js'
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -265,7 +265,9 @@ describe('InternalInstance', () => {
 			})
 			fireStatusChange({ c1: { category: 'error' } as InstanceStatusEntry })
 
-			const result = internal.executeFeedback(makeExecFeedback('instance_status', { instance_id: 'all', ...STATUS_COLORS }))
+			const result = internal.executeFeedback(
+				makeExecFeedback('instance_status', { instance_id: 'all', ...STATUS_COLORS })
+			)
 
 			expect(result).toEqual({ color: STATUS_COLORS.error_fg, bgcolor: STATUS_COLORS.error_bg })
 		})
@@ -277,7 +279,9 @@ describe('InternalInstance', () => {
 			})
 			fireStatusChange({ c1: { category: 'warning' } as InstanceStatusEntry })
 
-			const result = internal.executeFeedback(makeExecFeedback('instance_status', { instance_id: 'all', ...STATUS_COLORS }))
+			const result = internal.executeFeedback(
+				makeExecFeedback('instance_status', { instance_id: 'all', ...STATUS_COLORS })
+			)
 
 			expect(result).toEqual({ color: STATUS_COLORS.warning_fg, bgcolor: STATUS_COLORS.warning_bg })
 		})
@@ -289,7 +293,9 @@ describe('InternalInstance', () => {
 			})
 			fireStatusChange({ c1: { category: 'good' } as InstanceStatusEntry })
 
-			const result = internal.executeFeedback(makeExecFeedback('instance_status', { instance_id: 'all', ...STATUS_COLORS }))
+			const result = internal.executeFeedback(
+				makeExecFeedback('instance_status', { instance_id: 'all', ...STATUS_COLORS })
+			)
 
 			expect(result).toEqual({ color: STATUS_COLORS.ok_fg, bgcolor: STATUS_COLORS.ok_bg })
 		})
@@ -305,7 +311,9 @@ describe('InternalInstance', () => {
 				statuses: { c1: { category } as InstanceStatusEntry },
 			})
 
-			const result = internal.executeFeedback(makeExecFeedback('instance_status', { instance_id: 'c1', ...STATUS_COLORS }))
+			const result = internal.executeFeedback(
+				makeExecFeedback('instance_status', { instance_id: 'c1', ...STATUS_COLORS })
+			)
 
 			expect(result).toEqual(expected)
 		})
@@ -313,7 +321,9 @@ describe('InternalInstance', () => {
 		it('returns disabled colors when the connection has no status entry', () => {
 			const { internal } = createHarness({ statuses: {} })
 
-			const result = internal.executeFeedback(makeExecFeedback('instance_status', { instance_id: 'c1', ...STATUS_COLORS }))
+			const result = internal.executeFeedback(
+				makeExecFeedback('instance_status', { instance_id: 'c1', ...STATUS_COLORS })
+			)
 
 			expect(result).toEqual({ color: STATUS_COLORS.disabled_fg, bgcolor: STATUS_COLORS.disabled_bg })
 		})
@@ -327,20 +337,28 @@ describe('InternalInstance', () => {
 			})
 			fireStatusChange({ c1: { category: 'warning' } as InstanceStatusEntry })
 
-			expect(internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: 'c1', state: 'warning' }))).toBe(true)
-			expect(internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: 'c1', state: 'good' }))).toBe(false)
+			expect(
+				internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: 'c1', state: 'warning' }))
+			).toBe(true)
+			expect(
+				internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: 'c1', state: 'good' }))
+			).toBe(false)
 		})
 
 		it("treats a missing status as 'null' (disabled)", () => {
 			const { internal } = createHarness()
 
-			expect(internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: 'c1', state: 'null' }))).toBe(true)
+			expect(
+				internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: 'c1', state: 'null' }))
+			).toBe(true)
 		})
 
 		it('returns false when no connection is selected', () => {
 			const { internal } = createHarness()
 
-			expect(internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: '', state: 'good' }))).toBe(false)
+			expect(
+				internal.executeFeedback(makeExecFeedback('instance_custom_state', { instance_id: '', state: 'good' }))
+			).toBe(false)
 		})
 	})
 
@@ -349,10 +367,14 @@ describe('InternalInstance', () => {
 			const { internal } = createHarness({ collectionEnabled: true })
 
 			expect(
-				internal.executeFeedback(makeExecFeedback('connection_collection_enabled', { collection_id: 'col1', enable: 'true' }))
+				internal.executeFeedback(
+					makeExecFeedback('connection_collection_enabled', { collection_id: 'col1', enable: 'true' })
+				)
 			).toBe(true)
 			expect(
-				internal.executeFeedback(makeExecFeedback('connection_collection_enabled', { collection_id: 'col1', enable: 'false' }))
+				internal.executeFeedback(
+					makeExecFeedback('connection_collection_enabled', { collection_id: 'col1', enable: 'false' })
+				)
 			).toBe(false)
 		})
 
@@ -360,7 +382,9 @@ describe('InternalInstance', () => {
 			const { internal } = createHarness()
 
 			expect(
-				internal.executeFeedback(makeExecFeedback('connection_collection_enabled', { collection_id: '', enable: 'true' }))
+				internal.executeFeedback(
+					makeExecFeedback('connection_collection_enabled', { collection_id: '', enable: 'true' })
+				)
 			).toBe(false)
 		})
 	})
@@ -427,7 +451,11 @@ describe('InternalInstance', () => {
 			const visitor = { visitConnectionId: vi.fn() } as any
 
 			const action = { id: 'a1', action: 'instance_control', options: { instance_id: exprVal('conn1') } } as any
-			const customState = { id: 'fb1', type: 'instance_custom_state', options: { instance_id: exprVal('conn1') } } as any
+			const customState = {
+				id: 'fb1',
+				type: 'instance_custom_state',
+				options: { instance_id: exprVal('conn1') },
+			} as any
 			const statusAll = { id: 'fb2', type: 'instance_status', options: { instance_id: exprVal('all') } } as any
 			const statusSpecific = { id: 'fb3', type: 'instance_status', options: { instance_id: exprVal('conn2') } } as any
 

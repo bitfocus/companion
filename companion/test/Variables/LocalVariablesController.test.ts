@@ -101,7 +101,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.localVariableFor('1/3/3', 'my_var', makeExtras())).toBe(null)
 		})
 
-		test('an unparseable location returns null', () => {
+		test('an unparsable location returns null', () => {
 			const { controller } = createController()
 
 			expect(controller.localVariableFor('nonsense', 'my_var', makeExtras())).toBe(null)
