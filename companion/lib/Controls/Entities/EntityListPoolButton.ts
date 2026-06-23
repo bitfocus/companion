@@ -804,8 +804,10 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		// For the automatic/manual progression
 		const this_step_raw = this.#currentStep.id
 		if (stepIds.length > 0) {
-			// verify 'this_step_raw' is valid
-			const this_step_index = stepIds.findIndex((s) => s == this_step_raw) || 0
+			// verify 'this_step_raw' is valid, falling back to the first step if it is not
+			// (findIndex returns -1 when not found, and -1 is truthy, so `|| 0` would not catch it)
+			const foundIndex = stepIds.findIndex((s) => s == this_step_raw)
+			const this_step_index = foundIndex === -1 ? 0 : foundIndex
 			const this_step_id = stepIds[this_step_index]
 
 			// figure out the new step

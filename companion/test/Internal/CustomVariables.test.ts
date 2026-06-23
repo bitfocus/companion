@@ -46,6 +46,8 @@ function makeVariablesController(currentValue: unknown, exists = true) {
 			hasCustomVariable: vi.fn().mockReturnValue(exists),
 			setValue: vi.fn(),
 			createVariable: vi.fn(),
+			resetValueToDefault: vi.fn(),
+			syncValueToDefault: vi.fn(),
 		},
 	}
 }
@@ -181,5 +183,93 @@ describe('custom_variable_set_value deferred parse', () => {
 		expect(() => module.executeAction(action, fakeExtras, parser)).toThrow()
 		expect(variablesController.custom.setValue).not.toHaveBeenCalled()
 		expect(variablesController.custom.createVariable).not.toHaveBeenCalled()
+	})
+})
+
+// ---- custom_variable_reset_to_default ---------------------------------------
+
+describe('custom_variable_reset_to_default', () => {
+	it('resets the named variable to its startup value', () => {
+		const variablesController = makeVariablesController(0)
+		const module = new InternalCustomVariables(variablesController as any)
+		const parser = createParser()
+
+		const action = makeAction('custom_variable_reset_to_default', { name: 'myVar' }, { name: exprVal('myVar') })
+
+		module.executeAction(action, fakeExtras, parser)
+
+		expect(variablesController.custom.resetValueToDefault).toHaveBeenCalledWith('myVar')
+	})
+
+	it('does nothing when the name resolves to empty', () => {
+		const variablesController = makeVariablesController(0)
+		const module = new InternalCustomVariables(variablesController as any)
+		const parser = createParser()
+
+		const action = makeAction('custom_variable_reset_to_default', { name: '' }, { name: exprVal('') })
+
+		module.executeAction(action, fakeExtras, parser)
+
+		expect(variablesController.custom.resetValueToDefault).not.toHaveBeenCalled()
+	})
+})
+
+// ---- custom_variable_sync_to_default ----------------------------------------
+
+describe('custom_variable_sync_to_default', () => {
+	it('writes the current value to the startup value', () => {
+		const variablesController = makeVariablesController(5)
+		const module = new InternalCustomVariables(variablesController as any)
+		const parser = createParser()
+
+		const action = makeAction('custom_variable_sync_to_default', { name: 'myVar' }, { name: exprVal('myVar') })
+
+		module.executeAction(action, fakeExtras, parser)
+
+		expect(variablesController.custom.syncValueToDefault).toHaveBeenCalledWith('myVar')
+	})
+
+	it('does nothing when the name resolves to empty', () => {
+		const variablesController = makeVariablesController(5)
+		const module = new InternalCustomVariables(variablesController as any)
+		const parser = createParser()
+
+		const action = makeAction('custom_variable_sync_to_default', { name: '' }, { name: exprVal('') })
+
+		module.executeAction(action, fakeExtras, parser)
+
+		expect(variablesController.custom.syncValueToDefault).not.toHaveBeenCalled()
+	})
+})
+
+// ---- definitions & misc -----------------------------------------------------
+
+describe('getActionDefinitions', () => {
+	it('exposes the three custom variable actions', () => {
+		const module = new InternalCustomVariables(makeVariablesController(0) as any)
+
+		const defs = module.getActionDefinitions()
+
+		expect(Object.keys(defs).sort()).toEqual([
+			'custom_variable_reset_to_default',
+			'custom_variable_set_value',
+			'custom_variable_sync_to_default',
+		])
+		for (const def of Object.values(defs)) {
+			expect(def.optionsSupportExpressions).toBe(true)
+			expect(Array.isArray(def.options)).toBe(true)
+		}
+	})
+})
+
+describe('executeAction - unknown', () => {
+	it('returns null for an unrecognised action', () => {
+		const variablesController = makeVariablesController(0)
+		const module = new InternalCustomVariables(variablesController as any)
+		const parser = createParser()
+
+		const action = makeAction('not_a_real_action', {}, {})
+
+		expect(module.executeAction(action, fakeExtras, parser)).toBeNull()
 	})
 })
