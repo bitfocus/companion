@@ -78,6 +78,19 @@ async function parseImportData(rawData: ArrayBuffer): Promise<ParseImportDataRes
 		}
 	}
 	timing.parseEndTime = performance.now()
+
+	// A valid export is always an object. Reject primitives/null - YAML leniently parses an empty
+	// file as `null` and arbitrary text/binary as a scalar string, neither of which is a usable
+	// export and would otherwise crash the downstream upgrade step.
+	if (!parsedData || typeof parsedData !== 'object') {
+		timing.workerEndTime = performance.now()
+		return {
+			error: 'File is corrupted or unknown format',
+			data: null,
+			timing,
+		}
+	}
+
 	timing.workerEndTime = performance.now()
 
 	return {

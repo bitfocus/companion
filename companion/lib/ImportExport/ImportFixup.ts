@@ -38,7 +38,7 @@ export function fixupTriggerControl(
 		options: structuredClone(control.options),
 		actions: [],
 		condition: [],
-		events: control.events,
+		events: control.events ? structuredClone(control.events) : [],
 		localVariables: [],
 	}
 
