@@ -1,11 +1,12 @@
 import Express from 'express'
-import swaggerUi from 'swagger-ui-express'
 import type { InstanceController } from '../../Instance/Controller.js'
 import LogController from '../../Log/Controller.js'
+import type { AppInfo } from '../../Registry.js'
 import { restApiErrorHandler } from './middleware/errorHandler.js'
 import { generateOpenApiDocument } from './openapi.js'
 import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
 import { createConnectionsRouter } from './routes/ConnectionsRouter.js'
+import { createSwaggerUiRouter } from './SwaggerUi.js'
 
 /**
  * Create the main REST API router.
@@ -14,22 +15,22 @@ import { createConnectionsRouter } from './routes/ConnectionsRouter.js'
  *
  * Only created when the REST API is enabled at startup (checked in RestApiService).
  */
-export function createRestApiRouter(instanceController: InstanceController, tokenStore: ApiTokenStore): Express.Router {
+export function createRestApiRouter(
+	instanceController: InstanceController,
+	tokenStore: ApiTokenStore,
+	appInfo: Pick<AppInfo, 'appVersion'>
+): Express.Router {
 	const logger = LogController.createLogger('Service/RestApi')
 	const router = Express.Router()
 
 	// OpenAPI spec and Swagger UI — served without auth
-	const openApiDocument = generateOpenApiDocument()
+	const openApiDocument = generateOpenApiDocument(appInfo)
 
 	router.get('/openapi.json', (_req, res) => {
 		res.json(openApiDocument)
 	})
 
-	router.use(
-		'/docs',
-		swaggerUi.serve,
-		swaggerUi.setup(openApiDocument, { swaggerOptions: { persistAuthorization: true } })
-	)
+	router.use('/docs', createSwaggerUiRouter())
 
 	// Mount resource routers — each versioned independently
 	router.use(

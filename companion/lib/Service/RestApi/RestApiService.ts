@@ -1,9 +1,10 @@
-import type { UIExpress } from '../../UI/Express.js'
-import type { InstanceController } from '../../Instance/Controller.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
+import type { InstanceController } from '../../Instance/Controller.js'
+import LogController from '../../Log/Controller.js'
+import type { AppInfo } from '../../Registry.js'
+import type { UIExpress } from '../../UI/Express.js'
 import { createRestApiRouter } from './RestApiRouter.js'
 import { RestApiTokenStoreMemory } from './RestApiTokenStore.js'
-import LogController from '../../Log/Controller.js'
 
 /**
  * Service class that sets up and mounts the REST API.
@@ -17,7 +18,12 @@ export class RestApiService {
 	readonly #logger = LogController.createLogger('Service/RestApi')
 	readonly tokenStore: RestApiTokenStoreMemory
 
-	constructor(instanceController: InstanceController, userconfigController: DataUserConfig, express: UIExpress) {
+	constructor(
+		instanceController: InstanceController,
+		userconfigController: DataUserConfig,
+		express: UIExpress,
+		appInfo: Pick<AppInfo, 'appVersion'>
+	) {
 		this.tokenStore = new RestApiTokenStoreMemory()
 
 		if (!userconfigController.getKey('rest_api_enabled')) {
@@ -25,7 +31,7 @@ export class RestApiService {
 			return
 		}
 
-		const restApiRouter = createRestApiRouter(instanceController, this.tokenStore)
+		const restApiRouter = createRestApiRouter(instanceController, this.tokenStore, appInfo)
 
 		// Mount the REST API router via the setter on UIExpress
 		// This is registered at /api before the existing /api legacy routes

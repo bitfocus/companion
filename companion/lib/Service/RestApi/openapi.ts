@@ -1,16 +1,15 @@
-import { createRequire } from 'module'
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
+import type { AppInfo } from '../../Registry.js'
 import { registry } from './registry.js'
 import { registerConnectionPaths } from './routes/ConnectionsRouter.js'
-
-const require = createRequire(import.meta.url)
-const { version } = require('../../../package.json') as { version: string }
 
 /**
  * Generate the OpenAPI 3.0 JSON document from the registry.
  * All route modules register their paths before this is called.
  */
-export function generateOpenApiDocument(): ReturnType<OpenApiGeneratorV3['generateDocument']> {
+export function generateOpenApiDocument(
+	appInfo: Pick<AppInfo, 'appVersion'>
+): ReturnType<OpenApiGeneratorV3['generateDocument']> {
 	// Register all route paths into the registry
 	registerConnectionPaths()
 
@@ -20,7 +19,7 @@ export function generateOpenApiDocument(): ReturnType<OpenApiGeneratorV3['genera
 		openapi: '3.0.3',
 		info: {
 			title: 'Bitfocus Companion REST API',
-			version,
+			version: appInfo.appVersion,
 			description: 'REST API for programmatic configuration management of Bitfocus Companion.',
 		},
 		servers: [{ url: '/api', description: 'REST API (resources versioned independently)' }],

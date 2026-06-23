@@ -10,5 +10,5 @@ export const registry = new OpenAPIRegistry()
 registry.registerComponent('securitySchemes', 'bearerAuth', {
 	type: 'http',
 	scheme: 'bearer',
-	description: 'API token (e.g. cpn_admin, cpn_read)',
+	description: 'API token.',
 })

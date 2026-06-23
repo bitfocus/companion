@@ -44,6 +44,10 @@ const ConnectionResponseExample = {
 	secrets: {},
 }
 
+const ConnectionCreateResponseExample = {
+	id: 'KJA1isEECHRDBTFjx-7tf',
+}
+
 const VersionIdSchema = z.string().min(1, 'versionId cannot be empty')
 
 export const ConnectionPatchResponseExample = {
@@ -80,6 +84,13 @@ export const ConnectionResponseSchema = z
 		secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
 	})
 	.meta({ example: ConnectionResponseExample })
+
+/** Minimal response returned after creating a connection */
+export const ConnectionCreateResponseSchema = z
+	.object({
+		id: z.string().describe('Unique connection instance id.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
+	})
+	.meta({ example: ConnectionCreateResponseExample })
 
 /** Schema for creating a new connection */
 export const ConnectionCreateBodySchema = z
@@ -250,6 +261,7 @@ export const ConfigFieldResponseSchema = z
 
 export type ConnectionResponse = z.infer<typeof ConnectionResponseSchema>
 export type ConnectionCreateBody = z.infer<typeof ConnectionCreateBodySchema>
+export type ConnectionCreateResponse = z.infer<typeof ConnectionCreateResponseSchema>
 export type ConnectionPatchBody = z.infer<typeof ConnectionPatchBodySchema>
 
 /**

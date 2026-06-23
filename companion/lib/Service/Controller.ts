@@ -64,7 +64,7 @@ export class ServiceController {
 		express: UIExpress
 	) {
 		this.httpApi = new ServiceHttpApi(serviceApi, userconfig, express)
-		this.restApi = new RestApiService(instanceController, userconfig, express)
+		this.restApi = new RestApiService(instanceController, userconfig, express, serviceApi.appInfo)
 		this.https = new ServiceHttps(userconfig, express, io)
 		this.oscSender = oscSender
 		this.oscListener = new ServiceOscListener(serviceApi, userconfig)

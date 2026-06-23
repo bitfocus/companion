@@ -20,6 +20,10 @@ const mockOptions = {
 	},
 }
 
+const mockAppInfo = {
+	appVersion: '5.0.0-test',
+}
+
 describe('REST API v1 — Connections', () => {
 	function createService() {
 		const instanceController = mockDeep<InstanceController>(mockOptions)
@@ -32,7 +36,7 @@ describe('REST API v1 — Connections', () => {
 		const writeToken = 'cpn_write'
 		const secretsToken = 'cpn_secrets'
 
-		const restApiRouter = createRestApiRouter(instanceController, tokenStore)
+		const restApiRouter = createRestApiRouter(instanceController, tokenStore, mockAppInfo)
 
 		const app = express()
 		app.use(Express.json())
@@ -432,11 +436,7 @@ describe('REST API v1 — Connections', () => {
 
 			expect(res.status).toBe(201)
 			expect(res.headers.location).toBe('/api/connections/v1/new-id')
-			expect(res.body.data.id).toBe('new-id')
-			expect(res.body.data.label).toBe('New OBS')
-			expect(res.body.data.moduleId).toBe('obs-websocket')
-			expect(res.body.data.config).toEqual({})
-			expect(res.body.data).not.toHaveProperty('hasRecordActionsHandler')
+			expect(res.body.data).toEqual({ id: 'new-id' })
 
 			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledTimes(1)
 			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledWith({ type: 'obs-websocket' }, 'New OBS', {
@@ -554,7 +554,6 @@ describe('REST API v1 — Connections', () => {
 			})
 
 			expect(res.status).toBe(201)
-			expect(res.body.data.enabled).toBe(false)
 			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledWith({ type: 'obs-websocket' }, 'New OBS', {
 				versionId: null,
 				updatePolicy: InstanceVersionUpdatePolicy.Stable,
@@ -1179,8 +1178,7 @@ describe('REST API v1 — Connections', () => {
 				.send()
 
 			expect(res.status).toBe(200)
-			// static-text fields are filtered out
-			expect(res.body.data).toHaveLength(4)
+			expect(res.body.data).toHaveLength(5)
 
 			expect(res.body.data[0]).toEqual({
 				id: 'host',
@@ -1216,6 +1214,13 @@ describe('REST API v1 — Connections', () => {
 				id: 'password',
 				type: 'secret-text',
 				label: 'Password',
+			})
+
+			expect(res.body.data[4]).toEqual({
+				id: 'info',
+				type: 'static-text',
+				label: 'Info',
+				value: 'Some info text',
 			})
 		})
 

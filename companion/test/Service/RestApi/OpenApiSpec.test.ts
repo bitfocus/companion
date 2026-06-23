@@ -1,4 +1,3 @@
-import { createRequire } from 'module'
 import express from 'express'
 import Express from 'express'
 import supertest from 'supertest'
@@ -9,26 +8,27 @@ import { generateOpenApiDocument } from '../../../lib/Service/RestApi/openapi.js
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
 
-const require = createRequire(import.meta.url)
-const { version } = require('../../../package.json') as { version: string }
-
 const mockOptions = {
 	fallbackMockImplementation: () => {
 		throw new Error('not mocked')
 	},
 }
 
+const mockAppInfo = {
+	appVersion: '5.0.0-test',
+}
+
 describe('OpenAPI Spec Generation', () => {
 	let doc: ReturnType<typeof generateOpenApiDocument>
 
 	beforeAll(() => {
-		doc = generateOpenApiDocument()
+		doc = generateOpenApiDocument(mockAppInfo)
 	})
 
 	test('generates a valid OpenAPI 3.0.3 document', () => {
 		expect(doc.openapi).toBe('3.0.3')
 		expect(doc.info.title).toBe('Bitfocus Companion REST API')
-		expect(doc.info.version).toBe(version)
+		expect(doc.info.version).toBe(mockAppInfo.appVersion)
 	})
 
 	test('includes server definition', () => {
@@ -184,22 +184,6 @@ describe('OpenAPI Spec Generation', () => {
 			expect(bodySchema.properties?.moduleId.example).toBe('bmd-atem')
 		})
 
-		test('Connection response schema includes examples', () => {
-			const postOp = doc.paths?.['/connections/v1']?.post
-			const responseSchema = (postOp?.responses['201'] as any)?.content?.['application/json']?.schema
-			expect(responseSchema.example?.data).toEqual(
-				expect.objectContaining({
-					id: 'KJA1isEECHRDBTFjx-7tf',
-					moduleId: 'bmd-atem',
-					config: expect.objectContaining({
-						host: '10.50.0.20',
-						modelID: 0,
-						fadeFps: 10,
-					}),
-				})
-			)
-		})
-
 		test('GET and PATCH connection response schemas include config examples', () => {
 			const getOp = doc.paths?.['/connections/v1/{connectionId}']?.get
 			const patchOp = doc.paths?.['/connections/v1/{connectionId}']?.patch
@@ -256,7 +240,7 @@ describe('OpenAPI HTTP endpoints', () => {
 	function createService() {
 		const instanceController = mockDeep<InstanceController>(mockOptions)
 		const tokenStore = new RestApiTokenStoreMemory()
-		const restApiRouter = createRestApiRouter(instanceController, tokenStore)
+		const restApiRouter = createRestApiRouter(instanceController, tokenStore, mockAppInfo)
 
 		const app = express()
 		app.use(Express.json())

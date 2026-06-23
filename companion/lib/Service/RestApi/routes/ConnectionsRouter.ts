@@ -20,6 +20,7 @@ import {
 	ConfigFieldResponseSchema,
 	ConfigFieldsResponseExample,
 	ConnectionCreateBodySchema,
+	ConnectionCreateResponseSchema,
 	ConnectionPatchBodySchema,
 	ConnectionPatchResponseExample,
 	ConnectionResponseSchema,
@@ -110,15 +111,8 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 						disabled,
 					})
 
-					// Re-fetch from client JSON so response goes through the same path as GET
-					const clientConnections = instanceController.getConnectionClientJson(false)
-					const config = clientConnections[id]
-					const status = instanceController.getInstanceStatus(id)
-					const instanceConfig = instanceController.getInstanceConfigOfType(id, ModuleInstanceType.Connection)
-					const response = buildConnectionResponse(id, config, status, instanceConfig)
-
 					logger.info(`REST API: Created connection "${label}" (${id})`)
-					return { status: 201, location: `/api/connections/v1/${id}`, body: successResponse(response) }
+					return { status: 201, location: `/api/connections/v1/${id}`, body: successResponse({ id }) }
 				} catch (e) {
 					throw RestApiError.badRequest(e instanceof Error ? e.message : 'Failed to create connection')
 				}
@@ -263,8 +257,7 @@ export function createConnectionsRouter(logger: Logger, instanceController: Inst
 					throw RestApiError.conflict('Failed to retrieve config fields from module')
 				}
 
-				const configFields = fields.filter((field) => field.type !== 'static-text')
-				const response = connectionConfigFieldsResponseSchema.parse(successResponse(configFields))
+				const response = connectionConfigFieldsResponseSchema.parse(successResponse(fields))
 
 				return { body: response }
 			},
@@ -472,7 +465,7 @@ const createConnectionEndpoint = defineRestEndpointContract({
 	response: {
 		status: 201,
 		description: 'Connection created',
-		schema: createSuccessSchema(ConnectionResponseSchema),
+		schema: createSuccessSchema(ConnectionCreateResponseSchema),
 	},
 	errorResponses,
 })
