@@ -11,6 +11,8 @@ import type {
 	ControlEntityListPoolProps,
 } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
+import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities/EntityListPoolExpressionVariable.js'
+import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
 
 /**
  * Shared harness for exercising `ControlEntityListPoolButton` (and the `ControlEntityListPoolBase`
@@ -43,13 +45,15 @@ export function defaultGetEntityDefinition(
 	return { entityType } as Partial<ClientEntityDefinition> as any
 }
 
-export function createPool(options: CreatePoolOptions = {}) {
+/**
+ * Build the fully-mocked `ControlEntityListPoolProps` plus the collaborators that tests assert on.
+ * Shared by every pool subclass harness (Button/Trigger/ExpressionVariable) so they only differ in
+ * which concrete pool they construct.
+ */
+export function createPoolDeps(options: CreatePoolOptions = {}) {
 	const controlId = options.controlId ?? 'test01'
-	const isLayered = options.isLayered ?? false
 
 	const reportChange = vi.fn<(options: ControlEntityListChangeProps) => void>()
-	const sendRuntimeProps = vi.fn()
-	const executeExpressionInControl = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 
 	const getEntityDefinition = vi.fn(options.getEntityDefinition ?? defaultGetEntityDefinition)
 
@@ -83,21 +87,46 @@ export function createPool(options: CreatePoolOptions = {}) {
 		reportChange,
 	}
 
-	const pool = new ControlEntityListPoolButton(deps, sendRuntimeProps, executeExpressionInControl, isLayered)
-
 	return {
-		pool,
+		deps,
 		controlId,
 		reportChange,
-		sendRuntimeProps,
-		executeExpressionInControl,
 		getEntityDefinition,
 		internalModule,
 		processManager,
 		variableValues,
 		pageStore,
-		deps,
 	}
+}
+
+export function createPool(options: CreatePoolOptions = {}) {
+	const isLayered = options.isLayered ?? false
+
+	const sendRuntimeProps = vi.fn()
+	const executeExpressionInControl = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
+
+	const base = createPoolDeps(options)
+
+	const pool = new ControlEntityListPoolButton(base.deps, sendRuntimeProps, executeExpressionInControl, isLayered)
+
+	return {
+		...base,
+		pool,
+		sendRuntimeProps,
+		executeExpressionInControl,
+	}
+}
+
+export function createTriggerPool(options: CreatePoolOptions = {}) {
+	const base = createPoolDeps(options)
+	const pool = new ControlEntityListPoolTrigger(base.deps)
+	return { ...base, pool }
+}
+
+export function createExpressionVariablePool(options: CreatePoolOptions = {}) {
+	const base = createPoolDeps(options)
+	const pool = new EntityListPoolExpressionVariable(base.deps)
+	return { ...base, pool }
 }
 
 let nextEntityId = 0
