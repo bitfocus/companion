@@ -174,24 +174,25 @@ describe('OpenAPI Spec Generation', () => {
 
 		test('ConnectionCreateBody schema includes examples', () => {
 			const postOp = doc.paths?.['/connections/v1']?.post
-			const bodySchema = (postOp?.requestBody as any)?.content?.['application/json']?.schema
-			expect(bodySchema.example).toEqual(
+			const bodyContent = (postOp?.requestBody as any)?.content?.['application/json']
+			expect(bodyContent.example).toEqual(
 				expect.objectContaining({
 					moduleId: 'bmd-atem',
 					label: 'ATEM',
 				})
 			)
+			const bodySchema = bodyContent.schema
 			expect(bodySchema.properties?.moduleId.example).toBe('bmd-atem')
 		})
 
-		test('GET and PATCH connection response schemas include config examples', () => {
+		test('GET and PATCH connection responses include config examples', () => {
 			const getOp = doc.paths?.['/connections/v1/{connectionId}']?.get
 			const patchOp = doc.paths?.['/connections/v1/{connectionId}']?.patch
-			const getResponseSchema = (getOp?.responses['200'] as any)?.content?.['application/json']?.schema
-			const patchResponseSchema = (patchOp?.responses['200'] as any)?.content?.['application/json']?.schema
+			const getResponseContent = (getOp?.responses['200'] as any)?.content?.['application/json']
+			const patchResponseContent = (patchOp?.responses['200'] as any)?.content?.['application/json']
 
-			for (const responseSchema of [getResponseSchema, patchResponseSchema]) {
-				expect(responseSchema.example?.data.config).toEqual(
+			for (const responseContent of [getResponseContent, patchResponseContent]) {
+				expect(responseContent.example?.data.config).toEqual(
 					expect.objectContaining({
 						host: '10.50.0.20',
 						modelID: 0,

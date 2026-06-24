@@ -1,36 +1,236 @@
 import Express from 'express'
 import z from 'zod'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import {
+	InstanceVersionUpdatePolicy,
+	ModuleInstanceType,
+	type InstanceConfig,
+} from '@companion-app/shared/Model/Instance.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { InstanceController } from '../../../Instance/Controller.js'
-import type { Logger } from '../../../Log/Controller.js'
-import { RestApiError } from '../errors.js'
-import { registry } from '../registry.js'
-import { hasScope } from '../RestApiAuth.js'
+import type { Logger } from '../../Log/Controller.js'
+import { RestApiError } from '../../Service/RestApi/errors.js'
+import { registry } from '../../Service/RestApi/registry.js'
+import { hasScope } from '../../Service/RestApi/RestApiAuth.js'
 import {
 	collectionResponse,
 	createCollectionSchema,
 	createSuccessSchema,
 	ErrorResponseSchema,
 	successResponse,
-} from '../schemas/common.js'
-import {
-	buildConnectionResponse,
-	ConfigFieldResponseSchema,
-	ConfigFieldsResponseExample,
-	ConnectionCreateBodySchema,
-	ConnectionCreateResponseSchema,
-	ConnectionPatchBodySchema,
-	ConnectionPatchResponseExample,
-	ConnectionResponseSchema,
-} from '../schemas/connections.js'
+} from '../../Service/RestApi/schemas/common.js'
 import {
 	defineRestEndpoint,
 	defineRestEndpointContract,
 	mountRestEndpoint,
 	registerRestEndpoint,
-} from '../typedRoute.js'
+} from '../../Service/RestApi/typedRoute.js'
+import type { InstanceController } from '../Controller.js'
+import {
+	ConfigFieldsResponseExample,
+	ConnectionCreateBodyExample,
+	ConnectionCreateResponseExample,
+	ConnectionPatchBodyExample,
+	ConnectionPatchResponseExample,
+	ConnectionResponseExample,
+	RestartConnectionResponseExample,
+} from './ConnectionsRestApiExamples.js'
+
+/** Schema for connection status info */
+export const ConnectionStatusSchema = z
+	.object({
+		category: z
+			.string()
+			.nullable()
+			.describe('Status category reported by the connection module.')
+			.meta({ example: 'ok' }),
+		level: z.string().nullable().describe('Severity level of the current connection status.').meta({ example: 'info' }),
+		message: z
+			.string()
+			.nullable()
+			.describe('Human-readable status message from the connection module.')
+			.meta({ example: 'Connected' }),
+	})
+	.meta({ example: { category: 'ok', level: 'info', message: 'Connected' } })
+
+const VersionIdSchema = z.string().min(1, 'versionId cannot be empty')
+
+/** Schema for a connection in API responses — used for both validation and stripping */
+export const ConnectionResponseSchema = z.object({
+	id: z.string().describe('Unique connection instance id.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
+	label: z.string().describe('Display name shown for the connection in Companion.').meta({ example: 'ATEM' }),
+	moduleId: z
+		.string()
+		.describe('Connection module id, such as "bmd-atem" or "obs-websocket".')
+		.meta({ example: 'bmd-atem' }),
+	moduleVersionId: z
+		.string()
+		.nullable()
+		.describe(
+			'Module version id used by this connection, such as "1.2.0". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.'
+		)
+		.meta({ example: '1.2.0' }),
+	updatePolicy: z
+		.enum(InstanceVersionUpdatePolicy)
+		.describe('Module version update policy for this connection.')
+		.meta({ example: InstanceVersionUpdatePolicy.Stable }),
+	enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.').meta({ example: true }),
+	sortOrder: z.number().describe('Sort position of the connection in the Companion UI.').meta({ example: 1 }),
+	collectionId: z.string().nullable().describe('Connection collection id, or null when not in a collection.'),
+	status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
+	config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
+	secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
+})
+
+/** Minimal response returned after creating a connection */
+export const ConnectionCreateResponseSchema = z.object({
+	id: z.string().describe('Unique connection instance id.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
+})
+
+/** Schema for creating a new connection */
+export const ConnectionCreateBodySchema = z
+	.object({
+		moduleId: z
+			.string()
+			.describe('Connection module id to create, such as "bmd-atem" or "obs-websocket".')
+			.meta({ example: 'bmd-atem' }),
+		label: z.string().describe('Display name for the new connection.').meta({ example: 'ATEM' }),
+		versionId: VersionIdSchema.nullable()
+			.default(null)
+			.describe(
+				'Specific module version to use. Omit or use null to use the newest compatible stable version. If the module is not installed, Companion queues installation of that version.'
+			)
+			.meta({ example: null }),
+		updatePolicy: z
+			.enum(InstanceVersionUpdatePolicy)
+			.default(InstanceVersionUpdatePolicy.Stable)
+			.describe('Module version update policy for the new connection.')
+			.meta({ example: InstanceVersionUpdatePolicy.Stable }),
+		disabled: z
+			.boolean()
+			.default(false)
+			.describe('Whether the new connection should be created disabled.')
+			.meta({ example: false }),
+	})
+	.strict()
+
+/**
+ * Schema for partially updating a connection.
+ * Both `config` and `secrets` use merge semantics — only the keys you send are updated,
+ * existing keys are preserved.
+ */
+export const ConnectionPatchBodySchema = z
+	.object({
+		label: z.string().optional().describe('New display name for the connection.').meta({ example: 'ATEM Program' }),
+		disabled: z
+			.boolean()
+			.optional()
+			.describe('Set true to disable the connection, or false to enable it.')
+			.meta({ example: false }),
+		config: z
+			.record(z.string(), z.unknown())
+			.optional()
+			.describe('Non-secret config values to merge into the connection config.')
+			.meta({ example: { host: '10.50.0.20', fadeFps: 10 } }),
+		secrets: z
+			.record(z.string(), z.unknown())
+			.optional()
+			.describe('Secret config values to merge into the connection secrets.')
+			.meta({ example: {} }),
+		updatePolicy: z
+			.enum(InstanceVersionUpdatePolicy)
+			.optional()
+			.describe('Module version update policy to apply.')
+			.meta({ example: InstanceVersionUpdatePolicy.Manual }),
+		versionId: VersionIdSchema.nullable()
+			.optional()
+			.describe(
+				'Specific module version to use, such as "1.2.0". Omit to leave the current version unchanged. Use null to switch to the newest compatible stable version.'
+			)
+			.meta({ example: '1.2.0' }),
+		collectionId: z
+			.string()
+			.nullable()
+			.optional()
+			.describe('Collection id to move the connection into, or null to remove it.')
+			.meta({ example: null }),
+	})
+	.strict()
+
+/** Schema for a dropdown choice */
+const DropdownChoiceSchema = z.object({
+	id: z.union([z.string(), z.number()]).describe('Choice value sent in connection config.').meta({ example: 'auto' }),
+	label: z.string().describe('Display label for the choice.').meta({ example: 'Auto' }),
+})
+
+/** Schema for a raw config field definition in API responses */
+export const ConfigFieldResponseSchema = z
+	.object({
+		id: z.string().describe('Config field id used as the key in config or secrets objects.').meta({ example: 'host' }),
+		type: z.string().describe('Companion config field type.').meta({ example: 'textinput' }),
+		label: z.string().describe('Display label for the config field.').meta({ example: 'Host' }),
+		tooltip: z
+			.string()
+			.optional()
+			.describe('Short help text shown for the config field.')
+			.meta({ example: 'Target switcher IP' }),
+		description: z.string().optional().describe('Longer help text for the config field.'),
+		default: z.unknown().optional().describe('Default value for the config field.'),
+		min: z.number().optional().describe('Minimum numeric value allowed.'),
+		max: z.number().optional().describe('Maximum numeric value allowed.'),
+		step: z.number().optional().describe('Numeric step size.'),
+		range: z.boolean().optional().describe('Whether the field accepts a numeric range.'),
+		minLength: z.number().optional().describe('Minimum string length allowed.'),
+		regex: z.string().optional().describe('Regular expression that string values must match.'),
+		placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
+		multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
+		choices: z.array(DropdownChoiceSchema).optional().describe('Allowed choices for dropdown-style fields.'),
+		allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+		minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
+		maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
+		enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
+		returnType: z.string().optional().describe('Value type returned by the field.'),
+	})
+	.catchall(z.unknown())
+
+export type ConnectionResponse = z.infer<typeof ConnectionResponseSchema>
+export type ConnectionCreateBody = z.infer<typeof ConnectionCreateBodySchema>
+export type ConnectionCreateResponse = z.infer<typeof ConnectionCreateResponseSchema>
+export type ConnectionPatchBody = z.infer<typeof ConnectionPatchBodySchema>
+
+/**
+ * Build a validated ConnectionResponse from internal data.
+ * Parses through Zod to strip unknown fields and validate types.
+ */
+export function buildConnectionResponse(
+	id: string,
+	clientConfig: ClientConnectionConfig,
+	status: InstanceStatusEntry | undefined,
+	instanceConfig?: InstanceConfig,
+	includeSecrets?: boolean
+): ConnectionResponse {
+	const response: Record<string, unknown> = {
+		id,
+		label: clientConfig.label,
+		moduleId: clientConfig.moduleId,
+		moduleVersionId: clientConfig.moduleVersionId,
+		updatePolicy: clientConfig.updatePolicy,
+		enabled: clientConfig.enabled,
+		sortOrder: clientConfig.sortOrder,
+		collectionId: clientConfig.collectionId,
+		status: status ?? null,
+	}
+
+	if (instanceConfig) {
+		response.config = instanceConfig.config ?? {}
+		if (includeSecrets) {
+			response.secrets = instanceConfig.secrets ?? {}
+		}
+	}
+
+	return ConnectionResponseSchema.parse(response)
+}
 
 const CONNECTIONS_API_BASE_PATH = '/connections/v1'
 const CONNECTIONS_API_TAGS = ['Connections']
@@ -417,20 +617,16 @@ const connectionGetQuery = z.object({
 	}),
 })
 
-const connectionConfigFieldsResponseSchema = createSuccessSchema(
-	z.array(ConfigFieldResponseSchema).meta({ example: ConfigFieldsResponseExample })
-)
+const connectionConfigFieldsResponseSchema = createSuccessSchema(z.array(ConfigFieldResponseSchema))
 
 const restartConnectionResponseSchema = createSuccessSchema(
-	z
-		.object({
-			id: z.string().describe('Connection instance id that was restarted.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
-			message: z
-				.string()
-				.describe('Confirmation message for the restart request.')
-				.meta({ example: 'Restart triggered' }),
-		})
-		.meta({ example: { id: 'KJA1isEECHRDBTFjx-7tf', message: 'Restart triggered' } })
+	z.object({
+		id: z.string().describe('Connection instance id that was restarted.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
+		message: z
+			.string()
+			.describe('Confirmation message for the restart request.')
+			.meta({ example: 'Restart triggered' }),
+	})
 )
 
 const listConnectionsEndpoint = defineRestEndpointContract({
@@ -447,6 +643,9 @@ const listConnectionsEndpoint = defineRestEndpointContract({
 		status: 200,
 		description: 'List of connections',
 		schema: createCollectionSchema(ConnectionResponseSchema),
+	},
+	examples: {
+		response: collectionResponse([ConnectionResponseExample], { total: 1, limit: 1, offset: 0 }),
 	},
 	errorResponses,
 })
@@ -467,6 +666,10 @@ const createConnectionEndpoint = defineRestEndpointContract({
 		description: 'Connection created',
 		schema: createSuccessSchema(ConnectionCreateResponseSchema),
 	},
+	examples: {
+		body: ConnectionCreateBodyExample,
+		response: successResponse(ConnectionCreateResponseExample),
+	},
 	errorResponses,
 })
 
@@ -486,6 +689,9 @@ const getConnectionEndpoint = defineRestEndpointContract({
 		description: 'Connection details',
 		schema: createSuccessSchema(ConnectionResponseSchema),
 	},
+	examples: {
+		response: successResponse(ConnectionResponseExample),
+	},
 	errorResponses,
 })
 
@@ -504,6 +710,9 @@ const getConnectionConfigFieldsEndpoint = defineRestEndpointContract({
 		status: 200,
 		description: 'Config field definitions',
 		schema: connectionConfigFieldsResponseSchema,
+	},
+	examples: {
+		response: successResponse(ConfigFieldsResponseExample),
 	},
 	extraResponses: {
 		409: {
@@ -528,7 +737,11 @@ const patchConnectionEndpoint = defineRestEndpointContract({
 	response: {
 		status: 200,
 		description: 'Updated connection',
-		schema: createSuccessSchema(ConnectionResponseSchema.meta({ example: ConnectionPatchResponseExample })),
+		schema: createSuccessSchema(ConnectionResponseSchema),
+	},
+	examples: {
+		body: ConnectionPatchBodyExample,
+		response: successResponse(ConnectionPatchResponseExample),
 	},
 	errorResponses,
 })
@@ -564,6 +777,9 @@ const restartConnectionEndpoint = defineRestEndpointContract({
 		status: 200,
 		description: 'Restart triggered',
 		schema: restartConnectionResponseSchema,
+	},
+	examples: {
+		response: successResponse(RestartConnectionResponseExample),
 	},
 	extraResponses: {
 		409: {

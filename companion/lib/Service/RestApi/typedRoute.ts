@@ -10,6 +10,8 @@ type ResponseConfig = NonNullable<RegisterPathConfig['responses']>[number]
 type RouteParameter = NonNullable<NonNullable<RegisterPathConfig['request']>['params']>
 
 type InferSchema<T> = T extends z.ZodType ? z.infer<T> : undefined
+type RequestBodyExample<T> = T extends z.ZodType ? z.input<T> : never
+type ResponseExample<T> = T extends z.ZodType ? z.output<T> : never
 
 export type RestRouteResult<T> =
 	| {
@@ -60,6 +62,10 @@ export interface RestEndpointContract<
 				description: string
 				schema?: undefined
 		  }
+	examples?: {
+		body?: RequestBodyExample<BodySchema>
+		response?: ResponseExample<ResponseSchema>
+	}
 	errorResponses: RegisterPathConfig['responses']
 	extraResponses?: RegisterPathConfig['responses']
 }
@@ -151,6 +157,7 @@ export function registerRestEndpoint(
 			content: {
 				'application/json': {
 					schema: endpoint.request.body,
+					...(endpoint.examples?.body !== undefined ? { example: endpoint.examples.body } : {}),
 				},
 			},
 			required: true,
@@ -166,7 +173,7 @@ export function registerRestEndpoint(
 		security: [{ bearerAuth: [] }],
 		request,
 		responses: {
-			[endpoint.response.status]: createOpenApiResponse(endpoint.response),
+			[endpoint.response.status]: createOpenApiResponse(endpoint.response, endpoint.examples?.response),
 			...endpoint.extraResponses,
 			...endpoint.errorResponses,
 		},
@@ -189,7 +196,8 @@ function parseRequestPart<T extends z.ZodType | undefined>(
 }
 
 function createOpenApiResponse(
-	response: RestEndpointDefinition<undefined, undefined, undefined, z.ZodType | undefined>['response']
+	response: RestEndpointDefinition<undefined, undefined, undefined, z.ZodType | undefined>['response'],
+	example?: unknown
 ): ResponseConfig {
 	if (!response.schema) return { description: response.description }
 
@@ -198,6 +206,7 @@ function createOpenApiResponse(
 		content: {
 			'application/json': {
 				schema: response.schema,
+				...(example !== undefined ? { example } : {}),
 			},
 		},
 	}

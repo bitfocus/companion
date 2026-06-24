@@ -9,10 +9,10 @@ import {
 	ModuleInstanceType,
 	type InstanceConfig,
 } from '../../../../shared-lib/lib/Model/Instance.js'
+import { ConnectionCreateBodySchema } from '../../../lib/Instance/Connection/ConnectionsRestApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
-import { ConnectionCreateBodySchema } from '../../../lib/Service/RestApi/schemas/connections.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {

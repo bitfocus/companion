@@ -1,11 +1,11 @@
 import Express from 'express'
+import { createConnectionsRouter } from '../../Instance/Connection/ConnectionsRestApi.js'
 import type { InstanceController } from '../../Instance/Controller.js'
 import LogController from '../../Log/Controller.js'
 import type { AppInfo } from '../../Registry.js'
 import { restApiErrorHandler } from './middleware/errorHandler.js'
 import { generateOpenApiDocument } from './openapi.js'
 import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
-import { createConnectionsRouter } from './routes/ConnectionsRouter.js'
 import { createSwaggerUiRouter } from './SwaggerUi.js'
 
 /**

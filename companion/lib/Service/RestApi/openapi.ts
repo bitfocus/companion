@@ -1,7 +1,7 @@
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
+import { registerConnectionPaths } from '../../Instance/Connection/ConnectionsRestApi.js'
 import type { AppInfo } from '../../Registry.js'
 import { registry } from './registry.js'
-import { registerConnectionPaths } from './routes/ConnectionsRouter.js'
 
 /**
  * Generate the OpenAPI 3.0 JSON document from the registry.
