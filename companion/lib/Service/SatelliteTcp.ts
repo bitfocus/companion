@@ -1,4 +1,5 @@
 import net, { type Socket } from 'node:net'
+import { StringDecoder } from 'node:string_decoder'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
@@ -75,7 +76,10 @@ export class ServiceSatelliteTcp extends ServiceBase {
 
 			socket.on('close', doCleanup)
 
-			socket.on('data', (data) => processMessage(data.toString()))
+			// Use a StringDecoder rather than data.toString() so multi-byte UTF-8 characters
+			// split across TCP packet boundaries are decoded correctly.
+			const decoder = new StringDecoder('utf8')
+			socket.on('data', (data) => processMessage(decoder.write(data)))
 		})
 		this.#server.on('error', (e) => {
 			this.logger.debug(`listen-socket error: ${e}`)
