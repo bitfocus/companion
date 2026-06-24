@@ -5,11 +5,7 @@ import Express from 'express'
 const require = createRequire(import.meta.url)
 
 export function getSwaggerUiHtmlPath(): string {
-	if (process.env.COMPANION_BUNDLED === '1') {
-		return path.join(import.meta.dirname, 'assets', 'swagger-ui')
-	}
-
-	return path.resolve(import.meta.dirname, '..', '..', '..', '..', 'assets', 'swagger-ui')
+	return path.join(import.meta.dirname, 'assets', 'swagger-ui')
 }
 
 export function getSwaggerUiAssetPath(): string {
