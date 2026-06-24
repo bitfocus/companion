@@ -18,7 +18,7 @@ export function createRestApiRouter(
 	tokenStore: ApiTokenStore,
 	appInfo: Pick<AppInfo, 'appVersion'>
 ): Express.Router {
-	const logger = LogController.createLogger('Service/RestApi')
+	const logger = LogController.createLogger('Service/Rest')
 	const router = Express.Router()
 
 	// OpenAPI spec and Swagger UI — served without auth

@@ -639,7 +639,7 @@ const connectionEndpointSpecs = [
 					disabled,
 				})
 
-				logger.info(`REST API: Created connection "${label}" (${id})`)
+				logger.info(`Created connection "${label}" (${id})`)
 				return { status: 201, location: `/api/connections/v1/${id}`, body: successResponse({ id }) }
 			} catch (e) {
 				throw RestApiError.badRequest(e instanceof Error ? e.message : 'Failed to create connection')
@@ -747,7 +747,7 @@ const connectionEndpointSpecs = [
 			const instanceConfig = instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
 			const response = buildConnectionResponse(connectionId, updatedConfig, status, instanceConfig, !!secrets)
 
-			logger.info(`REST API: Updated connection "${response.label}" (${connectionId})`)
+			logger.info(`Updated connection "${response.label}" (${connectionId})`)
 			return { body: successResponse(response) }
 		}
 	}),
@@ -790,7 +790,7 @@ const connectionEndpointSpecs = [
 
 			await instanceController.removeConnection(connectionId)
 
-			logger.info(`REST API: Deleted connection ${connectionId}`)
+			logger.info(`Deleted connection ${connectionId}`)
 			return { status: 204 }
 		}
 	}),
@@ -809,7 +809,7 @@ const connectionEndpointSpecs = [
 				throw RestApiError.conflict('Connection is inactive and cannot be restarted')
 			}
 
-			logger.info(`REST API: Restarted connection ${connectionId}`)
+			logger.info(`Restarted connection ${connectionId}`)
 			return { body: successResponse({ id: connectionId, message: 'Restart triggered' }) }
 		}
 	}),
