@@ -47,13 +47,11 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { BackupController } from './Backups.js'
-import { FILE_VERSION } from './Constants.js'
+import { FILE_VERSION, MAX_IMPORT_FILE_SIZE } from './Constants.js'
 import { ExportController } from './Export.js'
 import { ImportController } from './Import.js'
 import type { ImportExportThreadMethods, ParseImportDataResult } from './ThreadMethods.js'
 import { find_smallest_grid_for_page } from './Util.js'
-
-const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 export class ImportExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
