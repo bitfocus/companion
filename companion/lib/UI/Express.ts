@@ -158,10 +158,6 @@ export class UIExpress {
 		// Use the router #legacyApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		this.app.use(async (r, s, n) => this.#legacyApiRouter(r, s, n))
 
-		this.app.use(['/api', '/trpc', '/socket.io'], (_req, res) => {
-			res.status(404).send()
-		})
-
 		function getResourcePath(subpath: string): string {
 			if (!isPackaged()) {
 				subpath = path.join('../../..', subpath)
