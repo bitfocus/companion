@@ -1,8 +1,6 @@
 import Express from 'express'
-import { createConnectionsRouter } from '../../Instance/Connection/ConnectionsRestApi.js'
-import type { InstanceController } from '../../Instance/Controller.js'
 import LogController from '../../Log/Controller.js'
-import type { AppInfo } from '../../Registry.js'
+import type { AppInfo, Registry } from '../../Registry.js'
 import { restApiErrorHandler } from './middleware/errorHandler.js'
 import { generateOpenApiDocument } from './openapi.js'
 import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
@@ -16,7 +14,7 @@ import { createSwaggerUiRouter } from './SwaggerUi.js'
  * Only created when the REST API is enabled at startup (checked in RestApiService).
  */
 export function createRestApiRouter(
-	instanceController: InstanceController,
+	registry: Registry,
 	tokenStore: ApiTokenStore,
 	appInfo: Pick<AppInfo, 'appVersion'>
 ): Express.Router {
@@ -33,11 +31,8 @@ export function createRestApiRouter(
 	router.use('/docs', createSwaggerUiRouter())
 
 	// Mount resource routers — each versioned independently
-	router.use(
-		'/connections/v1',
-		createAuthMiddleware(logger, tokenStore),
-		createConnectionsRouter(logger, instanceController)
-	)
+	router.use(createAuthMiddleware(logger, tokenStore))
+	router.use(registry.instance.createRestApiRouter(logger))
 
 	// Global error handler (unmatched routes fall through to the legacy /api router)
 	router.use(restApiErrorHandler)

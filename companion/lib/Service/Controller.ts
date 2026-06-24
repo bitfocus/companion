@@ -3,6 +3,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
+import type { Registry } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { UIExpress } from '../UI/Express.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -61,10 +62,11 @@ export class ServiceController {
 		pageStore: IPageStore,
 		instanceController: InstanceController,
 		io: UIHandler,
-		express: UIExpress
+		express: UIExpress,
+		registry: Registry
 	) {
 		this.httpApi = new ServiceHttpApi(serviceApi, userconfig, express)
-		this.restApi = new RestApiService(instanceController, userconfig, express, serviceApi.appInfo)
+		this.restApi = new RestApiService(registry, userconfig, express, serviceApi.appInfo)
 		this.https = new ServiceHttps(userconfig, express, io)
 		this.oscSender = oscSender
 		this.oscListener = new ServiceOscListener(serviceApi, userconfig)

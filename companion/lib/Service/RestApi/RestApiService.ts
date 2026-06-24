@@ -1,7 +1,6 @@
 import type { DataUserConfig } from '../../Data/UserConfig.js'
-import type { InstanceController } from '../../Instance/Controller.js'
 import LogController from '../../Log/Controller.js'
-import type { AppInfo } from '../../Registry.js'
+import type { AppInfo, Registry } from '../../Registry.js'
 import type { UIExpress } from '../../UI/Express.js'
 import { createRestApiRouter } from './RestApiRouter.js'
 import { RestApiTokenStoreMemory } from './RestApiTokenStore.js'
@@ -19,7 +18,7 @@ export class RestApiService {
 	readonly tokenStore: RestApiTokenStoreMemory
 
 	constructor(
-		instanceController: InstanceController,
+		registry: Registry,
 		userconfigController: DataUserConfig,
 		express: UIExpress,
 		appInfo: Pick<AppInfo, 'appVersion'>
@@ -31,7 +30,7 @@ export class RestApiService {
 			return
 		}
 
-		const restApiRouter = createRestApiRouter(instanceController, this.tokenStore, appInfo)
+		const restApiRouter = createRestApiRouter(registry, this.tokenStore, appInfo)
 
 		// Mount the REST API router via the setter on UIExpress
 		// This is registered at /api before the existing /api legacy routes
