@@ -1,5 +1,4 @@
 import express from 'express'
-import Express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
@@ -11,6 +10,8 @@ import {
 } from '../../../../shared-lib/lib/Model/Instance.js'
 import { ConnectionCreateBodySchema } from '../../../lib/Instance/Connection/ConnectionsRestApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
+import { createInstanceRestApiRouter } from '../../../lib/Instance/RestApi.js'
+import type { Registry } from '../../../lib/Registry.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
 
@@ -24,97 +25,115 @@ const mockAppInfo = {
 	appVersion: '5.0.0-test',
 }
 
+const tokens = {
+	admin: 'cpn_admin',
+	readOnly: 'cpn_read',
+	write: 'cpn_write',
+	secrets: 'cpn_secrets',
+}
+
+type TestService = {
+	app: express.Express
+	instanceController: InstanceController
+	tokenStore: RestApiTokenStoreMemory
+	validToken: string
+	readOnlyToken: string
+	writeToken: string
+	secretsToken: string
+}
+
+function createTestRegistry(instanceController: InstanceController): Registry {
+	return {
+		instance: {
+			createRestApiRouter: (logger) => createInstanceRestApiRouter(logger, instanceController),
+		},
+	} as Registry
+}
+
+function createService(): TestService {
+	const instanceController = mockDeep<InstanceController>(mockOptions)
+	const tokenStore = new RestApiTokenStoreMemory()
+	const restApiRouter = createRestApiRouter(createTestRegistry(instanceController), tokenStore, mockAppInfo)
+
+	const app = express()
+	app.use(express.json())
+	app.use('/api', restApiRouter)
+
+	return {
+		app,
+		instanceController,
+		tokenStore,
+		validToken: tokens.admin,
+		readOnlyToken: tokens.readOnly,
+		writeToken: tokens.write,
+		secretsToken: tokens.secrets,
+	}
+}
+
+function createConnectionConfigs(): Record<string, ClientConnectionConfig> {
+	return {
+		'conn-1': {
+			id: 'conn-1',
+			label: 'My OBS',
+			moduleId: 'obs-websocket',
+			enabled: true,
+			sortOrder: 0,
+			moduleType: ModuleInstanceType.Connection,
+			moduleVersionId: null,
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			hasRecordActionsHandler: false,
+			collectionId: null,
+		},
+		'conn-2': {
+			id: 'conn-2',
+			label: 'My ATEM',
+			moduleId: 'bmd-atem',
+			enabled: false,
+			sortOrder: 1,
+			moduleType: ModuleInstanceType.Connection,
+			moduleVersionId: 'v1.2.0',
+			updatePolicy: InstanceVersionUpdatePolicy.Manual,
+			hasRecordActionsHandler: true,
+			collectionId: 'group-a',
+		},
+	}
+}
+
+function createInstanceConfigs(): Record<string, InstanceConfig> {
+	return {
+		'conn-1': {
+			moduleInstanceType: ModuleInstanceType.Connection,
+			moduleId: 'obs-websocket',
+			moduleVersionId: null,
+			label: 'My OBS',
+			config: { host: 'localhost', port: 4455 },
+			secrets: { password: 'secret123' },
+			isFirstInit: false,
+			lastUpgradeIndex: 0,
+			enabled: true,
+			sortOrder: 0,
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+		},
+		'conn-2': {
+			moduleInstanceType: ModuleInstanceType.Connection,
+			moduleId: 'bmd-atem',
+			moduleVersionId: 'v1.2.0',
+			label: 'My ATEM',
+			config: { ip: '192.168.1.100' },
+			secrets: undefined,
+			isFirstInit: false,
+			lastUpgradeIndex: 0,
+			enabled: false,
+			sortOrder: 1,
+			updatePolicy: InstanceVersionUpdatePolicy.Manual,
+			collectionId: 'group-a',
+		},
+	}
+}
+
+const mockStatus = { category: 'good', level: 'ok', message: 'Connected' }
+
 describe('REST API v1 — Connections', () => {
-	function createService() {
-		const instanceController = mockDeep<InstanceController>(mockOptions)
-
-		const tokenStore = new RestApiTokenStoreMemory()
-
-		// Use the static dev tokens for testing
-		const validToken = 'cpn_admin'
-		const readOnlyToken = 'cpn_read'
-		const writeToken = 'cpn_write'
-		const secretsToken = 'cpn_secrets'
-
-		const restApiRouter = createRestApiRouter(instanceController, tokenStore, mockAppInfo)
-
-		const app = express()
-		app.use(Express.json())
-		app.use('/api', restApiRouter)
-
-		return {
-			app,
-			instanceController,
-			tokenStore,
-			validToken,
-			readOnlyToken,
-			writeToken,
-			secretsToken,
-		}
-	}
-
-	function createConnectionConfigs(): Record<string, ClientConnectionConfig> {
-		return {
-			'conn-1': {
-				id: 'conn-1',
-				label: 'My OBS',
-				moduleId: 'obs-websocket',
-				enabled: true,
-				sortOrder: 0,
-				moduleType: ModuleInstanceType.Connection,
-				moduleVersionId: null,
-				updatePolicy: InstanceVersionUpdatePolicy.Stable,
-				hasRecordActionsHandler: false,
-				collectionId: null,
-			},
-			'conn-2': {
-				id: 'conn-2',
-				label: 'My ATEM',
-				moduleId: 'bmd-atem',
-				enabled: false,
-				sortOrder: 1,
-				moduleType: ModuleInstanceType.Connection,
-				moduleVersionId: 'v1.2.0',
-				updatePolicy: InstanceVersionUpdatePolicy.Manual,
-				hasRecordActionsHandler: true,
-				collectionId: 'group-a',
-			},
-		}
-	}
-
-	function createInstanceConfigs(): Record<string, InstanceConfig> {
-		return {
-			'conn-1': {
-				moduleInstanceType: ModuleInstanceType.Connection,
-				moduleId: 'obs-websocket',
-				moduleVersionId: null,
-				label: 'My OBS',
-				config: { host: 'localhost', port: 4455 },
-				secrets: { password: 'secret123' },
-				isFirstInit: false,
-				lastUpgradeIndex: 0,
-				enabled: true,
-				sortOrder: 0,
-				updatePolicy: InstanceVersionUpdatePolicy.Stable,
-			},
-			'conn-2': {
-				moduleInstanceType: ModuleInstanceType.Connection,
-				moduleId: 'bmd-atem',
-				moduleVersionId: 'v1.2.0',
-				label: 'My ATEM',
-				config: { ip: '192.168.1.100' },
-				secrets: undefined,
-				isFirstInit: false,
-				lastUpgradeIndex: 0,
-				enabled: false,
-				sortOrder: 1,
-				updatePolicy: InstanceVersionUpdatePolicy.Manual,
-				collectionId: 'group-a',
-			},
-		}
-	}
-
-	const mockStatus = { category: 'good', level: 'ok', message: 'Connected' }
 
 	describe('authentication', () => {
 		test('falls through for non-REST API routes', async () => {

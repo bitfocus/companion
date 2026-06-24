@@ -6,6 +6,8 @@ import { generateOpenApiDocument } from './openapi.js'
 import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
 import { createSwaggerUiRouter } from './SwaggerUi.js'
 
+const REST_RESOURCE_PATH_PREFIXES = ['/connections/v1']
+
 /**
  * Create the main REST API router.
  * Mounted at /api/ on the admin Express app.
@@ -31,6 +33,14 @@ export function createRestApiRouter(
 	router.use('/docs', createSwaggerUiRouter())
 
 	// Mount resource routers — each versioned independently
+	router.use((req, _res, next) => {
+		if (!isRestResourcePath(req.path)) {
+			next('router')
+			return
+		}
+
+		next()
+	})
 	router.use(createAuthMiddleware(logger, tokenStore))
 	router.use(registry.instance.createRestApiRouter(logger))
 
@@ -38,4 +48,8 @@ export function createRestApiRouter(
 	router.use(restApiErrorHandler)
 
 	return router
+}
+
+function isRestResourcePath(path: string): boolean {
+	return REST_RESOURCE_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
 }
