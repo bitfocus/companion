@@ -220,8 +220,9 @@ function compareSchema(
 	}
 
 	if (stableSchema.properties) {
+		const currentProperties = collectSchemaProperties(currentSchema)
 		for (const [propertyName, stableProperty] of Object.entries(stableSchema.properties)) {
-			const currentProperty = currentSchema.properties?.[propertyName]
+			const currentProperty = currentProperties[propertyName]
 			if (!currentProperty) {
 				errors.push(`Removed property: ${jsonPointer([...path, 'properties', propertyName])}`)
 				continue
@@ -248,6 +249,18 @@ function compareSchema(
 	if (stableSchema.items) {
 		compareSchema(stableSchema.items, currentSchema.items, stableDocument, currentDocument, [...path, 'items'], errors)
 	}
+}
+
+function collectSchemaProperties(schema: JsonObject): Record<string, JsonObject> {
+	const properties: Record<string, JsonObject> = { ...(schema.properties ?? {}) }
+
+	for (const keyword of ['oneOf', 'anyOf', 'allOf'] as const) {
+		for (const childSchema of schema[keyword] ?? []) {
+			Object.assign(properties, collectSchemaProperties(childSchema))
+		}
+	}
+
+	return properties
 }
 
 function compareNewRequestPropertiesAreOptional(stable: JsonObject, current: JsonObject, errors: string[]): void {

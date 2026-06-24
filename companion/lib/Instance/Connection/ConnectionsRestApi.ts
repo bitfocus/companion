@@ -166,11 +166,9 @@ const DropdownChoiceSchema = z.object({
 	label: z.string().describe('Display label for the choice.').meta({ example: 'Auto' }),
 })
 
-/** Schema for a raw config field definition in API responses */
-export const ConfigFieldResponseSchema = z
+const ConfigFieldBaseResponseSchema = z
 	.object({
 		id: z.string().describe('Config field id used as the key in config or secrets objects.').meta({ example: 'host' }),
-		type: z.string().describe('Companion config field type.').meta({ example: 'textinput' }),
 		label: z.string().describe('Display label for the config field.').meta({ example: 'Host' }),
 		tooltip: z
 			.string()
@@ -178,23 +176,74 @@ export const ConfigFieldResponseSchema = z
 			.describe('Short help text shown for the config field.')
 			.meta({ example: 'Target switcher IP' }),
 		description: z.string().optional().describe('Longer help text for the config field.'),
-		default: z.unknown().optional().describe('Default value for the config field.'),
-		min: z.number().optional().describe('Minimum numeric value allowed.'),
-		max: z.number().optional().describe('Maximum numeric value allowed.'),
-		step: z.number().optional().describe('Numeric step size.'),
-		range: z.boolean().optional().describe('Whether the field accepts a numeric range.'),
+	})
+	.catchall(z.unknown())
+
+/** Schema for a raw config field definition in API responses */
+export const ConfigFieldResponseSchema = z.discriminatedUnion('type', [
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('bonjour-device').describe('Bonjour device selector field.'),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('secret-text').describe('Secret text field. Values for this field belong in secrets.'),
+		default: z.string().optional().describe('Default secret text value.'),
+		minLength: z.number().optional().describe('Minimum string length allowed.'),
+		regex: z.string().optional().describe('Regular expression that string values must match.'),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('static-text').describe('Read-only text shown alongside other config fields.'),
+		value: z.string().describe('Static text content to display.').meta({ example: 'Network settings' }),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('textinput').describe('Plain text input field.'),
+		default: z.string().optional().describe('Default text value.').meta({ example: '' }),
 		minLength: z.number().optional().describe('Minimum string length allowed.'),
 		regex: z.string().optional().describe('Regular expression that string values must match.'),
 		placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
 		multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
-		choices: z.array(DropdownChoiceSchema).optional().describe('Allowed choices for dropdown-style fields.'),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('checkbox').describe('Boolean checkbox field.'),
+		default: z.boolean().optional().describe('Default checked state.').meta({ example: false }),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('colorpicker').describe('Color picker field.'),
+		default: z.union([z.string(), z.number()]).optional().describe('Default color value.'),
+		enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
+		returnType: z.enum(['string', 'number']).optional().describe('Value type returned by the field.'),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('number').describe('Numeric input field.'),
+		default: z.number().optional().describe('Default numeric value.').meta({ example: 10 }),
+		min: z.number().optional().describe('Minimum numeric value allowed.'),
+		max: z.number().optional().describe('Maximum numeric value allowed.'),
+		step: z.number().optional().describe('Numeric step size.'),
+		range: z.boolean().optional().describe('Whether the field is shown as a range slider.'),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('dropdown').describe('Single-select dropdown field.'),
+		default: z
+			.union([z.string(), z.number()])
+			.optional()
+			.describe('Default selected choice id.')
+			.meta({ example: 'auto' }),
+		choices: z.array(DropdownChoiceSchema).describe('Allowed choices for the dropdown.'),
 		allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+		regex: z.string().optional().describe('Regular expression that custom string values must match.'),
+	}),
+	ConfigFieldBaseResponseSchema.extend({
+		type: z.literal('multidropdown').describe('Multi-select dropdown field.'),
+		default: z
+			.array(z.union([z.string(), z.number()]))
+			.optional()
+			.describe('Default selected choice ids.'),
+		choices: z.array(DropdownChoiceSchema).describe('Allowed choices for the dropdown.'),
 		minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
 		maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
-		enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
-		returnType: z.string().optional().describe('Value type returned by the field.'),
-	})
-	.catchall(z.unknown())
+		allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+		regex: z.string().optional().describe('Regular expression that custom string values must match.'),
+	}),
+])
 
 export type ConnectionResponse = z.infer<typeof ConnectionResponseSchema>
 export type ConnectionCreateBody = z.infer<typeof ConnectionCreateBodySchema>
@@ -497,7 +546,7 @@ const getConnectionConfigFieldsEndpoint = defineRestEndpointContract({
 		schema: connectionConfigFieldsResponseSchema,
 	},
 	examples: {
-		response: successResponse(ConfigFieldsResponseExample),
+		response: successResponse(ConfigFieldsResponseExample as z.infer<typeof ConfigFieldResponseSchema>[]),
 	},
 	extraResponses: {
 		409: {
