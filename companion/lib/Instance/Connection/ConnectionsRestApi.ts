@@ -7,8 +7,6 @@ import {
 	type InstanceConfig,
 } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { Logger } from '../../Log/Controller.js'
 import { RestApiError } from '../../Service/RestApi/errors.js'
 import { registry } from '../../Service/RestApi/registry.js'
@@ -29,6 +27,7 @@ import {
 	type RestEndpointDefinition,
 } from '../../Service/RestApi/typedRoute.js'
 import type { InstanceController } from '../Controller.js'
+import { ConnectionOperationError, ConnectionOperations } from './ConnectionOperations.js'
 import {
 	ConfigFieldsResponseExample,
 	ConnectionCreateBodyExample,
@@ -289,6 +288,7 @@ const CONNECTIONS_API_TAGS = ['Connections']
 type ConnectionsRestContext = {
 	logger: Logger
 	instanceController: InstanceController
+	connectionOperations: ConnectionOperations
 }
 
 type AnyRestEndpointContract = RestEndpointContract<
@@ -336,88 +336,20 @@ function defineConnectionEndpointSpec<
  */
 export function createConnectionsRouter(logger: Logger, instanceController: InstanceController): Express.Router {
 	const router = Express.Router()
+	const connectionOperations = new ConnectionOperations({ logger, instanceController })
 
 	for (const endpointSpec of connectionEndpointSpecs) {
-		mountRestEndpoint(router, endpointSpec.createEndpoint({ logger, instanceController }))
+		mountRestEndpoint(
+			router,
+			endpointSpec.createEndpoint({
+				logger,
+				instanceController,
+				connectionOperations,
+			})
+		)
 	}
 
 	return router
-}
-
-type ValidationResult =
-	| { status: 'ok' }
-	| { status: 'unavailable'; message: string }
-	| { status: 'invalid'; errors: Record<string, string> }
-
-/**
- * Validate config and secrets values against the module's field definitions.
- * Returns validation result: ok, unavailable (connection not running), or invalid (field errors).
- */
-async function validateConfigAndSecrets(
-	instanceController: InstanceController,
-	connectionId: string,
-	config: Record<string, unknown> | undefined,
-	secrets: Record<string, unknown> | undefined
-): Promise<ValidationResult> {
-	const instance = instanceController.processManager.getConnectionChild(connectionId)
-	if (!instance) {
-		return { status: 'unavailable', message: 'Connection is not running, cannot validate config' }
-	}
-
-	let fields: SomeCompanionInputField[]
-	try {
-		fields = await instance.requestConfigFields()
-	} catch {
-		return { status: 'unavailable', message: 'Failed to retrieve config fields from module' }
-	}
-
-	const errors: Record<string, string> = {}
-
-	// Build a lookup of field definitions by id
-	const fieldMap = new Map<string, SomeCompanionInputField>()
-	for (const field of fields) {
-		fieldMap.set(field.id, field)
-	}
-
-	// Validate config keys against non-secret fields
-	if (config) {
-		for (const [key, value] of Object.entries(config)) {
-			const field = fieldMap.get(key)
-			if (!field) {
-				errors[`config.${key}`] = `Unknown config field: "${key}"`
-				continue
-			}
-			if (field.type === 'secret-text') {
-				errors[`config.${key}`] = `Field "${key}" is a secret and must be sent in "secrets", not "config"`
-				continue
-			}
-			const result = validateInputValue(field, value as any)
-			if (result.validationError) {
-				errors[`config.${key}`] = result.validationError
-			}
-		}
-	}
-
-	// Validate secrets keys against secret-text fields
-	if (secrets) {
-		for (const [key, value] of Object.entries(secrets)) {
-			const field = fieldMap.get(key)
-			if (!field) {
-				errors[`secrets.${key}`] = `Unknown secret field: "${key}"`
-				continue
-			}
-			if (field.type !== 'secret-text') {
-				errors[`secrets.${key}`] = `Field "${key}" is not a secret and must be sent in "config", not "secrets"`
-				continue
-			}
-			const result = validateInputValue(field, value as any)
-			if (result.validationError) {
-				errors[`secrets.${key}`] = result.validationError
-			}
-		}
-	}
-
-	return Object.keys(errors).length > 0 ? { status: 'invalid', errors } : { status: 'ok' }
 }
 
 const connectionIdParam = z.object({
@@ -653,45 +585,22 @@ const connectionEndpointSpecs = [
 		}
 	}),
 
-	defineConnectionEndpointSpec(createConnectionEndpoint, ({ logger, instanceController }) => {
+	defineConnectionEndpointSpec(createConnectionEndpoint, ({ connectionOperations }) => {
 		return async ({ body }) => {
 			const { moduleId, label, versionId, updatePolicy, disabled } = body
 
-			// Validate the module exists before attempting to create
-			const isInstalledModule = instanceController.modules.hasModule(ModuleInstanceType.Connection, moduleId)
-			const storeVersionInfo = !isInstalledModule
-				? await instanceController.modulesStore.fetchModuleVersionInfo(
-						ModuleInstanceType.Connection,
-						moduleId,
-						versionId,
-						true
-					)
-				: null
-			if (!isInstalledModule && !storeVersionInfo) {
-				throw RestApiError.badRequest(`Unknown module id: "${moduleId}"`)
-			}
-
-			// Validate the specific version exists if provided
-			if (versionId) {
-				const versionInfo =
-					instanceController.modules.getModuleManifest(ModuleInstanceType.Connection, moduleId, versionId) ??
-					storeVersionInfo
-				if (!versionInfo) {
-					throw RestApiError.badRequest(`Unknown version "${versionId}" for module "${moduleId}"`)
-				}
-			}
-
 			try {
-				const [id] = instanceController.addConnectionWithLabel({ type: moduleId }, label, {
+				const id = await connectionOperations.createConnection({
+					moduleId,
+					label,
 					versionId,
 					updatePolicy,
 					disabled,
 				})
 
-				logger.info(`Created connection "${label}" (${id})`)
 				return { status: 201, location: `/api/connections/v1/${id}`, body: successResponse({ id }) }
 			} catch (e) {
-				throw RestApiError.badRequest(e instanceof Error ? e.message : 'Failed to create connection')
+				throw mapConnectionOperationError(e)
 			}
 		}
 	}),
@@ -719,15 +628,9 @@ const connectionEndpointSpecs = [
 		}
 	}),
 
-	defineConnectionEndpointSpec(patchConnectionEndpoint, ({ logger, instanceController }) => {
+	defineConnectionEndpointSpec(patchConnectionEndpoint, ({ logger, instanceController, connectionOperations }) => {
 		return async ({ params, body, token }) => {
 			const { connectionId } = params
-
-			const clientConnections = instanceController.getConnectionClientJson(true)
-			const currentConnection = clientConnections[connectionId]
-			if (!currentConnection) {
-				throw RestApiError.notFound('Connection not found')
-			}
 
 			const { label, disabled, config, secrets, updatePolicy, versionId } = body
 
@@ -736,57 +639,21 @@ const connectionEndpointSpecs = [
 				throw RestApiError.forbidden("Insufficient scope: requires 'secrets'")
 			}
 
-			if (versionId) {
-				const versionInfo =
-					instanceController.modules.getModuleManifest(
-						ModuleInstanceType.Connection,
-						currentConnection.moduleId,
-						versionId
-					) ??
-					(await instanceController.modulesStore.fetchModuleVersionInfo(
-						ModuleInstanceType.Connection,
-						currentConnection.moduleId,
-						versionId,
-						true
-					))
-				if (!versionInfo) {
-					throw RestApiError.badRequest(`Unknown version "${versionId}" for module "${currentConnection.moduleId}"`)
-				}
-			}
-
-			if (versionId !== undefined) {
-				const versionResult = instanceController.setModuleVersionAndActivate(connectionId, versionId, null)
-				if (!versionResult) {
-					throw RestApiError.badRequest('Failed to update connection version')
-				}
-			}
-
-			// Validate config/secrets values against module field definitions
-			if (config || secrets) {
-				const validationResult = await validateConfigAndSecrets(instanceController, connectionId, config, secrets)
-				if (validationResult.status === 'unavailable') {
-					throw RestApiError.conflict(validationResult.message)
-				}
-				if (validationResult.status === 'invalid') {
-					throw RestApiError.badRequest('Config validation failed', validationResult.errors)
-				}
-			}
-
-			const result = instanceController.setConnectionLabelAndConfig(
-				connectionId,
-				{
-					label: label ?? null,
+			try {
+				await connectionOperations.patchConnection({
+					connectionId,
+					label,
 					enabled: disabled === undefined ? null : !disabled,
-					config: config ?? null,
-					secrets: secrets ?? null,
-					updatePolicy: updatePolicy ?? null,
-					upgradeIndex: null,
-				},
-				{ patchConfig: true, patchSecrets: true }
-			)
-
-			if (!result.ok) {
-				throw RestApiError.badRequest(result.message)
+					config,
+					secrets,
+					updatePolicy,
+					versionId,
+					patchConfig: true,
+					patchSecrets: true,
+					validateConfigValues: true,
+				})
+			} catch (e) {
+				throw mapConnectionOperationError(e)
 			}
 
 			// Re-fetch updated data — only echo back secrets if they were part of the update
@@ -801,68 +668,64 @@ const connectionEndpointSpecs = [
 		}
 	}),
 
-	defineConnectionEndpointSpec(getConnectionConfigFieldsEndpoint, ({ instanceController }) => {
+	defineConnectionEndpointSpec(getConnectionConfigFieldsEndpoint, ({ connectionOperations }) => {
 		return async ({ params }) => {
 			const { connectionId } = params
 
-			const clientConnections = instanceController.getConnectionClientJson(true)
-			if (!clientConnections[connectionId]) {
-				throw RestApiError.notFound('Connection not found')
-			}
-
-			const instance = instanceController.processManager.getConnectionChild(connectionId)
-			if (!instance) {
-				throw RestApiError.conflict('Connection is not running')
-			}
-
-			let fields: SomeCompanionInputField[]
 			try {
-				fields = await instance.requestConfigFields()
-			} catch {
-				throw RestApiError.conflict('Failed to retrieve config fields from module')
+				const fields = await connectionOperations.getConnectionConfigFields(connectionId)
+				const response = connectionConfigFieldsResponseSchema.parse(successResponse(fields))
+
+				return { body: response }
+			} catch (e) {
+				throw mapConnectionOperationError(e)
 			}
-
-			const response = connectionConfigFieldsResponseSchema.parse(successResponse(fields))
-
-			return { body: response }
 		}
 	}),
 
-	defineConnectionEndpointSpec(deleteConnectionEndpoint, ({ logger, instanceController }) => {
+	defineConnectionEndpointSpec(deleteConnectionEndpoint, ({ connectionOperations }) => {
 		return async ({ params }) => {
 			const { connectionId } = params
 
-			const clientConnections = instanceController.getConnectionClientJson(true)
-			if (!clientConnections[connectionId]) {
-				throw RestApiError.notFound('Connection not found')
+			try {
+				await connectionOperations.deleteConnection(connectionId)
+				return { status: 204 }
+			} catch (e) {
+				throw mapConnectionOperationError(e)
 			}
-
-			await instanceController.removeConnection(connectionId)
-
-			logger.info(`Deleted connection ${connectionId}`)
-			return { status: 204 }
 		}
 	}),
 
-	defineConnectionEndpointSpec(restartConnectionEndpoint, ({ logger, instanceController }) => {
+	defineConnectionEndpointSpec(restartConnectionEndpoint, ({ connectionOperations }) => {
 		return ({ params }) => {
 			const { connectionId } = params
 
-			const clientConnections = instanceController.getConnectionClientJson(true)
-			if (!clientConnections[connectionId]) {
-				throw RestApiError.notFound('Connection not found')
+			try {
+				connectionOperations.restartConnection(connectionId)
+				return { body: successResponse({ id: connectionId, message: 'Restart triggered' }) }
+			} catch (e) {
+				throw mapConnectionOperationError(e)
 			}
-
-			const result = instanceController.restartConnection(connectionId)
-			if (!result) {
-				throw RestApiError.conflict('Connection is inactive and cannot be restarted')
-			}
-
-			logger.info(`Restarted connection ${connectionId}`)
-			return { body: successResponse({ id: connectionId, message: 'Restart triggered' }) }
 		}
 	}),
 ]
+
+function mapConnectionOperationError(e: unknown): RestApiError {
+	if (!(e instanceof ConnectionOperationError)) {
+		throw e
+	}
+
+	switch (e.code) {
+		case 'not_found':
+			return RestApiError.notFound(e.message)
+		case 'conflict':
+			return RestApiError.conflict(e.message)
+		case 'forbidden':
+			return RestApiError.forbidden(e.message)
+		case 'invalid_input':
+			return RestApiError.badRequest(e.message, e.details)
+	}
+}
 
 /**
  * Register all /connections paths in the OpenAPI registry.
