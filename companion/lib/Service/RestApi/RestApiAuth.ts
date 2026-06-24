@@ -11,13 +11,11 @@ export interface ApiToken {
 	scopes: ApiTokenScope[]
 }
 
-declare global {
-	namespace Express {
-		interface Request {
-			apiToken?: ApiToken
-		}
-	}
+export interface RestApiLocals extends Record<string, unknown> {
+	apiToken?: ApiToken
 }
+
+export type RestApiResponse = Express.Response<unknown, RestApiLocals>
 
 /** Maps HTTP method + route semantics to the required scope */
 export type RequiredScope = 'read' | 'write' | 'execute' | 'secrets' | 'admin'
@@ -43,7 +41,7 @@ export interface ApiTokenStore {
  * Extracts token from Authorization header and looks up by plaintext value.
  */
 export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) {
-	return (req: Express.Request, _res: Express.Response, next: Express.NextFunction): void => {
+	return (req: Express.Request, res: RestApiResponse, next: Express.NextFunction): void => {
 		const authHeader = req.headers.authorization
 		const match = authHeader?.match(/^Bearer\s+(.+)$/i)
 		if (!match) {
@@ -58,8 +56,8 @@ export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) 
 			return
 		}
 
-		// Attach token to request for scope checks
-		req.apiToken = token
+		// Attach token to this response's request-local state for scope checks
+		res.locals.apiToken = token
 
 		logger.debug(`API request authenticated: token="${token.name}" path=${req.path}`)
 		next()
@@ -70,8 +68,8 @@ export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) 
  * Create scope-checking middleware for a specific required scope.
  */
 export function requireScope(scope: RequiredScope) {
-	return (req: Express.Request, _res: Express.Response, next: Express.NextFunction): void => {
-		const token = req.apiToken
+	return (_req: Express.Request, res: RestApiResponse, next: Express.NextFunction): void => {
+		const token = res.locals.apiToken
 		if (!token) {
 			next(RestApiError.unauthorized())
 			return

@@ -2,7 +2,7 @@ import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi'
 import type Express from 'express'
 import type z from 'zod'
 import { RestApiError } from './errors.js'
-import { requireScope, type ApiToken, type RequiredScope } from './RestApiAuth.js'
+import { requireScope, type ApiToken, type RequiredScope, type RestApiResponse } from './RestApiAuth.js'
 
 type RegisterPathConfig = Parameters<OpenAPIRegistry['registerPath']>[0]
 type HttpMethod = 'get' | 'post' | 'patch' | 'delete'
@@ -112,9 +112,9 @@ export function mountRestEndpoint(
 		z.ZodType | undefined
 	>
 ): void {
-	router[endpoint.method](endpoint.path, requireScope(endpoint.scope), async (req, res, next) => {
+	router[endpoint.method](endpoint.path, requireScope(endpoint.scope), async (req, res: RestApiResponse, next) => {
 		try {
-			const token = req.apiToken
+			const token = res.locals.apiToken
 			if (!token) throw RestApiError.unauthorized()
 
 			const params = parseRequestPart(endpoint.request?.params, req.params, 'Invalid path parameters')
