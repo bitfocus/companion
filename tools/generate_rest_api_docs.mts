@@ -273,7 +273,7 @@ function writeCategoryIndexDoc(): void {
 
 // ── Main ─────────────────────────────────────────────────────────────
 
-const doc = generateOpenApiDocument()
+const doc = generateOpenApiDocument({ appVersion: '0.0.0-docs' })
 
 ensureDir(OUT_DIR)
 

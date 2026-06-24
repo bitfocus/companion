@@ -1,7 +1,7 @@
 import express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
-import { mockDeep } from 'vitest-mock-extended'
+import { mockDeep, type DeepMockProxy } from 'vitest-mock-extended'
 import type { ClientConnectionConfig } from '../../../../shared-lib/lib/Model/Connections.js'
 import {
 	InstanceVersionUpdatePolicy,
@@ -34,7 +34,7 @@ const tokens = {
 
 type TestService = {
 	app: express.Express
-	instanceController: InstanceController
+	instanceController: DeepMockProxy<InstanceController>
 	tokenStore: RestApiTokenStoreMemory
 	validToken: string
 	readOnlyToken: string
@@ -134,7 +134,6 @@ function createInstanceConfigs(): Record<string, InstanceConfig> {
 const mockStatus = { category: 'good', level: 'ok', message: 'Connected' }
 
 describe('REST API v1 — Connections', () => {
-
 	describe('authentication', () => {
 		test('falls through for non-REST API routes', async () => {
 			const { app } = createService()
