@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
-import { createExpressionVariablePool, feedbackModel } from './EntityListPoolTestHelpers.js'
+import { createExpressionVariablePool, feedbackModel, feedbackValues } from './EntityListPoolTestHelpers.js'
 
 // The pool schedules debounced timers (local-variable/special-expression processing) that would
 // otherwise outlive the test and race vitest's worker teardown. Fake timers keep them inert.
@@ -10,15 +9,6 @@ afterEach(() => {
 	vi.clearAllTimers()
 	vi.useRealTimers()
 })
-
-/** Build the feedback-value map shape the pool consumes for a set of entityId -> value pairs. */
-function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
-	const map = new Map<string, NewFeedbackValue>()
-	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
-	}
-	return map
-}
 
 /** A minimal ExpressionVariableModel carrying just the fields the pool reads in loadStorage. */
 function expressionVariableStorage(overrides: Partial<ExpressionVariableModel> = {}): ExpressionVariableModel {
@@ -87,6 +77,29 @@ describe('EntityListPoolExpressionVariable', () => {
 			reportChange.mockClear()
 
 			pool.updateFeedbackValues('conn01', feedbackValues({ 'unrelated-id': 1 }))
+
+			expect(reportChange).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('updateIsInvertedValues', () => {
+		test('reports a no-save redraw when the root entity inversion changes', () => {
+			const { pool, reportChange } = createExpressionVariablePool()
+			const entity = feedbackModel()
+			pool.loadStorage(expressionVariableStorage({ entity }), true, false)
+			reportChange.mockClear()
+
+			pool.updateIsInvertedValues(new Map([[entity.id, { entityId: entity.id, controlId: '', value: true }]]))
+
+			expect(reportChange).toHaveBeenCalledWith({ redraw: true, noSave: true })
+		})
+
+		test('is a no-op for inversion values that match no entity', () => {
+			const { pool, reportChange } = createExpressionVariablePool()
+			pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), true, false)
+			reportChange.mockClear()
+
+			pool.updateIsInvertedValues(new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: '', value: true }]]))
 
 			expect(reportChange).not.toHaveBeenCalled()
 		})

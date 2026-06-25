@@ -6,6 +6,7 @@ import {
 	FeedbackEntityModel,
 	FeedbackEntitySubType,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type {
 	ControlEntityListChangeProps,
 	ControlEntityListPoolProps,
@@ -13,6 +14,7 @@ import type {
 import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
 import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities/EntityListPoolExpressionVariable.js'
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
+import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
 
 /**
  * Shared harness for exercising `ControlEntityListPoolButton` (and the `ControlEntityListPoolBase`
@@ -67,7 +69,9 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	const processManager = {
 		connectionEntityUpdate: vi.fn(async () => false),
 		connectionEntityDelete: vi.fn(async () => false),
-		connectionEntityLearnOptions: vi.fn(async () => null),
+		connectionEntityLearnOptions: vi.fn<(...args: any[]) => Promise<ExpressionableOptionsObject | undefined | void>>(
+			async () => undefined
+		),
 	}
 	const variableValues = {
 		emit: vi.fn(),
@@ -162,4 +166,16 @@ export function feedbackModel(overrides: Partial<FeedbackEntityModel> = {}): Fee
 /** A step/set location for the default 'down' action set of a given step. */
 export function downSet(stepId = '0') {
 	return { stepId, setId: 'down' as const }
+}
+
+/**
+ * Build the feedback-value map shape the pools consume (`updateFeedbackValues`) for a set of
+ * entityId -> value pairs.
+ */
+export function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
+	const map = new Map<string, NewFeedbackValue>()
+	for (const [entityId, value] of Object.entries(values)) {
+		map.set(entityId, { entityId, controlId: '', value })
+	}
+	return map
 }

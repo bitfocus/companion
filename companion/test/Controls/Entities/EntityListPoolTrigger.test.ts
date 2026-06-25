@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
-import { actionModel, createTriggerPool, feedbackModel } from './EntityListPoolTestHelpers.js'
+import { actionModel, createTriggerPool, feedbackModel, feedbackValues } from './EntityListPoolTestHelpers.js'
 
 // The pool schedules debounced timers (local-variable/special-expression processing) that would
 // otherwise outlive the test and race vitest's worker teardown. Fake timers keep them inert.
@@ -10,15 +9,6 @@ afterEach(() => {
 	vi.clearAllTimers()
 	vi.useRealTimers()
 })
-
-/** Build the feedback-value map shape the pool consumes for a set of entityId -> value pairs. */
-function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
-	const map = new Map<string, NewFeedbackValue>()
-	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
-	}
-	return map
-}
 
 /** A minimal TriggerModel carrying just the entity lists the pool reads in loadStorage. */
 function triggerStorage(overrides: Partial<TriggerModel> = {}): TriggerModel {
@@ -120,6 +110,43 @@ describe('ControlEntityListPoolTrigger', () => {
 
 			pool.updateFeedbackValues('conn01', feedbackValues({ 'unrelated-id': true }))
 
+			expect(reportChange).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('updateIsInvertedValues', () => {
+		test('reports a no-save redraw when a condition feedback inversion changes', () => {
+			const { pool, reportChange } = createTriggerPool()
+			const feedback = feedbackModel()
+			pool.entityAdd('feedbacks', null, feedback)
+			reportChange.mockClear()
+
+			pool.updateIsInvertedValues(new Map([[feedback.id, { entityId: feedback.id, controlId: '', value: true }]]))
+
+			expect(reportChange).toHaveBeenCalledWith({ redraw: true, noSave: true })
+		})
+
+		test('is a no-op for inversion values that match no condition feedback', () => {
+			const { pool, reportChange } = createTriggerPool()
+			pool.entityAdd('feedbacks', null, feedbackModel())
+			reportChange.mockClear()
+
+			pool.updateIsInvertedValues(new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: '', value: true }]]))
+
+			expect(reportChange).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('updateStoreResultValues', () => {
+		test('applies to actions without reporting a change', () => {
+			const { pool, reportChange } = createTriggerPool()
+			const action = actionModel()
+			pool.entityAdd('trigger_actions', null, action)
+			reportChange.mockClear()
+
+			expect(() =>
+				pool.updateStoreResultValues(new Map([[action.id, { entityId: action.id, controlId: '', value: undefined }]]))
+			).not.toThrow()
 			expect(reportChange).not.toHaveBeenCalled()
 		})
 	})

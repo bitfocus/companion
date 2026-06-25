@@ -299,3 +299,80 @@ describe('EntityListPool - rotary action sets', () => {
 		expect(sets).not.toContain('rotate_right')
 	})
 })
+
+describe('EntityListPool - expression step progression', () => {
+	test('switching to expression mode selects the step the expression resolves to', () => {
+		const { pool, executeExpressionInControl } = createPool()
+		pool.stepAdd() // '1'
+		// The expression resolves to step number 2 (1-based) -> index 1
+		executeExpressionInControl.mockReturnValue({ ok: true, value: 2, variableIds: new Set() })
+
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '2' })
+
+		expect(pool.getActiveStepIndex()).toBe(1)
+	})
+
+	test('manual navigation is rejected while in expression mode', () => {
+		const { pool } = createPool()
+		pool.stepAdd() // '1'
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '1' })
+
+		expect(pool.stepSelectCurrent('1')).toBe(false)
+		expect(pool.stepAdvanceDelta(1)).toBe(false)
+		expect(pool.stepMakeCurrent(2)).toBe(false)
+	})
+
+	test('an out-of-range expression result clamps into the valid step range', () => {
+		const { pool, executeExpressionInControl } = createPool()
+		pool.stepAdd() // '1'
+		// Way past the end -> clamp to the last step (index 1)
+		executeExpressionInControl.mockReturnValue({ ok: true, value: 99, variableIds: new Set() })
+
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '99' })
+
+		expect(pool.getActiveStepIndex()).toBe(1)
+	})
+
+	test('a failed expression falls back to the first step', () => {
+		const { pool, executeExpressionInControl } = createPool()
+		pool.stepAdd() // '1'
+		executeExpressionInControl.mockReturnValue({ ok: false, error: 'boom', variableIds: new Set() })
+
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: 'bad' })
+
+		expect(pool.getActiveStepIndex()).toBe(0)
+	})
+
+	test('leaving expression mode freezes the currently selected step and restores manual control', () => {
+		const { pool, executeExpressionInControl } = createPool()
+		pool.stepAdd() // '1'
+		executeExpressionInControl.mockReturnValue({ ok: true, value: 2, variableIds: new Set() })
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '2' })
+		expect(pool.getActiveStepIndex()).toBe(1)
+
+		pool.stepExpressionUpdate({ stepProgression: 'manual' })
+
+		// Frozen on the last evaluated step, and manual navigation works again
+		expect(pool.getActiveStepIndex()).toBe(1)
+		expect(pool.stepSelectCurrent('0')).toBe(true)
+		expect(pool.getActiveStepIndex()).toBe(0)
+	})
+
+	test('onVariablesChanged re-evaluates the step only when a tracked variable changes', () => {
+		const { pool, executeExpressionInControl } = createPool()
+		pool.stepAdd() // '1'
+		// First evaluation tracks variable 'internal:custom_a' and selects step index 1
+		executeExpressionInControl.mockReturnValue({ ok: true, value: 2, variableIds: new Set(['internal:custom_a']) })
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '$(internal:custom_a)' })
+		expect(pool.getActiveStepIndex()).toBe(1)
+
+		// A change to an unrelated variable must not move the step
+		executeExpressionInControl.mockReturnValue({ ok: true, value: 1, variableIds: new Set(['internal:custom_a']) })
+		pool.onVariablesChanged(new Set(['internal:custom_b']))
+		expect(pool.getActiveStepIndex()).toBe(1)
+
+		// A change to the tracked variable re-evaluates and moves to step index 0
+		pool.onVariablesChanged(new Set(['internal:custom_a']))
+		expect(pool.getActiveStepIndex()).toBe(0)
+	})
+})

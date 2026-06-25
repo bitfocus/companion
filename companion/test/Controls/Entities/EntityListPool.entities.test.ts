@@ -348,3 +348,167 @@ describe('EntityListPool - resubscribeEntities', () => {
 		expect(processManager.connectionEntityUpdate).toHaveBeenCalled()
 	})
 })
+
+describe('EntityListPool - entityLearn', () => {
+	test('learns options and redraws for a feedback', async () => {
+		const { pool, reportChange, processManager } = createPool()
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		processManager.connectionEntityLearnOptions.mockResolvedValue({ learned: { isExpression: false, value: 1 } })
+		reportChange.mockClear()
+
+		await expect(pool.entityLearn('feedbacks', feedback.id)).resolves.toBe(true)
+		expect(reportChange).toHaveBeenCalledWith({ redraw: true })
+	})
+
+	test('learns options without a redraw for an action set', async () => {
+		const { pool, reportChange, processManager } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		processManager.connectionEntityLearnOptions.mockResolvedValue({ learned: { isExpression: false, value: 1 } })
+		reportChange.mockClear()
+
+		await expect(pool.entityLearn(downSet(), action.id)).resolves.toBe(true)
+		expect(reportChange).toHaveBeenCalledWith({ redraw: false })
+	})
+
+	test('returns false when the connection reports no learned changes', async () => {
+		const { pool, reportChange } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		reportChange.mockClear()
+
+		// The default mock resolves null, i.e. nothing was learned
+		await expect(pool.entityLearn(downSet(), action.id)).resolves.toBe(false)
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+
+	test('returns false for an unknown entity', async () => {
+		const { pool } = createPool()
+
+		await expect(pool.entityLearn(downSet(), 'nope')).resolves.toBe(false)
+	})
+
+	test('returns false for an unknown list', async () => {
+		const { pool } = createPool()
+
+		await expect(pool.entityLearn({ stepId: 'missing', setId: 'down' }, 'x')).resolves.toBe(false)
+	})
+})
+
+describe('EntityListPool - entitySetRawStoreResult', () => {
+	test('sets the store-result target on an action without a redraw', () => {
+		const { pool, reportChange } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		reportChange.mockClear()
+
+		const ok = pool.entitySetRawStoreResult(downSet(), action.id, {
+			type: 'custom-variable',
+			variableName: { isExpression: false, value: 'myvar' },
+			createIfNotExists: false,
+		})
+
+		expect(ok).toBe(true)
+		expect(reportChange).toHaveBeenCalledWith({ redraw: false })
+	})
+
+	test('clears the store-result target when passed undefined', () => {
+		const { pool } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+
+		expect(pool.entitySetRawStoreResult(downSet(), action.id, undefined)).toBe(true)
+	})
+
+	test('returns false for an unknown entity', () => {
+		const { pool } = createPool()
+
+		expect(pool.entitySetRawStoreResult(downSet(), 'nope', undefined)).toBe(false)
+	})
+})
+
+describe('EntityListPool - entitySetVariableValue', () => {
+	test('returns false for a feedback that is not a user-value feedback', () => {
+		const { pool, reportChange } = createPool()
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		reportChange.mockClear()
+
+		expect(pool.entitySetVariableValue('feedbacks', feedback.id, 42)).toBe(false)
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+
+	test('returns false for an unknown entity', () => {
+		const { pool } = createPool()
+
+		expect(pool.entitySetVariableValue('feedbacks', 'nope', 1)).toBe(false)
+	})
+
+	test('returns false for an unknown list', () => {
+		const { pool } = createPool()
+
+		expect(pool.entitySetVariableValue({ stepId: 'missing', setId: 'down' }, 'x', 1)).toBe(false)
+	})
+})
+
+describe('EntityListPool - style overrides', () => {
+	const override = {
+		overrideId: 'ov1',
+		elementId: 'el1',
+		elementProperty: 'color',
+		override: { isExpression: false as const, value: 0xff0000 },
+	}
+
+	test('entityReplaceStyleOverride invalidates the affected element', () => {
+		const { pool, reportChange } = createPool({ isLayered: true })
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		reportChange.mockClear()
+
+		const ok = pool.entityReplaceStyleOverride('feedbacks', feedback.id, override)
+
+		expect(ok).toBe(true)
+		expect(reportChange).toHaveBeenCalledWith({ redraw: true, changedElementIds: new Set(['el1']) })
+	})
+
+	test('entityReplaceStyleOverride on a disabled feedback does not redraw', () => {
+		const { pool, reportChange } = createPool({ isLayered: true })
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.entityEnabled('feedbacks', feedback.id, false)
+		reportChange.mockClear()
+
+		const ok = pool.entityReplaceStyleOverride('feedbacks', feedback.id, override)
+
+		expect(ok).toBe(true)
+		expect(reportChange).toHaveBeenCalledWith({ redraw: false, changedElementIds: undefined })
+	})
+
+	test('entityRemoveStyleOverride removes a previously added override', () => {
+		const { pool, reportChange } = createPool({ isLayered: true })
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.entityReplaceStyleOverride('feedbacks', feedback.id, override)
+		reportChange.mockClear()
+
+		const ok = pool.entityRemoveStyleOverride('feedbacks', feedback.id, override.overrideId)
+
+		expect(ok).toBe(true)
+		expect(reportChange).toHaveBeenCalledWith({ redraw: true, changedElementIds: new Set(['el1']) })
+	})
+
+	test('entityRemoveStyleOverride returns false when the override is not present', () => {
+		const { pool } = createPool({ isLayered: true })
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+
+		expect(pool.entityRemoveStyleOverride('feedbacks', feedback.id, 'missing')).toBe(false)
+	})
+
+	test('entityReplaceStyleOverride returns false for an unknown entity', () => {
+		const { pool } = createPool({ isLayered: true })
+
+		expect(pool.entityReplaceStyleOverride('feedbacks', 'nope', override)).toBe(false)
+	})
+})
