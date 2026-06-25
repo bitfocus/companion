@@ -1,4 +1,4 @@
-import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faClone, faLink, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
@@ -13,6 +13,7 @@ import { NonIdealState } from '../../Components/NonIdealState.js'
 import { SearchBox } from '../../Components/SearchBox.js'
 import { fuzzyMatch } from './fuzzyMatch.js'
 import { PresetSectionCollapse } from './PresetSectionCollapse.js'
+import { usePresetPlacementMode } from './usePresetPlacementMode.js'
 
 interface PresetsSectionsListProps {
 	presets: Record<string, UIPresetSection | undefined> | undefined
@@ -139,7 +140,12 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 				) : (
 					<>
 						<Callout color="info" className="my-2">
-							<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+							<div className="d-flex align-items-center justify-content-between gap-3">
+								<div>
+									<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+								</div>
+								<PresetPlacementModeToggle />
+							</div>
 						</Callout>
 						<div className="collapsible-tree">{sections}</div>
 					</>
@@ -148,3 +154,32 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 		</PanelCollapseHelperProvider>
 	)
 })
+
+function PresetPlacementModeToggle(): React.JSX.Element {
+	const [mode, setMode] = usePresetPlacementMode()
+	return (
+		<div className="d-flex align-items-center gap-2 flex-shrink-0">
+			<span className="text-muted small text-nowrap">When placed:</span>
+			<ButtonGroup>
+				<Button
+					size="sm"
+					color={mode === 'reference' ? 'primary' : 'secondary'}
+					onClick={() => setMode('reference')}
+					title="Newly placed presets stay linked to the source preset and update automatically"
+				>
+					<FontAwesomeIcon icon={faLink} className="me-1" />
+					Linked
+				</Button>
+				<Button
+					size="sm"
+					color={mode === 'copy' ? 'primary' : 'secondary'}
+					onClick={() => setMode('copy')}
+					title="Newly placed presets are a one-off copy you can freely edit"
+				>
+					<FontAwesomeIcon icon={faClone} className="me-1" />
+					Copy
+				</Button>
+			</ButtonGroup>
+		</div>
+	)
+}

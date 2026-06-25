@@ -18,6 +18,7 @@ import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.
 import { trpc } from '~/Resources/TRPC'
 import { assertNever, useComputed } from '~/Resources/util'
 import type { PresetDragItem } from './PresetDragItem'
+import { usePresetPlacementMode } from './usePresetPlacementMode.js'
 
 // Presets drag a clone (the original stays put in the pool) with no drop animation so a
 // released preset doesn't fly back. Configured per-draggable so it doesn't affect the default
@@ -168,10 +169,12 @@ interface PresetIconPreviewProps {
 	variableValues: VariableValues | null
 }
 function PresetIconPreview({ connectionId, presetId, title, variableValues }: Readonly<PresetIconPreviewProps>) {
+	const [placementMode] = usePresetPlacementMode()
 	const dragData: PresetDragItem = {
 		connectionId,
 		presetId,
 		variableValues: variableValues,
+		mode: placementMode,
 	}
 	const dragId = `preset:${connectionId}:${presetId}:${variableValues ? createStableObjectHash(variableValues) : 'base'}`
 	const { ref: drag, isDragSource } = useDraggable<PresetDragItem>({

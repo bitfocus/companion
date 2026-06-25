@@ -32,6 +32,7 @@ import type { ControlStore } from './ControlStore.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
+import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
@@ -280,6 +281,8 @@ export class ControlsController {
 		if (category === 'all' || category === 'button') {
 			if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
 				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
+			} else if (controlObj2?.type === 'preset-reference') {
+				return new ControlButtonPresetReference(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
@@ -328,12 +331,24 @@ export class ControlsController {
 	/**
 	 * Get all of the button controls
 	 */
-	getAllButtons(): Array<ControlButtonLayered | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> {
-		const buttons: Array<ControlButtonLayered | ControlButtonPageDown | ControlButtonPageNumber | ControlButtonPageUp> =
-			[]
+	getAllButtons(): Array<
+		| ControlButtonLayered
+		| ControlButtonPresetReference
+		| ControlButtonPageDown
+		| ControlButtonPageNumber
+		| ControlButtonPageUp
+	> {
+		const buttons: Array<
+			| ControlButtonLayered
+			| ControlButtonPresetReference
+			| ControlButtonPageDown
+			| ControlButtonPageNumber
+			| ControlButtonPageUp
+		> = []
 		for (const control of this.#store.controls.values()) {
 			if (
 				control instanceof ControlButtonLayered ||
+				control instanceof ControlButtonPresetReference ||
 				control instanceof ControlButtonPageDown ||
 				control instanceof ControlButtonPageNumber ||
 				control instanceof ControlButtonPageUp

@@ -3,7 +3,11 @@ import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	LayeredButtonModel,
+	PresetButtonModel,
+	PresetReferenceButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type {
 	ClientEntityDefinition,
 	CompositeElementDefinitionUpdate,
@@ -412,6 +416,44 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		injectOverriddenLocalVariableValues(model.localVariables, variableValues)
 
 		return model
+	}
+
+	/**
+	 * Build a preset-reference control model for a preset. The resulting model carries a cached copy of the
+	 * resolved button data plus a reference to the source preset, so the placed control keeps running in its
+	 * last-known state if the source preset/connection disappears.
+	 *
+	 * Only `localVariables` is cloned here (it is mutated by the templated-value injection); the other
+	 * fields are deep-cloned downstream when loaded into the control's entity pool.
+	 */
+	convertPresetToReferenceControlModel(
+		connectionId: string,
+		presetId: string,
+		variableValues: VariableValues | null
+	): PresetReferenceButtonModel | null {
+		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
+		if (!definition || definition.type !== 'button') return null
+
+		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
+		if (!config) return null
+
+		const localVariables = structuredClone(definition.model.localVariables)
+		if (variableValues) injectOverriddenLocalVariableValues(localVariables, variableValues)
+
+		return {
+			type: 'preset-reference',
+			style: definition.model.style,
+			options: definition.model.options,
+			feedbacks: definition.model.feedbacks,
+			steps: definition.model.steps,
+			localVariables,
+			presetRef: {
+				connectionId,
+				moduleId: config.moduleId,
+				presetId,
+				variableValues: variableValues ?? null,
+			},
+		}
 	}
 
 	/**

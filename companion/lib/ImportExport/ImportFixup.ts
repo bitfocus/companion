@@ -1,6 +1,10 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type { ButtonModelBase, LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	ButtonModelBase,
+	LayeredButtonModel,
+	PresetReferenceButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -117,6 +121,35 @@ export function fixupLayeredButtonControl(
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
 		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
+	}
+
+	referencesUpdater.visitDrawElements(result.style.layers)
+
+	return result
+}
+
+export function fixupPresetReferenceControl(
+	logger: Logger,
+	control: ExportControlv6,
+	referencesUpdater: VisitorReferencesUpdater,
+	instanceIdMap: InstanceAppliedRemappings
+): PresetReferenceButtonModel {
+	const oldConnectionId: string = control.presetRef?.connectionId
+	// Remap the referenced connection id the same way entity references are remapped, so the imported button
+	// stays a live reference to the (re-created) connection rather than a detached copy.
+	const newConnectionId = instanceIdMap[oldConnectionId]?.id ?? oldConnectionId
+
+	const result: PresetReferenceButtonModel = {
+		type: 'preset-reference',
+		options: structuredClone(control.options),
+		style: structuredClone(control.style),
+		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
+		presetRef: {
+			connectionId: newConnectionId,
+			moduleId: control.presetRef?.moduleId,
+			presetId: control.presetRef?.presetId,
+			variableValues: control.presetRef?.variableValues ?? null,
+		},
 	}
 
 	referencesUpdater.visitDrawElements(result.style.layers)

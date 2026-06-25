@@ -739,6 +739,95 @@ describe('InstanceDefinitions', () => {
 		})
 	})
 
+	// ── convertPresetToReferenceControlModel / refreshPresetReferenceModel ─
+
+	describe('convertPresetToReferenceControlModel', () => {
+		function makeLocalVariable(variableName: string, startup: unknown) {
+			return {
+				type: EntityModelType.Feedback,
+				id: `lv-${variableName}`,
+				definitionId: 'user_value',
+				connectionId: 'internal',
+				variableName,
+				options: { startup_value: exprVal(startup as any) },
+			} as any
+		}
+
+		it('returns null for unknown preset', () => {
+			const { defs } = createInstanceDefinitions()
+			expect(defs.convertPresetToReferenceControlModel('conn1', 'p1', null)).toBeNull()
+		})
+
+		it('builds a preset-reference model carrying the source reference', () => {
+			const { defs } = createInstanceDefinitions()
+			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1')]), {})
+
+			const result = defs.convertPresetToReferenceControlModel('conn1', 'p1', null)
+
+			expect(result).not.toBeNull()
+			expect(result!.type).toBe('preset-reference')
+			expect(result!.presetRef).toEqual({
+				connectionId: 'conn1',
+				moduleId: 'test-module',
+				presetId: 'p1',
+				variableValues: null,
+			})
+		})
+
+		it('injects templated variable overrides into the cached local variables', () => {
+			const { defs } = createInstanceDefinitions()
+			const preset = makeButtonPreset('p1', {
+				model: makeButtonPresetModel({ localVariables: [makeLocalVariable('channel', 1)] }),
+			})
+			defs.setPresetDefinitions('conn1', new Map([[preset.id, preset]]), {})
+
+			const result = defs.convertPresetToReferenceControlModel('conn1', 'p1', { channel: 5 })
+
+			expect(result).not.toBeNull()
+			expect(result!.presetRef.variableValues).toEqual({ channel: 5 })
+			expect((result!.localVariables[0] as any).options.startup_value).toEqual(exprVal(5))
+		})
+
+		it('does not mutate the stored preset definition when injecting overrides', () => {
+			const { defs } = createInstanceDefinitions()
+			const preset = makeButtonPreset('p1', {
+				model: makeButtonPresetModel({ localVariables: [makeLocalVariable('channel', 1)] }),
+			})
+			defs.setPresetDefinitions('conn1', new Map([[preset.id, preset]]), {})
+
+			defs.convertPresetToReferenceControlModel('conn1', 'p1', { channel: 99 })
+
+			// A fresh build with no overrides must still see the original default
+			const pristine = defs.convertPresetToReferenceControlModel('conn1', 'p1', null)
+			expect((pristine!.localVariables[0] as any).options.startup_value).toEqual(exprVal(1))
+		})
+
+		// The connection-switch feature re-resolves the same preset against a different connection
+		it('resolves the preset against a different connection (basis of switching), carrying its module-id', () => {
+			const { defs } = createInstanceDefinitions({
+				getConfigOfTypeForId: vi.fn((instanceId: string) =>
+					instanceId === 'unknown' ? undefined : makeConnectionConfig({ label: instanceId, moduleId: `mod-${instanceId}` })
+				),
+			} as any)
+			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1')]), {})
+			defs.setPresetDefinitions('conn2', presetsToMap([makeButtonPreset('p1')]), {})
+
+			const result = defs.convertPresetToReferenceControlModel('conn2', 'p1', null)
+
+			expect(result).not.toBeNull()
+			expect(result!.presetRef.connectionId).toBe('conn2')
+			expect(result!.presetRef.moduleId).toBe('mod-conn2')
+		})
+
+		it('returns null when the target connection does not provide the preset', () => {
+			const { defs } = createInstanceDefinitions()
+			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1')]), {})
+
+			// conn2 has a config (so it is a valid connection) but no such preset
+			expect(defs.convertPresetToReferenceControlModel('conn2', 'p1', null)).toBeNull()
+		})
+	})
+
 	// ── convertPresetToPreviewControlModel ───────────────────────────────
 
 	describe('convertPresetToPreviewControlModel', () => {

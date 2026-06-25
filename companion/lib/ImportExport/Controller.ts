@@ -364,6 +364,7 @@ export class ImportExportController {
 					let rawElements: SomeButtonGraphicsElement[]
 					switch (controlObjLayered.type) {
 						case 'button-layered':
+						case 'preset-reference':
 							drawType = 'button'
 							rawElements = controlObjLayered.style.layers
 							break
