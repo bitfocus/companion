@@ -17,6 +17,7 @@ import { GridStep } from './GridStep.js'
 import { PasswordStep } from './PasswordStep.js'
 import { ServicesStep } from './ServicesStep.js'
 import { SurfacesStep } from './SurfacesStep.js'
+import { TimezoneStep } from './TimezoneStep.js'
 
 export function WizardModal(): React.JSX.Element {
 	const { showWizardEvent, userConfig } = useContext(RootAppStoreContext)
@@ -30,7 +31,7 @@ export function WizardModal(): React.JSX.Element {
 
 	const defaultGridStart = !!startConfig && startConfig.gridSize.minColumn === 0 && startConfig.gridSize.minRow === 0
 	const allowGridStep = defaultGridStart ? 1 : 0
-	const maxSteps = 7 + allowGridStep
+	const maxSteps = 8 + allowGridStep
 	const applyStep = maxSteps - 1
 
 	const getConfig = useCallback(() => {
@@ -203,6 +204,11 @@ export function WizardModal(): React.JSX.Element {
 								)}
 								{currentStep === 5 + allowGridStep && newConfig && !error ? (
 									<PasswordStep config={newConfig} setValue={setValue} />
+								) : (
+									''
+								)}
+								{currentStep === 6 + allowGridStep && newConfig && !error ? (
+									<TimezoneStep config={newConfig} setValue={setValue} />
 								) : (
 									''
 								)}

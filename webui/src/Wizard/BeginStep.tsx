@@ -15,6 +15,7 @@ export function BeginStep({ allowGrid }: BeginStepProps): React.JSX.Element {
 				<li>Remote Control Services</li>
 				<li>Usage Statistics</li>
 				<li>Admin GUI Password</li>
+				<li>Timezone</li>
 			</ol>
 		</div>
 	)
