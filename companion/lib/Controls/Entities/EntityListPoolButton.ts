@@ -13,10 +13,11 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
-import type { ControlActionSetAndStepsManager } from './ControlActionSetAndStepsManager.js'
+import type { ControlStepsRuntimeManager } from './ControlActionSetAndStepsManager.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { WithEntityEditing, WithStepEditing } from './EntityListPoolEditingMixin.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { NewFeedbackValue } from './Types.js'
 
@@ -34,7 +35,19 @@ interface CurrentStepFromId {
 	id: string
 }
 
-export class ControlEntityListPoolButton extends ControlEntityListPoolBase implements ControlActionSetAndStepsManager {
+export interface ControlEntityListActionStep {
+	readonly sets: Map<ActionSetId, ControlEntityList>
+	options: ActionStepOptions
+}
+
+/**
+ * The shared button entity-pool base. Owns the steps/action-sets and all runtime/read behaviour (loading,
+ * step navigation, evaluation, serialization). It is abstract and does not pin the `isEditable` discriminant -
+ * the read-only {@link ControlEntityListPoolButton} and the editable {@link EditableControlEntityListPoolButton}
+ * extend it as siblings, each setting `isEditable`. (Sibling, not parent/child, so each can pin the literal
+ * discriminant without an override conflict.)
+ */
+export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase {
 	/**
 	 * The defaults options for a step
 	 */
@@ -45,26 +58,26 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	readonly #feedbacks: ControlEntityList
 	readonly #localVariables: ControlEntityList
 
-	readonly #steps = new Map<string, ControlEntityListActionStep>()
+	protected readonly steps = new Map<string, ControlEntityListActionStep>()
 
 	readonly #executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult
-	readonly #sendRuntimePropsChange: () => void
+	protected readonly sendRuntimePropsChange: () => void
 
 	/**
 	 * The current step
 	 */
-	#currentStep: CurrentStepFromExpression | CurrentStepFromId = { type: 'id', id: '0' }
+	protected currentStep: CurrentStepFromExpression | CurrentStepFromId = { type: 'id', id: '0' }
 
 	#hasRotaryActions = false
 
 	get currentStepId(): string {
-		switch (this.#currentStep.type) {
+		switch (this.currentStep.type) {
 			case 'id':
-				return this.#currentStep.id
+				return this.currentStep.id
 			case 'expression':
-				return this.#currentStep.lastStepId
+				return this.currentStep.lastStepId
 			default:
-				assertNever(this.#currentStep)
+				assertNever(this.currentStep)
 				throw new Error('Unsupported step mode')
 		}
 	}
@@ -78,7 +91,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		super(props, isLayeredButton)
 
 		this.#executeExpressionInControl = executeExpressionInControl
-		this.#sendRuntimePropsChange = sendRuntimePropsChange
+		this.sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
@@ -89,9 +102,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			feedbackListType: FeedbackEntitySubType.Value,
 		})
 
-		this.#currentStep = { type: 'id', id: '0' }
+		this.currentStep = { type: 'id', id: '0' }
 
-		this.#steps.set('0', this.#getNewStepValue(null, null))
+		this.steps.set('0', this.getNewStepValue(null, null))
 	}
 
 	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean): void {
@@ -99,13 +112,13 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
 
 		// Future:	cleanup the steps/sets
-		this.#steps.clear()
+		this.steps.clear()
 
 		for (const [id, stepObj] of Object.entries(storage.steps ?? {})) {
-			this.#steps.set(id, this.#getNewStepValue(stepObj.action_sets, stepObj.options))
+			this.steps.set(id, this.getNewStepValue(stepObj.action_sets, stepObj.options))
 		}
 
-		this.#currentStep = { type: 'id', id: this.getStepIds()[0] } // TODO - other modes?
+		this.currentStep = { type: 'id', id: this.getStepIds()[0] } // TODO - other modes?
 	}
 
 	/**
@@ -124,9 +137,9 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 
 	asNormalButtonSteps(): NormalButtonSteps {
 		const stepsJson: NormalButtonSteps = {}
-		for (const [id, step] of this.#steps) {
+		for (const [id, step] of this.steps) {
 			stepsJson[id] = {
-				action_sets: this.#stepAsActionSetsModel(step),
+				action_sets: this.stepAsActionSetsModel(step),
 				options: step.options,
 			}
 		}
@@ -134,7 +147,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return stepsJson
 	}
 
-	#stepAsActionSetsModel(step: ControlEntityListActionStep): ActionSetsModel {
+	protected stepAsActionSetsModel(step: ControlEntityListActionStep): ActionSetsModel {
 		const actionSets: ActionSetsModel = {
 			down: [],
 			up: [],
@@ -153,7 +166,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (listId === 'local-variables') return this.#localVariables
 
 		if (typeof listId === 'object' && 'setId' in listId && 'stepId' in listId) {
-			return this.#steps.get(listId.stepId)?.sets.get(listId.setId)
+			return this.steps.get(listId.stepId)?.sets.get(listId.setId)
 		}
 
 		return undefined
@@ -162,7 +175,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	protected getAllEntityLists(): ControlEntityList[] {
 		const entityLists: ControlEntityList[] = [this.#feedbacks, this.#localVariables]
 
-		for (const step of this.#steps.values()) {
+		for (const step of this.steps.values()) {
 			entityLists.push(...step.sets.values())
 		}
 
@@ -276,134 +289,21 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	getStepIds(): string[] {
-		return this.#steps
+		return this.steps
 			.keys()
 			.toArray()
 			.sort((a, b) => Number(a) - Number(b))
-	}
-
-	actionSetAdd(stepId: string): boolean {
-		const step = this.#steps.get(stepId)
-		if (!step) return false
-
-		const existingKeys = step.sets
-			.keys()
-			.map((k) => Number(k))
-			.filter((k) => !isNaN(k))
-			.toArray()
-		if (existingKeys.length === 0) {
-			// add the default '1000' set
-			step.sets.set(1000, this.#createActionEntityList([], false, false))
-
-			this.reportChange({ redraw: true })
-
-			return true
-			// return 1000
-		} else {
-			// add one after the last
-			const max = Math.max(...existingKeys)
-			const newIndex = Math.floor(max / 1000) * 1000 + 1000
-
-			step.sets.set(newIndex, this.#createActionEntityList([], false, false))
-
-			this.reportChange({ redraw: false })
-
-			return true
-			// return newIndex
-		}
-	}
-
-	actionSetRemove(stepId: string, setId: ActionSetId): boolean {
-		const step = this.#steps.get(stepId)
-		if (!step) return false
-
-		// Ensure is a valid number
-		const setIdNumber = Number(setId)
-		if (isNaN(setIdNumber)) return false
-
-		const setToRemove = step.sets.get(setIdNumber)
-		if (!setToRemove) return false
-
-		// Inform modules of the change
-		setToRemove.cleanup()
-
-		// Forget the step from the options
-		step.options.runWhileHeld = step.options.runWhileHeld.filter((id) => id !== setIdNumber)
-
-		// Assume it exists
-		step.sets.delete(setIdNumber)
-
-		// Save the change, and perform a draw
-		this.reportChange({ redraw: true })
-
-		return true
-	}
-
-	actionSetRename(stepId: string, oldSetId: ActionSetId, newSetId: ActionSetId): boolean {
-		const step = this.#steps.get(stepId)
-		if (!step) return false
-
-		const newSetIdNumber = Number(newSetId)
-		const oldSetIdNumber = Number(oldSetId)
-
-		// Only valid when both are numbers
-		if (isNaN(newSetIdNumber) || isNaN(oldSetIdNumber)) return false
-
-		// Ensure old set exists
-		const oldSet = step.sets.get(oldSetIdNumber)
-		if (!oldSet) return false
-
-		// Ensure new set doesnt already exist
-		if (step.sets.has(newSetIdNumber)) return false
-
-		// Rename the set
-		step.sets.set(newSetIdNumber, oldSet)
-		step.sets.delete(oldSetIdNumber)
-
-		// Update the runWhileHeld options
-		const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
-		if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
-
-		this.reportChange({ redraw: false })
-
-		return true
-	}
-
-	actionSetRunWhileHeld(stepId: string, setId: ActionSetId, runWhileHeld: boolean): boolean {
-		const step = this.#steps.get(stepId)
-		if (!step) return false
-
-		// Ensure it is a number
-		const setIdNumber = Number(setId)
-
-		// Only valid when step is a number
-		if (isNaN(setIdNumber)) return false
-
-		// Ensure set exists
-		if (!step.sets.get(setIdNumber)) return false
-
-		const runWhileHeldIndex = step.options.runWhileHeld.indexOf(setIdNumber)
-		if (runWhileHeld && runWhileHeldIndex === -1) {
-			step.options.runWhileHeld.push(setIdNumber)
-		} else if (!runWhileHeld && runWhileHeldIndex !== -1) {
-			step.options.runWhileHeld.splice(runWhileHeldIndex, 1)
-		}
-
-		this.reportChange({ redraw: false })
-
-		return true
 	}
 
 	setupRotaryActionSets(ensureCreated: boolean, skipCommit?: boolean): void {
 		// Cache the value
 		this.#hasRotaryActions = ensureCreated
 
-		for (const step of this.#steps.values()) {
+		for (const step of this.steps.values()) {
 			if (ensureCreated) {
 				// ensure they exist
-				if (!step.sets.has('rotate_left')) step.sets.set('rotate_left', this.#createActionEntityList([], false, false))
-				if (!step.sets.has('rotate_right'))
-					step.sets.set('rotate_right', this.#createActionEntityList([], false, false))
+				if (!step.sets.has('rotate_left')) step.sets.set('rotate_left', this.createActionEntityList([], false, false))
+				if (!step.sets.has('rotate_right')) step.sets.set('rotate_right', this.createActionEntityList([], false, false))
 			} else {
 				// remove the sets
 				const rotateLeftSet = step.sets.get('rotate_left')
@@ -423,33 +323,34 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		if (!skipCommit) this.reportChange({ redraw: true })
 	}
 
-	#createActionEntityList(entities: SomeEntityModel[], skipSubscribe: boolean, isCloned: boolean): ControlEntityList {
+	protected createActionEntityList(
+		entities: SomeEntityModel[],
+		skipSubscribe: boolean,
+		isCloned: boolean
+	): ControlEntityList {
 		const list = this.createEntityList({ type: EntityModelType.Action })
 		list.loadStorage(entities, skipSubscribe, isCloned)
 		return list
 	}
 
-	#getNewStepValue(
+	protected getNewStepValue(
 		existingActions: ActionSetsModel | null,
 		existingOptions: ActionStepOptions | null
 	): ControlEntityListActionStep {
-		const options = existingOptions || structuredClone(ControlEntityListPoolButton.DefaultStepOptions)
+		const options = existingOptions || structuredClone(ButtonEntityListPoolBase.DefaultStepOptions)
 
-		const downList = this.#createActionEntityList(existingActions?.down || [], false, !!existingActions)
-		const upList = this.#createActionEntityList(existingActions?.up || [], false, !!existingActions)
+		const downList = this.createActionEntityList(existingActions?.down || [], false, !!existingActions)
+		const upList = this.createActionEntityList(existingActions?.up || [], false, !!existingActions)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set(
-				'rotate_left',
-				this.#createActionEntityList(existingActions?.rotate_left || [], false, !!existingActions)
-			)
+			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], false, !!existingActions))
 			sets.set(
 				'rotate_right',
-				this.#createActionEntityList(existingActions?.rotate_right || [], false, !!existingActions)
+				this.createActionEntityList(existingActions?.rotate_right || [], false, !!existingActions)
 			)
 		}
 
@@ -458,7 +359,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			if (typeof setIdNumber === 'number') {
 				sets.set(
 					setIdNumber,
-					this.#createActionEntityList(existingActions?.[setIdNumber] || [], false, !!existingActions)
+					this.createActionEntityList(existingActions?.[setIdNumber] || [], false, !!existingActions)
 				)
 			}
 		}
@@ -484,7 +385,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param newValues The new storeResult values
 	 */
 	override updateStoreResultValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>): void {
-		for (const step of this.#steps.values()) {
+		for (const step of this.steps.values()) {
 			for (const set of step.sets.values()) {
 				set.updateStoreResultValues(newValues)
 			}
@@ -497,11 +398,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
 		super.onVariablesChanged(changedVariables)
 
-		if (this.#currentStep.type !== 'expression') return
+		if (this.currentStep.type !== 'expression') return
 
-		if (this.#currentStep.lastVariables.isDisjointFrom(changedVariables)) return
+		if (this.currentStep.lastVariables.isDisjointFrom(changedVariables)) return
 
-		if (this.#stepCheckExpression(true)) {
+		if (this.stepCheckExpression(true)) {
 			// Something changed, so redraw
 			this.reportChange({ redraw: true })
 		}
@@ -512,14 +413,14 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param updateClient Whether to inform the client if the step changed
 	 * @returns Whether a change was made
 	 */
-	#stepCheckExpression(updateClient: boolean): boolean {
-		if (this.#currentStep.type !== 'expression') return false
+	protected stepCheckExpression(updateClient: boolean): boolean {
+		if (this.currentStep.type !== 'expression') return false
 
 		let changed = false
 
 		const stepIds = this.getStepIds()
 
-		const latestValue = this.#executeExpressionInControl(this.#currentStep.expression, 'number')
+		const latestValue = this.#executeExpressionInControl(this.currentStep.expression, 'number')
 		if (latestValue.ok) {
 			let latestIndex = Math.max(Math.min(Number(latestValue.value) - 1, stepIds.length - 1), 0)
 			if (isNaN(latestIndex)) latestIndex = 0
@@ -527,11 +428,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			const newStepId = stepIds[latestIndex]
 
 			// Check if this will change the expected state
-			changed = this.#currentStep.lastStepId !== newStepId
+			changed = this.currentStep.lastStepId !== newStepId
 
 			// Update the state
-			this.#currentStep.lastStepId = newStepId
-			this.#currentStep.lastVariables = latestValue.variableIds
+			this.currentStep.lastStepId = newStepId
+			this.currentStep.lastVariables = latestValue.variableIds
 		} else {
 			// Lets always go to the first step, to ensure we have a sane and predictable value
 
@@ -540,15 +441,15 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 			const firstStepId = stepIds[0]
 
 			// Check if this will change the expected state
-			changed = this.#currentStep.lastStepId !== firstStepId
+			changed = this.currentStep.lastStepId !== firstStepId
 
 			// Update the state
-			this.#currentStep.lastStepId = firstStepId
-			this.#currentStep.lastVariables = latestValue.variableIds
+			this.currentStep.lastStepId = firstStepId
+			this.currentStep.lastVariables = latestValue.variableIds
 		}
 
 		// Inform clients of the change
-		if (changed && updateClient) this.#sendRuntimePropsChange()
+		if (changed && updateClient) this.sendRuntimePropsChange()
 
 		return changed
 	}
@@ -560,45 +461,24 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	stepExpressionUpdate(options: ButtonOptionsBase): void {
 		if (options.stepProgression === 'expression') {
 			// It may have changed, assume it has and purge the existing state
-			if (this.#currentStep.type !== 'expression') {
-				this.#currentStep = {
+			if (this.currentStep.type !== 'expression') {
+				this.currentStep = {
 					type: 'expression',
 					expression: options.stepExpression || '',
 					lastStepId: this.getStepIds()[0],
 					lastVariables: new Set(),
 				}
 			} else {
-				this.#currentStep.expression = options.stepExpression || ''
+				this.currentStep.expression = options.stepExpression || ''
 			}
 
-			this.#stepCheckExpression(true)
+			this.stepCheckExpression(true)
 		} else {
-			if (this.#currentStep.type === 'expression') {
+			if (this.currentStep.type === 'expression') {
 				// Stick to whatever is currently selected
-				this.#currentStep = { type: 'id', id: this.currentStepId }
+				this.currentStep = { type: 'id', id: this.currentStepId }
 			}
 		}
-	}
-
-	/**
-	 * Add a step to this control
-	 * @returns Id of new step
-	 */
-	stepAdd(): string {
-		const existingKeys = this.getStepIds()
-			.map((k) => Number(k))
-			.filter((k) => !isNaN(k))
-
-		const stepId = existingKeys.length === 0 ? '0' : `${Math.max(...existingKeys) + 1}`
-
-		this.#steps.set(stepId, this.#getNewStepValue(null, null))
-
-		// Ensure current step is valid
-		this.#stepCheckExpression(true)
-
-		this.reportChange({ redraw: true })
-
-		return stepId
 	}
 
 	/**
@@ -607,12 +487,12 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 */
 	stepAdvanceDelta(amount: number): boolean {
 		// If using an expression, don't allow manual progression
-		if (this.#currentStep.type !== 'id') return false
+		if (this.currentStep.type !== 'id') return false
 
 		if (amount && typeof amount === 'number') {
 			const all_steps = this.getStepIds()
 			if (all_steps.length > 0) {
-				const current = all_steps.indexOf(this.#currentStep.id)
+				const current = all_steps.indexOf(this.currentStep.id)
 
 				let newIndex = (current === -1 ? 0 : current) + amount
 				while (newIndex < 0) newIndex += all_steps.length
@@ -627,47 +507,12 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	/**
-	 * Duplicate a step on this control
-	 * @param stepId the id of the step to duplicate
-	 */
-	stepDuplicate(stepId: string): boolean {
-		const existingKeys = this.getStepIds()
-			.map((k) => Number(k))
-			.filter((k) => !isNaN(k))
-
-		const stepToCopy = this.#steps.get(stepId)
-		if (!stepToCopy) return false
-
-		const newStep = this.#getNewStepValue(
-			structuredClone(this.#stepAsActionSetsModel(stepToCopy)),
-			structuredClone(stepToCopy.options)
-		)
-
-		// add one after the last
-		const max = Math.max(...existingKeys)
-
-		const newStepId = `${max + 1}`
-		this.#steps.set(newStepId, newStep)
-
-		// Ensure current step is valid
-		this.#stepCheckExpression(false)
-
-		// Ensure the ui knows which step is current
-		this.#sendRuntimePropsChange()
-
-		// Save the change, and perform a draw
-		this.reportChange({ redraw: true })
-
-		return true
-	}
-
-	/**
 	 * Set the current (next to execute) action-set by index
 	 * @param index The step index to make the next
 	 */
 	stepMakeCurrent(index: number): boolean {
 		// If using an expression, don't allow manual progression
-		if (this.#currentStep.type !== 'id') return false
+		if (this.currentStep.type !== 'id') return false
 
 		if (typeof index === 'number') {
 			const stepId = this.getStepIds()[index - 1]
@@ -680,63 +525,22 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 
 	/**
-	 * Remove an action-set from this control
-	 * @param stepId the id of the action-set
-	 */
-	stepRemove(stepId: string): boolean {
-		const oldKeys = this.getStepIds()
-
-		// Ensure there is at least one step
-		if (oldKeys.length === 1) return false
-
-		const step = this.#steps.get(stepId)
-		if (!step) return false
-
-		for (const set of step.sets.values()) {
-			set.cleanup()
-		}
-		this.#steps.delete(stepId)
-
-		// Update the current step
-		if (this.#currentStep.type === 'id') {
-			const oldIndex = oldKeys.indexOf(stepId)
-			let newIndex = oldIndex + 1
-			if (newIndex >= oldKeys.length) {
-				newIndex = 0
-			}
-			if (newIndex !== oldIndex) {
-				this.#currentStep.id = oldKeys[newIndex]
-
-				this.#sendRuntimePropsChange()
-			}
-		} else {
-			// Ensure current step is valid
-			this.#stepCheckExpression(true)
-		}
-
-		// Save the change, and perform a draw
-		this.reportChange({ redraw: true })
-
-		return true
-	}
-
-	/**
 	 * Set the current (next to execute) action-set by id
 	 * @param stepId The step id to make the next
 	 */
 	stepSelectCurrent(stepId: string): boolean {
 		// If using an expression, don't allow manual progression
-		if (this.#currentStep.type !== 'id') return false
+		if (this.currentStep.type !== 'id') return false
 
-		const step = this.#steps.get(stepId)
+		const step = this.steps.get(stepId)
 		if (!step) return false
 
 		// Ensure it isn't currently pressed
 		// this.setPushed(false)
 
-		this.#currentStep.id = stepId
+		this.currentStep.id = stepId
 
-		this.#sendRuntimePropsChange()
+		this.sendRuntimePropsChange()
 
 		this.reportChange({
 			redraw: true,
@@ -746,49 +550,11 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		return true
 	}
 
-	/**
-	 * Swap two action-sets
-	 * @param stepId1 One of the action-sets
-	 * @param stepId2 The other action-set
-	 */
-	stepSwap(stepId1: string, stepId2: string): boolean {
-		const step1 = this.#steps.get(stepId1)
-		const step2 = this.#steps.get(stepId2)
-
-		if (!step1 || !step2) return false
-
-		this.#steps.set(stepId1, step2)
-		this.#steps.set(stepId2, step1)
-
-		// Ensure current step is valid
-		this.#stepCheckExpression(true)
-
-		this.reportChange({ redraw: false })
-
-		return true
-	}
-
-	/**
-	 * Rename step
-	 * @param stepId the id of the action-set
-	 * @param newName the new name of the step
-	 */
-	stepRename(stepId: string, newName: string): boolean {
-		const step = this.#steps.get(stepId)
-		if (!step) return false
-
-		step.options.name = newName
-
-		this.reportChange({ redraw: false })
-
-		return true
-	}
-
 	validateCurrentStepIdAndGetNextProgression(): [string | null, string | null] {
-		if (this.#currentStep.type === 'expression') {
+		if (this.currentStep.type === 'expression') {
 			// When in the expression mode, the next step is unknown, but we can produce a sane current step id
 
-			if (this.#stepCheckExpression(true)) {
+			if (this.stepCheckExpression(true)) {
 				// Something changed, so redraw
 				this.reportChange({
 					redraw: true,
@@ -796,13 +562,13 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				})
 			}
 
-			return [this.#currentStep.lastStepId, null]
+			return [this.currentStep.lastStepId, null]
 		}
 
 		const stepIds = this.getStepIds()
 
 		// For the automatic/manual progression
-		const this_step_raw = this.#currentStep.id
+		const this_step_raw = this.currentStep.id
 		if (stepIds.length > 0) {
 			// verify 'this_step_raw' is valid, falling back to the first step if it is not
 			// (findIndex returns -1 when not found, and -1 is truthy, so `|| 0` would not catch it)
@@ -824,7 +590,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 		const [this_step_id] = this.validateCurrentStepIdAndGetNextProgression()
 		if (!this_step_id) return []
 
-		const step = this.#steps.get(this_step_id)
+		const step = this.steps.get(this_step_id)
 		if (!step) return []
 
 		const set = step.sets.get(setId)
@@ -839,7 +605,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 				options: Readonly<ActionStepOptions>
 		  }
 		| undefined {
-		const step = this.#steps.get(stepId)
+		const step = this.steps.get(stepId)
 		if (!step) return undefined
 
 		const sets: Map<ActionSetId, ControlEntityInstance[]> = new Map()
@@ -859,7 +625,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param newValues The new feedback values
 	 */
 	updateFeedbackValues(connectionId: string, newValues: ReadonlyMap<string, NewFeedbackValue>): void {
-		for (const step of this.#steps.values()) {
+		for (const step of this.steps.values()) {
 			for (const set of step.sets.values()) {
 				set.updateFeedbackValues(connectionId, newValues)
 			}
@@ -878,7 +644,7 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	 * @param newValues The new isInverted values
 	 */
 	override updateIsInvertedValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>): void {
-		for (const step of this.#steps.values()) {
+		for (const step of this.steps.values()) {
 			for (const set of step.sets.values()) {
 				set.updateIsInvertedValues(newValues)
 			}
@@ -914,7 +680,36 @@ export class ControlEntityListPoolButton extends ControlEntityListPoolBase imple
 	}
 }
 
-interface ControlEntityListActionStep {
-	readonly sets: Map<ActionSetId, ControlEntityList>
-	options: ActionStepOptions
+/**
+ * The read-only button entity pool. Has the runtime step navigation surface ({@link ControlStepsRuntimeManager})
+ * but none of the structural edit mutators - a preset reference constructs this, so it is read-only by
+ * construction.
+ */
+export class ControlEntityListPoolButton extends ButtonEntityListPoolBase implements ControlStepsRuntimeManager {
+	readonly isEditable = false
 }
+
+/**
+ * The editable button entity pool: the shared {@link ButtonEntityListPoolBase} plus the structural entity-edit
+ * and step/action-set-edit mutators (added by the editing mixins, which also set `isEditable = true`). Normal
+ * layered buttons construct this.
+ */
+export class EditableControlEntityListPoolButton extends WithStepEditing(WithEntityEditing(ButtonEntityListPoolBase)) {}
+
+/**
+ * A button's entity pool: read-only or editable. Buttons hold this union so the button runtime can use the
+ * shared step machinery while callers narrow on `isEditable` to reach the structural mutators.
+ */
+export type SomeButtonEntityPool = ControlEntityListPoolButton | EditableControlEntityListPoolButton
+
+/**
+ * Constructor for a button entity pool. A button control passes the read-only or editable class to its base
+ * constructor, which decides (by construction) whether the control can be structurally edited. `TPool` is
+ * carried through so the control's `entities` is typed as exactly the pool it constructs.
+ */
+export type ButtonEntityPoolConstructor<TPool extends SomeButtonEntityPool> = new (
+	props: ControlEntityListPoolProps,
+	sendRuntimePropsChange: () => void,
+	executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult,
+	isLayeredButton: boolean
+) => TPool

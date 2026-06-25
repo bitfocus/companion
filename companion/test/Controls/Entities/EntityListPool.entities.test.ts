@@ -268,7 +268,7 @@ describe('EntityListPool - entityMoveTo', () => {
 	})
 })
 
-describe('EntityListPool - entityReplace', () => {
+describe('EntityListPool - entityReplaceForUpgrade', () => {
 	test('replaces props on an existing entity of the same type', () => {
 		const { pool } = createPool()
 		const action = actionModel({ definitionId: 'def-old' })
@@ -281,7 +281,7 @@ describe('EntityListPool - entityReplace', () => {
 			options: { x: { isExpression: false, value: 1 } },
 			upgradeIndex: undefined,
 		}
-		const result = pool.entityReplace(replacement)
+		const result = pool.entityReplaceForUpgrade(replacement)
 
 		expect(result?.id).toBe(action.id)
 		expect(pool.findEntityById(action.id)?.definitionId).toBe('def-new')
@@ -292,7 +292,7 @@ describe('EntityListPool - entityReplace', () => {
 		const action = actionModel()
 		pool.entityAdd(downSet(), null, action)
 
-		const result = pool.entityReplace({
+		const result = pool.entityReplaceForUpgrade({
 			id: action.id,
 			type: EntityModelType.Feedback,
 			definitionId: 'def-new',
@@ -306,7 +306,7 @@ describe('EntityListPool - entityReplace', () => {
 	test('returns undefined for an unknown entity', () => {
 		const { pool } = createPool()
 
-		const result = pool.entityReplace({
+		const result = pool.entityReplaceForUpgrade({
 			id: 'nope',
 			type: EntityModelType.Action,
 			definitionId: 'def-new',

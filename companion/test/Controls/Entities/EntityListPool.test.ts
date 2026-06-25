@@ -1,7 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
-import { actionModel, createPool, downSet, feedbackModel, feedbackValues } from './EntityListPoolTestHelpers.js'
+import {
+	ControlEntityListPoolButton,
+	EditableControlEntityListPoolButton,
+} from '../../../lib/Controls/Entities/EntityListPoolButton.js'
+import {
+	actionModel,
+	createPool,
+	createPoolDeps,
+	downSet,
+	feedbackModel,
+	feedbackValues,
+} from './EntityListPoolTestHelpers.js'
 
 /** A style override carrying the layered-drawing fields the pool reads. */
 function styleOverride(overrides: Record<string, unknown> = {}) {
@@ -183,6 +194,64 @@ describe('EntityListPool - destroy', () => {
 		pool.entityAdd('feedbacks', null, feedbackModel())
 
 		expect(() => pool.destroy()).not.toThrow()
+	})
+})
+
+describe('EntityListPool - read-only by construction', () => {
+	test('the isEditable discriminant distinguishes the two pools', () => {
+		const readonly = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: 'disc0' }).deps,
+			vi.fn(),
+			vi.fn(),
+			true
+		)
+		const editable = new EditableControlEntityListPoolButton(
+			createPoolDeps({ controlId: 'disc1' }).deps,
+			vi.fn(),
+			vi.fn(),
+			true
+		)
+
+		expect(readonly.isEditable).toBe(false)
+		expect(editable.isEditable).toBe(true)
+	})
+
+	test('the read-only pool structurally lacks the edit mutators', () => {
+		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro00' }).deps, vi.fn(), vi.fn(), true)
+
+		// Compile-time: these properties do not exist on the read-only pool type.
+		// Runtime: confirm they are genuinely absent (not merely guarded).
+		// @ts-expect-error stepAdd is only on the editable pool
+		expect(typeof pool.stepAdd).toBe('undefined')
+		// @ts-expect-error entityAdd is only on the editable pool
+		expect(typeof pool.entityAdd).toBe('undefined')
+		// @ts-expect-error actionSetAdd is only on the editable pool
+		expect(typeof pool.actionSetAdd).toBe('undefined')
+		// @ts-expect-error stepRename is only on the editable pool
+		expect(typeof pool.stepRename).toBe('undefined')
+	})
+
+	test('the editable pool has working edit mutators', () => {
+		const pool = new EditableControlEntityListPoolButton(
+			createPoolDeps({ controlId: 'rw00' }).deps,
+			vi.fn(),
+			vi.fn(),
+			true
+		)
+
+		expect(typeof pool.stepAdd).toBe('function')
+		pool.stepAdd()
+		expect(pool.getStepIds()).toEqual(['0', '1'])
+	})
+
+	test('loading and runtime step navigation work on the read-only pool', () => {
+		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro01' }).deps, vi.fn(), vi.fn(), true)
+
+		// Loading the cached data must work on a read-only pool
+		expect(() => pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [] }, true, false)).not.toThrow()
+
+		// Runtime step navigation (used by pressControl) must work
+		expect(() => pool.stepSelectCurrent('0')).not.toThrow()
 	})
 })
 

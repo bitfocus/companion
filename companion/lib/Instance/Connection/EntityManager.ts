@@ -386,7 +386,7 @@ export class ConnectionEntityManager {
 					}
 
 					try {
-						control.entities.entityReplace(upgradedEntity)
+						control.entities.entityReplaceForUpgrade(upgradedEntity)
 					} catch (e) {
 						// If we fail to replace the entity, we can just ignore it
 						this.#logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)

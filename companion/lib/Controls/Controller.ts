@@ -411,10 +411,8 @@ export class ControlsController {
 
 			this.#controlEvents.emit('controlPlacedAt', location, newControlId)
 
-			newControl.triggerRedraw()
-
 			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.commitChange(true)
 
 			return newControlId
 		}
@@ -512,7 +510,7 @@ export class ControlsController {
 				if (fromControlId && fromControlId !== control.controlId) continue
 
 				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
-				control.onVariablesChanged(allChangedVariablesSet)
+				control.drawing?.onVariablesChanged(allChangedVariablesSet)
 			}
 		}
 	}
@@ -525,9 +523,7 @@ export class ControlsController {
 		if (allChangedElementIds.size === 0) return
 
 		for (const control of this.#store.controls.values()) {
-			if (control.supportsLayeredStyle) {
-				control.onCompositeElementsChanged(allChangedElementIds)
-			}
+			control.drawing?.onCompositeElementsChanged(allChangedElementIds)
 		}
 	}
 

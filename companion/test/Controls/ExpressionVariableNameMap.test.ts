@@ -11,12 +11,12 @@ vi.mock('../../lib/Controls/ControlTypes/ExpressionVariable.js', () => {
 	class ControlExpressionVariable {
 		controlId: string
 		options: { variableName: string }
-		triggerRedraw: ReturnType<typeof vi.fn>
+		triggerInvalidation: ReturnType<typeof vi.fn>
 
 		constructor(controlId: string, variableName: string) {
 			this.controlId = controlId
 			this.options = { variableName }
-			this.triggerRedraw = vi.fn()
+			this.triggerInvalidation = vi.fn()
 		}
 	}
 	return { ControlExpressionVariable }
@@ -82,7 +82,7 @@ describe('removeExpressionVariable', () => {
 		])
 	})
 
-	test('removing active control promotes the first conflict and calls triggerRedraw', () => {
+	test('removing active control promotes the first conflict and calls triggerInvalidation', () => {
 		const { map, controls } = makeMap()
 
 		const ctrl2 = makeCveControl('ctrl-2', 'myVar')
@@ -94,7 +94,7 @@ describe('removeExpressionVariable', () => {
 		map.removeExpressionVariable('ctrl-1', 'myVar')
 
 		expect(map.getControlIdByName('myVar')).toBe('ctrl-2')
-		expect(ctrl2.triggerRedraw).toHaveBeenCalledOnce()
+		expect(ctrl2.triggerInvalidation).toHaveBeenCalledOnce()
 	})
 
 	test('removing a non-active conflict just removes it from the queue', () => {

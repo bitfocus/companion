@@ -30,6 +30,7 @@ function makeControl(entities: any[]) {
 	return {
 		supportsEntities: true,
 		entities: {
+			isEditable: true,
 			getAllEntitiesInList: (listId: string) => (listId === 'local-variables' ? entities : []),
 			entitySetVariableValue: vi.fn(),
 			entitySetOption: vi.fn(),

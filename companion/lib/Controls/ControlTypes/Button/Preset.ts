@@ -8,15 +8,8 @@ import type {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import {
-	ButtonGraphicsElementUsage,
-	type ButtonStyleProperties,
-	type DrawStyleLayeredButtonModel,
-} from '@companion-app/shared/Model/StyleModel.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
-import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
+import { ButtonGraphicsElementUsage, type ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
-import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../../ControlBase.js'
@@ -34,6 +27,7 @@ import type {
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
 import { ButtonControlBase } from './Base.js'
+import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
 /**
  * Class for the preset button control.
@@ -72,6 +66,15 @@ export class ControlButtonPreset
 
 	readonly entities: ControlEntityListPoolButton
 
+	readonly #drawing: LayeredButtonDrawer
+	override get drawing(): LayeredButtonDrawer {
+		return this.#drawing
+	}
+
+	protected triggerInvalidation = (): void => {
+		this.#drawing.invalidate()
+	}
+
 	/**
 	 * The current status of this button
 	 */
@@ -81,22 +84,6 @@ export class ControlButtonPreset
 	 * The config of this button
 	 */
 	options!: LayeredButtonOptions
-
-	/**
-	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
-	 */
-	#lastDrawVariables: ReadonlySet<string> | null = null
-	#lastDrawCompositeElements: ReadonlySet<CompositeElementIdString> | null = null
-
-	/**
-	 * The base style without feedbacks applied
-	 */
-	#drawElements: SomeButtonGraphicsElement[] = []
-
-	/**
-	 * Cache for element conversion results (for future per-element caching optimization)
-	 */
-	readonly #elementConversionCache = new ElementConversionCache()
 
 	readonly #connectionId: string
 	readonly #presetId: string
@@ -149,6 +136,17 @@ export class ControlButtonPreset
 			canModifyStyleInApis: false,
 		}
 
+		this.#drawing = new LayeredButtonDrawer(deps, controlId, {
+			getButtonStateProps: () => ({
+				pushed: false,
+				stepCurrent: this.entities.getActiveStepIndex() + 1,
+				stepCount: this.entities.getStepIds().length,
+				action_running: false,
+				button_status: this.button_status,
+			}),
+			entities: this.entities,
+		})
+
 		if (storage.type !== 'preset:button')
 			throw new Error(`Invalid type given to ControlButtonPreset: "${storage.type}"`)
 
@@ -162,7 +160,7 @@ export class ControlButtonPreset
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
-		this.#elementConversionCache.clear()
+		this.#drawing.dispose()
 		this.entities.destroy()
 
 		super.destroy()
@@ -177,15 +175,15 @@ export class ControlButtonPreset
 		}
 
 		if (options.invalidateAllElements) {
-			this.#elementConversionCache.clear()
+			this.#drawing.clearCache()
 		} else if (options.changedElementIds) {
 			for (const elementId of options.changedElementIds) {
-				this.#elementConversionCache.queueInvalidate(elementId)
+				this.#drawing.invalidateElement(elementId)
 			}
 		}
 
 		if (options.redraw || options.changedElementIds || options.invalidateAllElements) {
-			this.triggerRedraw()
+			this.triggerInvalidation()
 		}
 	}
 
@@ -206,8 +204,7 @@ export class ControlButtonPreset
 	}
 
 	#applyPresetModel(storage: PresetButtonModel): void {
-		this.#drawElements = storage.style.layers || []
-		this.#elementConversionCache.clear()
+		this.#drawing.loadElements(storage.style.layers)
 
 		this.options = Object.assign(this.options, storage.options || {})
 		this.entities.loadStorage(storage, true, true)
@@ -227,137 +224,44 @@ export class ControlButtonPreset
 		this.sendRuntimePropsChange()
 	}
 
-	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
-	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
-		return this.#lastDrawStyle
-	}
-
-	/**
-	 * Get the complete style object of a button
-	 * @returns the processed style of the button
-	 */
-	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
-			null,
-			this.entities.getLocalVariableEntities(),
-			null
-		)
-
-		const feedbackOverrides = this.entities.getFeedbackStyleOverrides()
-
-		// Compute the new drawing
-		const { elements, usedVariables, usedCompositeElements } = await ConvertSomeButtonGraphicsElementForDrawing(
-			this.deps.instance.definitions,
-			parser,
-			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
-			this.#drawElements,
-			feedbackOverrides,
-			true,
-			this.#elementConversionCache,
-			null,
-			null
-		)
-		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
-		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
-
-		const result: DrawStyleLayeredButtonModel = {
-			elements,
-
-			stepCurrent: this.entities.getActiveStepIndex() + 1,
-			stepCount: this.entities.getStepIds().length,
-
-			pushed: false,
-			action_running: false,
-			button_status: this.button_status,
-
-			style: 'button-layered',
-			drawType: 'button',
-		}
-
-		this.#lastDrawStyle = result
-		return result
-	}
-
 	/**
 	 * Collect the instance ids, labels, and variables referenced by this control
-	 * @param foundConnectionIds - instance ids being referenced
-	 * @param foundConnectionLabels - instance labels being referenced
-	 * @param foundVariables - variables being referenced
 	 */
 	collectReferencedConnectionsAndVariables(
 		foundConnectionIds: Set<string>,
 		foundConnectionLabels: Set<string>,
 		foundVariables: Set<string>
 	): void {
-		new VisitorReferencesCollector(
+		const collector = new VisitorReferencesCollector(
 			this.deps.internalModule,
 			foundConnectionIds,
 			foundConnectionLabels,
 			foundVariables,
 			undefined
 		)
-			.visitDrawElements(this.#drawElements)
-			.visitEntities(this.entities.getAllEntities(), [])
+		this.#drawing.visit(collector)
+		collector.visitEntities(this.entities.getAllEntities(), [])
 	}
 
 	/**
 	 * Rename a connection for variables used in this control
-	 * @param labelFrom - the old connection short name
-	 * @param labelTo - the new connection short name
 	 */
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const allEntities = this.entities.getAllEntities()
-
-		// Fix up references
-		const changed = new VisitorReferencesUpdater(
+		const updater = new VisitorReferencesUpdater(
 			this.deps.internalModule,
 			{ [labelFrom]: labelTo },
 			undefined,
 			undefined
 		)
-			.visitDrawElements(this.#drawElements)
-			.visitEntities(allEntities, [])
-			.recheckChangedFeedbacks()
-			.hasChanges()
+		this.#drawing.visit(updater)
+		const changed = updater.visitEntities(this.entities.getAllEntities(), []).recheckChangedFeedbacks().hasChanges()
 
 		// redraw if needed and save changes
 		this.commitChange(changed)
 	}
 
 	/**
-	 * Propagate variable changes
-	 * @param allChangedVariables - variables with changes
-	 */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		if (!this.#lastDrawVariables) return
-		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
-
-		// Queue invalidation for cached elements that use any of the changed variables
-		this.#elementConversionCache.queueInvalidateVariables(allChangedVariables)
-
-		this.logger.silly('variable changed in button ' + this.controlId)
-		this.triggerRedraw()
-	}
-
-	/**
-	 * Propagate composite element changes
-	 * @param allChangedElementIds - composite element ids with changes
-	 */
-	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {
-		if (!this.#lastDrawCompositeElements) return
-		if (this.#lastDrawCompositeElements.isDisjointFrom(allChangedElementIds)) return
-
-		// Queue invalidation for any cached elements that use these composite types
-		this.#elementConversionCache.queueInvalidateCompositeType(allChangedElementIds)
-
-		this.logger.silly('composite element changed in button ' + this.controlId)
-		this.triggerRedraw()
-	}
-
-	/**
 	 * Add an element to the layered style
-	 * @param _type Element type to add
-	 * @param _index Index to insert the element at, or null to append
 	 */
 	layeredStyleAddElement(_type: string, _index: number | null): string {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -365,8 +269,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Remove an element from the layered style
-	 * @param _id Element id to remove
-	 * @returns true if the element was removed
 	 */
 	layeredStyleRemoveElement(_id: string): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -378,10 +280,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Move an element in the layered style
-	 * @param _id Element id to move
-	 * @param _parentElementId Parent element id to move the element to
-	 * @param _newIndex New index of the element
-	 * @returns true if the element was moved
 	 */
 	layeredStyleMoveElement(_id: string, _parentElementId: string | null, _newIndex: number): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -389,9 +287,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Update the name of an element in the layered style
-	 * @param _id Element id to update
-	 * @param _name New name for the element
-	 * @returns true if the element was updated
 	 */
 	layeredStyleSetElementName(_id: string, _name: string): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -399,9 +294,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Update the usage of an element in the layered style
-	 * @param _id Element id to update
-	 * @param usage New usage for the element
-	 * @returns true if the element was updated
 	 */
 	layeredStyleSetElementUsage(_id: string, _name: ButtonGraphicsElementUsage): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -409,10 +301,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Update an option on an element from the layered style
-	 * @param _id Element id to update
-	 * @param _key Option key to update
-	 * @param _value New value for the option
-	 * @returns true if any changes were made
 	 */
 	layeredStyleUpdateOption(_id: string, _key: string, _value: ExpressionOrValue<JsonValue | undefined>): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -420,9 +308,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Update the style from legacy properties
-	 * Future: Once the old button style is removed, this should be reworked to utilise the new style system better
-	 * @param _diff The properties to update
-	 * @returns true if any changes were made
 	 */
 	layeredStyleUpdateFromLegacyProperties(_diff: Partial<ButtonStyleProperties>): boolean {
 		throw new Error('ControlButtonPreset does not support mutations')
@@ -430,8 +315,6 @@ export class ControlButtonPreset
 
 	/**
 	 * Get an element from the layered style by ID
-	 * @param _id Element ID to find
-	 * @returns The element if found, undefined otherwise
 	 */
 	layeredStyleGetElementById(_id: string): SomeButtonGraphicsElement | undefined {
 		// Streaming elements is not supported
@@ -456,7 +339,7 @@ export class ControlButtonPreset
 		const obj: PresetButtonModel = {
 			type: this.type,
 			style: {
-				layers: this.#drawElements,
+				layers: this.#drawing.drawElements,
 			},
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),

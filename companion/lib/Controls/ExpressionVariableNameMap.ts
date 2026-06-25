@@ -83,7 +83,7 @@ export class ExpressionVariableNameMap {
 				// Invalidate the newly promoted control so it updates its variable value
 				const newActiveControl = this.#controls.get(newActiveControlId) as ControlExpressionVariable | undefined
 				if (newActiveControl) {
-					newActiveControl.triggerRedraw()
+					newActiveControl.triggerInvalidation()
 				}
 			} else {
 				// No other controls, remove the entry entirely

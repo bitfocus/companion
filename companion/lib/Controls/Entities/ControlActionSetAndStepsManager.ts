@@ -1,6 +1,46 @@
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
-export interface ControlActionSetAndStepsManager {
+/**
+ * The runtime step/action-set surface. These are runtime navigation/read operations that are safe on a
+ * read-only control (e.g. a preset reference), so they live on the read-only button pool. The `isEditable`
+ * discriminant is `false`; the editing operations are in {@link ControlActionSetAndStepsEditor}.
+ */
+export interface ControlStepsRuntimeManager {
+	readonly isEditable: false
+
+	/**
+	 * Get the index of the current (next to execute) step
+	 * @returns The index of current step
+	 */
+	getActiveStepIndex(): number
+
+	/**
+	 * Progress through the action-sets
+	 * @param amount Number of steps to progress
+	 */
+	stepAdvanceDelta(amount: number): boolean
+
+	/**
+	 * Set the current (next to execute) action-set by index
+	 * @param index The step index to make the next
+	 */
+	stepMakeCurrent(index: number): boolean
+
+	/**
+	 * Set the current (next to execute) action-set by id
+	 * @param stepId The step id to make the next
+	 */
+	stepSelectCurrent(stepId: string): boolean
+}
+
+/**
+ * The editable step/action-set surface: the runtime navigation methods plus the structural editing mutators
+ * (added by the step-editing mixin), with the `isEditable` discriminant pinned to `true`. A read-only control
+ * structurally lacks the mutators - editing code narrows {@link SomeStepManager} on `isEditable`.
+ */
+export interface ControlActionSetAndStepsEditor extends Omit<ControlStepsRuntimeManager, 'isEditable'> {
+	readonly isEditable: true
+
 	/**
 	 * Add an action set to this control
 	 */
@@ -22,22 +62,10 @@ export interface ControlActionSetAndStepsManager {
 	actionSetRunWhileHeld(stepId: string, setId: ActionSetId, runWhileHeld: boolean): boolean
 
 	/**
-	 * Get the index of the current (next to execute) step
-	 * @returns The index of current step
-	 */
-	getActiveStepIndex(): number
-
-	/**
 	 * Add a step to this control
 	 * @returns Id of new step
 	 */
 	stepAdd(): string
-
-	/**
-	 * Progress through the action-sets
-	 * @param amount Number of steps to progress
-	 */
-	stepAdvanceDelta(amount: number): boolean
 
 	/**
 	 * Duplicate a step on this control
@@ -46,22 +74,10 @@ export interface ControlActionSetAndStepsManager {
 	stepDuplicate(stepId: string): boolean
 
 	/**
-	 * Set the current (next to execute) action-set by index
-	 * @param index The step index to make the next
-	 */
-	stepMakeCurrent(index: number): boolean
-
-	/**
 	 * Remove an action-set from this control
 	 * @param stepId the id of the action-set
 	 */
 	stepRemove(stepId: string): boolean
-
-	/**
-	 * Set the current (next to execute) action-set by id
-	 * @param stepId The step id to make the next
-	 */
-	stepSelectCurrent(stepId: string): boolean
 
 	/**
 	 * Swap two action-sets
@@ -77,3 +93,9 @@ export interface ControlActionSetAndStepsManager {
 	 */
 	stepRename(stepId: string, newName: string): boolean
 }
+
+/**
+ * The step/action-set surface as seen by a control: a runtime-only-or-editable discriminated union. Narrow on
+ * `isEditable` to reach the structural edit mutators.
+ */
+export type SomeStepManager = ControlStepsRuntimeManager | ControlActionSetAndStepsEditor

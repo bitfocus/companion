@@ -9,10 +9,16 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { WithEntityEditing } from './EntityListPoolEditingMixin.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { NewFeedbackValue } from './Types.js'
 
-export class EntityListPoolExpressionVariable extends ControlEntityListPoolBase {
+/**
+ * The expression-variable entity pool. Always editable, so this single exported class IS the editable pool
+ * (entity-edit mutators mixed in via {@link WithEntityEditing}); there is no separate read-only variant. The
+ * shared read-only machinery lives on the internal {@link ControlEntityListPoolBase}.
+ */
+export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlEntityListPoolBase) {
 	#entities: ControlEntityList
 	#localVariables: ControlEntityList
 
