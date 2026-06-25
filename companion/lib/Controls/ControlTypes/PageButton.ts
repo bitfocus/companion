@@ -4,9 +4,8 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
-import { ConvertSomeButtonGraphicsElementForDrawing } from '../../Graphics/ConvertGraphicsElements.js'
-import { ElementConversionCache } from '../../Graphics/ElementConversionCache.js'
 import { ControlBase } from '../ControlBase.js'
+import type { ControlDependencies } from '../ControlDependencies.js'
 import type {
 	ControlWithConvert,
 	ControlWithoutActions,
@@ -16,8 +15,7 @@ import type {
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 } from '../IControlFragments.js'
-
-const emptyMap: ReadonlyMap<string, never> = new Map<string, never>()
+import { LayeredButtonDrawer } from './Button/LayeredButtonDrawer.js'
 
 /**
  * Class for some page button control.
@@ -54,31 +52,43 @@ export abstract class ControlButtonPage<TJson>
 	readonly supportsOptions = false
 	readonly supportsPushed = false
 
-	/**
-	 * The variables referenced in the last draw. Whenever one of these changes, a redraw should be performed
-	 */
-	#lastDrawVariables: ReadonlySet<string> | null = null
+	readonly #drawing: LayeredButtonDrawer
+	override get drawing(): LayeredButtonDrawer {
+		return this.#drawing
+	}
 
-	/**
-	 * Cache for element conversion results (for future per-element caching optimization)
-	 */
-	readonly #elementConversionCache = new ElementConversionCache()
+	protected triggerInvalidation = (): void => {
+		this.#drawing.invalidate()
+	}
+
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+		super(deps, controlId, debugNamespace)
+
+		const { drawType, elements } = this.getDrawElements()
+		this.#drawing = new LayeredButtonDrawer(
+			deps,
+			controlId,
+			{
+				getButtonStateProps: () => ({
+					pushed: false,
+					stepCurrent: 0,
+					stepCount: 0,
+					button_status: undefined,
+					action_running: undefined,
+				}),
+				entities: null,
+			},
+			drawType
+		)
+		this.#drawing.loadElements(structuredClone(elements))
+	}
 
 	/**
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
-		this.#elementConversionCache.clear()
+		this.#drawing.dispose()
 		super.destroy()
-	}
-
-	/**
-	 * Get the complete style object of a button
-	 * @returns the processed style of the button
-	 */
-	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
-	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
-		return this.#lastDrawStyle
 	}
 
 	protected abstract getDrawElements(): {
@@ -87,51 +97,7 @@ export abstract class ControlButtonPage<TJson>
 	}
 
 	/**
-	 * Get the complete style object of a button
-	 * @returns the processed style of the button
-	 */
-	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel | null> {
-		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(location, null, null)
-
-		const { drawType, elements: rawElements } = this.getDrawElements()
-
-		// Compute the new drawing, using the element conversion cache for per-element caching
-		const { elements, usedVariables } = await ConvertSomeButtonGraphicsElementForDrawing(
-			this.deps.instance.definitions,
-			parser,
-			this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
-			rawElements,
-			emptyMap,
-			true,
-			this.#elementConversionCache,
-			null,
-			null
-		)
-		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
-
-		const result: DrawStyleLayeredButtonModel = {
-			pushed: false,
-			stepCurrent: 0,
-			stepCount: 0,
-			button_status: undefined,
-			action_running: undefined,
-
-			elements,
-
-			style: 'button-layered',
-			drawType: drawType,
-		}
-
-		this.#lastDrawStyle = result
-		return result
-	}
-
-	/**
 	 * Collect the connection ids, labels, and variables referenced by this control
-	 * @param foundConnectionIds - connection ids being referenced
-	 * @param foundConnectionLabels - connection labels being referenced
-	 * @param foundVariables - variables being referenced
 	 */
 	collectReferencedConnectionsAndVariables(
 		_foundConnectionIds: Set<string>,
@@ -145,28 +111,11 @@ export abstract class ControlButtonPage<TJson>
 	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
 	 */
 	triggerLocationHasChanged(): void {
-		// Ensure any dependencies on the location in the drawing are updated
-		this.#elementConversionCache.clear()
-		this.triggerRedraw()
+		this.#drawing.locationChanged()
 	}
 
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
-	}
-
-	/**
-	 * Propagate variable changes
-	 * @param allChangedVariables - variables with changes
-	 */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		if (!this.#lastDrawVariables) return
-		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
-
-		// Queue invalidation for cached elements that use any of the changed variables
-		this.#elementConversionCache.queueInvalidateVariables(allChangedVariables)
-
-		this.logger.silly('variable changed in button ' + this.controlId)
-		this.triggerRedraw()
 	}
 
 	abstract convertControl(): SomeButtonModel

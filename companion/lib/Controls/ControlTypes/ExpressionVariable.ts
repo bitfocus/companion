@@ -9,7 +9,6 @@ import type {
 	ExpressionVariableModel,
 	ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../ControlBase.js'
@@ -142,7 +141,7 @@ export class ControlExpressionVariable
 		// Elements are not relevant for expression variables
 
 		if (options.redraw) {
-			this.triggerRedraw()
+			this.triggerInvalidation()
 		}
 	}
 
@@ -329,9 +328,8 @@ export class ControlExpressionVariable
 
 	/**
 	 * Trigger a recheck of the condition, as something has changed and it might be the 'condition'
-	 * @access protected
 	 */
-	triggerRedraw = debounceFn(
+	triggerInvalidation = debounceFn(
 		() => {
 			const name = this.options.variableName
 			if (!name) return
@@ -351,17 +349,14 @@ export class ControlExpressionVariable
 		}
 	)
 
-	getLastDrawStyle(): DrawStyleModel | null {
-		return null
+	get drawing(): null {
+		return null // Expression variables don't draw
 	}
 
 	/**
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
-		// Nothing to do
-	}
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
 		// Nothing to do
 	}
 }

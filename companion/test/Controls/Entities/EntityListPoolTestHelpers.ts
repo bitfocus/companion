@@ -11,7 +11,7 @@ import type {
 	ControlEntityListChangeProps,
 	ControlEntityListPoolProps,
 } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
-import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
+import { EditableControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
 import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities/EntityListPoolExpressionVariable.js'
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
 import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
@@ -111,7 +111,14 @@ export function createPool(options: CreatePoolOptions = {}) {
 
 	const base = createPoolDeps(options)
 
-	const pool = new ControlEntityListPoolButton(base.deps, sendRuntimeProps, executeExpressionInControl, isLayered)
+	// The functional helper builds the editable pool so tests can exercise the entity/step mutators. The
+	// read-only `ControlEntityListPoolButton` is constructed directly by the read-only-by-construction tests.
+	const pool = new EditableControlEntityListPoolButton(
+		base.deps,
+		sendRuntimeProps,
+		executeExpressionInControl,
+		isLayered
+	)
 
 	return {
 		...base,

@@ -44,6 +44,7 @@ function makeEntityControl() {
 	return {
 		supportsEntities: true,
 		entities: {
+			isEditable: true,
 			entityAdd: vi.fn(() => true),
 			entityReplaceAll: vi.fn(() => true),
 		},

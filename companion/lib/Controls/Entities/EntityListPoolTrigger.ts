@@ -9,10 +9,16 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { WithEntityEditing } from './EntityListPoolEditingMixin.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { NewFeedbackValue } from './Types.js'
 
-export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
+/**
+ * The trigger entity pool. Triggers are always editable, so this single exported class IS the editable pool
+ * (the structural entity-edit mutators are mixed in via {@link WithEntityEditing}); there is no separate
+ * read-only variant. The shared read-only machinery lives on the internal {@link ControlEntityListPoolBase}.
+ */
+export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntityListPoolBase) {
 	#feedbacks: ControlEntityList
 
 	#actions: ControlEntityList

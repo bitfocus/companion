@@ -394,24 +394,24 @@ describe('ControlTrigger', () => {
 			runMultipleActions.mockClear()
 
 			condition.mockReturnValue(true)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 
 			// Staying true does not re-fire
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 
 			// Falling does not fire a condition_true event
 			condition.mockReturnValue(false)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 
 			// But the next rise fires again
 			condition.mockReturnValue(true)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(2)
 		})
@@ -425,7 +425,7 @@ describe('ControlTrigger', () => {
 			runMultipleActions.mockClear()
 
 			condition.mockReturnValue(false)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		})
@@ -440,9 +440,9 @@ describe('ControlTrigger', () => {
 
 			// Many redraw requests in quick succession produce a single recheck
 			condition.mockReturnValue(true)
-			trigger.triggerRedraw()
-			trigger.triggerRedraw()
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
+			trigger.triggerInvalidation()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		})
@@ -465,10 +465,10 @@ describe('ControlTrigger', () => {
 
 			// While a real falling and rising edge afterwards still fires
 			condition.mockReturnValue(false)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			condition.mockReturnValue(true)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		})
@@ -485,7 +485,7 @@ describe('ControlTrigger', () => {
 			vi.runAllTimers()
 
 			condition.mockReturnValue(true)
-			trigger.triggerRedraw()
+			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).not.toHaveBeenCalled()
 		})

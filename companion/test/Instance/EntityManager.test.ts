@@ -29,7 +29,7 @@ describe('InstanceEntityManager', () => {
 
 	const mockControl = {
 		entities: {
-			entityReplace: vi.fn(),
+			entityReplaceForUpgrade: vi.fn(),
 		},
 		supportsEntities: true,
 	}
@@ -773,7 +773,7 @@ describe('InstanceEntityManager', () => {
 			// Mock the control
 			const mockControl = {
 				entities: {
-					entityReplace: vi.fn(),
+					entityReplaceForUpgrade: vi.fn(),
 				},
 				supportsEntities: true,
 			}
@@ -801,8 +801,8 @@ describe('InstanceEntityManager', () => {
 			// Wait for the Promise microtasks to resolve
 			await vi.runAllTimersAsync()
 
-			// Verify that the entityReplace was called with the upgraded entity
-			expect(mockControl.entities.entityReplace).toHaveBeenCalledWith(
+			// Verify that the entityReplaceForUpgrade was called with the upgraded entity
+			expect(mockControl.entities.entityReplaceForUpgrade).toHaveBeenCalledWith(
 				expect.objectContaining({
 					id: 'entity-1',
 					type: EntityModelType.Action,
@@ -1290,7 +1290,7 @@ describe('InstanceEntityManager', () => {
 			await vi.runAllTimersAsync()
 
 			// The entity should not get updated in the control since it was deleted
-			expect(mockControl.entities.entityReplace).not.toHaveBeenCalled()
+			expect(mockControl.entities.entityReplaceForUpgrade).not.toHaveBeenCalled()
 		})
 	})
 

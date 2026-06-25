@@ -1004,7 +1004,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.entities.entityReplace(
+						control.entities.entityReplaceForUpgrade(
 							{
 								type: EntityModelType.Feedback,
 								id: feedback.id,
@@ -1027,7 +1027,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					const control = this.#deps.controls.getControl(action.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.entities.entityReplace(
+						control.entities.entityReplaceForUpgrade(
 							{
 								type: EntityModelType.Action,
 								id: action.id,

@@ -30,6 +30,7 @@ function makeControl(entities: any[]) {
 	return {
 		supportsEntities: true,
 		entities: {
+			isEditable: true,
 			getAllEntitiesInList: (listId: string) => (listId === 'local-variables' ? entities : []),
 			entitySetVariableValue: vi.fn(),
 			entitySetOption: vi.fn(),
@@ -182,12 +183,10 @@ describe('LocalVariablesController', () => {
 
 			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var' })
 
-			expect(control.entities.entitySetOption).toHaveBeenCalledWith(
-				'local-variables',
-				entity.id,
-				'startup_value',
-				'current'
-			)
+			expect(control.entities.entitySetOption).toHaveBeenCalledWith('local-variables', entity.id, 'startup_value', {
+				isExpression: false,
+				value: 'current',
+			})
 		})
 	})
 })
