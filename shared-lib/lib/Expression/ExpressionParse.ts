@@ -1,9 +1,22 @@
 import * as acorn from 'acorn'
 import { ValidateExpression } from './ExpressionValidate.js'
+import {
+	repeatedUnaryAcornPlugin,
+	templateLiteralAsiAcornPlugin,
+	topLevelObjectLiteralAcornPlugin,
+} from './Plugins/CompanionDialect.js'
 import { companionVariablesAcornPlugin } from './Plugins/CompanionVariables.js'
 
-// An acorn parser extended to understand Companion's `$(label:name)` variable references
-const ExpressionAcornParser = acorn.Parser.extend(companionVariablesAcornPlugin)
+// An acorn parser extended to understand Companion's expression dialect: `$(label:name)` variable
+// references plus a handful of dialect quirks (top-level object literals, `--1` as repeated unary,
+// and tagged-template ASI). Each concern is a focused plugin; they override disjoint methods so order
+// does not matter.
+const ExpressionAcornParser = acorn.Parser.extend(
+	companionVariablesAcornPlugin,
+	topLevelObjectLiteralAcornPlugin,
+	repeatedUnaryAcornPlugin,
+	templateLiteralAsiAcornPlugin
+)
 
 const PARSE_OPTIONS: acorn.Options = {
 	ecmaVersion: 'latest',

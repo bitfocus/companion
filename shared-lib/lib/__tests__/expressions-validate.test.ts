@@ -116,6 +116,9 @@ describe('expression validation (subset by rejection)', () => {
 			['/abc/', /Regular expression literals are not supported/],
 			['123n', /BigInt literals are not supported/],
 
+			// tagged templates (same-line backtick still parses as a tag, then is rejected)
+			['foo`bar`', /Tagged template literals are not supported/],
+
 			// member/call restrictions
 			['[].map(x)', /Only direct function calls are supported/],
 			['fn?.()', /Optional function calls/],

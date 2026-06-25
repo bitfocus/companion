@@ -267,6 +267,19 @@ describe('resolver', function () {
 			const result = resolve(parse('`val: ${1 + 2}dB or ${$(some:var)} and ${$(another:var)}`'), getVariable)
 			expect(result).toBe('val: 3dB or var1 and 99')
 		})
+
+		it('template on a new line after a statement is not a tagged template (ASI)', () => {
+			// JS ASI does not break before a backtick, so without special handling this parses as the
+			// tagged template `a = 1`L: ${a}``, which the dialect rejects. A newline must split it into
+			// two statements: `a = 1` then `` `L: ${a}` ``.
+			const result = resolve(parse('a = 1\n\n`L: ${a}`'), defaultGetValue)
+			expect(result).toBe('L: 1')
+		})
+
+		it('template on the next line after a number literal returns the template', () => {
+			const result = resolve(parse('1\n`done`'), defaultGetValue)
+			expect(result).toBe('done')
+		})
 	})
 
 	describe('objects', () => {
