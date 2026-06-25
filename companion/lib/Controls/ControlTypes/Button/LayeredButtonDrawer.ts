@@ -122,8 +122,10 @@ export class LayeredButtonDrawer {
 	)
 	#pendingDraw = false
 
-	/** The draw elements. Mutation lives on the editor subclass; this is for read/serialize. */
-	get drawElements(): SomeButtonGraphicsElement[] {
+	/**
+	 * The draw elements, as a read-only view.
+	 */
+	get drawElements(): readonly SomeButtonGraphicsElement[] {
 		return this.drawElementsList
 	}
 
@@ -138,35 +140,48 @@ export class LayeredButtonDrawer {
 	loadElements(elements: SomeButtonGraphicsElement[] | undefined): void {
 		this.drawElementsList = elements || []
 
-		// HACK: temporary fill in new properties on loaded elements
+		// Ensure all properties are defined on elements as they are loaded
 		for (const element of this.drawElementsList) {
-			if (element.type !== 'canvas') {
-				try {
-					const defaults = CreateElementOfType(element.type)
-					for (const key of Object.keys(defaults)) {
-						if (key === 'id' || key === 'type' || key === 'name') continue
-						if (!(key in element)) {
-							;(element as any)[key] = (defaults as any)[key]
-						}
-					}
-				} catch (_e) {
-					// Ignore
-				}
-			}
-			switch (element.type) {
-				case 'canvas':
-					if (!element.showStatusIcons)
-						element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
-					break
-				case 'image':
-					if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
-						element.fillMode.value = 'fit'
-					}
-					break
-			}
+			this.#normalizeLoadedElement(element)
 		}
 
 		this.elementConversionCache.clear()
+	}
+
+	/**
+	 * Backfill missing properties and migrate legacy values on a loaded element, recursing into group children
+	 * so that nested layers stay consistent with top-level ones.
+	 */
+	#normalizeLoadedElement(element: SomeButtonGraphicsElement): void {
+		if (element.type !== 'canvas') {
+			try {
+				const defaults = CreateElementOfType(element.type)
+				for (const key of Object.keys(defaults)) {
+					if (key === 'id' || key === 'type' || key === 'name') continue
+					if (!(key in element)) {
+						;(element as any)[key] = (defaults as any)[key]
+					}
+				}
+			} catch (_e) {
+				// Ignore
+			}
+		}
+		switch (element.type) {
+			case 'canvas':
+				if (!element.showStatusIcons)
+					element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
+				break
+			case 'image':
+				if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
+					element.fillMode.value = 'fit'
+				}
+				break
+			case 'group':
+				for (const child of element.children) {
+					this.#normalizeLoadedElement(child)
+				}
+				break
+		}
 	}
 
 	/** Compute the draw style of the button. */

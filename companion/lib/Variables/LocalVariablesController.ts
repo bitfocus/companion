@@ -160,6 +160,9 @@ export class LocalVariablesController {
 
 		const { entities, variableEntity } = controlAndVariable
 
-		entities.entitySetOption(LocalVariablesList, variableEntity.id, 'startup_value', variableEntity.feedbackValue)
+		entities.entitySetOption(LocalVariablesList, variableEntity.id, 'startup_value', {
+			isExpression: false,
+			value: variableEntity.feedbackValue,
+		})
 	}
 }

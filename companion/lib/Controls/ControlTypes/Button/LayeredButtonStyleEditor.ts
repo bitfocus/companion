@@ -199,14 +199,22 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 	}
 
 	updateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
-		// Ignore some fixed properties
-		if (key === 'id' || key === 'type' || key === 'name') return false
+		// Ignore fixed/structural properties, to avoid corrupting the layer model
+		if (
+			key === 'id' ||
+			key === 'type' ||
+			key === 'name' ||
+			key === 'usage' ||
+			key === 'children' ||
+			key === 'connectionId' ||
+			key === 'elementId'
+		)
+			return false
 
 		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
 		if (!currentElementLocation) return false
 
 		const entry = currentElementLocation.element as any
-		if (!entry[key]) return false
 
 		entry[key] = newVal
 

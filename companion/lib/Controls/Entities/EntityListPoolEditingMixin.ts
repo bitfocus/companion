@@ -714,12 +714,9 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			// Update the current step
 			if (this.currentStep.type === 'id') {
-				const oldIndex = oldKeys.indexOf(stepId)
-				let newIndex = oldIndex + 1
-				if (newIndex >= oldKeys.length) {
-					newIndex = 0
-				}
-				if (newIndex !== oldIndex) {
+				if (this.currentStep.id === stepId) {
+					const oldIndex = oldKeys.indexOf(stepId)
+					const newIndex = oldIndex + 1 >= oldKeys.length ? 0 : oldIndex + 1
 					this.currentStep.id = oldKeys[newIndex]
 
 					this.sendRuntimePropsChange()

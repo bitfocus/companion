@@ -161,14 +161,6 @@ export class ControlButtonLayered
 		}
 	}
 
-	/**
-	 * Prepare this control for deletion
-	 */
-	destroy(): void {
-		this.drawing.dispose()
-		super.destroy()
-	}
-
 	protected override entityListReportChange(options: ControlEntityListChangeProps): void {
 		if (!options.noSave) {
 			this.commitChange(false)
@@ -203,15 +195,6 @@ export class ControlButtonLayered
 		)
 		collector.visitEntities(this.entities.getAllEntities(), [])
 		this.drawing.visit(collector)
-	}
-
-	/**
-	 * Inform the control that it has been moved, and anything relying on its location must be invalidated
-	 */
-	triggerLocationHasChanged(): void {
-		super.triggerLocationHasChanged()
-
-		this.drawing.locationChanged()
 	}
 
 	layeredStyleAddElement(type: string, index: number | null): string {
@@ -297,7 +280,7 @@ export class ControlButtonLayered
 	override toJSON(clone = true): LayeredButtonModel {
 		const obj: LayeredButtonModel = {
 			type: this.type,
-			style: { layers: this.drawing.drawElements },
+			style: { layers: [...this.drawing.drawElements] },
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),

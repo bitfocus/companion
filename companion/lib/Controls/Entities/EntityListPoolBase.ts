@@ -49,7 +49,7 @@ export interface ControlEntityListPoolProps {
  * read-only control (e.g. a preset reference) is therefore read-only by construction, with no runtime flag
  * to check and no guard to forget.
  *
- * `entityReplace` is intentionally here (not in the mixin): it is an upgrade/runtime path used when a
+ * `entityReplaceForUpgrade` is intentionally here (not in the mixin): it is an upgrade/runtime path used when a
  * connection upgrades its entities, and must work on every control regardless of editability.
  */
 export abstract class ControlEntityListPoolBase {

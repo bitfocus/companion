@@ -211,6 +211,9 @@ export abstract class ButtonControlRuntimeBase<
 	destroy(): void {
 		this.abortRunningHoldTimers(undefined)
 
+		// Buttons always host a drawer, so the base owns tearing it down
+		this.drawing.dispose()
+
 		this.entities.destroy()
 
 		super.destroy()
@@ -404,6 +407,9 @@ export abstract class ButtonControlRuntimeBase<
 
 		// Report the location variables for this control as having changed
 		this.deps.variableValues.triggerLocationVariablesChange(this.controlId)
+
+		// Clear location-dependent draw state so the move is reflected immediately
+		this.drawing.locationChanged()
 	}
 }
 

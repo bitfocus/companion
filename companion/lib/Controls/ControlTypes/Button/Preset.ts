@@ -256,6 +256,11 @@ export class ControlButtonPreset
 		this.#drawing.visit(updater)
 		const changed = updater.visitEntities(this.entities.getAllEntities(), []).recheckChangedFeedbacks().hasChanges()
 
+		if (changed) {
+			// Purge all cache, as we don't know what could have changed
+			this.#drawing.clearCache()
+		}
+
 		// redraw if needed and save changes
 		this.commitChange(changed)
 	}
@@ -339,7 +344,7 @@ export class ControlButtonPreset
 		const obj: PresetButtonModel = {
 			type: this.type,
 			style: {
-				layers: this.#drawing.drawElements,
+				layers: [...this.#drawing.drawElements],
 			},
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
