@@ -12,7 +12,11 @@
 import type { ReadonlyDeep } from 'type-fest'
 import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression, type GetVariableValueProps } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import {
+	ResolveExpression,
+	type GetVariableValueProps,
+	type ResolveExpressionOptions,
+} from '@companion-app/shared/Expression/ExpressionResolve.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -263,7 +267,8 @@ export function executeExpression(
 	str: string,
 	rawVariableValues: ReadonlyDeep<VariableValueData>,
 	requiredType: string | undefined,
-	cachedVariableValues: VariableValueCache
+	cachedVariableValues: VariableValueCache,
+	options?: ResolveExpressionOptions
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
 
@@ -363,7 +368,7 @@ export function executeExpression(
 			},
 		}
 
-		let value = ResolveExpression(ParseExpression(str), getVariableValue, functions)
+		let value = ResolveExpression(ParseExpression(str), getVariableValue, functions, options)
 
 		// Fix up the result for some types
 		switch (requiredType) {

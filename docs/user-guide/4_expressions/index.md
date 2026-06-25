@@ -126,16 +126,24 @@ Template strings are the easiest way to build text out of multiple values. They 
 
 ### Multiple lines and temporary variables
 
-Longer expressions can be split across multiple lines, assigning intermediate results to temporary variables. The value of the last statement is the result of the expression:
+Longer expressions can be split across multiple statements, separated by a newline or a semicolon (`;`), assigning intermediate results to temporary variables. The value of the last statement is the result of the expression:
 
 ```
 myval = $(custom:a) + $(custom:b)
 myval / 2
 ```
 
-If you prefer, you can write `return` before the final statement to make the result explicit — `return myval / 2` behaves the same as the example above.
+If you prefer, you can write `return` to make the result explicit, and to stop early — `return myval / 2` ends the expression with that value. Note that `return` and its value must be on the same line.
 
 Temporary variables only exist while the expression is being evaluated — they are not visible anywhere else, and are not related to custom variables.
+
+:::tip
+
+If a statement ends with a value and the next line begins with `` ` ``, `(` or `[`, the two lines can be read as a single statement (for example a template string on its own line after a calculation becomes part of the line above). When in doubt, end statements with a semicolon (`;`) — it removes the ambiguity.
+
+:::
+
+You can also declare variables explicitly with `let` and `const`, which matters once you start using blocks and functions. How variables are created, updated and scoped is covered in [Advanced expressions](scripting.md#variables-and-scope).
 
 ### Comments
 
@@ -164,6 +172,18 @@ $(custom:settings).timeout
 ```
 
 For querying deeper structures, see the [`jsonpath` function](functions.md#objectarray-operations).
+
+You can also use optional chaining (`?.`) to safely read from a value that might be missing, and the spread operator (`...`) to combine arrays or objects:
+
+```js
+$(custom:settings)?.timeout ?? 1000
+[...$(custom:list_a), ...$(custom:list_b)]
+{ ...$(custom:defaults), label: 'override' }
+```
+
+## Going further
+
+Beyond the building blocks above, expressions can do real scripting — declaring variables, control flow (`if`, loops), defining your own functions, and processing arrays. If you need more than a single formula, see **[Advanced expressions](scripting.md)**.
 
 ## Worked examples
 
@@ -245,5 +265,16 @@ If you find a case where an expression fails to evaluate because of one of the v
 
 ## Notes
 
-- The parser is slightly more permissive than JavaScript about statement separation; multiple statements may appear on a single line.
+- The expression language is a subset of JavaScript. Most JavaScript you write will work, but features such as classes, regular-expression literals and `try`/`catch` are not available, and only arrow functions (`x => ...`) are supported, not the `function` keyword.
+- Multiple statements must be separated by a newline or a semicolon (`;`).
 - These features can be combined into long and complex expressions. More functionality will be added over time — let us know if something you need is missing.
+
+:::note Changes in Companion 5.0
+
+The expression engine was rebuilt on a standard JavaScript parser in 5.0, adding control flow, functions and collection helpers (see [Advanced expressions](scripting.md)). A few previously-accepted quirks changed as a result:
+
+- Statements must now be separated by a newline or `;` — two statements with no separator (e.g. `10 + 10 20 30`) are no longer accepted.
+- `return` must be on the same line as its value; a line break directly after `return` now ends the expression with no value.
+- Object property access with a dot (`$(custom:obj).name`) now works the same as bracket access (`$(custom:obj)['name']`); previously only bracket access returned a value.
+
+:::

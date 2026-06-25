@@ -495,7 +495,9 @@ export class SurfaceOutboundController {
 								throw new Error(`Unknown variable "${props.variableId}"`)
 							}
 						},
-						ExpressionFunctions
+						ExpressionFunctions,
+						// Config-match expressions should be trivial - keep the budget tight
+						{ maxOperations: 1000, maxCallDepth: 16 }
 					)
 					return !!val && val !== 'false' && val !== '0'
 				} catch (e) {

@@ -1778,13 +1778,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
-    "@jsep-plugin/comment": "npm:^1.0.4"
-    "@jsep-plugin/numbers": "npm:^1.0.2"
-    "@jsep-plugin/object": "npm:^1.2.2"
-    "@jsep-plugin/template": "npm:^1.0.5"
     "@types/semver": "npm:^7.7.1"
+    acorn: "npm:^8.17.0"
     colord: "npm:^2.9.3"
-    jsep: "npm:^1.4.0"
     jsonpath-plus: "npm:^10.4.0"
     quick-lru: "npm:^7.3.0"
     semver: "npm:^7.8.5"
@@ -4461,48 +4457,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jsep-plugin/comment@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "@jsep-plugin/comment@npm:1.0.4"
-  peerDependencies:
-    jsep: ^0.4.0||^1.0.0
-  checksum: 10c0/5689c714017734ed003e91ec4ec1ca3fabf55ee3388335e53855dd79538f81ef9f4e4122ecb588034a15488d1c6a5fceb3f9f0048a7f12b0e6c82a0b8907d1c1
-  languageName: node
-  linkType: hard
-
-"@jsep-plugin/numbers@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@jsep-plugin/numbers@npm:1.0.2"
-  peerDependencies:
-    jsep: ^0.4.0||^1.0.0
-  checksum: 10c0/04ec2e38dedadef98762e009e3f694a5cb8647615cb64c8d3525c916af667d75a599e67f671e3fedf7e3cf07afeb3ef715531ba2af97b6e95f5504dcc9f00804
-  languageName: node
-  linkType: hard
-
-"@jsep-plugin/object@npm:^1.2.2":
-  version: 1.2.2
-  resolution: "@jsep-plugin/object@npm:1.2.2"
-  peerDependencies:
-    jsep: ^0.4.0||^1.0.0
-  checksum: 10c0/5ba1a263d312bb486cd2168e8c137a4e9cec1f883bcf5e112f8e3096b9e880cdf8c1bc977029023b8e1bcc6b2a0420fdaecd19e42c7d2d538b3499bd78ad5863
-  languageName: node
-  linkType: hard
-
 "@jsep-plugin/regex@npm:^1.0.4":
   version: 1.0.4
   resolution: "@jsep-plugin/regex@npm:1.0.4"
   peerDependencies:
     jsep: ^0.4.0||^1.0.0
   checksum: 10c0/bec7eb7ea6ab453a2672edc808644c5be3dc06b2a9d77182e18cd595b37deba6dcdb3760849d8684afc5779a86b7d2604dd525cb612a548f9ed9f31a8032ec24
-  languageName: node
-  linkType: hard
-
-"@jsep-plugin/template@npm:^1.0.5":
-  version: 1.0.5
-  resolution: "@jsep-plugin/template@npm:1.0.5"
-  peerDependencies:
-    jsep: ^0.4.0||^1.0.0
-  checksum: 10c0/c1bd274ece3c84f8eee883489a1a1d1d4611135e8e4c64f4d6d7491b390e7744f986266f3743e818a911364bab8c7f7e4c79a693a74ca9375a6e153dcfca4070
   languageName: node
   linkType: hard
 
@@ -9519,6 +9479,15 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 10c0/c9c52697227661b68d0debaf972222d4f622aa06b185824164e153438afa7b08273432ca43ea792cadb24dada1d46f6f6bb1ef8de9956979288cc1b96bf9914e
+  languageName: node
+  linkType: hard
+
+"acorn@npm:^8.17.0":
+  version: 8.17.0
+  resolution: "acorn@npm:8.17.0"
+  bin:
+    acorn: bin/acorn
+  checksum: 10c0/5dcefea5f8f023b6cc24cbe71fb5a8112b601d36c4fa07d14e4e6ffc2ee47383332c46b36c766d9437725aa6660156eae50efa0c838719823b50d7c327c4ed42
   languageName: node
   linkType: hard
 

@@ -1,8 +1,33 @@
-import jsep from 'jsep'
 import { describe, expect, it } from 'vitest'
 import { ParseExpression as parse } from '../Expression/ExpressionParse.js'
 import { ResolveExpression as resolve, type GetVariableValueProps } from '../Expression/ExpressionResolve.js'
 import type { VariableValue } from '../Model/Variables.js'
+
+// The operators the evaluator implements. (Previously enumerated from jsep's tables; now that we parse
+// with acorn these are listed explicitly.)
+const BINARY_OPERATORS = [
+	'+',
+	'-',
+	'*',
+	'/',
+	'%',
+	'^',
+	'**',
+	'>>',
+	'<<',
+	'>=',
+	'<=',
+	'>',
+	'<',
+	'==',
+	'!=',
+	'===',
+	'!==',
+	'&',
+	'|',
+]
+const LOGICAL_OPERATORS = ['||', '&&', '??']
+const UNARY_OPERATORS = ['-', '+', '!', '~']
 
 const defaultGetValue = (_props: GetVariableValueProps): VariableValue | undefined => {
 	throw new Error('Not implemented')
@@ -10,24 +35,20 @@ const defaultGetValue = (_props: GetVariableValueProps): VariableValue | undefin
 
 describe('resolver', function () {
 	describe('ensure each binary operator is implemented', function () {
-		for (const op of Object.keys(jsep.binary_ops)) {
-			if (op) {
-				it(`should handle "${op}" operator`, function () {
-					const result = resolve(parse(`a = 1 ; a ${op} 2`), defaultGetValue)
-					expect(typeof result).toMatch(/^(number|boolean)$/)
-				})
-			}
+		for (const op of [...BINARY_OPERATORS, ...LOGICAL_OPERATORS]) {
+			it(`should handle "${op}" operator`, function () {
+				const result = resolve(parse(`a = 1 ; a ${op} 2`), defaultGetValue)
+				expect(typeof result).toMatch(/^(number|boolean)$/)
+			})
 		}
 	})
 
 	describe('ensure each unary operator is implemented', function () {
-		for (const op of Object.keys(jsep.unary_ops)) {
-			if (op) {
-				it(`should handle "${op}" operator`, function () {
-					const result = resolve(parse(`${op}2`), defaultGetValue)
-					expect(typeof result).toMatch(/^(number|boolean)$/)
-				})
-			}
+		for (const op of UNARY_OPERATORS) {
+			it(`should handle "${op}" operator`, function () {
+				const result = resolve(parse(`${op}2`), defaultGetValue)
+				expect(typeof result).toMatch(/^(number|boolean)$/)
+			})
 		}
 	})
 
@@ -180,12 +201,14 @@ describe('resolver', function () {
 
 		it('should detect missing operands', function () {
 			const fn = () => resolve(parse('1 +'), defaultGetValue)
-			expect(fn).toThrow(/Expected expression after/)
+			expect(fn).toThrow()
 		})
 
-		it('should treat extraneous operands as multiple statements', function () {
-			const value = resolve(parse('10 + 10 20 30'), defaultGetValue)
-			expect(value).toEqual(30)
+		it('should reject extraneous operands (no-separator multi-statement quirk dropped in 5.0)', function () {
+			// Previously this was silently treated as multiple statements and returned 30.
+			// A real parser rejects it; the quirk is intentionally removed.
+			const fn = () => resolve(parse('10 + 10 20 30'), defaultGetValue)
+			expect(fn).toThrow()
 		})
 	})
 
@@ -329,6 +352,112 @@ describe('resolver', function () {
 		})
 	})
 
+	describe('property access', () => {
+		const getObjVar = (props: GetVariableValueProps): any => {
+			switch (props.variableId) {
+				case 'my:obj':
+					return { k: 'v', n: 42 }
+				case 'my:arr':
+					return [10, 20, 30]
+			}
+			return undefined
+		}
+
+		it('non-computed data property on an object', () => {
+			expect(resolve(parse('$(my:obj).k'), getObjVar)).toBe('v')
+			expect(resolve(parse('{a: 1, b: 2}.b'), defaultGetValue)).toBe(2)
+		})
+
+		it('computed and non-computed access agree for data properties', () => {
+			expect(resolve(parse("$(my:obj)['k']"), getObjVar)).toBe('v')
+			expect(resolve(parse('$(my:obj).k'), getObjVar)).toBe('v')
+		})
+
+		it('array index access works', () => {
+			expect(resolve(parse('$(my:arr)[1]'), getObjVar)).toBe(20)
+			expect(resolve(parse('[10, 20, 30][2]'), defaultGetValue)).toBe(30)
+		})
+
+		it('built-in/inherited properties are NOT accessible', () => {
+			// `length` is an own-but-non-enumerable property; methods are inherited
+			expect(resolve(parse('$(my:arr).length'), getObjVar)).toBe(undefined)
+			expect(resolve(parse("$(my:arr)['length']"), getObjVar)).toBe(undefined)
+			expect(resolve(parse('[1, 2, 3].length'), defaultGetValue)).toBe(undefined)
+			expect(resolve(parse("'abc'.length"), defaultGetValue)).toBe(undefined)
+			expect(resolve(parse('[1, 2, 3].map'), defaultGetValue)).toBe(undefined)
+		})
+
+		it('string index access still works', () => {
+			expect(resolve(parse("'abc'[0]"), defaultGetValue)).toBe('a')
+		})
+	})
+
+	describe('optional chaining', () => {
+		const getValue = (props: GetVariableValueProps): any => {
+			switch (props.variableId) {
+				case 'my:obj':
+					return { k: 'v', nested: { deep: 1 } }
+				case 'my:null':
+					return null
+				case 'my:arr':
+					return [{ name: 'first' }]
+			}
+			return undefined
+		}
+
+		it('reads through a present value', () => {
+			expect(resolve(parse('$(my:obj)?.k'), getValue)).toBe('v')
+			expect(resolve(parse('$(my:obj)?.nested?.deep'), getValue)).toBe(1)
+		})
+
+		it('short-circuits to undefined on a nullish value', () => {
+			expect(resolve(parse('$(my:null)?.k'), getValue)).toBe(undefined)
+			expect(resolve(parse('$(my:null)?.k?.deep'), getValue)).toBe(undefined)
+			expect(resolve(parse('a = null; a?.b'), defaultGetValue)).toBe(undefined)
+		})
+
+		it('works with computed optional access', () => {
+			expect(resolve(parse('$(my:arr)?.[0]?.name'), getValue)).toBe('first')
+			expect(resolve(parse('$(my:null)?.[0]'), getValue)).toBe(undefined)
+		})
+	})
+
+	describe('spread', () => {
+		const getValue = (props: GetVariableValueProps): any => {
+			switch (props.variableId) {
+				case 'my:arr':
+					return [10, 20, 30]
+				case 'my:obj':
+					return { a: 1, b: 2 }
+			}
+			return undefined
+		}
+
+		it('spreads into array literals', () => {
+			expect(resolve(parse('[...[1, 2], 3]'), defaultGetValue)).toEqual([1, 2, 3])
+			expect(resolve(parse('[0, ...$(my:arr)]'), getValue)).toEqual([0, 10, 20, 30])
+			expect(resolve(parse("[...'ab']"), defaultGetValue)).toEqual(['a', 'b'])
+		})
+
+		it('spreads into object literals (later keys win)', () => {
+			expect(resolve(parse('{ ...{ a: 1 }, b: 2 }'), defaultGetValue)).toEqual({ a: 1, b: 2 })
+			expect(resolve(parse('{ a: 1, ...{ a: 2 } }'), defaultGetValue)).toEqual({ a: 2 })
+			expect(resolve(parse('{ ...$(my:obj), c: 3 }'), getValue)).toEqual({ a: 1, b: 2, c: 3 })
+		})
+
+		it('spreads into function call arguments', () => {
+			const result = resolve(parse('sum(...[1, 2, 3], 4)'), defaultGetValue, {
+				sum: (...args: number[]) => args.reduce((a, b) => a + b, 0),
+			})
+			expect(result).toBe(10)
+		})
+
+		it('throws when spreading a non-iterable value', () => {
+			expect(() => resolve(parse('[...5]'), defaultGetValue)).toThrow(/not iterable/)
+			expect(() => resolve(parse('[...null]'), defaultGetValue)).toThrow(/null or undefined/)
+		})
+	})
+
 	describe('return', () => {
 		it('return value', () => {
 			const result = resolve(parse('return 1'), defaultGetValue)
@@ -425,6 +554,11 @@ describe('resolver', function () {
 		it('array +=', () => {
 			const result = resolve(parse('a = [4,5,6]\na[1]+=2\nreturn a'), defaultGetValue)
 			expect(result).toEqual([4, 7, 6])
+		})
+
+		it('member += returns the new value', () => {
+			const result = resolve(parse('a = [4,5,6]\nreturn (a[1] += 2)'), defaultGetValue)
+			expect(result).toEqual(7)
 		})
 
 		it('no return', () => {
