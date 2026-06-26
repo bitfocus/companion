@@ -4,8 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression } from '@companion-app/shared/Expressions.js'
+import { ParseExpression, ResolveExpression } from '@companion-app/shared/Expressions.js'
 import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,

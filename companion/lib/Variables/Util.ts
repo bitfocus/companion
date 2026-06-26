@@ -10,9 +10,9 @@
  */
 
 import type { ReadonlyDeep } from 'type-fest'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import {
+	ParseExpression,
 	ResolveExpression,
 	type GetVariableValueProps,
 	type ResolveExpressionLimits,

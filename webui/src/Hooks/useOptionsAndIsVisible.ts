@@ -1,7 +1,6 @@
 import { toJS } from 'mobx'
 import type { JsonValue } from 'type-fest'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression } from '@companion-app/shared/Expressions.js'
+import { ParseExpression, ResolveExpression } from '@companion-app/shared/Expressions.js'
 import {
 	convertExpressionOptionsWithoutParsing,
 	type ExpressionableOptionsObject,
