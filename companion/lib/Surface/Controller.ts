@@ -19,7 +19,7 @@ import pDebounce from 'p-debounce'
 import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
 import z from 'zod'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type {

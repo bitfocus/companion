@@ -1,5 +1,5 @@
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'

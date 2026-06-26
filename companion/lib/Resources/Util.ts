@@ -1,6 +1,6 @@
 import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
 /**

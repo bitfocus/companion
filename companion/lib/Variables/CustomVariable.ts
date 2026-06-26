@@ -12,7 +12,7 @@
 import EventEmitter from 'node:events'
 import z from 'zod'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	CustomVariableCollection,
 	CustomVariableDefinition,

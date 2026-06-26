@@ -1721,6 +1721,19 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@companion-app/expressions@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@companion-app/expressions@npm:0.2.2"
+  dependencies:
+    acorn: "npm:^8.17.0"
+    jsonpath-plus: "npm:^10.4.0"
+    tslib: "npm:^2.8.1"
+    type-fest: "npm:^5.7.0"
+    unicode-segmenter: "npm:^0.16.0"
+  checksum: 10c0/4c59c3e30d23bcd1acb092d8138661b55d9a909b7ac89425f6373bda0f9a4a4c4df7a999c16cb352fdad5113d76c0c4d09d6a44db0acf184613b9ff7a0f8e60a
+  languageName: node
+  linkType: hard
+
 "@companion-app/launcher-ui@workspace:launcher-ui":
   version: 0.0.0-use.local
   resolution: "@companion-app/launcher-ui@workspace:launcher-ui"
@@ -1778,16 +1791,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
+    "@companion-app/expressions": "npm:^0.2.2"
     "@types/semver": "npm:^7.7.1"
-    acorn: "npm:^8.17.0"
     colord: "npm:^2.9.3"
-    jsonpath-plus: "npm:^10.4.0"
     quick-lru: "npm:^7.3.0"
     semver: "npm:^7.8.5"
     type-fest: "npm:^5.7.0"
     typescript: "npm:@typescript/typescript6@^6.0.0"
     typescript-7: "npm:typescript@rc"
-    unicode-segmenter: "npm:^0.16.0"
     zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft

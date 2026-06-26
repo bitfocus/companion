@@ -2,10 +2,7 @@ import EventEmitter from 'node:events'
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
-import type {
-	ExecuteExpressionResult,
-	ExpressionStreamResult,
-} from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult, ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import { ExpressionOrJsonValueSchema, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'

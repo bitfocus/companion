@@ -1,7 +1,7 @@
 import debounceFn from 'debounce-fn'
 import jsonPatch from 'fast-json-patch'
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {

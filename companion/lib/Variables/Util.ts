@@ -10,14 +10,13 @@
  */
 
 import type { ReadonlyDeep } from 'type-fest'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import {
 	ResolveExpression,
 	type GetVariableValueProps,
-	type ResolveExpressionOptions,
-} from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+	type ResolveExpressionLimits,
+} from '@companion-app/shared/Expressions.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -268,7 +267,7 @@ export function executeExpression(
 	rawVariableValues: ReadonlyDeep<VariableValueData>,
 	requiredType: string | undefined,
 	cachedVariableValues: VariableValueCache,
-	options?: ResolveExpressionOptions
+	limits?: ResolveExpressionLimits
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
 
@@ -335,8 +334,12 @@ export function executeExpression(
 			return value
 		}
 
-		const functions = {
-			...ExpressionFunctions,
+		let value = ResolveExpression(ParseExpression(str), {
+			...limits,
+
+			defaultTimezone: undefined, // Future use
+
+			getVariableValue,
 			blink(interval: any, dutyCycle: any): 0 | 1 {
 				// Validate the interval
 				const int = Number(interval)
@@ -366,9 +369,7 @@ export function executeExpression(
 
 				return result.text
 			},
-		}
-
-		let value = ResolveExpression(ParseExpression(str), getVariableValue, functions, options)
+		})
 
 		// Fix up the result for some types
 		switch (requiredType) {

@@ -1,4 +1,4 @@
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	CompanionInputFieldBaseExtended,
 	CompanionInputFieldCheckboxExtended,

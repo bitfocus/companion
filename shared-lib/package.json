@@ -16,13 +16,11 @@
     "node": ">=22.20"
   },
   "dependencies": {
-    "acorn": "^8.17.0",
+    "@companion-app/expressions": "^0.2.2",
     "colord": "^2.9.3",
-    "jsonpath-plus": "^10.4.0",
     "quick-lru": "^7.3.0",
     "semver": "^7.8.5",
     "type-fest": "^5.7.0",
-    "unicode-segmenter": "^0.16.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

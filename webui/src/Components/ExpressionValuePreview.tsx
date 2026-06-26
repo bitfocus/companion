@@ -4,7 +4,7 @@ import { useInView } from 'react-intersection-observer'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { ExpressionStreamResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import type {
 	ContextVariableResolution,
 	ExpressionableOptionsObject,

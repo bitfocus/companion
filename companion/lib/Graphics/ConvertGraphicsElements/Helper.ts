@@ -1,5 +1,5 @@
 import type { JsonValue } from 'type-fest'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'

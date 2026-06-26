@@ -1,4 +1,4 @@
-import type { VariableValue } from '../Model/Variables.js'
+import type { VariableValue } from './Model/Variables.js'
 
 export type ExecuteExpressionResult = ExecuteExpressionResultOk | ExecuteExpressionResultError
 export interface ExecuteExpressionResultOk {

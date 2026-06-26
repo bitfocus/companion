@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'

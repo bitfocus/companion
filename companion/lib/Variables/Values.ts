@@ -13,7 +13,7 @@ import EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	stringifyVariableValue,
