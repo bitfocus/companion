@@ -267,6 +267,7 @@ export function executeExpression(
 	rawVariableValues: ReadonlyDeep<VariableValueData>,
 	requiredType: string | undefined,
 	cachedVariableValues: VariableValueCache,
+	defaultTimezone: string | undefined,
 	limits?: ResolveExpressionLimits
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
@@ -336,8 +337,7 @@ export function executeExpression(
 
 		let value = ResolveExpression(ParseExpression(str), {
 			...limits,
-
-			defaultTimezone: undefined, // Future use
+			defaultTimezone,
 
 			getVariableValue,
 			blink(interval: any, dutyCycle: any): 0 | 1 {

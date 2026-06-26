@@ -9,12 +9,14 @@ import type { LocalVariablesController } from '../../lib/Variables/LocalVariable
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 import { createMockTrpcContext } from '../Util.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 // ── test infrastructure ──────────────────────────────────────────────────────
 
 const t = initTRPC.context<TrpcContext>().create()
 const testCtx: TrpcContext = createMockTrpcContext()
+const userconfig = mockUserConfig({ timezone: '' })
 
 function createParser(
 	variables: VariableValueData = {},
@@ -22,7 +24,7 @@ function createParser(
 ): VariablesAndExpressionParser {
 	// Mirror production's terminal construction (Values.createVariablesAndExpressionParser):
 	// overrides are applied via the constructor's overrideVariableValues arg, not createChildParser.
-	return new VariablesAndExpressionParser(null as any, variables, new Map(), null, overrides)
+	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides)
 }
 
 /**

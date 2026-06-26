@@ -499,7 +499,7 @@ export class SurfaceOutboundController {
 						parseVariables: null, // Not supported here
 						blink: undefined, // Not supported here
 
-						defaultTimezone: undefined,
+						defaultTimezone: undefined, // no timezone context
 					})
 					return !!val && val !== 'false' && val !== '0'
 				} catch (e) {

@@ -3,13 +3,14 @@ import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 
 describe('VariablesValues', () => {
 	let values: VariablesValues
 
 	beforeEach(() => {
 		vi.useFakeTimers()
-		values = new VariablesValues()
+		values = new VariablesValues(mockUserConfig({ timezone: '' }))
 	})
 
 	afterEach(() => {

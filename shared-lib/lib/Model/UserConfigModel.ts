@@ -65,6 +65,9 @@ export type UserConfigModel = {
 	installName: string
 	default_export_filename: string
 
+	/** IANA timezone name (e.g. 'America/New_York') used for internal time variables and time-based triggers. Empty = system timezone. */
+	timezone: string
+
 	backups: BackupRulesConfig[]
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { executeExpression, VariableValueCache } from '../../lib/Variables/Util.js'
+import { executeExpression as executeExpressionRaw, VariableValueCache } from '../../lib/Variables/Util.js'
 import { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
 
 const mockOptions = {
@@ -8,6 +8,15 @@ const mockOptions = {
 		throw new Error('not mocked')
 	},
 }
+
+/** These tests run without a configured timezone, so date/time functions use the process-local timezone. */
+const executeExpression = (
+	blinker: VariablesBlinker,
+	str: string,
+	rawVariableValues: Parameters<typeof executeExpressionRaw>[2],
+	requiredType: string | undefined,
+	cachedVariableValues: VariableValueCache
+) => executeExpressionRaw(blinker, str, rawVariableValues, requiredType, cachedVariableValues, undefined)
 
 describe('executeExpression', () => {
 	const mockBlinker = mock<VariablesBlinker>({}, mockOptions)

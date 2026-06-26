@@ -176,7 +176,7 @@ export class ControlTrigger
 		})
 
 		this.#eventBus = eventBus
-		this.#timerEvents = new TriggersEventTimer(eventBus, controlId, this.executeActions.bind(this))
+		this.#timerEvents = new TriggersEventTimer(deps.userconfig, eventBus, controlId, this.executeActions.bind(this))
 		this.#miscEvents = new TriggersEventMisc(eventBus, controlId, this.executeActions.bind(this))
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this), (limited) =>
 			this.#setVariableRateLimited(limited)

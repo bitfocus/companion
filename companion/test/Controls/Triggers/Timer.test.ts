@@ -3,13 +3,15 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import { TriggersEventTimer } from '../../../lib/Controls/ControlTypes/Triggers/Events/Timer.js'
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
+import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
+import { mockUserConfig } from '../../utils/MockUserConfig.js'
 import { MockTriggerEventBus } from './Helpers.js'
 
-function createTimer(lastTick = 100) {
+function createTimer(lastTick = 100, userconfig: DataUserConfig = mockUserConfig({ timezone: '' })) {
 	const bus = new MockTriggerEventBus()
 	bus.setLastTickTime(lastTick)
 	const executeActions = vi.fn()
-	const timer = new TriggersEventTimer(bus.asTriggerEvents(), 'trigger:test', executeActions)
+	const timer = new TriggersEventTimer(userconfig, bus.asTriggerEvents(), 'trigger:test', executeActions)
 	return { bus, timer, executeActions }
 }
 
@@ -304,6 +306,50 @@ describe('TriggersEventTimer', () => {
 			tickAt(bus, new Date(2026, 5, 8, 11, 0, 0, 500))
 			expect(executeActions).not.toHaveBeenCalled()
 		})
+
+		test('the configured timezone determines the firing instant (independent of host timezone)', () => {
+			// The same wall-clock time (11:00 Monday) fires at two different UTC instants depending on the
+			// configured zone. A system-timezone implementation can only ever fire at one instant, so it
+			// must fail one of these assertions on ANY host (including a New York CI runner).
+			vi.setSystemTime(new Date('2026-06-08T00:00:00Z'))
+			const tokyo = createTimer(100, mockUserConfig({ timezone: 'Asia/Tokyo' })) // UTC+9 -> 11:00 == 02:00Z
+			const ny = createTimer(100, mockUserConfig({ timezone: 'America/New_York' })) // UTC-4 -> 11:00 == 15:00Z
+			tokyo.timer.setEnabled(true)
+			ny.timer.setEnabled(true)
+			tokyo.timer.setTimeOfDay('a', { time: '11:00:00', days: [1] })
+			ny.timer.setTimeOfDay('a', { time: '11:00:00', days: [1] })
+
+			// At 02:00Z only the Tokyo-configured timer is due
+			tickAt(tokyo.bus, new Date('2026-06-08T02:00:00Z'))
+			tickAt(ny.bus, new Date('2026-06-08T02:00:00Z'))
+			expect(tokyo.executeActions).toHaveBeenCalledTimes(1)
+			expect(ny.executeActions).not.toHaveBeenCalled()
+
+			// At 15:00Z the New York-configured timer becomes due
+			tickAt(ny.bus, new Date('2026-06-08T15:00:00Z'))
+			expect(ny.executeActions).toHaveBeenCalledTimes(1)
+		})
+
+		test('recomputes the next execute time when the timezone changes', () => {
+			// Configured for Tokyo, the event is due at 02:00Z. Switching to New York must move it to 15:00Z.
+			// Comparing two explicit zones (not the host) means this catches a missing recompute on any host.
+			const config = { timezone: 'Asia/Tokyo' }
+			vi.setSystemTime(new Date('2026-06-08T00:00:00Z'))
+			const { bus, timer, executeActions } = createTimer(100, mockUserConfig(config))
+			timer.setEnabled(true)
+			timer.setTimeOfDay('a', { time: '11:00:00', days: [1] }) // 11:00 Tokyo == 02:00Z initially
+
+			// Switch to New York before the Tokyo instant arrives
+			config.timezone = 'America/New_York'
+
+			// The tick recomputes for New York, so the Tokyo instant (02:00Z) no longer fires
+			tickAt(bus, new Date('2026-06-08T02:00:00Z'))
+			expect(executeActions).not.toHaveBeenCalled()
+
+			// 11:00 New York == 15:00Z
+			tickAt(bus, new Date('2026-06-08T15:00:00Z'))
+			expect(executeActions).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('specific date events', () => {
@@ -362,6 +408,28 @@ describe('TriggersEventTimer', () => {
 			tickAt(bus, new Date(2026, 5, 9, 12, 0, 0, 500))
 			expect(executeActions).not.toHaveBeenCalled()
 		})
+
+		test('interprets the configured date and time in the configured timezone (independent of host)', () => {
+			// 12:00 on 2026-06-09 fires at two different UTC instants depending on the configured zone, so a
+			// system-timezone implementation must fail one of these assertions on any host.
+			vi.setSystemTime(new Date('2026-06-08T00:00:00Z'))
+			const tokyo = createTimer(100, mockUserConfig({ timezone: 'Asia/Tokyo' })) // UTC+9 -> 12:00 == 03:00Z
+			const ny = createTimer(100, mockUserConfig({ timezone: 'America/New_York' })) // UTC-4 -> 12:00 == 16:00Z
+			tokyo.timer.setEnabled(true)
+			ny.timer.setEnabled(true)
+			tokyo.timer.setSpecificDate('a', { date: '2026-06-09', time: '12:00:00' })
+			ny.timer.setSpecificDate('a', { date: '2026-06-09', time: '12:00:00' })
+
+			// At 03:00Z only the Tokyo-configured timer is due
+			tickAt(tokyo.bus, new Date('2026-06-09T03:00:00Z'))
+			tickAt(ny.bus, new Date('2026-06-09T03:00:00Z'))
+			expect(tokyo.executeActions).toHaveBeenCalledTimes(1)
+			expect(ny.executeActions).not.toHaveBeenCalled()
+
+			// At 16:00Z the New York-configured timer becomes due
+			tickAt(ny.bus, new Date('2026-06-09T16:00:00Z'))
+			expect(ny.executeActions).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('sun events', () => {
@@ -371,7 +439,12 @@ describe('TriggersEventTimer', () => {
 		function wouldFireAt(params: CompanionOptionValues, nowTime: number): boolean {
 			const bus = new MockTriggerEventBus()
 			const executeActions = vi.fn()
-			const timer = new TriggersEventTimer(bus.asTriggerEvents(), 'trigger:probe', executeActions)
+			const timer = new TriggersEventTimer(
+				mockUserConfig({ timezone: '' }),
+				bus.asTriggerEvents(),
+				'trigger:probe',
+				executeActions
+			)
 			timer.setEnabled(true)
 			timer.setSun('a', params)
 			bus.emitTick(1, nowTime)

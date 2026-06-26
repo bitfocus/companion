@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { InternalTime } from '../../lib/Internal/Time.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 
 type VariableValues = Record<string, VariableValue | undefined>
 
@@ -18,9 +19,9 @@ afterEach(() => {
 })
 
 /** Construct an InternalTime at a fixed wall-clock time and capture its emitted variable values. */
-function createTime(now: Date) {
+function createTime(now: Date, timezone = '') {
 	vi.setSystemTime(now)
-	const time = new InternalTime()
+	const time = new InternalTime(mockUserConfig({ timezone }))
 	const setVariables = vi.fn<(values: VariableValues) => void>()
 	time.on('setVariables', setVariables)
 	return { time, setVariables }
@@ -141,6 +142,41 @@ describe('InternalTime', () => {
 			time.updateVariables()
 
 			expect(lastValues(setVariables).uptime).toBe(5)
+		})
+
+		test('renders the same instant differently for two configured timezones (independent of host)', () => {
+			// One fixed UTC instant, rendered in two zones with different offsets. A system-timezone
+			// implementation can only ever produce one of these, so this fails on ANY host (including a
+			// New York CI runner) if the configured timezone is ignored.
+			const now = new Date('2024-06-15T01:30:00Z')
+			const config = { timezone: 'America/New_York' }
+
+			vi.setSystemTime(now)
+			const time = new InternalTime(mockUserConfig(config))
+			const setVariables = vi.fn<(values: VariableValues) => void>()
+			time.on('setVariables', setVariables)
+
+			// New York (UTC-4 in summer) -> previous day 21:30
+			time.updateVariables()
+			expect(lastValues(setVariables)).toMatchObject({
+				date_iso: '2024-06-14',
+				date_dow: 5, // Friday (numeric, so the assertion is locale-independent)
+				time_hms: '21:30:00',
+				time_h: '21',
+				time_h_12: '09',
+				time_hms_12: '09:30:00',
+			})
+
+			// Change the configured zone live; the next tick reflects Tokyo (UTC+9 -> 10:30 same day)
+			config.timezone = 'Asia/Tokyo'
+			time.updateVariables()
+			expect(lastValues(setVariables)).toMatchObject({
+				date_iso: '2024-06-15',
+				date_dow: 6, // Saturday
+				time_hms: '10:30:00',
+				time_h: '10',
+				time_h_12: '10',
+			})
 		})
 	})
 
