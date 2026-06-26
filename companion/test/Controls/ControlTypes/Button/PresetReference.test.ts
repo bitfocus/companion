@@ -136,7 +136,9 @@ describe('ControlButtonPresetReference', () => {
 
 		it('switches to another connection and updates the metadata', () => {
 			definitions.convertPresetToReferenceControlModel.mockReturnValue(
-				makeModel({ presetRef: { connectionId: 'conn2', moduleId: 'mod1', presetId: 'p1', variableValues: { channel: 1 } } })
+				makeModel({
+					presetRef: { connectionId: 'conn2', moduleId: 'mod1', presetId: 'p1', variableValues: { channel: 1 } },
+				})
 			)
 			const control = createControl()
 

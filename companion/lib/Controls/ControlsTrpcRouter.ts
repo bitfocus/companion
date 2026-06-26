@@ -35,14 +35,18 @@ export function createControlsTrpcRouter(
 				})
 			)
 			.mutation(async ({ input }) => {
-				const model =
-					input.mode === 'reference'
-						? instanceDefinitions.convertPresetToReferenceControlModel(
-								input.connectionId,
-								input.presetId,
-								input.variableValues
-							)
-						: instanceDefinitions.convertPresetToControlModel(input.connectionId, input.presetId, input.variableValues)
+				// Preset references (linked presets) are only supported by 2.0+ modules. Guard here so that an old
+				// module can never be placed as a reference, even if the request asks for it - it falls back to a copy.
+				const useReference =
+					input.mode === 'reference' && instanceDefinitions.doesConnectionSupportPresetReferences(input.connectionId)
+
+				const model = useReference
+					? instanceDefinitions.convertPresetToReferenceControlModel(
+							input.connectionId,
+							input.presetId,
+							input.variableValues
+						)
+					: instanceDefinitions.convertPresetToControlModel(input.connectionId, input.presetId, input.variableValues)
 				if (!model) return null
 
 				return controlsController.importControl(input.location, model)

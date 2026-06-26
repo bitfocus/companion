@@ -21,6 +21,17 @@ export interface UIPresetSection {
 	keywords?: string[]
 }
 
+/**
+ * The presets for a single connection, as viewed by the ui.
+ * Carries connection-level metadata alongside the sections so the ui/backend don't have to look up the
+ * module manifest to know what the connection supports.
+ */
+export interface UIPresetSections {
+	/** Whether this connection's module supports being placed as a live preset reference (linked preset) */
+	supportsReferences: boolean
+	sections: Record<string, UIPresetSection>
+}
+
 export interface UIPresetGroupBase {
 	id: string
 	name: string
@@ -64,12 +75,12 @@ export type UIPresetDefinitionUpdate =
 
 export interface UIPresetDefinitionUpdateInit {
 	type: 'init'
-	definitions: Record<string, Record<string, UIPresetSection>>
+	definitions: Record<string, UIPresetSections>
 }
 export interface UIPresetDefinitionUpdateAdd {
 	type: 'add'
 	connectionId: string
-	definitions: Record<string, UIPresetSection>
+	definitions: UIPresetSections
 }
 export interface UIPresetDefinitionUpdateRemove {
 	type: 'remove'
@@ -78,5 +89,5 @@ export interface UIPresetDefinitionUpdateRemove {
 export interface UIPresetDefinitionUpdatePatch {
 	type: 'patch'
 	connectionId: string
-	patch: jsonPatch.Operation<Record<string, UIPresetSection>>[]
+	patch: jsonPatch.Operation<UIPresetSections>[]
 }

@@ -254,7 +254,7 @@ export class ControlButtonPresetReference
 	convertControl(): LayeredButtonModel {
 		return {
 			type: 'button-layered',
-			style: { layers: structuredClone(this.drawing.drawElements) },
+			style: { layers: structuredClone([...this.drawing.drawElements]) },
 			options: structuredClone(this.options),
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
@@ -326,7 +326,7 @@ export class ControlButtonPresetReference
 	override toJSON(clone = true): PresetReferenceButtonModel {
 		const obj: PresetReferenceButtonModel = {
 			type: this.type,
-			style: { layers: this.drawing.drawElements },
+			style: { layers: [...this.drawing.drawElements] },
 			options: this.options,
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
