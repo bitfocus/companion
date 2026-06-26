@@ -7,7 +7,7 @@ import type { Complete } from '@companion-module/base'
 import type { VariableValue } from './Model/Variables.js'
 import { SplitVariableId, VARIABLE_UNKNOWN_VALUE } from './Variables.js'
 
-export { ParseExpression, BANNED_PROPS } from '@companion-app/expressions'
+export { ParseExpression, BANNED_PROPS, BuiltinFunctionNames } from '@companion-app/expressions'
 
 export interface GetVariableValueProps {
 	variableId: string

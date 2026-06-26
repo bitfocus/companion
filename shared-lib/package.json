@@ -16,7 +16,7 @@
     "node": ">=22.20"
   },
   "dependencies": {
-    "@companion-app/expressions": "^0.2.2",
+    "@companion-app/expressions": "^0.2.3",
     "colord": "^2.9.3",
     "quick-lru": "^7.3.0",
     "semver": "^7.8.5",
