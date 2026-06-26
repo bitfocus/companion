@@ -85,6 +85,7 @@
   },
   "resolutions": {
     "osc/serialport": "npm:empty-npm-package@1.0.0",
+    "osc/ws": "^8.21.0",
     "app-builder-lib@npm:26.9.1": "patch:app-builder-lib@npm%3A26.9.1#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
@@ -94,6 +95,7 @@
     "@companion-module/host": "1.0.3-nightly-main-20260626-140637-8370e66",
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
+    "webpack-bundle-analyzer": "^5.0.0",
     "@napi-rs/canvas-win32-arm64-msvc@npm:1.0.0": "npm:@julusian/canvas-win32-arm64-msvc@1.0.0"
   },
   "dependenciesMeta": {
