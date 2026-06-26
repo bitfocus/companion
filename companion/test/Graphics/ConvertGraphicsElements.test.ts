@@ -6,6 +6,8 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsCanvasDrawElement,
+	ButtonGraphicsGaugeDrawElement,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageElement,
@@ -182,6 +184,47 @@ function makeGroupEl(
 		squareCoords: val(false),
 		...overrides,
 		children,
+	}
+}
+
+function makeGaugeEl(overrides: Partial<ButtonGraphicsGaugeElement> = {}): ButtonGraphicsGaugeElement {
+	return {
+		id: 'gauge1',
+		name: '',
+		type: 'gauge',
+		usage: USAGE,
+		enabled: val(true),
+		opacity: val(100),
+		x: val(0),
+		y: val(0),
+		width: val(100),
+		height: val(100),
+		rotation: val(0),
+		value: val(50),
+		min: val(0),
+		max: val(100),
+		origin: val(0),
+		symmetric: val(false),
+		orientation: val('horizontal'),
+		reverse: val(false),
+		trackWidth: val(100),
+		startAngle: val(0),
+		endAngle: val(360),
+		ringWidth: val(20),
+		roundedEnds: val(true),
+		fillEnabled: val(true),
+		multiColour: val(true),
+		stops: val([
+			{ value: 0, color: 0x00ff00, gradient: false },
+			{ value: 66, color: 0xffff00, gradient: false },
+			{ value: 85, color: 0xff0000, gradient: false },
+		]),
+		markerEnabled: val(false),
+		markerColor: val(0xffffff),
+		markerWidth: val(15),
+		trackStyle: val('transparent'),
+		trackAmount: val(70),
+		...overrides,
 	}
 }
 
@@ -2358,6 +2401,248 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.referencedLocations.has('1/0/1')).toBe(true)
 			// Only the cyclic entry, not an unrelated location
 			expect(result.cyclicLocations.size).toBe(1)
+		})
+	})
+
+	describe('gauge element conversion', () => {
+		async function convertGauge(
+			element: ButtonGraphicsGaugeElement,
+			variableValues: Record<string, Record<string, string | number | boolean>> = {},
+			onlyEnabled = true
+		) {
+			return ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(variableValues),
+				mockDrawPixelBuffers,
+				[element],
+				new Map(),
+				onlyEnabled,
+				null,
+				null,
+				null
+			)
+		}
+
+		function gaugeDrawEl(result: Awaited<ReturnType<typeof convertGauge>>): ButtonGraphicsGaugeDrawElement {
+			return result.elements[0] as ButtonGraphicsGaugeDrawElement
+		}
+
+		test('converts gauge element with all defaults', async () => {
+			const result = await convertGauge(makeGaugeEl())
+			const el = gaugeDrawEl(result)
+			expect(el.type).toBe('gauge')
+			expect(el.id).toBe('gauge1')
+			expect(el.value).toBe(50)
+			expect(el.min).toBe(0)
+			expect(el.max).toBe(100)
+			expect(el.origin).toBe(0)
+			expect(el.symmetric).toBe(false)
+			expect(el.orientation).toBe('horizontal')
+			expect(el.reverse).toBe(false)
+			expect(el.trackWidth).toBe(100)
+			expect(el.startAngle).toBe(0)
+			expect(el.endAngle).toBe(360)
+			expect(el.ringWidth).toBe(20)
+			expect(el.roundedEnds).toBe(true)
+			expect(el.fillEnabled).toBe(true)
+			expect(el.multiColour).toBe(true)
+			expect(el.markerEnabled).toBe(false)
+			expect(el.markerColor).toBe(0xffffff)
+			expect(el.markerWidth).toBe(15)
+			expect(el.trackStyle).toBe('transparent')
+			expect(el.trackAmount).toBe(70)
+			expect(el.opacity).toBe(1)
+		})
+
+		test('value, min, max, origin pass through in the authored domain (no clamp/round)', async () => {
+			// Values are now mapped by the renderer; the converter keeps them raw.
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ value: val(150) }))).value).toBe(150)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ value: val(-10) }))).value).toBe(-10)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ value: val(33.333) }))).value).toBe(33.333)
+			const el = gaugeDrawEl(await convertGauge(makeGaugeEl({ min: val(-232), max: val(24), origin: val(-100) })))
+			expect(el.min).toBe(-232)
+			expect(el.max).toBe(24)
+			expect(el.origin).toBe(-100)
+		})
+
+		test('value resolved from expression', async () => {
+			const el = gaugeDrawEl(
+				await convertGauge(makeGaugeEl({ value: expr('$(counter:level)') }), { counter: { level: 75 } })
+			)
+			expect(el.value).toBe(75)
+		})
+
+		test('symmetric / fillEnabled / multiColour booleans pass through', async () => {
+			const el = gaugeDrawEl(
+				await convertGauge(makeGaugeEl({ symmetric: val(true), fillEnabled: val(false), multiColour: val(false) }))
+			)
+			expect(el.symmetric).toBe(true)
+			expect(el.fillEnabled).toBe(false)
+			expect(el.multiColour).toBe(false)
+		})
+
+		test('missing boolean field falls back to its schema default', async () => {
+			// Regression: a boolean added to the schema after an element was saved must use the default,
+			// not coerce undefined to false (which previously disabled the fill on existing gauges).
+			const el = makeGaugeEl()
+			delete (el as Partial<ButtonGraphicsGaugeElement>).fillEnabled
+			expect(gaugeDrawEl(await convertGauge(el)).fillEnabled).toBe(true)
+		})
+
+		test('orientation tolerant matching: leading whitespace and prefix', async () => {
+			// Deliberately out-of-spec raw strings exercising the tolerant parser — cast to bypass union check
+			expect(
+				gaugeDrawEl(await convertGauge(makeGaugeEl({ orientation: val('  horizontal') as any }))).orientation
+			).toBe('horizontal')
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ orientation: val('v') as any }))).orientation).toBe(
+				'vertical'
+			)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ orientation: val('r') as any }))).orientation).toBe('ring')
+		})
+
+		test('orientation: unknown value falls back to default', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ orientation: val('diagonal') as any }))).orientation).toBe(
+				'horizontal'
+			)
+		})
+
+		test('orientation: empty string falls back to default', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ orientation: val('   ') as any }))).orientation).toBe(
+				'horizontal'
+			)
+		})
+
+		test('all three orientations pass through', async () => {
+			for (const o of ['horizontal', 'vertical', 'ring'] as const) {
+				expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ orientation: val(o) }))).orientation).toBe(o)
+			}
+		})
+
+		test('trackStyle tolerant matching', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackStyle: val('  transparent') as any }))).trackStyle).toBe(
+				'transparent'
+			)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackStyle: val('d') as any }))).trackStyle).toBe('dimmed')
+		})
+
+		test('ringWidth clamped to 1–50', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ ringWidth: val(80) }))).ringWidth).toBe(50)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ ringWidth: val(0) }))).ringWidth).toBe(1)
+		})
+
+		test('trackWidth clamped to 0–100', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackWidth: val(150) }))).trackWidth).toBe(100)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackWidth: val(-5) }))).trackWidth).toBe(0)
+		})
+
+		test('trackAmount clamped to 0–100', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackAmount: val(200) }))).trackAmount).toBe(100)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackAmount: val(-5) }))).trackAmount).toBe(0)
+		})
+
+		test('markerWidth clamped to 1–100, marker fields pass through', async () => {
+			const el = gaugeDrawEl(
+				await convertGauge(makeGaugeEl({ markerEnabled: val(true), markerColor: val(0x123456), markerWidth: val(200) }))
+			)
+			expect(el.markerEnabled).toBe(true)
+			expect(el.markerColor).toBe(0x123456)
+			expect(el.markerWidth).toBe(100)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ markerWidth: val(0) }))).markerWidth).toBe(1)
+		})
+
+		test('startAngle / endAngle pass through', async () => {
+			const el = gaugeDrawEl(await convertGauge(makeGaugeEl({ startAngle: val(45), endAngle: val(315) })))
+			expect(el.startAngle).toBe(45)
+			expect(el.endAngle).toBe(315)
+		})
+
+		test('stops parsed from table rows including gradient flag', async () => {
+			const el = gaugeDrawEl(await convertGauge(makeGaugeEl()))
+			expect(el.stops).toEqual([
+				{ value: 0, color: 0x00ff00, gradient: false },
+				{ value: 66, color: 0xffff00, gradient: false },
+				{ value: 85, color: 0xff0000, gradient: false },
+			])
+		})
+
+		test('stop gradient flag passes through', async () => {
+			const el = gaugeDrawEl(
+				await convertGauge(
+					makeGaugeEl({
+						stops: val([
+							{ value: 0, color: 0x00ff00, gradient: true },
+							{ value: 100, color: 0xff0000, gradient: false },
+						]),
+					})
+				)
+			)
+			expect(el.stops[0]!.gradient).toBe(true)
+			expect(el.stops[1]!.gradient).toBe(false)
+		})
+
+		test('stop values are NOT clamped (authored domain, mapped by renderer)', async () => {
+			const el = gaugeDrawEl(
+				await convertGauge(
+					makeGaugeEl({
+						min: val(-100),
+						max: val(100),
+						stops: val([
+							{ value: -100, color: 0xff0000, gradient: false },
+							{ value: 100, color: 0x00ff00, gradient: false },
+						]),
+					})
+				)
+			)
+			expect(el.stops[0]!.value).toBe(-100)
+			expect(el.stops[1]!.value).toBe(100)
+		})
+
+		test('partial stop rows fall back to defaults without throwing', async () => {
+			const el = gaugeDrawEl(
+				await convertGauge(
+					makeGaugeEl({
+						// Rows missing some properties must not throw a TypeError
+						stops: val([{ value: 50 }, { color: 0x0000ff }] as any),
+					})
+				)
+			)
+			expect(el.stops).toHaveLength(2)
+			expect(el.stops[0]).toEqual({ value: 50, color: 0, gradient: false })
+			expect(el.stops[1]).toEqual({ value: 0, color: 0x0000ff, gradient: false })
+		})
+
+		test('empty stops produce empty array', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ stops: val([]) }))).stops).toEqual([])
+		})
+
+		test('enabled=false with onlyEnabled=true filters element out', async () => {
+			const result = await convertGauge(makeGaugeEl({ enabled: val(false) }), {}, true)
+			expect(result.elements).toHaveLength(0)
+		})
+
+		test('enabled=false with onlyEnabled=false produces disabled draw element', async () => {
+			const result = await convertGauge(makeGaugeEl({ enabled: val(false) }), {}, false)
+			expect(gaugeDrawEl(result).enabled).toBe(false)
+		})
+
+		test('opacity scaled from percentage to 0–1', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ opacity: val(50) }))).opacity).toBeCloseTo(0.5)
+		})
+
+		test('roundedEnds=false passes through', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ roundedEnds: val(false) }))).roundedEnds).toBe(false)
+		})
+
+		test('contentHash changes when value changes', async () => {
+			const hash50 = gaugeDrawEl(await convertGauge(makeGaugeEl({ value: val(50) }))).contentHash
+			const hash75 = gaugeDrawEl(await convertGauge(makeGaugeEl({ value: val(75) }))).contentHash
+			expect(hash50).not.toBe(hash75)
+		})
+
+		test('contentHash is stable for identical inputs', async () => {
+			const a = gaugeDrawEl(await convertGauge(makeGaugeEl())).contentHash
+			const b = gaugeDrawEl(await convertGauge(makeGaugeEl())).contentHash
+			expect(a).toBe(b)
 		})
 	})
 })

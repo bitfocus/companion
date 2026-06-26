@@ -3,6 +3,7 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
@@ -155,6 +156,9 @@ export class GraphicsLayeredButtonRenderer {
 					case 'circle':
 						elementBounds = await this.#drawCircleElement(img, drawBounds, element, skipDraw)
 						break
+					case 'gauge':
+						elementBounds = await this.#drawGaugeElement(img, drawBounds, element, skipDraw)
+						break
 					default:
 						assertNever(element)
 				}
@@ -243,8 +247,8 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		if (imageDrawn === false) {
-			await img.usingRotation(drawBounds, element.rotation, async () => {
-				await img.usingTemporaryLayer(element.opacity, async (img) => {
+			await img.usingTemporaryLayer(element.opacity, async (img) => {
+				await img.usingRotation(drawBounds, element.rotation, async () => {
 					const { x, y, width, height, maxX, maxY } = drawBounds
 
 					// Orange background
@@ -315,7 +319,7 @@ export class GraphicsLayeredButtonRenderer {
 		const marginX = 2 * marginScale * drawBounds.width
 		const marginY = 1 * marginScale * drawBounds.height
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.drawAlignedText(
 					drawBounds.x + marginX,
@@ -354,7 +358,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.box(
 					drawBounds.x,
@@ -420,7 +424,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
-		await img.usingAlpha(element.opacity, async () => {
+		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			const midX = drawBounds.x + drawBounds.width / 2
 			const midY = drawBounds.y + drawBounds.height / 2
 			const radiusX = drawBounds.width / 2
@@ -445,6 +449,319 @@ export class GraphicsLayeredButtonRenderer {
 				element.borderOnlyArc,
 				element.borderPosition
 			)
+		})
+
+		return drawBounds
+	}
+
+	static async #drawGaugeElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsGaugeDrawElement,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		const { x, y, width, height, maxX, maxY } = drawBounds
+		const { orientation, reverse, multiColour, trackStyle, symmetric } = element
+
+		const finite = (v: unknown, fallback: number): number => {
+			const n = Number(v)
+			return Number.isFinite(n) ? n : fallback
+		}
+
+		// --- Value mapping (authored Min..Max domain → 0–100 track position) ---
+		const min = finite(element.min, 0)
+		const max = finite(element.max, 100)
+		const range = max - min
+		const norm = (v: number): number => {
+			if (range === 0) return 0
+			return Math.max(0, Math.min(100, ((v - min) / range) * 100))
+		}
+
+		const valuePos = norm(finite(element.value, 0))
+		const originPos = norm(finite(element.origin, min))
+
+		// Active fill interval in track-position space (0–100).
+		// Non-symmetric: from the origin toward the value (handles normal bars, centre-bar, pan).
+		// Symmetric: a band of length = value, centred on the origin (handles stereo-width).
+		let fillLo: number
+		let fillHi: number
+		if (symmetric) {
+			const half = valuePos / 2
+			fillLo = Math.max(0, Math.min(100, originPos - half))
+			fillHi = Math.max(0, Math.min(100, originPos + half))
+		} else {
+			fillLo = Math.min(originPos, valuePos)
+			fillHi = Math.max(originPos, valuePos)
+		}
+		const hasFill = element.fillEnabled && fillHi > fillLo
+
+		const trackWidth = Math.max(0, Math.min(100, finite(element.trackWidth, 100))) / 100
+		const trackAmount = Math.max(0, Math.min(100, finite(element.trackAmount, 0))) / 100
+
+		// --- Colour stops → runs between consecutive stops, with the first anchored to position 0
+		//     and the last extended to 100 so the track never has an uncoloured gap. ---
+		const stops = [...element.stops]
+			.map((s) => ({ pos: norm(finite(s.value, 0)), color: finite(s.color, 0), gradient: !!s.gradient }))
+			.sort((a, b) => a.pos - b.pos)
+		if (stops.length === 0) return drawBounds
+
+		interface Run {
+			start: number
+			end: number
+			colorStart: number
+			colorEnd: number
+			gradient: boolean
+		}
+		const runs: Run[] = []
+		for (let i = 0; i < stops.length; i++) {
+			const start = i === 0 ? 0 : stops[i].pos
+			const end = i + 1 < stops.length ? stops[i + 1].pos : 100
+			if (end <= start) continue
+			const gradient = stops[i].gradient && i + 1 < stops.length
+			runs.push({
+				start,
+				end,
+				colorStart: stops[i].color,
+				colorEnd: gradient ? stops[i + 1].color : stops[i].color,
+				gradient,
+			})
+		}
+		if (runs.length === 0) return drawBounds
+
+		// Single-colour fill: colour of the highest stop whose position <= value.
+		let singleColor = stops[0].color
+		for (const s of stops) if (s.pos <= valuePos) singleColor = s.color
+
+		type RGBA = { r: number; g: number; b: number; a: number }
+		const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
+		const rgbaAt = (run: Run, p: number): RGBA => {
+			const c0 = rgbRev(run.colorStart, true)
+			if (!run.gradient) return c0
+			const c1 = rgbRev(run.colorEnd, true)
+			const span = run.end - run.start
+			const t = span > 0 ? Math.max(0, Math.min(1, (p - run.start) / span)) : 0
+			return { r: lerp(c0.r, c1.r, t), g: lerp(c0.g, c1.g, t), b: lerp(c0.b, c1.b, t), a: lerp(c0.a, c1.a, t) }
+		}
+		const cssOf = (c: RGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
+		// Track (unfilled) colour. 'transparent' base colours are emitted at full alpha and composited
+		// through a temporary layer at trackAmount; 'dimmed' darkens the colour in place.
+		const trackTransform = (c: RGBA): RGBA => {
+			if (trackStyle === 'transparent') return c
+			return { r: c.r * trackAmount, g: c.g * trackAmount, b: c.b * trackAmount, a: c.a }
+		}
+
+		// --- Geometry helpers shared by fill, track and marker passes. ---
+		const isRing = orientation === 'ring'
+		const isHorizontal = orientation === 'horizontal'
+
+		// Cross-axis geometry. The fill (indicator) uses the FULL cross-axis; trackWidth only
+		// narrows the unfilled track, so the fill can be drawn wider than the track.
+		const crossFull = isHorizontal ? height : width
+		const fillHalf = crossFull / 2
+		const trackHalf = (crossFull * trackWidth) / 2
+		const bandCenter = isHorizontal ? y + height / 2 : x + width / 2
+
+		const posToX = (p: number): number => (reverse ? maxX - (p / 100) * width : x + (p / 100) * width)
+		const posToY = (p: number): number => (reverse ? y + (p / 100) * height : maxY - (p / 100) * height)
+
+		// Ring geometry.
+		const cx = x + width / 2
+		const cy = y + height / 2
+		const outerRadius = Math.min(width, height) / 2
+		const ringWidthPx = outerRadius * (element.ringWidth / 100)
+		const arcRadius = outerRadius - ringWidthPx / 2
+		// Ring stroke widths: fill uses the full ring width; the track is narrowed by trackWidth.
+		const fillStrokePx = ringWidthPx
+		const trackStrokePx = ringWidthPx * trackWidth
+		// Arc span: clockwise from startAngle to endAngle (degrees, 0 = top). 0 span → full circle.
+		const startAngleDeg = finite(element.startAngle, 0)
+		const endAngleDeg = finite(element.endAngle, 360)
+		let sweepDeg = (((endAngleDeg - startAngleDeg) % 360) + 360) % 360
+		if (sweepDeg === 0) sweepDeg = 360
+		const degToRad = (deg: number): number => -Math.PI / 2 + (deg * Math.PI) / 180
+		// p=0 at startAngle, p=100 at endAngle (clockwise). reverse flips which end is p=0.
+		const posToAngle = (p: number): number => degToRad(startAngleDeg + (reverse ? 1 - p / 100 : p / 100) * sweepDeg)
+
+		// Paint a single position-space interval [a, b] with one solid colour onto `target`.
+		// `wide` selects the fill width (full) vs the narrowed track width.
+		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, wide: boolean): void => {
+			if (b - a <= 1e-6) return
+			if (isRing) {
+				const r1 = posToAngle(a)
+				const r2 = posToAngle(b)
+				target.arcStroke(cx, cy, arcRadius, Math.min(r1, r2), Math.max(r1, r2), false, {
+					color,
+					width: wide ? fillStrokePx : trackStrokePx,
+				})
+			} else {
+				const half = wide ? fillHalf : trackHalf
+				const lo = bandCenter - half
+				const hi = bandCenter + half
+				if (isHorizontal) {
+					const xa = posToX(a)
+					const xb = posToX(b)
+					target.box(Math.round(Math.min(xa, xb)), lo, Math.round(Math.max(xa, xb)), hi, color)
+				} else {
+					const ya = posToY(a)
+					const yb = posToY(b)
+					target.box(lo, Math.round(Math.min(ya, yb)), hi, Math.round(Math.max(ya, yb)), color)
+				}
+			}
+		}
+
+		// Approximate the pixel length of an interval, to choose a gradient sub-step count.
+		const pixelLen = (a: number, b: number): number => {
+			if (isRing) return arcRadius * Math.abs(posToAngle(b) - posToAngle(a))
+			return isHorizontal ? Math.abs(posToX(b) - posToX(a)) : Math.abs(posToY(b) - posToY(a))
+		}
+
+		// Paint an interval [a, b] of a run onto `target`, applying a colour transform.
+		const paintRunInterval = (
+			target: ImageBase<any>,
+			a: number,
+			b: number,
+			run: Run,
+			transform: (c: RGBA) => RGBA,
+			wide: boolean
+		): void => {
+			if (b - a <= 1e-6) return
+			const steps = run.gradient ? Math.max(1, Math.min(64, Math.ceil(pixelLen(a, b) / 2))) : 1
+			for (let s = 0; s < steps; s++) {
+				const sa = a + ((b - a) * s) / steps
+				const sb = a + ((b - a) * (s + 1)) / steps
+				paintSolid(target, sa, sb, cssOf(transform(rgbaAt(run, (sa + sb) / 2))), wide)
+			}
+		}
+
+		await img.usingTemporaryLayer(element.opacity, async (layer) => {
+			await layer.usingRotation(drawBounds, element.rotation, async () => {
+				// Whether the ring forms a complete circle (no ends to round).
+				const fullCircle = isRing && sweepDeg >= 360 && fillLo <= 1e-6 && fillHi >= 100 - 1e-6
+				const partialRing = isRing && sweepDeg < 360
+
+				// --- Track pass: the parts of each run NOT covered by the fill. ---
+				const paintTrack = (target: ImageBase<any>) => {
+					for (const run of runs) {
+						const leftHi = Math.min(run.end, hasFill ? fillLo : run.end)
+						if (leftHi > run.start) paintRunInterval(target, run.start, leftHi, run, trackTransform, false)
+						if (hasFill) {
+							const rightLo = Math.max(run.start, fillHi)
+							if (run.end > rightLo) paintRunInterval(target, rightLo, run.end, run, trackTransform, false)
+						}
+					}
+
+					// On a partial ring the open track ends follow the rounded-ends flag.
+					if (partialRing && element.roundedEnds) {
+						const r = trackStrokePx / 2
+						const lastRun = runs[runs.length - 1]
+						const ends: Array<[number, number]> = [
+							[0, runs[0].colorStart],
+							[100, lastRun.gradient ? lastRun.colorEnd : lastRun.colorStart],
+						]
+						for (const [p, colorNum] of ends) {
+							const ang = posToAngle(p)
+							target.circle(
+								cx + arcRadius * Math.cos(ang),
+								cy + arcRadius * Math.sin(ang),
+								r,
+								r,
+								0,
+								Math.PI * 2,
+								false,
+								cssOf(trackTransform(rgbRev(colorNum, true)))
+							)
+						}
+					}
+				}
+				if (trackStyle === 'transparent') {
+					// Composite the whole track through one layer so the requested transparency is
+					// applied once, and anti-aliased seams between runs don't accumulate into bright lines.
+					await layer.usingTemporaryLayer(trackAmount, async (trackLayer) => paintTrack(trackLayer))
+				} else {
+					paintTrack(layer)
+				}
+
+				// --- Fill pass: the active portion of each run (full width). ---
+				if (hasFill) {
+					for (const run of runs) {
+						const aLo = Math.max(run.start, fillLo)
+						const aHi = Math.min(run.end, fillHi)
+						if (aHi <= aLo) continue
+						if (multiColour) {
+							paintRunInterval(layer, aLo, aHi, run, (c) => c, true)
+						} else {
+							paintSolid(layer, aLo, aHi, parseColor(singleColor), true)
+						}
+					}
+
+					// Rounded ends on a ring active fill (skip when the fill is a complete circle).
+					if (isRing && element.roundedEnds && !fullCircle) {
+						const capRadius = fillStrokePx / 2
+						const colorAtPos = (p: number): number => {
+							if (!multiColour) return singleColor
+							const run = runs.find((r) => p >= r.start && p <= r.end) ?? runs[runs.length - 1]
+							if (!run.gradient) return run.colorStart
+							const span = run.end - run.start
+							// Use whichever stop colour the position is closer to.
+							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
+						}
+						for (const p of [fillLo, fillHi]) {
+							const ang = posToAngle(p)
+							layer.circle(
+								cx + arcRadius * Math.cos(ang),
+								cy + arcRadius * Math.sin(ang),
+								capRadius,
+								capRadius,
+								0,
+								Math.PI * 2,
+								false,
+								parseColor(colorAtPos(p))
+							)
+						}
+					}
+				}
+
+				// --- Marker pass: a single-colour line at the value, spanning the full fill width. ---
+				if (element.markerEnabled) {
+					const markerColor = parseColor(element.markerColor)
+					const markerW = Math.max(1, Math.min(100, finite(element.markerWidth, 15))) / 100
+					const cap: CanvasLineCap = element.roundedEnds ? 'round' : 'butt'
+					// The marker follows the value: its leading edge(s). In symmetric mode that's both
+					// fill edges; otherwise the single value position.
+					const positions = symmetric ? [fillLo, fillHi] : [valuePos]
+					for (const rawP of positions) {
+						const p = Math.max(0, Math.min(100, rawP))
+						if (isRing) {
+							// A short arc bead that follows the ring's curve, full ring width, ends matching
+							// the rounded-ends flag — so it reads as a slice of the fill, not a straight line.
+							const centerAng = posToAngle(p)
+							const halfAng = Math.max(1, ringWidthPx * markerW) / 2 / arcRadius
+							layer.arcStroke(cx, cy, arcRadius, centerAng - halfAng, centerAng + halfAng, false, {
+								color: markerColor,
+								width: ringWidthPx,
+								cap,
+							})
+						} else if (isHorizontal) {
+							const mx = posToX(p)
+							layer.line(mx, bandCenter - fillHalf, mx, bandCenter + fillHalf, {
+								color: markerColor,
+								width: Math.max(1, crossFull * markerW),
+								cap,
+							})
+						} else {
+							const my = posToY(p)
+							layer.line(bandCenter - fillHalf, my, bandCenter + fillHalf, my, {
+								color: markerColor,
+								width: Math.max(1, crossFull * markerW),
+								cap,
+							})
+						}
+					}
+				}
+			})
 		})
 
 		return drawBounds

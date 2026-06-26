@@ -119,6 +119,62 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				borderPosition: { value: 'center', isExpression: false },
 				borderOnlyArc: { value: false, isExpression: false },
 			}
+		case 'gauge':
+			return {
+				id: nanoid(),
+				name: 'Gauge',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				type: 'gauge',
+				enabled: { value: true, isExpression: false },
+				opacity: { value: 100, isExpression: false },
+				x: { value: 0, isExpression: false },
+				y: { value: 0, isExpression: false },
+				width: { value: 100, isExpression: false },
+				height: { value: 100, isExpression: false },
+				rotation: { value: 0, isExpression: false },
+				value: { value: 0, isExpression: false },
+				min: { value: 0, isExpression: false },
+				max: { value: 100, isExpression: false },
+				origin: { value: 0, isExpression: false },
+				symmetric: { value: false, isExpression: false },
+				orientation: { value: 'horizontal', isExpression: false },
+				reverse: { value: false, isExpression: false },
+				trackWidth: { value: 100, isExpression: false },
+				startAngle: { value: 0, isExpression: false },
+				endAngle: { value: 360, isExpression: false },
+				ringWidth: { value: 20, isExpression: false },
+				roundedEnds: { value: true, isExpression: false },
+				fillEnabled: { value: true, isExpression: false },
+				multiColour: { value: true, isExpression: false },
+				stops: {
+					value: [
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 0, isExpression: false },
+							color: { value: 0x00ff00, isExpression: false },
+							gradient: { value: false, isExpression: false },
+						},
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 66, isExpression: false },
+							color: { value: 0xffff00, isExpression: false },
+							gradient: { value: false, isExpression: false },
+						},
+						{
+							_id: { value: nanoid(), isExpression: false },
+							value: { value: 85, isExpression: false },
+							color: { value: 0xff0000, isExpression: false },
+							gradient: { value: false, isExpression: false },
+						},
+					],
+					isExpression: false,
+				},
+				markerEnabled: { value: false, isExpression: false },
+				markerColor: { value: 0xffffff, isExpression: false },
+				markerWidth: { value: 15, isExpression: false },
+				trackStyle: { value: 'transparent', isExpression: false },
+				trackAmount: { value: 70, isExpression: false },
+			}
 		case 'composite':
 			// Composite elements should not be created directly through this function
 			// They are created with custom logic in layeredStyleAddElement

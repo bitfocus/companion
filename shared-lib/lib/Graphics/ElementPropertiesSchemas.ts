@@ -1,6 +1,7 @@
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextElement,
 } from '../Model/StyleLayersModel.js'
@@ -479,6 +480,266 @@ export const referenceElementSchema: ElementSchemaSection[] = [
 	},
 ]
 
+export const gaugeElementSchema: ElementSchemaSection[] = [
+	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
+	{
+		id: 'value',
+		label: 'Value',
+		fields: [
+			{
+				type: 'number',
+				id: 'value',
+				label: 'Value',
+				tooltip: 'The current value of the gauge, in the Min..Max range defined below.',
+				default: 0,
+				min: -1000000,
+				max: 1000000,
+				step: 1,
+			},
+			{
+				type: 'number',
+				id: 'min',
+				label: 'Minimum',
+				tooltip: 'The value mapped to the start of the gauge.',
+				default: 0,
+				min: -1000000,
+				max: 1000000,
+				step: 1,
+			},
+			{
+				type: 'number',
+				id: 'max',
+				label: 'Maximum',
+				tooltip: 'The value mapped to the end of the gauge.',
+				default: 100,
+				min: -1000000,
+				max: 1000000,
+				step: 1,
+			},
+			{
+				type: 'number',
+				id: 'origin',
+				label: 'Origin (0-point)',
+				tooltip:
+					'The value the fill grows from. Set to the Minimum for a normal bar, or to the midpoint for a bipolar (pan/centre) gauge.',
+				default: 0,
+				min: -1000000,
+				max: 1000000,
+				step: 1,
+			},
+			{
+				type: 'checkbox',
+				id: 'symmetric',
+				label: 'Symmetric (mirror around origin)',
+				tooltip:
+					'When enabled the fill grows outward in both directions from the origin as the value rises (e.g. stereo width). When disabled the fill grows from the origin toward the value (e.g. pan).',
+				default: false,
+			},
+		],
+	},
+	{
+		id: 'appearance',
+		label: 'Appearance',
+		fields: [
+			{
+				type: 'dropdown',
+				id: 'orientation',
+				label: 'Orientation',
+				choices: [
+					{ id: 'horizontal', label: 'Horizontal' },
+					{ id: 'vertical', label: 'Vertical' },
+					{ id: 'ring', label: 'Ring' },
+				],
+				default: 'horizontal',
+			},
+			{
+				type: 'checkbox',
+				id: 'reverse',
+				label: 'Reverse direction',
+				tooltip:
+					'When enabled, the gauge fills from the opposite end (right-to-left for horizontal, top-to-bottom for vertical, counter-clockwise for ring).',
+				default: false,
+			},
+		],
+	},
+	{
+		id: 'circular',
+		label: 'Circular styling',
+		fields: [
+			{
+				type: 'number',
+				id: 'startAngle',
+				label: 'Start angle',
+				tooltip: 'Angle of the start of the arc, in degrees clockwise from the top. Only applies to ring orientation.',
+				default: 0,
+				min: 0,
+				max: 360,
+				step: 1,
+			},
+			{
+				type: 'number',
+				id: 'endAngle',
+				label: 'End angle',
+				tooltip:
+					'Angle of the end of the arc, in degrees clockwise from the top. Any space between end and start becomes the gap. Only applies to ring orientation.',
+				default: 360,
+				min: 0,
+				max: 360,
+				step: 1,
+			},
+			{
+				type: 'number',
+				id: 'ringWidth',
+				label: 'Ring width (%)',
+				tooltip: 'Width of the ring as a percentage of the shorter dimension. Only applies to ring orientation.',
+				default: 20,
+				min: 1,
+				max: 50,
+				step: 1,
+			},
+			{
+				type: 'checkbox',
+				id: 'roundedEnds',
+				label: 'Rounded ends',
+				tooltip: 'Round the ends of the active arc. Only applies to ring orientation.',
+				default: true,
+			},
+		],
+	},
+	{
+		id: 'fill',
+		label: 'Fill',
+		fields: [
+			{
+				type: 'checkbox',
+				id: 'fillEnabled',
+				label: 'Show fill',
+				tooltip: 'Draw the filled portion of the gauge.',
+				default: true,
+			},
+			{
+				type: 'checkbox',
+				id: 'multiColour',
+				label: 'Multi-colour fill',
+				tooltip:
+					'When enabled, each colour stop is visible in the filled portion. When disabled, only the active stop colour is used for the entire filled area.',
+				default: true,
+			},
+			{
+				type: 'internal:list',
+				id: 'stops',
+				label: 'Colour stops',
+				tooltip:
+					'Define colour stops for the gauge fill. Each stop specifies the value at which that colour starts. Enable "Gradient" to blend toward the next stop.',
+				addLabel: 'Add stop',
+				minItems: 1,
+				fields: [
+					{
+						id: 'value',
+						type: 'number',
+						label: 'Value',
+						min: -1000000,
+						max: 1000000,
+						step: 1,
+						default: 0,
+					},
+					{
+						id: 'color',
+						type: 'colorpicker',
+						label: 'Colour',
+						default: 0x00ff00,
+						enableAlpha: false,
+						returnType: 'number',
+					},
+					{
+						id: 'gradient',
+						type: 'checkbox',
+						label: 'Gradient to next',
+						default: false,
+					},
+				],
+				default: [
+					{ value: 0, color: 0x00ff00, gradient: false },
+					{ value: 66, color: 0xffff00, gradient: false },
+					{ value: 85, color: 0xff0000, gradient: false },
+				],
+			},
+		],
+	},
+	{
+		id: 'marker',
+		label: 'Marker',
+		fields: [
+			{
+				type: 'checkbox',
+				id: 'markerEnabled',
+				label: 'Show marker',
+				tooltip: 'Draw a marker line at the current value, across the full width of the fill.',
+				default: false,
+			},
+			{
+				type: 'colorpicker',
+				id: 'markerColor',
+				label: 'Colour',
+				default: 0xffffff,
+				enableAlpha: true,
+				returnType: 'number',
+			},
+			{
+				type: 'number',
+				id: 'markerWidth',
+				label: 'Width (%)',
+				tooltip: 'Thickness of the marker line as a percentage of the fill width.',
+				default: 15,
+				min: 1,
+				max: 100,
+				step: 1,
+			},
+		],
+	},
+	{
+		id: 'track',
+		label: 'Track (background)',
+		fields: [
+			{
+				type: 'dropdown',
+				id: 'trackStyle',
+				label: 'Style',
+				tooltip: 'How to render the unfilled track behind the fill.',
+				choices: [
+					{ id: 'transparent', label: 'Transparent' },
+					{ id: 'dimmed', label: 'Dimmed (darker)' },
+				],
+				default: 'transparent',
+			},
+			{
+				type: 'number',
+				id: 'trackAmount',
+				label: 'Amount (%)',
+				tooltip:
+					'How much of the original colour remains in the unfilled track. 0 = invisible / black, 100 = same as the active colour.',
+				default: 70,
+				min: 0,
+				max: 100,
+				step: 1,
+				range: true,
+			},
+			{
+				type: 'number',
+				id: 'trackWidth',
+				label: 'Track width (%)',
+				tooltip: 'Width of the track relative to the available space, centred.',
+				default: 100,
+				min: 0,
+				max: 100,
+				step: 1,
+				range: true,
+			},
+		],
+	},
+]
+
 /**
  * Section-structured schemas per element type.
  */
@@ -492,6 +753,7 @@ export const elementSchemas = {
 	composite: compositeElementSchema,
 	canvas: canvasElementSchema,
 	reference: referenceElementSchema,
+	gauge: gaugeElementSchema,
 } as const satisfies Record<string, ElementSchemaSection[]>
 
 export function getElementSchemaProperty(
@@ -536,4 +798,8 @@ export const elementSimpleModeFields = {
 		//
 		'color',
 	] satisfies ReadonlyArray<keyof ButtonGraphicsBoxElement>,
+	gauge: [
+		//
+		'value',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsGaugeElement>,
 } as const

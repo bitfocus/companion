@@ -280,6 +280,98 @@ describe('Image drawing', () => {
 	// circle
 	// -------------------------------------------------------------------------
 
+	describe('arcStroke', () => {
+		function pixelAt(buf: Buffer, width: number, x: number, y: number) {
+			const idx = (y * width + x) * 4
+			return { r: buf[idx]!, g: buf[idx + 1]!, b: buf[idx + 2]!, a: buf[idx + 3]! }
+		}
+
+		test('full circle - arc pixels are colored, center is transparent', () => {
+			const img = Image.create(60, 60, 1, null)
+			// radius=20, center=(30,30), lineWidth=4 → arc spans r=18..22 from center
+			img.arcStroke(30, 30, 20, 0, Math.PI * 2, false, { color: '#ff0000', width: 4 })
+			const buf = img.buffer()
+
+			// Center pixel (well inside ring) should be transparent
+			expect(pixelAt(buf, 60, 30, 30).a).toBe(0)
+
+			// Top of circle: (30, 10) = cy - r → should be red
+			const top = pixelAt(buf, 60, 30, 10)
+			expect(top.r).toBeGreaterThan(100)
+			expect(top.a).toBeGreaterThan(0)
+
+			// Right of circle: (50, 30) = cx + r → should be red
+			const right = pixelAt(buf, 60, 50, 30)
+			expect(right.r).toBeGreaterThan(100)
+			expect(right.a).toBeGreaterThan(0)
+		})
+
+		test('lineWidth=0 - draws nothing', () => {
+			const img = Image.create(60, 60, 1, null)
+			img.arcStroke(30, 30, 20, 0, Math.PI * 2, false, { color: '#ff0000', width: 0 })
+			const buf = img.buffer()
+			for (let i = 3; i < buf.length; i += 4) {
+				expect(buf[i]).toBe(0)
+			}
+		})
+
+		test('radius=0 - draws nothing', () => {
+			const img = Image.create(60, 60, 1, null)
+			img.arcStroke(30, 30, 0, 0, Math.PI * 2, false, { color: '#ff0000', width: 4 })
+			const buf = img.buffer()
+			for (let i = 3; i < buf.length; i += 4) {
+				expect(buf[i]).toBe(0)
+			}
+		})
+
+		test('clockwise semicircle - colors lower half, not upper', () => {
+			const img = Image.create(60, 60, 1, null)
+			// CW from 0 (3 o'clock) to π (9 o'clock) = lower half (right→bottom→left)
+			img.arcStroke(30, 30, 20, 0, Math.PI, false, { color: '#00ff00', width: 4 })
+			const buf = img.buffer()
+
+			// Bottom of circle (cy+r = 50) should have color
+			expect(pixelAt(buf, 60, 30, 50).a).toBeGreaterThan(0)
+
+			// Top of circle (cy-r = 10) should be transparent
+			expect(pixelAt(buf, 60, 30, 10).a).toBe(0)
+		})
+
+		test('anticlockwise semicircle - colors upper half, not lower', () => {
+			const img = Image.create(60, 60, 1, null)
+			// CCW from 0 to π = upper half (right→top→left)
+			img.arcStroke(30, 30, 20, 0, Math.PI, true, { color: '#0000ff', width: 4 })
+			const buf = img.buffer()
+
+			// Top of circle (cy-r = 10) should have color
+			expect(pixelAt(buf, 60, 30, 10).a).toBeGreaterThan(0)
+
+			// Bottom of circle (cy+r = 50) should be transparent
+			expect(pixelAt(buf, 60, 30, 50).a).toBe(0)
+		})
+
+		test('snapshot - full circle and quarter arcs', async () => {
+			const img = Image.create(144, 72, 1, null)
+			img.fillColor('#111111')
+			// Full circle on left
+			img.arcStroke(36, 36, 28, 0, Math.PI * 2, false, { color: '#ff0000', width: 5 })
+			// CW bottom-half in middle (green)
+			img.arcStroke(72, 36, 28, 0, Math.PI, false, { color: '#00ff00', width: 5 })
+			// CCW top-half on right (blue)
+			img.arcStroke(108, 36, 28, 0, Math.PI, true, { color: '#0088ff', width: 5 })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('snapshot - thick vs thin arc', async () => {
+			const img = Image.create(144, 72, 1, null)
+			img.fillColor('#111111')
+			// 270° arc (0 → 3π/2) – avoids angles that normalise to the same point
+			img.arcStroke(36, 36, 28, 0, Math.PI * 1.5, false, { color: '#ff8800', width: 2 })
+			img.arcStroke(108, 36, 28, 0, Math.PI * 1.5, false, { color: '#ff8800', width: 14 })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+	})
+
 	describe('circle', () => {
 		test('filled full circle', async () => {
 			const img = Image.create(72, 58, 1, null)
