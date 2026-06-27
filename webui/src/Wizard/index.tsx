@@ -35,7 +35,7 @@ const DEV_VERSION_OPTIONS: { label: string; value: number }[] = [
 ]
 
 export function WizardModal(): React.JSX.Element {
-	const { showWizardEvent, userConfig } = useContext(RootAppStoreContext)
+	const { showWizardEvent, userConfig, wizardActive } = useContext(RootAppStoreContext)
 
 	const [currentStep, setCurrentStep] = useState(0)
 	const [startConfig, setStartConfig] = useState<UserConfigModel | null>(null)
@@ -165,6 +165,11 @@ export function WizardModal(): React.JSX.Element {
 			showWizardEvent.removeEventListener('show', show)
 		}
 	}, [showWizardEvent, clear, getConfig])
+
+	// Let the rest of the app know the wizard is open, so the What's New modal can wait its turn
+	useEffect(() => {
+		wizardActive.set(show)
+	}, [show, wizardActive])
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 

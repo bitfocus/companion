@@ -102,6 +102,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			showWizardEvent,
 			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
+			wizardActive: observable.box(false),
 
 			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore

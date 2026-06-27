@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react'
+import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import semver from 'semver'
 import { useLocalStorage } from 'usehooks-ts'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { WIZARD_CURRENT_VERSION } from '~/Wizard/Constants.js'
 import { MyErrorBoundary } from '../Resources/Error.js'
 import { DocsContent } from './DocsContent.js'
 
@@ -22,9 +24,19 @@ export interface WhatsNewModalRef {
 
 export const WhatsNewModal = observer(
 	forwardRef<WhatsNewModalRef>(function HelpModal(_props, ref) {
+		const { userConfig, wizardActive } = useContext(RootAppStoreContext)
+
 		const [show, setShow] = useState(false)
 		const [selectedVersion, setSelectedVersion] = useState<string | undefined>(undefined)
 		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
+
+		// The setup wizard takes priority on launch: don't auto-pop What's New while it is pending or open.
+		// Once the wizard finishes (it bumps setup_wizard and clears wizardActive), this re-evaluates and shows.
+		// Wait for the config to load first, so we know whether the wizard is pending before deciding.
+		const setupWizardVersion = userConfig.properties?.setup_wizard
+		const configLoaded = setupWizardVersion !== undefined
+		const isWizardPending = configLoaded && setupWizardVersion < WIZARD_CURRENT_VERSION
+		const isWizardActive = wizardActive.get()
 
 		// Load pages manifest using proper React Query
 		const {
@@ -48,11 +60,12 @@ export const WhatsNewModal = observer(
 
 		// Check if we should auto-show the modal for new versions
 		useEffect(() => {
+			if (!configLoaded || isWizardPending || isWizardActive) return
 			if (latestPage && (!storedLatest || semver.lt(storedLatest, latestPage.version))) {
 				setShow(true)
 				console.log('New version detected, showing WhatsNewModal')
 			}
-		}, [latestPage, storedLatest])
+		}, [latestPage, storedLatest, configLoaded, isWizardPending, isWizardActive])
 
 		// Set initial selected version when pages load
 		useEffect(() => {
