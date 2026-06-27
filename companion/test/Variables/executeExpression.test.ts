@@ -401,14 +401,7 @@ describe('executeExpression', () => {
 
 		test('the configured timezone is applied and tracked', () => {
 			const ts = new Date('2024-06-15T12:00:00Z').getTime()
-			const res = executeExpressionRaw(
-				mockBlinker,
-				`dateHour(${ts})`,
-				{},
-				undefined,
-				new Map(),
-				'America/New_York'
-			)
+			const res = executeExpressionRaw(mockBlinker, `dateHour(${ts})`, {}, undefined, new Map(), 'America/New_York')
 			expect(res).toMatchObject({ value: 8, variableIds: new Set(['internal:timezone']) }) // UTC-4 in summer
 		})
 	})
