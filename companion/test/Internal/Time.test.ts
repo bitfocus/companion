@@ -41,7 +41,7 @@ describe('InternalTime', () => {
 			const defs = time.getVariableDefinitions()
 			const names = defs.map((d) => d.name)
 
-			expect(defs).toHaveLength(16)
+			expect(defs).toHaveLength(17)
 			expect(names).toEqual([
 				'date_iso',
 				'date_y',
@@ -59,6 +59,7 @@ describe('InternalTime', () => {
 				'time_h_12',
 				'time_unix',
 				'uptime',
+				'timezone',
 			])
 
 			// Every definition should carry a human-readable description
@@ -165,6 +166,7 @@ describe('InternalTime', () => {
 				time_h: '21',
 				time_h_12: '09',
 				time_hms_12: '09:30:00',
+				timezone: 'America/New_York',
 			})
 
 			// Change the configured zone live; the next tick reflects Tokyo (UTC+9 -> 10:30 same day)
@@ -176,7 +178,20 @@ describe('InternalTime', () => {
 				time_hms: '10:30:00',
 				time_h: '10',
 				time_h_12: '10',
+				timezone: 'Asia/Tokyo',
 			})
+		})
+
+		test('exposes the resolved system timezone when none is configured', () => {
+			const { time, setVariables } = createTime(new Date('2024-06-15T01:30:00Z'))
+			time.updateVariables()
+
+			// With no configured timezone the variable resolves to a concrete IANA name (the host zone),
+			// never an empty string, so expressions always have a usable value to depend on.
+			const tz = lastValues(setVariables).timezone
+			expect(tz).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone)
+			expect(typeof tz).toBe('string')
+			expect((tz as string).length).toBeGreaterThan(0)
 		})
 		test('falls back to local time (without throwing) when the configured timezone is invalid', () => {
 			// A bad stored/imported timezone must not break the 500ms tick. getZonedDateParts() already

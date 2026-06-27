@@ -62,6 +62,7 @@ export const EventDefinitions: Record<string, EventDefinition> = {
 	},
 	timeofday: {
 		name: 'Time of Day',
+		description: 'This uses the timezone specified in the settings, or your system time if that is unset',
 		options: [
 			{
 				id: 'time',

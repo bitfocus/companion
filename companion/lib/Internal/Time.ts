@@ -107,6 +107,10 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 				description: 'Uptime (seconds)',
 				name: 'uptime',
 			},
+			{
+				description: 'Active timezone (IANA name)',
+				name: 'timezone',
+			},
 		]
 	}
 
@@ -160,6 +164,11 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 			time_h_12: hh12,
 
 			uptime,
+
+			// The timezone actually in effect, as a concrete IANA name (resolving the process-local zone
+			// when none is configured). Expressions that use a date/time function without an explicit
+			// timezone depend on this variable, so changing it re-evaluates them.
+			timezone: effectiveTz ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
 		})
 	}
 

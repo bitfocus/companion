@@ -382,4 +382,34 @@ describe('executeExpression', () => {
 			expect(res).toMatchObject({ value: 0 })
 		})
 	})
+
+	describe('default timezone dependency', () => {
+		test('a date function without an explicit tz depends on internal:timezone', () => {
+			const res = executeExpression(mockBlinker, 'dateYear(0)', {}, undefined, new Map())
+			expect(res).toMatchObject({ variableIds: new Set(['internal:timezone']) })
+		})
+
+		test('an explicit tz argument does not register the dependency', () => {
+			const res = executeExpression(mockBlinker, "dateYear(0, 'UTC')", {}, undefined, new Map())
+			expect(res).toMatchObject({ variableIds: new Set() })
+		})
+
+		test('an expression with no date function does not register the dependency', () => {
+			const res = executeExpression(mockBlinker, '1 + 2', {}, undefined, new Map())
+			expect(res).toMatchObject({ variableIds: new Set() })
+		})
+
+		test('the configured timezone is applied and tracked', () => {
+			const ts = new Date('2024-06-15T12:00:00Z').getTime()
+			const res = executeExpressionRaw(
+				mockBlinker,
+				`dateHour(${ts})`,
+				{},
+				undefined,
+				new Map(),
+				'America/New_York'
+			)
+			expect(res).toMatchObject({ value: 8, variableIds: new Set(['internal:timezone']) }) // UTC-4 in summer
+		})
+	})
 })
