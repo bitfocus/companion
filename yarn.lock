@@ -1962,27 +1962,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.1.0-0-nightly-main-20260626-140426-8370e66":
-  version: 2.1.0-0-nightly-main-20260626-140426-8370e66
-  resolution: "@companion-module/base@npm:2.1.0-0-nightly-main-20260626-140426-8370e66"
+"@companion-module/base@npm:~2.1.0":
+  version: 2.1.0
+  resolution: "@companion-module/base@npm:2.1.0"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/9bc3a45ad36959b395a054a3bb653c4f944cf41777fedb0fd0ff8c5932f20ea1b316adfe61a273d5b42c50c5e967f342a0b115b1739bf77bc739d759b4dc27d3
+  checksum: 10c0/b04cf278f22f714699d43286c1ffbeaf1860746f6034bddcc8c1ff198dc623d217926d3f49293aaae003346dfc401472735e6f2fdc740296cc0a05e360620ff0
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.0.3-nightly-main-20260626-140637-8370e66":
-  version: 1.0.3-nightly-main-20260626-140637-8370e66
-  resolution: "@companion-module/host@npm:1.0.3-nightly-main-20260626-140637-8370e66"
+"@companion-module/host@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@companion-module/host@npm:1.1.0"
   dependencies:
-    "@companion-module/base": "npm:~2.1.0-0"
+    "@companion-module/base": "npm:~2.1.0"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.3.0"
-    semver: "npm:^7.8.4"
+    semver: "npm:^7.8.5"
     tslib: "npm:^2.8.1"
     zod: "npm:^4.4.3"
-  checksum: 10c0/22022a097c938bd2d0aded325329723f47a11c5e72253ed7cf2b8243d207c4618fd55bccd93d24a4e9f55f86e298a379e90de6b3088118180ceaf2c0aa3bc632
+  checksum: 10c0/db27ead39c8ff8bae667a900e8ce6d73b75f77fad6a723a1cbe29d5f9ea0eedfaddf6de715e377f11a7631704c5c2efa56dc4281e5f615f7cd3c01753e551467
   languageName: node
   linkType: hard
 
@@ -10782,7 +10782,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
-    "@companion-module/host": "npm:1.0.3"
+    "@companion-module/host": "npm:1.1.0"
     "@companion-surface/host": "npm:1.3.2"
     "@julusian/bonjour-service": "npm:^1.4.3"
     "@julusian/image-rs": "npm:^2.1.1"
@@ -21900,7 +21900,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.2, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.8.4, semver@npm:^7.8.5":
+"semver@npm:^7.3.2, semver@npm:^7.3.5, semver@npm:^7.3.7, semver@npm:^7.5.2, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.3, semver@npm:^7.7.2, semver@npm:^7.7.3, semver@npm:^7.8.5":
   version: 7.8.5
   resolution: "semver@npm:7.8.5"
   bin:

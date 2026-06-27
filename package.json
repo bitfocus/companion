@@ -91,8 +91,6 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "2.1.0-0-nightly-main-20260626-140426-8370e66",
-    "@companion-module/host": "1.0.3-nightly-main-20260626-140637-8370e66",
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
     "webpack-bundle-analyzer": "^5.0.0"
