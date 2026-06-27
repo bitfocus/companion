@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 5
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -47,7 +47,7 @@ jobs:
       version: ${{ steps.filenames.outputs.longversion }}
       upload-url: ${{ steps.upload-beta.outputs.upload-url || steps.upload-stable.outputs.upload-url }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -58,7 +58,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: linux-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -148,7 +148,7 @@ jobs:
       upload-url: ${{ steps.upload-beta.outputs.upload-url || steps.upload-stable.outputs.upload-url }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -159,7 +159,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: linux-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -256,7 +256,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -267,7 +267,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: macos-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -354,7 +354,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -365,7 +365,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: macos-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -454,7 +454,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -465,7 +465,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: windows-x64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -565,7 +565,7 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -576,7 +576,7 @@ jobs:
           node-version-file: ".node-version"
 
       - name: Cache build sources
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .cache
           key: windows-arm64-build-cache-${{ hashFiles('assets/nodejs-versions.json') }}
@@ -716,7 +716,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         if: ${{ steps.meta.outputs.tags }}
         with:
           persist-credentials: false

@@ -1,13 +1,8 @@
 import debounceFn from 'debounce-fn'
-import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
-import { isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
-	type EntityOwner,
 	type FeedbackEntityStyleOverride,
-	type RawStoreResult,
-	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -20,7 +15,7 @@ import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { VariablesValues } from '../../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
-import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
@@ -46,7 +41,26 @@ export interface ControlEntityListPoolProps {
 	reportChange: (options: ControlEntityListChangeProps) => void
 }
 
+/**
+ * The read-only entity pool. It owns the entity lists and all runtime/read behaviour (loading, feedback
+ * evaluation, variable propagation, serialization). It deliberately has NO user-facing structural edit
+ * mutators (entityAdd/Remove/etc) - those are added by the entity-editing mixin (see
+ * {@link ../EntityListPoolEditingMixin.js WithEntityEditing}) and so exist only on editable pools. A
+ * read-only control (e.g. a preset reference) is therefore read-only by construction, with no runtime flag
+ * to check and no guard to forget.
+ *
+ * `entityReplaceForUpgrade` is intentionally here (not in the mixin): it is an upgrade/runtime path used when a
+ * connection upgrades its entities, and must work on every control regardless of editability.
+ */
 export abstract class ControlEntityListPoolBase {
+	/**
+	 * Discriminant for the read-only vs editable pool union. `false` on the read-only base (this class and the
+	 * read-only concrete pools); the editing mixin ({@link ../EntityListPoolEditingMixin.js WithEntityEditing})
+	 * sets it `true`. Code narrows on this (`if (pool.isEditable)`) to reach the structural edit mutators -
+	 * there is no per-control capability flag, the editability lives on the pool itself.
+	 */
+	abstract readonly isEditable: boolean
+
 	/**
 	 * The logger
 	 */
@@ -67,7 +81,9 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	protected readonly reportChange: (options: ControlEntityListChangeProps) => void
 
-	protected constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
+	// Public (not protected) so the editing mixins can extend this base via a generic constructor constraint.
+	// The class is abstract, so it still cannot be instantiated directly.
+	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EntityPool/${props.controlId}`)
 
 		this.controlId = props.controlId
@@ -274,226 +290,18 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
-	 * Add an entity to this control
-	 * @param entityModel the item to add
-	 * @param ownerId the ids of parent entity that this entity should be added as a child of
+	 * Replace an entity's stored props with a module-upgraded version.
+	 *
+	 * This is SOLELY the connection/module upgrade path (see {@link ../../Instance/Connection/EntityManager.js}
+	 * and the legacy child handler) - it is invoked when a connection upgrades the definition of one of its
+	 * entities, never as a result of a user edit. That is why it lives on the read-only base (it must work on
+	 * every control, including read-only ones like a preset reference) and is not part of the editable mutator
+	 * surface. Do not call it for user-facing edits.
 	 */
-	entityAdd(
-		listId: SomeSocketEntityLocation,
-		ownerId: EntityOwner | null,
-		...entityModels: SomeEntityModel[]
-	): boolean {
-		if (entityModels.length === 0) return false
-
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		let newEntities: ControlEntityInstance[]
-		if (ownerId) {
-			const parent = entityList.findById(ownerId.parentId)
-			if (!parent) throw new Error(`Failed to find parent entity ${ownerId.parentId} when adding child entity`)
-
-			newEntities = entityModels.map((entity) => parent.addChild(ownerId.childGroup, entity))
-		} else {
-			newEntities = entityModels.map((entity) => entityList.addEntity(entity))
-		}
-
-		// Inform relevant module
-		for (const entity of newEntities) {
-			entity.subscribe(true)
-		}
-
-		this.tryTriggerLocalVariablesChanged(...newEntities)
-
-		this.reportChange({
-			// Ensure new feedbacks clear caches
-			redraw: true, // Need to recheck status icon
-			invalidateAllElements: listId === 'feedbacks',
-		})
-
-		return true
-	}
-
-	/**
-	 * Duplicate an entity on this control
-	 */
-	entityDuplicate(listId: SomeSocketEntityLocation, id: string): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.duplicateEntity(id)
-		if (!entity) return false
-
-		this.tryTriggerLocalVariablesChanged(entity)
-
-		this.reportChange({
-			// Ensure new feedbacks clear caches
-			redraw: listId === 'feedbacks',
-			changedElementIds: listId === 'feedbacks' ? entity.styleOverrideAffectedElementIds : undefined,
-		})
-
-		return true
-	}
-
-	/**
-	 * Enable or disable an entity
-	 */
-	entityEnabled(listId: SomeSocketEntityLocation, id: string, enabled: boolean): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		// Collect element IDs referenced by style overrides
-		const affectedElementIds = listId === 'feedbacks' ? entity.styleOverrideAffectedElementIds : undefined
-
-		entity.setEnabled(enabled)
-
-		this.tryTriggerLocalVariablesChanged(entity)
-
-		this.reportChange({
-			redraw: true,
-			changedElementIds: affectedElementIds,
-		})
-
-		return true
-	}
-
-	/**
-	 * Set headline for the entity
-	 */
-	entityHeadline(listId: SomeSocketEntityLocation, id: string, headline: string): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		entity.setHeadline(headline)
-
-		this.reportChange({
-			redraw: false,
-		})
-
-		return true
-	}
-
-	/**
-	 * Learn the options for an entity, by asking the connection for the current values
-	 */
-	async entityLearn(listId: SomeSocketEntityLocation, id: string): Promise<boolean> {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		const changed = await entity.learnOptions()
-		if (!changed) return false
-
-		// Time has passed due to the `await`
-		// So the entity may not still exist, meaning we should find it again to be sure
-		const entityAfter = entityList.findById(id)
-		if (!entityAfter) return false
-
-		this.tryTriggerLocalVariablesChanged(entityAfter)
-
-		this.reportChange({
-			redraw: listId === 'feedbacks',
-		})
-
-		return true
-	}
-
-	/**
-	 * Remove an entity from this control
-	 */
-	entityRemove(listId: SomeSocketEntityLocation, id: string): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const removedEntity = entityList.removeEntity(id)
-		if (removedEntity) {
-			this.reportChange({
-				redraw: true, // Need to recheck status icon
-				changedElementIds: listId === 'feedbacks' ? removedEntity.styleOverrideAffectedElementIds : undefined,
-			})
-
-			this.tryTriggerLocalVariablesChanged(removedEntity.localVariableName)
-
-			return true
-		} else {
-			return false
-		}
-	}
-
-	/**
-	 * Move an entity within the hierarchy
-	 * @param moveListId the id of the list to move the entity from
-	 * @param moveEntityId the id of the entity to move
-	 * @param newOwnerId the target new owner of the entity
-	 * @param newListId the id of the list to move the entity to
-	 * @param newIndex the target index of the entity
-	 */
-	entityMoveTo(
-		moveListId: SomeSocketEntityLocation,
-		moveEntityId: string,
-		newOwnerId: EntityOwner | null,
-		newListId: SomeSocketEntityLocation,
-		newIndex: number
-	): boolean {
-		if (newOwnerId && moveEntityId === newOwnerId.parentId) return false
-
-		const oldInfo = this.getEntityList(moveListId)?.findParentAndIndex(moveEntityId)
-		if (!oldInfo) return false
-
-		let movedEntity: ControlEntityInstance | undefined
-
-		if (
-			isEqual(moveListId, newListId) &&
-			oldInfo.parent.ownerId?.parentId === newOwnerId?.parentId &&
-			oldInfo.parent.ownerId?.childGroup === newOwnerId?.childGroup
-		) {
-			movedEntity = oldInfo.parent.moveEntity(oldInfo.index, newIndex)
-			if (!movedEntity) return false
-		} else {
-			const newEntityList = this.getEntityList(newListId)
-			if (!newEntityList) return false
-
-			const newParent = newOwnerId ? newEntityList.findById(newOwnerId.parentId) : null
-			if (newOwnerId && !newParent) return false
-
-			// Ensure the new parent is not a child of the entity being moved
-			if (newOwnerId && oldInfo.item.findChildById(newOwnerId.parentId)) return false
-
-			// Check if the new parent can hold the entity being moved
-			if (newParent && !newParent.canAcceptChild(newOwnerId!.childGroup, oldInfo.item)) return false
-			if (!newParent && !newEntityList.canAcceptEntity(oldInfo.item)) return false
-
-			movedEntity = oldInfo.parent.popEntity(oldInfo.index)
-			if (!movedEntity) return false
-
-			if (newParent) {
-				newParent.pushChild(movedEntity, newOwnerId!.childGroup, newIndex)
-			} else {
-				newEntityList.pushEntity(movedEntity, newIndex)
-			}
-		}
-
-		this.reportChange({
-			redraw: true,
-			// If it moved at all, that could invalidate the overrides. Play it safe
-			changedElementIds: movedEntity?.styleOverrideAffectedElementIds,
-		})
-
-		return true
-	}
-
-	/**
-	 * Replace an entity with an updated version
-	 */
-	entityReplace(newProps: SomeReplaceableEntityModel, skipNotifyModule = false): ControlEntityInstance | undefined {
+	entityReplaceForUpgrade(
+		newProps: SomeReplaceableEntityModel,
+		skipNotifyModule = false
+	): ControlEntityInstance | undefined {
 		for (const entityList of this.getAllEntityLists()) {
 			const entity = entityList.findById(newProps.id)
 			if (!entity) continue
@@ -554,219 +362,6 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		return undefined
-	}
-
-	/**
-	 * Replace all the entities in a list
-	 * @param listId the list to update
-	 * @param newEntities entities to populate
-	 */
-	entityReplaceAll(listId: SomeSocketEntityLocation, entities: SomeEntityModel[]): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		entityList.loadStorage(entities, false, false)
-
-		this.reportChange({
-			redraw: true,
-			invalidateAllElements: listId === 'feedbacks',
-		})
-
-		return true
-	}
-
-	/**
-	 * Update an option for an entity
-	 * @param id the id of the entity
-	 * @param key the key/name of the property
-	 * @param value the new value
-	 */
-	entitySetOption(
-		listId: SomeSocketEntityLocation,
-		id: string,
-		key: string,
-		value: ExpressionOrValue<JsonValue | undefined>
-	): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		entity.setOption(key, value)
-
-		this.tryTriggerLocalVariablesChanged(entity)
-
-		this.reportChange({ redraw: false })
-
-		return true
-	}
-
-	/**
-	 * Set a new connection instance for an entity
-	 * @param id the id of the entity
-	 * @param connectionId the id of the new connection
-	 */
-	entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		entity.setConnectionId(connectionId)
-
-		this.tryTriggerLocalVariablesChanged(entity)
-
-		this.reportChange({
-			redraw: true,
-			// No need to invalidate caches, feedback values havent changed
-		})
-
-		return true
-	}
-
-	/**
-	 * Set whether a boolean feedback should be inverted
-	 * @param id the id of the entity
-	 * @param isInverted the new value
-	 */
-	entitySetInverted(listId: SomeSocketEntityLocation, id: string, isInverted: ExpressionOrValue<boolean>): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		entity.setInverted(isInverted)
-
-		this.tryTriggerLocalVariablesChanged(entity)
-
-		this.reportChange({
-			redraw: true,
-			changedElementIds: listId === 'feedbacks' ? entity.styleOverrideAffectedElementIds : undefined,
-		})
-
-		return true
-	}
-
-	/** Set where this action's result will be stored (if at all). */
-	entitySetRawStoreResult(listId: SomeSocketEntityLocation, id: string, target: RawStoreResult | undefined): boolean {
-		const entity = this.getEntityList(listId)?.findById(id)
-		if (!entity) return false
-
-		entity.setRawStoreResult(target)
-
-		this.reportChange({ redraw: false })
-
-		return true
-	}
-
-	/**
-	 * Set the local variable name for an entity
-	 * @param listId The list the entity is in
-	 * @param id The id of the entity
-	 * @param name The new name for the variable
-	 */
-	entitySetVariableName(listId: SomeSocketEntityLocation, id: string, name: string): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		// Make sure the new name is valid
-		if (name !== '' && !isLabelValid(name)) {
-			// throw new Error(`Invalid local variable name "${name}"`)
-			return false
-		}
-
-		const oldLocalVariableName = entity.localVariableName
-
-		entity.setVariableName(name)
-
-		this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
-
-		this.reportChange({ redraw: false })
-
-		return true
-	}
-
-	/**
-	 * Set the variable value for an entity, if this is a user local variable
-	 * @param listId The list the entity is in
-	 * @param id The id of the entity
-	 * @param value The new value for the variable
-	 */
-	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: JsonValue | undefined): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(id)
-		if (!entity) return false
-
-		if (!isInternalUserValueFeedback(entity)) return false
-
-		const needsPersistence = entity.setUserValue(value)
-
-		// Persist value if needed
-		if (needsPersistence) {
-			this.reportChange({ redraw: false })
-		}
-
-		this.tryTriggerLocalVariablesChanged(entity)
-
-		return true
-	}
-
-	entityReplaceStyleOverride(
-		listId: SomeSocketEntityLocation,
-		entityId: string,
-		override: FeedbackEntityStyleOverride
-	): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(entityId)
-		if (!entity) return false
-
-		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		const result = entity.replaceStyleOverride(override)
-		if (result) {
-			// Invalidate the specific element if the feedback is enabled
-			this.reportChange({
-				redraw: !entity.disabled,
-				changedElementIds: !entity.disabled ? new Set([result.elementId]) : undefined,
-			})
-
-			return true
-		}
-
-		return false
-	}
-
-	entityRemoveStyleOverride(listId: SomeSocketEntityLocation, entityId: string, overrideId: string): boolean {
-		const entityList = this.getEntityList(listId)
-		if (!entityList) return false
-
-		const entity = entityList.findById(entityId)
-		if (!entity) return false
-
-		// if (this.#booleanOnly) throw new Error('FragmentFeedbacks not setup to use styles')
-
-		const removed = entity.removeStyleOverride(overrideId)
-		if (removed) {
-			// Invalidate the specific element if the feedback is enabled
-			this.reportChange({
-				redraw: !entity.disabled,
-				changedElementIds: !entity.disabled ? new Set([removed.elementId]) : undefined,
-			})
-
-			return true
-		}
-
-		return false
 	}
 
 	/**

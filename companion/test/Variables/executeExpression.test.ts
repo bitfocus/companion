@@ -248,4 +248,129 @@ describe('executeExpression', () => {
 			expect(res).toMatchObject({ ok: false, variableIds: new Set(['test:missing']) })
 		})
 	})
+
+	test('a direct reference to another variable preserves its type', () => {
+		const res = executeExpression(
+			mockBlinker,
+			'$(test:ref)',
+			{
+				test: {
+					ref: '$(test:num)',
+					num: 42,
+				},
+			},
+			'number',
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 42, variableIds: new Set(['test:ref', 'test:num']) })
+	})
+
+	test('custom variables are resolvable through the internal:custom_ alias', () => {
+		const res = executeExpression(
+			mockBlinker,
+			'$(internal:custom_foo)',
+			{
+				custom: {
+					foo: 'custom value',
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 'custom value' })
+	})
+
+	test('a variable embedding itself does not recurse endlessly', () => {
+		const res = executeExpression(
+			mockBlinker,
+			'$(test:loop)',
+			{
+				test: {
+					loop: 'foo $(test:loop)',
+				},
+			},
+			undefined,
+			new Map()
+		)
+		expect(res).toMatchObject({ value: 'foo $RE', variableIds: new Set(['test:loop']) })
+	})
+
+	describe('parseVariables function', () => {
+		test('parses variables within a string', () => {
+			const res = executeExpression(
+				mockBlinker,
+				"parseVariables('$(test:page) x')",
+				{ test: { page: 'abc' } },
+				undefined,
+				new Map()
+			)
+			expect(res).toMatchObject({ value: 'abc x', variableIds: new Set(['test:page']) })
+		})
+
+		test('missing variables use the provided fallback', () => {
+			const res = executeExpression(mockBlinker, "parseVariables('$(test:missing)', 'N/A')", {}, undefined, new Map())
+			expect(res).toMatchObject({ value: 'N/A' })
+		})
+	})
+
+	describe('blink function', () => {
+		test('looks up the blinker value for the interval', () => {
+			const blinker = mock<VariablesBlinker>({}, mockOptions)
+			blinker.trackDependencyOnInterval.mockReturnValue({
+				variableId: 'internal:__interval_500_500',
+				label: 'internal',
+				name: '__interval_500_500',
+			})
+
+			const injectedVariableValues: VariableValueCache = new Map()
+			injectedVariableValues.set('internal:__interval_500_500', true)
+
+			const res = executeExpression(blinker, 'blink(1000)', {}, undefined, injectedVariableValues)
+			expect(res).toMatchObject({ value: 1 })
+			expect(blinker.trackDependencyOnInterval).toHaveBeenCalledWith(1000, 0.5)
+
+			injectedVariableValues.set('internal:__interval_500_500', false)
+			const res2 = executeExpression(blinker, 'blink(1000)', {}, undefined, injectedVariableValues)
+			expect(res2).toMatchObject({ value: 0 })
+		})
+
+		test('a custom duty cycle is passed through', () => {
+			const blinker = mock<VariablesBlinker>({}, mockOptions)
+			blinker.trackDependencyOnInterval.mockReturnValue({
+				variableId: 'internal:__interval_250_750',
+				label: 'internal',
+				name: '__interval_250_750',
+			})
+
+			executeExpression(blinker, 'blink(1000, 0.25)', {}, undefined, new Map())
+			expect(blinker.trackDependencyOnInterval).toHaveBeenCalledWith(1000, 0.25)
+		})
+
+		test('an invalid duty cycle falls back to 0.5', () => {
+			const blinker = mock<VariablesBlinker>({}, mockOptions)
+			blinker.trackDependencyOnInterval.mockReturnValue({
+				variableId: 'internal:__interval_500_500',
+				label: 'internal',
+				name: '__interval_500_500',
+			})
+
+			executeExpression(blinker, "blink(1000, 'nope')", {}, undefined, new Map())
+			expect(blinker.trackDependencyOnInterval).toHaveBeenCalledWith(1000, 0.5)
+		})
+
+		test('invalid intervals return 0 without tracking', () => {
+			// mockBlinker throws if trackDependencyOnInterval is called
+			expect(executeExpression(mockBlinker, 'blink(0)', {}, undefined, new Map())).toMatchObject({ value: 0 })
+			expect(executeExpression(mockBlinker, 'blink(-5)', {}, undefined, new Map())).toMatchObject({ value: 0 })
+			expect(executeExpression(mockBlinker, "blink('abc')", {}, undefined, new Map())).toMatchObject({ value: 0 })
+		})
+
+		test('a rejected interval returns 0', () => {
+			const blinker = mock<VariablesBlinker>({}, mockOptions)
+			blinker.trackDependencyOnInterval.mockReturnValue(null)
+
+			const res = executeExpression(blinker, 'blink(1000)', {}, undefined, new Map())
+			expect(res).toMatchObject({ value: 0 })
+		})
+	})
 })

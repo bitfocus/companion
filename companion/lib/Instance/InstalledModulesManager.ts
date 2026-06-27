@@ -19,7 +19,12 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { describeHowToEnableDangerousFeature } from '../Resources/Util.js'
 import { publicProcedure, router, type TrpcContext } from '../UI/TRPC.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
-import { MAX_MODULE_BUNDLE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from './Constants.js'
+import {
+	MAX_DECOMPRESSED_MODULE_BUNDLE_TAR_SIZE,
+	MAX_DECOMPRESSED_MODULE_TAR_SIZE,
+	MAX_MODULE_BUNDLE_TAR_SIZE,
+	MAX_MODULE_TAR_SIZE,
+} from './Constants.js'
 import type { InstanceModules } from './Modules.js'
 import type { ModuleStoreService } from './ModuleStore.js'
 
@@ -61,7 +66,7 @@ export class InstanceInstalledModulesManager {
 				)
 			}
 
-			const decompressedData = await gunzipP(data)
+			const decompressedData = await gunzipP(data, { maxOutputLength: MAX_DECOMPRESSED_MODULE_BUNDLE_TAR_SIZE })
 			if (!decompressedData) {
 				this.#logger.error(`Failed to decompress module data`)
 				throw new Error('Failed to decompress data')
@@ -259,7 +264,7 @@ export class InstanceInstalledModulesManager {
 
 					// TODO - error handling for this whole function
 
-					const decompressedData = await gunzipP(tarBuffer)
+					const decompressedData = await gunzipP(tarBuffer, { maxOutputLength: MAX_DECOMPRESSED_MODULE_TAR_SIZE })
 					if (!decompressedData) {
 						this.#logger.warn(`Failed to decompress module data`)
 						return 'Failed to decompress data'
@@ -395,7 +400,7 @@ export class InstanceInstalledModulesManager {
 			return 'Download did not match checksum'
 		}
 
-		const decompressedData = await gunzipP(fullTarBuffer)
+		const decompressedData = await gunzipP(fullTarBuffer, { maxOutputLength: MAX_DECOMPRESSED_MODULE_TAR_SIZE })
 		if (!decompressedData) {
 			this.#logger.error(`Failed to decompress module data`)
 			return 'Failed to decompress data'

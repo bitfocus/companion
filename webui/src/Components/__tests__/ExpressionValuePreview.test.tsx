@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ExpressionStreamResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import { exprExpr, exprVal, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import {
 	buildContextResolutionForPreview,

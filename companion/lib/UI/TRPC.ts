@@ -38,6 +38,28 @@ export function parseTrustedProxies(trustedProxies: string | undefined): string[
 		.filter((v) => !!v)
 }
 
+/**
+ * Build a predicate for "is this peer address one of the configured trusted proxies", using the same
+ * proxy-addr matching (and config) that express's "trust proxy" uses. When no trusted proxies are
+ * configured the predicate is always false, so nothing is treated as a proxy.
+ */
+export function makeIsTrustedProxyAddress(
+	trustedProxies: string | undefined
+): (address: string | undefined) => boolean {
+	const parts = parseTrustedProxies(trustedProxies)
+	if (parts.length === 0) return () => false
+
+	const trust = proxyaddr.compile(parts)
+	return (address) => {
+		if (!address) return false
+		try {
+			return trust(address, 0)
+		} catch (_e) {
+			return false
+		}
+	}
+}
+
 // created for each request
 // The express side already resolves req.ip via express's "trust proxy" setting, so we can use it directly.
 export const createTrpcExpressContext = ({ req, res: _res }: trpcExpress.CreateExpressContextOptions): TrpcContext => ({

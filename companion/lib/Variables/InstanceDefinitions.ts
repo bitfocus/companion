@@ -11,7 +11,7 @@
 
 import EventEmitter from 'node:events'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	AllVariableDefinitions,
 	ModuleVariableDefinitions,

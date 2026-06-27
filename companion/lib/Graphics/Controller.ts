@@ -235,7 +235,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				try {
 					if (args.type === 'preset') {
 						const control = this.controlsStore.getControl(args.controlId)
-						const buttonStyle = (await control?.getDrawStyle()) ?? undefined
+						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
 
 						let render: ImageResult | undefined
 						if (buttonStyle && buttonStyle.style === 'button-layered') {
@@ -280,7 +280,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
-					const buttonStyle = (await control?.getDrawStyle()) ?? undefined
+					const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {

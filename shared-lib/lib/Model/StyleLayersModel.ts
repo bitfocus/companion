@@ -212,6 +212,56 @@ export interface ButtonGraphicsReferenceElement
 	location: ExpressionOrValue<string>
 }
 
+export interface ButtonGraphicsGaugeDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
+	type: 'gauge'
+	value: number
+	min: number
+	max: number
+	origin: number
+	symmetric: boolean
+	orientation: 'horizontal' | 'vertical' | 'ring'
+	reverse: boolean
+	startAngle: number
+	endAngle: number
+	ringWidth: number
+	roundedEnds: boolean
+	fillEnabled: boolean
+	multiColour: boolean
+	stops: Record<string, JsonValue>[]
+	markerEnabled: boolean
+	markerColor: number
+	markerWidth: number
+	trackStyle: 'transparent' | 'dimmed'
+	trackAmount: number
+	trackWidth: number
+}
+
+export interface ButtonGraphicsGaugeElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
+	type: 'gauge'
+	value: ExpressionOrValue<number>
+	min: ExpressionOrValue<number>
+	max: ExpressionOrValue<number>
+	origin: ExpressionOrValue<number>
+	symmetric: ExpressionOrValue<boolean>
+	orientation: ExpressionOrValue<'horizontal' | 'vertical' | 'ring'>
+	reverse: ExpressionOrValue<boolean>
+	startAngle: ExpressionOrValue<number>
+	endAngle: ExpressionOrValue<number>
+	ringWidth: ExpressionOrValue<number>
+	roundedEnds: ExpressionOrValue<boolean>
+	fillEnabled: ExpressionOrValue<boolean>
+	multiColour: ExpressionOrValue<boolean>
+	stops: ExpressionOrValue<Record<string, JsonValue>[]>
+	markerEnabled: ExpressionOrValue<boolean>
+	markerColor: ExpressionOrValue<number>
+	markerWidth: ExpressionOrValue<number>
+	trackStyle: ExpressionOrValue<'transparent' | 'dimmed'>
+	trackAmount: ExpressionOrValue<number>
+	trackWidth: ExpressionOrValue<number>
+}
+
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
@@ -221,6 +271,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsGroupDrawElement
 	| ButtonGraphicsCircleDrawElement
 	| ButtonGraphicsReferenceDrawElement
+	| ButtonGraphicsGaugeDrawElement
 
 export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCanvasElement
@@ -232,3 +283,4 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsCircleElement
 	| ButtonGraphicsCompositeElement
 	| ButtonGraphicsReferenceElement
+	| ButtonGraphicsGaugeElement

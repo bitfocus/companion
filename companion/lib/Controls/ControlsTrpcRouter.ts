@@ -168,7 +168,8 @@ export function createControlsTrpcRouter(
 
 					controlEvents.emit('controlPlacedAt', toLocation, newControlId)
 
-					newControl.triggerRedraw()
+					// Ensure it is redrawn
+					newControl.commitChange(true)
 
 					return true
 				}

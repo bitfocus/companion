@@ -13,7 +13,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { nanoid } from 'nanoid'
-import nodeCron from 'node-cron'
+import nodeCron, { type ScheduledTask } from 'node-cron'
 import z from 'zod'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -36,7 +36,7 @@ export class BackupController {
 	readonly #userConfig: DataUserConfig
 	readonly #variableValuesController: VariablesValues
 	readonly #defaultBackupDir: string
-	readonly #cronJobs: Map<string, nodeCron.ScheduledTask> = new Map()
+	readonly #cronJobs: Map<string, ScheduledTask> = new Map()
 	readonly #exportController: ExportController
 	#backupRules: BackupRulesConfig[] = []
 

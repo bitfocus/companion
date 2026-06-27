@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
+import { BuiltinFunctionNames } from '@companion-app/shared/Expressions.js'
 import { builtinFunctionCompletions } from '../Expression.monarch.js'
 
 describe('Ensure all functions are documented', () => {
-	for (const funcName of Object.keys(ExpressionFunctions)) {
+	for (const funcName of BuiltinFunctionNames) {
 		test(`Function "${funcName}" is documented`, () => {
 			expect(builtinFunctionCompletions.find((c) => c.name === funcName)).toBeDefined()
 		})
@@ -22,7 +22,7 @@ describe('Ensure all documentation references real functions', () => {
 		if (ignoreFunctions.has(funcDocs.name)) continue
 
 		test(`Function "${funcDocs.name}" exists`, () => {
-			expect(ExpressionFunctions[funcDocs.name]).toBeDefined()
+			expect(BuiltinFunctionNames.includes(funcDocs.name)).toBeDefined()
 		})
 	}
 })

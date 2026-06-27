@@ -171,3 +171,243 @@ describe('local_variable_set_value deferred parse', () => {
 		expect(localVariables.setLocalVariable).not.toHaveBeenCalled()
 	})
 })
+
+// ---- reset / sync actions ---------------------------------------------------
+
+function makeFullLocalVariablesController(localVariable: LocalVariable | null): LocalVariablesController {
+	return {
+		localVariableFor: vi.fn().mockReturnValue(localVariable),
+		getLocalVariableContextFor: vi.fn().mockReturnValue({}),
+		setLocalVariable: vi.fn(),
+		resetLocalVariable: vi.fn(),
+		writeLocalVariableStartupValue: vi.fn(),
+	} as unknown as LocalVariablesController
+}
+
+describe('local_variable_reset_to_default', () => {
+	it('resets the resolved local variable', () => {
+		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'counter' }
+		const localVariables = makeFullLocalVariablesController(localVar)
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_reset_to_default',
+			{ location: 'this', name: 'counter' },
+			{ location: exprVal('this'), name: exprVal('counter') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(localVariables.resetLocalVariable).toHaveBeenCalledWith(localVar)
+	})
+
+	it('does nothing when the local variable is not found', () => {
+		const localVariables = makeFullLocalVariablesController(null)
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_reset_to_default',
+			{ location: 'this', name: 'missing' },
+			{ location: exprVal('this'), name: exprVal('missing') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(localVariables.resetLocalVariable).not.toHaveBeenCalled()
+	})
+})
+
+describe('local_variable_sync_to_default', () => {
+	it('writes the current value to the startup value', () => {
+		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'counter' }
+		const localVariables = makeFullLocalVariablesController(localVar)
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_sync_to_default',
+			{ location: 'this', name: 'counter' },
+			{ location: exprVal('this'), name: exprVal('counter') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(localVariables.writeLocalVariableStartupValue).toHaveBeenCalledWith(localVar)
+	})
+
+	it('does nothing when the local variable is not found', () => {
+		const localVariables = makeFullLocalVariablesController(null)
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_sync_to_default',
+			{ location: 'this', name: 'missing' },
+			{ location: exprVal('this'), name: exprVal('missing') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(localVariables.writeLocalVariableStartupValue).not.toHaveBeenCalled()
+	})
+})
+
+describe('executeAction - unknown', () => {
+	it('returns null for an unrecognised action', () => {
+		const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+		const action = makeAction('not_a_real_action', {}, {})
+
+		expect(module.executeAction(action, fakeExtras, createParser())).toBeNull()
+	})
+})
+
+// ---- executeFeedback --------------------------------------------------------
+
+function makeFeedback(definitionId: string, options: Record<string, unknown>) {
+	return {
+		controlId: 'ctrl1',
+		location: undefined,
+		id: 'fb1',
+		definitionId,
+		options: options as any,
+	}
+}
+
+describe('executeFeedback - variable_value', () => {
+	const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+	it('reports true when the variable equals the value', () => {
+		const parser = createParser({ custom: { foo: '5' } })
+		const result = module.executeFeedback(
+			makeFeedback('variable_value', { variable: 'custom:foo', op: 'eq', value: '5' }),
+			parser
+		)
+		expect(result).toMatchObject({ value: true })
+	})
+
+	it('reports false when the variable differs', () => {
+		const parser = createParser({ custom: { foo: '5' } })
+		const result = module.executeFeedback(
+			makeFeedback('variable_value', { variable: 'custom:foo', op: 'eq', value: '6' }),
+			parser
+		)
+		expect(result).toMatchObject({ value: false })
+	})
+
+	it('supports the gt operator', () => {
+		const parser = createParser({ custom: { foo: '10' } })
+		const result = module.executeFeedback(
+			makeFeedback('variable_value', { variable: 'custom:foo', op: 'gt', value: '5' }),
+			parser
+		)
+		expect(result).toMatchObject({ value: true })
+	})
+
+	it('returns false when no variable is configured', () => {
+		const result = module.executeFeedback(
+			makeFeedback('variable_value', { variable: '', op: 'eq', value: '5' }),
+			createParser()
+		)
+		expect(result).toBe(false)
+	})
+})
+
+describe('executeFeedback - variable_variable', () => {
+	const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+	it('compares two variables for equality', () => {
+		const parser = createParser({ custom: { a: '5', b: '5' } })
+		const result = module.executeFeedback(
+			makeFeedback('variable_variable', { variable: 'custom:a', op: 'eq', variable2: 'custom:b' }),
+			parser
+		)
+		expect(result).toMatchObject({ value: true })
+	})
+
+	it('returns false when either variable is missing', () => {
+		const result = module.executeFeedback(
+			makeFeedback('variable_variable', { variable: 'custom:a', op: 'eq', variable2: '' }),
+			createParser({ custom: { a: '5' } })
+		)
+		expect(result).toBe(false)
+	})
+})
+
+describe('executeFeedback - expression based', () => {
+	const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+	it('check_expression returns the truthiness of the evaluated option', () => {
+		expect(module.executeFeedback(makeFeedback('check_expression', { expression: true }), createParser())).toBe(true)
+		expect(module.executeFeedback(makeFeedback('check_expression', { expression: false }), createParser())).toBe(false)
+	})
+
+	it('expression_value returns the evaluated option directly', () => {
+		expect(module.executeFeedback(makeFeedback('expression_value', { expression: 42 }), createParser())).toBe(42)
+	})
+
+	it('user_value is not evaluated here and returns false', () => {
+		expect(module.executeFeedback(makeFeedback('user_value', {}), createParser())).toBe(false)
+	})
+
+	it('debug_expression_value coerces non-objects to an empty style', () => {
+		expect(
+			module.executeFeedback(makeFeedback('debug_expression_value', { expression: 'not-an-object' }), createParser())
+		).toEqual({})
+		expect(
+			module.executeFeedback(makeFeedback('debug_expression_value', { expression: { color: 1 } }), createParser())
+		).toEqual({ color: 1 })
+	})
+})
+
+// ---- definitions & visitReferences ------------------------------------------
+
+describe('definitions', () => {
+	const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+	it('exposes the three local variable actions', () => {
+		expect(Object.keys(module.getActionDefinitions()).sort()).toEqual([
+			'local_variable_reset_to_default',
+			'local_variable_set_value',
+			'local_variable_sync_to_default',
+		])
+	})
+
+	it('exposes the variable feedbacks (debug feedback only when not packaged)', () => {
+		const keys = Object.keys(module.getFeedbackDefinitions())
+		expect(keys).toEqual(
+			expect.arrayContaining([
+				'variable_value',
+				'variable_variable',
+				'check_expression',
+				'expression_value',
+				'user_value',
+			])
+		)
+	})
+})
+
+describe('visitReferences', () => {
+	const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+	it('visits the variable name option of variable_value feedbacks', () => {
+		const visitor = { visitVariableName: vi.fn(), visitString: vi.fn() } as any
+		const feedback = { id: 'fb1', type: 'variable_value', options: { variable: 'custom:foo' } } as any
+
+		module.visitReferences(visitor, [], [feedback])
+
+		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable', 'fb1')
+	})
+
+	it('visits both variable names of variable_variable feedbacks', () => {
+		const visitor = { visitVariableName: vi.fn(), visitString: vi.fn() } as any
+		const feedback = {
+			id: 'fb2',
+			type: 'variable_variable',
+			options: { variable: 'custom:a', variable2: 'custom:b' },
+		} as any
+
+		module.visitReferences(visitor, [], [feedback])
+
+		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable', 'fb2')
+		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable2', 'fb2')
+	})
+})

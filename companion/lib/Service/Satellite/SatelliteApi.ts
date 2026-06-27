@@ -57,6 +57,21 @@ import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './Sate
  */
 export const API_VERSION = '1.11.0'
 
+/**
+ * Maximum length of a single line (command) the receive buffer will accumulate before the
+ * connection is dropped. This bounds the per-connection memory and closes off a "buffer bomb"
+ * where a client streams data forever without ever sending a newline. 2MB is comfortably more
+ * than any legitimate line needs (e.g. a base64 bitmap, layout manifest or variable value).
+ */
+const MAX_LINE_LENGTH = 2 * 1024 * 1024
+
+/**
+ * Upper bounds for the legacy grid description, to prevent a client requesting an absurd grid
+ * that would allocate huge amounts of memory (one control object is created per key).
+ */
+const MAX_KEYS_TOTAL = 2000
+const MAX_KEYS_PER_ROW = 1000
+
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
 export abstract class SatelliteSocketWrapper {
@@ -209,12 +224,12 @@ export class ServiceSatelliteApi {
 			}
 
 			const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
-			if (isNaN(keysTotal) || keysTotal <= 0) {
+			if (isNaN(keysTotal) || keysTotal <= 0 || keysTotal > MAX_KEYS_TOTAL) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
 			}
 
 			const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
-			if (isNaN(keysPerRow) || keysPerRow <= 0) {
+			if (isNaN(keysPerRow) || keysPerRow <= 0 || keysPerRow > MAX_KEYS_PER_ROW) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
 			}
 
@@ -442,6 +457,15 @@ export class ServiceSatelliteApi {
 					}
 				}
 				receivebuffer = receivebuffer.substr(offset)
+
+				// Guard against a client streaming data forever without ever sending a newline,
+				// which would otherwise grow the receive buffer unbounded ("buffer bomb").
+				if (receivebuffer.length > MAX_LINE_LENGTH) {
+					socketLogger.warn(`Closing connection: line exceeded ${MAX_LINE_LENGTH} bytes`)
+					this.#formatAndSendError(socket, 'ERROR', undefined, 'Line too long')
+					receivebuffer = ''
+					socket.destroy()
+				}
 			},
 			cleanupDevices: () => {
 				let count = 0

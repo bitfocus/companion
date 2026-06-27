@@ -143,6 +143,18 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	 */
 	#pageIds: string[] = []
 
+	/**
+	 * Whether the default page was created during setup, because the database was empty
+	 */
+	#createdDefaultPage = false
+
+	/**
+	 * Whether the default page was created during setup, because the database was empty
+	 */
+	get createdDefaultPage(): boolean {
+		return this.#createdDefaultPage
+	}
+
 	constructor(dbTable: DataStoreTableView<Record<string, PageModel>>) {
 		super()
 		this.setMaxListeners(0)
@@ -574,31 +586,10 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 			this.#pageIds = [newPageInfo.id]
 
 			this.#dbTable.set('1', newPageInfo)
+			this.#createdDefaultPage = true
 		}
 
 		// Setup #locationCache
 		this._rebuildLocationCache()
-	}
-
-	/**
-	 * Internal method: Check if default page needs to be created and create it
-	 * Used by PageController during initialization
-	 */
-	_ensureDefaultPageExists(): boolean {
-		if (this.#pageIds.length === 0) {
-			const newPageInfo: PageModel = {
-				id: nanoid(),
-				name: 'PAGE',
-				controls: {},
-			}
-
-			// Create a single page
-			this.#pagesById[newPageInfo.id] = newPageInfo
-			this.#pageIds = [newPageInfo.id]
-
-			this.#dbTable.set('1', newPageInfo)
-			return true
-		}
-		return false
 	}
 }

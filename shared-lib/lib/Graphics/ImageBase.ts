@@ -46,6 +46,10 @@ export interface LineStyle {
 	 * Line width in pixels
 	 */
 	width: number
+	/**
+	 * Line cap style (defaults to 'butt')
+	 */
+	cap?: CanvasLineCap
 }
 
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
@@ -151,7 +155,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 */
 	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
 		const oldAlpha = this.context2d.globalAlpha
-		this.context2d.globalAlpha = alpha
+		this.context2d.globalAlpha *= alpha
 
 		try {
 			await fcn()
@@ -227,13 +231,19 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * draws a line between two given points
 	 */
 	line(x1: number, y1: number, x2: number, y2: number, style: LineStyle): void {
+		const oldLineCap = this.context2d.lineCap
 		this.context2d.lineWidth = style.width ?? 1
 		this.context2d.strokeStyle = style.color
-		this.context2d.beginPath()
-		this.context2d.moveTo(x1, y1)
-		this.context2d.lineTo(x2, y2)
-		this.context2d.closePath()
-		this.context2d.stroke()
+		this.context2d.lineCap = style.cap ?? 'butt'
+		try {
+			this.context2d.beginPath()
+			this.context2d.moveTo(x1, y1)
+			this.context2d.lineTo(x2, y2)
+			this.context2d.closePath()
+			this.context2d.stroke()
+		} finally {
+			this.context2d.lineCap = oldLineCap
+		}
 	}
 
 	/**
@@ -377,6 +387,39 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		}
 
 		return didDraw
+	}
+
+	/**
+	 * Draws a stroked arc (no fill). Used by the ring gauge renderer.
+	 * @param x center x
+	 * @param y center y
+	 * @param radius arc radius in pixels
+	 * @param startAngle in radians
+	 * @param endAngle in radians
+	 * @param anticlockwise whether to draw counter-clockwise
+	 * @param lineStyle stroke style and width
+	 */
+	arcStroke(
+		x: number,
+		y: number,
+		radius: number,
+		startAngle: number,
+		endAngle: number,
+		anticlockwise: boolean,
+		lineStyle: LineStyle
+	): void {
+		if (radius <= 0 || lineStyle.width <= 0) return
+		const oldLineCap = this.context2d.lineCap
+		this.context2d.beginPath()
+		this.context2d.arc(x, y, radius, startAngle, endAngle, anticlockwise)
+		this.context2d.strokeStyle = lineStyle.color
+		this.context2d.lineWidth = lineStyle.width
+		this.context2d.lineCap = lineStyle.cap ?? 'butt'
+		try {
+			this.context2d.stroke()
+		} finally {
+			this.context2d.lineCap = oldLineCap
+		}
 	}
 
 	/**

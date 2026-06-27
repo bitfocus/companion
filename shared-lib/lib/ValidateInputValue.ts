@@ -1,6 +1,6 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
-import { ParseExpression } from './Expression/ExpressionParse.js'
+import { ParseExpression } from './Expressions.js'
 import { isExpressionOrValue, type SomeCompanionInputField } from './Model/Options.js'
 import { stringifyVariableValue } from './Model/Variables.js'
 import { assertNever } from './Util.js'

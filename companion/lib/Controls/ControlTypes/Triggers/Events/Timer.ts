@@ -137,9 +137,9 @@ export class TriggersEventTimer {
 
 		const pad2 = (val: number) => String(val).padStart(2, '0')
 		if (hours > 0) {
-			return `${hours}:${pad2(minutes)}:${pad2(seconds)} hour${hours + minutes + seconds === 1 ? 's' : ''}`
+			return `${hours}:${pad2(minutes)}:${pad2(seconds)} hour${hours + minutes + seconds === 1 ? '' : 's'}`
 		} else if (minutes > 0) {
-			return `${minutes}:${pad2(seconds)} minute${minutes + seconds === 1 ? 's' : ''}`
+			return `${minutes}:${pad2(seconds)} minute${minutes + seconds === 1 ? '' : 's'}`
 		} else {
 			return `${seconds} second${seconds === 1 ? '' : 's'}`
 		}
@@ -234,7 +234,10 @@ export class TriggersEventTimer {
 	getTimeOfDayDescription(event: EventInstance): string {
 		let day_str = 'Unknown'
 		if (event.options.days && Array.isArray(event.options.days)) {
-			const days = [...event.options.days].map(Number).filter(isNaN).sort()
+			const days = [...event.options.days]
+				.map(Number)
+				.filter((d) => !isNaN(d))
+				.sort()
 			const days_tmp = days.toString()
 
 			if (days.length === 7) {

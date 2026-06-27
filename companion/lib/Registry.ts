@@ -367,6 +367,11 @@ export class Registry {
 			this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
 		})
 
+		this.instance.definitions.on('updateCompositeElements', (elementIds) => {
+			this.controls.onCompositeElementsChanged(elementIds)
+			this.preview.onConnectionCompositeElementsChanged(elementIds)
+		})
+
 		this.page.on('controlIdsMoved', (controlIds) => {
 			this.preview.onControlIdsLocationChanged(controlIds)
 		})

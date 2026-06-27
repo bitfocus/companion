@@ -1,5 +1,5 @@
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -8,8 +8,13 @@ import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
-import { ControlEntityListPoolButton } from '../../Entities/EntityListPoolButton.js'
+import {
+	EditableControlEntityListPoolButton,
+	type ButtonEntityPoolConstructor,
+	type SomeButtonEntityPool,
+} from '../../Entities/EntityListPoolButton.js'
 import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
+import type { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
 /**
  * Abstract class for a editable button control.
@@ -26,13 +31,15 @@ import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from 
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
+export abstract class ButtonControlRuntimeBase<
+	TJson,
+	TOptions extends ButtonOptionsBase,
+	TPool extends SomeButtonEntityPool,
+>
 	extends ControlBase<TJson>
-	implements ControlWithEntities, ControlWithOptions, ControlWithPushed
+	implements ControlWithEntities, ControlWithPushed
 {
 	readonly supportsEntities = true
-	readonly supportsConvert = false
-	readonly supportsOptions = true
 	readonly supportsPushed = true
 
 	/**
@@ -63,16 +70,29 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	 */
 	pushed = false
 
-	readonly entities: ControlEntityListPoolButton
+	readonly entities: TPool
 
 	protected readonly actionRunner: ControlActionRunner
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, isLayered: boolean) {
+	/** Buttons always host a drawer; subclasses provide it (the editor or the plain reader). */
+	abstract override get drawing(): LayeredButtonDrawer
+
+	protected triggerInvalidation = (): void => {
+		this.drawing.invalidate()
+	}
+
+	constructor(
+		deps: ControlDependencies,
+		controlId: string,
+		debugNamespace: string,
+		isLayered: boolean,
+		EntityPoolClass: ButtonEntityPoolConstructor<TPool>
+	) {
 		super(deps, controlId, debugNamespace)
 
-		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
+		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerInvalidation.bind(this))
 
-		this.entities = new ControlEntityListPoolButton(
+		this.entities = new EntityPoolClass(
 			{
 				controlId,
 				reportChange: this.entityListReportChange.bind(this),
@@ -178,7 +198,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		// If the status has changed, emit the eent
 		if (status != this.button_status) {
 			this.button_status = status
-			if (redraw) this.triggerRedraw()
+			if (redraw) this.triggerInvalidation()
 			return true
 		} else {
 			return false
@@ -190,6 +210,9 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	 */
 	destroy(): void {
 		this.abortRunningHoldTimers(undefined)
+
+		// Buttons always host a drawer, so the base owns tearing it down
+		this.drawing.dispose()
 
 		this.entities.destroy()
 
@@ -207,27 +230,6 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 		}
 
 		return result
-	}
-
-	abstract onVariablesChanged(allChangedVariables: ReadonlySet<string>): void
-
-	/**
-	 * Update an option field of this control
-	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
-
-		// Check if rotary_actions should be added/remove
-		if (key === 'rotaryActions') {
-			this.entities.setupRotaryActionSets(!!value, true)
-		}
-
-		// @ts-expect-error mismatch in key type
-		this.options[key] = value
-
-		this.commitChange()
-
-		return true
 	}
 
 	/**
@@ -389,7 +391,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 				this.deps.events.emit('updateButtonState', location, this.pushed, surfaceId)
 			}
 
-			this.triggerRedraw()
+			this.triggerInvalidation()
 
 			return true
 		} else {
@@ -405,6 +407,47 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 
 		// Report the location variables for this control as having changed
 		this.deps.variableValues.triggerLocationVariablesChange(this.controlId)
+
+		// Clear location-dependent draw state so the move is reflected immediately
+		this.drawing.locationChanged()
+	}
+}
+
+/**
+ * Abstract class for an editable button control.
+ *
+ * This adds the editing surface (`optionsSetField`) on top of the runtime base. Read-only button controls
+ * (e.g. a preset reference) extend {@link ButtonControlRuntimeBase} directly so they cannot inherit this -
+ * or any future control-level mutator added here.
+ */
+export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
+	extends ButtonControlRuntimeBase<TJson, TOptions, EditableControlEntityListPoolButton>
+	implements ControlWithOptions
+{
+	readonly supportsConvert = false
+	readonly supportsOptions = true
+
+	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, isLayered: boolean) {
+		super(deps, controlId, debugNamespace, isLayered, EditableControlEntityListPoolButton)
+	}
+
+	/**
+	 * Update an option field of this control
+	 */
+	optionsSetField(key: string, value: JsonValue): boolean {
+		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
+
+		// Check if rotary_actions should be added/remove
+		if (key === 'rotaryActions') {
+			this.entities.setupRotaryActionSets(!!value, true)
+		}
+
+		// @ts-expect-error mismatch in key type
+		this.options[key] = value
+
+		this.commitChange()
+
+		return true
 	}
 }
 

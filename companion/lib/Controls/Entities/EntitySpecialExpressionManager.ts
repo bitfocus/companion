@@ -1,5 +1,5 @@
 import debounceFn from 'debounce-fn'
-import type { ExecuteExpressionResultError } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResultError } from '@companion-app/shared/ExpressionResult.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ExpressionOrValue, JsonValue } from '@companion-module/host'

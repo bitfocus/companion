@@ -18,7 +18,9 @@ import Express from 'express'
 import serveZip from 'express-serve-zip'
 import onHeaders from 'on-headers'
 import { isPackaged } from '../Resources/Util.js'
+import { isLoopbackHostAllowed } from './Handler.js'
 import { createRewriteMiddleware, getCustomPrefixHeader } from './middleware/rewriteRootUrl.js'
+import { makeIsTrustedProxyAddress, parseTrustedProxies } from './TRPC.js'
 
 /**
  * Create a zip serve app
@@ -94,16 +96,10 @@ export class UIExpress {
 		// Configure how the client ip is determined when running behind a reverse proxy.
 		// Without this, a proxied request appears to originate from the proxy (often loopback),
 		// which would make remote clients look local to features that trust loopback.
-		if (trustedProxies) {
-			// Accept comma or semicolon separated lists of addresses/subnets, or special values like 'loopback'
-			const trimmed = trustedProxies.trim()
-			if (trimmed) {
-				const parts = trimmed
-					.split(/[,;]/)
-					.map((v) => v.trim())
-					.filter((v) => !!v)
-				this.app.set('trust proxy', parts.length > 1 ? parts : parts[0])
-			}
+		// Accepts comma or semicolon separated lists of addresses/subnets, or special values like 'loopback'.
+		const trustedProxyParts = parseTrustedProxies(trustedProxies)
+		if (trustedProxyParts.length > 0) {
+			this.app.set('trust proxy', trustedProxyParts.length > 1 ? trustedProxyParts : trustedProxyParts[0])
 		}
 
 		this.app.use((_req, res, next) => {
@@ -120,10 +116,26 @@ export class UIExpress {
 		// parse text/plain
 		this.app.use(Express.text())
 
-		this.app.use('/int', internalApiRouter, (_req, res) => {
-			res.status(404)
-			res.send('Not found')
-		})
+		// The /int api is internal-only and not CORS-accessible. Guard it against DNS rebinding against
+		// localhost: reject loopback connections whose Host names a non-loopback domain (the rebinding
+		// signature).
+		const isTrustedProxyAddress = makeIsTrustedProxyAddress(trustedProxies)
+		this.app.use(
+			'/int',
+			(req, res, next) => {
+				const isTrustedProxy = isTrustedProxyAddress(req.socket.remoteAddress)
+				if (!isLoopbackHostAllowed(req.socket.remoteAddress, req.headers.host, { isTrustedProxy })) {
+					res.status(403).send('Forbidden')
+					return
+				}
+				next()
+			},
+			internalApiRouter,
+			(_req, res) => {
+				res.status(404)
+				res.send('Not found')
+			}
+		)
 
 		// Use the router #connectionApiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		// CORS is enabled here as this is part of the intentionally cross-origin accessible HTTP api.

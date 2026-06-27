@@ -5,7 +5,7 @@ import { gunzip } from 'zlib'
 import { AbortError } from 'p-retry'
 import * as tarfs from 'tar-fs'
 import { fetch, fs, path, usePowerShell } from 'zx'
-import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
+import { MAX_DECOMPRESSED_MODULE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
 import { generateVersionString } from './lib.mts'
 
 if (process.platform === 'win32') {
@@ -85,7 +85,7 @@ async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, a
 		throw new Error('Download did not match checksum')
 	}
 
-	const decompressedData = await gunzipP(fullTarBuffer)
+	const decompressedData = await gunzipP(fullTarBuffer, { maxOutputLength: MAX_DECOMPRESSED_MODULE_TAR_SIZE })
 	if (!decompressedData) {
 		throw new Error('Failed to decompress data')
 	}

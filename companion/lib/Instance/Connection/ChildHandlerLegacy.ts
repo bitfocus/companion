@@ -1,6 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -1004,7 +1004,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.entities.entityReplace(
+						control.entities.entityReplaceForUpgrade(
 							{
 								type: EntityModelType.Feedback,
 								id: feedback.id,
@@ -1027,7 +1027,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					const control = this.#deps.controls.getControl(action.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.entities.entityReplace(
+						control.entities.entityReplaceForUpgrade(
 							{
 								type: EntityModelType.Action,
 								id: action.id,
