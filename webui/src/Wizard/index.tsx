@@ -1,5 +1,5 @@
 import { toJS } from 'mobx'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
@@ -11,28 +11,31 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ApplyStep } from './ApplyStep.js'
 import { BeginStep } from './BeginStep.js'
 import { WIZARD_CURRENT_VERSION } from './Constants.js'
-import { DataCollectionStep } from './DataCollectionStep.js'
 import { FinishStep } from './FinishStep.js'
-import { GridStep } from './GridStep.js'
-import { PasswordStep } from './PasswordStep.js'
-import { ServicesStep } from './ServicesStep.js'
-import { SurfacesStep } from './SurfacesStep.js'
-import { TimezoneStep } from './TimezoneStep.js'
+import { WIZARD_CONFIG_STEPS } from './Steps.js'
+import { WizardStepper, type WizardStepperItem } from './WizardStepper.js'
 
 export function WizardModal(): React.JSX.Element {
 	const { showWizardEvent, userConfig } = useContext(RootAppStoreContext)
 
-	const [currentStep, setCurrentStep] = useState(1)
+	const [currentStep, setCurrentStep] = useState(0)
 	const [startConfig, setStartConfig] = useState<UserConfigModel | null>(null)
 	const [oldConfig, setOldConfig] = useState<UserConfigModel | null>(null)
 	const [newConfig, setNewConfig] = useState<UserConfigModel | null>(null)
 	const [error, setError] = useState<string | null>(null)
 	const [clear, setClear] = useState(true)
 
-	const defaultGridStart = !!startConfig && startConfig.gridSize.minColumn === 0 && startConfig.gridSize.minRow === 0
-	const allowGridStep = defaultGridStart ? 1 : 0
-	const maxSteps = 8 + allowGridStep
-	const applyStep = maxSteps - 1
+	// The configurable steps available this session. Availability is fixed at the config captured when the
+	// wizard opened, so steps don't appear/disappear as the user edits values mid-flow.
+	const configurableSteps = useMemo(
+		() => (startConfig ? WIZARD_CONFIG_STEPS.filter((s) => !s.isAvailable || s.isAvailable(startConfig)) : []),
+		[startConfig]
+	)
+
+	// The wizard is a flat sequence: [Begin, ...configurableSteps, Apply, Finish]. `currentStep` indexes into it.
+	const beginStepIndex = 0
+	const applyStepIndex = configurableSteps.length + 1
+	const finishStepIndex = configurableSteps.length + 2
 
 	const getConfig = useCallback(() => {
 		if (!userConfig.properties) {
@@ -66,25 +69,14 @@ export function WizardModal(): React.JSX.Element {
 	)
 
 	const doNextStep = useCallback(() => {
-		setCurrentStep((currentStep) => {
-			// Make sure step is set to something reasonable
-			if (currentStep >= maxSteps - 1) {
-				return maxSteps
-			} else {
-				return currentStep + 1
-			}
-		})
-	}, [maxSteps])
+		setCurrentStep((currentStep) => Math.min(currentStep + 1, finishStepIndex))
+	}, [finishStepIndex])
 
 	const doPrevStep = useCallback(() => {
-		setCurrentStep((currentStep) => {
-			if (currentStep <= 1) {
-				return 1
-			} else {
-				return currentStep - 1
-			}
-		})
-	}, [])
+		setCurrentStep((currentStep) => Math.max(currentStep - 1, beginStepIndex))
+	}, [beginStepIndex])
+
+	const doJumpToStep = useCallback((index: number) => setCurrentStep(index), [])
 
 	const doSave = useCallback(
 		(e: React.FormEvent) => {
@@ -124,7 +116,7 @@ export function WizardModal(): React.JSX.Element {
 		const show = () => {
 			if (clear) {
 				getConfig()
-				setCurrentStep(1)
+				setCurrentStep(0)
 			}
 			setShow(true)
 			setClear(false)
@@ -140,14 +132,14 @@ export function WizardModal(): React.JSX.Element {
 
 	let nextButton
 	switch (currentStep) {
-		case applyStep:
+		case applyStepIndex:
 			nextButton = (
 				<Button ref={buttonRef} color="primary" onClick={doSave}>
 					Apply
 				</Button>
 			)
 			break
-		case maxSteps:
+		case finishStepIndex:
 			nextButton = (
 				<Button ref={buttonRef} color="primary" onClick={doClose}>
 					Finish
@@ -162,70 +154,57 @@ export function WizardModal(): React.JSX.Element {
 			)
 	}
 
+	// One stepper entry per configurable step, plus the review (Apply) step
+	const stepperItems: WizardStepperItem[] = [
+		...configurableSteps.map((step, i) => ({ index: i + 1, title: step.title })),
+		{ index: applyStepIndex, title: 'Review' },
+	]
+	const showStepper = currentStep !== finishStepIndex
+
+	// The configurable step (if any) active for the current index
+	const activeConfigStep =
+		currentStep >= 1 && currentStep <= configurableSteps.length ? configurableSteps[currentStep - 1] : undefined
+
 	return (
 		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Portal>
 				<Modal.Backdrop />
 				<Modal.Viewport>
-					<Modal.Popup initialFocus={buttonRef}>
+					<Modal.Popup initialFocus={buttonRef} size="lg" scrollable className="modal-wizard">
 						<Modal.Header closeButton>
 							<Modal.Title>
 								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
 								Welcome to Companion
 							</Modal.Title>
 						</Modal.Header>
+						{showStepper && stepperItems.length > 0 && (
+							<WizardStepper items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />
+						)}
 						<Form onSubmit={doSave} className="flex-form">
 							<Modal.Body>
 								{error ? <StaticAlert color="danger">{error}</StaticAlert> : ''}
-								{currentStep === 1 && newConfig && !error ? <BeginStep allowGrid={allowGridStep} /> : ''}
-								{currentStep === 2 && newConfig && !error ? (
-									<SurfacesStep config={newConfig} setValue={setValue} />
+								{currentStep === beginStepIndex && newConfig && !error ? (
+									<BeginStep stepTitles={configurableSteps.map((step) => step.title)} />
 								) : (
 									''
 								)}
-								{currentStep === 3 && allowGridStep === 1 && newConfig && !error ? (
-									<GridStep
-										rows={newConfig.gridSize.maxRow + 1}
-										columns={newConfig.gridSize.maxColumn + 1}
-										setValue={setValue}
-									/>
-								) : (
-									''
-								)}
-								{currentStep === 3 + allowGridStep && newConfig && !error ? (
-									<ServicesStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 4 + allowGridStep && newConfig && !error ? (
-									<DataCollectionStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 5 + allowGridStep && newConfig && !error ? (
-									<PasswordStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 6 + allowGridStep && newConfig && !error ? (
-									<TimezoneStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === applyStep && newConfig && oldConfig && !error ? (
+								{activeConfigStep && newConfig && !error
+									? activeConfigStep.render({ config: newConfig, setValue })
+									: ''}
+								{currentStep === applyStepIndex && newConfig && oldConfig && !error ? (
 									<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
 								) : (
 									''
 								)}
-								{currentStep === maxSteps && newConfig && startConfig && !error ? (
+								{currentStep === finishStepIndex && newConfig && startConfig && !error ? (
 									<FinishStep oldConfig={startConfig} newConfig={newConfig} />
 								) : (
 									''
 								)}
 							</Modal.Body>
 							<Modal.Footer>
-								{currentStep <= applyStep && <Modal.Close>Cancel</Modal.Close>}
-								<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
+								{currentStep <= applyStepIndex && <Modal.Close>Cancel</Modal.Close>}
+								<Button color="secondary" disabled={currentStep === beginStepIndex} onClick={doPrevStep}>
 									Previous
 								</Button>
 								{nextButton}

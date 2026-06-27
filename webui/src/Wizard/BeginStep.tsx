@@ -1,8 +1,9 @@
 interface BeginStepProps {
-	allowGrid: number
+	/** Titles of the configurable steps that will be shown, in order */
+	stepTitles: string[]
 }
 
-export function BeginStep({ allowGrid }: BeginStepProps): React.JSX.Element {
+export function BeginStep({ stepTitles }: BeginStepProps): React.JSX.Element {
 	return (
 		<div>
 			<p style={{ marginTop: 0 }}>
@@ -10,12 +11,9 @@ export function BeginStep({ allowGrid }: BeginStepProps): React.JSX.Element {
 				Companion. This wizard will walk you through the following configuration settings:
 			</p>
 			<ol>
-				<li>Surface Detection Configuration</li>
-				{allowGrid === 1 && <li>Button Grid Size</li>}
-				<li>Remote Control Services</li>
-				<li>Usage Statistics</li>
-				<li>Admin GUI Password</li>
-				<li>Timezone</li>
+				{stepTitles.map((title) => (
+					<li key={title}>{title}</li>
+				))}
 			</ol>
 		</div>
 	)
