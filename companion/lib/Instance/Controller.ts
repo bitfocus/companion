@@ -32,7 +32,7 @@ import type { Complete } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataCache } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
 import type { SurfaceController } from '../Surface/Controller.js'
@@ -48,6 +48,7 @@ import { InstanceInstalledModulesManager } from './InstalledModulesManager.js'
 import { InstanceModules } from './Modules.js'
 import { ModuleStoreService } from './ModuleStore.js'
 import { InstanceProcessManager } from './ProcessManager.js'
+import { createInstanceRestApiRouter } from './RestApi.js'
 import { InstanceStatus } from './Status.js'
 import { SurfaceInstanceCollections } from './Surface/Collections.js'
 import { createSurfacesTrpcRouter } from './Surface/TrpcRouter.js'
@@ -104,6 +105,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 	get surfaceInstanceCollections(): SurfaceInstanceCollections {
 		return this.#surfaceInstanceCollectionsController
+	}
+
+	createRestApiRouter(logger: Logger): express.Router {
+		return createInstanceRestApiRouter(logger, this)
 	}
 
 	constructor(
@@ -389,6 +394,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		},
 		options?: {
 			skipNotifyConnection?: boolean
+			patchConfig?: boolean // If true, only config keys defined in the object are updated (shallow merge)
 			patchSecrets?: boolean // If true, only secrets defined in the object are updated
 		}
 	): { ok: true } | { ok: false; message: string } {
@@ -411,7 +417,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			connectionConfig.isFirstInit = false
 
 			// Update the config blob
-			connectionConfig.config = values.config
+			if (options?.patchConfig) {
+				// Patch the config, only updating those keys that are defined
+				connectionConfig.config = {
+					...(connectionConfig.config as any),
+					...values.config,
+				}
+			} else {
+				connectionConfig.config = values.config
+			}
 		}
 
 		if (values.secrets) {

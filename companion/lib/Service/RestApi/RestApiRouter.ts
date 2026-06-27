@@ -1,0 +1,55 @@
+import Express from 'express'
+import LogController from '../../Log/Controller.js'
+import type { AppInfo, Registry } from '../../Registry.js'
+import { restApiErrorHandler } from './middleware/errorHandler.js'
+import { generateOpenApiDocument } from './openapi.js'
+import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
+import { createSwaggerUiRouter } from './SwaggerUi.js'
+
+const REST_RESOURCE_PATH_PREFIXES = ['/connections/v1']
+
+/**
+ * Create the main REST API router.
+ * Mounted at /api/ on the admin Express app.
+ * Each resource type is versioned independently: /api/connections/v1/, /api/pages/v1/, etc.
+ *
+ * Only created when the REST API is enabled at startup (checked in RestApiService).
+ */
+export function createRestApiRouter(
+	registry: Registry,
+	tokenStore: ApiTokenStore,
+	appInfo: Pick<AppInfo, 'appVersion'>
+): Express.Router {
+	const logger = LogController.createLogger('Service/Rest')
+	const router = Express.Router()
+
+	// OpenAPI spec and Swagger UI — served without auth
+	const openApiDocument = generateOpenApiDocument(appInfo)
+
+	router.get('/openapi.json', (_req, res) => {
+		res.json(openApiDocument)
+	})
+
+	router.use('/docs', createSwaggerUiRouter())
+
+	// Mount resource routers — each versioned independently
+	router.use((req, _res, next) => {
+		if (!isRestResourcePath(req.path)) {
+			next('router')
+			return
+		}
+
+		next()
+	})
+	router.use(createAuthMiddleware(logger, tokenStore))
+	router.use(registry.instance.createRestApiRouter(logger))
+
+	// Global error handler (unmatched routes fall through to the legacy /api router)
+	router.use(restApiErrorHandler)
+
+	return router
+}
+
+function isRestResourcePath(path: string): boolean {
+	return REST_RESOURCE_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+}

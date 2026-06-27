@@ -29,6 +29,13 @@ if (!semver.satisfies(process.versions.node, nodeJsValidRange)) {
 
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
+const swaggerUiSourcePath = path.join(import.meta.dirname, '../assets/swagger-ui')
+const swaggerUiDevPath = path.join(import.meta.dirname, '../companion/dist/Service/RestApi/assets/swagger-ui')
+
+function syncSwaggerUiDevAssets() {
+	fs.rmSync(swaggerUiDevPath, { recursive: true, force: true })
+	fs.cpSync(swaggerUiSourcePath, swaggerUiDevPath, { recursive: true })
+}
 
 const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
 const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
@@ -99,6 +106,8 @@ if (!fs.existsSync('../webui/build')) {
 	console.warn('Skipping webui build, you may need to run `yarn dist:webui` if changes have been made recently')
 }
 
+syncSwaggerUiDevAssets()
+
 console.log('Starting typescript watchers')
 
 concurrently([
@@ -118,6 +127,10 @@ concurrently([
 })
 
 const cachedDebounces = {} as Record<string, any>
+
+chokidar.watch(swaggerUiSourcePath, { ignoreInitial: true }).on('all', () => {
+	syncSwaggerUiDevAssets()
+})
 
 const mainWatcher = chokidar
 	.watch(['../companion', '../shared-lib', '../docs', '../package.json', '../tsconfig.json'], {

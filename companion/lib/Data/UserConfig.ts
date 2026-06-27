@@ -4,6 +4,7 @@ import z from 'zod'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
+import { isPackaged } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import type { DataStoreTableView } from './StoreBase.js'
@@ -57,6 +58,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		http_api_enabled: true,
 		http_legacy_api_enabled: false,
+
+		rest_api_enabled: !isPackaged(),
 
 		tcp_enabled: false,
 		tcp_listen_port: 16759,

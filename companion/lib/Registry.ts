@@ -310,7 +310,8 @@ export class Registry {
 			pageStore,
 			this.instance,
 			this.ui.io,
-			this.ui.express
+			this.ui.express,
+			this
 		)
 		this.cloud = new CloudController(this.#appInfo, this.db, this.#data.cache, controlStore, this.graphics, pageStore)
 		this.usageStatistics = new DataUsageStatistics(

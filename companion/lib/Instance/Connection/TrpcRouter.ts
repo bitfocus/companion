@@ -1,29 +1,13 @@
 import type EventEmitter from 'node:events'
 import z from 'zod'
-import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
-import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { JsonObjectSchema, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import type { Logger } from '../../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
-
-/**
- * Ensure every field has a unique id.
- *
- * Some modules incorrectly reuse the same id for multiple `static-text` fields. This breaks React (duplicate keys),
- * but since these fields are purely visual and have no value, we can safely give each one a unique but stable id by
- * suffixing it with its index in the array.
- */
-function ensureUniqueFieldIds(fields: SomeCompanionInputField[]): SomeCompanionInputField[] {
-	return fields.map((field, index) => {
-		if (field.type !== 'static-text') return field
-
-		return { ...field, id: `${field.id}_${index}` }
-	})
-}
+import { ConnectionOperationError, ConnectionOperations } from './ConnectionOperations.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createConnectionsTrpcRouter(
@@ -32,6 +16,8 @@ export function createConnectionsTrpcRouter(
 	instanceEvents: EventEmitter<InstanceControllerEvents>,
 	configStore: InstanceConfigStore
 ) {
+	const connectionOperations = new ConnectionOperations({ logger, instanceController, configStore })
+
 	return router({
 		collections: instanceController.connectionCollections.createTrpcRouter(),
 
@@ -58,13 +44,15 @@ export function createConnectionsTrpcRouter(
 					versionId: z.string(),
 				})
 			)
-			.mutation(({ input }) => {
-				const connectionInfo = instanceController.addConnectionWithLabel(input.module, input.label, {
+			.mutation(async ({ input }) => {
+				return connectionOperations.createConnection({
+					moduleId: input.module.type,
+					product: input.module.product,
+					label: input.label,
 					versionId: input.versionId,
 					updatePolicy: InstanceVersionUpdatePolicy.Stable,
 					disabled: false,
 				})
-				return connectionInfo[0]
 			}),
 
 		delete: publicProcedure
@@ -74,7 +62,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(async ({ input }) => {
-				await instanceController.removeConnection(input.connectionId)
+				await connectionOperations.deleteConnection(input.connectionId)
 			}),
 
 		reorder: publicProcedure
@@ -86,7 +74,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				configStore.moveInstance(input.collectionId, ModuleInstanceType.Connection, input.connectionId, input.dropIndex)
+				connectionOperations.reorderConnection(input)
 			}),
 
 		setEnabled: publicProcedure
@@ -97,7 +85,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				instanceController.enableDisableConnection(input.connectionId, input.enabled)
+				connectionOperations.setConnectionEnabled(input.connectionId, input.enabled)
 			}),
 
 		edit: publicProcedure
@@ -107,30 +95,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.query(async ({ input }) => {
-				// Check if the instance exists
-				const instanceConf = configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
-				if (!instanceConf) return null
-
-				// Make sure the collection is enabled
-				if (!instanceController.connectionCollections.isCollectionEnabled(instanceConf.collectionId)) return null
-
-				const instance = instanceController.processManager.getConnectionChild(input.connectionId)
-				if (!instance) return null
-
-				try {
-					const fields = await instance.requestConfigFields()
-
-					const result: ClientEditInstanceConfig = {
-						fields: ensureUniqueFieldIds(fields),
-						useNewLayout: instance.usesNewConfigLayout,
-						config: instanceConf.config,
-						secrets: instanceConf.secrets || {},
-					}
-					return result
-				} catch (e) {
-					logger.silly(`Failed to load instance config_fields: ${stringifyError(e)}`)
-					return null
-				}
+				return connectionOperations.getConnectionEditConfig(input.connectionId)
 			}),
 
 		setConfig: publicProcedure
@@ -144,19 +109,22 @@ export function createConnectionsTrpcRouter(
 					updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
 				})
 			)
-			.mutation(({ input }) => {
+			.mutation(async ({ input }) => {
 				logger.info('Updating config for ', input.connectionId, input.label)
 
-				const res = instanceController.setConnectionLabelAndConfig(input.connectionId, {
-					label: input.label,
-					enabled: input.enabled ?? null,
-					config: input.config ?? null,
-					secrets: input.secrets ?? null,
-					updatePolicy: input.updatePolicy ?? null,
-					upgradeIndex: null,
-				})
-
-				if (!res.ok) return res.message
+				try {
+					await connectionOperations.setConnectionConfig({
+						connectionId: input.connectionId,
+						label: input.label,
+						enabled: input.enabled,
+						config: input.config,
+						secrets: input.secrets,
+						updatePolicy: input.updatePolicy,
+					})
+				} catch (e) {
+					if (e instanceof ConnectionOperationError) return e.message
+					throw e
+				}
 
 				return null
 			}),
@@ -169,14 +137,17 @@ export function createConnectionsTrpcRouter(
 					versionId: z.string().nullable(),
 				})
 			)
-			.mutation(({ input }) => {
-				const res = instanceController.setModuleVersionAndActivate(
-					input.connectionId,
-					`${input.moduleId}@${input.versionId ?? ''}`,
-					null
-				)
-
-				if (!res) return 'no connection' // Update the config
+			.mutation(async ({ input }) => {
+				try {
+					await connectionOperations.setConnectionModuleVersion({
+						connectionId: input.connectionId,
+						moduleId: input.moduleId,
+						versionId: input.versionId,
+					})
+				} catch (e) {
+					if (e instanceof ConnectionOperationError) return e.message
+					throw e
+				}
 
 				return null
 			}),
