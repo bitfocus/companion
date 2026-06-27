@@ -106,6 +106,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		gridSizePromptGrow: true,
 
 		installName: '',
+		mdns_announcements_enabled: true,
 		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
 
 		timezone: '',

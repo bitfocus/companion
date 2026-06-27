@@ -63,6 +63,7 @@ export type UserConfigModel = {
 	gridSizePromptGrow: boolean
 
 	installName: string
+	mdns_announcements_enabled: boolean
 	default_export_filename: string
 
 	/** IANA timezone name (e.g. 'America/New_York') used for internal time variables and time-based triggers. Empty = system timezone. */

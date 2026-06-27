@@ -303,6 +303,7 @@ export class Registry {
 		)
 
 		this.services = new ServiceController(
+			this.#appInfo,
 			serviceApi,
 			this.userconfig,
 			oscSender,
