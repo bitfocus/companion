@@ -353,6 +353,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * @param brightness 0-100
 	 */
 	setBrightness(brightness: number): void {
+		if (!Number.isFinite(brightness)) return
+
 		const config = {
 			...this.#surfaceConfig.config,
 			brightness: brightness,
@@ -366,6 +368,15 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				this.panel.setConfig(config)
 			})
 		}
+	}
+
+	/**
+	 * Adjust the brightness of the panel by a relative amount
+	 * @param adjustment -100 to 100
+	 */
+	adjustBrightness(adjustment: number): void {
+		const newBrightness = Math.min(100, Math.max(0, this.#surfaceConfig.config.brightness + adjustment))
+		this.setBrightness(newBrightness)
 	}
 
 	/**

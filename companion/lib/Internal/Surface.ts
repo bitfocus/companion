@@ -303,6 +303,26 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				optionsSupportExpressions: true,
 			},
 
+			adjust_brightness: {
+				label: 'Surface: Adjust brightness',
+				description: undefined,
+				options: [
+					CHOICES_SURFACE_GROUP,
+
+					{
+						type: 'number',
+						label: 'Brightness adjustment',
+						id: 'brightness',
+						default: 0,
+						min: -100,
+						max: 100,
+						step: 1,
+					},
+				],
+
+				optionsSupportExpressions: true,
+			},
+
 			set_page: {
 				label: 'Surface: Set to page',
 				description: undefined,
@@ -485,6 +505,13 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
 				if (surfaceId) {
 					this.#surfaceController.setDeviceBrightness(surfaceId, Number(action.options.brightness), true)
+				}
+				break
+			}
+			case 'adjust_brightness': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				if (surfaceId) {
+					this.#surfaceController.adjustDeviceBrightness(surfaceId, Number(action.options.brightness), true)
 				}
 				break
 			}

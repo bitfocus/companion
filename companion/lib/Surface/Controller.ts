@@ -1943,6 +1943,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
+	 * Adjust the brightness of a surface by a relative amount
+	 * @param surfaceId
+	 * @param adjustment -100 to 100
+	 * @param looseIdMatching
+	 */
+	adjustDeviceBrightness(surfaceId: string, adjustment: number, looseIdMatching = false): void {
+		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
+		if (device) {
+			device.adjustBrightness(adjustment)
+		}
+	}
+
+	/**
 	 * Set the position offset of a surface
 	 * @param surfaceId
 	 * @param xOffset
