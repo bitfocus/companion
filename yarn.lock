@@ -1962,27 +1962,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:~2.1.0":
-  version: 2.1.0
-  resolution: "@companion-module/base@npm:2.1.0"
+"@companion-module/base@npm:~2.1.1":
+  version: 2.1.1
+  resolution: "@companion-module/base@npm:2.1.1"
   dependencies:
     colord: "npm:^2.9.3"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/b04cf278f22f714699d43286c1ffbeaf1860746f6034bddcc8c1ff198dc623d217926d3f49293aaae003346dfc401472735e6f2fdc740296cc0a05e360620ff0
+  checksum: 10c0/fc74d8fd5c91521c9560e50e831b57439135d9bf877f6c119981f7082c3cff4e83199425cf0d0274315172d6d85d99900bafb6c6b8fad22a08c39c778b13e816
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@companion-module/host@npm:1.1.0"
+"@companion-module/host@npm:1.1.1":
+  version: 1.1.1
+  resolution: "@companion-module/host@npm:1.1.1"
   dependencies:
-    "@companion-module/base": "npm:~2.1.0"
+    "@companion-module/base": "npm:~2.1.1"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.3.0"
     semver: "npm:^7.8.5"
     tslib: "npm:^2.8.1"
     zod: "npm:^4.4.3"
-  checksum: 10c0/db27ead39c8ff8bae667a900e8ce6d73b75f77fad6a723a1cbe29d5f9ea0eedfaddf6de715e377f11a7631704c5c2efa56dc4281e5f615f7cd3c01753e551467
+  checksum: 10c0/f16621b9e40674116658911d69adb0f5f6cdcf7108c543ca3360377cfa5b3d31c60afa9e300df28b1e430ef354132ca63400245e1f16056aa9c01018c4f035f5
   languageName: node
   linkType: hard
 
@@ -10782,7 +10782,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
-    "@companion-module/host": "npm:1.1.0"
+    "@companion-module/host": "npm:1.1.1"
     "@companion-surface/host": "npm:1.3.2"
     "@julusian/bonjour-service": "npm:^1.4.3"
     "@julusian/image-rs": "npm:^2.1.1"
