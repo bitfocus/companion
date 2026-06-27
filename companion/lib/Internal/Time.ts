@@ -115,8 +115,12 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 		const tz = this.#getTimezone()
 
 		// Break the current time down into its parts as observed in the configured timezone.
-		// Falls back to the process-local timezone when `tz` is undefined.
-		const parts = getZonedDateParts(now, tz) ?? getZonedDateParts(now, undefined)!
+		// Falls back to the process-local timezone when `tz` is undefined or invalid.
+		const zonedParts = getZonedDateParts(now, tz)
+		// `effectiveTz` is the timezone that was actually applied, so the rest of the method
+		// (including toLocaleString) can use it without re-triggering an invalid-zone error.
+		const effectiveTz = zonedParts ? tz : undefined
+		const parts = zonedParts ?? getZonedDateParts(now, undefined)!
 
 		const hours = parts.hour
 		const hours12 = hours % 12
@@ -141,7 +145,7 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 			date_m: month,
 			date_d: day,
 			date_dow: parts.weekday,
-			date_weekday: now.toLocaleString(undefined, { weekday: 'long', timeZone: tz }),
+			date_weekday: now.toLocaleString(undefined, { weekday: 'long', timeZone: effectiveTz }),
 
 			time_hms: hhmmss,
 			time_hm: hhmm,

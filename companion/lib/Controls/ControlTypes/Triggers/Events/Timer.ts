@@ -314,7 +314,7 @@ export class TriggersEventTimer {
 		const timeValue: string | number = date.time as string | number
 		const dateStr = dayjs(date.date as string | number).format('YYYY-MM-DD')
 		const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-		const timeMatch = String(timeValue).match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+		const timeMatch = String(timeValue).match(/^([01][0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]))?$/)
 		if (!dateMatch || !timeMatch) return null
 
 		// Interpret the wall-clock date/time in the configured timezone

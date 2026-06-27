@@ -398,6 +398,21 @@ describe('TriggersEventTimer', () => {
 			expect(executeActions).not.toHaveBeenCalled()
 		})
 
+		test('an out-of-range time never fires (and is not normalized into a valid instant)', () => {
+			// '25:70' must be rejected outright. A lenient parser would let zonedTimeToUtc normalize it
+			// (25:70 -> next day 02:10) and schedule at an unexpected instant, so assert it never fires
+			// across the whole window where a normalized value could have landed.
+			vi.setSystemTime(new Date(2026, 5, 8, 10, 0, 0, 500))
+			const { bus, timer, executeActions } = createTimer()
+			timer.setEnabled(true)
+			timer.setSpecificDate('a', { date: '2026-06-09', time: '25:70' })
+
+			tickAt(bus, new Date(2026, 5, 9, 12, 0, 0, 500))
+			tickAt(bus, new Date(2026, 5, 10, 2, 10, 0, 500)) // where 25:70 would normalize to
+			tickAt(bus, new Date(2026, 5, 11, 2, 10, 0, 500))
+			expect(executeActions).not.toHaveBeenCalled()
+		})
+
 		test('clearSpecificDate stops the event', () => {
 			vi.setSystemTime(new Date(2026, 5, 8, 10, 0, 0, 500))
 			const { bus, timer, executeActions } = createTimer()

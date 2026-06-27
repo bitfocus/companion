@@ -178,6 +178,25 @@ describe('InternalTime', () => {
 				time_h_12: '10',
 			})
 		})
+		test('falls back to local time (without throwing) when the configured timezone is invalid', () => {
+			// A bad stored/imported timezone must not break the 500ms tick. getZonedDateParts() already
+			// falls back, but date_weekday goes through toLocaleString({ timeZone }), which throws on the
+			// same invalid value unless the effective (fallback) zone is used.
+			const now = new Date(2024, 2, 5, 9, 7, 8) // a Tuesday, local time
+			const { time, setVariables } = createTime(now, 'Not/A_Zone')
+
+			expect(() => time.updateVariables()).not.toThrow()
+
+			const values = lastValues(setVariables)
+			expect(values).toMatchObject({
+				date_iso: '2024-03-05',
+				date_dow: now.getDay(),
+				time_hms: '09:07:08',
+			})
+			// date_weekday must still be produced (falling back to the local weekday) rather than throwing
+			expect(typeof values.date_weekday).toBe('string')
+			expect((values.date_weekday as string).length).toBeGreaterThan(0)
+		})
 	})
 
 	describe('interval', () => {
