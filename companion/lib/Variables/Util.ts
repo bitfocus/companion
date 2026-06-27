@@ -267,6 +267,7 @@ export function executeExpression(
 	rawVariableValues: ReadonlyDeep<VariableValueData>,
 	requiredType: string | undefined,
 	cachedVariableValues: VariableValueCache,
+	defaultTimezone: string | undefined,
 	limits?: ResolveExpressionLimits
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
@@ -336,8 +337,13 @@ export function executeExpression(
 
 		let value = ResolveExpression(ParseExpression(str), {
 			...limits,
-
-			defaultTimezone: undefined, // Future use
+			defaultTimezone: () => {
+				// Reading the default timezone registers a dependency on the active timezone variable, so
+				// the expression re-evaluates when the user changes it. Only date/time functions that fall
+				// back to the default (i.e. no explicit `tz` argument) reach this.
+				referencedVariableIds.add('internal:timezone')
+				return defaultTimezone || undefined
+			},
 
 			getVariableValue,
 			blink(interval: any, dutyCycle: any): 0 | 1 {

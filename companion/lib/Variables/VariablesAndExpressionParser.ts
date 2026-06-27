@@ -11,6 +11,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import {
 	executeExpression,
 	parseVariablesInString,
@@ -37,6 +38,9 @@ export class VariablesAndExpressionParser {
 	readonly #localValues: VariablesCache = new Map()
 	readonly #overrideVariableValues: VariableValues
 
+	/** User configuration, used to read the configured timezone for date/time expression functions */
+	readonly #userconfig: DataUserConfig
+
 	readonly #valueCacheAccessor: VariableValueCache = {
 		has: (id: string): boolean => {
 			return this.#thisValues.has(id) || this.#localValues.has(id) || this.#overrideVariableValues[id] !== undefined
@@ -52,12 +56,14 @@ export class VariablesAndExpressionParser {
 	}
 
 	constructor(
+		userconfig: DataUserConfig,
 		blinker: VariablesBlinker,
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues | null
 	) {
+		this.#userconfig = userconfig
 		this.#blinker = blinker
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
@@ -68,6 +74,7 @@ export class VariablesAndExpressionParser {
 
 	createChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
 		const childParser = new VariablesAndExpressionParser(
+			this.#userconfig,
 			this.#blinker,
 			this.#rawVariableValues,
 			this.#thisValues,
@@ -106,7 +113,14 @@ export class VariablesAndExpressionParser {
 	 * @returns result of the expression
 	 */
 	executeExpression(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		return executeExpression(this.#blinker, str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
+		return executeExpression(
+			this.#blinker,
+			str,
+			this.#rawVariableValues,
+			requiredType,
+			this.#valueCacheAccessor,
+			this.#userconfig.getKey('timezone') || undefined
+		)
 	}
 
 	/**

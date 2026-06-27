@@ -39,7 +39,7 @@ function createMockParser(
 				for (const [key, value] of Object.entries(overrides)) {
 					cache.set(key, value as any)
 				}
-				return executeExpression(blinker, str, rawVariableValues, requiredType, cache)
+				return executeExpression(blinker, str, rawVariableValues, requiredType, cache, undefined)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()
