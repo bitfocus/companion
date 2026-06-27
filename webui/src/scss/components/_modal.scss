@@ -289,6 +289,21 @@
 	}
 }
 
+// Dev-only control for previewing the wizard's upgrade experience from a chosen version.
+// Rendered outside the modal and above its backdrop.
+.wizard-dev-controls {
+	position: fixed;
+	top: 0.5rem;
+	left: 0.5rem;
+	z-index: 2000;
+	padding: 0.4rem 0.6rem;
+	border-radius: 0.4rem;
+	background-color: rgb(0 0 0 / 80%);
+	color: #fff;
+	font-size: 0.8rem;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+}
+
 // Clickable step indicator along the top of the wizard
 .wizard-stepper {
 	display: flex;
