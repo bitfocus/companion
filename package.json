@@ -51,7 +51,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch",
-    "@tanstack/eslint-plugin-query": "^5.101.0",
+    "@tanstack/eslint-plugin-query": "^5.101.1",
     "@types/express-serve-static-core": "^5.1.1",
     "@types/node": "^25.9.4",
     "@vitest/coverage-v8": "^4.1.9",
@@ -69,15 +69,15 @@
     "eslint-plugin-react-refresh": "^0.5.3",
     "husky": "^9.1.7",
     "json-schema-to-typescript": "^15.0.4",
-    "lint-staged": "^17.0.7",
+    "lint-staged": "^17.0.8",
     "openapi-typescript": "^7.13.0",
     "p-retry": "^8.0.0",
     "prettier": "^3.8.4",
-    "socket": "^1.1.124",
+    "socket": "^1.1.127",
     "tsx": "^4.22.4",
     "typescript": "npm:@typescript/typescript6@^6.0.0",
     "typescript-7": "npm:typescript@rc",
-    "typescript-eslint": "^8.61.1",
+    "typescript-eslint": "^8.62.0",
     "vitest": "^4.1.9",
     "vitest-mock-extended": "^4.0.0",
     "yaml": "^2.9.0",
@@ -91,12 +91,9 @@
     "bare-fs": "npm:empty-npm-package@1.0.0",
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
-    "@companion-module/base": "2.1.0-0-nightly-main-20260626-140426-8370e66",
-    "@companion-module/host": "1.0.3-nightly-main-20260626-140637-8370e66",
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
-    "webpack-bundle-analyzer": "^5.0.0",
-    "@napi-rs/canvas-win32-arm64-msvc@npm:1.0.0": "npm:@julusian/canvas-win32-arm64-msvc@1.0.0"
+    "webpack-bundle-analyzer": "^5.0.0"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

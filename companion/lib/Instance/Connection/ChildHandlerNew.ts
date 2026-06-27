@@ -815,6 +815,13 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 							type: EntityModelType.Action,
 							definitionId: action.actionId,
 							options: action.options,
+							storeResult: action.storeResult
+								? {
+										type: 'custom-variable',
+										variableName: action.storeResult.variableName,
+										createIfNotExists: false,
+									}
+								: undefined,
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableActionEntityModel
 				)
