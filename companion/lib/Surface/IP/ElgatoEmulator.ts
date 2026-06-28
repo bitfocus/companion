@@ -18,7 +18,7 @@ import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/share
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
+import { OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {
@@ -66,7 +66,6 @@ const configFields: CompanionSurfaceConfigField[] = [
 		label: 'Prompt to enter fullscreen',
 		default: DefaultConfig.emulator_prompt_fullscreen,
 	},
-	...LockConfigFields,
 ]
 
 export type EmulatorUpdateEvents = {

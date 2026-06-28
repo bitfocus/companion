@@ -31,6 +31,7 @@ export class SurfaceGroup {
 		last_page_id: '',
 		startup_page_id: '',
 		use_last_page: true,
+		never_lock: false,
 		restrict_pages: false,
 		allowed_page_ids: [],
 	}
@@ -212,7 +213,7 @@ export class SurfaceGroup {
 
 		this.surfaceHandlers.push(surfaceHandler)
 
-		surfaceHandler.setLocked(this.#isLocked, true)
+		surfaceHandler.setLocked(this.#isLocked && !this.groupConfig.never_lock, true)
 		surfaceHandler.storeNewDevicePage(this.#currentPageId, true)
 	}
 
@@ -428,6 +429,11 @@ export class SurfaceGroup {
 			;(this.groupConfig as any)[key] = newValue
 			this.#saveConfig()
 
+			// Changing never_lock changes whether the lock is suppressed for the member surfaces
+			if (key === 'never_lock') {
+				this.#applyLockedToSurfaces()
+			}
+
 			return
 		}
 	}
@@ -437,37 +443,28 @@ export class SurfaceGroup {
 	 * @returns whether the locked state changed
 	 */
 	setLocked(locked: boolean): boolean {
-		// If an auto-group, just pass to the sole surface
-		if (this.isAutoGroup) {
-			return this.surfaceHandlers[0].setLocked(locked)
-		}
-
-		// // skip if surface can't be locked
-		// if (this.#surfaceConfig.config.never_lock) return
-
 		if (this.#isLocked === !!locked) {
 			return false
 		}
 
-		// Track the locked status
+		// Track the intended locked status. `never_lock` is applied when pushing to the surfaces,
+		// so the intent is still remembered while suppressed and can be restored if it is toggled off.
 		this.#isLocked = !!locked
 
-		// If it changed, redraw
-		for (const surface of this.surfaceHandlers) {
-			surface.setLocked(locked)
-		}
+		this.#applyLockedToSurfaces()
 
 		return true
 	}
 
 	/**
-	 * Ensure all surfaces in this group have the correct locked state
+	 * Push the effective locked state to all surfaces in this group.
+	 * A group configured to never lock is always pushed as unlocked.
 	 */
-	syncLocked(): void {
-		if (this.isAutoGroup) return
+	#applyLockedToSurfaces(): void {
+		const locked = this.#isLocked && !this.groupConfig.never_lock
 
 		for (const surface of this.surfaceHandlers) {
-			surface.setLocked(this.#isLocked)
+			surface.setLocked(locked)
 		}
 	}
 
@@ -517,6 +514,9 @@ export function validateGroupConfigValue(pageStore: IPageStore, key: string, val
 
 			return value
 		}
+		case 'never_lock':
+			return Boolean(value)
+
 		case 'restrict_pages':
 			return Boolean(value)
 
