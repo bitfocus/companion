@@ -304,24 +304,65 @@
 		text-align: center;
 	}
 
-	// Review step: icon-led list of pending changes
+	// Review step: pending changes grouped into cards by category, each with a tonal icon badge
+	.wizard-review {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.wizard-review-group-title {
+		margin-bottom: 0.35rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--cui-secondary-color, #768192);
+	}
+
 	.wizard-review-list {
 		list-style: none;
 		padding-left: 0;
 		margin-bottom: 0;
+		border: 1px solid var(--cui-border-color, #c4c9d0);
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
 
-		.wizard-review-item {
-			display: flex;
-			align-items: baseline;
-			gap: 0.5rem;
-			padding: 0.2rem 0;
+	.wizard-review-item {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem 0.75rem;
+
+		& + .wizard-review-item {
+			border-top: 1px solid var(--cui-border-color-translucent, rgb(0 0 21 / 10%));
+		}
+	}
+
+	.wizard-review-badge {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		border-radius: 50%;
+		font-size: 0.75rem;
+
+		&.wizard-review-badge-add {
+			background-color: var(--cui-success-bg-subtle, #d1e7dd);
+			color: var(--cui-success, #2eb85c);
 		}
 
-		.wizard-review-icon {
-			flex: 0 0 auto;
-			width: 1rem;
-			text-align: center;
-			align-self: center;
+		&.wizard-review-badge-remove {
+			background-color: var(--cui-danger-bg-subtle, #f8d7da);
+			color: var(--cui-danger, #e55353);
+		}
+
+		&.wizard-review-badge-info {
+			background-color: var(--cui-tertiary-bg, #ebedef);
+			color: var(--cui-secondary-color, #768192);
 		}
 	}
 }

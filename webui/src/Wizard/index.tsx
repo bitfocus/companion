@@ -8,7 +8,7 @@ import { Modal } from '~/Components/Modal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ApplyStep } from './ApplyStep.js'
+import { ApplyStep, getWizardChanges } from './ApplyStep.js'
 import { BeginStep } from './BeginStep.js'
 import {
 	WIZARD_CURRENT_VERSION,
@@ -73,6 +73,14 @@ export function WizardModal(): React.JSX.Element {
 	const beginStepIndex = 0
 	const applyStepIndex = configurableSteps.length + 1
 	const finishStepIndex = configurableSteps.length + 2
+
+	// When there's nothing to apply, the review step is pointless, so fold the finish step into it: show the
+	// finish content there and turn the Apply button into Finish (skipping the separate finish step).
+	const reviewChanges = useMemo(
+		() => (oldConfig && newConfig ? getWizardChanges(oldConfig, newConfig) : []),
+		[oldConfig, newConfig]
+	)
+	const hasReviewChanges = reviewChanges.length > 0
 
 	const getConfig = useCallback(() => {
 		if (!userConfig.properties) {
@@ -176,9 +184,13 @@ export function WizardModal(): React.JSX.Element {
 	let nextButton
 	switch (currentStep) {
 		case applyStepIndex:
-			nextButton = (
+			nextButton = hasReviewChanges ? (
 				<Button ref={buttonRef} color="primary" onClick={doSave}>
 					Apply
+				</Button>
+			) : (
+				<Button ref={buttonRef} color="primary" onClick={doClose}>
+					Finish
 				</Button>
 			)
 			break
@@ -207,11 +219,25 @@ export function WizardModal(): React.JSX.Element {
 		})),
 		{ index: applyStepIndex, title: 'Review' },
 	]
+	// Hide the stepper only on the dedicated finish screen; the merged review/finish step keeps it
 	const showStepper = currentStep !== finishStepIndex
 
 	// The configurable step (if any) active for the current index
 	const activeConfigStep =
 		currentStep >= 1 && currentStep <= configurableSteps.length ? configurableSteps[currentStep - 1] : undefined
+
+	// On the post-applied finish step, "Previous" would step back over already-applied changes, so offer a
+	// Restart instead which returns to the beginning of the wizard.
+	const previousButton =
+		currentStep === finishStepIndex ? (
+			<Button color="secondary" onClick={() => doJumpToStep(beginStepIndex)}>
+				Start over
+			</Button>
+		) : (
+			<Button color="secondary" disabled={currentStep === beginStepIndex} onClick={doPrevStep}>
+				Previous
+			</Button>
+		)
 
 	return (
 		<>
@@ -237,7 +263,7 @@ export function WizardModal(): React.JSX.Element {
 					</label>
 				</div>
 			)}
-			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
+			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete} disableDismiss>
 				<Modal.Portal>
 					<Modal.Backdrop />
 					<Modal.Viewport>
@@ -267,8 +293,12 @@ export function WizardModal(): React.JSX.Element {
 									{activeConfigStep && newConfig && !error
 										? activeConfigStep.render({ config: newConfig, setValue })
 										: ''}
-									{currentStep === applyStepIndex && newConfig && oldConfig && !error ? (
-										<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
+									{currentStep === applyStepIndex && newConfig && oldConfig && startConfig && !error ? (
+										hasReviewChanges ? (
+											<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
+										) : (
+											<FinishStep oldConfig={startConfig} newConfig={newConfig} />
+										)
 									) : (
 										''
 									)}
@@ -279,10 +309,7 @@ export function WizardModal(): React.JSX.Element {
 									)}
 								</Modal.Body>
 								<Modal.Footer>
-									{currentStep <= applyStepIndex && <Modal.Close>Cancel</Modal.Close>}
-									<Button color="secondary" disabled={currentStep === beginStepIndex} onClick={doPrevStep}>
-										Previous
-									</Button>
+									{previousButton}
 									{nextButton}
 								</Modal.Footer>
 							</Form>

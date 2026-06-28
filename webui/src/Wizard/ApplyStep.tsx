@@ -1,7 +1,7 @@
-import { faCheck, faCircleCheck, faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons'
+/* eslint-disable react-refresh/only-export-components */
+import { faCheck, faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { NonIdealState } from '~/Components/NonIdealState'
 import { TIMEZONE_CHOICES } from '~/Resources/timezones.js'
 import { WIZARD_VERSION_3_0, WIZARD_VERSION_4_2, WIZARD_VERSION_5_0 } from './Constants.js'
 
@@ -12,18 +12,21 @@ interface ApplyStepProps {
 
 type ChangeTone = 'add' | 'remove' | 'info'
 
-interface Change {
+export interface WizardChange {
+	category: string
 	tone: ChangeTone
 	content: React.ReactNode
 }
 
 const TONE_ICON = { add: faCheck, remove: faXmark, info: faCircleInfo } as const
-const TONE_CLASS = { add: 'text-success', remove: 'text-danger', info: 'text-secondary' } as const
 
-export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.Element {
-	const changes: Change[] = []
-	const add = (tone: ChangeTone, content: React.ReactNode) => changes.push({ tone, content })
+/** Compute the list of changes the wizard will apply, comparing the original config to the edited one. */
+export function getWizardChanges(oldConfig: UserConfigModel, newConfig: UserConfigModel): WizardChange[] {
+	const changes: WizardChange[] = []
+	let category = ''
+	const add = (tone: ChangeTone, content: React.ReactNode) => changes.push({ category, tone, content })
 
+	category = 'Surfaces'
 	if (oldConfig.setup_wizard < WIZARD_VERSION_3_0 || oldConfig.usb_hotplug !== newConfig.usb_hotplug) {
 		add(
 			'info',
@@ -45,6 +48,7 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		)
 	}
 
+	category = 'Button Grid'
 	if (
 		oldConfig.setup_wizard === 0 ||
 		newConfig?.gridSize.minColumn !== oldConfig.gridSize.minColumn ||
@@ -79,6 +83,7 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		)
 	}
 
+	category = 'Remote Control Services'
 	if (
 		oldConfig.setup_wizard === 0 &&
 		!newConfig.tcp_enabled &&
@@ -169,6 +174,7 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		}
 	}
 
+	category = 'Usage Statistics'
 	if (
 		oldConfig.setup_wizard < WIZARD_VERSION_4_2 ||
 		oldConfig.detailed_data_collection !== newConfig.detailed_data_collection
@@ -181,6 +187,7 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		)
 	}
 
+	category = 'Security'
 	if (oldConfig.setup_wizard === 0 || oldConfig.admin_lockout !== newConfig.admin_lockout) {
 		add(
 			'info',
@@ -219,38 +226,50 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		)
 	}
 
+	category = 'Timezone'
 	if (oldConfig.setup_wizard < WIZARD_VERSION_5_0 || oldConfig.timezone !== newConfig.timezone) {
 		const tzLabel = TIMEZONE_CHOICES.find((c) => c.id === (newConfig.timezone ?? ''))?.label ?? newConfig.timezone
 		add('info', `${oldConfig.setup_wizard > 0 ? 'Change' : 'Set'} timezone to ${tzLabel}.`)
 	}
 
-	// Nothing changed: show a friendly centered confirmation rather than an empty list
-	if (changes.length === 0) {
-		return (
-			<div className="wizard-centered-step">
-				<NonIdealState icon={faCircleCheck}>
-					<h4 className="mb-2">Nothing to change</h4>
-					<p className="mb-0">Your settings are already up to date - you're good to go!</p>
-				</NonIdealState>
-			</div>
-		)
+	return changes
+}
+
+export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.Element {
+	const changes = getWizardChanges(oldConfig, newConfig)
+
+	// Group consecutive changes by category, preserving order
+	const groups: { category: string; items: WizardChange[] }[] = []
+	for (const change of changes) {
+		const last = groups[groups.length - 1]
+		if (last && last.category === change.category) {
+			last.items.push(change)
+		} else {
+			groups.push({ category: change.category, items: [change] })
+		}
 	}
 
 	return (
 		<div>
 			<h5>Review Settings</h5>
 			<p>The following {oldConfig.setup_wizard > 0 ? 'settings' : 'changes'} will be applied:</p>
-			<ul className="wizard-review-list">
-				{changes.map((change, i) => (
-					<li key={i} className="wizard-review-item">
-						<FontAwesomeIcon
-							icon={TONE_ICON[change.tone]}
-							className={`wizard-review-icon ${TONE_CLASS[change.tone]}`}
-						/>
-						<span>{change.content}</span>
-					</li>
+			<div className="wizard-review">
+				{groups.map((group) => (
+					<div key={group.category} className="wizard-review-group">
+						<div className="wizard-review-group-title">{group.category}</div>
+						<ul className="wizard-review-list">
+							{group.items.map((change, i) => (
+								<li key={i} className="wizard-review-item">
+									<span className={`wizard-review-badge wizard-review-badge-${change.tone}`}>
+										<FontAwesomeIcon icon={TONE_ICON[change.tone]} />
+									</span>
+									<span>{change.content}</span>
+								</li>
+							))}
+						</ul>
+					</div>
 				))}
-			</ul>
+			</div>
 		</div>
 	)
 }
