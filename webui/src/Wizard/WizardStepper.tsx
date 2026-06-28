@@ -1,6 +1,7 @@
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import { memo } from 'react'
 
 export interface WizardStepperItem {
 	/** The wizard step index this item jumps to when clicked */
@@ -28,25 +29,56 @@ export function WizardStepper({ items, currentIndex, onJump }: WizardStepperProp
 					currentIndex > item.index ? 'complete' : currentIndex === item.index ? 'active' : 'upcoming'
 
 				return (
-					<li key={item.index} className={classNames('wizard-stepper-step', `wizard-stepper-step-${status}`)}>
-						<button
-							type="button"
-							className="wizard-stepper-button"
-							onClick={() => onJump(item.index)}
-							aria-current={status === 'active' ? 'step' : undefined}
-							aria-label={item.title}
-						>
-							<span className="wizard-stepper-marker">
-								{status === 'complete' ? <FontAwesomeIcon icon={faCheck} /> : i + 1}
-							</span>
-							<span className="wizard-stepper-label">
-								{item.title}
-								{item.isNew && <span className="wizard-stepper-badge">New</span>}
-							</span>
-						</button>
-					</li>
+					<WizardStepperStep
+						key={item.index}
+						index={item.index}
+						displayNumber={i + 1}
+						title={item.title}
+						isNew={item.isNew}
+						status={status}
+						onJump={onJump}
+					/>
 				)
 			})}
 		</ol>
 	)
 }
+
+interface WizardStepperStepProps {
+	index: number
+	/** 1-based position shown in the marker before a step is completed */
+	displayNumber: number
+	title: string
+	isNew?: boolean
+	status: StepStatus
+	onJump: (index: number) => void
+}
+
+const WizardStepperStep = memo(function WizardStepperStep({
+	index,
+	displayNumber,
+	title,
+	isNew,
+	status,
+	onJump,
+}: WizardStepperStepProps): React.JSX.Element {
+	return (
+		<li className={classNames('wizard-stepper-step', `wizard-stepper-step-${status}`)}>
+			<button
+				type="button"
+				className="wizard-stepper-button"
+				onClick={() => onJump(index)}
+				aria-current={status === 'active' ? 'step' : undefined}
+				aria-label={title}
+			>
+				<span className="wizard-stepper-marker">
+					{status === 'complete' ? <FontAwesomeIcon icon={faCheck} /> : displayNumber}
+				</span>
+				<span className="wizard-stepper-label">
+					{title}
+					{isNew && <span className="wizard-stepper-badge">New</span>}
+				</span>
+			</button>
+		</li>
+	)
+})
