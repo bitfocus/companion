@@ -52,10 +52,11 @@ export interface RootAppStore {
 
 	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 
-	readonly showWizardEvent: EventTarget
-	readonly showWizard: () => void
-	/** Whether the setup wizard modal is currently open. Used to defer the What's New modal. */
-	readonly wizardActive: IObservableValue<boolean>
+	/**
+	 * The setup wizard modal's open state. Set to `true` to open it; the modal sets it back to `false` on close.
+	 * Doubles as the signal the What's New modal watches so it can wait its turn.
+	 */
+	readonly wizardOpen: IObservableValue<boolean>
 
 	readonly viewControl: ViewControlStore
 }

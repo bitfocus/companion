@@ -1,4 +1,5 @@
-import { toJS } from 'mobx'
+import { reaction, toJS } from 'mobx'
+import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
@@ -34,15 +35,14 @@ const DEV_VERSION_OPTIONS: { label: string; value: number }[] = [
 	{ label: '5.0', value: WIZARD_VERSION_5_0 },
 ]
 
-export function WizardModal(): React.JSX.Element {
-	const { showWizardEvent, userConfig, wizardActive } = useContext(RootAppStoreContext)
+export const WizardModal = observer(function WizardModal(): React.JSX.Element {
+	const { userConfig, wizardOpen } = useContext(RootAppStoreContext)
 
 	const [currentStep, setCurrentStep] = useState(0)
 	const [startConfig, setStartConfig] = useState<UserConfigModel | null>(null)
 	const [oldConfig, setOldConfig] = useState<UserConfigModel | null>(null)
 	const [newConfig, setNewConfig] = useState<UserConfigModel | null>(null)
 	const [error, setError] = useState<string | null>(null)
-	const [clear, setClear] = useState(true)
 	const [reviewAll, setReviewAll] = useState(false)
 	// Dev-only: override the "from" version to preview the upgrade experience (see the dev control below)
 	const [devFromVersion, setDevFromVersion] = useState<number | undefined>(undefined)
@@ -97,8 +97,8 @@ export function WizardModal(): React.JSX.Element {
 		setNewConfig(config)
 	}, [userConfig])
 
-	const [show, setShow] = useState(false)
-	const doClose = useCallback(() => setShow(false), [])
+	const show = wizardOpen.get()
+	const doClose = useCallback(() => wizardOpen.set(false), [wizardOpen])
 
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 	const setConfigKeysMutation = useMutationExt(trpc.userConfig.setConfigKeys.mutationOptions())
@@ -107,7 +107,6 @@ export function WizardModal(): React.JSX.Element {
 		(open: boolean) => {
 			if (!open) {
 				setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
-				setClear(true)
 			}
 		},
 		[setConfigKeyMutation]
@@ -157,27 +156,19 @@ export function WizardModal(): React.JSX.Element {
 		)
 	}
 
+	// Capture a fresh config snapshot and reset to the first step each time the wizard is opened
 	useEffect(() => {
-		const show = () => {
-			if (clear) {
-				getConfig()
-				setCurrentStep(0)
-				setReviewAll(false)
+		return reaction(
+			() => wizardOpen.get(),
+			(open) => {
+				if (open) {
+					getConfig()
+					setCurrentStep(0)
+					setReviewAll(false)
+				}
 			}
-			setShow(true)
-			setClear(false)
-		}
-
-		showWizardEvent.addEventListener('show', show)
-		return () => {
-			showWizardEvent.removeEventListener('show', show)
-		}
-	}, [showWizardEvent, clear, getConfig])
-
-	// Let the rest of the app know the wizard is open, so the What's New modal can wait its turn
-	useEffect(() => {
-		wizardActive.set(show)
-	}, [show, wizardActive])
+		)
+	}, [wizardOpen, getConfig])
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
@@ -263,7 +254,12 @@ export function WizardModal(): React.JSX.Element {
 					</label>
 				</div>
 			)}
-			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete} disableDismiss>
+			<Modal.Root
+				open={show}
+				onOpenChange={(open) => wizardOpen.set(open)}
+				onOpenChangeComplete={onOpenChangeComplete}
+				disableDismiss
+			>
 				<Modal.Portal>
 					<Modal.Backdrop />
 					<Modal.Viewport>
@@ -319,4 +315,4 @@ export function WizardModal(): React.JSX.Element {
 			</Modal.Root>
 		</>
 	)
-}
+})

@@ -24,19 +24,19 @@ export interface WhatsNewModalRef {
 
 export const WhatsNewModal = observer(
 	forwardRef<WhatsNewModalRef>(function HelpModal(_props, ref) {
-		const { userConfig, wizardActive } = useContext(RootAppStoreContext)
+		const { userConfig, wizardOpen } = useContext(RootAppStoreContext)
 
 		const [show, setShow] = useState(false)
 		const [selectedVersion, setSelectedVersion] = useState<string | undefined>(undefined)
 		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
 
 		// The setup wizard takes priority on launch: don't auto-pop What's New while it is pending or open.
-		// Once the wizard finishes (it bumps setup_wizard and clears wizardActive), this re-evaluates and shows.
+		// Once the wizard finishes (it bumps setup_wizard and clears wizardOpen), this re-evaluates and shows.
 		// Wait for the config to load first, so we know whether the wizard is pending before deciding.
 		const setupWizardVersion = userConfig.properties?.setup_wizard
 		const configLoaded = setupWizardVersion !== undefined
 		const isWizardPending = configLoaded && setupWizardVersion < WIZARD_CURRENT_VERSION
-		const isWizardActive = wizardActive.get()
+		const isWizardActive = wizardOpen.get()
 
 		// Load pages manifest using proper React Query
 		const {
