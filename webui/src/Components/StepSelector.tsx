@@ -69,7 +69,7 @@ const StepSelectorStep = memo(function StepSelectorStep({
 				className="step-selector-button"
 				onClick={() => onJump(index)}
 				aria-current={status === 'active' ? 'step' : undefined}
-				aria-label={title}
+				aria-label={isNew ? `${title} (New)` : title}
 			>
 				<span className="step-selector-marker">
 					{status === 'complete' ? <FontAwesomeIcon icon={faCheck} /> : displayNumber}

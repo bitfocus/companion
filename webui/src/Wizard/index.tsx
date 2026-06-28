@@ -2,6 +2,7 @@ import { reaction, toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
@@ -85,14 +86,23 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 	}, [userConfig])
 
 	const show = wizardOpen.get()
+
+	// Only true once the wizard has genuinely been completed (changes applied successfully, or there were none).
+	// Closing before this point must not record `setup_wizard`, or a failed save would permanently suppress the wizard.
+	const completedRef = useRef(false)
+
 	const doClose = useCallback(() => wizardOpen.set(false), [wizardOpen])
+	const doFinish = useCallback(() => {
+		completedRef.current = true
+		doClose()
+	}, [doClose])
 
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 	const setConfigKeysMutation = useMutationExt(trpc.userConfig.setConfigKeys.mutationOptions())
 
 	const onOpenChangeComplete = useCallback(
 		(open: boolean) => {
-			if (!open) {
+			if (!open && completedRef.current) {
 				setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
 			}
 		},
@@ -124,11 +134,21 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 				}
 			}
 
-			setConfigKeysMutation.mutate({ values: saveConfig })
-
-			setOldConfig(newConfig)
-
-			doNextStep()
+			// Only advance to the finish step (and allow the wizard to be marked complete) once the write succeeds.
+			// Otherwise a failed save could finish the wizard and suppress it permanently without persisting anything.
+			setConfigKeysMutation.mutate(
+				{ values: saveConfig },
+				{
+					onSuccess: () => {
+						setError(null)
+						setOldConfig(newConfig)
+						doNextStep()
+					},
+					onError: (e) => {
+						setError(`Failed to save settings: ${stringifyError(e)}`)
+					},
+				}
+			)
 		},
 		[setConfigKeysMutation, newConfig, oldConfig, doNextStep]
 	)
@@ -152,6 +172,7 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 					getConfig()
 					setCurrentStep(0)
 					setReviewAll(false)
+					completedRef.current = false
 				}
 			}
 		)
@@ -167,14 +188,14 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 					Apply
 				</Button>
 			) : (
-				<Button ref={buttonRef} color="primary" onClick={doClose}>
+				<Button ref={buttonRef} color="primary" onClick={doFinish}>
 					Finish
 				</Button>
 			)
 			break
 		case finishStepIndex:
 			nextButton = (
-				<Button ref={buttonRef} color="primary" onClick={doClose}>
+				<Button ref={buttonRef} color="primary" onClick={doFinish}>
 					Finish
 				</Button>
 			)

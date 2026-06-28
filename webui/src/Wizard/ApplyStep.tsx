@@ -202,14 +202,7 @@ export function getWizardChanges(oldConfig: UserConfigModel, newConfig: UserConf
 	) {
 		add(
 			'info',
-			oldConfig.setup_wizard > 0 ? (
-				<>
-					Change admin password from {oldConfig.admin_password === '' ? '(none)' : `'${oldConfig.admin_password}'`} to '
-					{newConfig.admin_password}'.
-				</>
-			) : (
-				<>Set admin password to '{newConfig.admin_password}'.</>
-			)
+			oldConfig.setup_wizard > 0 && oldConfig.admin_password !== '' ? 'Change admin password.' : 'Set admin password.'
 		)
 	}
 	if (
@@ -221,8 +214,8 @@ export function getWizardChanges(oldConfig: UserConfigModel, newConfig: UserConf
 		add(
 			'info',
 			oldConfig.setup_wizard > 0
-				? `Change admin GUI timeout from ${oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'} to ${newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.`
-				: `Set admin GUI timeout to ${newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.`
+				? `Change admin GUI timeout from ${oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'} to ${newAdminTimeoutStr === '0' ? 'none' : newConfig.admin_timeout + ' minutes'}.`
+				: `Set admin GUI timeout to ${newAdminTimeoutStr === '0' ? 'none' : newConfig.admin_timeout + ' minutes'}.`
 		)
 	}
 
