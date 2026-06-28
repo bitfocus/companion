@@ -19,10 +19,19 @@ function createFixture(initialPages: PageModel[] | undefined = threePages()) {
 		clearAllForPage: vi.fn(),
 		invalidateButton: vi.fn(),
 	}
+	// Return a stable stub per controlId so tests can assert which controls were told their location changed
+	const controlInstances = new Map<string, { controlId: string; triggerLocationHasChanged: ReturnType<typeof vi.fn> }>()
 	const controls = {
 		deleteControl: vi.fn(),
 		createButtonControl: vi.fn(),
-		getControl: vi.fn(() => ({})),
+		getControl: vi.fn((controlId: string) => {
+			let control = controlInstances.get(controlId)
+			if (!control) {
+				control = { controlId, triggerLocationHasChanged: vi.fn() }
+				controlInstances.set(controlId, control)
+			}
+			return control
+		}),
 	}
 	const userconfig = {
 		getKey: vi.fn(() => ({ minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 })),
@@ -32,7 +41,7 @@ function createFixture(initialPages: PageModel[] | undefined = threePages()) {
 	const controller = new PageController(graphics as any, controls as any, userconfig as any, controlEvents, store)
 	const caller = t.createCallerFactory(controller.createTrpcRouter())(testCtx)
 
-	return { db, store, graphics, controls, userconfig, controlEvents, controller, caller }
+	return { db, store, graphics, controls, controlInstances, userconfig, controlEvents, controller, caller }
 }
 
 describe('PageController', () => {
@@ -73,7 +82,7 @@ describe('PageController', () => {
 		})
 
 		test('removes the page, renumbers the rest and reports the changes', () => {
-			const { controller, store, graphics, controls } = createFixture()
+			const { controller, store, graphics, controls, controlInstances } = createFixture()
 
 			const clientUpdate = vi.fn()
 			controller.on('clientUpdate', clientUpdate)
@@ -99,6 +108,9 @@ describe('PageController', () => {
 			expect(graphics.clearAllForPage).toHaveBeenCalledWith(2)
 			expect(graphics.clearAllForPage).toHaveBeenCalledWith(3)
 			expect(graphics.invalidateButton).toHaveBeenCalledWith({ pageNumber: 2, row: 0, column: 0 })
+
+			// The renumbered control must recompute its location-dependent state (e.g. this:page)
+			expect(controlInstances.get('control-c1')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
 
 			expect(clientUpdate).toHaveBeenCalledWith({
 				type: 'update',
@@ -131,7 +143,7 @@ describe('PageController', () => {
 		})
 
 		test('inserts pages and renumbers later pages', () => {
-			const { controller, store } = createFixture()
+			const { controller, store, controlInstances } = createFixture()
 
 			const clientUpdate = vi.fn()
 			controller.on('clientUpdate', clientUpdate)
@@ -147,6 +159,11 @@ describe('PageController', () => {
 
 			// Controls on later pages moved
 			expect(store.getLocationOfControlId('control-b1')).toEqual({ pageNumber: 4, row: 1, column: 2 })
+
+			// Controls on the renumbered pages were told their location changed
+			expect(controlInstances.get('control-b1')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			expect(controlInstances.get('control-b2')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			expect(controlInstances.get('control-c1')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
 
 			expect(pagecount).toHaveBeenCalledWith(5)
 			expect(clientUpdate).toHaveBeenCalledWith(
@@ -380,7 +397,7 @@ describe('PageController', () => {
 		})
 
 		test('move forwards lands the page at the target page number', async () => {
-			const { caller, store } = createFixture()
+			const { caller, store, controlInstances } = createFixture()
 
 			await expect(caller.move({ pageId: 'page-a', pageNumber: 3 })).resolves.toBe('ok')
 
@@ -389,6 +406,12 @@ describe('PageController', () => {
 			// the location cache reflects the new order
 			expect(store.getLocationOfControlId('control-b1')).toEqual({ pageNumber: 1, row: 1, column: 2 })
 			expect(store.getLocationOfControlId('control-a1')).toEqual({ pageNumber: 3, row: 0, column: 0 })
+
+			// Every control on a renumbered page must recompute its location-dependent state, so that
+			// pagenum buttons (this:page) and location feedbacks reflect the new page number
+			for (const controlId of ['control-a1', 'control-b1', 'control-b2', 'control-c1']) {
+				expect(controlInstances.get(controlId)?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			}
 		})
 
 		test('move backwards', async () => {
