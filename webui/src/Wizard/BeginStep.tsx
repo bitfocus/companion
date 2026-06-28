@@ -1,10 +1,10 @@
+import { faRocket } from '@fortawesome/free-solid-svg-icons'
 import { Button } from '~/Components/Button'
+import { NonIdealState } from '~/Components/NonIdealState'
 
 interface BeginStepProps {
 	/** The wizard version the user last completed (0 for a fresh install) */
 	prevVersion: number
-	/** Titles of every configurable step, in order */
-	allStepTitles: string[]
 	/** Titles of the steps that are new/changed since `prevVersion` */
 	newStepTitles: string[]
 	/** Whether the full flow is currently being shown (fresh install or "review all") */
@@ -18,51 +18,41 @@ function formatWizardVersion(version: number): string {
 	return `${Math.floor(version / 10)}.${version % 10}`
 }
 
-export function BeginStep({
-	prevVersion,
-	allStepTitles,
-	newStepTitles,
-	showAll,
-	onReviewAll,
-}: BeginStepProps): React.JSX.Element {
+export function BeginStep({ prevVersion, newStepTitles, showAll, onReviewAll }: BeginStepProps): React.JSX.Element {
 	const isUpgrade = prevVersion > 0
 
 	// Returning user with a short upgrade flow: explain what's new and offer to review everything
 	if (isUpgrade && !showAll && newStepTitles.length > 0) {
 		return (
-			<div>
-				<p style={{ marginTop: 0 }}>
-					Welcome back! Since you last set up Companion (version {formatWizardVersion(prevVersion)}), the following
-					settings are new or have changed and are worth a quick review:
-				</p>
-				<ol>
-					{newStepTitles.map((title) => (
-						<li key={title}>{title}</li>
-					))}
-				</ol>
-				<p className="mb-0">
-					We'll just walk you through these. Would you rather go through everything?{' '}
-					<Button color="link" className="p-0 align-baseline" onClick={onReviewAll}>
-						Review all settings
-					</Button>
-				</p>
+			<div className="wizard-centered-step">
+				<NonIdealState icon={faRocket}>
+					<h4 className="mb-2">Welcome back!</h4>
+					<p>
+						Since you last set up Companion (version {formatWizardVersion(prevVersion)}), a few settings are new or have
+						changed{newStepTitles.length > 0 ? ` (${newStepTitles.join(', ')})` : ''}. We'll quickly walk you through
+						them - use the steps above to navigate.
+					</p>
+					<p className="mb-0">
+						<Button color="link" className="p-0 align-baseline" onClick={onReviewAll}>
+							Review all settings instead
+						</Button>
+					</p>
+				</NonIdealState>
 			</div>
 		)
 	}
 
 	// Fresh install, or a returning user who chose to review everything
 	return (
-		<div>
-			<p style={{ marginTop: 0 }}>
-				{isUpgrade
-					? 'Here are all of the settings you can review before using Companion:'
-					: 'Whether you are a new user or upgrading, there are a number of settings you should review before using Companion. This wizard will walk you through the following configuration settings:'}
-			</p>
-			<ol>
-				{allStepTitles.map((title) => (
-					<li key={title}>{title}</li>
-				))}
-			</ol>
+		<div className="wizard-centered-step">
+			<NonIdealState icon={faRocket}>
+				<h4 className="mb-2">{isUpgrade ? 'Review your settings' : 'Welcome to Companion'}</h4>
+				<p className="mb-0">
+					{isUpgrade
+						? 'These are the settings we recommend you review. Use the steps above to jump between them.'
+						: "Let's get you set up. We'll walk through a few settings worth reviewing before you start - use the steps above to navigate."}
+				</p>
+			</NonIdealState>
 		</div>
 	)
 }

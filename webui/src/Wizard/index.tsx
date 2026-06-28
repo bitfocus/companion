@@ -257,7 +257,6 @@ export function WizardModal(): React.JSX.Element {
 									{currentStep === beginStepIndex && newConfig && !error ? (
 										<BeginStep
 											prevVersion={prevVersion}
-											allStepTitles={availableSteps.map((step) => step.title)}
 											newStepTitles={newSteps.map((step) => step.title)}
 											showAll={showAllSteps}
 											onReviewAll={() => setReviewAll(true)}

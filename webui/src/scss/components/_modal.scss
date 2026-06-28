@@ -284,8 +284,45 @@
 // doesn't jump around as content varies between short and long steps. Tall steps scroll within the body.
 
 .modal-wizard {
+	// Constant body height so the modal doesn't resize between short and long steps (the Next button stays put).
+	// Bounded by clamp so it isn't excessively empty on short steps nor too tall on small screens; taller steps
+	// scroll within the body. .flex-form isn't a flex container, so set an explicit height rather than flex: 1.
+	// overflow: hidden auto (not just overflow-y) avoids an unwanted horizontal scrollbar from grid negative margins.
 	.modal2-body {
-		min-height: 420px;
+		height: clamp(300px, 42vh, 440px);
+		overflow: hidden auto;
+	}
+
+	// Sparse framing steps (Begin/Finish) center their content so the constant-height box looks intentional
+	// rather than leaving the content stranded at the top with empty space below.
+	.wizard-centered-step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 100%;
+		text-align: center;
+	}
+
+	// Review step: icon-led list of pending changes
+	.wizard-review-list {
+		list-style: none;
+		padding-left: 0;
+		margin-bottom: 0;
+
+		.wizard-review-item {
+			display: flex;
+			align-items: baseline;
+			gap: 0.5rem;
+			padding: 0.2rem 0;
+		}
+
+		.wizard-review-icon {
+			flex: 0 0 auto;
+			width: 1rem;
+			text-align: center;
+			align-self: center;
+		}
 	}
 }
 
