@@ -277,7 +277,7 @@ function createMockParser(
 
 	const blinker = null as any
 
-	const createParserWithOverrides = (overrides: VariableValues): VariablesAndExpressionParser => {
+	const buildParser = (raw: VariableValueData, overrides: VariableValues): VariablesAndExpressionParser => {
 		const parser = {
 			executeExpression: (str: string, requiredType: string | undefined) => {
 				const cache = createCache()
@@ -285,7 +285,7 @@ function createMockParser(
 				for (const [key, value] of Object.entries(overrides)) {
 					cache.set(key, value)
 				}
-				return executeExpression(blinker, str, rawVariableValues, requiredType, cache, undefined)
+				return executeExpression(blinker, str, raw, requiredType, cache, undefined)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()
@@ -293,16 +293,21 @@ function createMockParser(
 				for (const [key, value] of Object.entries(overrides)) {
 					cache.set(key, value)
 				}
-				return parseVariablesInString(str, rawVariableValues, cache, VARIABLE_UNKNOWN_VALUE)
+				return parseVariablesInString(str, raw, cache, VARIABLE_UNKNOWN_VALUE)
 			},
 			createChildParser: (childOverrides: VariableValues) => {
-				return createParserWithOverrides({ ...overrides, ...childOverrides })
+				return buildParser(raw, { ...overrides, ...childOverrides })
+			},
+			// Mirrors VariablesAndExpressionParser.createIsolatedChildParser: no global variable
+			// values and only the provided overrides are resolvable.
+			createIsolatedChildParser: (childOverrides: VariableValues) => {
+				return buildParser({}, { ...childOverrides })
 			},
 		}
 		return parser as unknown as VariablesAndExpressionParser
 	}
 
-	return createParserWithOverrides({})
+	return buildParser(rawVariableValues, {})
 }
 
 // Create mock InstanceDefinitions
@@ -1641,6 +1646,154 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
 			expect((groupElement.children[0] as { text: string }).text).toBe('Default Label')
+		})
+
+		test('blocks global variables from being used in composite children', async () => {
+			const compositeDefinition: CompositeElementDefinition = {
+				id: 'labelComposite',
+				name: 'Label Composite',
+				description: '',
+				options: [],
+				// Authored by the module - must NOT be able to reach global variables
+				elements: [makeTextEl({ id: 'label', text: val('$(internal:foo)') })],
+			}
+
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					labelComposite: compositeDefinition,
+				},
+			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'labelComposite',
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser({ internal: { foo: 'GLOBAL VALUE' } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
+			// The global variable is not resolvable inside the composite, so it falls back to the unknown placeholder
+			expect((groupElement.children[0] as { text: string }).text).toBe(VARIABLE_UNKNOWN_VALUE)
+		})
+
+		test('forwards parent options into a nested composite while still blocking globals', async () => {
+			const innerComposite: CompositeElementDefinition = {
+				id: 'innerComposite',
+				name: 'Inner Composite',
+				description: '',
+				options: [
+					{
+						id: 'inner',
+						type: 'textinput',
+						label: 'Inner',
+						default: 'inner-default',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+				elements: [
+					makeTextEl({ id: 'inner-label', text: val('$(options:inner)') }),
+					makeTextEl({ id: 'inner-global', text: val('$(internal:foo)') }),
+				],
+			}
+
+			const outerComposite: CompositeElementDefinition = {
+				id: 'outerComposite',
+				name: 'Outer Composite',
+				description: '',
+				options: [
+					{
+						id: 'outer',
+						type: 'textinput',
+						label: 'Outer',
+						default: 'outer-default',
+						useVariables: CompanionFieldVariablesSupport.InternalParser,
+					},
+				],
+				elements: [
+					// Nested composite child forwarding the outer option into the inner option
+					{
+						id: 'inner-instance',
+						name: '',
+						type: 'composite',
+						usage: USAGE,
+						enabled: val(true),
+						opacity: val(100),
+						x: val(0),
+						y: val(0),
+						width: val(100),
+						height: val(100),
+						connectionId: 'test-connection',
+						elementId: 'innerComposite',
+						'opt:inner': val('$(options:outer)'),
+					},
+				],
+			}
+
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					outerComposite,
+					innerComposite,
+				},
+			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'outerComposite',
+					'opt:outer': val('Forwarded'),
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser({ internal: { foo: 'GLOBAL VALUE' } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			const outerGroup = result.elements[0] as ButtonGraphicsGroupDrawElement
+			const innerGroup = outerGroup.children[0] as ButtonGraphicsGroupDrawElement
+			// The outer option value was forwarded through to the inner composite's child
+			expect((innerGroup.children[0] as { text: string }).text).toBe('Forwarded')
+			// ...but the global variable is still blocked inside the nested composite
+			expect((innerGroup.children[1] as { text: string }).text).toBe(VARIABLE_UNKNOWN_VALUE)
 		})
 	})
 

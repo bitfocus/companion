@@ -1346,6 +1346,63 @@ describe('VariablesAndExpressionParser', () => {
 		})
 	})
 
+	describe('createIsolatedChildParser', () => {
+		it('resolves the injected override values', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const child = parser.createIsolatedChildParser({ 'options:label': 'injected' })
+
+			expect(child.parseVariables('$(options:label)').text).toBe('injected')
+			const result = child.executeExpression('$(options:label)', undefined)
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.value).toBe('injected')
+		})
+
+		it('does NOT inherit raw variable values from parent', () => {
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				defaultVariables,
+				new Map(),
+				null,
+				null
+			)
+			const child = parser.createIsolatedChildParser({})
+
+			expect(child.parseVariables('$(test:var1)').text).toBe('$NA')
+		})
+
+		it('does NOT inherit thisValues from parent', () => {
+			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, thisValues, null, null)
+			const child = parser.createIsolatedChildParser({})
+
+			expect(child.parseVariables('$(custom:val)').text).toBe('$NA')
+		})
+
+		it('does NOT inherit parent override values', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, {
+				'override:val': 'parent-override',
+			})
+			const child = parser.createIsolatedChildParser({})
+
+			expect(child.parseVariables('$(override:val)').text).toBe('$NA')
+		})
+
+		it('does NOT inherit local variables from parent', () => {
+			const mockEntity = {
+				localVariableName: 'local:myvar',
+				feedbackValue: 'local-value',
+				type: EntityModelType.Feedback,
+				connectionId: 'non-internal',
+				definitionId: 'some-def',
+			} as unknown as ControlEntityInstance
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
+			const child = parser.createIsolatedChildParser({})
+
+			expect(child.parseVariables('$(local:myvar)').text).toBe('$NA')
+		})
+	})
+
 	describe('deferParsing field passthrough', () => {
 		function makeDeferredDefinition(): ClientEntityDefinition {
 			return {

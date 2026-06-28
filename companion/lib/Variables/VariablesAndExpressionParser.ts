@@ -93,6 +93,28 @@ export class VariablesAndExpressionParser {
 		return childParser
 	}
 
+	/**
+	 * Create an isolated child parser that can ONLY resolve the provided override variables.
+	 * Unlike `createChildParser`, this does not inherit the global variable values, `this:` values,
+	 * inherited overrides, or `local:` values - any reference outside the given overrides resolves
+	 * to "unknown".
+	 *
+	 * Used for composite element children: a composite is authored by a module and must behave as a
+	 * self-contained component whose children can only reference its `options:*` variables, not any
+	 * global state. The values wired into the composite's options are resolved by the caller (with
+	 * full access) before being passed in here.
+	 */
+	createIsolatedChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
+		return new VariablesAndExpressionParser(
+			this.#userconfig,
+			this.#blinker,
+			{},
+			new Map(),
+			null,
+			overrideVariableValues
+		)
+	}
+
 	#bindLocalVariables(entities: ControlEntityInstance[]) {
 		for (const entity of entities) {
 			const variableName = entity.localVariableName

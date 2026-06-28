@@ -349,7 +349,7 @@ export function createParseElementsContext(
 		withPropOverrides(propOverrides: VariableValues): ParseElementsContext {
 			return createParseElementsContext(
 				compositeElementStore,
-				parser.createChildParser(propOverrides),
+				parser.createIsolatedChildParser(propOverrides),
 				drawPixelBuffers,
 				feedbackOverrides,
 				onlyEnabled,

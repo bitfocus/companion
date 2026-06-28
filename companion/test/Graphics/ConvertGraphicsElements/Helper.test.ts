@@ -32,30 +32,35 @@ function createMockParser(
 	const createCache = (): VariableValueCache => new Map() as unknown as VariableValueCache
 	const blinker = null as any
 
-	const createParserWithOverrides = (overrides: VariableValues): VariablesAndExpressionParser => {
+	const buildParser = (raw: VariableValueData, overrides: VariableValues): VariablesAndExpressionParser => {
 		const parser = {
 			executeExpression: (str: string, requiredType: string | undefined) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
 					cache.set(key, value as any)
 				}
-				return executeExpression(blinker, str, rawVariableValues, requiredType, cache, undefined)
+				return executeExpression(blinker, str, raw, requiredType, cache, undefined)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
 					cache.set(key, value as any)
 				}
-				return parseVariablesInString(str, rawVariableValues, cache, VARIABLE_UNKNOWN_VALUE)
+				return parseVariablesInString(str, raw, cache, VARIABLE_UNKNOWN_VALUE)
 			},
 			createChildParser: (childOverrides: VariableValues) => {
-				return createParserWithOverrides({ ...overrides, ...childOverrides })
+				return buildParser(raw, { ...overrides, ...childOverrides })
+			},
+			// Mirrors VariablesAndExpressionParser.createIsolatedChildParser: no global variable
+			// values and only the provided overrides are resolvable.
+			createIsolatedChildParser: (childOverrides: VariableValues) => {
+				return buildParser({}, { ...childOverrides })
 			},
 		}
 		return parser as unknown as VariablesAndExpressionParser
 	}
 
-	return createParserWithOverrides({})
+	return buildParser(rawVariableValues, {})
 }
 
 type TestEl = {
@@ -869,11 +874,15 @@ describe('createParseElementsContext', () => {
 			expect(helper.getString('strProp', 'default')).toBe('default')
 		})
 
-		test('child propOverrides are merged with parent variable values', () => {
+		test('child context is isolated from parent global variable values', () => {
 			const ctx = makeCtx({ variableValues: { ns: { existing: 'base' } } })
 			const child = ctx.withPropOverrides({ 'ns:injected': 'extra' })
+			// The child can only see its own propOverrides, not the parent's global variables
 			const { helper } = child.createHelper({ id: 'el1', strProp: expr<string>('$(ns:existing)') })
-			expect(helper.getString('strProp', '')).toBe('base')
+			expect(helper.getString('strProp', 'default')).toBe('default')
+			// ...but the injected override is resolvable
+			const { helper: helper2 } = child.createHelper({ id: 'el2', strProp: expr<string>('$(ns:injected)') })
+			expect(helper2.getString('strProp', '')).toBe('extra')
 		})
 	})
 
