@@ -11,28 +11,15 @@ import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ApplyStep, getWizardChanges } from './ApplyStep.js'
 import { BeginStep } from './BeginStep.js'
-import {
-	WIZARD_CURRENT_VERSION,
-	WIZARD_VERSION_2_2,
-	WIZARD_VERSION_3_0,
-	WIZARD_VERSION_3_4,
-	WIZARD_VERSION_4_2,
-	WIZARD_VERSION_4_3,
-	WIZARD_VERSION_5_0,
-} from './Constants.js'
+import { WIZARD_CURRENT_VERSION, WIZARD_VERSIONS } from './Constants.js'
 import { FinishStep } from './FinishStep.js'
 import { WIZARD_CONFIG_STEPS } from './Steps.js'
 import { WizardStepper, type WizardStepperItem } from './WizardStepper.js'
 
-// Dev-only: the versions selectable in the "preview from version" control
+// Dev-only: the versions selectable in the "preview from version" control, plus a fresh-install option
 const DEV_VERSION_OPTIONS: { label: string; value: number }[] = [
 	{ label: 'Fresh install', value: 0 },
-	{ label: '2.2', value: WIZARD_VERSION_2_2 },
-	{ label: '3.0', value: WIZARD_VERSION_3_0 },
-	{ label: '3.4', value: WIZARD_VERSION_3_4 },
-	{ label: '4.2', value: WIZARD_VERSION_4_2 },
-	{ label: '4.3', value: WIZARD_VERSION_4_3 },
-	{ label: '5.0', value: WIZARD_VERSION_5_0 },
+	...WIZARD_VERSIONS,
 ]
 
 export const WizardModal = observer(function WizardModal(): React.JSX.Element {
