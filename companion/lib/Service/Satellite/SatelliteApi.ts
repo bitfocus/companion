@@ -24,7 +24,12 @@ import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import type { ServiceApi } from '../ServiceApi.js'
 import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
 import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
-import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
+import {
+	buildSatelliteStyleArgs,
+	parseSatelliteBitmapFormat,
+	SATELLITE_BITMAP_FORMATS,
+	type SatelliteBitmapFormat,
+} from './SatelliteRenderUtil.js'
 import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
 
 /**
@@ -54,8 +59,10 @@ import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './Sate
  *        - Add CHANGE-PAGE message for surfaces to navigate pages
  * 1.10.1 - LOCKED-STATE now includes ROTATION
  * 1.11.0 - Add NONSQUARE to CAPS to indicate support for non-square buttons
+ * 1.12.0 - Add BITMAP_FORMATS to CAPS and BITMAP_FORMAT to ADD-DEVICE and ADD-SUB to negotiate bitmap encoding (rgb/png/webp)
+ *        - KEY-STATE and SUB-STATE tag compressed bitmaps with FORMAT
  */
-export const API_VERSION = '1.11.0'
+export const API_VERSION = '1.12.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the
@@ -267,6 +274,10 @@ export class ServiceSatelliteApi {
 
 		socketLogger.debug(`add surface "${id}"`)
 
+		// Negotiate the bitmap encoding. Defaults to rgb when absent or unknown, so older satellites
+		// (and any reporting a format we didn't advertise in CAPS) keep receiving raw rgb pixels.
+		const bitmapFormat = parseSatelliteBitmapFormat(params.BITMAP_FORMAT)
+
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
@@ -313,6 +324,7 @@ export class ServiceSatelliteApi {
 			surfaceManifest,
 			configFields: processedConfigFields,
 			canChangePage,
+			bitmapFormat,
 		})
 
 		this.#devices.set(id, {
@@ -421,7 +433,7 @@ export class ServiceSatelliteApi {
 				const sub = socketState.subscriptions.get(subId)
 				if (!sub) return
 				try {
-					await this.#sendSubState(socket, subId, sub.style, image)
+					await this.#sendSubState(socket, subId, sub.style, sub.bitmapFormat, image)
 				} catch (e) {
 					socketLogger.debug(`sendSubState failed: ${stringifyError(e)}`)
 				}
@@ -437,6 +449,7 @@ export class ServiceSatelliteApi {
 		socket.sendMessage('CAPS', null, null, {
 			SUBSCRIPTIONS: !!this.#userconfig.getKey('satellite_subscriptions_enabled'),
 			NONSQUARE: true,
+			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
 		})
 
 		let receivebuffer = ''
@@ -766,10 +779,15 @@ export class ServiceSatelliteApi {
 			style.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
+		// The bitmap encoding is negotiated per subscription (a subscription has no device to inherit from),
+		// validated against what CAPS advertised, defaulting to rgb for clients that don't opt in.
+		const bitmapFormat = parseSatelliteBitmapFormat(params.BITMAP_FORMAT)
+
 		const sub: SatelliteSubscription = {
 			subId: subIdStr,
 			location,
 			style,
+			bitmapFormat,
 		}
 		socketState.subscriptions.set(subIdStr, sub)
 
@@ -872,9 +890,10 @@ export class ServiceSatelliteApi {
 		socket: SatelliteSocketWrapper,
 		subId: string,
 		style: SatelliteControlStylePreset,
+		bitmapFormat: SatelliteBitmapFormat,
 		image: ImageResult
 	): Promise<void> {
-		const styleArgs = await buildSatelliteStyleArgs(image, style, null)
+		const styleArgs = await buildSatelliteStyleArgs(image, style, null, bitmapFormat)
 
 		socket.sendMessage('SUB-STATE', null, null, {
 			SUBID: subId,
@@ -923,6 +942,7 @@ interface SatelliteSubscription {
 	subId: string
 	location: ControlLocation
 	style: SatelliteControlStylePreset
+	bitmapFormat: SatelliteBitmapFormat
 }
 
 interface SatelliteSocketState {

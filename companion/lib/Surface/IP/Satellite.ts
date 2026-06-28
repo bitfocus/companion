@@ -21,7 +21,7 @@ import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
+import { buildSatelliteStyleArgs, type SatelliteBitmapFormat } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
@@ -60,6 +60,9 @@ export interface SatelliteDeviceInfo {
 	configFields: CompanionSurfaceConfigField[] | undefined
 
 	canChangePage: string | undefined
+
+	/** The bitmap encoding (rgb/png/webp) this surface negotiated for button images */
+	bitmapFormat: SatelliteBitmapFormat
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -196,6 +199,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
 	readonly #supportsLockedState: boolean
+	readonly #bitmapFormat: SatelliteBitmapFormat
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
 	readonly #outputVariables: Record<string, SatelliteOutputVariableInfo> = {}
@@ -223,6 +227,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
+		this.#bitmapFormat = deviceInfo.bitmapFormat
 
 		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
@@ -341,7 +346,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		const styleArgs = await buildSatelliteStyleArgs(
 			drawItem.defaultRender,
 			controlDefinition.style,
-			this.#config.rotation
+			this.#config.rotation,
+			this.#bitmapFormat
 		)
 		Object.assign(params, styleArgs)
 
