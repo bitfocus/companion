@@ -1,13 +1,20 @@
 import Editor, { type Monaco } from '@monaco-editor/react'
+import Bowser from 'bowser'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import type { editor } from 'monaco-editor'
-import { useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { ParseExpression } from '@companion-app/shared/Expressions.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
+
+// WebKit (Safari, and all browsers on iOS) paints the native CSS `resize` grabber underneath child
+// content, so the Monaco editor permanently covers it and the handle can't be dragged. Only there do
+// we fall back to a custom drag handle; every other engine keeps the native resizer.
+const isWebkit =
+	typeof window !== 'undefined' && Bowser.getParser(window.navigator.userAgent).getEngineName() === 'WebKit'
 
 interface ExpressionInputFieldProps {
 	id: string | undefined
@@ -28,6 +35,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 }: ExpressionInputFieldProps) {
 	const { variablesStore } = useContext(RootAppStoreContext)
 
+	const containerRef = useRef<HTMLDivElement>(null)
 	const [editor, setEditor] = useState<editor.IStandaloneCodeEditor | null>(null)
 	const [tmpValue, setTmpValue] = useState<string | null>(null)
 	const [isValid, setValid] = useState(true)
@@ -83,9 +91,11 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 	// Render the input
 	return (
 		<div
+			ref={containerRef}
 			id={id}
 			className={classNames('expression-editor-container', {
 				'syntax-error': !isValid,
+				'custom-resize': isWebkit,
 			})}
 		>
 			<Editor
@@ -116,9 +126,48 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					suggestLineHeight: 53,
 				}}
 			/>
+			{isWebkit && <ExpressionEditorResizeHandle containerRef={containerRef} />}
 		</div>
 	)
 })
+
+/**
+ * WebKit-only fallback resize handle. WebKit paints the native CSS `resize` grabber underneath the
+ * Monaco editor, so it can't be dragged in Safari (see `isWebkit`). This renders a strip on top of
+ * the editor and drives the container height manually. Kept as its own component so the pointer
+ * handler is never created on engines that use the native resizer.
+ */
+function ExpressionEditorResizeHandle({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
+	const handleResizePointerDown = useCallback(
+		(e: React.PointerEvent<HTMLDivElement>) => {
+			const container = containerRef.current
+			if (!container) return
+
+			e.preventDefault()
+
+			const handleEl = e.currentTarget
+			const startY = e.clientY
+			const startHeight = container.getBoundingClientRect().height
+			const minHeight = parseFloat(getComputedStyle(container).minHeight) || 0
+
+			const onMove = (ev: PointerEvent) => {
+				container.style.height = `${Math.max(minHeight, startHeight + (ev.clientY - startY))}px`
+			}
+			const onUp = () => {
+				handleEl.releasePointerCapture(e.pointerId)
+				handleEl.removeEventListener('pointermove', onMove)
+				handleEl.removeEventListener('pointerup', onUp)
+			}
+
+			handleEl.setPointerCapture(e.pointerId)
+			handleEl.addEventListener('pointermove', onMove)
+			handleEl.addEventListener('pointerup', onUp)
+		},
+		[containerRef]
+	)
+
+	return <div className="expression-editor-resize-handle" onPointerDown={handleResizePointerDown} aria-hidden="true" />
+}
 
 function isExpressionValid(value: string): boolean {
 	try {

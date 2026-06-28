@@ -15,6 +15,42 @@
 		border-color: rgb(255, 12, 138);
 	}
 
+	// WebKit paints the native `resize` grabber underneath the Monaco editor, so it can't be dragged
+	// in Safari. There (and only there) we disable it and supply a custom handle that sits on top.
+	&.custom-resize {
+		position: relative;
+		resize: none;
+		overflow: hidden;
+
+		.expression-editor-resize-handle {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			width: 16px;
+			height: 16px;
+			z-index: 20; // above the Monaco editor content and its scrollbars
+			cursor: ns-resize;
+			touch-action: none;
+
+			// Visible diagonal grip lines in the corner, mimicking the native resizer
+			background-image: repeating-linear-gradient(
+				-45deg,
+				var(--cui-border-color) 0,
+				var(--cui-border-color) 1px,
+				transparent 1px,
+				transparent 3px
+			);
+			background-repeat: no-repeat;
+			background-position: bottom right;
+			background-size: 9px 9px;
+			opacity: 0.7;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
+
 	/* Override Monaco suggest widget to show details below name */
 	.monaco-editor .suggest-widget {
 		box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
