@@ -125,7 +125,7 @@ interface AppMainProps {
 }
 
 const AppMain = observer(function AppMain({ connected, loadingComplete, loadingProgress }: AppMainProps) {
-	const { userConfig, showWizard } = useContext(RootAppStoreContext)
+	const { userConfig, wizardOpen } = useContext(RootAppStoreContext)
 
 	// Once everything has loaded, prune collapse-state keys for controls/connections that no longer exist
 	useEvictDeadCollapseState(loadingComplete)
@@ -151,9 +151,9 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
 		if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
-			showWizard()
+			wizardOpen.set(true)
 		}
-	}, [setup_wizard, showWizard])
+	}, [setup_wizard, wizardOpen])
 
 	// If lockout is disabled, then we are logged in
 	const admin_lockout = userConfig.properties && !userConfig.properties?.admin_lockout
@@ -161,10 +161,10 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 		if (admin_lockout) {
 			setUnlocked(true)
 			if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
-				showWizard()
+				wizardOpen.set(true)
 			}
 		}
-	}, [admin_lockout, setup_wizard, showWizard])
+	}, [admin_lockout, setup_wizard, wizardOpen])
 
 	return (
 		<div className="c-app">

@@ -1,38 +1,74 @@
-import { toJS } from 'mobx'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { reaction, toJS } from 'mobx'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal.js'
+import { StepSelector, type StepSelectorItem } from '~/Components/StepSelector.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ApplyStep } from './ApplyStep.js'
+import { ApplyStep, getWizardChanges } from './ApplyStep.js'
 import { BeginStep } from './BeginStep.js'
-import { WIZARD_CURRENT_VERSION } from './Constants.js'
-import { DataCollectionStep } from './DataCollectionStep.js'
+import { WIZARD_CURRENT_VERSION, WIZARD_VERSIONS } from './Constants.js'
 import { FinishStep } from './FinishStep.js'
-import { GridStep } from './GridStep.js'
-import { PasswordStep } from './PasswordStep.js'
-import { ServicesStep } from './ServicesStep.js'
-import { SurfacesStep } from './SurfacesStep.js'
-import { TimezoneStep } from './TimezoneStep.js'
+import { WIZARD_CONFIG_STEPS } from './Steps.js'
 
-export function WizardModal(): React.JSX.Element {
-	const { showWizardEvent, userConfig } = useContext(RootAppStoreContext)
+// Dev-only: the versions selectable in the "preview from version" control, plus a fresh-install option
+const DEV_VERSION_OPTIONS: { label: string; value: number }[] = [
+	{ label: 'Fresh install', value: 0 },
+	...WIZARD_VERSIONS,
+]
 
-	const [currentStep, setCurrentStep] = useState(1)
+export const WizardModal = observer(function WizardModal(): React.JSX.Element {
+	const { userConfig, wizardOpen } = useContext(RootAppStoreContext)
+
+	const [currentStep, setCurrentStep] = useState(0)
 	const [startConfig, setStartConfig] = useState<UserConfigModel | null>(null)
 	const [oldConfig, setOldConfig] = useState<UserConfigModel | null>(null)
 	const [newConfig, setNewConfig] = useState<UserConfigModel | null>(null)
 	const [error, setError] = useState<string | null>(null)
-	const [clear, setClear] = useState(true)
+	const [reviewAll, setReviewAll] = useState(false)
+	// Dev-only: override the "from" version to preview the upgrade experience (see the dev control below)
+	const [devFromVersion, setDevFromVersion] = useState<number | undefined>(undefined)
 
-	const defaultGridStart = !!startConfig && startConfig.gridSize.minColumn === 0 && startConfig.gridSize.minRow === 0
-	const allowGridStep = defaultGridStart ? 1 : 0
-	const maxSteps = 8 + allowGridStep
-	const applyStep = maxSteps - 1
+	// The configurable steps available this session. Availability is fixed at the config captured when the
+	// wizard opened, so steps don't appear/disappear as the user edits values mid-flow.
+	const availableSteps = useMemo(
+		() => (startConfig ? WIZARD_CONFIG_STEPS.filter((s) => !s.isAvailable || s.isAvailable(startConfig)) : []),
+		[startConfig]
+	)
+
+	// The version the user last completed the wizard at; 0 for a fresh install. Determines the short upgrade flow.
+	const prevVersion = devFromVersion ?? startConfig?.setup_wizard ?? 0
+	const isUpgrade = prevVersion > 0
+
+	const newSteps = useMemo(
+		() => availableSteps.filter((s) => s.revisedInVersion > prevVersion),
+		[availableSteps, prevVersion]
+	)
+
+	// Upgrading users see only the steps that changed since they last ran the wizard. Fresh installs, and anyone
+	// who chooses "review all", see every step. If nothing is new (e.g. dev preview of the current version), fall
+	// back to the full flow rather than an empty wizard.
+	const showAllSteps = reviewAll || newSteps.length === 0
+	const configurableSteps = showAllSteps ? availableSteps : newSteps
+
+	// The wizard is a flat sequence: [Begin, ...configurableSteps, Apply, Finish]. `currentStep` indexes into it.
+	const beginStepIndex = 0
+	const applyStepIndex = configurableSteps.length + 1
+	const finishStepIndex = configurableSteps.length + 2
+
+	// When there's nothing to apply, the review step is pointless, so fold the finish step into it: show the
+	// finish content there and turn the Apply button into Finish (skipping the separate finish step).
+	const reviewChanges = useMemo(
+		() => (oldConfig && newConfig ? getWizardChanges(oldConfig, newConfig) : []),
+		[oldConfig, newConfig]
+	)
+	const hasReviewChanges = reviewChanges.length > 0
 
 	const getConfig = useCallback(() => {
 		if (!userConfig.properties) {
@@ -49,42 +85,39 @@ export function WizardModal(): React.JSX.Element {
 		setNewConfig(config)
 	}, [userConfig])
 
-	const [show, setShow] = useState(false)
-	const doClose = useCallback(() => setShow(false), [])
+	const show = wizardOpen.get()
+
+	// Only true once the wizard has genuinely been completed (changes applied successfully, or there were none).
+	// Closing before this point must not record `setup_wizard`, or a failed save would permanently suppress the wizard.
+	const completedRef = useRef(false)
+
+	const doClose = useCallback(() => wizardOpen.set(false), [wizardOpen])
+	const doFinish = useCallback(() => {
+		completedRef.current = true
+		doClose()
+	}, [doClose])
 
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 	const setConfigKeysMutation = useMutationExt(trpc.userConfig.setConfigKeys.mutationOptions())
 
 	const onOpenChangeComplete = useCallback(
 		(open: boolean) => {
-			if (!open) {
+			if (!open && completedRef.current) {
 				setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
-				setClear(true)
 			}
 		},
 		[setConfigKeyMutation]
 	)
 
 	const doNextStep = useCallback(() => {
-		setCurrentStep((currentStep) => {
-			// Make sure step is set to something reasonable
-			if (currentStep >= maxSteps - 1) {
-				return maxSteps
-			} else {
-				return currentStep + 1
-			}
-		})
-	}, [maxSteps])
+		setCurrentStep((currentStep) => Math.min(currentStep + 1, finishStepIndex))
+	}, [finishStepIndex])
 
 	const doPrevStep = useCallback(() => {
-		setCurrentStep((currentStep) => {
-			if (currentStep <= 1) {
-				return 1
-			} else {
-				return currentStep - 1
-			}
-		})
-	}, [])
+		setCurrentStep((currentStep) => Math.max(currentStep - 1, beginStepIndex))
+	}, [beginStepIndex])
+
+	const doJumpToStep = useCallback((index: number) => setCurrentStep(index), [])
 
 	const doSave = useCallback(
 		(e: React.FormEvent) => {
@@ -101,11 +134,21 @@ export function WizardModal(): React.JSX.Element {
 				}
 			}
 
-			setConfigKeysMutation.mutate({ values: saveConfig })
-
-			setOldConfig(newConfig)
-
-			doNextStep()
+			// Only advance to the finish step (and allow the wizard to be marked complete) once the write succeeds.
+			// Otherwise a failed save could finish the wizard and suppress it permanently without persisting anything.
+			setConfigKeysMutation.mutate(
+				{ values: saveConfig },
+				{
+					onSuccess: () => {
+						setError(null)
+						setOldConfig(newConfig)
+						doNextStep()
+					},
+					onError: (e) => {
+						setError(`Failed to save settings: ${stringifyError(e)}`)
+					},
+				}
+			)
 		},
 		[setConfigKeysMutation, newConfig, oldConfig, doNextStep]
 	)
@@ -120,36 +163,39 @@ export function WizardModal(): React.JSX.Element {
 		)
 	}
 
+	// Capture a fresh config snapshot and reset to the first step each time the wizard is opened
 	useEffect(() => {
-		const show = () => {
-			if (clear) {
-				getConfig()
-				setCurrentStep(1)
+		return reaction(
+			() => wizardOpen.get(),
+			(open) => {
+				if (open) {
+					getConfig()
+					setCurrentStep(0)
+					setReviewAll(false)
+					completedRef.current = false
+				}
 			}
-			setShow(true)
-			setClear(false)
-		}
-
-		showWizardEvent.addEventListener('show', show)
-		return () => {
-			showWizardEvent.removeEventListener('show', show)
-		}
-	}, [showWizardEvent, clear, getConfig])
+		)
+	}, [wizardOpen, getConfig])
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
 	let nextButton
 	switch (currentStep) {
-		case applyStep:
-			nextButton = (
+		case applyStepIndex:
+			nextButton = hasReviewChanges ? (
 				<Button ref={buttonRef} color="primary" onClick={doSave}>
 					Apply
 				</Button>
+			) : (
+				<Button ref={buttonRef} color="primary" onClick={doFinish}>
+					Finish
+				</Button>
 			)
 			break
-		case maxSteps:
+		case finishStepIndex:
 			nextButton = (
-				<Button ref={buttonRef} color="primary" onClick={doClose}>
+				<Button ref={buttonRef} color="primary" onClick={doFinish}>
 					Finish
 				</Button>
 			)
@@ -162,78 +208,119 @@ export function WizardModal(): React.JSX.Element {
 			)
 	}
 
+	// One stepper entry per configurable step, plus the review (Apply) step. When reviewing everything as an
+	// upgrader, badge the steps that are actually new/changed since the previous version.
+	const stepperItems: StepSelectorItem[] = [
+		...configurableSteps.map((step, i) => ({
+			index: i + 1,
+			title: step.title,
+			isNew: isUpgrade && step.revisedInVersion > prevVersion,
+		})),
+		{ index: applyStepIndex, title: 'Review' },
+	]
+	// Hide the stepper only on the dedicated finish screen; the merged review/finish step keeps it
+	const showStepper = currentStep !== finishStepIndex
+
+	// The configurable step (if any) active for the current index
+	const activeConfigStep =
+		currentStep >= 1 && currentStep <= configurableSteps.length ? configurableSteps[currentStep - 1] : undefined
+
+	// On the post-applied finish step, "Previous" would step back over already-applied changes, so offer a
+	// Restart instead which returns to the beginning of the wizard.
+	const previousButton =
+		currentStep === finishStepIndex ? (
+			<Button color="secondary" onClick={() => doJumpToStep(beginStepIndex)}>
+				Start over
+			</Button>
+		) : (
+			<Button color="secondary" disabled={currentStep === beginStepIndex} onClick={doPrevStep}>
+				Previous
+			</Button>
+		)
+
 	return (
-		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Portal>
-				<Modal.Backdrop />
-				<Modal.Viewport>
-					<Modal.Popup initialFocus={buttonRef}>
-						<Modal.Header closeButton>
-							<Modal.Title>
-								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
-								Welcome to Companion
-							</Modal.Title>
-						</Modal.Header>
-						<Form onSubmit={doSave} className="flex-form">
-							<Modal.Body>
-								{error ? <StaticAlert color="danger">{error}</StaticAlert> : ''}
-								{currentStep === 1 && newConfig && !error ? <BeginStep allowGrid={allowGridStep} /> : ''}
-								{currentStep === 2 && newConfig && !error ? (
-									<SurfacesStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 3 && allowGridStep === 1 && newConfig && !error ? (
-									<GridStep
-										rows={newConfig.gridSize.maxRow + 1}
-										columns={newConfig.gridSize.maxColumn + 1}
-										setValue={setValue}
-									/>
-								) : (
-									''
-								)}
-								{currentStep === 3 + allowGridStep && newConfig && !error ? (
-									<ServicesStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 4 + allowGridStep && newConfig && !error ? (
-									<DataCollectionStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 5 + allowGridStep && newConfig && !error ? (
-									<PasswordStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === 6 + allowGridStep && newConfig && !error ? (
-									<TimezoneStep config={newConfig} setValue={setValue} />
-								) : (
-									''
-								)}
-								{currentStep === applyStep && newConfig && oldConfig && !error ? (
-									<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
-								) : (
-									''
-								)}
-								{currentStep === maxSteps && newConfig && startConfig && !error ? (
-									<FinishStep oldConfig={startConfig} newConfig={newConfig} />
-								) : (
-									''
-								)}
-							</Modal.Body>
-							<Modal.Footer>
-								{currentStep <= applyStep && <Modal.Close>Cancel</Modal.Close>}
-								<Button color="secondary" disabled={currentStep === 1} onClick={doPrevStep}>
-									Previous
-								</Button>
-								{nextButton}
-							</Modal.Footer>
-						</Form>
-					</Modal.Popup>
-				</Modal.Viewport>
-			</Modal.Portal>
-		</Modal.Root>
+		<>
+			{import.meta.env.DEV && show && (
+				<div className="wizard-dev-controls">
+					<label>
+						🛠 Preview from version:{' '}
+						<select
+							value={devFromVersion ?? ''}
+							onChange={(e) => {
+								setDevFromVersion(e.target.value === '' ? undefined : Number(e.target.value))
+								setReviewAll(false)
+								setCurrentStep(0)
+							}}
+						>
+							<option value="">Use real config ({startConfig?.setup_wizard ?? '?'})</option>
+							{DEV_VERSION_OPTIONS.map((opt) => (
+								<option key={opt.value} value={opt.value}>
+									{opt.label} ({opt.value})
+								</option>
+							))}
+						</select>
+					</label>
+				</div>
+			)}
+			<Modal.Root
+				open={show}
+				onOpenChange={(open) => wizardOpen.set(open)}
+				onOpenChangeComplete={onOpenChangeComplete}
+				disableDismiss
+			>
+				<Modal.Portal>
+					<Modal.Backdrop />
+					<Modal.Viewport>
+						<Modal.Popup initialFocus={buttonRef} size="lg" scrollable className="modal-wizard">
+							<Modal.Header closeButton>
+								<Modal.Title>
+									<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
+									Welcome to Companion
+								</Modal.Title>
+							</Modal.Header>
+							{showStepper && stepperItems.length > 0 && (
+								<StepSelector items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />
+							)}
+							<Form onSubmit={doSave} className="flex-form">
+								<Modal.Body>
+									{error ? <StaticAlert color="danger">{error}</StaticAlert> : ''}
+									{currentStep === beginStepIndex && newConfig && !error ? (
+										<BeginStep
+											prevVersion={prevVersion}
+											newStepTitles={newSteps.map((step) => step.title)}
+											showAll={showAllSteps}
+											onReviewAll={() => setReviewAll(true)}
+										/>
+									) : (
+										''
+									)}
+									{activeConfigStep && newConfig && !error
+										? activeConfigStep.render({ config: newConfig, setValue })
+										: ''}
+									{currentStep === applyStepIndex && newConfig && oldConfig && startConfig && !error ? (
+										hasReviewChanges ? (
+											<ApplyStep oldConfig={oldConfig} newConfig={newConfig} />
+										) : (
+											<FinishStep oldConfig={startConfig} newConfig={newConfig} />
+										)
+									) : (
+										''
+									)}
+									{currentStep === finishStepIndex && newConfig && startConfig && !error ? (
+										<FinishStep oldConfig={startConfig} newConfig={newConfig} />
+									) : (
+										''
+									)}
+								</Modal.Body>
+								<Modal.Footer>
+									{previousButton}
+									{nextButton}
+								</Modal.Footer>
+							</Form>
+						</Modal.Popup>
+					</Modal.Viewport>
+				</Modal.Portal>
+			</Modal.Root>
+		</>
 	)
-}
+})
