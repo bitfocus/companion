@@ -48,7 +48,7 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		try {
 			this.#bonjour = new Bonjour()
 
-			const name = String(this.userconfig.getKey('installName') || '').trim() || os.hostname() || 'Companion'
+			const name = String(this.userconfig.getKey('installName') || '').trim() || `Companion (${os.hostname()})`
 			const txt = {
 				id: this.#appInfo.machineId,
 				version: this.#appInfo.appVersion,
