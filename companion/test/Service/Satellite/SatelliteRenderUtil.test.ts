@@ -5,10 +5,9 @@ import type { SatelliteControlStylePreset } from '../../../lib/Service/Satellite
 
 function makeImage(
 	style: ImageResultProcessedStyle | null,
-	drawNative = vi.fn().mockResolvedValue(new Uint8Array(0)),
-	drawDataUrl = vi.fn().mockResolvedValue('')
+	drawNative = vi.fn().mockResolvedValue(new Uint8Array(0))
 ): ImageResult {
-	return new ImageResult(style, drawNative, drawDataUrl)
+	return new ImageResult(style, drawNative)
 }
 
 describe('buildSatelliteStyleArgs', () => {

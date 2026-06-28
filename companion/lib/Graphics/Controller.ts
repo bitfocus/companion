@@ -623,29 +623,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					format,
 					CRASHED_WORKER_RETRY_COUNT
 				),
-			async (width, height, rotation) =>
-				this.#executePoolDrawButtonImageDataUrl(
-					drawStyle,
-					{ width, height, oversampling: computeOversampling(width, height) },
-					rotation,
-					CRASHED_WORKER_RETRY_COUNT
-				),
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-	}
-
-	/**
-	 * Draw a button image in the worker pool
-	 * @returns Image render object
-	 */
-	async #executePoolDrawButtonImageDataUrl(
-		drawStyle: RendererDrawStyle,
-		resolution: { width: number; height: number; oversampling: number },
-		rotation: SurfaceRotation | null,
-		remainingAttempts: number
-	): Promise<string> {
-		return this.#poolExec('drawButtonImageDataUrl', [drawStyle, resolution, rotation], remainingAttempts)
 	}
 
 	/**

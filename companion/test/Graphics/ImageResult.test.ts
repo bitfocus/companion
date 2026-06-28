@@ -20,11 +20,10 @@ function makeRgbBuffer(width: number, height: number): Uint8Array {
  */
 function createImage(
 	style: ImageResultProcessedStyle | null = null,
-	drawNative = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
-	drawDataUrl = vi.fn().mockResolvedValue('data:image/png;base64,deadbeef')
+	drawNative = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]))
 ) {
-	const image = new ImageResult(style, drawNative, drawDataUrl)
-	return { image, drawNative, drawDataUrl }
+	const image = new ImageResult(style, drawNative)
+	return { image, drawNative }
 }
 
 describe('ImageResult', () => {
@@ -54,7 +53,7 @@ describe('ImageResult', () => {
 
 		test('drawElements is stored when provided', () => {
 			const drawElements: never[] = []
-			const image = new ImageResult(null, vi.fn(), vi.fn(), drawElements)
+			const image = new ImageResult(null, vi.fn(), drawElements)
 			expect(image.drawElements).toBe(drawElements)
 		})
 
@@ -66,7 +65,7 @@ describe('ImageResult', () => {
 
 		test('referencedLocations is stored when provided', () => {
 			const locations = new Set(['1/0/0', '2/1/3'])
-			const image = new ImageResult(null, vi.fn(), vi.fn(), null, locations)
+			const image = new ImageResult(null, vi.fn(), null, locations)
 			expect(image.referencedLocations).toBe(locations)
 		})
 	})
@@ -219,39 +218,6 @@ describe('ImageResult', () => {
 			// The empty result is cached too, so the render is not repeated
 			expect(second).toBe('')
 			expect(drawNative).toHaveBeenCalledTimes(1)
-		})
-	})
-
-	describe('drawDataUrl', () => {
-		test('returns the value from the underlying data url fn', async () => {
-			const drawDataUrl = vi.fn().mockResolvedValue('data:image/png;base64,abc123')
-			const { image } = createImage(null, undefined, drawDataUrl)
-
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- exercising the legacy path until it is unified
-			expect(await image.drawDataUrl()).toBe('data:image/png;base64,abc123')
-		})
-
-		test('requests the backwards-compatible 72x72 unrotated size', async () => {
-			const drawDataUrl = vi.fn().mockResolvedValue('data:image/png;base64,abc123')
-			const { image } = createImage(null, undefined, drawDataUrl)
-
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- exercising the legacy path until it is unified
-			await image.drawDataUrl()
-
-			expect(drawDataUrl).toHaveBeenCalledWith(72, 72, null)
-		})
-
-		test('is lazily memoized across repeated calls', async () => {
-			const drawDataUrl = vi.fn().mockResolvedValue('data:image/png;base64,abc123')
-			const { image } = createImage(null, undefined, drawDataUrl)
-
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- exercising the legacy path until it is unified
-			const first = await image.drawDataUrl()
-			// eslint-disable-next-line @typescript-eslint/no-deprecated -- exercising the legacy path until it is unified
-			const second = await image.drawDataUrl()
-
-			expect(second).toBe(first)
-			expect(drawDataUrl).toHaveBeenCalledTimes(1)
 		})
 	})
 })

@@ -35,6 +35,7 @@ import { upgradeImport } from '../Data/Upgrade.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
+import { PREVIEW_RENDER_SIZE } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
@@ -401,7 +402,7 @@ export class ImportExportController {
 
 					const res = await this.#graphicsController.drawPreview(drawType, elements)
 					if (!res?.style) return null
-					return await res.drawDataUrl()
+					return await res.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 				}),
 
 			importSinglePage: publicProcedure

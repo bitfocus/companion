@@ -116,35 +116,19 @@ export class GraphicsRenderer {
 		// the full oversampling: cap at 1 when there are no edges to antialias, 2 for the topbar text.
 		const maxOversampling = showTopbar ? 2 : 1
 
-		return new ImageResult(
-			null,
-			async (width, height, rotation, format) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(
-					dimensions[0],
-					dimensions[1],
-					computeOversampling(dimensions[0], dimensions[1], maxOversampling),
-					async (img) => {
-						GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
+		return new ImageResult(null, async (width, height, rotation, format) => {
+			const dimensions = rotateResolution(width, height, rotation)
+			return GraphicsRenderer.#getCachedImage(
+				dimensions[0],
+				dimensions[1],
+				computeOversampling(dimensions[0], dimensions[1], maxOversampling),
+				async (img) => {
+					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
 
-						return this.#RotateAndConvertImage(img, width, height, rotation, format)
-					}
-				)
-			},
-			async (width, height, rotation) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(
-					dimensions[0],
-					dimensions[1],
-					computeOversampling(dimensions[0], dimensions[1], maxOversampling),
-					(img) => {
-						GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
-
-						return img.toDataURLSync()
-					}
-				)
-			}
-		)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				}
+			)
+		})
 	}
 
 	static #drawBlankImage(img: Image, showTopbar: boolean, location: ControlLocation | null) {
@@ -204,26 +188,6 @@ export class GraphicsRenderer {
 		)
 
 		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
-	}
-
-	/**
-	 * Draw the image for a button
-	 */
-	static async drawButtonImageDataUrl(
-		drawStyle: RendererDrawStyle,
-		resolution: { width: number; height: number; oversampling: number },
-		rotation: SurfaceRotation | null
-	): Promise<string> {
-		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
-
-		return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], resolution.oversampling, async (img) => {
-			await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {
-				x: 0,
-				y: 0,
-			})
-
-			return img.toDataURLSync()
-		})
 	}
 
 	/**
@@ -301,41 +265,34 @@ export class GraphicsRenderer {
 	 * @param height Height of the image
 	 */
 	static drawLockIcon(): ImageResult {
-		return new ImageResult(
-			LOCK_ICON_STYLE,
-			async (width, height, rotation, format) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(
-					dimensions[0],
-					dimensions[1],
-					computeOversampling(dimensions[0], dimensions[1]),
-					async (img) => {
-						// Fill with black background
-						img.fillColor('rgb(0, 0, 0)')
+		return new ImageResult(LOCK_ICON_STYLE, async (width, height, rotation, format) => {
+			const dimensions = rotateResolution(width, height, rotation)
+			return GraphicsRenderer.#getCachedImage(
+				dimensions[0],
+				dimensions[1],
+				computeOversampling(dimensions[0], dimensions[1]),
+				async (img) => {
+					// Fill with black background
+					img.fillColor('rgb(0, 0, 0)')
 
-						// Draw a centered padlock unicode character in light grey
-						img.drawAlignedText(
-							0,
-							0,
-							dimensions[0],
-							dimensions[1],
-							'🔒',
-							'rgb(200, 200, 200)',
-							Math.floor(dimensions[1] * 0.6),
-							false,
-							'center',
-							'center'
-						)
+					// Draw a centered padlock unicode character in light grey
+					img.drawAlignedText(
+						0,
+						0,
+						dimensions[0],
+						dimensions[1],
+						'🔒',
+						'rgb(200, 200, 200)',
+						Math.floor(dimensions[1] * 0.6),
+						false,
+						'center',
+						'center'
+					)
 
-						return this.#RotateAndConvertImage(img, width, height, rotation, format)
-					}
-				)
-			},
-			async () => {
-				// data-url of this image is never used
-				return ''
-			}
-		)
+					return this.#RotateAndConvertImage(img, width, height, rotation, format)
+				}
+			)
+		})
 	}
 
 	/**
