@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
-import { WizardStepper, type WizardStepperItem } from './WizardStepper'
+import { StepSelector, type StepSelectorItem } from './StepSelector'
 
-const FULL_FLOW: WizardStepperItem[] = [
+const FULL_FLOW: StepSelectorItem[] = [
 	{ index: 1, title: 'Surfaces' },
 	{ index: 2, title: 'Button Grid' },
 	{ index: 3, title: 'Services' },
@@ -12,14 +12,14 @@ const FULL_FLOW: WizardStepperItem[] = [
 	{ index: 7, title: 'Review' },
 ]
 
-const UPGRADE_FLOW: WizardStepperItem[] = [
+const UPGRADE_FLOW: StepSelectorItem[] = [
 	{ index: 1, title: 'Usage Stats', isNew: true },
 	{ index: 2, title: 'Timezone', isNew: true },
 	{ index: 3, title: 'Review' },
 ]
 
 const meta = {
-	component: WizardStepper,
+	component: StepSelector,
 	decorators: [
 		(Story) => (
 			<div style={{ padding: 24, maxWidth: 760, background: 'var(--cui-modal-bg, #fff)' }}>
@@ -27,7 +27,7 @@ const meta = {
 			</div>
 		),
 	],
-} satisfies Meta<typeof WizardStepper>
+} satisfies Meta<typeof StepSelector>
 
 export default meta
 type Story = StoryObj<typeof meta>
@@ -50,7 +50,7 @@ export const ShortUpgradeFlow: Story = {
 
 function InteractiveStory() {
 	const [current, setCurrent] = useState(1)
-	return <WizardStepper items={FULL_FLOW} currentIndex={current} onJump={setCurrent} />
+	return <StepSelector items={FULL_FLOW} currentIndex={current} onJump={setCurrent} />
 }
 
 export const Interactive: Story = {

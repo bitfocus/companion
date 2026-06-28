@@ -1,0 +1,123 @@
+@use '../variables' as *;
+
+// ─── Step selector ───────────────────────────────────────────────────────────
+//
+// Clickable step indicator: a row of numbered markers joined by connector lines, with completed steps
+// showing a tick. Used along the top of multi-step flows such as the setup wizard.
+
+.step-selector {
+	display: flex;
+	align-items: flex-start;
+	margin: 0;
+	padding: 0.75rem 1rem;
+	list-style: none;
+	border-bottom: var(--modal2-header-border-width) solid var(--modal2-header-border-color);
+
+	.step-selector-step {
+		position: relative;
+		flex: 1 1 0;
+		min-width: 0;
+		text-align: center;
+
+		// Connector line between markers
+		&:not(:first-child)::before {
+			content: '';
+			position: absolute;
+			top: 0.85rem;
+			right: 50%;
+			left: -50%;
+			height: 2px;
+			background-color: var(--cui-border-color, #c4c9d0);
+		}
+
+		&.step-selector-step-complete::before,
+		&.step-selector-step-active::before {
+			background-color: $primary;
+		}
+	}
+
+	.step-selector-button {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		width: 100%;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--cui-secondary-color, #768192);
+		cursor: pointer;
+
+		&:hover .step-selector-marker {
+			border-color: $primary;
+		}
+
+		&:focus-visible {
+			outline: 2px solid $primary;
+			outline-offset: 2px;
+			border-radius: 4px;
+		}
+	}
+
+	.step-selector-marker {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: 50%;
+		border: 2px solid var(--cui-border-color, #c4c9d0);
+		background-color: var(--modal2-bg, #fff);
+		font-size: 0.8rem;
+		font-weight: bold;
+		line-height: 1;
+	}
+
+	.step-selector-label {
+		font-size: 0.8rem;
+		line-height: 1.2;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 100%;
+	}
+
+	.step-selector-badge {
+		display: inline-block;
+		margin-left: 0.35rem;
+		padding: 0.05rem 0.3rem;
+		border-radius: 0.5rem;
+		background-color: $primary;
+		color: #fff;
+		font-size: 0.6rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		vertical-align: middle;
+	}
+
+	// Active step: filled marker + emphasised label
+	.step-selector-step-active {
+		.step-selector-marker {
+			border-color: $primary;
+			background-color: $primary;
+			color: #fff;
+		}
+
+		.step-selector-button {
+			color: var(--cui-body-color);
+		}
+	}
+
+	// Completed steps: filled marker with a tick
+	.step-selector-step-complete {
+		.step-selector-marker {
+			border-color: $primary;
+			color: $primary;
+		}
+
+		.step-selector-button {
+			color: var(--cui-body-color);
+		}
+	}
+}

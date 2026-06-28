@@ -6,6 +6,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal.js'
+import { StepSelector, type StepSelectorItem } from '~/Components/StepSelector.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -14,7 +15,6 @@ import { BeginStep } from './BeginStep.js'
 import { WIZARD_CURRENT_VERSION, WIZARD_VERSIONS } from './Constants.js'
 import { FinishStep } from './FinishStep.js'
 import { WIZARD_CONFIG_STEPS } from './Steps.js'
-import { WizardStepper, type WizardStepperItem } from './WizardStepper.js'
 
 // Dev-only: the versions selectable in the "preview from version" control, plus a fresh-install option
 const DEV_VERSION_OPTIONS: { label: string; value: number }[] = [
@@ -189,7 +189,7 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 
 	// One stepper entry per configurable step, plus the review (Apply) step. When reviewing everything as an
 	// upgrader, badge the steps that are actually new/changed since the previous version.
-	const stepperItems: WizardStepperItem[] = [
+	const stepperItems: StepSelectorItem[] = [
 		...configurableSteps.map((step, i) => ({
 			index: i + 1,
 			title: step.title,
@@ -258,7 +258,7 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 								</Modal.Title>
 							</Modal.Header>
 							{showStepper && stepperItems.length > 0 && (
-								<WizardStepper items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />
+								<StepSelector items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />
 							)}
 							<Form onSubmit={doSave} className="flex-form">
 								<Modal.Body>
