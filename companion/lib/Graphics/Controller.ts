@@ -45,7 +45,7 @@ import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { ImageResult } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
-import { GraphicsRenderer } from './Renderer.js'
+import { computeOversampling, GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -618,7 +618,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
-					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
 					CRASHED_WORKER_RETRY_COUNT
@@ -626,7 +626,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			async (width, height, rotation) =>
 				this.#executePoolDrawButtonImageDataUrl(
 					drawStyle,
-					{ width, height, oversampling: 4 }, // Default values
+					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					CRASHED_WORKER_RETRY_COUNT
 				),
