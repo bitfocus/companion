@@ -184,7 +184,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 							value: {
 								...valueObject,
 								// Backwards compatibility fixup, ensure the imageBuffer is a string
-								imageBuffer: uint8ArrayToBuffer(imageBuffer).toString('base64'),
+								imageBuffer: imageBuffer.toBase64(),
 							},
 						}
 					} else {
@@ -219,13 +219,13 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 					encodedArgs.push({ type: 'f', value: arg })
 				} else if (arg instanceof Uint8Array) {
 					// Future: use native toBase64 when available
-					encodedArgs.push({ type: 'b', value: uint8ArrayToBuffer(arg).toString('base64') })
+					encodedArgs.push({ type: 'b', value: arg.toBase64() })
 				} else if (arg && typeof arg === 'object') {
 					if (arg.type === 's' || arg.type === 'f' || arg.type === 'i') {
 						encodedArgs.push(arg)
 					} else if (arg.type === 'b' && arg.value instanceof Uint8Array) {
 						// Future: use native toBase64 when available
-						encodedArgs.push({ type: 'b', value: uint8ArrayToBuffer(arg.value).toString('base64') })
+						encodedArgs.push({ type: 'b', value: arg.value.toBase64() })
 					} else {
 						throw new Error(`Unsupported OSC argument type: ${JSON.stringify(arg)}`)
 					}
@@ -283,11 +283,4 @@ function shouldShowInvertForFeedback(options: SomeCompanionFeedbackInputField[])
 
 	// Nothing looked to be a user defined invert field
 	return true
-}
-
-/**
- * Note: explicitly copied away from Resources/Util.ts to avoid circular dependencies
- */
-function uint8ArrayToBuffer(arr: Uint8Array | Uint8ClampedArray): Buffer {
-	return Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength)
 }

@@ -108,7 +108,7 @@ export class MultipartUploader<TRes, TCompleteData> {
 					})
 				)
 				.mutation(({ input }) => {
-					const buffer = Buffer.from(input.data, 'base64')
+					const buffer = Uint8Array.fromBase64(input.data)
 					this.#logger.info(`Uploading chunk ${input.sessionId} (@${input.offset} = ${buffer.length} bytes)`)
 
 					const progress = this.addChunk(input.sessionId, input.offset, buffer)

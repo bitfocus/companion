@@ -709,7 +709,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketMessage', {
 					handleId,
 					portNumber: msg.portNumber,
-					message: message.toString('base64'),
+					message: message.toBase64(),
 					source: rInfo,
 				})
 			},

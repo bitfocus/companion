@@ -213,7 +213,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					if (buffer === undefined || buffer.length == 0) {
 						this.#logger.warn('buffer has invalid size')
 					} else {
-						drawProps.image = Buffer.from(buffer).toString('base64') // TODO - avoid buffer wrap
+						drawProps.image = buffer.toBase64()
 					}
 				}
 

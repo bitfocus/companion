@@ -1,7 +1,7 @@
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
-import { parseColorToNumber, uint8ArrayToBuffer } from '../../Resources/Util.js'
+import { parseColorToNumber } from '../../Resources/Util.js'
 import type { SatelliteMessageArgs } from './SatelliteApi.js'
 import type { SatelliteControlStylePreset } from './SatelliteSurfaceManifestSchema.js'
 
@@ -54,7 +54,7 @@ export async function buildSatelliteStyleArgs(
 		if (bitmapFormat === 'rgb') {
 			const buffer = await image.drawNative(style.bitmap.w, style.bitmap.h, rotation, 'rgb')
 			if (buffer.length > 0) {
-				params['BITMAP'] = uint8ArrayToBuffer(buffer).toString('base64')
+				params['BITMAP'] = buffer.toBase64()
 			}
 		} else {
 			// Compressed formats come back as a self-describing data url (`data:image/webp;base64,...`)
