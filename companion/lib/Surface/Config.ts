@@ -8,7 +8,6 @@ export const PanelDefaults: SurfacePanelConfig = {
 	rotation: 0,
 
 	// companion owned defaults
-	never_lock: false,
 	xOffset: 0,
 	yOffset: 0,
 	groupId: null,

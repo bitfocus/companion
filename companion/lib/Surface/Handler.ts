@@ -156,11 +156,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		// Setup logger to use the name
 		this.#recreateLogger()
 
-		if (this.#surfaceConfig.config.never_lock) {
-			// if device can't be locked, then make sure it isnt already locked
-			this.#isSurfaceLocked = false
-		}
-
 		this.#graphics.on('button_drawn', this.#onButtonDrawn)
 
 		this.panel.on('click', this.#onDeviceClick.bind(this))
@@ -304,9 +299,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 * Set the surface as locked
 	 */
 	setLocked(locked: boolean, skipDraw = false): boolean {
-		// skip if surface can't be locked
-		if (this.#surfaceConfig.config.never_lock && locked) return false
-
 		if (this.#isSurfaceLocked === !!locked) return false
 
 		this.#isSurfaceLocked = !!locked
@@ -623,11 +615,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		)
 			redraw = true
 		if (newconfig.rotation != this.#surfaceConfig.config.rotation) redraw = true
-
-		if (newconfig.never_lock && newconfig.never_lock != this.#surfaceConfig.config.never_lock) {
-			this.setLocked(false, true)
-			redraw = true
-		}
 
 		// if this is an import, the config file may have been missing fields:
 		//  (note: import does not call `createOrSanitizeSurfaceHandlerConfig`, which might be a better option?)

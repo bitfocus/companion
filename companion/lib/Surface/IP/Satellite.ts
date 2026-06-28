@@ -26,12 +26,7 @@ import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from '../CommonConfigFields.js'
+import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
 	DrawButtonItem,
@@ -87,7 +82,7 @@ function generateConfigFields(
 	if (deviceInfo.supportsBrightness) {
 		fields.push(BrightnessConfigField)
 	}
-	fields.push(RotationConfigField, ...LockConfigFields)
+	fields.push(RotationConfigField)
 
 	if (deviceInfo.canChangePage) {
 		fields.push({

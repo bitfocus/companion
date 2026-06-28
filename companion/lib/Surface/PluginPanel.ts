@@ -21,12 +21,7 @@ import type {
 import LogController, { type Logger } from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColorToNumber } from '../Resources/Util.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from './CommonConfigFields.js'
+import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from './CommonConfigFields.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -59,7 +54,7 @@ function generateConfigFields(
 
 	// If there are any controls, add rotation and lock config
 	if (gridSize.columns > 0 && gridSize.rows > 0) {
-		fields.push(RotationConfigField, ...LockConfigFields)
+		fields.push(RotationConfigField)
 	}
 
 	if (surfaceInfo.canChangePage) {
