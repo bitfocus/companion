@@ -65,6 +65,10 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 			this.logger.info('Advertising Companion satellite ports via mDNS')
 		} catch (e) {
 			this.logger.error(`Could not launch: ${stringifyError(e)}`)
+
+			// Tear down the partially-initialized instance so a later enable cycle can retry,
+			// rather than leaving #bonjour populated with currentState still false.
+			this.close()
 		}
 	}
 
