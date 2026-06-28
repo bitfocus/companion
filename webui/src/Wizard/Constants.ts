@@ -18,3 +18,21 @@ export const WIZARD_VERSIONS: { label: string; value: number }[] = [
 ]
 
 export const WIZARD_CURRENT_VERSION = WIZARD_VERSIONS[WIZARD_VERSIONS.length - 1].value
+
+/** True if `value` is a wizard version that Companion could legitimately have stored. */
+export function isKnownWizardVersion(value: unknown): value is number {
+	return typeof value === 'number' && WIZARD_VERSIONS.some((v) => v.value === value)
+}
+
+/**
+ * Decide whether the setup wizard should auto-open based on the stored `setup_wizard` value:
+ * - `undefined`: config not loaded yet, do nothing
+ * - falsey (`0`/`null`): a fresh install, show the wizard
+ * - a known prior version below the current one: an upgrade, show the wizard
+ * - anything else (a corrupt/unexpected value): leave it for a manual re-run, don't pester
+ */
+export function shouldAutoOpenWizard(value: unknown): boolean {
+	if (value === undefined) return false
+	if (!value) return true
+	return isKnownWizardVersion(value) && value < WIZARD_CURRENT_VERSION
+}

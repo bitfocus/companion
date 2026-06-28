@@ -8,7 +8,7 @@ import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { WIZARD_CURRENT_VERSION } from '~/Wizard/Constants.js'
+import { shouldAutoOpenWizard } from '~/Wizard/Constants.js'
 import { MyErrorBoundary } from '../Resources/Error.js'
 import { DocsContent } from './DocsContent.js'
 
@@ -35,7 +35,7 @@ export const WhatsNewModal = observer(
 		// Wait for the config to load first, so we know whether the wizard is pending before deciding.
 		const setupWizardVersion = userConfig.properties?.setup_wizard
 		const configLoaded = setupWizardVersion !== undefined
-		const isWizardPending = configLoaded && setupWizardVersion < WIZARD_CURRENT_VERSION
+		const isWizardPending = configLoaded && shouldAutoOpenWizard(setupWizardVersion)
 		const isWizardActive = wizardOpen.get()
 
 		// Load pages manifest using proper React Query

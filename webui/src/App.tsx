@@ -23,7 +23,7 @@ import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
 import { trpc } from './Resources/TRPC.js'
-import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
+import { shouldAutoOpenWizard } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
 
 export default function App(): React.JSX.Element {
@@ -150,7 +150,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 	const setup_wizard = userConfig.properties?.setup_wizard
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-		if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
+		if (shouldAutoOpenWizard(setup_wizard)) {
 			wizardOpen.set(true)
 		}
 	}, [setup_wizard, wizardOpen])
@@ -160,7 +160,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 	useEffect(() => {
 		if (admin_lockout) {
 			setUnlocked(true)
-			if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
+			if (shouldAutoOpenWizard(setup_wizard)) {
 				wizardOpen.set(true)
 			}
 		}

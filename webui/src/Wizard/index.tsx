@@ -13,7 +13,7 @@ import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ApplyStep, getWizardChanges } from './ApplyStep.js'
 import { BeginStep } from './BeginStep.js'
-import { WIZARD_CURRENT_VERSION, WIZARD_VERSIONS } from './Constants.js'
+import { isKnownWizardVersion, WIZARD_CURRENT_VERSION, WIZARD_VERSIONS } from './Constants.js'
 import { FinishStep } from './FinishStep.js'
 import { WIZARD_CONFIG_STEPS } from './Steps.js'
 
@@ -42,8 +42,17 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 		[startConfig]
 	)
 
-	// The version the user last completed the wizard at; 0 for a fresh install. Determines the short upgrade flow.
-	const prevVersion = devFromVersion ?? startConfig?.setup_wizard ?? 0
+	// The version the user last completed the wizard at, used to decide the flow:
+	// - falsey (0/null/undefined) → a fresh install, walk through everything
+	// - a known prior version → the short upgrade flow showing what's changed
+	// - anything else (a corrupt/unexpected value, or a manual re-run at the current version) → review everything,
+	//   so we never present an empty wizard for a value we don't recognise.
+	const rawPrevVersion = devFromVersion ?? startConfig?.setup_wizard
+	const prevVersion = !rawPrevVersion
+		? 0
+		: isKnownWizardVersion(rawPrevVersion)
+			? rawPrevVersion
+			: WIZARD_CURRENT_VERSION
 	const isUpgrade = prevVersion > 0
 
 	const newSteps = useMemo(
@@ -87,26 +96,22 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 
 	const show = wizardOpen.get()
 
-	// Only true once the wizard has genuinely been completed (changes applied successfully, or there were none).
-	// Closing before this point must not record `setup_wizard`, or a failed save would permanently suppress the wizard.
-	const completedRef = useRef(false)
-
 	const doClose = useCallback(() => wizardOpen.set(false), [wizardOpen])
-	const doFinish = useCallback(() => {
-		completedRef.current = true
-		doClose()
-	}, [doClose])
+	const doFinish = doClose
 
 	const setConfigKeyMutation = useMutationExt(trpc.userConfig.setConfigKey.mutationOptions())
 	const setConfigKeysMutation = useMutationExt(trpc.userConfig.setConfigKeys.mutationOptions())
 
+	// Closing the wizard - whether by finishing it or dismissing it - records that it has been run, so it isn't
+	// re-shown on every load. Guard on `startConfig` so a modal that never managed to load its config (and would
+	// have shown empty) doesn't suppress the wizard; it should get another chance once the config is available.
 	const onOpenChangeComplete = useCallback(
 		(open: boolean) => {
-			if (!open && completedRef.current) {
+			if (!open && startConfig) {
 				setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
 			}
 		},
-		[setConfigKeyMutation]
+		[setConfigKeyMutation, startConfig]
 	)
 
 	const doNextStep = useCallback(() => {
@@ -163,7 +168,9 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 		)
 	}
 
-	// Capture a fresh config snapshot and reset to the first step each time the wizard is opened
+	// Capture a fresh config snapshot and reset to the first step each time the wizard is opened.
+	// `fireImmediately` matters because the wizard is auto-opened (wizardOpen is set true) before this component
+	// is even mounted, so a change-only reaction would never run and the modal would render empty.
 	useEffect(() => {
 		return reaction(
 			() => wizardOpen.get(),
@@ -172,9 +179,9 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 					getConfig()
 					setCurrentStep(0)
 					setReviewAll(false)
-					completedRef.current = false
 				}
-			}
+			},
+			{ fireImmediately: true }
 		)
 	}, [wizardOpen, getConfig])
 
