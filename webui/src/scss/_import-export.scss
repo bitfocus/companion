@@ -1,3 +1,111 @@
+@use 'variables' as *;
+@use 'sass:color';
+
+// ─── Config selection (Export / Reset modals) ───────────────────────
+//
+// Shared styling for the "choose what to export / reset" lists. Items are grouped into bordered cards with a
+// tonal icon badge per row and an uppercase section title, mirroring the setup wizard's review styling
+// (_wizard.scss) so these flows feel like part of the same product rather than a plain checkbox list.
+
+.config-selection {
+	.config-selection-intro {
+		margin-bottom: 0.75rem;
+		color: var(--cui-secondary-color, #768192);
+	}
+
+	.config-selection-section {
+		margin-bottom: 0.85rem;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	.config-selection-title {
+		margin-bottom: 0.3rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--cui-secondary-color, #768192);
+	}
+
+	.config-selection-list {
+		border: 1px solid var(--cui-border-color, #c4c9d0);
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
+
+	.config-selection-row {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.3rem 0.75rem;
+
+		& + .config-selection-row {
+			border-top: 1px solid var(--cui-border-color-translucent, rgb(0 0 21 / 10%));
+		}
+
+		// Nested items (Include secrets, the surface sub-options) sit indented under their parent, with a
+		// muted grey badge (vs the brand-toned parent badge) so the hierarchy reads at a glance.
+		&.config-selection-row-sub {
+			padding-left: 2.25rem;
+
+			.config-selection-icon {
+				background-color: var(--cui-tertiary-bg, #ebedef);
+				color: var(--cui-secondary-color, #768192);
+			}
+		}
+
+		&.config-selection-row-disabled {
+			.config-selection-icon,
+			.config-selection-label {
+				opacity: 0.5;
+			}
+		}
+	}
+
+	// Single-hue badge: the brand colour at low opacity for the fill, full strength for the glyph. Keeping
+	// both on the same hue avoids the clashing red-on-blue of a generic "primary-subtle" token.
+	.config-selection-icon {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		border-radius: 50%;
+		background-color: color.change($primary, $alpha: 0.12);
+		color: $primary;
+		font-size: 0.72rem;
+	}
+
+	.config-selection-label {
+		flex: 1 1 auto;
+		min-width: 0;
+		margin-bottom: 0;
+		cursor: pointer;
+	}
+
+	// Export-only: output options use the familiar two-column form layout — label on the left, control fills.
+	.export-output {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+
+	.export-output-field {
+		display: grid;
+		grid-template-columns: 7.5rem 1fr;
+		align-items: center;
+		gap: 0.5rem;
+
+		> .form-label2 {
+			margin-bottom: 0;
+		}
+	}
+}
+
 .import-wizard {
 	&.import-full {
 		display: grid;
