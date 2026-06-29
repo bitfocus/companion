@@ -84,6 +84,10 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 	#relevantHidDevices = new Map<number, Set<number>>()
 
+	/** Diagnostics: bytes/messages of drawControls payload sent to the child over IPC, since last report */
+	#ipcDrawBytes = 0
+	#ipcDrawMsgs = 0
+
 	constructor(
 		deps: SurfaceChildHandlerDependencies,
 		monitor: RespawnMonitor,
@@ -142,6 +146,16 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
 			(msg) => {
+				// Diagnostics: tally the bitmap bytes we ship to the child per draw, so the IPC data rate
+				// can be compared against the process memory growth rate.
+				if ((msg as any)?.name === 'drawControls') {
+					const drawProps = (msg as any)?.payload?.drawProps as Array<{ image?: string }> | undefined
+					if (drawProps) {
+						for (const d of drawProps) this.#ipcDrawBytes += d.image?.length ?? 0
+						this.#ipcDrawMsgs++
+					}
+				}
+
 				if (monitor.child) {
 					monitor.child.send(msg)
 				} else {
@@ -150,6 +164,18 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			},
 			5000
 		)
+
+		// Diagnostics: report the IPC draw data rate (drawControls bitmap bytes) periodically
+		const ipcStatsTimer = setInterval(() => {
+			if (this.#ipcDrawMsgs > 0) {
+				this.logger.debug(
+					`ipc drawControls: ${this.#ipcDrawMsgs} msgs / ${Math.round(this.#ipcDrawBytes / 1024)}KB to child in last 30s`
+				)
+			}
+			this.#ipcDrawBytes = 0
+			this.#ipcDrawMsgs = 0
+		}, 30_000)
+		ipcStatsTimer.unref()
 
 		// Attach message handler to receive messages from child process
 		const messageHandler = (msg: any) => {

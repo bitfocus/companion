@@ -13,6 +13,8 @@ import { EventEmitter } from 'node:events'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import v8 from 'node:v8'
+import vm from 'node:vm'
 import type * as imageRs from '@julusian/image-rs'
 import { GlobalFonts } from '@napi-rs/canvas'
 import compressionMiddleware from 'compression'
@@ -421,14 +423,25 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	#startMemoryMonitor(): void {
 		const toMb = (bytes: number) => Math.round(bytes / 1024 / 1024)
 
+		// Diagnostics: a full GC on the MAIN isolate. If forcing it reclaims the growth, the leaked
+		// memory is held by main-thread JS objects that auto-GC isn't freeing fast enough (a pacing
+		// issue, fixable); if it reclaims ~0 while rss keeps climbing, it is a true native leak that
+		// no GC can free (then we trace the malloc).
+		v8.setFlagsFromString('--expose-gc')
+		const forceGc = vm.runInNewContext('gc') as (() => void) | undefined
+
 		let lastTotal = 0
 		let lastDrawCalls = 0
 		let lastDrawRenders = 0
 		let lastImageBuffers = 0
 
 		const timer = setInterval(() => {
+			const rssBeforeGc = process.memoryUsage().rss
+			forceGc?.()
+
 			const mem = process.memoryUsage()
 			const images = getImageResultStats()
+			const reclaimed = toMb(rssBeforeGc - mem.rss)
 
 			// Per-interval deltas: how many ImageResults were created, how many drawNative requests came
 			// in, and how many of those actually rendered (cache miss → worker draw + native allocation).
@@ -442,8 +455,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			lastImageBuffers = this.#drawImageBuffersCalls
 
 			this.#logger.debug(
-				`memory rss=${toMb(mem.rss)}MB heapUsed=${toMb(mem.heapUsed)}MB external=${toMb(mem.external)}MB ` +
-					`arrayBuffers=${toMb(mem.arrayBuffers)}MB | renderLRU=${this.#renderLRUCache.size}/${this.#renderLRUCache.maxSize} ` +
+				`memory rss=${toMb(mem.rss)}MB (mainGC reclaimed ${reclaimed}MB) heapUsed=${toMb(mem.heapUsed)}MB ` +
+					`external=${toMb(mem.external)}MB arrayBuffers=${toMb(mem.arrayBuffers)}MB | ` +
+					`renderLRU=${this.#renderLRUCache.size}/${this.#renderLRUCache.maxSize} ` +
 					`imageResults=${images.live} live (${images.total} total) | ` +
 					`per-interval: imageResults+${dTotal} drawNative ${dCalls} calls/${dRenders} rendered ` +
 					`drawImageBuffers+${dImageBuffers}`
