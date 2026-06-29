@@ -5,6 +5,7 @@ import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connect
 import type { CustomVariablesModel } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { ClientDevicesListItem } from '@companion-app/shared/Model/Surfaces.js'
 import type { ModuleVariableDefinitions, VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -224,6 +225,25 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 	surfacePageDown(surfaceId: string): void {
 		this.#surfaceController.devicePageDown(surfaceId)
+	}
+
+	surfaceSetBrightness(surfaceId: string, brightness: number): boolean {
+		return this.#surfaceController.setDeviceBrightness(surfaceId, brightness, true)
+	}
+
+	getSurfacesList(): ClientDevicesListItem[] {
+		return this.#surfaceController.getDevicesList()
+	}
+
+	/**
+	 * Get the current page (id, number and name) a surface is showing
+	 */
+	getSurfacePage(surfaceId: string): { id: string; number: number | null; name: string } | null {
+		const pageId = this.#surfaceController.devicePageGet(surfaceId, true)
+		if (!pageId) return null
+		const number = this.getPageNumberForId(pageId)
+		const name = number !== null ? (this.#pageStore.getPageInfo(number)?.name ?? '') : ''
+		return { id: pageId, number, name }
 	}
 
 	getCachedRenderOrGeneratePlaceholder(location: ControlLocation): ImageResult {
