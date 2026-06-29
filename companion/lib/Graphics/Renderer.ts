@@ -166,7 +166,7 @@ export class GraphicsRenderer {
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
-	): Promise<Uint8Array> {
+	): Promise<string> {
 		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
 
 		const { buffer, width, height } = await GraphicsRenderer.#getCachedImage(
@@ -187,7 +187,9 @@ export class GraphicsRenderer {
 			}
 		)
 
-		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
+		return (
+			await transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
+		).toBase64()
 	}
 
 	/**

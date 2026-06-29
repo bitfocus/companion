@@ -704,7 +704,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		return this.#poolExec('drawButtonImageBuffer', [drawStyle, resolution, rotation, format], remainingAttempts)
+		const a = await this.#poolExec(
+			'drawButtonImageBuffer',
+			[drawStyle, resolution, rotation, format],
+			remainingAttempts
+		)
+		return Uint8Array.fromBase64(a)
 	}
 
 	/**
