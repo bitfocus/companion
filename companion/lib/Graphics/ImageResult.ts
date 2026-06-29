@@ -37,6 +37,22 @@ export type ImageResultNativeDrawFn = (
 	format: imageRs.PixelFormat
 ) => Promise<Uint8Array>
 
+// Lightweight diagnostics for tracking ImageResult lifetime. Each render produces a new ImageResult
+// that retains cached pixel/encoded buffers, so a memory leak shows up as `live` climbing without
+// bound while the render caches stay bounded. `total` is monotonic (renders ever produced).
+let liveImageResultCount = 0
+let totalImageResultCount = 0
+const imageResultFinalization =
+	typeof FinalizationRegistry !== 'undefined'
+		? new FinalizationRegistry<void>(() => {
+				liveImageResultCount--
+			})
+		: undefined
+
+export function getImageResultStats(): { live: number; total: number } {
+	return { live: liveImageResultCount, total: totalImageResultCount }
+}
+
 export class ImageResult {
 	/**
 	 * Image draw style
@@ -76,6 +92,10 @@ export class ImageResult {
 		this.referencedLocations = referencedLocations
 
 		this.updated = Date.now()
+
+		liveImageResultCount++
+		totalImageResultCount++
+		imageResultFinalization?.register(this)
 	}
 
 	get bgcolor(): number {

@@ -43,7 +43,7 @@ import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
-import { ImageResult } from './ImageResult.js'
+import { getImageResultStats, ImageResult } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
@@ -60,6 +60,9 @@ const RENDER_CACHE_PER_BUTTON_RATIO = 0.1 // Proportion of states to keep cached
 const RENDER_CACHE_MIN_SIZE = 100
 const RENDER_CACHE_MAX_SIZE = 1000
 const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
+
+// How often to sample process memory usage for diagnostics (only logged at debug level)
+const MEMORY_MONITOR_INTERVAL_MS = 30_000
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
@@ -400,6 +403,32 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			res.on('close', () => stream.destroy())
 			stream.pipe(res)
 		})
+
+		this.#startMemoryMonitor()
+	}
+
+	/**
+	 * Periodically sample process memory usage for diagnosing memory growth.
+	 *
+	 * Cached renders retain off-heap pixel/encoded image data, so a leak shows up as `external` /
+	 * `arrayBuffers` (and `rss`) climbing while `heapUsed` stays comparatively flat. The `ImageResult`
+	 * live count climbing while the caches stay bounded means renders are being retained somewhere.
+	 * The sample is only logged at debug level, so it is effectively free unless someone is diagnosing.
+	 */
+	#startMemoryMonitor(): void {
+		const toMb = (bytes: number) => Math.round(bytes / 1024 / 1024)
+
+		const timer = setInterval(() => {
+			const mem = process.memoryUsage()
+			const images = getImageResultStats()
+			this.#logger.debug(
+				`memory rss=${toMb(mem.rss)}MB heapUsed=${toMb(mem.heapUsed)}MB external=${toMb(mem.external)}MB ` +
+					`arrayBuffers=${toMb(mem.arrayBuffers)}MB | renderLRU=${this.#renderLRUCache.size}/${this.#renderLRUCache.maxSize} ` +
+					`imageResults=${images.live} live (${images.total} total)`
+			)
+		}, MEMORY_MONITOR_INTERVAL_MS)
+		// Don't keep the process alive just for diagnostics
+		timer.unref()
 	}
 
 	/**
