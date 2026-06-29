@@ -415,16 +415,38 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * live count climbing while the caches stay bounded means renders are being retained somewhere.
 	 * The sample is only logged at debug level, so it is effectively free unless someone is diagnosing.
 	 */
+	/** Diagnostics: count of renderPixelBuffers dispatches (worker pixel-buffer draws) */
+	#drawImageBuffersCalls = 0
+
 	#startMemoryMonitor(): void {
 		const toMb = (bytes: number) => Math.round(bytes / 1024 / 1024)
+
+		let lastTotal = 0
+		let lastDrawCalls = 0
+		let lastDrawRenders = 0
+		let lastImageBuffers = 0
 
 		const timer = setInterval(() => {
 			const mem = process.memoryUsage()
 			const images = getImageResultStats()
+
+			// Per-interval deltas: how many ImageResults were created, how many drawNative requests came
+			// in, and how many of those actually rendered (cache miss → worker draw + native allocation).
+			const dTotal = images.total - lastTotal
+			const dCalls = images.drawNativeCalls - lastDrawCalls
+			const dRenders = images.drawNativeRenders - lastDrawRenders
+			const dImageBuffers = this.#drawImageBuffersCalls - lastImageBuffers
+			lastTotal = images.total
+			lastDrawCalls = images.drawNativeCalls
+			lastDrawRenders = images.drawNativeRenders
+			lastImageBuffers = this.#drawImageBuffersCalls
+
 			this.#logger.debug(
 				`memory rss=${toMb(mem.rss)}MB heapUsed=${toMb(mem.heapUsed)}MB external=${toMb(mem.external)}MB ` +
 					`arrayBuffers=${toMb(mem.arrayBuffers)}MB | renderLRU=${this.#renderLRUCache.size}/${this.#renderLRUCache.maxSize} ` +
-					`imageResults=${images.live} live (${images.total} total)`
+					`imageResults=${images.live} live (${images.total} total) | ` +
+					`per-interval: imageResults+${dTotal} drawNative ${dCalls} calls/${dRenders} rendered ` +
+					`drawImageBuffers+${dImageBuffers}`
 			)
 		}, MEMORY_MONITOR_INTERVAL_MS)
 		// Don't keep the process alive just for diagnostics
@@ -686,6 +708,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
 	): Promise<string | undefined> {
 		if (imageBuffers.length === 0) return undefined
+
+		// Diagnostics: this dispatches a worker draw that allocates a fresh native canvas per pixel
+		// buffer (drawPixelBuffer -> loadPixelBuffer -> new Canvas), so a high rate here is a candidate
+		// native-churn source separate from drawNative.
+		this.#drawImageBuffersCalls++
 
 		return this.#poolExec('drawImageBuffers', [true, imageBuffers], remainingAttempts)
 	}

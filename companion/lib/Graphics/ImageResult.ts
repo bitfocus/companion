@@ -42,6 +42,11 @@ export type ImageResultNativeDrawFn = (
 // bound while the render caches stay bounded. `total` is monotonic (renders ever produced).
 let liveImageResultCount = 0
 let totalImageResultCount = 0
+// `drawNativeCalls` counts every drawNative request; `drawNativeRenders` counts only the cache misses
+// that actually dispatch a native render (worker draw + Skia/image-rs allocation). The gap between them
+// and `total` shows what fraction of renders produce native work vs. just create a (lazy) ImageResult.
+let drawNativeCalls = 0
+let drawNativeRenders = 0
 const imageResultFinalization =
 	typeof FinalizationRegistry !== 'undefined'
 		? new FinalizationRegistry<void>(() => {
@@ -49,8 +54,18 @@ const imageResultFinalization =
 			})
 		: undefined
 
-export function getImageResultStats(): { live: number; total: number } {
-	return { live: liveImageResultCount, total: totalImageResultCount }
+export function getImageResultStats(): {
+	live: number
+	total: number
+	drawNativeCalls: number
+	drawNativeRenders: number
+} {
+	return {
+		live: liveImageResultCount,
+		total: totalImageResultCount,
+		drawNativeCalls,
+		drawNativeRenders,
+	}
 }
 
 export class ImageResult {
@@ -113,10 +128,13 @@ export class ImageResult {
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
 	): Promise<Uint8Array> {
+		drawNativeCalls++
+
 		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
 		const cached = this.#drawNativeCache.get(cacheKey)
 		if (cached) return cached
 
+		drawNativeRenders++
 		const newBuffer = this.#drawNative(width, height, rotation, format)
 		this.#drawNativeCache.set(cacheKey, newBuffer)
 		return newBuffer
