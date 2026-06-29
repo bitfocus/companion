@@ -318,6 +318,38 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		// The text outline width is proportional to the font size, so it should keep a consistent visual
+		// weight relative to the text across canvas sizes, oversampling factors and font sizes (rather than
+		// being a fixed pixel width). These snapshots let us eyeball the thickness across that matrix.
+		describe('text outline thickness', () => {
+			const resolutions = [
+				{ name: '72x58 1x', width: 72, height: 58, oversampling: 1 },
+				{ name: '72x58 2x', width: 72, height: 58, oversampling: 2 },
+				{ name: '144x116 1x', width: 144, height: 116, oversampling: 1 },
+				{ name: '288x232 1x', width: 288, height: 232, oversampling: 1 },
+			] as const
+			const fontSizes = [25, 50, 100, 200] as const
+
+			for (const res of resolutions) {
+				for (const fontsize of fontSizes) {
+					test(`${res.name} - fontsize ${fontsize}`, async () => {
+						const img = Image.create(res.width, res.height, res.oversampling, null)
+						await GraphicsLayeredButtonRenderer.draw(
+							img,
+							makeStyle({
+								...drawOpts,
+								elements: [makeTextElement({ outlineColor: 0xff0000, fontsize, fontsizeAllowShrink: false })],
+							}),
+							new Set(),
+							null,
+							DEFAULT_PADDING
+						)
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+				}
+			}
+		})
+
 		test('box element', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(

@@ -17,6 +17,13 @@ import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import { DrawBounds, parseColor, rgbRev } from './Util.js'
 
+/**
+ * Text outline width as a fraction of the font size. Proportional (rather than a fixed pixel value) so
+ * the outline keeps a consistent visual weight relative to its text at any button/canvas size. Because
+ * it derives from the render-size font size, it is automatically resolution-independent.
+ */
+const TEXT_OUTLINE_FACTOR = 1 / 16
+
 export class GraphicsLayeredButtonRenderer {
 	static async draw(
 		img: ImageBase<any>,
@@ -334,7 +341,7 @@ export class GraphicsLayeredButtonRenderer {
 					element.valign,
 					rgbRev(element.outlineColor, true).a > 0
 						? {
-								width: 2, // Fixed width for now, maybe should be dynamic
+								width: fontSize * TEXT_OUTLINE_FACTOR,
 								color: parseColor(element.outlineColor),
 							}
 						: undefined,
