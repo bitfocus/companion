@@ -237,7 +237,12 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'
 				// }
 
-				this.#ipcWrapper
+				// Await the send so the write queue paces itself to the child process. Without this the
+				// host emits frames as fast as it renders, never waiting for the child to acknowledge —
+				// under churn the un-acked frames pile into the native child.send() buffer (and pending
+				// callbacks), which reads as a main-process memory leak that scales with draws, not renders.
+				// Awaiting lets the ImageWriteQueue coalesce newer frames for the same key while one is in flight.
+				await this.#ipcWrapper
 					.sendWithCb('drawControls', {
 						surfaceId: this.#surfaceInfo.surfaceId,
 						drawProps: [drawProps],
