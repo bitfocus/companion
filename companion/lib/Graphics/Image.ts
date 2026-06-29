@@ -17,7 +17,6 @@ import {
 	type TextLayoutCache,
 } from '@companion-app/shared/Graphics/ImageBase.js'
 import LogController from '../Log/Controller.js'
-import { uint8ArrayToBuffer } from '../Resources/Util.js'
 
 export { LineStyle }
 
@@ -137,8 +136,17 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	 * @returns RGBA buffer of the pixels
 	 */
 	buffer(): Buffer {
-		const buffer = uint8ArrayToBuffer(this.#context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
-		return buffer
+		// HACK / intentional copy. `Buffer.from(...)` copies the pixels into a fresh, JS-owned buffer
+		// rather than returning a view over getImageData()'s `.data` (which is backed by Skia's native
+		// allocation in @napi-rs/canvas).
+		//
+		// Why: this buffer is then handed to @julusian/image-rs (transformButtonImage). Empirically,
+		// passing the *view* through the image-rs transform leaks ~one frame of native (Skia) memory
+		// per render — RSS climbs unbounded over hours until OOM. Passing a *copy* does not leak.
+		// Notably the JS ArrayBuffer is still collected in the leaking case (verified with a
+		// FinalizationRegistry), so this is NOT image-rs holding the JS view alive — the leaked memory
+		// is native, lost only when image-rs consumes a view over the externally-backed buffer.
+		return Buffer.from(this.#context2d.getImageData(0, 0, this.realwidth, this.realheight).data)
 	}
 
 	// /**
