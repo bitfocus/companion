@@ -383,13 +383,14 @@ export class ServiceHttpApi {
 		const surfaceId = req.params.id
 
 		const rawValue = req.query.brightness
-		const brightness = Number(rawValue)
+		const brightnessText = typeof rawValue === 'string' ? rawValue.trim() : undefined
+		const brightness = Number(brightnessText)
 
 		this.logger.debug(`Got HTTP surface set brightness "${surfaceId}" to ${JSON.stringify(rawValue)}`)
 
 		if (
-			rawValue === undefined ||
-			rawValue === '' ||
+			brightnessText === undefined ||
+			brightnessText === '' ||
 			!Number.isFinite(brightness) ||
 			brightness < 0 ||
 			brightness > 100

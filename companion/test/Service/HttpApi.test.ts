@@ -229,6 +229,26 @@ describe('HttpApi', () => {
 
 				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
 			})
+
+			test('empty value', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
+
+			test('whitespace value', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=%20').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
 		})
 	})
 

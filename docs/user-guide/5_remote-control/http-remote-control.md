@@ -94,7 +94,7 @@ This API tries to follow REST principles, and the convention that a `POST` reque
 - Set the brightness of a surface
   Method: POST
   Path: `/api/surfaces/<surface id>/brightness?brightness=<0-100>`
-  Error (400): `Invalid brightness` if the value is missing or outside 0-100
+  Error (400): `Invalid brightness` if the value is missing, not a number, or outside 0-100
   Error (404): `Not found` if no connected surface matches the given id
 
 ### Connection Management
@@ -187,7 +187,7 @@ List all surfaces:
 GET `/api/surfaces`
 
 Set the brightness of the emulator surface to 30%:
-POST `/api/surfaces/emulator/brightness?brightness=30`
+POST `/api/surfaces/emulator:emulator/brightness?brightness=30`
 
 List all connections:
 GET `/api/connections`
