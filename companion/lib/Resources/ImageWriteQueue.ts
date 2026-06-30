@@ -38,6 +38,20 @@ export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> 
 	}
 
 	/**
+	 * Number of operations waiting to be processed
+	 */
+	get pending(): number {
+		return this.#pendingImages.length
+	}
+
+	/**
+	 * Number of operations currently being processed
+	 */
+	get inProgress(): number {
+		return this.#inProgress.size
+	}
+
+	/**
 	 * Queue an operation for the queue
 	 * @param key
 	 * @param args Arguments for the callback

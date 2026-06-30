@@ -12,6 +12,7 @@ import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
+import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
@@ -136,6 +137,7 @@ export class Registry {
 	readonly importExport: ImportExportController
 
 	readonly usageStatistics: DataUsageStatistics
+	readonly metrics: DataMetrics
 
 	/**
 	 * The 'data' controller
@@ -205,13 +207,17 @@ export class Registry {
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
+		// Constructed early so subsystems can register their own metrics inline as they are built
+		this.metrics = new DataMetrics(this.#appInfo, this.userconfig, this.ui.express)
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
 			this.userconfig,
 			this.variables,
 			this.db,
-			this.#internalApiRouter
+			this.#internalApiRouter,
+			this.metrics
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -232,7 +238,8 @@ export class Registry {
 			controlStore,
 			this.variables,
 			this.surfaces,
-			oscSender
+			oscSender,
+			this.metrics
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
@@ -326,6 +333,14 @@ export class Registry {
 			this.services,
 			this.userconfig
 		)
+		registerCoreMetrics(this.metrics, {
+			instance: this.instance,
+			surfaces: this.surfaces,
+			page: this.page,
+			controls: this.controls,
+			variables: this.variables,
+			services: this.services,
+		})
 
 		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 		controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))

@@ -49,7 +49,11 @@ interface ModuleChild {
 	instanceId: string
 	logger: Logger
 	restartCount: number
+	/** Cumulative count of restarts since this child entry was created. Unlike restartCount, never reset - exposed as a metrics counter. */
+	restartsTotal: number
 	isReady: boolean
+	/** Wall-clock ms when the child last became ready. Used to derive connection uptime. undefined while not ready. */
+	readyAt: number | undefined
 	targetState: ModuleChildTargetState | null // Null if disabled
 	lastLabel: string
 
@@ -159,6 +163,30 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		} else {
 			return undefined
 		}
+	}
+
+	/**
+	 * Snapshot of per-instance runtime state for metrics. Keeps #children encapsulated - the instance
+	 * controller registers the actual metrics and pulls this at scrape time.
+	 */
+	getRuntimeMetrics(): Array<{
+		instanceId: string
+		moduleType: ModuleInstanceType
+		isReady: boolean
+		restartsTotal: number
+		readyAt: number | undefined
+	}> {
+		const out = []
+		for (const child of this.#children.values()) {
+			out.push({
+				instanceId: child.instanceId,
+				moduleType: child.moduleType,
+				isReady: child.isReady,
+				restartsTotal: child.restartsTotal,
+				readyAt: child.isReady ? child.readyAt : undefined,
+			})
+		}
+		return out
 	}
 
 	/**
@@ -293,7 +321,9 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				lifeCycleQueue: new PQueue({ concurrency: 1 }),
 				logger: LogController.createLogger(`Instance/Child/${targetState.label}`),
 				restartCount: 0,
+				restartsTotal: 0,
 				isReady: false,
+				readyAt: undefined,
 				targetState: targetState,
 				lastLabel: targetState.label,
 			}
@@ -550,6 +580,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		const forceRestart = () => {
 			// Force restart the instance, as it failed to initialise and will be broken
 			child.restartCount++
+			child.restartsTotal++
 
 			monitor.off('exit', forceRestart)
 
@@ -636,6 +667,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 						// mark child as ready to receive
 						child.isReady = true
+						child.readyAt = Date.now()
 						this.emit('childStateChange', child.instanceId)
 
 						// Call ready hook

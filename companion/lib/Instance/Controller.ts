@@ -32,6 +32,7 @@ import type { Complete } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataCache } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { LabeledValue, MetricsRegistry } from '../Data/Metrics.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
@@ -136,7 +137,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		controlsStore: IControlStore,
 		variables: VariablesController,
 		surfaces: SurfaceController,
-		oscSender: ServiceOscSender
+		oscSender: ServiceOscSender,
+		metrics: MetricsRegistry
 	) {
 		super()
 		this.setMaxListeners(0)
@@ -245,6 +247,118 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#broadcastSurfaceInstanceChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface))
 
 		this.#udevRules.triggerRegenerate()
+
+		this.#registerMetrics(metrics)
+	}
+
+	/**
+	 * Register per-instance metrics, owned by this controller and read live from its sub-components at
+	 * scrape time. The id label is always `instance_id` (covers connections and surface integrations - a
+	 * connection's id is an instance id); the `type` label on the info metric distinguishes them. Cross-cutting
+	 * lifecycle metrics are `companion_instance_*`; connection-specific ones are `companion_connection_*`.
+	 * Join the info metric onto the others by instance_id for the descriptive fields (label/module) - this
+	 * keeps churn-prone labels off every series.
+	 */
+	#registerMetrics(metrics: MetricsRegistry): void {
+		const configStore = this.#configStore
+		const definitions = this.definitions
+		const variableValues = this.#variablesController.values
+		const processManager = this.processManager
+
+		// Info metric: one series per instance, value 1, descriptive fields carried as labels
+		metrics.labeledGauge(
+			'companion_instance_info',
+			'Information about a configured instance (constant 1, see labels)',
+			['instance_id', 'label', 'module_id', 'module_version', 'type'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const [id, config] of configStore.getAllInstanceConfigs()) {
+					out.push({
+						labels: {
+							instance_id: id,
+							label: config.label,
+							module_id: config.moduleId,
+							module_version: config.moduleVersionId ?? '',
+							type: config.moduleInstanceType,
+						},
+						value: 1,
+					})
+				}
+				return out
+			}
+		)
+
+		// Per-connection definition counts, one series per (connection, entity_type)
+		metrics.labeledGauge(
+			'companion_connection_definitions',
+			'Number of entity definitions a connection exposes',
+			['instance_id', 'entity_type'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					const counts = definitions.getDefinitionCounts(id)
+					out.push(
+						{ labels: { instance_id: id, entity_type: 'action' }, value: counts.actions },
+						{ labels: { instance_id: id, entity_type: 'feedback' }, value: counts.feedbacks },
+						{ labels: { instance_id: id, entity_type: 'preset' }, value: counts.presets }
+					)
+				}
+				return out
+			}
+		)
+
+		// Per-connection variable count
+		metrics.labeledGauge(
+			'companion_connection_variables',
+			'Number of variables a connection currently exposes values for',
+			['instance_id'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					const label = this.getLabelForConnection(id)
+					if (!label) continue
+					out.push({ labels: { instance_id: id }, value: variableValues.getVariableCountForLabel(label) })
+				}
+				return out
+			}
+		)
+
+		// Runtime: ready state (1/0)
+		metrics.labeledGauge(
+			'companion_instance_ready',
+			'Whether an instance is currently ready/connected (1) or not (0)',
+			['instance_id'],
+			() =>
+				processManager
+					.getRuntimeMetrics()
+					.map((m) => ({ labels: { instance_id: m.instanceId }, value: m.isReady ? 1 : 0 }))
+		)
+
+		// Runtime: when the instance last became ready - derive uptime as `time() - this`. Absent while not ready.
+		metrics.labeledGauge(
+			'companion_instance_ready_timestamp_seconds',
+			'Unix time when an instance last became ready (derive uptime as time() - this)',
+			['instance_id'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const m of processManager.getRuntimeMetrics()) {
+					if (m.readyAt === undefined) continue
+					out.push({ labels: { instance_id: m.instanceId }, value: m.readyAt / 1000 })
+				}
+				return out
+			}
+		)
+
+		// Runtime: cumulative restarts since startup
+		metrics.labeledCounter(
+			'companion_instance_restarts_total',
+			'Cumulative instance restarts since startup',
+			['instance_id'],
+			() =>
+				processManager
+					.getRuntimeMetrics()
+					.map((m) => ({ labels: { instance_id: m.instanceId }, value: m.restartsTotal }))
+		)
 	}
 
 	getAllConnectionIds(): string[] {

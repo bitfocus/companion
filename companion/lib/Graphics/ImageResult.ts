@@ -37,6 +37,47 @@ export type ImageResultNativeDrawFn = (
 	format: imageRs.PixelFormat
 ) => Promise<Uint8Array>
 
+/**
+ * Lightweight, always-on counters for the drawing pipeline, exposed for the metrics endpoint.
+ * These are cheap to maintain and let a leak in the native (Skia/canvas) render path show up as
+ * a climbing `live` count or a `calls` >> `renders` cache-miss ratio.
+ */
+let liveImageResultCount = 0
+let totalImageResultCount = 0
+let drawNativeCalls = 0
+let drawNativeRenders = 0
+let drawNativeEncodedCalls = 0
+let drawNativeEncodedRenders = 0
+
+/**
+ * Decrement the live count when an ImageResult is garbage collected. This is a passive GC hook -
+ * it does not force GC - so `live` reflects how many renders are actually retained in memory.
+ */
+const imageResultFinalization =
+	typeof FinalizationRegistry !== 'undefined'
+		? new FinalizationRegistry<void>(() => {
+				liveImageResultCount--
+			})
+		: undefined
+
+export function getImageResultStats(): {
+	live: number
+	total: number
+	drawNativeCalls: number
+	drawNativeRenders: number
+	drawNativeEncodedCalls: number
+	drawNativeEncodedRenders: number
+} {
+	return {
+		live: liveImageResultCount,
+		total: totalImageResultCount,
+		drawNativeCalls,
+		drawNativeRenders,
+		drawNativeEncodedCalls,
+		drawNativeEncodedRenders,
+	}
+}
+
 export class ImageResult {
 	/**
 	 * Image draw style
@@ -76,6 +117,10 @@ export class ImageResult {
 		this.referencedLocations = referencedLocations
 
 		this.updated = Date.now()
+
+		liveImageResultCount++
+		totalImageResultCount++
+		imageResultFinalization?.register(this)
 	}
 
 	get bgcolor(): number {
@@ -93,10 +138,12 @@ export class ImageResult {
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat
 	): Promise<Uint8Array> {
+		drawNativeCalls++
 		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
 		const cached = this.#drawNativeCache.get(cacheKey)
 		if (cached) return cached
 
+		drawNativeRenders++
 		const newBuffer = this.#drawNative(width, height, rotation, format)
 		this.#drawNativeCache.set(cacheKey, newBuffer)
 		return newBuffer
@@ -118,10 +165,12 @@ export class ImageResult {
 		rotation: SurfaceRotation | null,
 		format: imageRs.ImageFormat
 	): Promise<string> {
+		drawNativeEncodedCalls++
 		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
 		const cached = this.#drawNativeEncodedCache.get(cacheKey)
 		if (cached) return cached
 
+		drawNativeEncodedRenders++
 		const newDataUrl = (async () => {
 			const raw = await this.drawNative(width, height, rotation, 'rgb')
 			if (raw.length === 0) return ''

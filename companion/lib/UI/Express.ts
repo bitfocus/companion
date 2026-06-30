@@ -91,6 +91,7 @@ export class UIExpress {
 	#apiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
 	#connectionApiRouter = Express.Router()
+	#metricsRouter = Express.Router()
 
 	constructor(internalApiRouter: Express.Router, trustedProxies: string | undefined) {
 		// Configure how the client ip is determined when running behind a reverse proxy.
@@ -146,6 +147,11 @@ export class UIExpress {
 		this.app.use('/connections/instance', async (req, res) => {
 			res.redirect(301, `/instance${req.url}`)
 		})
+
+		// Prometheus metrics endpoint. Mounted before /api (more specific path wins) and intentionally
+		// without CORS - it is scraped server-side by Prometheus, not from a browser. The router itself
+		// enforces the enable toggle and bearer-token auth. Redefinable at runtime with the setter.
+		this.app.use('/api/metrics', async (r, s, n) => this.#metricsRouter(r, s, n))
 
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		// CORS is enabled here as this is part of the intentionally cross-origin accessible HTTP api.
@@ -218,5 +224,12 @@ export class UIExpress {
 	 */
 	set connectionApiRouter(router: Express.Router) {
 		this.#connectionApiRouter = router
+	}
+
+	/**
+	 * Set a new router as the metricsRouter
+	 */
+	set metricsRouter(router: Express.Router) {
+		this.#metricsRouter = router
 	}
 }

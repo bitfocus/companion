@@ -33,6 +33,7 @@ import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -43,7 +44,7 @@ import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
-import { ImageResult } from './ImageResult.js'
+import { getImageResultStats, ImageResult } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
@@ -120,8 +121,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		},
 	})
 
-	// Track recent worker terminations (timestamps in ms)
+	// Track recent worker terminations (timestamps in ms), used for crash-loop detection
 	#workerTerminationTimestamps: number[] = []
+
+	// Cumulative count of worker terminations since startup, exposed as a metrics counter
+	#workerTerminationsTotal = 0
 
 	#poolExec = async <TKey extends keyof typeof GraphicsThreadMethods>(
 		key: TKey,
@@ -139,6 +143,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 				const now = Date.now()
 				this.#workerTerminationTimestamps.push(now)
+				this.#workerTerminationsTotal++
 				const cutoff = now - WORKER_TERMINATION_WINDOW_MS
 
 				// prune old timestamps
@@ -208,7 +213,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		userConfigController: DataUserConfig,
 		variablesController: VariablesController,
 		db: DataDatabase,
-		internalApiRouter: Express.Router
+		internalApiRouter: Express.Router,
+		metrics: MetricsRegistry
 	) {
 		super()
 
@@ -221,6 +227,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const initialCacheSize = this.#computeRenderCacheSize()
 		this.#renderLRUCache = new QuickLRU({ maxSize: initialCacheSize })
 		this.#logger.debug(`Render LRU cache initialized with size ${initialCacheSize}`)
+
+		this.#registerMetrics(metrics)
 
 		this.setMaxListeners(0)
 
@@ -617,6 +625,76 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	triggerCacheResize(): void {
 		this.#debounceResizeRenderCache()
+	}
+
+	/**
+	 * Register the drawing-pipeline metrics, inline with the state they measure.
+	 */
+	#registerMetrics(metrics: MetricsRegistry): void {
+		// Current state - render LRU cache. Kept as two metrics (not labels) so utilization is a simple
+		// `entries / limit_entries` query. Names spell out the unit (entries) to avoid a bytes assumption.
+		metrics.gauge('companion_render_cache_entries', 'Current entries in the button render LRU cache', () => {
+			return this.#renderLRUCache.size
+		})
+		metrics.gauge(
+			'companion_render_cache_limit_entries',
+			'Maximum entries the button render LRU cache will hold',
+			() => {
+				return this.#renderLRUCache.maxSize
+			}
+		)
+
+		// Render queue depth, one series per state
+		metrics.labeledGauge('companion_render_queue_tasks', 'Button render tasks by state', ['state'], () => [
+			{ labels: { state: 'pending' }, value: this.#renderQueue.pending },
+			{ labels: { state: 'in_progress' }, value: this.#renderQueue.inProgress },
+		])
+
+		// Current ImageResults retained in memory
+		metrics.gauge('companion_image_results_live', 'ImageResult objects currently retained in memory', () => {
+			return getImageResultStats().live
+		})
+
+		// Cumulative ImageResults created (distinct from the live gauge: history vs current state)
+		metrics.counter('companion_image_results_created_total', 'ImageResult objects created since startup', () => {
+			return getImageResultStats().total
+		})
+
+		// drawNative requests by result. cache_hit = total calls - fresh renders; both are monotonic.
+		metrics.labeledCounter(
+			'companion_draw_requests_total',
+			'draw requests by result, since startup',
+			['result'],
+			() => {
+				const stats = getImageResultStats()
+				return [
+					{ labels: { result: 'cache_hit' }, value: stats.drawNativeCalls - stats.drawNativeRenders },
+					{ labels: { result: 'render' }, value: stats.drawNativeRenders },
+				]
+			}
+		)
+
+		// drawNativeEncoded (data-url) requests by result. cache_hit = total calls - fresh encodes.
+		metrics.labeledCounter(
+			'companion_draw_datauri_requests_total',
+			'draw data-url requests by result, since startup',
+			['result'],
+			() => {
+				const stats = getImageResultStats()
+				return [
+					{
+						labels: { result: 'cache_hit' },
+						value: stats.drawNativeEncodedCalls - stats.drawNativeEncodedRenders,
+					},
+					{ labels: { result: 'encode' }, value: stats.drawNativeEncodedRenders },
+				]
+			}
+		)
+
+		// Render worker terminations since startup
+		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
+			return this.#workerTerminationsTotal
+		})
 	}
 
 	async #drawImageResult(

@@ -1,6 +1,10 @@
 import * as imageRs from '@julusian/image-rs'
 import { describe, expect, test, vi } from 'vitest'
-import { ImageResult, type ImageResultProcessedStyle } from '../../lib/Graphics/ImageResult.js'
+import {
+	getImageResultStats,
+	ImageResult,
+	type ImageResultProcessedStyle,
+} from '../../lib/Graphics/ImageResult.js'
 
 /**
  * Build a deterministic rgb test pattern of the given size.
@@ -152,6 +156,44 @@ describe('ImageResult', () => {
 
 			expect(await a).toBe(await b)
 			expect(drawNative).toHaveBeenCalledTimes(1)
+		})
+	})
+
+	describe('getImageResultStats', () => {
+		test('counts created instances and drawNative calls vs fresh renders', async () => {
+			const before = getImageResultStats()
+
+			const drawNative = vi.fn(async (w: number, h: number) => new Uint8Array([w, h]))
+			const { image } = createImage(null, drawNative)
+
+			// One created instance
+			expect(getImageResultStats().total).toBe(before.total + 1)
+
+			// Two calls for the same key: both counted as calls, only the first as a fresh render
+			await image.drawNative(8, 8, null, 'rgb')
+			await image.drawNative(8, 8, null, 'rgb')
+			// A different key: another call and another render
+			await image.drawNative(16, 16, null, 'rgb')
+
+			const after = getImageResultStats()
+			expect(after.drawNativeCalls).toBe(before.drawNativeCalls + 3)
+			expect(after.drawNativeRenders).toBe(before.drawNativeRenders + 2)
+		})
+
+		test('counts drawNativeEncoded calls vs fresh encodes', async () => {
+			const before = getImageResultStats()
+
+			const { image } = createImage(null, vi.fn().mockResolvedValue(makeRgbBuffer(8, 8)))
+
+			// Two calls for the same key: both counted as calls, only the first as a fresh encode
+			await image.drawNativeEncoded(8, 8, null, 'png')
+			await image.drawNativeEncoded(8, 8, null, 'png')
+			// A different format: another call and another encode
+			await image.drawNativeEncoded(8, 8, null, 'webp')
+
+			const after = getImageResultStats()
+			expect(after.drawNativeEncodedCalls).toBe(before.drawNativeEncodedCalls + 3)
+			expect(after.drawNativeEncodedRenders).toBe(before.drawNativeEncodedRenders + 2)
 		})
 	})
 

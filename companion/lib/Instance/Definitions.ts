@@ -283,6 +283,17 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	/**
+	 * Count the action, feedback and preset definitions a connection currently exposes.
+	 */
+	getDefinitionCounts(connectionId: string): { actions: number; feedbacks: number; presets: number } {
+		return {
+			actions: Object.keys(this.#actionDefinitions[connectionId] ?? {}).length,
+			feedbacks: Object.keys(this.#feedbackDefinitions[connectionId] ?? {}).length,
+			presets: this.#presetDefinitions[connectionId]?.size ?? 0,
+		}
+	}
+
+	/**
 	 * Forget all the definitions for an instance
 	 */
 	forgetConnection(connectionId: string): void {
