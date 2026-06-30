@@ -188,7 +188,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * Clear the image, resetting to a fully transparent and empty state
 	 */
 	clear(): void {
-		this.context2d.clearRect(0, 0, this.width, this.height)
+		// Fully reset the context/canvas
+		this.context2d.reset()
 	}
 
 	/**

@@ -237,7 +237,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'
 				// }
 
-				this.#ipcWrapper
+				// Await the send so the write queue paces itself to the child process.
+				await this.#ipcWrapper
 					.sendWithCb('drawControls', {
 						surfaceId: this.#surfaceInfo.surfaceId,
 						drawProps: [drawProps],
