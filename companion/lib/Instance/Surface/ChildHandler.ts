@@ -44,6 +44,9 @@ export interface SurfaceChildHandlerDependencies {
 	) => void
 
 	readonly invalidateClientJson: (instanceId: string) => void
+
+	/** Record an IPC message exchanged with the module child (for metrics) */
+	readonly trackIpcMessage: (instanceId: string, direction: 'sent' | 'received') => void
 }
 
 export interface SurfaceChildFeatures {
@@ -144,6 +147,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			(msg) => {
 				if (monitor.child) {
 					monitor.child.send(msg)
+					this.#deps.trackIpcMessage(this.instanceId, 'sent')
 				} else {
 					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
 				}
@@ -153,6 +157,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 		// Attach message handler to receive messages from child process
 		const messageHandler = (msg: any) => {
+			this.#deps.trackIpcMessage(this.instanceId, 'received')
 			this.#ipcWrapper.receivedMessage(msg)
 		}
 		monitor.on('message', messageHandler)

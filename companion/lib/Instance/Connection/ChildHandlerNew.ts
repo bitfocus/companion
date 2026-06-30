@@ -136,6 +136,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			(msg) => {
 				if (monitor.child) {
 					monitor.child.send(msg)
+					this.#deps.trackIpcMessage(this.connectionId, 'sent')
 				} else {
 					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
 				}
@@ -150,6 +151,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		)
 
 		const messageHandler = (msg: any) => {
+			this.#deps.trackIpcMessage(this.connectionId, 'received')
 			this.#ipcWrapper.receivedMessage(msg)
 		}
 		monitor.on('message', messageHandler)
@@ -568,6 +570,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
+		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
+
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
 			msg.values.map((val) => ({
@@ -583,6 +587,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
+
+		this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 
 		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 	}

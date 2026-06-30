@@ -124,6 +124,9 @@ export class DataMetrics implements MetricsRegistry {
 			labelNames,
 			registers: [this.#register],
 			collect() {
+				// Reset first so series for things that no longer exist (e.g. a deleted connection) drop out
+				// rather than lingering at their last value.
+				this.reset()
 				for (const { labels, value } of getValues()) {
 					this.set(labels, value)
 				}
@@ -215,19 +218,29 @@ export function registerCoreMetrics(
 		services: ServiceController
 	}
 ): void {
-	metrics.gauge('companion_connections', 'Number of configured module connections', () => {
-		return deps.instance.getAllConnectionIds().length
-	})
-	metrics.gauge('companion_surfaces_connected', 'Number of connected surfaces', () => {
-		let count = 0
-		for (const group of deps.surfaces.getDevicesList()) {
-			if (!group.surfaces) continue
-			for (const surface of group.surfaces) {
-				if (surface.id && surface.isConnected) count++
+	metrics.labeledGauge(
+		'companion_surfaces_connected',
+		'Number of connected surfaces by location (total = sum without(location))',
+		['location'],
+		() => {
+			let local = 0
+			let remote = 0
+			for (const group of deps.surfaces.getDevicesList()) {
+				if (!group.surfaces) continue
+				for (const surface of group.surfaces) {
+					if (!surface.id || !surface.isConnected) continue
+					// A surface with a network location (satellite, networked Stream Decks, Studio over IP, etc.)
+					// is remote; USB panels and the emulator have no location and are local.
+					if (surface.location) remote++
+					else local++
+				}
 			}
+			return [
+				{ labels: { location: 'local' }, value: local },
+				{ labels: { location: 'remote' }, value: remote },
+			]
 		}
-		return count
-	})
+	)
 	metrics.gauge('companion_surface_groups', 'Number of user-created surface groups', () => {
 		return deps.surfaces.getGroupCount()
 	})
