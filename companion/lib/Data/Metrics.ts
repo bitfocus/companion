@@ -11,7 +11,7 @@
 
 import { timingSafeEqual } from 'node:crypto'
 import Express from 'express'
-import { collectDefaultMetrics, Counter, Gauge, Registry } from 'prom-client'
+import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from 'prom-client'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import LogController from '../Log/Controller.js'
@@ -58,6 +58,12 @@ export interface MetricsRegistry {
 	 * source: the per-combination delta since the previous scrape is added to that series.
 	 */
 	labeledCounter(name: string, help: string, labelNames: string[], getValues: () => LabeledValue[]): void
+
+	/**
+	 * Register a histogram and return an `observe(value)` function. Unlike gauges/counters this is
+	 * push-based: call the returned function once per observed event (e.g. a render duration in seconds).
+	 */
+	histogram(name: string, help: string, buckets?: number[]): (value: number) => void
 }
 
 /**
@@ -151,6 +157,16 @@ export class DataMetrics implements MetricsRegistry {
 				}
 			},
 		})
+	}
+
+	histogram(name: string, help: string, buckets?: number[]): (value: number) => void {
+		const histogram = new Histogram({
+			name,
+			help,
+			registers: [this.#register],
+			...(buckets ? { buckets } : {}),
+		})
+		return (value: number) => histogram.observe(value)
 	}
 
 	#createRouter(): Express.Router {

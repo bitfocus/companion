@@ -106,6 +106,21 @@ describe('DataMetrics', () => {
 		expect(second.text).toContain('companion_test_counter_total 8')
 	})
 
+	test('histograms record observations (count/sum/buckets)', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const observe = metrics.histogram('companion_test_duration_seconds', 'A test histogram', [0.01, 0.1, 1])
+		observe(0.05)
+		observe(0.5)
+
+		const res = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(res.text).toContain('companion_test_duration_seconds_count 2')
+		expect(res.text).toContain('companion_test_duration_seconds_sum 0.55')
+		// 0.05 falls in the 0.1 bucket but not the 0.01 bucket
+		expect(res.text).toContain('companion_test_duration_seconds_bucket{le="0.01"} 0')
+		expect(res.text).toContain('companion_test_duration_seconds_bucket{le="0.1"} 1')
+	})
+
 	test('labeled gauges and counters emit one series per label combination', async () => {
 		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
 

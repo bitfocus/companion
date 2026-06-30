@@ -44,7 +44,7 @@ import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
-import { getImageResultStats, ImageResult } from './ImageResult.js'
+import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
@@ -631,6 +631,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Register the drawing-pipeline metrics, inline with the state they measure.
 	 */
 	#registerMetrics(metrics: MetricsRegistry): void {
+		// Native render duration, observed only for drawNative cache misses (actual renders). Expected values
+		// are ~0.1-2ms, so buckets are dense in the sub-millisecond range with headroom for a slow tail.
+		// Values are in seconds (Prometheus base unit); gives avg (sum/count) and percentiles (histogram_quantile).
+		setDrawNativeRenderObserver(
+			metrics.histogram(
+				'companion_draw_native_render_duration_seconds',
+				'Duration of native button renders (drawNative cache misses), in seconds',
+				[0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25]
+			)
+		)
+
 		// Current state - render LRU cache. Kept as two metrics (not labels) so utilization is a simple
 		// `entries / limit_entries` query. Names spell out the unit (entries) to avoid a bytes assumption.
 		metrics.gauge('companion_render_cache_entries', 'Current entries in the button render LRU cache', () => {

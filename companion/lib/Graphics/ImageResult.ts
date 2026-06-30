@@ -60,6 +60,16 @@ const imageResultFinalization =
 			})
 		: undefined
 
+/**
+ * Optional observer for native render durations (seconds). Only invoked for drawNative cache misses -
+ * i.e. actual native renders. Set by the metrics layer to feed a histogram.
+ */
+let drawNativeRenderObserver: ((durationSeconds: number) => void) | undefined
+
+export function setDrawNativeRenderObserver(observer: ((durationSeconds: number) => void) | undefined): void {
+	drawNativeRenderObserver = observer
+}
+
 export function getImageResultStats(): {
 	live: number
 	total: number
@@ -145,6 +155,15 @@ export class ImageResult {
 
 		drawNativeRenders++
 		const newBuffer = this.#drawNative(width, height, rotation, format)
+		if (drawNativeRenderObserver) {
+			const renderStart = performance.now()
+			// Observe on a separate chain so we don't interfere with (or double-handle errors on) the cached
+			// promise. Render failures are ignored for timing purposes.
+			newBuffer.then(
+				() => drawNativeRenderObserver?.((performance.now() - renderStart) / 1000),
+				() => undefined
+			)
+		}
 		this.#drawNativeCache.set(cacheKey, newBuffer)
 		return newBuffer
 	}
