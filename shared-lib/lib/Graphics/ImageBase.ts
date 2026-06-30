@@ -190,7 +190,16 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	clear(): void {
 		// Fully reset the context/canvas
 		this.context2d.reset()
+
+		// reset() also discards the transform (eg oversampling scale) and any other initial
+		// context state, so re-apply it
+		this.initialiseContext()
 	}
+
+	/**
+	 * Apply the initial context state (eg the oversampling transform) that must survive a `reset()`.
+	 */
+	protected abstract initialiseContext(): void
 
 	/**
 	 * Draw an image loaded with one of the load abstract load functions
