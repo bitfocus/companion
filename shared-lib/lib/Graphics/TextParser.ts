@@ -275,6 +275,13 @@ export function computeTextLayout(
 			lines.push({ text: lineText.join(''), ascent, descent })
 
 			lastDrawnCharCount += breakPos + 1
+
+			// If a hard newline immediately follows a width-based break, consume it. The line break
+			// it would have caused has already happened here, so leaving it in place would start the
+			// next chunk on a newline and insert a spurious blank line.
+			if (displayTextChars[lastDrawnCharCount]?.codePointAt(0) === 10) {
+				lastDrawnCharCount += 1
+			}
 		}
 	}
 	//console.log('we got the break', text, lines.map(line => byteToString(line.text)))
