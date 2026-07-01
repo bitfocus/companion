@@ -44,6 +44,7 @@ if (typeof verificationToken !== 'string' || !verificationToken)
 const logger = createModuleLogger('Entrypoint')
 
 let instance: InstanceWrapper<any> | null = null
+let hostContext: HostContext<any, any> | null = null
 let instanceInitialized = false
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
@@ -64,6 +65,9 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
 			await instance.destroy()
+
+			// Release any pending timers (e.g. the batched variable value flush)
+			hostContext?.destroy()
 		},
 
 		updateConfig: async (msg): Promise<void> => {
@@ -205,9 +209,10 @@ ipcWrapper
 		logger.info(`Found module entrypoint, with ${moduleUpgradeScripts.length} upgrade scripts`)
 
 		// Now load the plugin
+		hostContext = new HostContext(ipcWrapper, msg.connectionId, moduleUpgradeScripts.length - 1)
 		instance = new InstanceWrapper(
 			msg.connectionId,
-			new HostContext(ipcWrapper, msg.connectionId, moduleUpgradeScripts.length - 1),
+			hostContext,
 			moduleConstructor,
 			moduleUpgradeScripts,
 			msg.moduleApiVersion
