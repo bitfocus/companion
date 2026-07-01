@@ -209,6 +209,14 @@ Searches a string for a specific value, and then replaces all instances of that 
 
 eg `replaceAll("This is great!", "This", "Companion")` gives `Companion is great!`
 
+**stringCompare(a, b)**
+
+Compare two strings for sorting purposes, using locale-aware comparison. Returns a negative number if `a` sorts before `b`, `0` if they are equal, or a positive number if `a` sorts after `b`.
+
+This is most useful as a comparator for `arraySort` when ordering arrays of strings or objects.
+
+eg `arraySort(["banana", "apple", "cherry"], (a, b) => stringCompare(a, b))` gives `["apple", "banana", "cherry"]`
+
 **encode(str, enc)**
 
 Encode a string to the requested format ('hex','base64'). If `enc` is missing, `latin1` will be used.
@@ -377,6 +385,8 @@ Return whether `fn` returns true for at least one element (`arraySome`) or for a
 **arraySort(arr, fn)**
 
 Return a sorted copy of the array (the original is not changed). Without a comparator the elements are sorted as strings; provide `fn(a, b)` returning a negative, zero or positive number to control the order. `arraySort([3, 1, 2], (a, b) => a - b)` gives `[1, 2, 3]`.
+
+To sort strings (or objects by a string property) use `stringCompare` as the comparator, eg `arraySort($(custom:names), (a, b) => stringCompare(a, b))`. See [stringCompare](#string-operations) for details.
 
 **arrayReverse(arr)**
 

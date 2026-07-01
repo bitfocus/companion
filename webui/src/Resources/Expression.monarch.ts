@@ -128,6 +128,12 @@ export const builtinFunctionCompletions: Array<{
 		documentation: 'Replaces all occurrences of find with replace',
 	},
 	{
+		name: 'stringCompare',
+		detail: 'stringCompare(a, b)',
+		documentation:
+			'Compares two strings for sorting. Returns a negative number if a sorts before b, 0 if they are equal, or a positive number if a sorts after b. Useful as a comparator for arraySort',
+	},
+	{
 		name: 'decode',
 		detail: 'decode(string, encoding)',
 		documentation: 'Decodes a string from specified encoding',
