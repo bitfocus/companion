@@ -68,6 +68,17 @@ export class InstanceModuleScanner {
 			const manifestJson: SomeModuleManifest = JSON.parse(manifestJsonStr.toString())
 			const manifestType = manifestJson.type
 
+			// A self-contained build (e.g. produced by `yarn package`) bundles its base library and so declares it as a
+			// dependency nowhere, whereas a source checkout always declares it - even before `node_modules` is installed.
+			// So a module which doesn't depend on its base library is a packaged build, and its manifest apiVersion can be
+			// trusted. This catches builds dropped into the dev folder without the `DEBUG-PACKAGED`/`pkg` layout.
+			if (!isPackaged) {
+				const baseLibName = manifestType === 'surface' ? '@companion-surface/base' : '@companion-module/base'
+				if (!(await this.#moduleDeclaresDependency(fullpath, baseLibName))) {
+					isPackaged = true
+				}
+			}
+
 			// Parse the manifest based on the type
 			if (manifestJson.type === undefined) {
 				return await this.#parseConnectionManifest(manifestJson, fullpath, isPackaged)
@@ -83,6 +94,19 @@ export class InstanceModuleScanner {
 			this.#logger.silly(`Error loading module from ${fullpath}`, e)
 			this.#logger.error(`Error loading module from "${fullpath}": ` + e)
 			return undefined
+		}
+	}
+
+	/**
+	 * Check whether a module's own `package.json` declares the given dependency in any dependency field.
+	 * A missing or unparseable `package.json` is treated as not declaring it.
+	 */
+	async #moduleDeclaresDependency(basePath: string, name: string): Promise<boolean> {
+		try {
+			const pkg = JSON.parse(await fs.readFile(path.join(basePath, 'package.json'), 'utf-8'))
+			return !!(pkg.dependencies?.[name] || pkg.devDependencies?.[name])
+		} catch {
+			return false
 		}
 	}
 
