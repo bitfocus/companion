@@ -143,17 +143,30 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 	// Create surface integrations based on old userconfig settings
 	const userconfig: Partial<OldUserConfigModel> = db.defaultTableView.getOrDefault('userconfig', {})
 
+	// Collect the integrationType of every already-configured surface, so that we can ensure an
+	// integration exists for surfaces the user has used before, even if the integration was disabled.
+	const surfaces = db.getTableView('surfaces')
+	const knownIntegrationTypes = new Set<string>()
+	for (const surface of Object.values(surfaces.all())) {
+		const integrationType = surface?.integrationType
+		if (integrationType) knownIntegrationTypes.add(integrationType)
+	}
+
 	const createInstanceIfNeeded = (
 		oldKey: keyof OldUserConfigModel,
 		moduleId: string,
 		isBuiltin: boolean,
+		oldIntegrationTypes: string[],
 		invertState = false,
 		preserveConfig = false
 	) => {
-		// Only create instance if the setting is enabled
 		const isEnabled = invertState ? !userconfig[oldKey] : userconfig[oldKey]
 		if (!preserveConfig) delete userconfig[oldKey]
-		if (!isEnabled) return
+
+		// If the integration was not enabled, only create it (disabled) when a surface of this type is
+		// already configured. That means the user has used it before and may want it again.
+		const hasKnownSurface = oldIntegrationTypes.some((t) => knownIntegrationTypes.has(t))
+		if (!isEnabled && !hasKnownSurface) return
 
 		// Don't create duplicate instances
 		if (allSurfaceInstanceModuleIds.has(moduleId)) return
@@ -171,23 +184,23 @@ function convertDatabaseToV10(db: DataStoreBase<any>, _logger: Logger): void {
 			secrets: undefined,
 			isFirstInit: true,
 			lastUpgradeIndex: 0,
-			enabled: true,
+			enabled: !!isEnabled,
 			sortOrder: 0,
 			updatePolicy: InstanceVersionUpdatePolicy.Stable,
 		} satisfies InstanceConfig)
 	}
 
 	// Note: this will remove the old config fields
-	createInstanceIfNeeded('elgato_plugin_enable', 'elgato-stream-deck', true, true, true)
-	createInstanceIfNeeded('xkeys_enable', 'xkeys', true)
-	createInstanceIfNeeded('loupedeck_enable', 'loupedeck', false)
-	createInstanceIfNeeded('mirabox_streamdock_enable', 'mirabox-stream-dock', false)
-	createInstanceIfNeeded('contour_shuttle_enable', 'contour-shuttle', false)
-	createInstanceIfNeeded('vec_footpedal_enable', 'vec-footpedal', false)
-	createInstanceIfNeeded('blackmagic_controller_enable', 'blackmagic-controller', false)
-	createInstanceIfNeeded('mystrix_enable', '203-systems-mystrix', false)
-	createInstanceIfNeeded('logitech_mx_console_enable', 'logitech-mx-creative-console', false)
-	createInstanceIfNeeded('videohub_panel_enabled', 'blackmagic-videohub-panel', false)
+	createInstanceIfNeeded('elgato_plugin_enable', 'elgato-stream-deck', true, ['elgato-streamdeck'], true, true)
+	createInstanceIfNeeded('xkeys_enable', 'xkeys', true, ['xkeys'])
+	createInstanceIfNeeded('loupedeck_enable', 'loupedeck', false, ['loupedeck'])
+	createInstanceIfNeeded('mirabox_streamdock_enable', 'mirabox-stream-dock', false, ['mirabox-streamdock'])
+	createInstanceIfNeeded('contour_shuttle_enable', 'contour-shuttle', false, ['contour-shuttle'])
+	createInstanceIfNeeded('vec_footpedal_enable', 'vec-footpedal', false, ['vec-footpedal'])
+	createInstanceIfNeeded('blackmagic_controller_enable', 'blackmagic-controller', false, ['blackmagic-controller'])
+	createInstanceIfNeeded('mystrix_enable', '203-systems-mystrix', false, ['203-mystrix'])
+	createInstanceIfNeeded('logitech_mx_console_enable', 'logitech-mx-creative-console', false, ['logi-mx-console'])
+	createInstanceIfNeeded('videohub_panel_enabled', 'blackmagic-videohub-panel', false, ['videohub-panel'])
 
 	db.defaultTableView.set('userconfig', userconfig)
 
