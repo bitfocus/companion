@@ -176,7 +176,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			(msg) => {
 				if (monitor.child) {
 					monitor.child.send(msg)
-					this.#deps.trackIpcMessage(this.connectionId, 'sent')
+					// payload is already an EJSON string (base-old IpcWrapper serializes it); measure for free
+					const bytes = 'payload' in msg && typeof msg.payload === 'string' ? Buffer.byteLength(msg.payload, 'utf8') : 0
+					this.#deps.trackIpcMessage(this.connectionId, 'sent', bytes)
 				} else {
 					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
 				}
@@ -195,7 +197,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			: null
 
 		const messageHandler = (msg: any) => {
-			this.#deps.trackIpcMessage(this.connectionId, 'received')
+			// payload is an EJSON string here (parsed inside receivedMessage); count it before that
+			const bytes = typeof msg?.payload === 'string' ? Buffer.byteLength(msg.payload, 'utf8') : 0
+			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
 			this.#ipcWrapper.receivedMessage(msg)
 		}
 		monitor.on('message', messageHandler)

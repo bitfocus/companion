@@ -24,7 +24,8 @@ import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
+import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type {
 	ConnectionChildHandlerApi,
@@ -131,15 +132,21 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
 		}
 
+		// Framed message transport over the dedicated 'pipe' fd (fd 4). Owning the serialization means one
+		// JSON.stringify per message and an exact wire byte count for metrics - no object-mode double-encode.
+		// Created before the IpcWrapper: its onMessage uses #ipcWrapper lazily (no message arrives until
+		// monitor.start(), after this constructor), and the monitor isn't started yet so it only arms its
+		// 'spawn' listener now.
+		const transport = new HostFramedTransport(monitor, 4, (msg, bytes) => {
+			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
+			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+		})
+
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
 			(msg) => {
-				if (monitor.child) {
-					monitor.child.send(msg)
-					this.#deps.trackIpcMessage(this.connectionId, 'sent')
-				} else {
-					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
-				}
+				const bytes = transport.send(msg)
+				if (bytes > 0) this.#deps.trackIpcMessage(this.connectionId, 'sent', bytes)
 			},
 			5000
 		)
@@ -150,15 +157,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.connectionId
 		)
 
-		const messageHandler = (msg: any) => {
-			this.#deps.trackIpcMessage(this.connectionId, 'received')
-			this.#ipcWrapper.receivedMessage(msg)
-		}
-		monitor.on('message', messageHandler)
-
-		this.#unsubListeners = () => {
-			monitor.off('message', messageHandler)
-		}
+		// The transport binds to the monitor, which is discarded on restart; nothing persistent to unbind.
+		this.#unsubListeners = () => undefined
 	}
 
 	/**

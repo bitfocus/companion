@@ -1,11 +1,13 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
+import net from 'node:net'
 import {
 	createModuleLogger,
 	PluginWrapper,
 	registerLoggingSink,
 	type SurfaceModuleManifest,
 } from '@companion-surface/host'
+import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import { importModuleFromPath, sealParentIpcChannel } from '../../Common/ThreadUtil.js'
 import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
@@ -179,10 +181,17 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		},
 	},
 	(msg) => {
-		parentSend(msg)
+		channel.send(msg)
 	},
 	5000
 )
+// Framed message transport over the dedicated 'pipe' fd (fd 4), paired with the host side. The 'ipc'
+// channel (process.send) is retained only for the disconnect lifecycle signal below.
+const channel = new FramedChannel(new net.Socket({ fd: 4, readable: true, writable: true }), (msg) =>
+	ipcWrapper.receivedMessage(msg as any)
+)
+
+process.on('disconnect', () => process.exit())
 
 registerLoggingSink((source, level, message) => {
 	ipcWrapper.sendWithNoCb('log-message', {

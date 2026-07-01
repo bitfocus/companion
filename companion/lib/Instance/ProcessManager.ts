@@ -502,7 +502,10 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				kill: 5000,
 				cwd: moduleInfo.basePath,
 				fork: false,
-				stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+				// fd 3 = 'ipc' (legacy modules + registration/disconnect lifecycle); fd 4 = raw 'pipe' carrying
+				// the framed message transport for new connections + surfaces (see FramedMessageChannel). Legacy
+				// children simply never open fd 4.
+				stdio: ['pipe', 'pipe', 'pipe', 'ipc', 'pipe'],
 			})
 
 			monitor.on('start', () => {

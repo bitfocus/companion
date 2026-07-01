@@ -102,13 +102,22 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			variableValuesReceived: number
 			ipcMessagesSent: number
 			ipcMessagesReceived: number
+			ipcBytesSent: number
+			ipcBytesReceived: number
 		}
 	>()
 
 	#instanceCounter(instanceId: string) {
 		let counter = this.#instanceCounters.get(instanceId)
 		if (!counter) {
-			counter = { feedbackValuesReceived: 0, variableValuesReceived: 0, ipcMessagesSent: 0, ipcMessagesReceived: 0 }
+			counter = {
+				feedbackValuesReceived: 0,
+				variableValuesReceived: 0,
+				ipcMessagesSent: 0,
+				ipcMessagesReceived: 0,
+				ipcBytesSent: 0,
+				ipcBytesReceived: 0,
+			}
 			this.#instanceCounters.set(instanceId, counter)
 		}
 		return counter
@@ -239,10 +248,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				trackVariableValuesReceived: (connectionId, count) => {
 					this.#instanceCounter(connectionId).variableValuesReceived += count
 				},
-				trackIpcMessage: (instanceId, direction) => {
+				trackIpcMessage: (instanceId, direction, bytes) => {
 					const counter = this.#instanceCounter(instanceId)
-					if (direction === 'sent') counter.ipcMessagesSent++
-					else counter.ipcMessagesReceived++
+					if (direction === 'sent') {
+						counter.ipcMessagesSent++
+						counter.ipcBytesSent += bytes
+					} else {
+						counter.ipcMessagesReceived++
+						counter.ipcBytesReceived += bytes
+					}
 				},
 			},
 			{
@@ -254,10 +268,15 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				invalidateClientJson: (instanceId: string) => {
 					this.#broadcastSurfaceInstanceChanges([instanceId])
 				},
-				trackIpcMessage: (instanceId, direction) => {
+				trackIpcMessage: (instanceId, direction, bytes) => {
 					const counter = this.#instanceCounter(instanceId)
-					if (direction === 'sent') counter.ipcMessagesSent++
-					else counter.ipcMessagesReceived++
+					if (direction === 'sent') {
+						counter.ipcMessagesSent++
+						counter.ipcBytesSent += bytes
+					} else {
+						counter.ipcMessagesReceived++
+						counter.ipcBytesReceived += bytes
+					}
 				},
 			},
 			this.modules,
@@ -474,8 +493,29 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			() => {
 				const out: LabeledValue[] = []
 				for (const [instance_id, c] of this.#instanceCounters) {
-					out.push({ labels: { instance_id, direction: 'sent' }, value: c.ipcMessagesSent })
-					out.push({ labels: { instance_id, direction: 'received' }, value: c.ipcMessagesReceived })
+					out.push(
+						{ labels: { instance_id, direction: 'sent' }, value: c.ipcMessagesSent },
+						{ labels: { instance_id, direction: 'received' }, value: c.ipcMessagesReceived }
+					)
+				}
+				return out
+			}
+		)
+
+		// Cumulative IPC payload bytes exchanged with each instance's module child, by direction. Measured from
+		// the already-serialized payload string at the IPC boundary - a slight under-count (excludes the small
+		// fixed envelope), no extra serialization on the hot path.
+		metrics.labeledCounter(
+			'companion_instance_ipc_bytes_total',
+			'Cumulative IPC bytes exchanged with an instance module child, by direction',
+			['instance_id', 'direction'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const [instance_id, c] of this.#instanceCounters) {
+					out.push(
+						{ labels: { instance_id, direction: 'sent' }, value: c.ipcBytesSent },
+						{ labels: { instance_id, direction: 'received' }, value: c.ipcBytesReceived }
+					)
 				}
 				return out
 			}
