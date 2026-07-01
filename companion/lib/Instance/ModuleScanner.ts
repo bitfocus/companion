@@ -99,7 +99,7 @@ export class InstanceModuleScanner {
 
 	/**
 	 * Check whether a module's own `package.json` declares the given dependency in any dependency field.
-	 * A missing or unparseable `package.json` is treated as not declaring it.
+	 * A missing or unparsable `package.json` is treated as not declaring it.
 	 */
 	async #moduleDeclaresDependency(basePath: string, name: string): Promise<boolean> {
 		try {
