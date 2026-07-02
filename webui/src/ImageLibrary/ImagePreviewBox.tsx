@@ -7,6 +7,7 @@ interface ImagePreviewBoxProps {
 	onFileDrop?: (file: File) => void
 	dragOverMessage?: string
 	className?: string
+	backgroundColor?: string
 }
 
 export function ImagePreviewBox({
@@ -15,6 +16,7 @@ export function ImagePreviewBox({
 	onFileDrop,
 	dragOverMessage = 'Drop image here',
 	className,
+	backgroundColor,
 }: ImagePreviewBoxProps): JSX.Element {
 	const [isDragOver, setIsDragOver] = useState(false)
 
@@ -47,6 +49,7 @@ export function ImagePreviewBox({
 	return (
 		<div
 			className={classNames('image-preview-full', { 'drag-over': isDragOver }, className)}
+			style={{ backgroundColor: backgroundColor ?? '#ffffff' }}
 			onDragOver={onFileDrop ? handleDragOver : undefined}
 			onDragLeave={onFileDrop ? handleDragLeave : undefined}
 			onDrop={onFileDrop ? handleDrop : undefined}

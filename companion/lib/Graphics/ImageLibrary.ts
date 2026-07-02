@@ -173,6 +173,17 @@ export class ImageLibrary {
 				.mutation(({ input }) => {
 					return this.setImageName(input.imageName, input.newName)
 				}),
+
+			setBackgroundColor: publicProcedure
+				.input(
+					z.object({
+						imageName: z.string(),
+						backgroundColor: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setImageBackgroundColor(input.imageName, input.backgroundColor)
+				}),
 		})
 	}
 
@@ -253,6 +264,7 @@ export class ImageLibrary {
 			checksum: '',
 			mimeType: '',
 			sortOrder: 0, // Will be updated when moved to collections
+			backgroundColor: '#ffffff',
 		}
 
 		const imageData: ImageLibraryData = {
@@ -315,6 +327,26 @@ export class ImageLibrary {
 		this.#updateImageVariableDefinitions()
 
 		this.#logger.info(`Updated image ${name} description to "${description}"`)
+
+		// Notify clients
+		this.#events.emit('update', [{ type: 'update', itemName: name, info: data.info }])
+
+		return true
+	}
+
+	/**
+	 * Set the preview background colour of an existing image
+	 */
+	setImageBackgroundColor(name: string, backgroundColor: string): boolean {
+		const data = this.#dbTable.get(name)
+		if (!data) return false
+
+		data.info.backgroundColor = backgroundColor
+		data.info.modifiedAt = Date.now()
+
+		this.#dbTable.set(name, data)
+
+		this.#logger.info(`Updated image ${name} background colour to "${backgroundColor}"`)
 
 		// Notify clients
 		this.#events.emit('update', [{ type: 'update', itemName: name, info: data.info }])
