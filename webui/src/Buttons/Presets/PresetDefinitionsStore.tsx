@@ -1,13 +1,13 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { action, observable } from 'mobx'
 import { useState } from 'react'
-import type { UIPresetDefinitionUpdate, UIPresetSection } from '@companion-app/shared/Model/Presets.js'
+import type { UIPresetDefinitionUpdate, UIPresetSections } from '@companion-app/shared/Model/Presets.js'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util'
 import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
 
 export class PresetDefinitionsStore {
-	readonly presets = observable.map<string, Record<string, UIPresetSection | undefined>>()
+	readonly presets = observable.map<string, UIPresetSections>()
 
 	updatePresets = action((update: UIPresetDefinitionUpdate | null) => {
 		if (!update) {

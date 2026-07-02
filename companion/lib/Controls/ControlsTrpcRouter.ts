@@ -10,6 +10,7 @@ import { zodLocation } from '../Preview/Graphics.js'
 import { publicProcedure } from '../UI/TRPC.js'
 import type { ControlCommonEvents } from './ControlDependencies.js'
 import type { ControlsController } from './Controller.js'
+import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import type { SomeControl } from './IControlFragments.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -29,17 +30,61 @@ export function createControlsTrpcRouter(
 					presetId: z.string(),
 					location: zodLocation,
 					variableValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
+					/** Whether to place a live reference to the preset, or a one-off copy of its data */
+					mode: z.enum(['copy', 'reference']).default('reference'),
 				})
 			)
 			.mutation(async ({ input }) => {
-				const model = instanceDefinitions.convertPresetToControlModel(
-					input.connectionId,
-					input.presetId,
-					input.variableValues
-				)
+				// Preset references (linked presets) are only supported by 2.0+ modules. Guard here so that an old
+				// module can never be placed as a reference, even if the request asks for it - it falls back to a copy.
+				const useReference =
+					input.mode === 'reference' && instanceDefinitions.doesConnectionSupportPresetReferences(input.connectionId)
+
+				const model = useReference
+					? instanceDefinitions.convertPresetToReferenceControlModel(
+							input.connectionId,
+							input.presetId,
+							input.variableValues
+						)
+					: instanceDefinitions.convertPresetToControlModel(input.connectionId, input.presetId, input.variableValues)
 				if (!model) return null
 
 				return controlsController.importControl(input.location, model)
+			}),
+
+		setPresetReferenceVariable: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+					variableName: z.string(),
+					value: JsonValueSchema.optional(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const controlId = pageStore.getControlIdAt(input.location)
+				if (!controlId) return false
+
+				const control = controlsMap.get(controlId)
+				if (!(control instanceof ControlButtonPresetReference)) return false
+
+				return control.setTemplateVariableValue(input.variableName, input.value)
+			}),
+
+		setPresetReferenceConnection: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+					connectionId: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const controlId = pageStore.getControlIdAt(input.location)
+				if (!controlId) return false
+
+				const control = controlsMap.get(controlId)
+				if (!(control instanceof ControlButtonPresetReference)) return false
+
+				return control.setReferencedConnection(input.connectionId)
 			}),
 
 		convertControl: publicProcedure

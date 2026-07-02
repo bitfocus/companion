@@ -1,8 +1,14 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
+import type { VariableValues } from './Variables.js'
 
-export type SomeButtonModel = PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | LayeredButtonModel
+export type SomeButtonModel =
+	| PageNumberButtonModel
+	| PageUpButtonModel
+	| PageDownButtonModel
+	| LayeredButtonModel
+	| PresetReferenceButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
@@ -40,6 +46,38 @@ export interface LayeredButtonModel extends ButtonModelBase {
 
 	style: {
 		layers: SomeButtonGraphicsElement[]
+	}
+}
+
+/**
+ * A button that references a preset from a connection.
+ * It keeps a cached copy of the resolved button data (the same fields as a layered button) so it keeps
+ * running in its 'last known' state if the source preset disappears or the connection stops, and refreshes
+ * that cache when the source preset definition updates.
+ */
+export interface PresetReferenceButtonModel extends ButtonModelBase {
+	readonly type: 'preset-reference'
+
+	options: LayeredButtonOptions
+
+	style: {
+		layers: SomeButtonGraphicsElement[]
+	}
+
+	/**
+	 * The reference to the source preset, and the user-editable templated variable overrides.
+	 * The keys of `variableValues` match `localVariable.variableName` of the templated local variables and
+	 * are the only fields the user is allowed to edit on a placed reference.
+	 */
+	presetRef: {
+		connectionId: string
+		/**
+		 * The module-id of the source connection. Kept up to date with the referenced connection, so the user
+		 * can switch the reference to another connection of the same module (and so import can re-link).
+		 */
+		moduleId: string
+		presetId: string
+		variableValues: VariableValues | null
 	}
 }
 

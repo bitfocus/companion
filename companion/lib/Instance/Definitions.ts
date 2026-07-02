@@ -3,7 +3,11 @@ import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { diffObjects } from '@companion-app/shared/Diff.js'
-import type { LayeredButtonModel, PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	LayeredButtonModel,
+	PresetButtonModel,
+	PresetReferenceButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type {
 	ClientEntityDefinition,
 	CompositeElementDefinitionUpdate,
@@ -31,6 +35,7 @@ import type {
 	PresetDefinition,
 	UIPresetDefinitionUpdate,
 	UIPresetSection,
+	UIPresetSections,
 } from '@companion-app/shared/Model/Presets.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
@@ -109,7 +114,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	/**
 	 * The preset definitions, as viewed by the ui
 	 */
-	#uiPresetDefinitions: Record<string, Record<string, UIPresetSection>> = {}
+	#uiPresetDefinitions: Record<string, UIPresetSections> = {}
 
 	/**
 	 * The composite element definitions
@@ -415,6 +420,44 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	/**
+	 * Build a preset-reference control model for a preset. The resulting model carries a cached copy of the
+	 * resolved button data plus a reference to the source preset, so the placed control keeps running in its
+	 * last-known state if the source preset/connection disappears.
+	 *
+	 * Only `localVariables` is cloned here (it is mutated by the templated-value injection); the other
+	 * fields are deep-cloned downstream when loaded into the control's entity pool.
+	 */
+	convertPresetToReferenceControlModel(
+		connectionId: string,
+		presetId: string,
+		variableValues: VariableValues | null
+	): PresetReferenceButtonModel | null {
+		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
+		if (!definition || definition.type !== 'button') return null
+
+		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
+		if (!config) return null
+
+		const localVariables = structuredClone(definition.model.localVariables)
+		if (variableValues) injectOverriddenLocalVariableValues(localVariables, variableValues)
+
+		return {
+			type: 'preset-reference',
+			style: definition.model.style,
+			options: definition.model.options,
+			feedbacks: definition.model.feedbacks,
+			steps: definition.model.steps,
+			localVariables,
+			presetRef: {
+				connectionId,
+				moduleId: config.moduleId,
+				presetId,
+				variableValues: variableValues ?? null,
+			},
+		}
+	}
+
+	/**
 	 * Set the action definitions for a connection
 	 */
 	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
@@ -478,12 +521,27 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	setPresetDefinitions(
 		connectionId: string,
 		newPresets: ReadonlyMap<string, PresetDefinition>,
-		uiDefinitions: Record<string, UIPresetSection>
+		uiDefinitions: Record<string, UIPresetSection>,
+		supportsReferences: boolean
 	): void {
 		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!config) return
 
-		this.#updateVariablePrefixesAndStoreDefinitions(connectionId, config.label, newPresets, uiDefinitions)
+		this.#updateVariablePrefixesAndStoreDefinitions(
+			connectionId,
+			config.label,
+			newPresets,
+			uiDefinitions,
+			supportsReferences
+		)
+	}
+
+	/**
+	 * Whether a connection's module supports placing its presets as live references (linked presets).
+	 * Older modules (pre 2.0 api) only support being placed as a one-off copy.
+	 */
+	doesConnectionSupportPresetReferences(connectionId: string): boolean {
+		return this.#uiPresetDefinitions[connectionId]?.supportsReferences ?? false
 	}
 
 	setCompositeElementDefinitions(connectionId: string, rawDefinitions: CompositeElementDefinition[]): void {
@@ -529,7 +587,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				connectionId,
 				labelTo,
 				this.#presetDefinitions[connectionId],
-				this.#uiPresetDefinitions[connectionId]
+				this.#uiPresetDefinitions[connectionId].sections,
+				this.#uiPresetDefinitions[connectionId].supportsReferences
 			)
 		}
 		if (this.#compositeElementDefinitions[connectionId] !== undefined) {
@@ -549,7 +608,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		connectionId: string,
 		label: string,
 		presets: ReadonlyMap<string, PresetDefinition>,
-		uiDefinitions: Record<string, UIPresetSection>
+		uiDefinitions: Record<string, UIPresetSection>,
+		supportsReferences: boolean
 	): void {
 		const missingReferencedFeedbackDefinitions = new Set<string>()
 		const missingReferencedActionDefinitions = new Set<string>()
@@ -645,7 +705,11 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		this.#presetDefinitions[connectionId] = structuredClone(presets)
 		const lastPresetDefinitions = this.#uiPresetDefinitions[connectionId]
-		this.#uiPresetDefinitions[connectionId] = structuredClone(uiDefinitions)
+		const newUiDefinitions: UIPresetSections = {
+			supportsReferences,
+			sections: structuredClone(uiDefinitions),
+		}
+		this.#uiPresetDefinitions[connectionId] = newUiDefinitions
 
 		this.emit('updatePresets', connectionId)
 
@@ -654,10 +718,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				this.#events.emit('presets', {
 					type: 'add',
 					connectionId,
-					definitions: uiDefinitions,
+					definitions: newUiDefinitions,
 				})
 			} else {
-				const diff = jsonPatch.compare(lastPresetDefinitions, uiDefinitions)
+				const diff = jsonPatch.compare(lastPresetDefinitions, newUiDefinitions)
 				if (diff && diff.length > 0) {
 					this.#events.emit('presets', { type: 'patch', connectionId, patch: diff })
 				}

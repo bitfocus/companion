@@ -27,7 +27,7 @@ const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeaf
 
 		let count = 0
 
-		for (const section of Object.values(connectionPresets)) {
+		for (const section of Object.values(connectionPresets.sections)) {
 			for (const group of Object.values(section?.definitions ?? {})) {
 				switch (group.type) {
 					case 'simple':
@@ -86,7 +86,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	const filterConnection = useCallback(
 		(connectionId: string, _connectionInfo: ClientConnectionConfig) => {
 			const presets = presetsDefinitionsStore.presets.get(connectionId)
-			return !!presets && Object.keys(presets).length > 0
+			return !!presets && Object.keys(presets.sections).length > 0
 		},
 		[presetsDefinitionsStore.presets]
 	)
