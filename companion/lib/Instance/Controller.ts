@@ -106,6 +106,28 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#surfaceInstanceCollectionsController
 	}
 
+	/**
+	 * Whether the collection containing an instance of the given type is enabled.
+	 * Dispatches to the correct collections controller so callers don't have to.
+	 */
+	isCollectionEnabled(moduleType: ModuleInstanceType, collectionId: string | null | undefined): boolean {
+		switch (moduleType) {
+			case ModuleInstanceType.Connection:
+				return this.#connectionCollectionsController.isCollectionEnabled(collectionId)
+			case ModuleInstanceType.Surface:
+				return this.#surfaceInstanceCollectionsController.isCollectionEnabled(collectionId)
+			default:
+				return false
+		}
+	}
+
+	/**
+	 * Whether an instance should be running: it is enabled directly AND its collection is enabled.
+	 */
+	isInstanceEnabled(config: InstanceConfig): boolean {
+		return config.enabled !== false && this.isCollectionEnabled(config.moduleInstanceType, config.collectionId)
+	}
+
 	constructor(
 		appInfo: AppInfo,
 		db: DataDatabase,
@@ -818,6 +840,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			enabledChanged = true
 		}
 
+		this.emit('surface_instance_updated', instanceId)
+
 		this.#configStore.commitChanges([instanceId], false)
 
 		this.#logger.debug(`surface integration "${surfaceConfig?.label}" configuration updated`)
@@ -1091,17 +1115,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#configStore.commitChanges([id], false)
 		}
 
-		let enableInstance = config.enabled !== false
-		if (
-			config.moduleInstanceType === ModuleInstanceType.Connection &&
-			!this.#connectionCollectionsController.isCollectionEnabled(config.collectionId)
-		)
-			enableInstance = false
-		else if (
-			config.moduleInstanceType === ModuleInstanceType.Surface &&
-			!this.#surfaceInstanceCollectionsController.isCollectionEnabled(config.collectionId)
-		)
-			enableInstance = false
+		const enableInstance = this.isInstanceEnabled(config)
 
 		this.processManager.queueUpdateInstanceState(
 			id,
