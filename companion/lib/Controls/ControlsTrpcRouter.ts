@@ -9,6 +9,7 @@ import type { IPageStore } from '../Page/Store.js'
 import { zodLocation } from '../Preview/Graphics.js'
 import { publicProcedure } from '../UI/TRPC.js'
 import type { ControlCommonEvents } from './ControlDependencies.js'
+import { getControlIncrementOptions, incrementControlModelFields } from './ControlIncrementUtil.js'
 import type { ControlsController } from './Controller.js'
 import type { SomeControl } from './IControlFragments.js'
 
@@ -170,6 +171,78 @@ export function createControlsTrpcRouter(
 
 					// Ensure it is redrawn
 					newControl.commitChange(true)
+
+					return true
+				}
+
+				return false
+			}),
+
+		getControlIncrementOptions: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+				})
+			)
+			.query(async ({ input }) => {
+				const controlId = pageStore.getControlIdAt(input.location)
+				if (!controlId) return []
+
+				const control = controlsMap.get(controlId)
+				if (!control) return []
+
+				return getControlIncrementOptions(control.toJSON(true))
+			}),
+
+		copyControlWithOffset: publicProcedure
+			.input(
+				z.object({
+					fromLocation: zodLocation,
+					toLocation: zodLocation,
+					incrementFieldIds: z.array(z.string()),
+					incrementBy: z.number().int(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { fromLocation, toLocation } = input
+
+				// Don't try copying over itself
+				if (
+					fromLocation.pageNumber === toLocation.pageNumber &&
+					fromLocation.column === toLocation.column &&
+					fromLocation.row === toLocation.row
+				)
+					return false
+
+				// Make sure target page number is valid
+				if (!pageStore.isPageValid(toLocation.pageNumber)) return false
+
+				// Make sure there is something to copy
+				const fromControlId = pageStore.getControlIdAt(fromLocation)
+				if (!fromControlId) return false
+
+				const fromControl = controlsMap.get(fromControlId)
+				if (!fromControl) return false
+				const controlJson = incrementControlModelFields(
+					fromControl.toJSON(true),
+					input.incrementFieldIds,
+					input.incrementBy
+				)
+
+				// Delete the control at the destination
+				const toControlId = pageStore.getControlIdAt(toLocation)
+				if (toControlId) {
+					controlsController.deleteControl(toControlId)
+				}
+
+				const newControlId = CreateBankControlId(nanoid())
+				const newControl = controlsController.createClassForControl(newControlId, 'button', controlJson, true)
+				if (newControl) {
+					controlsMap.set(newControlId, newControl)
+
+					controlEvents.emit('controlPlacedAt', toLocation, newControlId)
+
+					newControl.triggerRedraw()
 
 					return true
 				}
