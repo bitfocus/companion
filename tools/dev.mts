@@ -152,59 +152,46 @@ const mainWatcher = chokidar
 	})
 
 if (devModulesPath) {
-	// Stagger module watcher startup to avoid FD spike during initialization
-	mainWatcher.on('ready', () => {
-		chokidar
-			.watch('.', {
-				cwd: devModulesPath,
-				ignoreInitial: true,
-				ignored: (filePath, stats) => {
-					if (
-						stats?.isFile() &&
-						!filePath.endsWith('.mjs') &&
-						!filePath.endsWith('.js') &&
-						!filePath.endsWith('.cjs') &&
-						!filePath.endsWith('.json')
-					) {
-						return true
-					}
-					if (filePath.includes('node_modules')) {
-						return true
-					}
-					return false
-				},
-			})
-			.on('all', (event, filename) => {
-				const moduleDirName = filename.split(path.sep)[0]
-				// Module changed
+	if (!fs.existsSync(devModulesPath)) {
+		console.warn(`Module watcher path does not exist: ${devModulesPath}`)
+	} else {
+		const allowedExtensions = ['.mjs', '.js', '.cjs', '.json']
+		const moduleWatcher = fs.watch(devModulesPath, { recursive: true, persistent: true }, (_event, filename) => {
+			if (!filename) return
+			if (filename.includes('node_modules')) return
+			if (!allowedExtensions.some((ext) => filename.endsWith(ext))) return
 
-				let fn = cachedDebounces[moduleDirName]
-				if (!fn) {
-					fn = debounceFn(
-						() => {
-							console.log('Sending reload for module:', moduleDirName)
-							if (node) {
-								node.send({
-									messageType: 'reload-extra-module',
-									fullpath: path.join(devModulesPath, moduleDirName),
-								})
-							}
-						},
-						{
-							after: true,
-							before: false,
-							wait: 1000,
+			const moduleDirName = filename.split(path.sep)[0]
+			if (!moduleDirName) return
+			// Module changed
+
+			let fn = cachedDebounces[moduleDirName]
+			if (!fn) {
+				fn = debounceFn(
+					() => {
+						console.log('Sending reload for module:', moduleDirName)
+						if (node) {
+							node.send({
+								messageType: 'reload-extra-module',
+								fullpath: path.join(devModulesPath, moduleDirName),
+							})
 						}
-					)
-					cachedDebounces[moduleDirName] = fn
-				}
+					},
+					{
+						after: true,
+						before: false,
+						wait: 1000,
+					}
+				)
+				cachedDebounces[moduleDirName] = fn
+			}
 
-				fn()
-			})
-			.on('error', (error) => {
-				console.warn(`Module watcher error: ${error}`)
-			})
-	})
+			fn()
+		})
+		moduleWatcher.on('error', (error) => {
+			console.warn(`Module watcher error: ${error}`)
+		})
+	}
 }
 
 async function start() {

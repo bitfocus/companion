@@ -3,7 +3,6 @@ import os from 'node:os'
 import path from 'node:path'
 import url, { fileURLToPath } from 'node:url'
 import { getCurrentScope, init } from '@sentry/electron/main'
-import chokidar from 'chokidar'
 import debounceFn from 'debounce-fn'
 import electron, { app, BrowserWindow, dialog, ipcMain } from 'electron'
 import Store from 'electron-store'
@@ -290,7 +289,7 @@ if (!lock) {
 
 	let restartCounter = 0
 
-	/** @type {ReturnType<typeof chokidar.watch> | null} */
+	/** @type {import('fs').FSWatcher | null} */
 	let watcher = null
 	/** @type {boolean} */
 	let pendingWatcher = false
@@ -312,34 +311,16 @@ if (!lock) {
 
 				const newPath0 = uiConfig.get('dev_modules_path')
 				if (newPath0 && (await fs.pathExists(newPath0))) {
-					// Watch for changes in the modules
+					// Watch for changes in the module dev folder.
 					const devModulesPath = path.resolve(newPath0)
-					watcher = chokidar.watch('.', {
-						ignoreInitial: true,
-						cwd: devModulesPath,
-						ignored: (path, stats) => {
-							if (
-								stats?.isFile() &&
-								!path.endsWith('.mjs') &&
-								!path.endsWith('.js') &&
-								!path.endsWith('.cjs') &&
-								!path.endsWith('.json')
-							) {
-								return true
-							}
-							if (path.includes('node_modules')) {
-								return true
-							}
-							return false
-						},
-					})
+					const allowedExtensions = ['.mjs', '.js', '.cjs', '.json']
+					watcher = fs.watch(devModulesPath, { recursive: true, persistent: true }, (_event, filename) => {
+						if (!filename) return
+						if (filename.includes('node_modules')) return
+						if (!allowedExtensions.some((ext) => filename.endsWith(ext))) return
 
-					watcher.on('error', (error) => {
-						customLog(`Watcher error: ${error}`, 'Application')
-					})
-
-					watcher.on('all', (event, filename) => {
 						const moduleDirName = filename.split(path.sep)[0]
+						if (!moduleDirName) return
 
 						let fn = cachedDebounces[moduleDirName]
 						if (!fn) {
@@ -363,6 +344,10 @@ if (!lock) {
 							cachedDebounces[moduleDirName] = fn
 						}
 						fn()
+					})
+
+					watcher.on('error', (error) => {
+						customLog(`Watcher error: ${error}`, 'Application')
 					})
 				}
 			} catch (e) {
