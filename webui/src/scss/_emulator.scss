@@ -10,24 +10,197 @@
 }
 
 .page-emulator-list {
-	h1 {
-		margin-top: 1rem;
-		color: #f7f7f7;
-		text-align: center;
+	height: 100vh;
+	overflow-y: auto;
+
+	.emulator-list-inner {
+		max-width: 1040px;
+		margin: 0 auto;
+		padding: clamp(1.5rem, 4vh, 3.5rem) clamp(1rem, 4vw, 2.5rem) 3rem;
+		display: flex;
+		flex-direction: column;
+		min-height: 100%;
 	}
 
-	.row {
-		justify-content: center !important;
+	// ─── Header ──────────────────────────────────────────────
+	.emulator-list-header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		margin-bottom: 2rem;
+
+		.emulator-list-logo {
+			flex-shrink: 0;
+			opacity: 0.95;
+		}
+
+		.emulator-list-heading {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+
+			h1 {
+				margin: 0;
+				color: #f7f7f7;
+				font-size: clamp(1.4rem, 3.5vw, 2rem);
+				font-weight: 600;
+				line-height: 1.2;
+				word-break: break-word;
+			}
+
+			.emulator-list-subheading {
+				margin-top: 0.15rem;
+				color: rgba(255, 255, 255, 0.55);
+				font-size: 0.95rem;
+			}
+		}
+	}
+
+	// ─── Card grid ───────────────────────────────────────────
+	.emulator-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+		gap: 1rem;
 	}
 
 	.emulator-button {
-		min-height: 120px;
-		padding: 1.25rem 1rem;
-		text-align: center;
+		position: relative;
+		overflow: hidden;
+		min-height: 140px;
+		padding: 1.25rem 1.5rem;
 
-		font-size: 1.7em;
-		padding: 2rem 1rem;
-		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-end;
+		text-align: left;
+
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 10px;
+		color: #f7f7f7;
+
+		transition:
+			transform 0.15s ease,
+			border-color 0.15s ease,
+			box-shadow 0.15s ease,
+			background-color 0.15s ease;
+
+		// Decorative dot-grid motif, echoing the emulator button surface
+		.emulator-card-grid {
+			position: absolute;
+			top: 1.25rem;
+			left: 1.5rem;
+			width: 80px; // 8 dots × 10px
+			height: 40px; // 4 rows × 10px
+			color: #f7f7f7;
+			opacity: 0.18;
+			background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.6px);
+			background-size: 10px 10px;
+			background-position: 0 0;
+			transition:
+				color 0.15s ease,
+				opacity 0.15s ease;
+			pointer-events: none;
+		}
+
+		.emulator-card-body {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+		}
+
+		.emulator-card-name {
+			font-size: 1.25rem;
+			font-weight: 600;
+			line-height: 1.25;
+			color: #f7f7f7;
+			word-break: break-word;
+		}
+
+		.emulator-card-chevron {
+			position: absolute;
+			bottom: 1.25rem;
+			right: 1.5rem;
+			font-size: 0.9rem;
+			color: rgba(255, 255, 255, 0.4);
+			transition:
+				transform 0.15s ease,
+				color 0.15s ease;
+		}
+
+		&:hover,
+		&:focus-visible {
+			transform: translateY(-2px);
+			background: rgba(255, 255, 255, 0.07);
+			border-color: rgba(214, 158, 46, 0.7);
+			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+
+			.emulator-card-grid {
+				color: #d69e2e;
+				opacity: 0.55;
+			}
+
+			.emulator-card-chevron {
+				transform: translateX(3px);
+				color: #d69e2e;
+			}
+		}
+
+		&:active {
+			transform: translateY(0);
+			border-color: #d69e2e;
+			background: rgba(214, 158, 46, 0.12);
+		}
+	}
+
+	// ─── Footer ──────────────────────────────────────────────
+	.emulator-list-footer {
+		margin-top: auto;
+		padding-top: 2.5rem;
+
+		details {
+			border-top: 1px solid rgba(255, 255, 255, 0.1);
+			padding-top: 1rem;
+
+			summary {
+				cursor: pointer;
+				color: rgba(255, 255, 255, 0.55);
+				font-size: 0.9rem;
+				list-style: none;
+				user-select: none;
+
+				&::-webkit-details-marker {
+					display: none;
+				}
+
+				&::before {
+					content: '▸';
+					display: inline-block;
+					margin-right: 0.5rem;
+					transition: transform 0.15s ease;
+				}
+
+				&:hover {
+					color: #f7f7f7;
+				}
+			}
+
+			&[open] summary::before {
+				transform: rotate(90deg);
+			}
+		}
+
+		.emulator-list-footer-content {
+			margin-top: 0.85rem;
+			color: rgba(255, 255, 255, 0.65);
+			font-size: 0.9rem;
+			line-height: 1.5;
+
+			b {
+				color: #f7f7f7;
+			}
+		}
 	}
 }
 
