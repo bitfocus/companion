@@ -7,7 +7,7 @@ import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { StandalonePageError } from '~/Components/StandalonePageError.js'
 import { trpc } from '~/Resources/TRPC'
 
 export const EmulatorList = observer(function EmulatorList() {
@@ -71,9 +71,7 @@ export const EmulatorList = observer(function EmulatorList() {
 						</Grid.Row>
 					</>
 				) : (
-					<Grid.Row style={{ margin: '20% 0' }}>
-						<LoadingRetryOrError error={emulatorList.error} dataReady={false} doRetry={doRetryLoad} design="pulse-xl" />
-					</Grid.Row>
+					<StandalonePageError error={emulatorList.error} dataReady={false} doRetry={doRetryLoad} />
 				)}
 			</Grid.Container>
 		</div>

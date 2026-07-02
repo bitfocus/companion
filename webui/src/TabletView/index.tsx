@@ -6,12 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Grid } from '~/Components/Grid'
+import { StandalonePageError } from '~/Components/StandalonePageError.js'
 import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { usePagesInfoSubscription } from '~/Hooks/usePagesInfoSubscription.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
+import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus.js'
 import { useUserConfigSubscription } from '~/Hooks/useUserConfigSubscription.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
@@ -20,6 +21,8 @@ import { ConfigurePanel } from './ConfigurePanel.js'
 
 export const TabletView = observer(function TabletView() {
 	const navigate = useNavigate({ from: '/tablet' })
+
+	const connectionStatus = useTRPCConnectionStatus()
 
 	const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -168,6 +171,21 @@ export const TabletView = observer(function TabletView() {
 
 	useWakeLock()
 
+	// If the socket was connected and has since dropped, show a calm reconnecting overlay
+	// rather than the raw connection error. Gated on `wasConnected` so it doesn't flash
+	// during the normal first-load connect.
+	if (connectionStatus.wasConnected && connectionStatus.status !== TRPCConnectionStatus.Connected) {
+		return (
+			<div className="page-tablet">
+				<StandalonePageError
+					dataReady={false}
+					error={loadError || 'Lost connection to Companion'}
+					doRetry={doRetryLoad}
+				/>
+			</div>
+		)
+	}
+
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
@@ -203,10 +221,7 @@ export const TabletView = observer(function TabletView() {
 						</>
 					) : (
 						<Grid.Row className="flex-grow-1">
-							<div className="cycle-layout">
-								<div></div>
-								<LoadingRetryOrError dataReady={false} error={loadError} doRetry={doRetryLoad} design="pulse-xl" />
-							</div>
+							<StandalonePageError dataReady={false} error={loadError} doRetry={doRetryLoad} />
 						</Grid.Row>
 					)}
 				</Grid.Container>
