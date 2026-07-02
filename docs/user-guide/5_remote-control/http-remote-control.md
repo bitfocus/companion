@@ -68,6 +68,35 @@ This API tries to follow REST principles, and the convention that a `POST` reque
   Method: POST
   Path: `/api/surfaces/rescan`
 
+### Surfaces
+
+- List all surfaces
+  Method: GET
+  Path: `/api/surfaces`
+  Response: JSON array of surface objects, each with `id`, `type`, `integrationType`, `name`, `displayName`, `isConnected`, `size` (`{rows, columns}` or `null`), `brightness` (0-100, or `null` if unknown), and `page` — an object `{id, number, name}` describing the current page (or `null` if unknown).
+
+  ```json
+  [
+  	{
+  		"id": "emulator:emulator",
+  		"type": "Emulator",
+  		"integrationType": "emulator",
+  		"name": "",
+  		"displayName": "Emulator (emulator:emulator)",
+  		"isConnected": true,
+  		"size": { "rows": 4, "columns": 8 },
+  		"brightness": 100,
+  		"page": { "id": "abcd1234", "number": 1, "name": "Main" }
+  	}
+  ]
+  ```
+
+- Set the brightness of a surface
+  Method: POST
+  Path: `/api/surfaces/<surface id>/brightness?brightness=<0-100>`
+  Error (400): `Invalid brightness` if the value is missing, not a number, or outside 0-100
+  Error (404): `Not found` if no connected surface matches the given id
+
 ### Connection Management
 
 - List all connections with their current status
@@ -153,6 +182,12 @@ POST `/api/custom-variable/data/value`
 Content-Type `application/json`  
 Body: `{"name":"Douglas", "answer":42}` - Body needs to be a valid JSON.  
 The object will be stored in the variable value and will not be converted to a string. You can also use the data types boolean, number, array or null. JSON does not support sending undefined as a value, but we interpret an empty body as undefined, properties of an object can of course be undefined.
+
+List all surfaces:
+GET `/api/surfaces`
+
+Set the brightness of the emulator surface to 30%:
+POST `/api/surfaces/emulator:emulator/brightness?brightness=30`
 
 List all connections:
 GET `/api/connections`

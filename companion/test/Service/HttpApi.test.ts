@@ -130,6 +130,126 @@ describe('HttpApi', () => {
 				expect(res.text).toBe('fail')
 			})
 		})
+
+		describe('list', () => {
+			test('ok', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.getSurfacesList.mockReturnValue([
+					{
+						id: 'group',
+						surfaces: [
+							{
+								id: 'emulator',
+								type: 'Emulator',
+								integrationType: 'emulator',
+								name: '',
+								displayName: 'Emulator (emulator)',
+								isConnected: true,
+								size: { rows: 4, columns: 8 },
+								brightness: 50,
+							},
+						],
+					},
+				] as any)
+				serviceApi.getSurfacePage.mockReturnValue({ id: 'abcd1234', number: 1, name: 'Main' })
+
+				const res = await supertest(app).get('/api/surfaces').send()
+				expect(res.status).toBe(200)
+				expect(res.body).toEqual([
+					{
+						id: 'emulator',
+						type: 'Emulator',
+						integrationType: 'emulator',
+						name: '',
+						displayName: 'Emulator (emulator)',
+						isConnected: true,
+						size: { rows: 4, columns: 8 },
+						brightness: 50,
+						page: { id: 'abcd1234', number: 1, name: 'Main' },
+					},
+				])
+
+				expect(serviceApi.getSurfacePage).toHaveBeenCalledWith('group')
+
+				expect(serviceApi.getSurfacesList).toHaveBeenCalledTimes(1)
+			})
+		})
+
+		describe('set brightness', () => {
+			test('ok from query', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.surfaceSetBrightness.mockReturnValue(true)
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=30').send()
+				expect(res.status).toBe(200)
+				expect(res.text).toBe('ok')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(1)
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledWith('emulator', 30)
+			})
+
+			test('unknown surface', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.surfaceSetBrightness.mockReturnValue(false)
+
+				const res = await supertest(app).post('/api/surfaces/does-not-exist/brightness?brightness=30').send()
+				expect(res.status).toBe(404)
+				expect(res.text).toBe('Not found')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(1)
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledWith('does-not-exist', 30)
+			})
+
+			test('no value', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
+
+			test('out of range', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=150').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
+
+			test('not a number', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=abc').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
+
+			test('empty value', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
+
+			test('whitespace value', async () => {
+				const { app, serviceApi } = createService()
+
+				const res = await supertest(app).post('/api/surfaces/emulator/brightness?brightness=%20').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Invalid brightness')
+
+				expect(serviceApi.surfaceSetBrightness).toHaveBeenCalledTimes(0)
+			})
+		})
 	})
 
 	describe('custom-variable', () => {

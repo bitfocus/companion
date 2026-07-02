@@ -1927,12 +1927,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param surfaceId
 	 * @param brightness 0-100
 	 * @param looseIdMatching
+	 * @returns whether a matching surface was found
 	 */
-	setDeviceBrightness(surfaceId: string, brightness: number, looseIdMatching = false): void {
+	setDeviceBrightness(surfaceId: string, brightness: number, looseIdMatching = false): boolean {
 		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
-		if (device) {
-			device.setBrightness(brightness)
-		}
+		if (!device) return false
+		device.setBrightness(brightness)
+		return true
 	}
 
 	/**
