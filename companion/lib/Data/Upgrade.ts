@@ -36,7 +36,7 @@ const allUpgrades = [
 	v13tov14, // v5.0 - split fontsize into size + allowShrink
 	v14tov15, // v5.0 - move surface never_lock to the surface group
 ]
-const targetVersion = allUpgrades.length + 1
+export const targetVersion = allUpgrades.length + 1
 
 /**
  * Upgrade the db to the latest version.

@@ -34,6 +34,8 @@
   - Add action and feedback to enable/monitor active remote surfaces #4194 (#4206)
   - Page number button takes surfaces to their startup page
   - mdns announce satellite ports (#4288)
+  - add support for sending compressed images over satellite
+  - rework confusing 'never lock' property (#4290)
 - Editor and UI improvements
   - Better indicator of regex invalid/valid (#4271)
   - Add notes to control editors #760 (#4202)
@@ -71,6 +73,10 @@
 - add deprecation marker to old 'Button: set X' actions
 - clarify deprecation of 'use another buttons style'
 - show better failure when encountering invalid image
+- implement custom monaco drag handle for safari #4265
+- rate limit variables updates from modules to be at most 50hz #3859
+- running packaged module from dev modules folder #3930
+- page numbers not invalidating on page move
 
 ## Companion v4.3.4 - Release Notes
 
