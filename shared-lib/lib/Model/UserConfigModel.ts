@@ -1,10 +1,12 @@
+import type { ResolvedButtonGraphicsDecoration } from './StyleModel.js'
+
 export type UserConfigModel = {
 	setup_wizard: number
 	detailed_data_collection: boolean
 
 	page_direction_flipped: boolean
 	page_plusminus: boolean
-	remove_topbar: boolean
+	buttons_decoration: ResolvedButtonGraphicsDecoration
 	buttons_status_icons: 'show' | 'none'
 
 	usb_hotplug: boolean

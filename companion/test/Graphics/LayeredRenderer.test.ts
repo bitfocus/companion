@@ -6,7 +6,6 @@ import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/La
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
-	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGroupDrawElement,
@@ -15,11 +14,7 @@ import type {
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import {
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
-	ButtonGraphicsShowStatusIcons,
-} from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { Image } from '../../lib/Graphics/Image.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -42,7 +37,7 @@ function makeStyle(overrides: Partial<RendererButtonStyle> = {}): RendererButton
 		style: 'button-layered',
 		drawType: 'button',
 		elements: [],
-		show_topbar: false,
+		decoration: ButtonGraphicsDecorationType.Border,
 		show_status_icons: false,
 		location: { pageNumber: 1, row: 2, column: 3 },
 		pushed: false,
@@ -51,18 +46,6 @@ function makeStyle(overrides: Partial<RendererButtonStyle> = {}): RendererButton
 		button_status: undefined,
 		action_running: undefined,
 		...overrides,
-	}
-}
-
-/** Build a canvas background element controlling the decoration type. */
-function makeCanvasElement(decoration: ButtonGraphicsDecorationType): ButtonGraphicsCanvasDrawElement {
-	return {
-		id: 'canvas-bg',
-		usage: ButtonGraphicsElementUsage.Automatic,
-		contentHash: '',
-		type: 'canvas',
-		decoration,
-		showStatusIcons: ButtonGraphicsShowStatusIcons.FollowDefault,
 	}
 }
 
@@ -198,23 +181,11 @@ beforeAll(() => {
 
 describe('GraphicsLayeredButtonRenderer', () => {
 	describe('decoration', () => {
-		test('show_topbar=true - FollowDefault resolves to TopBar', async () => {
-			const img = Image.create(72, 58, 1, null)
-			await GraphicsLayeredButtonRenderer.draw(img, makeStyle({ show_topbar: true }), new Set(), null, DEFAULT_PADDING)
-			await expect(img.canvasImage).toMatchImageSnapshot()
-		})
-
-		test('show_topbar=false not pushed - FollowDefault resolves to Border (nothing visible)', async () => {
-			const img = Image.create(72, 58, 1, null)
-			await GraphicsLayeredButtonRenderer.draw(img, makeStyle({ show_topbar: false }), new Set(), null, DEFAULT_PADDING)
-			await expect(img.canvasImage).toMatchImageSnapshot()
-		})
-
-		test('show_topbar=false pushed - Border decoration border visible', async () => {
+		test('decoration=topbar - top bar drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ show_topbar: false, pushed: true }),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.TopBar }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -222,11 +193,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('canvas element decoration=None - no decoration drawn', async () => {
+		test('decoration=border, not pushed - nothing drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ elements: [makeCanvasElement(ButtonGraphicsDecorationType.None)] }),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.Border }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -234,14 +205,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('canvas element decoration=TopBar overrides show_topbar=false', async () => {
+		test('decoration=border, pushed - border drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({
-					show_topbar: false,
-					elements: [makeCanvasElement(ButtonGraphicsDecorationType.TopBar)],
-				}),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.Border, pushed: true }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -249,14 +217,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('canvas element decoration=Border pushed - border visible', async () => {
+		test('decoration=none - nothing drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({
-					pushed: true,
-					elements: [makeCanvasElement(ButtonGraphicsDecorationType.Border)],
-				}),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.None }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -270,7 +235,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ show_topbar: true, show_status_icons: true, button_status: 'error' }),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.TopBar, show_status_icons: true, button_status: 'error' }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -282,7 +247,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ show_topbar: true, show_status_icons: false, button_status: 'error' }),
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					show_status_icons: false,
+					button_status: 'error',
+				}),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -292,7 +261,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('element types', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('text element', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -507,7 +476,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({
-					show_topbar: true,
+					decoration: ButtonGraphicsDecorationType.TopBar,
 					show_status_icons: true,
 					pushed: true,
 					button_status: 'error',
@@ -536,7 +505,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('skipDraw per element type', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('text element with enabled=false - not drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -628,7 +597,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({
-					show_topbar: false,
+					decoration: ButtonGraphicsDecorationType.Border,
 					elements: [makeImageElement('data:image/png;base64,NOTVALIDBASE64NOTVALIDBASE64NOTVALIDBASE64!!!')],
 				}),
 				new Set(),
@@ -640,7 +609,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('selectedElementId through nesting', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('group element selected - crosshair at group bounds', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -704,7 +673,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('box properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('box at sub-bounds position', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -786,7 +755,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('text properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('text halign left', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -892,7 +861,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('circle properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('circle partial arc (0 to 270 degrees)', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -961,7 +930,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('image properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('image fillMode=fill - stretches to fill bounds ignoring aspect ratio', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -1018,7 +987,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('group properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('group with multiple children at different sub-bounds', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -1136,7 +1105,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			}
 		}
 
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		async function drawGauge(gauge: ButtonGraphicsGaugeDrawElement, size = { w: 72, h: 58 }): Promise<Canvas> {
 			const img = Image.create(size.w, size.h, 1, null)

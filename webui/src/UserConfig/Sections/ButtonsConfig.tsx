@@ -1,5 +1,7 @@
 import { observer } from 'mobx-react-lite'
+import { BUTTON_DECORATION_CHOICES } from '../ButtonAppearanceChoices.js'
 import type { UserConfigProps } from '../Components/Common.js'
+import { UserConfigDropdownRow } from '../Components/UserConfigDropdownRow.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
 import { UserConfigSwitchValueRow } from '../Components/UserConfigSwitchValueRow.js'
@@ -25,11 +27,11 @@ export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigPr
 				field="page_plusminus"
 			/>
 
-			<UserConfigSwitchRow
+			<UserConfigDropdownRow
 				userConfig={props}
-				label="Show the topbar on each button. This can be overridden per-button"
-				field="remove_topbar"
-				inverted
+				label="Default decoration to show on each button. This can be overridden per-button"
+				field="buttons_decoration"
+				choices={BUTTON_DECORATION_CHOICES}
 			/>
 
 			<UserConfigSwitchValueRow

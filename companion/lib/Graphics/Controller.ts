@@ -28,7 +28,7 @@ import {
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -225,7 +225,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.setMaxListeners(0)
 
 		this.#drawOptions = {
-			remove_topbar: this.#userConfigController.getKey('remove_topbar'),
+			buttons_decoration: this.#userConfigController.getKey('buttons_decoration'),
 			buttons_status_icons: this.#userConfigController.getKey('buttons_status_icons'),
 		}
 
@@ -260,7 +260,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, null)
+							render = GraphicsRenderer.drawBlank(
+								this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+								null
+							)
 						}
 
 						this.emit('presetDrawn', args.controlId, render)
@@ -290,7 +293,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							...buttonStyle,
 
 							...showButtonConfig,
-							location: showButtonConfig.show_topbar ? location : undefined, // Only needed if the topbar is shown
+							// Only needed if the topbar is shown
+							location: showButtonConfig.decoration === ButtonGraphicsDecorationType.TopBar ? location : undefined,
 						}
 
 						const cacheKeyObj: Record<string, any> = {
@@ -308,7 +312,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
+						render = GraphicsRenderer.drawBlank(
+							this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+							location
+						)
 					}
 
 					if (location && locationIsInBounds) {
@@ -417,7 +424,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
+				const blankRender = GraphicsRenderer.drawBlank(
+					this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+					location
+				)
 
 				this.#updateCacheWithRender(location, blankRender)
 				this.emit('button_drawn', location, blankRender)
@@ -478,9 +488,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @param value - the saved value
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
-		if (key == 'remove_topbar') {
-			this.#drawOptions.remove_topbar = !!value
-			this.#logger.silly('Topbar removed')
+		if (key == 'buttons_decoration') {
+			this.#drawOptions.buttons_decoration = value as any
+			this.#logger.silly('Button decoration changed')
 			// Delay redrawing to give connections a chance to adjust
 			setTimeout(() => {
 				this.emit('resubscribeFeedbacks')
@@ -586,7 +596,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
+		return GraphicsRenderer.drawBlank(
+			this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+			location
+		)
 	}
 
 	/**

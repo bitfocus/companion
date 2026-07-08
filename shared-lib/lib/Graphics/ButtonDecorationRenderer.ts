@@ -13,7 +13,7 @@ export class ButtonDecorationRenderer {
 
 	static drawStatusBar(
 		img: ImageBase<any>,
-		drawStyle: Omit<RendererButtonStyle, 'style' | 'drawType' | 'show_topbar' | 'show_status_icons' | 'elements'>,
+		drawStyle: Omit<RendererButtonStyle, 'style' | 'drawType' | 'decoration' | 'show_status_icons' | 'elements'>,
 		topBarBounds: DrawBounds,
 		emptyButton: boolean
 	): void {
@@ -34,26 +34,15 @@ export class ButtonDecorationRenderer {
 		const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
 		const locationDrawSize = Math.round(topBarBounds.height * 0.65)
 
-		if (drawStyle.location === undefined) {
-			// Preview (no location)
-			img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, drawColor, locationDrawSize)
-		} else if (drawStyle.pushed) {
+		// Without a location (e.g. a preview render) show a placeholder instead of a real page/row/column.
+		const label = drawStyle.location === undefined ? `x/x/x${step}` : `${formatLocation(drawStyle.location)}${step}`
+
+		if (drawStyle.pushed) {
+			// Pushed: invert the bar (solid fill, dark text).
 			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, drawColor)
-			img.drawTextLine(
-				locationDrawX,
-				locationDrawY,
-				`${formatLocation(drawStyle.location)}${step}`,
-				colorBlack,
-				locationDrawSize
-			)
+			img.drawTextLine(locationDrawX, locationDrawY, label, colorBlack, locationDrawSize)
 		} else {
-			img.drawTextLine(
-				locationDrawX,
-				locationDrawY,
-				`${formatLocation(drawStyle.location)}${step}`,
-				drawColor,
-				locationDrawSize
-			)
+			img.drawTextLine(locationDrawX, locationDrawY, label, drawColor, locationDrawSize)
 		}
 	}
 

@@ -37,10 +37,8 @@ export class GraphicsLayeredButtonRenderer {
 		const drawWidth = img.width - paddingPx.x * 2
 		const drawHeight = img.height - paddingPx.y * 2
 
-		let decoration = backgroundElement?.decoration
-		if (decoration === ButtonGraphicsDecorationType.FollowDefault || decoration === undefined) {
-			decoration = drawStyle.show_topbar ? ButtonGraphicsDecorationType.TopBar : ButtonGraphicsDecorationType.Border
-		}
+		// Read the resolved `decoration`, not the raw one off the canvas
+		const decoration = drawStyle.decoration
 		const showTopBar = decoration === ButtonGraphicsDecorationType.TopBar
 
 		const topBarBounds = new DrawBounds(

@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, test } from 'vitest'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import { DrawBounds } from '@companion-app/shared/Graphics/Util.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
-import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 import { Image } from '../../lib/Graphics/Image.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -19,7 +19,7 @@ function makeButtonStyle(
 		style: 'button-layered',
 		drawType: 'button',
 		elements: [],
-		show_topbar: true,
+		decoration: ButtonGraphicsDecorationType.TopBar,
 		show_status_icons: true,
 		location: { pageNumber: 1, row: 2, column: 3 },
 		pushed: false,
@@ -98,6 +98,17 @@ describe('ButtonDecorationRenderer', () => {
 			ButtonDecorationRenderer.drawStatusBar(
 				img,
 				makeStatusStyle({ location: undefined, stepCount: 3, stepCurrent: 2 }),
+				topBarBounds,
+				false
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('non-empty - no location - pushed', async () => {
+			const { img, topBarBounds } = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawStatusBar(
+				img,
+				makeStatusStyle({ location: undefined, pushed: true }),
 				topBarBounds,
 				false
 			)
