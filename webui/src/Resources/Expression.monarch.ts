@@ -214,6 +214,22 @@ export const builtinFunctionCompletions: Array<{
 		documentation: 'Returns the last index of value in array',
 	},
 	{
+		name: 'arraySlice',
+		detail: 'arraySlice(array, start, end)',
+		documentation:
+			'Returns a shallow copy of a portion of an array between the start and end indices, without changing the original',
+	},
+	{
+		name: 'arrayConcat',
+		detail: 'arrayConcat(...arrays)',
+		documentation: 'Combines multiple arrays into one, wrapping any non-array values as single elements',
+	},
+	{
+		name: 'arrayFlat',
+		detail: 'arrayFlat(array)',
+		documentation: 'Flattens a nested array by one level',
+	},
+	{
 		name: 'arrayMap',
 		detail: 'arrayMap(array, fn)',
 		documentation: 'Returns a new array with fn applied to each element',

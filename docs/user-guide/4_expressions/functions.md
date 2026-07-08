@@ -354,6 +354,28 @@ Optionally provide an offset to begin the search from, searching from the end.
 
 If the value isn't found, it will return -1, otherwise the index of the last occurrence. The beginning is position 0.
 
+**arraySlice(arr, start, end)**
+
+Return a shallow copy of a portion of an array, without changing the original.
+
+`start` is the index to begin from (0 is the beginning) and `end` is the index to stop before. Both are optional, and negative values count back from the end.
+
+`arraySlice([1, 2, 3, 4, 5], 1, 3)` gives `[2, 3]`.
+
+If this encounters invalid input, it will return undefined.
+
+**arrayConcat(...arrays)**
+
+Combine multiple arrays into a single new array. Any argument that isn't an array is wrapped as a single element.
+
+`arrayConcat([1, 2], [3, 4], 5)` gives `[1, 2, 3, 4, 5]`.
+
+**arrayFlat(arr)**
+
+Flatten a nested array by one level. `arrayFlat([1, [2, 3], [4, [5]]])` gives `[1, 2, 3, 4, [5]]`.
+
+If this encounters invalid input, it will return undefined.
+
 ### Array iteration operations
 
 These run a function (usually an arrow function `x => ...`) over each element of an array. Most callbacks receive `(element, index)`, while `arrayReduce` receives `(accumulator, element, index)`. They are most powerful combined with arrow functions — see [Advanced expressions](scripting.md#functions).
