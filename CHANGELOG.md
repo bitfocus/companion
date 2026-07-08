@@ -52,6 +52,7 @@
   - Package linux install script
   - Linux desktop udev sync (#4248)
   - Companion PI config tool (#4256)
+  - Support headless config file format in docker images
 
 ### 🐞 BUG FIXES
 

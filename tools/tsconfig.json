@@ -1,6 +1,6 @@
 {
-	"exclude": ["node_modules/**", "webui/**", "module-local-dev/**"],
-	"include": ["tools/**/*.mts", "tools/**/*.ts", "tools/**/*.cts"],
+	"exclude": ["node_modules/**"],
+	"include": ["./**/*.mts", "./**/*.ts", "./**/*.cts"],
 	"compilerOptions": {
 		"composite": true,
 		"paths": {},
@@ -18,5 +18,5 @@
 		"allowImportingTsExtensions": true,
 		"strict": true
 	},
-	"references": [{ "path": "./companion" }, { "path": "./shared-lib" }]
+	"references": [{ "path": "../companion" }, { "path": "../shared-lib" }, { "path": "../config-tool" }]
 }

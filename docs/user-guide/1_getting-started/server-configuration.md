@@ -21,6 +21,9 @@ You set these in one of two places, depending on how you run Companion:
 Both are just two ways of editing the same set of options, described below. Changing some of them
 (notably the security options) restarts Companion so the new setting takes effect.
 
+For the complete list of every option — including the exact `config.yaml` keys, environment variables
+and command-line flags — see the [Configuration reference](./config-reference.generated.md).
+
 ## Network
 
 - **Admin port** — the port the admin interface (and the rest of the web UI) listens on. The default

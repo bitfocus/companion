@@ -704,8 +704,25 @@ jobs:
 
     env:
       IMAGE_NAME: companion
+      # GHCR shows the package description from the index (manifest-list) annotation, so metadata-action
+      # must emit annotations at that level (default is 'manifest' only) for our multi-arch push.
+      DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
     steps:
+      - uses: actions/checkout@v7
+        if: ${{ needs.linux-x64.outputs.upload-url }}
+        with:
+          persist-credentials: false
+
+      - name: Read image description
+        if: ${{ needs.linux-x64.outputs.upload-url }}
+        run: |
+          {
+            echo 'IMAGE_DESCRIPTION<<EOF'
+            cat assets/docker/README.md
+            echo EOF
+          } >> "$GITHUB_ENV"
+
       - name: Docker meta
         if: ${{ needs.linux-x64.outputs.upload-url }}
         id: meta
@@ -717,6 +734,10 @@ jobs:
             type=raw,value=${{ needs.linux-x64.outputs.version }}
             type=ref,event=tag
             type=ref,event=branch
+          labels: |
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+          annotations: |
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
 
       - name: Set up QEMU
         if: ${{ steps.meta.outputs.tags }}
@@ -733,11 +754,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v7
-        if: ${{ steps.meta.outputs.tags }}
-        with:
-          persist-credentials: false
 
       - name: Check s4 cdn
         env:
@@ -758,6 +774,7 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push: true
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           tags: "${{ steps.meta.outputs.tags }}"
           build-args: |
             linux_x64_url=${{ needs.linux-x64.outputs.upload-url }}

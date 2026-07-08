@@ -68,11 +68,47 @@ The download also includes a standalone headless build, launched with the includ
 
 ### Docker
 
-There is a docker image published to the [Github container registry](https://github.com/bitfocus/companion/pkgs/container/companion%2Fcompanion) that can be used to simplify deployment on linux.
+There is a docker image published to the [Github container registry](https://github.com/bitfocus/companion/pkgs/container/companion%2Fcompanion) that can be used to simplify deployment on linux. It is published for `linux/amd64` and `linux/arm64`.
 
-**Make sure to bind a volume to `/companion` so that your configuration is persisted**
+```sh
+docker run -d --name companion \
+  -p 8000:8000 -p 16622:16622 -p 16623:16623 \
+  -v companion-config:/companion \
+  ghcr.io/bitfocus/companion/companion:latest
+```
 
-Companion uses various incoming ports. There are various api servers, and some modules will setup their own servers expecting inbound connections to work. Make sure to plan for this with the network mode used in docker.
+Or with docker-compose:
+
+```yaml
+services:
+  companion:
+    image: ghcr.io/bitfocus/companion/companion:latest
+    restart: unless-stopped
+    ports:
+      - '8000:8000' # Admin UI
+      - '16622:16622' # Companion Satellite (TCP)
+      - '16623:16623' # Companion Satellite (WS)
+    volumes:
+      - companion-config:/companion
+volumes:
+  companion-config:
+```
+
+**Make sure to bind a volume to `/companion` so that your configuration is persisted.**
+
+Companion uses various incoming ports. In addition to the ones below, some modules set up their own servers expecting inbound connections to work, so make sure to plan for this with the network mode used in docker.
+
+| Port    | Purpose                   |
+| ------- | ------------------------- |
+| `8000`  | Admin UI and web API      |
+| `16622` | Companion Satellite (TCP) |
+| `16623` | Companion Satellite (WS)  |
+
+#### Configuration
+
+Launch options (the [server configuration](./server-configuration.md) — admin port, logging, syslog, security options and so on) are read from a `config.yaml` file inside the config volume, at `/companion/config.yaml`. A commented file is created automatically on first start; edit it and restart the container to apply your changes. This is the same file and tooling used by [headless / CompanionPi installs](./companion-pi/config-tool.md). The full list of options is in the [configuration reference](./config-reference.generated.md).
+
+`COMPANION_ADMIN_PORT` (default `8000`) is honoured when the file is first created and is used by the container health check. If you change `adminPort` in `config.yaml`, update your published port mapping to match.
 
 #### USB passthrough
 
