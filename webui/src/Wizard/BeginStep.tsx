@@ -23,9 +23,8 @@ export function BeginStep({ prevVersion, newStepTitles, showAll, onReviewAll }: 
 				<NonIdealState icon={faRocket}>
 					<h4 className="mb-2">Welcome back!</h4>
 					<p>
-						Since you last set up Companion, a few settings are new or have changed
-						{newStepTitles.length > 0 ? ` (${newStepTitles.join(', ')})` : ''}. We'll quickly walk you through them -
-						use the steps above to navigate.
+						Since you last set up Companion, a few settings are new or have changed. We'll quickly walk you through them
+						- use the steps above to navigate.
 					</p>
 					<p className="mb-0">
 						<Button color="link" className="p-0 align-baseline" onClick={onReviewAll}>

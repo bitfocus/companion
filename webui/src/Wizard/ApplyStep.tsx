@@ -5,6 +5,12 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import { TIMEZONE_CHOICES } from '~/Resources/timezones.js'
 import { WIZARD_VERSION_3_0, WIZARD_VERSION_4_2, WIZARD_VERSION_5_0 } from './Constants.js'
 
+const DECORATION_LABELS: Record<string, string> = {
+	topbar: 'a top bar',
+	border: 'a border when pressed',
+	none: 'no decoration',
+}
+
 interface ApplyStepProps {
 	oldConfig: UserConfigModel
 	newConfig: UserConfigModel
@@ -80,6 +86,25 @@ export function getWizardChanges(oldConfig: UserConfigModel, newConfig: UserConf
 					</>
 				)}
 			</>
+		)
+	}
+
+	category = 'Button Appearance'
+	if (oldConfig.setup_wizard < WIZARD_VERSION_5_0 || oldConfig.buttons_decoration !== newConfig.buttons_decoration) {
+		add(
+			'info',
+			`Buttons will show ${DECORATION_LABELS[newConfig.buttons_decoration] ?? newConfig.buttons_decoration} by default.`
+		)
+	}
+	if (
+		oldConfig.setup_wizard < WIZARD_VERSION_5_0 ||
+		oldConfig.buttons_status_icons !== newConfig.buttons_status_icons
+	) {
+		add(
+			newConfig.buttons_status_icons === 'show' ? 'add' : 'remove',
+			newConfig.buttons_status_icons === 'show'
+				? 'Status icons will be shown on buttons.'
+				: 'Status icons will not be shown on buttons.'
 		)
 	}
 

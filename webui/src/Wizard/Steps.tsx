@@ -7,6 +7,7 @@ import {
 	WIZARD_VERSION_5_0,
 } from './Constants.js'
 import { DataCollectionStep } from './DataCollectionStep.js'
+import { GraphicsStep } from './GraphicsStep.js'
 import { GridStep } from './GridStep.js'
 import { PasswordStep } from './PasswordStep.js'
 import { ServicesStep } from './ServicesStep.js'
@@ -54,6 +55,12 @@ export const WIZARD_CONFIG_STEPS: WizardStepDef[] = [
 		render: ({ config, setValue }) => (
 			<GridStep rows={config.gridSize.maxRow + 1} columns={config.gridSize.maxColumn + 1} setValue={setValue} />
 		),
+	},
+	{
+		id: 'graphics',
+		title: 'Buttons',
+		revisedInVersion: WIZARD_VERSION_5_0,
+		render: ({ config, setValue }) => <GraphicsStep config={config} setValue={setValue} />,
 	},
 	{
 		id: 'services',
