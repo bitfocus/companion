@@ -82,10 +82,7 @@ export interface ParsedControlIdPreset {
 	variablesHash: string
 }
 export type ParsedControlIdType =
-	| ParsedControlIdBank
-	| ParsedControlIdTrigger
-	| ParsedControlIdExpressionVariable
-	| ParsedControlIdPreset
+	ParsedControlIdBank | ParsedControlIdTrigger | ParsedControlIdExpressionVariable | ParsedControlIdPreset
 
 /**
  * Parse a controlId

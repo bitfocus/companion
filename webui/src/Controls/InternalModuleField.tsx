@@ -546,13 +546,11 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 		}
 
 		// Convert triggers Map to array of objects with id field
-		const allTriggers = Array.from(triggersList.triggers.entries()).map(
-			([id, trigger]): MinimalTrigger => ({
-				id,
-				name: trigger.name,
-				collectionId: trigger.collectionId || null,
-			})
-		)
+		const allTriggers = Array.from(triggersList.triggers.entries()).map(([id, trigger]): MinimalTrigger => ({
+			id,
+			name: trigger.name,
+			collectionId: trigger.collectionId || null,
+		}))
 
 		const getItemChoice = (trigger: MinimalTrigger): DropdownChoice => ({
 			id: trigger.id,

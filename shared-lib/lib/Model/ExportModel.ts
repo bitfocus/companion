@@ -66,8 +66,7 @@ export interface ExportPageContentv6 {
 export type ExportControlv6 = Record<string, any> // TODO
 
 export type ExportInstancesv6 =
-	| Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6>
-	| Record<string, InstanceConfig | undefined> // TODO - tidy
+	Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6> | Record<string, InstanceConfig | undefined> // TODO - tidy
 
 export type ExportInstanceFullv6 = {
 	label: string

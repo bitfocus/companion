@@ -50,8 +50,7 @@ type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
 ) => SpecialExpressionComputation<Expression>
 
 type EvaluationResult<T> = { variableIds: ReadonlySet<string> } & (
-	| { ok: true; value: T }
-	| { ok: false; error: ExecuteExpressionResultError['error'] }
+	{ ok: true; value: T } | { ok: false; error: ExecuteExpressionResultError['error'] }
 )
 
 const NoVariables = new Set<string>()

@@ -35,10 +35,7 @@ export interface ClientTriggerData extends TriggerOptions {
 }
 
 export type TriggersUpdate =
-	| TriggersUpdateInitOp
-	| TriggersUpdateRemoveOp
-	| TriggersUpdateAddOp
-	| TriggersUpdateUpdateOp
+	TriggersUpdateInitOp | TriggersUpdateRemoveOp | TriggersUpdateAddOp | TriggersUpdateUpdateOp
 
 export interface TriggersUpdateInitOp {
 	type: 'init'
