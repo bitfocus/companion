@@ -438,8 +438,6 @@ export class ServiceSatelliteApi {
 				}
 			}),
 		}
-		this.#socketStates.set(socket, socketState)
-
 		socket.sendMessage('BEGIN', null, null, {
 			CompanionVersion: this.#serviceApi.appInfo.appBuild,
 			ApiVersion: API_VERSION,
@@ -450,6 +448,11 @@ export class ServiceSatelliteApi {
 			NONSQUARE: true,
 			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
 		})
+
+		// Register the per-socket state only once the handshake has been sent, so a failure while
+		// sending it doesn't leave an orphaned entry in the map (the caller wires up cleanup around
+		// the value returned below).
+		this.#socketStates.set(socket, socketState)
 
 		let receivebuffer = ''
 		return {

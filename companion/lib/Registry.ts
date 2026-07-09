@@ -320,6 +320,7 @@ export class Registry {
 			this.instance,
 			this.page,
 			this.controls,
+			this.graphics,
 			this.variables,
 			this.cloud,
 			this.services,
