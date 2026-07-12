@@ -21,7 +21,7 @@
   "engines": {
     "npm": "please-use-yarn",
     "yarn": "^4.5",
-    "node": ">=26.4.0 <27"
+    "node": ">=26.5.0 <27"
   },
   "author": "Bitfocus AS",
   "license": "MIT",
