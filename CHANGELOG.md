@@ -2,8 +2,6 @@
 
 ## Companion v5.0.0 - Release Notes
 
-<!-- DRAFT -->
-
 ### IMPORTANT CHANGES
 
 - This version of Companion requires macOS 13.5 or later
@@ -23,6 +21,7 @@
 - Advanced expressions (#4274)
   - more expression math utils (#4260)
   - loops, ifs and control statements
+  - more array methods
 - Variables
   - Access local variable from another button #3723 (#4234)
   - Support feedback based local variables from presets #3893
