@@ -12,6 +12,7 @@ import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
+import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
@@ -136,6 +137,7 @@ export class Registry {
 	readonly importExport: ImportExportController
 
 	readonly usageStatistics: DataUsageStatistics
+	readonly metrics: DataMetrics
 
 	/**
 	 * The 'data' controller
@@ -189,7 +191,6 @@ export class Registry {
 
 		this.#logger.debug('constructing core modules')
 
-		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		LogController.init(this.#appInfo)
 
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
@@ -198,6 +199,12 @@ export class Registry {
 		this.db = new DataDatabase(this.#appInfo.configDir)
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
+
+		// Constructed before the UI so its router can be handed to UIExpress at construction, and before
+		// graphics/surfaces/instance so those subsystems can register their own metrics inline as they build.
+		this.metrics = new DataMetrics(this.#appInfo, this.userconfig)
+
+		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
 
 		const activeLearningStore = new ActiveLearningStore()
 		const pageStore = new PageStore(this.db.getTableView('pages'))
@@ -211,7 +218,8 @@ export class Registry {
 			this.userconfig,
 			this.variables,
 			this.db,
-			this.#internalApiRouter
+			this.#internalApiRouter,
+			this.metrics
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -232,7 +240,8 @@ export class Registry {
 			controlStore,
 			this.variables,
 			this.surfaces,
-			oscSender
+			oscSender,
+			this.metrics
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
@@ -326,6 +335,14 @@ export class Registry {
 			this.services,
 			this.userconfig
 		)
+		registerCoreMetrics(this.metrics, {
+			instance: this.instance,
+			surfaces: this.surfaces,
+			page: this.page,
+			controls: this.controls,
+			variables: this.variables,
+			services: this.services,
+		})
 
 		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 		controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))

@@ -1,13 +1,15 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
+import net from 'node:net'
 import {
 	createModuleLogger,
 	PluginWrapper,
 	registerLoggingSink,
 	type SurfaceModuleManifest,
 } from '@companion-surface/host'
+import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import { importModuleFromPath, sealParentIpcChannel } from '../../Common/ThreadUtil.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 import { HostContext } from './HostContext.js'
@@ -35,13 +37,6 @@ const logger = createModuleLogger('Entrypoint')
 
 let plugin: PluginWrapper | null = null
 let pluginInitialized = false
-
-// Seal the parent IPC channel off `process` before any module code is loaded, so a module
-// can only reach the host via the sanctioned HostContext. Returns the still-working send.
-const parentSend = sealParentIpcChannel({
-	onMessage: (msg) => ipcWrapper.receivedMessage(msg),
-	onDisconnect: () => process.exit(),
-})
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>(
@@ -179,10 +174,17 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		},
 	},
 	(msg) => {
-		parentSend(msg)
+		channel.send(msg)
 	},
 	5000
 )
+// Framed message transport over the dedicated 'pipe' fd (fd 4), paired with the host side. The 'ipc'
+// channel (process.send) is retained only for the disconnect lifecycle signal below.
+const channel = new FramedChannel(new net.Socket({ fd: 4, readable: true, writable: true }), (msg) =>
+	ipcWrapper.receivedMessage(msg as any)
+)
+
+process.on('disconnect', () => process.exit())
 
 registerLoggingSink((source, level, message) => {
 	ipcWrapper.sendWithNoCb('log-message', {

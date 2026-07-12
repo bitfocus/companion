@@ -6,7 +6,8 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
 import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
+import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
 import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
@@ -44,6 +45,9 @@ export interface SurfaceChildHandlerDependencies {
 	) => void
 
 	readonly invalidateClientJson: (instanceId: string) => void
+
+	/** Record an IPC message (and its serialized payload byte size) exchanged with the module child (for metrics) */
+	readonly trackIpcMessage: (instanceId: string, direction: 'sent' | 'received', bytes: number) => void
 }
 
 export interface SurfaceChildFeatures {
@@ -139,24 +143,25 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			'firmware-update-info': this.#handleFirmwareUpdateInfo.bind(this),
 		}
 
+		// Framed message transport over the dedicated 'pipe' fd (fd 4) - one JSON.stringify per message and an
+		// exact wire byte count for metrics, no object-mode double-encode. Created before the IpcWrapper (its
+		// onMessage uses #ipcWrapper lazily; no message arrives until monitor.start() after this constructor).
+		const transport = new HostFramedTransport(monitor, 4, (msg, bytes) => {
+			this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
+			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+		})
+
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
 			(msg) => {
-				if (monitor.child) {
-					monitor.child.send(msg)
-				} else {
-					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
-				}
+				const bytes = transport.send(msg)
+				if (bytes > 0) this.#deps.trackIpcMessage(this.instanceId, 'sent', bytes)
 			},
 			5000
 		)
 
-		// Attach message handler to receive messages from child process
-		const messageHandler = (msg: any) => {
-			this.#ipcWrapper.receivedMessage(msg)
-		}
-		monitor.on('message', messageHandler)
-		this.#unsubListeners = () => monitor.off('message', messageHandler)
+		// The transport binds to the monitor, which is discarded on restart; nothing persistent to unbind.
+		this.#unsubListeners = () => undefined
 
 		// Build relevant HID devices map for quick lookup
 		for (const usbIds of manifest.usbIds || []) {

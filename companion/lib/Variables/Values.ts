@@ -98,6 +98,13 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		})
 	}
 
+	/**
+	 * Count how many variables a connection (identified by its label) currently exposes values for.
+	 */
+	getVariableCountForLabel(label: string): number {
+		return Object.keys(this.#variableValues[label] ?? {}).length
+	}
+
 	getVariableValue(label: string, name: string): VariableValue | undefined {
 		if (label === 'internal' && name.substring(0, 7) == 'custom_') {
 			label = 'custom'

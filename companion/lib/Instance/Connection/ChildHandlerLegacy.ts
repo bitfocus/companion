@@ -176,6 +176,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			(msg) => {
 				if (monitor.child) {
 					monitor.child.send(msg)
+					// payload is already an EJSON string (base-old IpcWrapper serializes it); measure for free
+					const bytes = 'payload' in msg && typeof msg.payload === 'string' ? Buffer.byteLength(msg.payload, 'utf8') : 0
+					this.#deps.trackIpcMessage(this.connectionId, 'sent', bytes)
 				} else {
 					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
 				}
@@ -194,6 +197,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			: null
 
 		const messageHandler = (msg: any) => {
+			// payload is an EJSON string here (parsed inside receivedMessage); count it before that
+			const bytes = typeof msg?.payload === 'string' ? Buffer.byteLength(msg.payload, 'utf8') : 0
+			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
 			this.#ipcWrapper.receivedMessage(msg)
 		}
 		monitor.on('message', messageHandler)
@@ -849,6 +855,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
+		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
+
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
 			msg.values.map((val) => ({
@@ -864,6 +872,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
+
+		this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 
 		this.#variableValuesBatcher.add(msg.newValues)
 	}
@@ -898,6 +908,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
+			this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 			this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 		}
 

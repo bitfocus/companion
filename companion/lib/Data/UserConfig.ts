@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+import { nanoid } from 'nanoid'
 import selfsigned from 'selfsigned'
 import z from 'zod'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
@@ -58,6 +59,9 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		http_api_enabled: true,
 		http_legacy_api_enabled: false,
+
+		prometheus_enabled: false,
+		prometheus_token: '',
 
 		tcp_enabled: false,
 		tcp_listen_port: 16759,
@@ -174,6 +178,10 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			}),
 			sslCertificateRenew: publicProcedure.mutation(async () => {
 				return this.renewSslCertificate()
+			}),
+
+			prometheusTokenRegenerate: publicProcedure.mutation(() => {
+				return this.regeneratePrometheusToken()
 			}),
 
 			getConfig: publicProcedure.query(() => {
@@ -433,7 +441,21 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		if (BANNED_PROPS.has(String(key))) throw new Error(`Setting config key "${String(key)}" is not allowed`)
 
+		// Ensure a token exists whenever the metrics endpoint is enabled, so it can never be exposed without auth
+		if (key === 'prometheus_enabled' && value && !this.#data.prometheus_token) {
+			this.setKeyUnchecked('prometheus_token', nanoid(32), false)
+		}
+
 		this.setKeyUnchecked(key, value, save)
+	}
+
+	/**
+	 * Generate a fresh prometheus bearer token, invalidating the previous one
+	 */
+	regeneratePrometheusToken(): string {
+		const token = nanoid(32)
+		this.setKey('prometheus_token', token)
+		return token
 	}
 
 	/**
@@ -461,7 +483,12 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			this.#dbTable.set('userconfig', this.#data)
 		}
 
-		this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+		// Never log the value of secret keys - the prometheus token is a live scrape credential
+		if (key === 'prometheus_token') {
+			this.#logger.info(`set '${key}' to: <redacted>`)
+		} else {
+			this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+		}
 
 		this.emit('keyChanged', key, value, checkControlsInBounds)
 	}

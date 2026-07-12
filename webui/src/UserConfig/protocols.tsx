@@ -11,6 +11,7 @@ import { EmberPlusConfig } from './Sections/EmberPlusConfig.js'
 import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
 import { HttpConfig } from './Sections/HttpConfig.js'
 import { HttpProtocol } from './Sections/HttpProtocol.js'
+import { MetricsConfig } from './Sections/MetricsConfig.js'
 import { OscConfig } from './Sections/OscConfig.js'
 import { OscProtocol } from './Sections/OscProtocol.js'
 import { RosstalkConfig } from './Sections/RosstalkConfig.js'
@@ -65,6 +66,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 				<TcpConfig {...userConfigProps} />
 				<UdpConfig {...userConfigProps} />
 				<HttpConfig {...userConfigProps} />
+				<MetricsConfig {...userConfigProps} />
 				<OscConfig {...userConfigProps} />
 				<RosstalkConfig {...userConfigProps} />
 				<EmberPlusConfig {...userConfigProps} />
