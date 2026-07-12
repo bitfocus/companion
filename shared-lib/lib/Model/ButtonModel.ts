@@ -4,11 +4,7 @@ import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
 import type { VariableValues } from './Variables.js'
 
 export type SomeButtonModel =
-	| PageNumberButtonModel
-	| PageUpButtonModel
-	| PageDownButtonModel
-	| LayeredButtonModel
-	| PresetReferenceButtonModel
+	PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | LayeredButtonModel | PresetReferenceButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
