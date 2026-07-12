@@ -404,10 +404,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		if (!variableValues) return structuredClone(definition.model)
 
-		const model: LayeredButtonModel = {
-			...structuredClone(definition.model),
-			localVariables: structuredClone(definition.model.localVariables),
-		}
+		const model: LayeredButtonModel = structuredClone(definition.model)
 
 		injectOverriddenLocalVariableValues(model.localVariables, variableValues)
 
