@@ -12,7 +12,6 @@
 import { GraphicsRenderer } from './Renderer.js'
 
 export const GraphicsThreadMethods = Object.freeze({
-	drawButtonImageDataUrl: GraphicsRenderer.drawButtonImageDataUrl.bind(GraphicsRenderer),
 	drawButtonImageBuffer: GraphicsRenderer.drawButtonImageBuffer.bind(GraphicsRenderer),
 	createImagePreview: GraphicsRenderer.createImagePreview.bind(GraphicsRenderer),
 	drawImageBuffers: GraphicsRenderer.drawImageBuffers.bind(GraphicsRenderer),

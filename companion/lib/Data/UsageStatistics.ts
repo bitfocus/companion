@@ -13,13 +13,19 @@ import * as Sentry from '@sentry/node'
 import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type {
+	BackupRulesConfig,
+	UserConfigGridSize,
+	UserConfigModel,
+} from '@companion-app/shared/Model/UserConfigModel.js'
 import type {
 	operations as CompanionUpdatesApiOperations,
 	paths as CompanionUpdatesApiPaths,
 } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import type { Complete } from '@companion-module/host'
 import type { CloudController } from '../Cloud/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import LogController from '../Log/Controller.js'
 import type { PageController } from '../Page/Controller.js'
@@ -45,6 +51,7 @@ export class DataUsageStatistics {
 	readonly #instancesController: InstanceController
 	readonly #pageController: PageController
 	readonly #controlController: ControlsController
+	readonly #graphicsController: GraphicsController
 	readonly #variablesController: VariablesController
 	readonly #cloudController: CloudController
 	readonly #serviceController: ServiceController
@@ -60,6 +67,7 @@ export class DataUsageStatistics {
 		instancesController: InstanceController,
 		pageController: PageController,
 		controlController: ControlsController,
+		graphicsController: GraphicsController,
 		variablesController: VariablesController,
 		cloudController: CloudController,
 		serviceController: ServiceController,
@@ -70,6 +78,7 @@ export class DataUsageStatistics {
 		this.#instancesController = instancesController
 		this.#pageController = pageController
 		this.#controlController = controlController
+		this.#graphicsController = graphicsController
 		this.#variablesController = variablesController
 		this.#cloudController = cloudController
 		this.#serviceController = serviceController
@@ -93,12 +102,13 @@ export class DataUsageStatistics {
 	#buildPayload(): DetailedUsagePayload {
 		const rawGridSize: UserConfigGridSize = this.#userConfigController.getKey('gridSize')
 
-		const payload: DetailedUsagePayload = {
+		const payload: Complete<DetailedUsagePayload> = {
 			...compileUpdatePayload(this.#appInfo),
 			uptime: process.uptime(),
 
 			surfaces: [],
 			connections: [],
+			surfaceModules: [],
 
 			features: {
 				isBoundToLoopback: this.#bindIp === '127.0.0.1' || this.#bindIp === '::1',
@@ -106,6 +116,14 @@ export class DataUsageStatistics {
 				hasPincodeLockout: !!this.#userConfigController.getKey('pin_enable'),
 				cloudEnabled: !!this.#cloudController.data.cloudActive,
 				httpsEnabled: !!this.#userConfigController.getKey('https_enabled'),
+
+				buttonDecoration: this.#userConfigController.getKey('buttons_decoration'),
+				buttonStatusIcons: this.#userConfigController.getKey('buttons_status_icons'),
+
+				httpEnabled: !!this.#userConfigController.getKey('http_api_enabled'),
+				httpDeprecatedEnabled: !!this.#userConfigController.getKey('http_legacy_api_enabled'),
+				satelliteSubscriptionsEnabled: !!this.#userConfigController.getKey('satellite_subscriptions_enabled'),
+				mdnsAnnouncementsEnabled: !!this.#userConfigController.getKey('mdns_announcements_enabled'),
 
 				tcpEnabled: !!this.#userConfigController.getKey('tcp_enabled'),
 				tcpDeprecatedEnabled: !!this.#userConfigController.getKey('tcp_legacy_api_enabled'),
@@ -132,6 +150,10 @@ export class DataUsageStatistics {
 				},
 				connectedSatellites:
 					this.#serviceController.satelliteTcp.clientCount + this.#serviceController.satelliteWebsocket.clientCount,
+				imageLibraryCount: this.#graphicsController.imageLibrary.listImages().length,
+				enabledBackupRuleCount: (this.#userConfigController.getKey('backups') ?? ([] as BackupRulesConfig[])).filter(
+					(rule: BackupRulesConfig) => rule.enabled
+				).length,
 			},
 		}
 
@@ -148,7 +170,7 @@ export class DataUsageStatistics {
 						// Collect info about the type of the surface
 						payload.surfaces.push({
 							id: serialNumber,
-							moduleId: surface.integrationType || '', // Future: update to the real moduleId once merged
+							moduleId: surface.integrationType || '',
 							description: surface.type || '',
 						})
 					}
@@ -178,6 +200,30 @@ export class DataUsageStatistics {
 			}
 		} catch (e) {
 			this.#logger.error('Error collecting module versions', e)
+			Sentry.captureException(e)
+		}
+
+		try {
+			const moduleVersionCounts = this.#instancesController.getSurfacesMetrics()
+			const publishedModules = this.#instancesController.modulesStore.getCachedStoreList(ModuleInstanceType.Surface)
+
+			payload.surfaceModules = [] // Ensure the array exists
+
+			for (const [moduleId, counts] of Object.entries(moduleVersionCounts)) {
+				if (!moduleId || !counts) continue
+
+				// Filter out any not yet published modules
+				// Note: this does mean that we won't report anything if the module store manifest is not loaded yet,
+				// but if that is the case then we are unlikely to be able to make the request to report the modules anyway
+				if (!publishedModules[moduleId]) continue
+
+				payload.surfaceModules.push({
+					moduleId,
+					counts,
+				})
+			}
+		} catch (e) {
+			this.#logger.error('Error collecting surface module versions', e)
 			Sentry.captureException(e)
 		}
 

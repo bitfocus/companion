@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -13,6 +13,8 @@ import {
 	type FeedbackEntityStyleOverride,
 	type FeedbackValue,
 	type RawStoreResult,
+	type ReplaceableActionEntityModel,
+	type ReplaceableFeedbackEntityModel,
 	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -698,7 +700,7 @@ export class ControlEntityInstance {
 
 		if (this.#data.type === EntityModelType.Feedback) {
 			const feedbackData = this.#data as FeedbackEntityModel
-			const newPropsData = newProps as FeedbackEntityModel
+			const newPropsData = newProps as ReplaceableFeedbackEntityModel
 			feedbackData.isInverted = newPropsData.isInverted ?? feedbackData.isInverted
 
 			// Replace the style overrides only if the new one is non-empty
@@ -706,6 +708,13 @@ export class ControlEntityInstance {
 				newPropsData.styleOverrides && newPropsData.styleOverrides.length > 0
 					? newPropsData.styleOverrides
 					: feedbackData.styleOverrides
+		}
+
+		if (this.#data.type === EntityModelType.Action) {
+			const actionData = this.#data as ActionEntityModel
+			const newActionProps = newProps as ReplaceableActionEntityModel
+			// Preserve any existing target chosen by the user, an upgrade must not clobber it
+			actionData.storeResult = actionData.storeResult ?? newActionProps.storeResult
 		}
 
 		if (!skipNotifyModule) {

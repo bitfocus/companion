@@ -2,7 +2,7 @@ import { isEqual } from 'lodash-es'
 import { toJS } from 'mobx'
 import { useObserver } from 'mobx-react-lite'
 import { useEffect, useState } from 'react'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,

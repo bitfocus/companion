@@ -1,8 +1,9 @@
-import { action, observable, runInAction } from 'mobx'
+import { isEqual } from 'lodash-es'
+import { action, observable } from 'mobx'
 import { computedFn } from 'mobx-utils'
-import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { ClientEditInstanceConfigState } from '@companion-app/shared/Model/Common.js'
 import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
@@ -22,109 +23,129 @@ export interface InstanceConfigAndSecrets {
 	useNewLayout: boolean
 
 	config: CompanionOptionValues
-	configDirty: boolean
 	secrets: CompanionOptionValues
-	secretsDirty: boolean
 }
 
 /**
  * Store for the Instance Edit Panel
  * This used to use tanstack/react-form, but that was challenging because of the complex flows and changing form fields, often leaving the form in an invalid state.
  * Instead, this uses MobX to manage the state of the form and the instance configuration in a more predictable way.
+ *
+ * The config fields are driven by a single subscription (`service.watchConfig`): the backend reports the current
+ * state (loading / running-with-config / not-running / error) and this store just applies it, keeping any of the
+ * user's in-progress edits intact.
  */
 export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 	readonly service: InstanceEditPanelService<TConfig>
 	readonly instanceInfo: TConfig
 
-	#isLoading = observable.box<string | null>(null)
-	#loadError = observable.box<string | null>(null)
+	/** The latest state reported by the config subscription. null = not yet received. */
+	#state = observable.box<ClientEditInstanceConfigState | null>(null)
 
-	#configAndSecrets = observable.box<InstanceConfigAndSecrets | null>(null)
+	/** The working copy of the config/secret values the user is editing */
+	#config = observable.box<CompanionOptionValues>({})
+	#secrets = observable.box<CompanionOptionValues>({})
+	/** The ids of fields the user has edited but not yet saved */
+	#dirtyFields = observable.set<string>()
+	/** Set when a config update arrives from elsewhere while the user has unsaved edits */
+	#externalChangeWarning = observable.box(false)
 
 	#basicChanges = observable.box<InstanceBasicInfoChanges>({})
 
 	get configAndSecrets(): InstanceConfigAndSecrets | null {
-		return this.#configAndSecrets.get()
+		const state = this.#state.get()
+		if (state?.type !== 'config') return null
+
+		return {
+			fields: state.fields,
+			useNewLayout: state.useNewLayout,
+			config: this.#config.get(),
+			secrets: this.#secrets.get(),
+		}
 	}
 
 	get loadError(): string | null {
-		return this.#loadError.get()
+		const state = this.#state.get()
+		return state?.type === 'error' ? state.message : null
 	}
 
 	get isLoading(): boolean {
-		return this.#isLoading.get() !== null
+		const state = this.#state.get()
+		return state === null || state.type === 'loading'
 	}
+
+	/** If the instance is not running, why. null when it is running (or still loading). */
+	get notRunningReason(): 'disabled' | 'missing' | 'starting' | 'crashed' | null {
+		const state = this.#state.get()
+		return state?.type === 'notRunning' ? state.reason : null
+	}
+
+	get externalChangeWarning(): boolean {
+		return this.#externalChangeWarning.get()
+	}
+
+	dismissExternalChangeWarning = action(() => {
+		this.#externalChangeWarning.set(false)
+	})
 
 	constructor(service: InstanceEditPanelService<TConfig>, instanceInfo: TConfig) {
 		this.service = service
 		this.instanceInfo = instanceInfo
-
-		this.triggerReload()
 	}
 
-	unloadConfigAndSecrets = action(() => {
-		this.#isLoading.set(null)
-		this.#configAndSecrets.set(null)
-		this.#loadError.set(null)
+	/**
+	 * Apply a new state from the config subscription. Incoming values are taken for fields the user has not
+	 * edited; the user's edits to dirty fields are preserved. If an untouched field changes while the user has
+	 * unsaved edits, flag that the config was changed elsewhere.
+	 */
+	applyState = action((newState: ClientEditInstanceConfigState | null) => {
+		this.#state.set(newState)
+
+		if (newState?.type === 'config') {
+			const incomingConfig = (newState.config ?? {}) as CompanionOptionValues
+			const incomingSecrets = (newState.secrets ?? {}) as CompanionOptionValues
+
+			// Detect an external change: an untouched field whose value differs from what we currently show
+			if (this.#dirtyFields.size > 0) {
+				const localConfig = this.#config.get()
+				const localSecrets = this.#secrets.get()
+				const changedElsewhere =
+					Object.entries(incomingConfig).some(
+						([id, value]) => !this.#dirtyFields.has(id) && !isEqual(localConfig[id], value)
+					) ||
+					Object.entries(incomingSecrets).some(
+						([id, value]) => !this.#dirtyFields.has(id) && !isEqual(localSecrets[id], value)
+					)
+				if (changedElsewhere) this.#externalChangeWarning.set(true)
+			}
+
+			// Merge: take incoming values, but keep the user's edits for dirty fields
+			const mergedConfig: CompanionOptionValues = { ...incomingConfig }
+			const mergedSecrets: CompanionOptionValues = { ...incomingSecrets }
+			for (const fieldId of this.#dirtyFields) {
+				if (fieldId in this.#config.get()) mergedConfig[fieldId] = this.#config.get()[fieldId]
+				if (fieldId in this.#secrets.get()) mergedSecrets[fieldId] = this.#secrets.get()[fieldId]
+			}
+			this.#config.set(mergedConfig)
+			this.#secrets.set(mergedSecrets)
+		} else {
+			// Not running / error - drop the working copy and any edits
+			this.#config.set({})
+			this.#secrets.set({})
+			this.#dirtyFields.clear()
+			this.#externalChangeWarning.set(false)
+		}
 	})
 
-	triggerReload = (retryCount = 0): void => {
-		if (this.#isLoading.get() && retryCount === 0) return
-
-		const loadingId = nanoid()
-
-		runInAction(() => {
-			this.#isLoading.set(loadingId)
-			this.#configAndSecrets.set(null)
-			this.#loadError.set(null)
-		})
-
-		this.service
-			.fetchConfig()
-			.then((data) => {
-				runInAction(() => {
-					const currentLoadingId = this.#isLoading.get()
-					// If the loading ID has changed, this means that a new reload has been triggered
-					if (currentLoadingId !== loadingId) return
-
-					if (!data) {
-						if (retryCount > 5) {
-							this.#isLoading.set(null)
-							this.#configAndSecrets.set(null)
-							this.#loadError.set('Connection not found or not running')
-						} else {
-							setTimeout(() => {
-								if (this.#isLoading.get() !== loadingId) return
-								this.triggerReload(retryCount + 1)
-							}, 500)
-						}
-					} else {
-						this.#isLoading.set(null)
-						this.#configAndSecrets.set({
-							fields: data.fields,
-
-							useNewLayout: data.useNewLayout,
-
-							config: data.config as CompanionOptionValues,
-							configDirty: false,
-							secrets: data.secrets as CompanionOptionValues,
-							secretsDirty: false,
-						})
-					}
-				})
-			})
-			.catch((err) => {
-				runInAction(() => {
-					const currentLoadingId = this.#isLoading.get()
-					// If the loading ID has changed, this means that a new reload has been triggered
-					if (currentLoadingId !== loadingId) return
-
-					this.#isLoading.set(null)
-					this.#loadError.set(err.message)
-					this.#configAndSecrets.set(null)
-				})
-			})
-	}
+	/**
+	 * Mark the current config as saved: clear the dirty tracking so the form is no longer considered dirty.
+	 * Called after a successful save; the working copy already holds the saved values.
+	 */
+	markSaved = action(() => {
+		this.#basicChanges.set({})
+		this.#dirtyFields.clear()
+		this.#externalChangeWarning.set(false)
+	})
 
 	isDirty = computedFn((): boolean => {
 		const basicChanges = this.#basicChanges.get()
@@ -132,22 +153,14 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 			return true
 		}
 
-		// Check if the config or secrets have changed
-		const configAndSecrets = this.#configAndSecrets.get()
-		if (configAndSecrets) {
-			if (configAndSecrets.configDirty || configAndSecrets.secretsDirty) {
-				return true
-			}
-		}
-
-		return false
+		return this.#dirtyFields.size > 0
 	})
 
 	isValid = computedFn(() => {
 		if (!this.checkLabelIsValid(this.labelValue)) return false
 
 		// Validate the config and secrets
-		const configAndSecrets = this.#configAndSecrets.get()
+		const configAndSecrets = this.configAndSecrets
 		if (configAndSecrets) {
 			for (const field of configAndSecrets.fields) {
 				if (!this.#isFieldValueValid(configAndSecrets, field)) {
@@ -164,7 +177,7 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 	isVisible = computedFn((field: SomeCompanionInputField): boolean => {
 		const isVisibleFn = this.isVisibleFn(field)
 		if (isVisibleFn) {
-			const configAndSecrets = this.#configAndSecrets.get()
+			const configAndSecrets = this.configAndSecrets
 			if (configAndSecrets) {
 				return isVisibleFn(configAndSecrets.config)
 			}
@@ -219,19 +232,18 @@ export class InstanceEditPanelStore<TConfig extends ClientInstanceConfigBase> {
 	})
 
 	setConfigValue = action((fieldId: string, value: JsonValue | undefined) => {
-		const configAndSecrets = this.#configAndSecrets.get()
-		if (!configAndSecrets) return
+		const state = this.#state.get()
+		if (state?.type !== 'config') return
 
-		const field = configAndSecrets.fields.find((f) => f.id === fieldId)
+		const field = state.fields.find((f) => f.id === fieldId)
 		if (!field) return
 
 		if (isConfigFieldSecret(field)) {
-			configAndSecrets.secrets[fieldId] = value
-			configAndSecrets.secretsDirty = true
+			this.#secrets.set({ ...this.#secrets.get(), [fieldId]: value })
 		} else {
-			configAndSecrets.config[fieldId] = value
-			configAndSecrets.configDirty = true
+			this.#config.set({ ...this.#config.get(), [fieldId]: value })
 		}
+		this.#dirtyFields.add(fieldId)
 	})
 }
 

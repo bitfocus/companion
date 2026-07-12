@@ -157,7 +157,9 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			)}
 
 			<Grid.Col sm={12}>
-				<p className="mb-0">You can change these later and review how to use them on the 'Settings' tab in the GUI.</p>
+				<p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+					You can change these later and review how to use them on the 'Settings' tab in the GUI.
+				</p>
 			</Grid.Col>
 		</Grid.Row>
 	)

@@ -11,7 +11,7 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
+	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
 }
@@ -66,8 +66,7 @@ export interface ExportPageContentv6 {
 export type ExportControlv6 = Record<string, any> // TODO
 
 export type ExportInstancesv6 =
-	| Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6>
-	| Record<string, InstanceConfig | undefined> // TODO - tidy
+	Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6> | Record<string, InstanceConfig | undefined> // TODO - tidy
 
 export type ExportInstanceFullv6 = {
 	label: string

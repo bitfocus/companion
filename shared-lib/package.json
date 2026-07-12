@@ -16,18 +16,16 @@
     "node": ">=22.20"
   },
   "dependencies": {
-    "acorn": "^8.17.0",
+    "@companion-app/expressions": "^0.5.0",
     "colord": "^2.9.3",
-    "jsonpath-plus": "^10.4.0",
     "quick-lru": "^7.3.0",
     "semver": "^7.8.5",
-    "type-fest": "^5.7.0",
-    "unicode-segmenter": "^0.16.0",
+    "type-fest": "^5.8.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/semver": "^7.7.1",
-    "typescript": "npm:@typescript/typescript6@^6.0.0",
-    "typescript-7": "npm:typescript@rc"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2"
   }
 }

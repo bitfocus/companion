@@ -123,7 +123,7 @@ export class InternalController {
 			this.#buildingBlocksFragment,
 			new InternalActionRecorder(instanceController.actionRecorder, this.#pageStore),
 			new InternalInstance(instanceController),
-			new InternalTime(),
+			new InternalTime(userConfigController),
 			new InternalControls(graphicsController, this.#controlsStore, this.#pageStore, controlEvents),
 			new InternalCustomVariables(this.#variablesController),
 			new InternalPage(this.#pageStore),

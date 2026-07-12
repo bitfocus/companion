@@ -209,7 +209,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					this.#store._movePageInOrder(currentPageIndex, input.pageNumber - 1)
 
 					// Update cache for controls on later pages
-					const { changedPageIds } = this.#updateAndRedrawAllPagesAfter(
+					const { changedPageIds } = this.#updateAndRedrawAllPagesInRange(
 						Math.min(currentPageIndex + 1, input.pageNumber),
 						Math.max(currentPageIndex + 1, input.pageNumber)
 					)
@@ -266,7 +266,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.#store._removePage(pageInfo.id)
 
 		// Update cache for controls on later pages
-		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(pageNumber, null)
+		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesInRange(pageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		const missingPageNumber = this.#store.getPageIds().length + 1
@@ -304,7 +304,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		}
 
 		// Update cache for controls on later pages
-		const { changedPageIds } = this.#updateAndRedrawAllPagesAfter(asPageNumber, null)
+		const { changedPageIds } = this.#updateAndRedrawAllPagesInRange(asPageNumber, null)
 
 		// inform clients
 		this.emit('clientUpdate', {
@@ -326,7 +326,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * @param firstPageNumber
 	 * @param lastPageNumber If null, run to the end
 	 */
-	#updateAndRedrawAllPagesAfter(
+	#updateAndRedrawAllPagesInRange(
 		firstPageNumber: number,
 		lastPageNumber: number | null
 	): { changedPageNumbers: number[]; changedPageIds: Set<string> } {
@@ -533,6 +533,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			for (const [column, controlId] of Object.entries(rowObj)) {
 				const control = this.#controlsController.getControl(controlId)
 				if (control) {
+					// The page number changed, so the control's location-dependent state (this:page and
+					// related variables/feedbacks) must be recomputed, not just redrawn from cache.
+					control.triggerLocationHasChanged()
+
 					this.#graphicsController.invalidateButton({
 						pageNumber: pageNumber,
 						column: Number(column),

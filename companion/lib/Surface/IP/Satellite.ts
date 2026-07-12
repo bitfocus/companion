@@ -11,7 +11,7 @@
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -21,17 +21,12 @@ import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
+import { buildSatelliteStyleArgs, type SatelliteBitmapFormat } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import type {
 	SatelliteControlStylePreset,
 	SatelliteSurfaceLayout,
 } from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from '../CommonConfigFields.js'
+import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
 	DrawButtonItem,
@@ -60,6 +55,9 @@ export interface SatelliteDeviceInfo {
 	configFields: CompanionSurfaceConfigField[] | undefined
 
 	canChangePage: string | undefined
+
+	/** The bitmap encoding (rgb/png/webp) this surface negotiated for button images */
+	bitmapFormat: SatelliteBitmapFormat
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -87,7 +85,7 @@ function generateConfigFields(
 	if (deviceInfo.supportsBrightness) {
 		fields.push(BrightnessConfigField)
 	}
-	fields.push(RotationConfigField, ...LockConfigFields)
+	fields.push(RotationConfigField)
 
 	if (deviceInfo.canChangePage) {
 		fields.push({
@@ -196,6 +194,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #surfaceManifest: ReadonlyDeep<SatelliteSurfaceLayout>
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
 	readonly #supportsLockedState: boolean
+	readonly #bitmapFormat: SatelliteBitmapFormat
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
 	readonly #outputVariables: Record<string, SatelliteOutputVariableInfo> = {}
@@ -223,6 +222,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
+		this.#bitmapFormat = deviceInfo.bitmapFormat
 
 		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
@@ -341,7 +341,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		const styleArgs = await buildSatelliteStyleArgs(
 			drawItem.defaultRender,
 			controlDefinition.style,
-			this.#config.rotation
+			this.#config.rotation,
+			this.#bitmapFormat
 		)
 		Object.assign(params, styleArgs)
 

@@ -9,8 +9,8 @@ import { Button } from '~/Components/Button.js'
 import { Form } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { StandalonePageError } from '~/Components/StandalonePageError.js'
 import { useWakeLock } from '~/Hooks/useScreenWakeLock.js'
-import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 import { EmulatorButtons } from './Buttons.js'
@@ -52,14 +52,11 @@ export const Emulator = observer(function Emulator() {
 					<EmulatorNotFound emulatorId={emulatorId} />
 				</Grid.Row>
 			) : (
-				<Grid.Row className={'loading'}>
-					<LoadingRetryOrError
-						dataReady={false}
-						error={config.error || imagesSub.error || lockedState.error}
-						doRetry={doRetryLoad}
-						design="pulse-xl"
-					/>
-				</Grid.Row>
+				<StandalonePageError
+					dataReady={false}
+					error={config.error || imagesSub.error || lockedState.error}
+					doRetry={doRetryLoad}
+				/>
 			)}
 		</div>
 	)

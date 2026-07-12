@@ -12,7 +12,7 @@ import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type { ImageResult } from '../Graphics/ImageResult.js'
+import { PREVIEW_RENDER_SIZE, type ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
@@ -150,7 +150,7 @@ export class CloudController {
 
 				const bank = xyToOldBankIndex(location.column, location.row)
 				const updateId = v4()
-				const png64 = await render.drawDataUrl()
+				const png64 = await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 				for (const region of Object.values(this.#regionInstances)) {
 					region.socketTransmit('companion-banks:' + this.state.uuid, {
 						updateId,
@@ -350,7 +350,10 @@ export class CloudController {
 			const bankIndex = xyToOldBankIndex(location.column, location.row)
 
 			items.push(
-				(render ? render.drawDataUrl() : Promise.resolve(undefined)).then((png64) => ({
+				(render
+					? render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+					: Promise.resolve(undefined)
+				).then((png64) => ({
 					location,
 					bank: bankIndex, // backwards compatibility, TODO: remove in release
 					page: location.pageNumber, // backwards compatibility, remove in release

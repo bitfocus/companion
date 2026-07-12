@@ -21,12 +21,7 @@ import type {
 import LogController, { type Logger } from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColorToNumber } from '../Resources/Util.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from './CommonConfigFields.js'
+import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from './CommonConfigFields.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -59,7 +54,7 @@ function generateConfigFields(
 
 	// If there are any controls, add rotation and lock config
 	if (gridSize.columns > 0 && gridSize.rows > 0) {
-		fields.push(RotationConfigField, ...LockConfigFields)
+		fields.push(RotationConfigField)
 	}
 
 	if (surfaceInfo.canChangePage) {
@@ -218,7 +213,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					if (buffer === undefined || buffer.length == 0) {
 						this.#logger.warn('buffer has invalid size')
 					} else {
-						drawProps.image = Buffer.from(buffer).toString('base64') // TODO - avoid buffer wrap
+						drawProps.image = buffer.toBase64()
 					}
 				}
 
@@ -242,7 +237,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'
 				// }
 
-				this.#ipcWrapper
+				// Await the send so the write queue paces itself to the child process.
+				await this.#ipcWrapper
 					.sendWithCb('drawControls', {
 						surfaceId: this.#surfaceInfo.surfaceId,
 						drawProps: [drawProps],

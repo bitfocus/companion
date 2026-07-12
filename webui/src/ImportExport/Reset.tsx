@@ -1,4 +1,5 @@
-import { faDownload, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faDownload, faTrashAlt, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
@@ -6,13 +7,14 @@ import { useCallback, useContext, useRef, useState } from 'react'
 import type { ClientImportOrResetSelection, ResetType } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button, LinkButtonExternal } from '~/Components/Button'
-import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { Form } from '~/Components/Form.js'
-import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { Modal } from '~/Components/Modal'
+import { NonIdealState } from '~/Components/NonIdealState'
+import { StepSelector, type StepSelectorItem } from '~/Components/StepSelector.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { CONFIG_OPTION_META, ConfigOptionRow, CONTENT_OPTION_KEYS, SURFACE_CHILD_OPTIONS } from './ConfigSelection.js'
 
 const defaultFullResetConfig: ClientImportOrResetSelection = {
 	connections: 'reset',
@@ -122,6 +124,15 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 		setCurrentStep(newStep)
 	}, [currentStep])
 
+	const doJumpToStep = useCallback((index: number) => setCurrentStep(index), [])
+
+	// The three steps of the flow. Markers stay clickable so users can jump between them.
+	const stepperItems: StepSelectorItem[] = [
+		{ index: 1, title: 'Backup' },
+		{ index: 2, title: 'Options' },
+		{ index: applyStep, title: 'Review' },
+	]
+
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
 	let nextButton
@@ -184,6 +195,9 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 								Reset Configuration
 							</Modal.Title>
 						</Modal.Header>
+						{currentStep <= applyStep && (
+							<StepSelector items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />
+						)}
 
 						<form.AppForm>
 							<Form
@@ -220,14 +234,17 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 function ResetBeginStep() {
 	return (
 		<div>
-			<p style={{ marginTop: 0 }}>
-				Proceeding will allow you to reset some or all major components of this Companion installation.
-			</p>
-			<p>It is recommended to export the system configuration first.</p>
-
-			<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
-				<FontAwesomeIcon icon={faDownload} /> Export
-			</LinkButtonExternal>
+			<NonIdealState icon={faTriangleExclamation} style={{ paddingLeft: 0, paddingRight: 0 }}>
+				<h4 className="mb-2">Before you reset</h4>
+				<p>
+					This lets you reset some or all major components of this Companion installation. Use the steps above to choose
+					what to reset and review before applying.
+				</p>
+				<p className="mb-3">It is strongly recommended to export your configuration first.</p>
+				<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
+					<FontAwesomeIcon icon={faDownload} /> Export
+				</LinkButtonExternal>
+			</NonIdealState>
 		</div>
 	)
 }
@@ -236,17 +253,26 @@ const ResetOptionsStep = withForm({
 	defaultValues: defaultFullResetConfig, // Just for types
 	render: function ResetOptionsStep({ form }) {
 		return (
-			<div>
-				<h5>Reset Options</h5>
-				<p>Please select the components you'd like to reset.</p>
+			<div className="config-selection">
+				<p className="config-selection-intro">Choose what to reset.</p>
 
-				<div className="ms-2 mb-1">
-					<form.AppField name="connections">{(field) => <field.ResetToggleField label="Connections" />}</form.AppField>
+				<div className="config-selection-section">
+					<div className="config-selection-title">Connections</div>
+					<div className="config-selection-list">
+						<form.AppField name="connections">
+							{(field) => (
+								<field.ResetToggleField
+									icon={CONFIG_OPTION_META.connections.icon}
+									label={CONFIG_OPTION_META.connections.label}
+								/>
+							)}
+						</form.AppField>
+					</div>
 					<form.Subscribe
 						selector={(state: any) => [state.values.connections, state.values.buttons, state.values.triggers]}
 						children={([connections, buttons, triggers]: any[]) =>
 							connections !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<StaticAlert color="warning">
+								<StaticAlert color="warning" className="mt-2 mb-0">
 									Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the
 									connections even if 'Buttons' and/or 'Triggers' are not also reset.
 								</StaticAlert>
@@ -255,22 +281,22 @@ const ResetOptionsStep = withForm({
 					/>
 				</div>
 
-				<div className="ms-2 mb-1">
-					<form.AppField name="buttons">{(field) => <field.ResetToggleField label="Buttons" />}</form.AppField>
-				</div>
-				<div className="ms-2 mb-1">
-					<form.AppField name="triggers">{(field) => <field.ResetToggleField label="Triggers" />}</form.AppField>
-				</div>
-
-				<div className="ms-2 mb-1">
-					<form.AppField name="customVariables">
-						{(field) => <field.ResetToggleField label="Custom Variables" />}
-					</form.AppField>
+				<div className="config-selection-section">
+					<div className="config-selection-title">Content</div>
+					<div className="config-selection-list">
+						{CONTENT_OPTION_KEYS.map((key) => (
+							<form.AppField key={key} name={key}>
+								{(field) => (
+									<field.ResetToggleField icon={CONFIG_OPTION_META[key].icon} label={CONFIG_OPTION_META[key].label} />
+								)}
+							</form.AppField>
+						))}
+					</div>
 					<form.Subscribe
 						selector={(state: any) => [state.values.customVariables, state.values.buttons, state.values.triggers]}
 						children={([customVariables, buttons, triggers]: any[]) =>
 							customVariables !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<StaticAlert color="warning">
+								<StaticAlert color="warning" className="mt-2 mb-0">
 									Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them
 									can create an unstable environment.
 								</StaticAlert>
@@ -278,91 +304,52 @@ const ResetOptionsStep = withForm({
 						}
 					/>
 				</div>
-				<div className="ms-2 mb-1">
-					<form.AppField name="expressionVariables">
-						{(field) => <field.ResetToggleField label="Expression Variables" />}
-					</form.AppField>
+
+				<div className="config-selection-section">
+					<div className="config-selection-title">Surfaces</div>
+					<div className="config-selection-list">
+						<form.AppField name="surfaces">
+							{(field) => (
+								<field.ResetToggleGroup
+									icon={CONFIG_OPTION_META.surfaces.icon}
+									label={CONFIG_OPTION_META.surfaces.label}
+									defaultChecked={
+										{
+											known: 'reset',
+											instances: 'reset',
+											remote: 'reset',
+										} satisfies ClientImportOrResetSelection['surfaces']
+									}
+									defaultUnchecked={
+										{
+											known: 'unchanged',
+											instances: 'unchanged',
+											remote: 'unchanged',
+										} satisfies ClientImportOrResetSelection['surfaces']
+									}
+								/>
+							)}
+						</form.AppField>
+						{SURFACE_CHILD_OPTIONS.map((child) => (
+							<form.AppField key={child.key} name={`surfaces.${child.key}`}>
+								{(field) => <field.ResetToggleField sub icon={child.icon} label={child.label} />}
+							</form.AppField>
+						))}
+					</div>
 				</div>
 
-				<div className="ms-2 mb-1">
-					<form.AppField name="surfaces">
-						{(field) => (
-							<field.ResetToggleGroup
-								label="Surfaces"
-								defaultChecked={
-									{
-										known: 'reset',
-										instances: 'reset',
-										remote: 'reset',
-									} satisfies ClientImportOrResetSelection['surfaces']
-								}
-								defaultUnchecked={
-									{
-										known: 'unchanged',
-										instances: 'unchanged',
-										remote: 'unchanged',
-									} satisfies ClientImportOrResetSelection['surfaces']
-								}
-							/>
-						)}
-					</form.AppField>
-				</div>
-				<div className="ms-2 mb-1">
-					<form.AppField name="surfaces.known">
-						{(field) => (
-							<field.ResetToggleField
-								className="ms-4"
-								label={
-									<>
-										Known Surfaces
-										<InlineHelpIcon className="ms-1">The list of known surfaces, and their settings</InlineHelpIcon>
-									</>
-								}
-							/>
-						)}
-					</form.AppField>
-				</div>
-				<div className="ms-2 mb-1">
-					<form.AppField name="surfaces.instances">
-						{(field) => (
-							<field.ResetToggleField
-								className="ms-4"
-								label={
-									<>
-										Surface Integrations
-										<InlineHelpIcon className="ms-1">The configured surface integrations</InlineHelpIcon>
-									</>
-								}
-							/>
-						)}
-					</form.AppField>
-				</div>
-				<div className="ms-2 mb-1">
-					<form.AppField name="surfaces.remote">
-						{(field) => (
-							<field.ResetToggleField
-								className="ms-4"
-								label={
-									<>
-										Remote Surfaces
-										<InlineHelpIcon className="ms-1">
-											Connections for surfaces that are connected remotely
-										</InlineHelpIcon>
-									</>
-								}
-							/>
-						)}
-					</form.AppField>
-				</div>
-
-				<div className="ms-2 mb-1">
-					<form.AppField name="imageLibrary">
-						{(field) => <field.ResetToggleField label="Image Library" />}
-					</form.AppField>
-				</div>
-
-				<div className="ms-2 mb-1">
-					<form.AppField name="userconfig">{(field) => <field.ResetToggleField label="Settings" />}</form.AppField>
+				<div className="config-selection-section">
+					<div className="config-selection-title">Settings</div>
+					<div className="config-selection-list">
+						<form.AppField name="userconfig">
+							{(field) => (
+								<field.ResetToggleField
+									icon={CONFIG_OPTION_META.userconfig.icon}
+									label={CONFIG_OPTION_META.userconfig.label}
+								/>
+							)}
+						</form.AppField>
+					</div>
 				</div>
 			</div>
 		)
@@ -371,42 +358,45 @@ const ResetOptionsStep = withForm({
 
 interface ResetToggleFieldProps {
 	label: string | React.ReactNode
-	className?: string
+	icon: IconDefinition
+	sub?: boolean
 }
-function ResetToggleField({ label, className }: ResetToggleFieldProps) {
+// Bridges the reset form's 'reset'/'unchanged' value to the shared boolean ConfigOptionRow.
+function ResetToggleField({ label, icon, sub }: ResetToggleFieldProps) {
 	const field = useFieldContext<ResetType>()
 
 	return (
-		<CheckboxInputFieldWithLabel
-			className={className}
+		<ConfigOptionRow
+			icon={icon}
+			label={label}
+			sub={sub}
 			value={field.state.value !== 'unchanged'}
 			setValue={(val) => field.handleChange(val ? 'reset' : 'unchanged')}
 			onBlur={field.handleBlur}
-			label={label}
 		/>
 	)
 }
 
 interface ResetToggleGroupProps {
 	label: string | React.ReactNode
+	icon: IconDefinition
 	defaultChecked: Record<string, ResetType>
 	defaultUnchecked: Record<string, ResetType>
-	className?: string
 }
-function ResetToggleGroup({ label, defaultChecked, defaultUnchecked, className }: ResetToggleGroupProps) {
+function ResetToggleGroup({ label, icon, defaultChecked, defaultUnchecked }: ResetToggleGroupProps) {
 	const field = useFieldContext<Record<string, ResetType>>()
 
 	const isAChildChecked = !!field.state.value && Object.values(field.state.value).some((v) => v !== 'unchanged')
 	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
 
 	return (
-		<CheckboxInputFieldWithLabel
-			className={className}
+		<ConfigOptionRow
+			icon={icon}
+			label={label}
 			indeterminate={isAChildChecked && isAChildUnchecked}
 			value={isAChildChecked}
 			setValue={(val) => field.handleChange(val ? defaultChecked : defaultUnchecked)}
 			onBlur={field.handleBlur}
-			label={label}
 		/>
 	)
 }

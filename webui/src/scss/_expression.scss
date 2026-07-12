@@ -1,3 +1,68 @@
+// Monaco's toolbar button tooltips (the find/replace widget's Match Case, Regex, etc.) are shown by the
+// hover service in a body-level container. This doesn't work properly for us, so suppress them.
+.monaco-hover.workbench-hover {
+	display: none !important;
+}
+
+// Un-clipped positioning wrapper around the editor box. The Monaco find/replace widget is
+// reparented into a `.monaco-editor` host inside this element (see ExpressionInputField.tsx) so it
+// can float above the editor box instead of being clipped inside the tiny, resizable code viewport.
+.expression-editor-outer {
+	position: relative;
+
+	// Zero-height styling host, pinned to the top edge of the box. Carries `.monaco-editor` so Monaco's
+	// `.monaco-editor .find-widget` styles and theme CSS variables still apply after the reparent.
+	> .expression-find-host {
+		position: absolute;
+		bottom: 100%; // its bottom edge sits on the top edge of the editor box
+		left: 0;
+		right: 0;
+		height: 0;
+		// Float above sibling form content (e.g. the validation message that sits just above the field),
+		// which would otherwise paint over the top of the widget and make it look clipped.
+		z-index: 40;
+
+		// The reparented find/replace widget, floated just above the editor box.
+		.find-widget {
+			top: auto !important;
+			bottom: 0 !important; // hug the top edge of the box, growing upward
+			left: 0 !important;
+			right: auto !important;
+			transform: none !important; // cancel Monaco's slide-in-from-top transform
+
+			// Hanging above the box, so round the top corners and restore the top border that Monaco drops.
+			border-top: 1px solid var(--vscode-widget-border);
+			border-top-left-radius: 4px;
+			border-top-right-radius: 4px;
+
+			// Because the editor is narrow, Monaco forces the widget into its "collapsed" mode (max-width
+			// 170px, with several buttons hidden). Since the widget floats above the box we're not bound by
+			// that width, so give it a usable minimum and let it grow up to the box width.
+			min-width: 250px !important;
+			max-width: 100% !important;
+
+			// ...and show the controls Monaco's collapsed mode hides, now that there's room for them.
+			&.collapsed-find-widget {
+				.button.previous,
+				.button.next,
+				.button.replace,
+				.button.replace-all {
+					display: flex !important;
+				}
+				> .find-part .monaco-findInput .controls {
+					display: block !important;
+				}
+			}
+
+			// When closed, Monaco only hides the widget via its transform (which we've cancelled), so hide it
+			// explicitly. Use `visibility: hidden` rather than `display: none` so that size measuring works.
+			&:not(.visible) {
+				visibility: hidden !important;
+			}
+		}
+	}
+}
+
 .expression-editor-container {
 	height: 90px;
 	min-height: 90px; // ~5 lines at default font size (18px per line)
@@ -13,6 +78,42 @@
 
 	&.syntax-error {
 		border-color: rgb(255, 12, 138);
+	}
+
+	// WebKit paints the native `resize` grabber underneath the Monaco editor, so it can't be dragged
+	// in Safari. There (and only there) we disable it and supply a custom handle that sits on top.
+	&.custom-resize {
+		position: relative;
+		resize: none;
+		overflow: hidden;
+
+		.expression-editor-resize-handle {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			width: 16px;
+			height: 16px;
+			z-index: 20; // above the Monaco editor content and its scrollbars
+			cursor: ns-resize;
+			touch-action: none;
+
+			// Visible diagonal grip lines in the corner, mimicking the native resizer
+			background-image: repeating-linear-gradient(
+				-45deg,
+				var(--cui-border-color) 0,
+				var(--cui-border-color) 1px,
+				transparent 1px,
+				transparent 3px
+			);
+			background-repeat: no-repeat;
+			background-position: bottom right;
+			background-size: 9px 9px;
+			opacity: 0.7;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
 	}
 
 	/* Override Monaco suggest widget to show details below name */

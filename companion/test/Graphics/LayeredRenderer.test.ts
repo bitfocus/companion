@@ -6,19 +6,15 @@ import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/La
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
-	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
+	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import {
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
-	ButtonGraphicsShowStatusIcons,
-} from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { Image } from '../../lib/Graphics/Image.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -41,7 +37,7 @@ function makeStyle(overrides: Partial<RendererButtonStyle> = {}): RendererButton
 		style: 'button-layered',
 		drawType: 'button',
 		elements: [],
-		show_topbar: false,
+		decoration: ButtonGraphicsDecorationType.Border,
 		show_status_icons: false,
 		location: { pageNumber: 1, row: 2, column: 3 },
 		pushed: false,
@@ -50,18 +46,6 @@ function makeStyle(overrides: Partial<RendererButtonStyle> = {}): RendererButton
 		button_status: undefined,
 		action_running: undefined,
 		...overrides,
-	}
-}
-
-/** Build a canvas background element controlling the decoration type. */
-function makeCanvasElement(decoration: ButtonGraphicsDecorationType): ButtonGraphicsCanvasDrawElement {
-	return {
-		id: 'canvas-bg',
-		usage: ButtonGraphicsElementUsage.Automatic,
-		contentHash: '',
-		type: 'canvas',
-		decoration,
-		showStatusIcons: ButtonGraphicsShowStatusIcons.FollowDefault,
 	}
 }
 
@@ -197,23 +181,11 @@ beforeAll(() => {
 
 describe('GraphicsLayeredButtonRenderer', () => {
 	describe('decoration', () => {
-		test('show_topbar=true - FollowDefault resolves to TopBar', async () => {
-			const img = Image.create(72, 58, 1, null)
-			await GraphicsLayeredButtonRenderer.draw(img, makeStyle({ show_topbar: true }), new Set(), null, DEFAULT_PADDING)
-			await expect(img.canvasImage).toMatchImageSnapshot()
-		})
-
-		test('show_topbar=false not pushed - FollowDefault resolves to Border (nothing visible)', async () => {
-			const img = Image.create(72, 58, 1, null)
-			await GraphicsLayeredButtonRenderer.draw(img, makeStyle({ show_topbar: false }), new Set(), null, DEFAULT_PADDING)
-			await expect(img.canvasImage).toMatchImageSnapshot()
-		})
-
-		test('show_topbar=false pushed - Border decoration border visible', async () => {
+		test('decoration=topbar - top bar drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ show_topbar: false, pushed: true }),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.TopBar }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -221,11 +193,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('canvas element decoration=None - no decoration drawn', async () => {
+		test('decoration=border, not pushed - nothing drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ elements: [makeCanvasElement(ButtonGraphicsDecorationType.None)] }),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.Border }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -233,14 +205,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('canvas element decoration=TopBar overrides show_topbar=false', async () => {
+		test('decoration=border, pushed - border drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({
-					show_topbar: false,
-					elements: [makeCanvasElement(ButtonGraphicsDecorationType.TopBar)],
-				}),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.Border, pushed: true }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -248,14 +217,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('canvas element decoration=Border pushed - border visible', async () => {
+		test('decoration=none - nothing drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({
-					pushed: true,
-					elements: [makeCanvasElement(ButtonGraphicsDecorationType.Border)],
-				}),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.None }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -269,7 +235,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ show_topbar: true, show_status_icons: true, button_status: 'error' }),
+				makeStyle({ decoration: ButtonGraphicsDecorationType.TopBar, show_status_icons: true, button_status: 'error' }),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -281,7 +247,11 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
-				makeStyle({ show_topbar: true, show_status_icons: false, button_status: 'error' }),
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					show_status_icons: false,
+					button_status: 'error',
+				}),
 				new Set(),
 				null,
 				DEFAULT_PADDING
@@ -291,7 +261,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('element types', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('text element', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -315,6 +285,38 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				DEFAULT_PADDING
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		// The text outline width is proportional to the font size, so it should keep a consistent visual
+		// weight relative to the text across canvas sizes, oversampling factors and font sizes (rather than
+		// being a fixed pixel width). These snapshots let us eyeball the thickness across that matrix.
+		describe('text outline thickness', () => {
+			const resolutions = [
+				{ name: '72x58 1x', width: 72, height: 58, oversampling: 1 },
+				{ name: '72x58 2x', width: 72, height: 58, oversampling: 2 },
+				{ name: '144x116 1x', width: 144, height: 116, oversampling: 1 },
+				{ name: '288x232 1x', width: 288, height: 232, oversampling: 1 },
+			] as const
+			const fontSizes = [25, 50, 100, 200] as const
+
+			for (const res of resolutions) {
+				for (const fontsize of fontSizes) {
+					test(`${res.name} - fontsize ${fontsize}`, async () => {
+						const img = Image.create(res.width, res.height, res.oversampling, null)
+						await GraphicsLayeredButtonRenderer.draw(
+							img,
+							makeStyle({
+								...drawOpts,
+								elements: [makeTextElement({ outlineColor: 0xff0000, fontsize, fontsizeAllowShrink: false })],
+							}),
+							new Set(),
+							null,
+							DEFAULT_PADDING
+						)
+						await expect(img.canvasImage).toMatchImageSnapshot()
+					})
+				}
+			}
 		})
 
 		test('box element', async () => {
@@ -474,7 +476,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({
-					show_topbar: true,
+					decoration: ButtonGraphicsDecorationType.TopBar,
 					show_status_icons: true,
 					pushed: true,
 					button_status: 'error',
@@ -503,7 +505,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('skipDraw per element type', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('text element with enabled=false - not drawn', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -595,7 +597,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({
-					show_topbar: false,
+					decoration: ButtonGraphicsDecorationType.Border,
 					elements: [makeImageElement('data:image/png;base64,NOTVALIDBASE64NOTVALIDBASE64NOTVALIDBASE64!!!')],
 				}),
 				new Set(),
@@ -607,7 +609,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('selectedElementId through nesting', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('group element selected - crosshair at group bounds', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -671,7 +673,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('box properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('box at sub-bounds position', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -753,7 +755,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('text properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('text halign left', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -859,7 +861,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('circle properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('circle partial arc (0 to 270 degrees)', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -928,7 +930,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('image properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('image fillMode=fill - stretches to fill bounds ignoring aspect ratio', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -985,7 +987,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 	})
 
 	describe('group properties', () => {
-		const drawOpts = { show_topbar: false, show_status_icons: false } as const
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		test('group with multiple children at different sub-bounds', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -1059,6 +1061,341 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				DEFAULT_PADDING
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+	})
+
+	describe('gauge element', () => {
+		const DEFAULT_STOPS: ButtonGraphicsGaugeDrawElement['stops'] = [
+			{ value: 0, color: 0x00ff00, gradient: false },
+			{ value: 66, color: 0xffff00, gradient: false },
+			{ value: 85, color: 0xff0000, gradient: false },
+		]
+
+		function makeGaugeElement(overrides: Partial<ButtonGraphicsGaugeDrawElement> = {}): ButtonGraphicsGaugeDrawElement {
+			return {
+				...ELEMENT_BASE,
+				id: 'gauge-1',
+				type: 'gauge',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				rotation: 0,
+				value: 50,
+				min: 0,
+				max: 100,
+				origin: 0,
+				symmetric: false,
+				orientation: 'horizontal',
+				reverse: false,
+				trackWidth: 100,
+				startAngle: 0,
+				endAngle: 360,
+				ringWidth: 20,
+				roundedEnds: true,
+				fillEnabled: true,
+				multiColour: true,
+				stops: DEFAULT_STOPS,
+				markerEnabled: false,
+				markerColor: 0xffffff,
+				markerWidth: 15,
+				trackStyle: 'transparent',
+				trackAmount: 70,
+				...overrides,
+			}
+		}
+
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
+
+		async function drawGauge(gauge: ButtonGraphicsGaugeDrawElement, size = { w: 72, h: 58 }): Promise<Canvas> {
+			const img = Image.create(size.w, size.h, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements: [gauge] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			return img.canvasImage
+		}
+
+		test('value=0 - only inactive background visible', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 0 }))).toMatchImageSnapshot()
+		})
+
+		test('value=50 - first segment partially active', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50 }))).toMatchImageSnapshot()
+		})
+
+		test('value=75 - two segments active (green + yellow), red inactive', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75 }))).toMatchImageSnapshot()
+		})
+
+		test('value=100 - all segments active, no inactive', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 100 }))).toMatchImageSnapshot()
+		})
+
+		test('reverse=true - fills from right', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, reverse: true }))).toMatchImageSnapshot()
+		})
+
+		test('multiColour=false - single colour for entire active region', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75, multiColour: false }))).toMatchImageSnapshot()
+		})
+
+		test('trackStyle=dimmed - inactive portions darkened', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, trackStyle: 'dimmed', trackAmount: 70 }))
+			).toMatchImageSnapshot()
+		})
+
+		test('trackAmount=0 - inactive portions invisible', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 0 }))).toMatchImageSnapshot()
+		})
+
+		test('trackAmount=100 - inactive same as active colour', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 100 }))).toMatchImageSnapshot()
+		})
+
+		test('orientation=vertical reverse=false - fills from bottom', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 50, orientation: 'vertical' }))).toMatchImageSnapshot()
+		})
+
+		test('orientation=vertical reverse=true - fills from top', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, orientation: 'vertical', reverse: true }))
+			).toMatchImageSnapshot()
+		})
+
+		test('empty stops - nothing drawn', async () => {
+			await expect(await drawGauge(makeGaugeElement({ stops: [] }))).toMatchImageSnapshot()
+		})
+
+		test('single segment - full bar one colour', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, stops: [{ value: 0, color: 0x0088ff }] }))
+			).toMatchImageSnapshot()
+		})
+
+		// Helper: draw a gauge on top of a dark box so inactive transparent arcs are visible
+		async function drawRing(
+			overrides: Partial<ButtonGraphicsGaugeDrawElement>,
+			size = { w: 72, h: 72 }
+		): Promise<Canvas> {
+			const img = Image.create(size.w, size.h, 1, null)
+			const bg = makeBoxElement({ color: 0x222222 })
+			const gauge = makeGaugeElement({ orientation: 'ring', ...overrides })
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements: [bg, gauge] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			return img.canvasImage
+		}
+
+		test('ring value=33 - one colour, within first segment', async () => {
+			await expect(await drawRing({ value: 33 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=50 - midway through first segment', async () => {
+			await expect(await drawRing({ value: 50 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=66 - exactly at first segment boundary', async () => {
+			await expect(await drawRing({ value: 66 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=75 - crossing into yellow segment', async () => {
+			await expect(await drawRing({ value: 75 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=90 - crossing into red segment', async () => {
+			await expect(await drawRing({ value: 90 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=0 - inactive arc only (dark bg makes it visible)', async () => {
+			await expect(await drawRing({ value: 0 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=100 - fully active', async () => {
+			await expect(await drawRing({ value: 100 })).toMatchImageSnapshot()
+		})
+
+		test('ring value=75 dimmed inactive - both halves clearly visible', async () => {
+			await expect(await drawRing({ value: 75, trackStyle: 'dimmed', trackAmount: 40 })).toMatchImageSnapshot()
+		})
+
+		test('ring reverse=true value=75 - counter-clockwise', async () => {
+			await expect(await drawRing({ value: 75, reverse: true })).toMatchImageSnapshot()
+		})
+
+		test('ring thin ringWidth=8', async () => {
+			await expect(await drawRing({ value: 75, ringWidth: 8 })).toMatchImageSnapshot()
+		})
+
+		test('ring thick ringWidth=40', async () => {
+			await expect(await drawRing({ value: 75, ringWidth: 40 })).toMatchImageSnapshot()
+		})
+
+		test('ring multiColour=false value=75 - single colour active', async () => {
+			await expect(await drawRing({ value: 75, multiColour: false })).toMatchImageSnapshot()
+		})
+
+		test('ring roundedEnds=false value=75 - flat ends', async () => {
+			await expect(await drawRing({ value: 75, roundedEnds: false })).toMatchImageSnapshot()
+		})
+
+		test('ring in non-square element - stays circular', async () => {
+			await expect(await drawRing({ value: 50 }, { w: 72, h: 58 })).toMatchImageSnapshot()
+		})
+
+		test('unsorted stops - sorted before rendering', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 75,
+						stops: [
+							{ value: 85, color: 0xff0000 },
+							{ value: 0, color: 0x00ff00 },
+							{ value: 66, color: 0xffff00 },
+						],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		// --- Value mapping: min / max / origin / symmetric ---
+
+		test('min/max maps an arbitrary range onto the gauge', async () => {
+			// Audio-style range: value 0 sits ~91% of the way along -232..24
+			await expect(await drawGauge(makeGaugeElement({ value: 0, min: -232, max: 24 }))).toMatchImageSnapshot()
+		})
+
+		test('origin at midpoint - pan fills right of centre', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 75, origin: 50, stops: [{ value: 0, color: 0x00aaff }] }))
+			).toMatchImageSnapshot()
+		})
+
+		test('origin at midpoint - pan fills left of centre', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 25, origin: 50, stops: [{ value: 0, color: 0x00aaff }] }))
+			).toMatchImageSnapshot()
+		})
+
+		test('symmetric - fill grows both ways from origin (stereo width)', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({ value: 60, origin: 50, symmetric: true, stops: [{ value: 0, color: 0x00ff88 }] })
+				)
+			).toMatchImageSnapshot()
+		})
+
+		// --- Track width: fill is wider than the (narrowed) track ---
+
+		test('trackWidth=40 - fill wider than track', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 60, trackWidth: 40 }))).toMatchImageSnapshot()
+		})
+
+		test('vertical trackWidth=50 - narrow track, full-width fill', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 60, orientation: 'vertical', trackWidth: 50 }))
+			).toMatchImageSnapshot()
+		})
+
+		test('ring trackWidth=50 - track narrower than fill within ring width', async () => {
+			await expect(await drawRing({ value: 75, trackWidth: 50 })).toMatchImageSnapshot()
+		})
+
+		// --- Fill toggle ---
+
+		test('fillEnabled=false - only the track renders', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 75, fillEnabled: false }))).toMatchImageSnapshot()
+		})
+
+		// --- Gradient stops ---
+
+		test('gradient stop - blends toward the next stop colour', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 100,
+						stops: [
+							{ value: 0, color: 0x00ff00, gradient: true },
+							{ value: 100, color: 0xff0000, gradient: false },
+						],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		test('first stop not at zero - anchored so no gap forms', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 100,
+						stops: [
+							{ value: 40, color: 0x00ff00 },
+							{ value: 80, color: 0xff0000 },
+						],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		// --- Marker ---
+
+		test('marker - line at value, rounded caps with roundedEnds', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, markerEnabled: true, markerColor: 0xffffff }))
+			).toMatchImageSnapshot()
+		})
+
+		test('marker - flat caps when roundedEnds=false', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 50, markerEnabled: true, markerColor: 0xffffff, roundedEnds: false }))
+			).toMatchImageSnapshot()
+		})
+
+		test('marker - mirrors in symmetric mode', async () => {
+			await expect(
+				await drawGauge(
+					makeGaugeElement({
+						value: 60,
+						origin: 50,
+						symmetric: true,
+						markerEnabled: true,
+						markerColor: 0xffffff,
+						stops: [{ value: 0, color: 0x00ff88 }],
+					})
+				)
+			).toMatchImageSnapshot()
+		})
+
+		test('ring marker - arc bead following the curve', async () => {
+			await expect(
+				await drawRing({ value: 50, markerEnabled: true, markerColor: 0xffffff, markerWidth: 25 })
+			).toMatchImageSnapshot()
+		})
+
+		// --- Circular start/end angle (gap positioning) ---
+
+		test('ring partial arc - gap at the bottom (270° arc)', async () => {
+			await expect(await drawRing({ value: 75, startAngle: 225, endAngle: 135 })).toMatchImageSnapshot()
+		})
+
+		test('ring partial arc - rounded track ends follow roundedEnds', async () => {
+			await expect(
+				await drawRing({ value: 40, startAngle: 225, endAngle: 135, roundedEnds: true })
+			).toMatchImageSnapshot()
+		})
+
+		test('ring partial arc - flat track ends when roundedEnds=false', async () => {
+			await expect(
+				await drawRing({ value: 40, startAngle: 225, endAngle: 135, roundedEnds: false })
+			).toMatchImageSnapshot()
 		})
 	})
 })

@@ -265,10 +265,29 @@ describe('parseLineParameters', () => {
 		expect(parseLineParameters('key=hello\\ world')).toEqual({ key: 'hello world' })
 	})
 
+	test('keeps a value that contains = (only splits on the first =)', () => {
+		expect(parseLineParameters('key=a=b=c')).toEqual({ key: 'a=b=c' })
+	})
+
+	test('preserves the base64 = padding of a data: url bitmap value', () => {
+		const dataUrl = 'data:image/png;base64,iVBORw0KGgo='
+		expect(parseLineParameters(`BITMAP="${dataUrl}"`)).toEqual({ BITMAP: dataUrl })
+	})
+
+	test('treats an empty value (trailing =) as an empty string', () => {
+		expect(parseLineParameters('key=')).toEqual({ key: '' })
+	})
+
 	test('filters out BANNED_PROPS keys', () => {
 		const result = parseLineParameters('__proto__=injected constructor=bad normal=ok')
 		expect(result).not.toHaveProperty('__proto__')
 		expect(result).not.toHaveProperty('constructor')
+		expect(result.normal).toBe('ok')
+	})
+
+	test('filters out a BANNED_PROPS key even when its value contains =', () => {
+		const result = parseLineParameters('__proto__=a=b normal=ok')
+		expect(result).not.toHaveProperty('__proto__')
 		expect(result.normal).toBe('ok')
 	})
 })

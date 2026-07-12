@@ -1,21 +1,44 @@
+/* eslint-disable react-refresh/only-export-components */
+import { faCheck, faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { WIZARD_VERSION_3_0 } from './Constants.js'
+import { TIMEZONE_CHOICES } from '~/Resources/timezones.js'
+import { WIZARD_VERSION_3_0, WIZARD_VERSION_4_2, WIZARD_VERSION_5_0 } from './Constants.js'
+
+const DECORATION_LABELS: Record<string, string> = {
+	topbar: 'a top bar',
+	border: 'a border when pressed',
+	none: 'no decoration',
+}
 
 interface ApplyStepProps {
 	oldConfig: UserConfigModel
 	newConfig: UserConfigModel
 }
 
-export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.Element {
-	const changes: React.ReactNode[] = []
+type ChangeTone = 'add' | 'remove' | 'info'
 
+export interface WizardChange {
+	category: string
+	tone: ChangeTone
+	content: React.ReactNode
+}
+
+const TONE_ICON = { add: faCheck, remove: faXmark, info: faCircleInfo } as const
+
+/** Compute the list of changes the wizard will apply, comparing the original config to the edited one. */
+export function getWizardChanges(oldConfig: UserConfigModel, newConfig: UserConfigModel): WizardChange[] {
+	const changes: WizardChange[] = []
+	let category = ''
+	const add = (tone: ChangeTone, content: React.ReactNode) => changes.push({ category, tone, content })
+
+	category = 'Surfaces'
 	if (oldConfig.setup_wizard < WIZARD_VERSION_3_0 || oldConfig.usb_hotplug !== newConfig.usb_hotplug) {
-		changes.push(
-			newConfig.usb_hotplug ? (
-				<li>Companion will watch for and use newly detected USB devices.</li>
-			) : (
-				<li>After attaching a new USB device, you must scan for it in the Surfaces tab.</li>
-			)
+		add(
+			'info',
+			newConfig.usb_hotplug
+				? 'Companion will watch for and use newly detected USB devices.'
+				: 'After attaching a new USB device, you must scan for it in the Surfaces tab.'
 		)
 	}
 
@@ -23,15 +46,15 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		oldConfig.setup_wizard < WIZARD_VERSION_3_0 ||
 		oldConfig.auto_enable_discovered_surfaces !== newConfig.auto_enable_discovered_surfaces
 	) {
-		changes.push(
-			newConfig.auto_enable_discovered_surfaces ? (
-				<li>Newly discovered surfaces will be automatically enabled.</li>
-			) : (
-				<li>Newly discovered surfaces will need to be manually enabled in the Surfaces tab.</li>
-			)
+		add(
+			'info',
+			newConfig.auto_enable_discovered_surfaces
+				? 'Newly discovered surfaces will be automatically enabled.'
+				: 'Newly discovered surfaces will need to be manually enabled in the Surfaces tab.'
 		)
 	}
 
+	category = 'Button Grid'
 	if (
 		oldConfig.setup_wizard === 0 ||
 		newConfig?.gridSize.minColumn !== oldConfig.gridSize.minColumn ||
@@ -49,22 +72,43 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 
 		const newGridSize = newConfig?.gridSize
 
-		changes.push(
-			<li>
+		add(
+			'info',
+			<>
 				Button grid size will be {newGridSize?.maxRow - newGridSize?.minRow + 1} rows x{' '}
 				{newGridSize?.maxColumn - newGridSize?.minColumn + 1} columns
 				{oldConfig.setup_wizard !== 0 && isReducingSize && (
 					<>
 						<br />
-						<span style={{ color: 'red' }}>
+						<span className="text-danger">
 							By reducing the grid size, any buttons outside of the new boundaries will be deleted.
 						</span>
 					</>
 				)}
-			</li>
+			</>
 		)
 	}
 
+	category = 'Button Appearance'
+	if (oldConfig.setup_wizard < WIZARD_VERSION_5_0 || oldConfig.buttons_decoration !== newConfig.buttons_decoration) {
+		add(
+			'info',
+			`Buttons will show ${DECORATION_LABELS[newConfig.buttons_decoration] ?? newConfig.buttons_decoration} by default.`
+		)
+	}
+	if (
+		oldConfig.setup_wizard < WIZARD_VERSION_5_0 ||
+		oldConfig.buttons_status_icons !== newConfig.buttons_status_icons
+	) {
+		add(
+			newConfig.buttons_status_icons === 'show' ? 'add' : 'remove',
+			newConfig.buttons_status_icons === 'show'
+				? 'Status icons will be shown on buttons.'
+				: 'Status icons will not be shown on buttons.'
+		)
+	}
+
+	category = 'Remote Control Services'
 	if (
 		oldConfig.setup_wizard === 0 &&
 		!newConfig.tcp_enabled &&
@@ -74,146 +118,116 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 		!newConfig.emberplus_enabled &&
 		!newConfig.artnet_enabled
 	) {
-		changes.push(<li>No remote control services will be enabled.</li>)
+		add('info', 'No remote control services will be enabled.')
 	} else {
 		if (oldConfig.tcp_enabled !== newConfig.tcp_enabled) {
-			changes.push(
-				newConfig.tcp_enabled ? (
-					<li style={{ color: 'green' }}>Enable TCP Listener</li>
-				) : (
-					<li style={{ color: 'red' }}>Disable TCP Listener</li>
-				)
-			)
+			add(newConfig.tcp_enabled ? 'add' : 'remove', `${newConfig.tcp_enabled ? 'Enable' : 'Disable'} TCP Listener`)
 		}
 		if (
 			(oldConfig.setup_wizard === 0 && newConfig.tcp_enabled && !oldConfig.tcp_enabled) ||
 			(newConfig.tcp_enabled && oldConfig.tcp_listen_port !== newConfig.tcp_listen_port)
 		) {
-			changes.push(
-				<li>
-					{oldConfig.setup_wizard > 0 || oldConfig.tcp_enabled ? 'Change' : 'Set'} TCP listen port to{' '}
-					{newConfig.tcp_listen_port}
-				</li>
+			add(
+				'info',
+				`${oldConfig.setup_wizard > 0 || oldConfig.tcp_enabled ? 'Change' : 'Set'} TCP listen port to ${newConfig.tcp_listen_port}`
 			)
 		}
 
 		if (oldConfig.udp_enabled !== newConfig.udp_enabled) {
-			changes.push(
-				newConfig.udp_enabled ? (
-					<li style={{ color: 'green' }}>Enable TCP Listener</li>
-				) : (
-					<li style={{ color: 'red' }}>Disable TCP Listener</li>
-				)
-			)
+			add(newConfig.udp_enabled ? 'add' : 'remove', `${newConfig.udp_enabled ? 'Enable' : 'Disable'} UDP Listener`)
 		}
 		if (
 			(oldConfig.setup_wizard === 0 && newConfig.udp_enabled && !oldConfig.udp_enabled) ||
 			(newConfig.udp_enabled && oldConfig.udp_listen_port !== newConfig.udp_listen_port)
 		) {
-			changes.push(
-				<li>
-					{oldConfig.setup_wizard > 0 || oldConfig.udp_enabled ? 'Change' : 'Set'} UDP listen port to{' '}
-					{newConfig.udp_listen_port}
-				</li>
+			add(
+				'info',
+				`${oldConfig.setup_wizard > 0 || oldConfig.udp_enabled ? 'Change' : 'Set'} UDP listen port to ${newConfig.udp_listen_port}`
 			)
 		}
 
 		if (oldConfig.osc_enabled !== newConfig.osc_enabled) {
-			changes.push(
-				newConfig.osc_enabled ? (
-					<li style={{ color: 'green' }}>Enable OSC Listener</li>
-				) : (
-					<li style={{ color: 'red' }}>Disable OSC Listener</li>
-				)
-			)
+			add(newConfig.osc_enabled ? 'add' : 'remove', `${newConfig.osc_enabled ? 'Enable' : 'Disable'} OSC Listener`)
 		}
 		if (
 			(oldConfig.setup_wizard === 0 && newConfig.osc_enabled && !oldConfig.osc_enabled) ||
 			(newConfig.osc_enabled && oldConfig.osc_listen_port !== newConfig.osc_listen_port)
 		) {
-			changes.push(
-				<li>
-					{oldConfig.setup_wizard > 0 || oldConfig.osc_enabled ? 'Change' : 'Set'} OSC listen port to{' '}
-					{newConfig.osc_listen_port}
-				</li>
+			add(
+				'info',
+				`${oldConfig.setup_wizard > 0 || oldConfig.osc_enabled ? 'Change' : 'Set'} OSC listen port to ${newConfig.osc_listen_port}`
 			)
 		}
 
 		if (oldConfig.rosstalk_enabled !== newConfig.rosstalk_enabled) {
-			changes.push(
-				newConfig.rosstalk_enabled ? (
-					<li style={{ color: 'green' }}>Enable Rosstalk Listener</li>
-				) : (
-					<li style={{ color: 'red' }}>Disable Rosstalk Listener</li>
-				)
+			add(
+				newConfig.rosstalk_enabled ? 'add' : 'remove',
+				`${newConfig.rosstalk_enabled ? 'Enable' : 'Disable'} Rosstalk Listener`
 			)
 		}
 
 		if (oldConfig.emberplus_enabled !== newConfig.emberplus_enabled) {
-			changes.push(
-				newConfig.emberplus_enabled ? (
-					<li style={{ color: 'green' }}>Enable Ember+ Listener</li>
-				) : (
-					<li style={{ color: 'red' }}>Disable Ember+ Listener</li>
-				)
+			add(
+				newConfig.emberplus_enabled ? 'add' : 'remove',
+				`${newConfig.emberplus_enabled ? 'Enable' : 'Disable'} Ember+ Listener`
 			)
 		}
 
 		if (oldConfig.artnet_enabled !== newConfig.artnet_enabled) {
-			changes.push(
-				newConfig.artnet_enabled ? (
-					<li style={{ color: 'green' }}>Enable Artnet Listener</li>
-				) : (
-					<li style={{ color: 'red' }}>Disable Artnet Listener</li>
-				)
+			add(
+				newConfig.artnet_enabled ? 'add' : 'remove',
+				`${newConfig.artnet_enabled ? 'Enable' : 'Disable'} Artnet Listener`
 			)
 		}
 		if (
 			(oldConfig.setup_wizard === 0 && newConfig.artnet_enabled && !oldConfig.artnet_enabled) ||
 			(newConfig.artnet_enabled && oldConfig.artnet_universe !== newConfig.artnet_universe)
 		) {
-			changes.push(
-				<li>
-					{oldConfig.setup_wizard > 0 || oldConfig.artnet_enabled ? 'Change' : 'Set'} Artnet Universe to{' '}
-					{newConfig.artnet_universe}
-				</li>
+			add(
+				'info',
+				`${oldConfig.setup_wizard > 0 || oldConfig.artnet_enabled ? 'Change' : 'Set'} Artnet Universe to ${newConfig.artnet_universe}`
 			)
 		}
 		if (
 			(oldConfig.setup_wizard === 0 && newConfig.artnet_enabled && !oldConfig.artnet_enabled) ||
 			(newConfig.artnet_enabled && oldConfig.artnet_channel !== newConfig.artnet_channel)
 		) {
-			changes.push(
-				<li>
-					{oldConfig.setup_wizard > 0 || oldConfig.artnet_enabled ? 'Change' : 'Set'} Artnet Channel to{' '}
-					{newConfig.artnet_channel}
-				</li>
+			add(
+				'info',
+				`${oldConfig.setup_wizard > 0 || oldConfig.artnet_enabled ? 'Change' : 'Set'} Artnet Channel to ${newConfig.artnet_channel}`
 			)
 		}
 	}
 
+	category = 'Usage Statistics'
+	if (
+		oldConfig.setup_wizard < WIZARD_VERSION_4_2 ||
+		oldConfig.detailed_data_collection !== newConfig.detailed_data_collection
+	) {
+		add(
+			newConfig.detailed_data_collection ? 'add' : 'remove',
+			newConfig.detailed_data_collection
+				? 'Send anonymous usage statistics.'
+				: 'Anonymous usage statistics will not be sent.'
+		)
+	}
+
+	category = 'Security'
 	if (oldConfig.setup_wizard === 0 || oldConfig.admin_lockout !== newConfig.admin_lockout) {
-		changes.push(
-			newConfig.admin_lockout ? (
-				<li>This admin interface will {oldConfig.setup_wizard > 0 ? 'now' : ''} be password protected.</li>
-			) : (
-				<li>This admin interface will not be password protected.</li>
-			)
+		add(
+			'info',
+			newConfig.admin_lockout
+				? `This admin interface will ${oldConfig.setup_wizard > 0 ? 'now ' : ''}be password protected.`
+				: 'This admin interface will not be password protected.'
 		)
 	}
 	if (
 		(oldConfig.setup_wizard === 0 && newConfig.admin_lockout) ||
 		(newConfig.admin_lockout && oldConfig.admin_password !== newConfig.admin_password)
 	) {
-		changes.push(
-			oldConfig.setup_wizard > 0 ? (
-				<li>
-					Change admin password from {oldConfig.admin_password === '' ? '(none)' : `'${oldConfig.admin_password}'`} to '
-					{newConfig.admin_password}'.
-				</li>
-			) : (
-				<li>Set admin password to '{newConfig.admin_password}'.</li>
-			)
+		add(
+			'info',
+			oldConfig.setup_wizard > 0 && oldConfig.admin_password !== '' ? 'Change admin password.' : 'Set admin password.'
 		)
 	}
 	if (
@@ -222,27 +236,58 @@ export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.E
 	) {
 		const oldAdminTimeoutStr = oldConfig.admin_timeout + ''
 		const newAdminTimeoutStr = newConfig.admin_timeout + ''
-		changes.push(
-			oldConfig.setup_wizard > 0 ? (
-				<li>
-					Change admin GUI timeout from {oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'} to{' '}
-					{newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.
-				</li>
-			) : (
-				<li>Set admin GUI timeout to {newAdminTimeoutStr ? 'none' : newConfig.admin_timeout + ' minutes'}.</li>
-			)
+		add(
+			'info',
+			oldConfig.setup_wizard > 0
+				? `Change admin GUI timeout from ${oldAdminTimeoutStr === '0' ? 'none' : oldConfig.admin_timeout + ' minutes'} to ${newAdminTimeoutStr === '0' ? 'none' : newConfig.admin_timeout + ' minutes'}.`
+				: `Set admin GUI timeout to ${newAdminTimeoutStr === '0' ? 'none' : newConfig.admin_timeout + ' minutes'}.`
 		)
 	}
 
-	if (changes.length === 0) {
-		changes.push(<li>No changes to the configuration will be made.</li>)
+	category = 'Timezone'
+	if (oldConfig.setup_wizard < WIZARD_VERSION_5_0 || oldConfig.timezone !== newConfig.timezone) {
+		const tzLabel = TIMEZONE_CHOICES.find((c) => c.id === (newConfig.timezone ?? ''))?.label ?? newConfig.timezone
+		add('info', `${oldConfig.setup_wizard > 0 ? 'Change' : 'Set'} timezone to ${tzLabel}.`)
+	}
+
+	return changes
+}
+
+export function ApplyStep({ oldConfig, newConfig }: ApplyStepProps): React.JSX.Element {
+	const changes = getWizardChanges(oldConfig, newConfig)
+
+	// Group consecutive changes by category, preserving order
+	const groups: { category: string; items: WizardChange[] }[] = []
+	for (const change of changes) {
+		const last = groups[groups.length - 1]
+		if (last && last.category === change.category) {
+			last.items.push(change)
+		} else {
+			groups.push({ category: change.category, items: [change] })
+		}
 	}
 
 	return (
 		<div>
 			<h5>Review Settings</h5>
-			<p>The following configuration {oldConfig.setup_wizard > 0 ? 'settings' : 'changes'} will be applied:</p>
-			<ul>{changes}</ul>
+			<p>The following {oldConfig.setup_wizard > 0 ? 'settings' : 'changes'} will be applied:</p>
+			<div className="wizard-review">
+				{groups.map((group) => (
+					<div key={group.category} className="wizard-review-group">
+						<div className="wizard-review-group-title">{group.category}</div>
+						<ul className="wizard-review-list">
+							{group.items.map((change, i) => (
+								<li key={i} className="wizard-review-item">
+									<span className={`wizard-review-badge wizard-review-badge-${change.tone}`}>
+										<FontAwesomeIcon icon={TONE_ICON[change.tone]} />
+									</span>
+									<span>{change.content}</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				))}
+			</div>
 		</div>
 	)
 }

@@ -156,13 +156,11 @@ export class VariablesStore {
 
 		return variables
 			.entries()
-			.map(
-				([name, variable]): VariableDefinitionExt => ({
-					...variable,
-					connectionLabel: label,
-					name,
-				})
-			)
+			.map(([name, variable]): VariableDefinitionExt => ({
+				...variable,
+				connectionLabel: label,
+				name,
+			}))
 			.toArray()
 	}
 

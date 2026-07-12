@@ -1,7 +1,11 @@
 import { colord } from 'colord'
 import type { CompanionAlignment } from '@companion-module/base'
 import type { SomeButtonGraphicsDrawElement } from '../Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '../Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsShowStatusIcons,
+	type ResolvedButtonGraphicsDecoration,
+} from '../Model/StyleModel.js'
 import type { UserConfigModel } from '../Model/UserConfigModel.js'
 
 export type HorizontalAlignment = 'left' | 'right' | 'center'
@@ -108,24 +112,25 @@ export const parseColor = (color: number | string, skipValidation = false): stri
 	return 'rgba(0, 0, 0, 0)'
 }
 
-export type ResolveButtonStylePropertiesConfig = Pick<UserConfigModel, 'remove_topbar' | 'buttons_status_icons'>
+export type ResolveButtonStylePropertiesConfig = Pick<UserConfigModel, 'buttons_decoration' | 'buttons_status_icons'>
 
 export function resolveButtonStyleProperties(
 	drawConfig: ResolveButtonStylePropertiesConfig,
 	elements: SomeButtonGraphicsDrawElement[]
 ): {
-	show_topbar: boolean
+	decoration: ResolvedButtonGraphicsDecoration
 	show_status_icons: boolean
 } {
 	const canvasElement = elements.find((el) => el.type === 'canvas')
 
-	const globalShowTopBar = !drawConfig.remove_topbar
+	// The global default supports the full topbar/border/none range; the canvas element may override it per-button.
+	const globalDecoration = drawConfig.buttons_decoration
 	const globalShowStatusIcons = drawConfig.buttons_status_icons === 'show'
 
-	const show_topbar =
+	const decoration: ResolvedButtonGraphicsDecoration =
 		!canvasElement || canvasElement.decoration === ButtonGraphicsDecorationType.FollowDefault
-			? globalShowTopBar
-			: canvasElement.decoration === ButtonGraphicsDecorationType.TopBar
+			? globalDecoration
+			: canvasElement.decoration
 
 	const show_status_icons =
 		!canvasElement || canvasElement.showStatusIcons === ButtonGraphicsShowStatusIcons.FollowDefault
@@ -133,7 +138,7 @@ export function resolveButtonStyleProperties(
 			: canvasElement.showStatusIcons === ButtonGraphicsShowStatusIcons.ShowAll
 
 	return {
-		show_topbar,
+		decoration,
 		show_status_icons,
 	}
 }

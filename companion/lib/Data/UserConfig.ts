@@ -1,7 +1,8 @@
 import { EventEmitter } from 'node:events'
 import selfsigned from 'selfsigned'
 import z from 'zod'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -42,7 +43,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		page_direction_flipped: false,
 		page_plusminus: false,
-		remove_topbar: false,
+		buttons_decoration: ButtonGraphicsDecorationType.TopBar,
 		buttons_status_icons: 'show',
 
 		usb_hotplug: true,
@@ -106,7 +107,10 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		gridSizePromptGrow: true,
 
 		installName: '',
+		mdns_announcements_enabled: true,
 		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
+
+		timezone: '',
 
 		backups: [
 			// Create a disabled backup rule by default

@@ -13,9 +13,7 @@ export interface ConnectionCollectionData {
 export type ConnectionCollection = CollectionBase<ConnectionCollectionData>
 
 export type ClientConnectionsUpdate =
-	| ClientConnectionsUpdateInitOp
-	| ClientConnectionsUpdateUpdateOp
-	| ClientConnectionsUpdateRemoveOp
+	ClientConnectionsUpdateInitOp | ClientConnectionsUpdateUpdateOp | ClientConnectionsUpdateRemoveOp
 
 export interface ClientConnectionsUpdateInitOp {
 	type: 'init'

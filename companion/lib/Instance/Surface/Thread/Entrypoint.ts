@@ -7,7 +7,7 @@ import {
 	type SurfaceModuleManifest,
 } from '@companion-surface/host'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import { importModuleFromPath } from '../../Common/ThreadUtil.js'
+import { importModuleFromPath, sealParentIpcChannel } from '../../Common/ThreadUtil.js'
 import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 import { HostContext } from './HostContext.js'
@@ -25,8 +25,6 @@ const manifestJson: Partial<SurfaceModuleManifest> = JSON.parse(manifestBlob)
 
 if (!manifestJson.runtime?.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
 
-if (!process.send) throw new Error('Module is not being run with ipc')
-
 console.log(`Starting up surface module: ${manifestJson.id}`)
 
 const verificationToken = process.env.VERIFICATION_TOKEN
@@ -37,6 +35,13 @@ const logger = createModuleLogger('Entrypoint')
 
 let plugin: PluginWrapper | null = null
 let pluginInitialized = false
+
+// Seal the parent IPC channel off `process` before any module code is loaded, so a module
+// can only reach the host via the sanctioned HostContext. Returns the still-working send.
+const parentSend = sealParentIpcChannel({
+	onMessage: (msg) => ipcWrapper.receivedMessage(msg),
+	onDisconnect: () => process.exit(),
+})
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>(
@@ -174,24 +179,18 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		},
 	},
 	(msg) => {
-		process.send!(msg)
+		parentSend(msg)
 	},
 	5000
 )
-process.on('message', (msg) => ipcWrapper.receivedMessage(msg as any))
-process.on('disconnect', () => process.exit())
 
 registerLoggingSink((source, level, message) => {
-	if (!process.send) {
-		console.log(`[${level.toUpperCase()}]${source ? ` [${source}]` : ''} ${message}`)
-	} else {
-		ipcWrapper.sendWithNoCb('log-message', {
-			time: Date.now(),
-			source,
-			level,
-			message,
-		})
-	}
+	ipcWrapper.sendWithNoCb('log-message', {
+		time: Date.now(),
+		source,
+		level,
+		message,
+	})
 })
 
 const moduleImport = await importModuleFromPath(moduleEntrypoint)

@@ -1,5 +1,7 @@
 .flex-form {
-	& > div:not(.button-group) {
+	// The modal2 parts manage their own padding and borders, so exclude them from the generic child margin
+	// (the same way .button-group is) — otherwise the body's margin adds an unwanted gap before the footer.
+	& > div:not(.button-group):not(.modal2-body):not(.modal2-footer) {
 		// column
 		margin-bottom: 10px;
 	}

@@ -5,9 +5,7 @@ export interface InstanceStatusEntry {
 }
 
 export type InstanceStatusUpdate =
-	| InstanceStatusUpdateInitOp
-	| InstanceStatusUpdateRemoveOp
-	| InstanceStatusUpdateUpdateOp
+	InstanceStatusUpdateInitOp | InstanceStatusUpdateRemoveOp | InstanceStatusUpdateUpdateOp
 
 export interface InstanceStatusUpdateInitOp {
 	type: 'init'

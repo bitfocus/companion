@@ -18,6 +18,7 @@ import type {
 	ButtonGraphicsCircleElement,
 	ButtonGraphicsCompositeElement,
 	ButtonGraphicsElementBase,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsLineElement,
@@ -244,6 +245,52 @@ function convertLayeredPresetElement(
 
 				...options,
 			} satisfies ButtonGraphicsCompositeElement
+		}
+		case 'gauge': {
+			const convertedStops = (element.stops ?? []).map((stop) => ({
+				_id: { isExpression: false, value: nanoid() } as const,
+				value: convertModuleExpressionOrValue(stop.value, { value: 0, isExpression: false }),
+				color: convertModuleExpressionOrValue(stop.color, { value: 0x00ff00, isExpression: false }),
+				gradient: convertModuleExpressionOrValue(stop.gradient, { value: false, isExpression: false }),
+			}))
+			// The gauge requires at least one colour stop; fall back to a sensible default when none are provided.
+			if (convertedStops.length === 0) {
+				convertedStops.push({
+					_id: { isExpression: false, value: nanoid() } as const,
+					value: { value: 0, isExpression: false },
+					color: { value: 0x00ff00, isExpression: false },
+					gradient: { value: false, isExpression: false },
+				})
+			}
+
+			return {
+				type: 'gauge',
+				...convertElementBasicProperties(element, 'Gauge', forceNewIds),
+
+				...convertElementSize(element),
+				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
+
+				value: convertModuleExpressionOrValue(element.value, { value: 0, isExpression: false }),
+				min: convertModuleExpressionOrValue(element.min, { value: 0, isExpression: false }),
+				max: convertModuleExpressionOrValue(element.max, { value: 100, isExpression: false }),
+				origin: convertModuleExpressionOrValue(element.origin, { value: 0, isExpression: false }),
+				symmetric: convertModuleExpressionOrValue(element.symmetric, { value: false, isExpression: false }),
+				orientation: convertModuleExpressionOrValue(element.orientation, { value: 'horizontal', isExpression: false }),
+				reverse: convertModuleExpressionOrValue(element.reverse, { value: false, isExpression: false }),
+				startAngle: convertModuleExpressionOrValue(element.startAngle, { value: 0, isExpression: false }),
+				endAngle: convertModuleExpressionOrValue(element.endAngle, { value: 360, isExpression: false }),
+				ringWidth: convertModuleExpressionOrValue(element.ringWidth, { value: 20, isExpression: false }),
+				roundedEnds: convertModuleExpressionOrValue(element.roundedEnds, { value: true, isExpression: false }),
+				fillEnabled: convertModuleExpressionOrValue(element.fillEnabled, { value: true, isExpression: false }),
+				multiColour: convertModuleExpressionOrValue(element.multiColour, { value: true, isExpression: false }),
+				stops: { isExpression: false, value: convertedStops },
+				markerEnabled: convertModuleExpressionOrValue(element.markerEnabled, { value: false, isExpression: false }),
+				markerColor: convertModuleExpressionOrValue(element.markerColor, { value: 0xffffff, isExpression: false }),
+				markerWidth: convertModuleExpressionOrValue(element.markerWidth, { value: 15, isExpression: false }),
+				trackStyle: convertModuleExpressionOrValue(element.trackStyle, { value: 'transparent', isExpression: false }),
+				trackAmount: convertModuleExpressionOrValue(element.trackAmount, { value: 70, isExpression: false }),
+				trackWidth: convertModuleExpressionOrValue(element.trackWidth, { value: 100, isExpression: false }),
+			} satisfies ButtonGraphicsGaugeElement
 		}
 		default:
 			assertNever(element)

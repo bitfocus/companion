@@ -1,6 +1,6 @@
 import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
@@ -188,9 +188,19 @@ export function parseLineParameters(line: string): ParsedParams {
 	const res: ParsedParams = Object.create(null)
 
 	for (const fragment of fragments) {
-		const [key, value] = fragment.split('=', 2)
-		if (BANNED_PROPS.has(key)) continue
-		res[key] = value === undefined ? true : value
+		// Split on the first `=` only, keeping the rest of the value intact. A plain
+		// `split('=', 2)` would truncate at the first `=`, which corrupts values that
+		// legitimately contain it - e.g. the base64 `=` padding of a `data:` url bitmap,
+		// breaking image decoding.
+		const splitIndex = fragment.indexOf('=')
+		if (splitIndex === -1) {
+			if (BANNED_PROPS.has(fragment)) continue
+			res[fragment] = true
+		} else {
+			const key = fragment.substring(0, splitIndex)
+			if (BANNED_PROPS.has(key)) continue
+			res[key] = fragment.substring(splitIndex + 1)
+		}
 	}
 
 	return res

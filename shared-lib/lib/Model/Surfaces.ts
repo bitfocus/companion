@@ -88,6 +88,7 @@ export interface SurfaceGroupConfig {
 	last_page_id: string
 	startup_page_id: string
 	use_last_page: boolean
+	never_lock: boolean
 	restrict_pages?: boolean
 	allowed_page_ids?: string[]
 
@@ -105,7 +106,6 @@ export interface SurfacePanelConfig {
 	rotation: SurfaceRotation
 
 	// companion owned defaults
-	never_lock: boolean
 	xOffset: number
 	yOffset: number
 	groupId: string | null
@@ -115,10 +115,7 @@ export interface SurfacePanelConfig {
 }
 
 export type SurfacesUpdate =
-	| SurfacesUpdateInitOp
-	| SurfacesUpdateRemoveOp
-	| SurfacesUpdateAddOp
-	| SurfacesUpdateUpdateOp
+	SurfacesUpdateInitOp | SurfacesUpdateRemoveOp | SurfacesUpdateAddOp | SurfacesUpdateUpdateOp
 
 export interface SurfacesUpdateInitOp {
 	type: 'init'
@@ -162,9 +159,7 @@ export interface OutboundSurfaceCollectionData {
 export type OutboundSurfaceCollection = CollectionBase<OutboundSurfaceCollectionData>
 
 export type OutboundSurfacesUpdate =
-	| OutboundSurfacesUpdateInitOp
-	| OutboundSurfacesUpdateRemoveOp
-	| OutboundSurfacesUpdateAddOp
+	OutboundSurfacesUpdateInitOp | OutboundSurfacesUpdateRemoveOp | OutboundSurfacesUpdateAddOp
 
 export interface OutboundSurfacesUpdateInitOp {
 	type: 'init'
@@ -209,9 +204,7 @@ export interface ClientDiscoveredSurfaceInfoPlugin {
 }
 
 export type SurfacesDiscoveryUpdate =
-	| SurfaceDiscoveryUpdateInitOp
-	| SurfaceDiscoveryUpdateRemoveOp
-	| SurfaceDiscoveryUpdateUpdateOp
+	SurfaceDiscoveryUpdateInitOp | SurfaceDiscoveryUpdateRemoveOp | SurfaceDiscoveryUpdateUpdateOp
 
 export interface SurfaceDiscoveryUpdateRemoveOp {
 	type: 'remove'

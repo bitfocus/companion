@@ -10,6 +10,7 @@
  */
 
 import type { DataDatabase } from '../Data/Database.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import { router } from '../UI/TRPC.js'
 import { VariablesCustomVariable } from './CustomVariable.js'
 import { VariablesInstanceDefinitions } from './InstanceDefinitions.js'
@@ -20,8 +21,8 @@ export class VariablesController {
 	readonly values: VariablesValues
 	readonly definitions: VariablesInstanceDefinitions
 
-	constructor(db: DataDatabase) {
-		this.values = new VariablesValues()
+	constructor(db: DataDatabase, userconfig: DataUserConfig) {
+		this.values = new VariablesValues(userconfig)
 		this.custom = new VariablesCustomVariable(db, this.values)
 		this.definitions = new VariablesInstanceDefinitions()
 	}

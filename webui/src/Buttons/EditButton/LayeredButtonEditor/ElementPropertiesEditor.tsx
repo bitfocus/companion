@@ -212,8 +212,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	const updateOptionMutation = useMutationExt(trpc.controls.styles.updateOption.mutationOptions())
 
 	const rawValue = (elementProps as unknown as Record<string, unknown>)[field.id] as
-		| ExpressionOrValue<JsonValue | undefined>
-		| undefined
+		ExpressionOrValue<JsonValue | undefined> | undefined
 
 	const setListValue = useCallback(
 		(newRows: Record<string, ExpressionOrValue<JsonValue>>[]) => {

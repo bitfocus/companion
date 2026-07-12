@@ -1,4 +1,6 @@
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { NonIdealState } from '~/Components/NonIdealState'
 
 interface FinishStepProps {
 	oldConfig: UserConfigModel
@@ -7,25 +9,23 @@ interface FinishStepProps {
 
 export function FinishStep(_props: FinishStepProps): React.JSX.Element {
 	return (
-		<div>
-			<h4>Congratulations!</h4>
-			<p style={{ fontWeight: 'bold' }}>
-				Companion is now configured and ready for use.
-				<br />
-				Your next steps are:
-			</p>
-			<ol>
-				<li>Review the 'Surfaces' tab and ensure the USB devices you have plugged in are detected for use. </li>
-				<li>Go to the 'Connections' tab to configure the devices you'd like to control.</li>
-				<li>
-					Go to the 'Buttons' tab to program buttons to control your devices.
-					<br />
-					<span style={{ fontStyle: 'italic' }}>
-						Helpful hint: many devices have 'Presets' (pre-configured buttons) that you can drag and drop onto the
-						surfaces.
-					</span>
-				</li>
-			</ol>
+		<div className="wizard-centered-step">
+			<NonIdealState icon={faCircleCheck}>
+				<h4 className="mb-2">You're all set!</h4>
+				<p>Companion is configured and ready to use. Here's where to go next:</p>
+				<ul className="text-start d-inline-block mb-0">
+					<li>
+						Check the <b>Surfaces</b> tab to confirm your USB devices are detected.
+					</li>
+					<li>
+						Use the <b>Connections</b> tab to add the devices you want to control.
+					</li>
+					<li>
+						Open the <b>Buttons</b> tab to program your buttons - many devices ship with <b>Presets</b> you can drag
+						straight onto a surface.
+					</li>
+				</ul>
+			</NonIdealState>
 		</div>
 	)
 }

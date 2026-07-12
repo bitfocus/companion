@@ -1,8 +1,13 @@
-import type * as imageRs from '@julusian/image-rs'
+import * as imageRs from '@julusian/image-rs'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
-import { lazy } from '../Resources/Util.js'
+
+/**
+ * Fixed resolution (px) used when rendering preview data urls for web/emulator/cloud/import consumers.
+ * Matches the effective resolution the previously deprecated drawDataUrl path produced (72px logical at 4x oversampling).
+ */
+export const PREVIEW_RENDER_SIZE = 288
 
 export interface ImageResultProcessedStyle {
 	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
@@ -32,12 +37,6 @@ export type ImageResultNativeDrawFn = (
 	format: imageRs.PixelFormat
 ) => Promise<Uint8Array>
 
-export type ImageResultDataUrlDrawFn = (
-	width: number,
-	height: number,
-	rotation: SurfaceRotation | null
-) => Promise<string>
-
 export class ImageResult {
 	/**
 	 * Image draw style
@@ -45,8 +44,8 @@ export class ImageResult {
 	readonly style: ImageResultProcessedStyle | null
 
 	readonly #drawNativeCache = new Map<string, Promise<Uint8Array>>()
+	readonly #drawNativeEncodedCache = new Map<string, Promise<string>>()
 	readonly #drawNative: ImageResultNativeDrawFn
-	readonly #dataUrl: () => Promise<string>
 
 	/**
 	 * Last updated time
@@ -68,14 +67,12 @@ export class ImageResult {
 	constructor(
 		style: ImageResultProcessedStyle | null,
 		drawNative: ImageResultNativeDrawFn,
-		drawDataUrl: ImageResultDataUrlDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> = new Set()
 	) {
 		this.style = style
 		this.#drawNative = drawNative
 		this.drawElements = drawElements
-		this.#dataUrl = lazy(async () => drawDataUrl(72, 72, null)) // Default values for backwards compatibility
 		this.referencedLocations = referencedLocations
 
 		this.updated = Date.now()
@@ -106,10 +103,32 @@ export class ImageResult {
 	}
 
 	/**
-	 * Get the image as a png data url for web and similar clients
-	 * This caches the result between calls, and is safe to call multiple times
+	 * Generate a native sized image encoded as a compressed image data url (e.g. png or webp).
+	 * Renders the raw rgb pixels (reusing the drawNative cache) then encodes once, caching the
+	 * data url for the same width, height, rotation and image format.
+	 *
+	 * The result is a data url (`data:image/png;base64,...`) so the base64 encoding is done once,
+	 * natively, rather than materialising an encoded buffer just to base64 it again before sending.
+	 * png and webp are both encoded losslessly, so the image is pixel-identical to the rgb buffer.
+	 * Returns an empty string when there is nothing to render.
 	 */
-	async drawDataUrl(): Promise<string> {
-		return this.#dataUrl()
+	async drawNativeEncoded(
+		width: number,
+		height: number,
+		rotation: SurfaceRotation | null,
+		format: imageRs.ImageFormat
+	): Promise<string> {
+		const cacheKey = `${width}x${height}-${rotation ?? ''}-${format}`
+		const cached = this.#drawNativeEncodedCache.get(cacheKey)
+		if (cached) return cached
+
+		const newDataUrl = (async () => {
+			const raw = await this.drawNative(width, height, rotation, 'rgb')
+			if (raw.length === 0) return ''
+
+			return imageRs.ImageTransformer.fromBuffer(raw, width, height, 'rgb').toDataUrl(format)
+		})()
+		this.#drawNativeEncodedCache.set(cacheKey, newDataUrl)
+		return newDataUrl
 	}
 }

@@ -1,4 +1,4 @@
-import type { GetVariableValueProps } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { GetVariableValueProps } from '@companion-app/shared/Expressions.js'
 import LogController from '../Log/Controller.js'
 import type { VariableValueEntry } from './Values.js'
 

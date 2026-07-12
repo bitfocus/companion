@@ -710,7 +710,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketMessage', {
 					handleId,
 					portNumber: msg.portNumber,
-					message: message.toString('base64'),
+					message: message.toBase64(),
 					source: rInfo,
 				})
 			},
@@ -816,6 +816,13 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 							type: EntityModelType.Action,
 							definitionId: action.actionId,
 							options: action.options,
+							storeResult: action.storeResult
+								? {
+										type: 'custom-variable',
+										variableName: action.storeResult.variableName,
+										createIfNotExists: false,
+									}
+								: undefined,
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableActionEntityModel
 				)

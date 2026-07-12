@@ -1,5 +1,5 @@
 import type { JsonValue } from 'type-fest'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -171,13 +171,23 @@ export class ElementExpressionHelper<T> {
 		const trimmed = String(raw ?? '')
 			.trim()
 			.toLowerCase()
+		// An empty/whitespace-only input has no first character to match against, so
+		// `startsWith(undefined)` would coerce to `startsWith('undefined')` and never match.
+		// Fall back to the default explicitly instead.
+		if (trimmed.length === 0) return defaultValue
 		return values.find((v) => v.toLowerCase().startsWith(trimmed[0])) ?? defaultValue
 	}
 
 	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
 		const value = this.#getValue(propertyName)
 
-		if (!value.isExpression) return Boolean(value.value)
+		if (!value.isExpression) {
+			// A missing property (added to the schema after an element was saved) surfaces as
+			// `undefined` and must fall back to the default rather than coercing to `false`.
+			// An explicit `null`/`0`/`''` is still treated as falsy.
+			if (value.value === undefined) return defaultValue
+			return Boolean(value.value)
+		}
 
 		const result = this.executeExpressionAndTrackVariables(value.value, 'boolean')
 		if (!result.ok) {
@@ -339,7 +349,7 @@ export function createParseElementsContext(
 		withPropOverrides(propOverrides: VariableValues): ParseElementsContext {
 			return createParseElementsContext(
 				compositeElementStore,
-				parser.createChildParser(propOverrides),
+				parser.createIsolatedChildParser(propOverrides),
 				drawPixelBuffers,
 				feedbackOverrides,
 				onlyEnabled,

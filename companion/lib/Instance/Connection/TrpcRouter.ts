@@ -1,14 +1,15 @@
 import type EventEmitter from 'node:events'
 import z from 'zod'
-import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
+import type { ClientEditInstanceConfigState } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { JsonObjectSchema, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Logger } from '../../Log/Controller.js'
-import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
+import { mergeEventTriggers, publicProcedure, router, toIterable } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
+import { computeInstanceConfigState } from '../EditConfigState.js'
 
 /**
  * Ensure every field has a unique id.
@@ -100,36 +101,33 @@ export function createConnectionsTrpcRouter(
 				instanceController.enableDisableConnection(input.connectionId, input.enabled)
 			}),
 
-		edit: publicProcedure
+		watchEdit: publicProcedure
 			.input(
 				z.object({
 					connectionId: z.string(),
 				})
 			)
-			.query(async ({ input }) => {
-				// Check if the instance exists
-				const instanceConf = configStore.getConfigOfTypeForId(input.connectionId, ModuleInstanceType.Connection)
-				if (!instanceConf) return null
+			.subscription(async function* ({ input, signal }) {
+				const { connectionId } = input
 
-				// Make sure the collection is enabled
-				if (!instanceController.connectionCollections.isCollectionEnabled(instanceConf.collectionId)) return null
+				if (!signal) throw new Error('No signal in watchEdit subscription')
 
-				const instance = instanceController.processManager.getConnectionChild(input.connectionId)
-				if (!instance) return null
+				const triggers = mergeEventTriggers(signal, [
+					// config saved / module changed / enable-disable
+					{ ee: instanceEvents, key: 'connection_updated', filter: (id) => id === connectionId },
+					// a collection was enabled/disabled (no id payload, so always re-evaluate)
+					{ ee: instanceEvents, key: 'connection_collections_enabled' },
+					// the child process became ready / stopped / crashed
+					{ ee: instanceController.processManager, key: 'childStateChange', filter: (id) => id === connectionId },
+				])
 
-				try {
-					const fields = await instance.requestConfigFields()
+				// Emit the initial state, then recompute and emit whenever something relevant changes. Each
+				// recompute is awaited fully before the next trigger is handled, so requestConfigFields calls
+				// never overlap.
+				yield await loadConnectionConfigState(logger, instanceController, configStore, connectionId)
 
-					const result: ClientEditInstanceConfig = {
-						fields: ensureUniqueFieldIds(fields),
-						useNewLayout: instance.usesNewConfigLayout,
-						config: instanceConf.config,
-						secrets: instanceConf.secrets || {},
-					}
-					return result
-				} catch (e) {
-					logger.silly(`Failed to load instance config_fields: ${stringifyError(e)}`)
-					return null
+				for await (const _trigger of triggers) {
+					yield await loadConnectionConfigState(logger, instanceController, configStore, connectionId)
 				}
 			}),
 
@@ -181,4 +179,39 @@ export function createConnectionsTrpcRouter(
 				return null
 			}),
 	})
+}
+
+/**
+ * Compute the current state of the config-fields editor for a connection. The shared helper owns the
+ * lifecycle reasoning; the connection only provides how to reach the child and load its config fields.
+ */
+async function loadConnectionConfigState(
+	logger: Logger,
+	instanceController: InstanceController,
+	configStore: InstanceConfigStore,
+	connectionId: string
+): Promise<ClientEditInstanceConfigState> {
+	return computeInstanceConfigState(
+		instanceController,
+		configStore,
+		ModuleInstanceType.Connection,
+		connectionId,
+		() => instanceController.processManager.getConnectionChild(connectionId),
+		async (instance, instanceConf) => {
+			try {
+				const fields = await instance.requestConfigFields()
+
+				return {
+					type: 'config',
+					fields: ensureUniqueFieldIds(fields),
+					useNewLayout: instance.usesNewConfigLayout,
+					config: instanceConf.config,
+					secrets: instanceConf.secrets || {},
+				}
+			} catch (e) {
+				logger.silly(`Failed to load instance config_fields: ${stringifyError(e)}`)
+				return { type: 'error', message: 'Failed to load configuration fields' }
+			}
+		}
+	)
 }

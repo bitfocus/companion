@@ -11,7 +11,7 @@ import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
-import type { ImageResult } from '../Graphics/ImageResult.js'
+import { PREVIEW_RENDER_SIZE, type ImageResult } from '../Graphics/ImageResult.js'
 import { ParseLocationString } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -78,12 +78,15 @@ export class PreviewGraphics {
 			this.#logger,
 			async (locationId: string, location: ControlLocation, controlId: string | null, render: ImageResult) => {
 				if (controlId && this.#renderEvents.listenerCount(`controlId:${controlId}`) > 0) {
-					this.#renderEvents.emit(`controlId:${controlId}`, await render.drawDataUrl())
+					this.#renderEvents.emit(
+						`controlId:${controlId}`,
+						await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+					)
 				}
 
 				if (this.#renderEvents.listenerCount(`location:${locationId}`) > 0) {
 					this.#renderEvents.emit(`location:${locationId}`, {
-						image: await render.drawDataUrl(),
+						image: await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png'),
 						isUsed: !!render.style,
 					})
 				}
@@ -94,7 +97,10 @@ export class PreviewGraphics {
 					if (previewSession.resolvedLocation.row != location.row) continue
 					if (previewSession.resolvedLocation.column != location.column) continue
 
-					this.#renderEvents.emit(`reference:${previewSession.id}`, await render.drawDataUrl())
+					this.#renderEvents.emit(
+						`reference:${previewSession.id}`,
+						await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+					)
 				}
 			}
 		)
@@ -106,7 +112,7 @@ export class PreviewGraphics {
 
 				const dataUrl = await this.#graphicsController
 					.getCachedRenderOrGeneratePlaceholder(resolvedLocation)
-					.drawDataUrl()
+					.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 				this.#renderEvents.emit(`reference:${sessionId}`, dataUrl)
 			}
 		)
@@ -131,7 +137,7 @@ export class PreviewGraphics {
 					const changes = toIterable(self.#renderEvents, `location:${locationId}`, signal)
 
 					const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
-					const dataUrl = await render.drawDataUrl()
+					const dataUrl = await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 					yield { image: dataUrl, isUsed: !!render.style } satisfies WrappedImage
 
 					for await (const [image] of changes) {
@@ -153,7 +159,9 @@ export class PreviewGraphics {
 					// Send the preview image shortly after
 					const location = self.#pageStore.getLocationOfControlId(controlId)
 					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
-					yield originalImg ? await originalImg.drawDataUrl() : null
+					yield originalImg
+						? await originalImg.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+						: null
 
 					for await (const [image] of changes) {
 						yield image
@@ -185,11 +193,15 @@ export class PreviewGraphics {
 
 						// Send the preview image shortly after
 						const initialRender = control.lastRender
-						yield initialRender ? await initialRender.drawDataUrl() : null
+						yield initialRender
+							? await initialRender.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+							: null
 
 						for await (const [controlId, render] of changes) {
 							if (controlId !== control.controlId) continue
-							yield render ? await render.drawDataUrl() : null
+							yield render
+								? await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+								: null
 						}
 					} finally {
 						if (control.removeRenderSubscriberAndCheckEmpty(sessionId)) {
@@ -237,7 +249,9 @@ export class PreviewGraphics {
 
 						// Emit the initial image
 						yield resolvedLocation
-							? await self.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation).drawDataUrl()
+							? await self.#graphicsController
+									.getCachedRenderOrGeneratePlaceholder(resolvedLocation)
+									.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 							: null
 
 						for await (const [image] of changes) {

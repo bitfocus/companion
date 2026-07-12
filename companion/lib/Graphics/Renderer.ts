@@ -44,6 +44,34 @@ const LOCK_ICON_STYLE: ImageResultProcessedStyle = {
 
 const emptySet: ReadonlySet<string> = new Set()
 
+/**
+ * Choose an oversampling factor for a given render resolution.
+ *
+ * Oversampling improves antialiasing quality when rendering at low resolutions, but the benefit
+ * diminishes as the resolution grows while the cost scales with the square of the factor. So we
+ * scale it down for larger buttons, and disable it entirely once the native antialiasing is already
+ * indistinguishable from the oversampled result.
+ *
+ * The decision is keyed on the short edge (`min(width, height)`): that is the axis where detail
+ * (text height, curve smoothness) runs out of pixels first, and using the short edge keeps the
+ * result stable under 90° rotation (which swaps width/height).
+ *
+ * `maxOversampling` caps the result for content that does not need the full factor. Antialiasing
+ * only helps edges, so simple content can request a lower ceiling: a solid fill needs nothing (1),
+ * a small bit of secondary text is fine at 2. The size-based rule still applies below the cap.
+ */
+export function computeOversampling(width: number, height: number, maxOversampling = 4): number {
+	const shortEdge = Math.min(width, height)
+	let oversampling: number
+	if (shortEdge <= 96)
+		oversampling = 4 // Stream Deck hardware sizes (72-96px) - quality critical, and cheap
+	else if (shortEdge <= 168)
+		oversampling = 2 // Larger surfaces incl. SD+ LCD strip (200x100) - near-identical, ~3x cheaper
+	else oversampling = 1 // Emulator/web/large LCDs - native AA already matches os4, up to ~30-47x cheaper
+
+	return Math.min(oversampling, maxOversampling)
+}
+
 export class GraphicsRenderer {
 	static #IMAGE_CACHE = new Map<string, Image[]>()
 
@@ -84,25 +112,23 @@ export class GraphicsRenderer {
 	 * Draw the image for an empty button
 	 */
 	static drawBlank(showTopbar: boolean, location: ControlLocation | null): ImageResult {
-		return new ImageResult(
-			null,
-			async (width, height, rotation, format) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
+		// A blank is a solid fill, plus (with a topbar) some small secondary text. So it never needs
+		// the full oversampling: cap at 1 when there are no edges to antialias, 2 for the topbar text.
+		const maxOversampling = showTopbar ? 2 : 1
+
+		return new ImageResult(null, async (width, height, rotation, format) => {
+			const dimensions = rotateResolution(width, height, rotation)
+			return GraphicsRenderer.#getCachedImage(
+				dimensions[0],
+				dimensions[1],
+				computeOversampling(dimensions[0], dimensions[1], maxOversampling),
+				async (img) => {
 					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
-				})
-			},
-			async (width, height, rotation) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 2, (img) => {
-					GraphicsRenderer.#drawBlankImage(img, showTopbar, location)
-
-					return img.toDataURLSync()
-				})
-			}
-		)
+				}
+			)
+		})
 	}
 
 	static #drawBlankImage(img: Image, showTopbar: boolean, location: ControlLocation | null) {
@@ -162,26 +188,6 @@ export class GraphicsRenderer {
 		)
 
 		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
-	}
-
-	/**
-	 * Draw the image for a button
-	 */
-	static async drawButtonImageDataUrl(
-		drawStyle: RendererDrawStyle,
-		resolution: { width: number; height: number; oversampling: number },
-		rotation: SurfaceRotation | null
-	): Promise<string> {
-		const dimensions = rotateResolution(resolution.width, resolution.height, rotation)
-
-		return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], resolution.oversampling, async (img) => {
-			await GraphicsLayeredButtonRenderer.draw(img, drawStyle, emptySet, null, {
-				x: 0,
-				y: 0,
-			})
-
-			return img.toDataURLSync()
-		})
 	}
 
 	/**
@@ -259,11 +265,13 @@ export class GraphicsRenderer {
 	 * @param height Height of the image
 	 */
 	static drawLockIcon(): ImageResult {
-		return new ImageResult(
-			LOCK_ICON_STYLE,
-			async (width, height, rotation, format) => {
-				const dimensions = rotateResolution(width, height, rotation)
-				return GraphicsRenderer.#getCachedImage(dimensions[0], dimensions[1], 4, async (img) => {
+		return new ImageResult(LOCK_ICON_STYLE, async (width, height, rotation, format) => {
+			const dimensions = rotateResolution(width, height, rotation)
+			return GraphicsRenderer.#getCachedImage(
+				dimensions[0],
+				dimensions[1],
+				computeOversampling(dimensions[0], dimensions[1]),
+				async (img) => {
 					// Fill with black background
 					img.fillColor('rgb(0, 0, 0)')
 
@@ -282,13 +290,9 @@ export class GraphicsRenderer {
 					)
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
-				})
-			},
-			async () => {
-				// data-url of this image is never used
-				return ''
-			}
-		)
+				}
+			)
+		})
 	}
 
 	/**
@@ -298,19 +302,24 @@ export class GraphicsRenderer {
 		const imageWidth = 72
 		const imageHeight = showTopBar ? 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT : 72
 
-		return GraphicsRenderer.#getCachedImage(imageWidth, imageHeight, 4, async (img) => {
-			for (const imageBuffer of imageBuffers) {
-				if (imageBuffer.buffer) {
-					const x = imageBuffer.x ?? 0
-					const y = imageBuffer.y ?? 0
-					const width = imageBuffer.width || imageWidth
-					const height = imageBuffer.height || imageHeight
+		return GraphicsRenderer.#getCachedImage(
+			imageWidth,
+			imageHeight,
+			computeOversampling(imageWidth, imageHeight),
+			async (img) => {
+				for (const imageBuffer of imageBuffers) {
+					if (imageBuffer.buffer) {
+						const x = imageBuffer.x ?? 0
+						const y = imageBuffer.y ?? 0
+						const width = imageBuffer.width || imageWidth
+						const height = imageBuffer.height || imageHeight
 
-					img.drawPixelBuffer(x, y, width, height, imageBuffer.buffer, imageBuffer.pixelFormat, imageBuffer.drawScale)
+						img.drawPixelBuffer(x, y, width, height, imageBuffer.buffer, imageBuffer.pixelFormat, imageBuffer.drawScale)
+					}
 				}
-			}
 
-			return img.toDataURLSync()
-		})
+				return img.toDataURLSync()
+			}
+		)
 	}
 }

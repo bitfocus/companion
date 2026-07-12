@@ -1,14 +1,15 @@
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
+import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { capitalize } from 'lodash-es'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { StaticAlert } from '~/Components/Alert.js'
+import { DismissableAlert, StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -23,7 +24,6 @@ import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/Instance
 import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { InstanceSecretField } from '~/Instances/InstanceEdit/InstanceSecretField.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
-import { doesInstanceVersionExist } from '~/Instances/VersionUtil.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InstanceVersionChangeButton } from '../../Instances/InstanceEdit/InstanceVersionChangeButton.js'
@@ -38,25 +38,24 @@ interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase
 export const InstanceGenericEditPanel = observer(function InstanceGenericEditPanel<
 	TConfig extends ClientInstanceConfigBase,
 >({ instanceInfo, service, changeModuleDangerMessage, cannotEnableReason }: InstanceGenericEditPanelProps<TConfig>) {
-	const { modules, instanceStatuses } = useContext(RootAppStoreContext)
-
-	const isInstanceRunning = instanceStatuses.getStatus(instanceInfo.id)?.level ?? false
+	const { modules } = useContext(RootAppStoreContext)
 
 	const panelStore = useMemo(() => new InstanceEditPanelStore(service, instanceInfo), [service, instanceInfo])
 
-	// Ensure a reload happens each time the version changes
-	useEffect(() => {
-		panelStore.triggerReload()
-	}, [panelStore, instanceInfo.moduleId, instanceInfo.moduleVersionId])
+	// A single subscription drives the config-fields editor: the backend reports the current state
+	// (loading / running-with-config / not-running / error) whenever anything relevant changes.
+	useSubscription(
+		service.watchConfig({
+			onStarted: () => panelStore.applyState(null),
+			onData: (state) => panelStore.applyState(state),
+			onError: (error) => {
+				console.error('Error in instance config subscription', error)
+				panelStore.applyState({ type: 'error', message: 'Lost connection to the configuration' })
+			},
+		})
+	)
 
 	const moduleInfo = modules.getModuleInfo(panelStore.instanceInfo.moduleType, panelStore.instanceInfo.moduleId)
-
-	const instanceVersionExists = doesInstanceVersionExist(moduleInfo, panelStore.instanceInfo.moduleVersionId)
-	const instanceShouldBeRunning =
-		panelStore.instanceInfo.enabled &&
-		instanceVersionExists &&
-		service.isCollectionEnabled(panelStore.instanceInfo.collectionId)
-	const instanceIsCrashed = instanceShouldBeRunning && isInstanceRunning === 'Crashed'
 
 	const isSaving = observable.box(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
@@ -71,7 +70,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 		Promise.resolve()
 			.then(async () => {
-				const error = await service.saveConfig(instanceShouldBeRunning, panelStore)
+				const error = await service.saveConfig(panelStore)
 
 				setSaveError(error)
 				isSaving.set(false)
@@ -81,16 +80,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 				setSaveError(`Failed to save ${capitalize(service.moduleTypeDisplayName)}: ${error.message || error}`)
 				console.error('Failed to save instance:', error)
 			})
-	}, [service, panelStore, isSaving, instanceShouldBeRunning])
-
-	// Trigger a reload/unload of the instance config when the instance transitions to be running
-	useEffect(() => {
-		if (instanceShouldBeRunning) {
-			panelStore.triggerReload()
-		} else {
-			panelStore.unloadConfigAndSecrets()
-		}
-	}, [panelStore, instanceShouldBeRunning])
+	}, [service, panelStore, isSaving])
 
 	return (
 		<>
@@ -121,47 +111,11 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
 
-						{!instanceShouldBeRunning && (
-							<Grid.Col xs={12}>
-								<NonIdealState icon={faGear}>
-									<p>
-										{capitalize(service.moduleTypeDisplayName)} configuration cannot be edited while it is disabled. The
-										fields above can be edited.
-									</p>
-								</NonIdealState>
-							</Grid.Col>
-						)}
-
-						{instanceShouldBeRunning && !instanceIsCrashed && (panelStore.isLoading || panelStore.loadError) && (
-							<Grid.Col xs={12}>
-								<LoadingRetryOrError
-									error={panelStore.loadError}
-									dataReady={!panelStore.isLoading}
-									doRetry={panelStore.triggerReload}
-									design="pulse"
-								/>
-							</Grid.Col>
-						)}
-
-						{instanceShouldBeRunning && !panelStore.isLoading && !instanceIsCrashed && (
-							<InstanceConfigFields panelStore={panelStore} />
-						)}
-
-						{instanceShouldBeRunning && instanceIsCrashed && (
-							<NonIdealState icon={faCircleExclamation}>
-								{capitalize(panelStore.service.moduleTypeDisplayName)} is not running.
-								<br />
-								Please check the logs for more information.
-							</NonIdealState>
-						)}
+						<InstanceConfigArea panelStore={panelStore} />
 					</div>
 				</div>
 
-				<InstanceFormButtons
-					panelStore={panelStore}
-					instanceShouldBeRunning={instanceShouldBeRunning}
-					isSaving={isSaving.get()}
-				/>
+				<InstanceFormButtons panelStore={panelStore} isSaving={isSaving.get()} />
 			</Form>
 		</>
 	)
@@ -307,6 +261,78 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 	)
 })
 
+/**
+ * Renders the config-fields area for an instance, driven entirely by the state reported by the config
+ * subscription (disabled / loading / running-with-config / crashed / error).
+ */
+const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends ClientInstanceConfigBase>({
+	panelStore,
+}: {
+	panelStore: InstanceEditPanelStore<TConfig>
+}): React.JSX.Element {
+	const displayName = capitalize(panelStore.service.moduleTypeDisplayName)
+
+	// A terminal failure (e.g. incompatible module version) - show the reported reason
+	if (panelStore.loadError) {
+		return (
+			<Grid.Col xs={12}>
+				<NonIdealState icon={faCircleExclamation}>
+					{panelStore.loadError}
+					<br />
+					Please check the logs for more information.
+				</NonIdealState>
+			</Grid.Col>
+		)
+	}
+
+	// Crashed and not running
+	if (panelStore.notRunningReason === 'crashed') {
+		return (
+			<Grid.Col xs={12}>
+				<NonIdealState icon={faCircleExclamation}>
+					{displayName} is not running.
+					<br />
+					Please check the logs for more information.
+				</NonIdealState>
+			</Grid.Col>
+		)
+	}
+
+	// Disabled (directly or via its collection), so there is nothing running to configure
+	if (panelStore.notRunningReason === 'disabled' || panelStore.notRunningReason === 'missing') {
+		return (
+			<Grid.Col xs={12}>
+				<NonIdealState icon={faGear}>
+					<p>{displayName} configuration cannot be edited while it is not running. The fields above can be edited.</p>
+				</NonIdealState>
+			</Grid.Col>
+		)
+	}
+
+	// Still starting up / waiting for the config fields
+	if (panelStore.isLoading || panelStore.configAndSecrets === null) {
+		return (
+			<Grid.Col xs={12}>
+				<LoadingRetryOrError error={null} dataReady={false} design="pulse" />
+			</Grid.Col>
+		)
+	}
+
+	return (
+		<>
+			{panelStore.externalChangeWarning && (
+				<Grid.Col xs={12}>
+					<DismissableAlert color="warning" onClose={panelStore.dismissExternalChangeWarning}>
+						This {panelStore.service.moduleTypeDisplayName}'s configuration was changed elsewhere. Your unsaved changes
+						have been kept.
+					</DismissableAlert>
+				</Grid.Col>
+			)}
+			<InstanceConfigFields panelStore={panelStore} />
+		</>
+	)
+})
+
 const InstanceConfigFields = observer(function InstanceConfigFields<TConfig extends ClientInstanceConfigBase>({
 	panelStore,
 }: {
@@ -374,15 +400,13 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extends ClientInstanceConfigBase>({
 	panelStore,
 	isSaving,
-	instanceShouldBeRunning,
 }: {
 	panelStore: InstanceEditPanelStore<TConfig>
 	isSaving: boolean
-	instanceShouldBeRunning: boolean
 }): React.JSX.Element {
 	const isValid = panelStore.isValid()
 
-	const isLoading = instanceShouldBeRunning && panelStore.isLoading
+	const isLoading = panelStore.isLoading
 
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
@@ -457,7 +481,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
-				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }}>
+				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="align-self-center">
 					{children}
 				</Grid.Col>
 			</React.Fragment>

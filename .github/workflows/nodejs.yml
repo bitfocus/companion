@@ -91,15 +91,18 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo "sourcename=electron-output/companion-x64.tar.gz" >> $GITHUB_OUTPUT
+          mv electron-output/companion-x64.tar.gz electron-output/companion-linux-x64-${VERSION}.tar.gz
+
+          echo "sourcename=electron-output/companion-linux-x64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
           echo "targetname=companion-linux-x64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          # archive: false uploads the file as-is (no extra zip layer); the artifact name
+          # is taken from the filename, so sourcename is renamed to match the s3 targetname
           archive: false
-          name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
@@ -192,15 +195,18 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo "sourcename=electron-output/companion-arm64.tar.gz" >> $GITHUB_OUTPUT
+          mv electron-output/companion-arm64.tar.gz electron-output/companion-linux-arm64-${VERSION}.tar.gz
+
+          echo "sourcename=electron-output/companion-linux-arm64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
           echo "targetname=companion-linux-arm64-${VERSION}.tar.gz" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          # archive: false uploads the file as-is (no extra zip layer); the artifact name
+          # is taken from the filename, so sourcename is renamed to match the s3 targetname
           archive: false
-          name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
@@ -302,15 +308,18 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo "sourcename=electron-output/companion-mac-x64.dmg" >> $GITHUB_OUTPUT
+          mv electron-output/companion-mac-x64.dmg electron-output/companion-mac-x64-${VERSION}.dmg
+
+          echo "sourcename=electron-output/companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
           echo "targetname=companion-mac-x64-${VERSION}.dmg" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          # archive: false uploads the file as-is (no extra zip layer); the artifact name
+          # is taken from the filename, so sourcename is renamed to match the s3 targetname
           archive: false
-          name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
@@ -402,15 +411,18 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo "sourcename=electron-output/companion-mac-arm64.dmg" >> $GITHUB_OUTPUT
+          mv electron-output/companion-mac-arm64.dmg electron-output/companion-mac-arm64-${VERSION}.dmg
+
+          echo "sourcename=electron-output/companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
           echo "targetname=companion-mac-arm64-${VERSION}.dmg" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          # archive: false uploads the file as-is (no extra zip layer); the artifact name
+          # is taken from the filename, so sourcename is renamed to match the s3 targetname
           archive: false
-          name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
@@ -513,15 +525,18 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo "sourcename=electron-output/companion-win64.exe" >> $GITHUB_OUTPUT
+          mv electron-output/companion-win64.exe electron-output/companion-win64-${VERSION}.exe
+
+          echo "sourcename=electron-output/companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
           echo "targetname=companion-win64-${VERSION}.exe" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          # archive: false uploads the file as-is (no extra zip layer); the artifact name
+          # is taken from the filename, so sourcename is renamed to match the s3 targetname
           archive: false
-          name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
@@ -626,15 +641,18 @@ jobs:
         run: |
           VERSION=$(cat ./dist/BUILD)
 
-          echo "sourcename=electron-output/companion-winarm64.exe" >> $GITHUB_OUTPUT
+          mv electron-output/companion-winarm64.exe electron-output/companion-winarm64-${VERSION}.exe
+
+          echo "sourcename=electron-output/companion-winarm64-${VERSION}.exe" >> $GITHUB_OUTPUT
           echo "targetname=companion-winarm64-${VERSION}.exe" >> $GITHUB_OUTPUT
           echo "longversion=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
         with:
+          # archive: false uploads the file as-is (no extra zip layer); the artifact name
+          # is taken from the filename, so sourcename is renamed to match the s3 targetname
           archive: false
-          name: ${{ steps.filenames.outputs.targetname }}
           path: ${{ steps.filenames.outputs.sourcename }}
           retention-days: 1
       - name: Upload build (beta)
@@ -686,8 +704,25 @@ jobs:
 
     env:
       IMAGE_NAME: companion
+      # GHCR shows the package description from the index (manifest-list) annotation, so metadata-action
+      # must emit annotations at that level (default is 'manifest' only) for our multi-arch push.
+      DOCKER_METADATA_ANNOTATIONS_LEVELS: index
 
     steps:
+      - uses: actions/checkout@v7
+        if: ${{ needs.linux-x64.outputs.upload-url }}
+        with:
+          persist-credentials: false
+
+      - name: Read image description
+        if: ${{ needs.linux-x64.outputs.upload-url }}
+        run: |
+          {
+            echo 'IMAGE_DESCRIPTION<<EOF'
+            cat assets/docker/README.md
+            echo EOF
+          } >> "$GITHUB_ENV"
+
       - name: Docker meta
         if: ${{ needs.linux-x64.outputs.upload-url }}
         id: meta
@@ -699,6 +734,10 @@ jobs:
             type=raw,value=${{ needs.linux-x64.outputs.version }}
             type=ref,event=tag
             type=ref,event=branch
+          labels: |
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
+          annotations: |
+            org.opencontainers.image.description=${{ env.IMAGE_DESCRIPTION }}
 
       - name: Set up QEMU
         if: ${{ steps.meta.outputs.tags }}
@@ -715,11 +754,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v7
-        if: ${{ steps.meta.outputs.tags }}
-        with:
-          persist-credentials: false
 
       - name: Check s4 cdn
         env:
@@ -740,6 +774,7 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           push: true
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           tags: "${{ steps.meta.outputs.tags }}"
           build-args: |
             linux_x64_url=${{ needs.linux-x64.outputs.upload-url }}

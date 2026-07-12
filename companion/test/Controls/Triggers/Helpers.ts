@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events'
 import { vi, type Mock } from 'vitest'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import type { TriggerEvents } from '../../../lib/Controls/TriggerEvents.js'
+import { mockUserConfig } from '../../utils/MockUserConfig.js'
 
 /**
  * A stand-in for the TriggerEvents bus, which allows tests to emit ticks
@@ -52,7 +53,7 @@ export function createMockControlDependencies(): MockControlDependencies {
 			processManager: null as any,
 		} as any,
 		variableValues: null as any,
-		userconfig: null as any,
+		userconfig: mockUserConfig({ timezone: '' }),
 		graphics: null as any,
 		actionRunner: {
 			runMultipleActions,

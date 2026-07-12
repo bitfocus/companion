@@ -23,7 +23,7 @@ import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
 import { trpc } from './Resources/TRPC.js'
-import { WIZARD_CURRENT_VERSION } from './Wizard/Constants.js'
+import { shouldAutoOpenWizard } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
 
 export default function App(): React.JSX.Element {
@@ -125,7 +125,7 @@ interface AppMainProps {
 }
 
 const AppMain = observer(function AppMain({ connected, loadingComplete, loadingProgress }: AppMainProps) {
-	const { userConfig, showWizard } = useContext(RootAppStoreContext)
+	const { userConfig, wizardOpen } = useContext(RootAppStoreContext)
 
 	// Once everything has loaded, prune collapse-state keys for controls/connections that no longer exist
 	useEvictDeadCollapseState(loadingComplete)
@@ -150,21 +150,21 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 	const setup_wizard = userConfig.properties?.setup_wizard
 	const setUnlockedInner = useCallback(() => {
 		setUnlocked(true)
-		if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
-			showWizard()
+		if (shouldAutoOpenWizard(setup_wizard)) {
+			wizardOpen.set(true)
 		}
-	}, [setup_wizard, showWizard])
+	}, [setup_wizard, wizardOpen])
 
 	// If lockout is disabled, then we are logged in
 	const admin_lockout = userConfig.properties && !userConfig.properties?.admin_lockout
 	useEffect(() => {
 		if (admin_lockout) {
 			setUnlocked(true)
-			if (setup_wizard !== undefined && setup_wizard < WIZARD_CURRENT_VERSION) {
-				showWizard()
+			if (shouldAutoOpenWizard(setup_wizard)) {
+				wizardOpen.set(true)
 			}
 		}
-	}, [admin_lockout, setup_wizard, showWizard])
+	}, [admin_lockout, setup_wizard, wizardOpen])
 
 	return (
 		<div className="c-app">

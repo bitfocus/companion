@@ -202,7 +202,7 @@ export class Registry {
 		const activeLearningStore = new ActiveLearningStore()
 		const pageStore = new PageStore(this.db.getTableView('pages'))
 
-		this.variables = new VariablesController(this.db)
+		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
 		this.graphics = new GraphicsController(
@@ -303,6 +303,7 @@ export class Registry {
 		)
 
 		this.services = new ServiceController(
+			this.#appInfo,
 			serviceApi,
 			this.userconfig,
 			oscSender,
@@ -319,6 +320,7 @@ export class Registry {
 			this.instance,
 			this.page,
 			this.controls,
+			this.graphics,
 			this.variables,
 			this.cloud,
 			this.services,

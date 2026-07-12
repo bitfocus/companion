@@ -11,6 +11,8 @@
 
 import { EventEmitter } from 'node:events'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import { getZonedDateParts } from '@companion-app/shared/Timezone.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import type {
 	ActionForVisitor,
 	FeedbackForVisitor,
@@ -22,12 +24,21 @@ import type {
 export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)
 
-	constructor() {
+	readonly #userConfigController: DataUserConfig
+
+	constructor(userConfigController: DataUserConfig) {
 		super()
+
+		this.#userConfigController = userConfigController
 
 		setInterval(() => {
 			this.updateVariables()
 		}, 500) // Do it at 2hz to make sure we dont skip one
+	}
+
+	/** The configured timezone, or undefined to use the process-local timezone */
+	#getTimezone(): string | undefined {
+		return this.#userConfigController.getKey('timezone') || undefined
 	}
 
 	getVariableDefinitions(): VariableDefinition[] {
@@ -96,20 +107,34 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 				description: 'Uptime (seconds)',
 				name: 'uptime',
 			},
+			{
+				description: 'Active timezone (IANA name)',
+				name: 'timezone',
+			},
 		]
 	}
 
 	updateVariables(): void {
 		const now = new Date()
-		const hours = now.getHours()
+		const tz = this.#getTimezone()
+
+		// Break the current time down into its parts as observed in the configured timezone.
+		// Falls back to the process-local timezone when `tz` is undefined or invalid.
+		const zonedParts = getZonedDateParts(now, tz)
+		// `effectiveTz` is the timezone that was actually applied, so the rest of the method
+		// (including toLocaleString) can use it without re-triggering an invalid-zone error.
+		const effectiveTz = zonedParts ? tz : undefined
+		const parts = zonedParts ?? getZonedDateParts(now, undefined)!
+
+		const hours = parts.hour
 		const hours12 = hours % 12
 		const hh = `0${hours}`.slice(-2)
 		const hh12 = `0${hours12 === 0 ? 12 : hours12}`.slice(-2)
-		const mm = `0${now.getMinutes()}`.slice(-2)
-		const ss = `0${now.getSeconds()}`.slice(-2)
-		const year = now.getFullYear()
-		const month = `0${now.getMonth() + 1}`.slice(-2)
-		const day = `0${now.getDate()}`.slice(-2)
+		const mm = `0${parts.minute}`.slice(-2)
+		const ss = `0${parts.second}`.slice(-2)
+		const year = parts.year
+		const month = `0${parts.month}`.slice(-2)
+		const day = `0${parts.day}`.slice(-2)
 		const hhmm = `${hh}:${mm}`
 		const hhmmss = `${hhmm}:${ss}`
 		const hhmm12 = `${hh12}:${mm}`
@@ -123,8 +148,8 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 			date_y: year,
 			date_m: month,
 			date_d: day,
-			date_dow: now.getDay(),
-			date_weekday: now.toLocaleString(undefined, { weekday: 'long' }),
+			date_dow: parts.weekday,
+			date_weekday: now.toLocaleString(undefined, { weekday: 'long', timeZone: effectiveTz }),
 
 			time_hms: hhmmss,
 			time_hm: hhmm,
@@ -139,6 +164,11 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 			time_h_12: hh12,
 
 			uptime,
+
+			// The timezone actually in effect, as a concrete IANA name (resolving the process-local zone
+			// when none is configured). Expressions that use a date/time function without an explicit
+			// timezone depend on this variable, so changing it re-evaluates them.
+			timezone: effectiveTz ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
 		})
 	}
 

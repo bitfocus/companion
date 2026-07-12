@@ -1,6 +1,6 @@
 import path from 'path'
-import { SetOptional } from 'type-fest'
 import electronBuilder from 'electron-builder'
+import { SetOptional } from 'type-fest'
 
 function expandMissing(info: SetOptional<PlatformInfo, 'nodeArch' | 'nodePlatform'>): PlatformInfo {
 	return {
@@ -65,14 +65,6 @@ export function determinePlatformInfo(platform: string | undefined): PlatformInf
 			electronBuilderArch: electronBuilder.Arch.x64,
 			runtimePlatform: 'linux',
 			runtimeArch: 'x64',
-		})
-	} else if (platform === 'linux-arm7' || platform === 'linux-arm' || platform === 'linux-armv7l') {
-		return expandMissing({
-			electronBuilderPlatform: 'linux',
-			electronBuilderArch: electronBuilder.Arch.armv7l,
-			runtimePlatform: 'linux',
-			runtimeArch: 'armv7l',
-			nodeArch: 'arm',
 		})
 	} else if (platform === 'linux-arm64') {
 		return expandMissing({

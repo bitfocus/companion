@@ -42,12 +42,3 @@ export const RotationConfigField: CompanionSurfaceConfigField = {
 		{ id: 'surface180', label: '180' },
 	],
 }
-
-export const LockConfigFields: CompanionSurfaceConfigField[] = [
-	{
-		id: 'never_lock',
-		type: 'checkbox',
-		label: 'Never pin code lock',
-		default: false,
-	},
-]

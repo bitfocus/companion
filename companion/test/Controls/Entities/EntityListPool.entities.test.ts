@@ -316,6 +316,62 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 
 		expect(result).toBeUndefined()
 	})
+
+	test('applies a storeResult from an upgrade when the action has none', () => {
+		const { pool } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+
+		pool.entityReplaceForUpgrade({
+			id: action.id,
+			type: EntityModelType.Action,
+			definitionId: action.definitionId,
+			options: {},
+			upgradeIndex: undefined,
+			storeResult: {
+				type: 'custom-variable',
+				variableName: { isExpression: false, value: 'myvar' },
+				createIfNotExists: false,
+			},
+		})
+
+		expect(pool.findEntityById(action.id)?.rawStoreResult).toEqual({
+			type: 'custom-variable',
+			variableName: { isExpression: false, value: 'myvar' },
+			createIfNotExists: false,
+		})
+	})
+
+	test('preserves a user-chosen storeResult over the one from an upgrade', () => {
+		const { pool } = createPool()
+		const action = actionModel({
+			storeResult: {
+				type: 'custom-variable',
+				variableName: { isExpression: false, value: 'user-choice' },
+				createIfNotExists: false,
+			},
+		})
+		pool.entityAdd(downSet(), null, action)
+
+		pool.entityReplaceForUpgrade({
+			id: action.id,
+			type: EntityModelType.Action,
+			definitionId: action.definitionId,
+			options: {},
+			upgradeIndex: undefined,
+			storeResult: {
+				type: 'custom-variable',
+				variableName: { isExpression: false, value: 'upgrade-choice' },
+				createIfNotExists: false,
+			},
+		})
+
+		expect(pool.findEntityById(action.id)?.rawStoreResult).toEqual({
+			type: 'custom-variable',
+			variableName: { isExpression: false, value: 'user-choice' },
+			createIfNotExists: false,
+		})
+	})
 })
 
 describe('EntityListPool - entityReplaceAll', () => {

@@ -1,6 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -86,6 +86,7 @@ import {
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
+import { VariableValueBatcher } from './VariableValueBatcher.js'
 
 const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT } // Backwards compatibility for modules that expect feedback size
 
@@ -95,6 +96,15 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
 
 	readonly #deps: ConnectionChildHandlerDependencies
+
+	/**
+	 * Coalesce variable value updates from the module, to avoid flooding the render pipeline when a module
+	 * pushes values very frequently (e.g. a stopwatch). Legacy modules run in a child process using an
+	 * external base library, so unlike the new module system this throttles after the IPC hop rather than before.
+	 */
+	readonly #variableValuesBatcher = new VariableValueBatcher<SetVariableValuesMessage['newValues'][number]>((values) =>
+		this.#deps.variables.values.setVariableValues(this.#label, values)
+	)
 
 	readonly connectionId: string
 
@@ -647,6 +657,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
+		this.#variableValuesBatcher.destroy()
+
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
@@ -853,7 +865,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
 
-		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
+		this.#variableValuesBatcher.add(msg.newValues)
 	}
 
 	/**

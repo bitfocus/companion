@@ -2,7 +2,7 @@ import debounceFn from 'debounce-fn'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
@@ -176,7 +176,7 @@ export class ControlTrigger
 		})
 
 		this.#eventBus = eventBus
-		this.#timerEvents = new TriggersEventTimer(eventBus, controlId, this.executeActions.bind(this))
+		this.#timerEvents = new TriggersEventTimer(deps.userconfig, eventBus, controlId, this.executeActions.bind(this))
 		this.#miscEvents = new TriggersEventMisc(eventBus, controlId, this.executeActions.bind(this))
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this), (limited) =>
 			this.#setVariableRateLimited(limited)

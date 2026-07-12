@@ -896,4 +896,35 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 	})
+
+	// A width-based break landing immediately before a hard newline used to leave that newline as
+	// the first character of the next chunk, which the newline handling then turned into a blank
+	// line. This only surfaced in the browser preview: its measureText measures *past* a '\n' (so a
+	// value like "Sonos:\n-17.46" is judged too wide and hits the width-wrap path), whereas
+	// @napi-rs/canvas stops measuring at the '\n' and never reached the buggy branch. The
+	// createMockContext here measures past the '\n' (width = length * charWidth), matching browsers.
+	describe('hard newline adjacent to a width break', () => {
+		const fontDef = '14px TestFont'
+
+		test('width break exactly before a newline does not insert a blank line', () => {
+			const context = createMockContext(10, 14)
+			// 'ABCDEF' is exactly 60px wide (fills w=60) and is immediately followed by '\n'.
+			const result = computeTextLayout(context, 60, 72, [...'ABCDEF\nGHIJKL'], fontDef)
+			expect(result.lines.map((l) => l.text)).toEqual(['ABCDEF', 'GHIJKL'])
+		})
+
+		test('real-world "Sonos:\\n-17.46" renders as two lines, not three', () => {
+			const context = createMockContext(10, 14)
+			const result = computeTextLayout(context, 60, 72, [...'Sonos:\n-17.46'], fontDef)
+			expect(result.lines.map((l) => l.text)).toEqual(['Sonos:', '-17.46'])
+		})
+
+		test('a deliberate blank line is still preserved through the width-wrap path', () => {
+			const context = createMockContext(10, 14)
+			// Two newlines: the width break consumes the first (its break already happened), the
+			// second remains as the user's intended blank line.
+			const result = computeTextLayout(context, 60, 72, [...'ABCDEF\n\nGHIJKL'], fontDef)
+			expect(result.lines.map((l) => l.text)).toEqual(['ABCDEF', '', 'GHIJKL'])
+		})
+	})
 })

@@ -209,6 +209,14 @@ Searches a string for a specific value, and then replaces all instances of that 
 
 eg `replaceAll("This is great!", "This", "Companion")` gives `Companion is great!`
 
+**stringCompare(a, b)**
+
+Compare two strings for sorting purposes, using locale-aware comparison. Returns a negative number if `a` sorts before `b`, `0` if they are equal, or a positive number if `a` sorts after `b`.
+
+This is most useful as a comparator for `arraySort` when ordering arrays of strings or objects.
+
+eg `arraySort(["banana", "apple", "cherry"], (a, b) => stringCompare(a, b))` gives `["apple", "banana", "cherry"]`
+
 **encode(str, enc)**
 
 Encode a string to the requested format ('hex','base64'). If `enc` is missing, `latin1` will be used.
@@ -346,6 +354,28 @@ Optionally provide an offset to begin the search from, searching from the end.
 
 If the value isn't found, it will return -1, otherwise the index of the last occurrence. The beginning is position 0.
 
+**arraySlice(arr, start, end)**
+
+Return a shallow copy of a portion of an array, without changing the original.
+
+`start` is the index to begin from (0 is the beginning) and `end` is the index to stop before. Both are optional, and negative values count back from the end.
+
+`arraySlice([1, 2, 3, 4, 5], 1, 3)` gives `[2, 3]`.
+
+If this encounters invalid input, it will return undefined.
+
+**arrayConcat(...arrays)**
+
+Combine multiple arrays into a single new array. Any argument that isn't an array is wrapped as a single element.
+
+`arrayConcat([1, 2], [3, 4], 5)` gives `[1, 2, 3, 4, 5]`.
+
+**arrayFlat(arr)**
+
+Flatten a nested array by one level. `arrayFlat([1, [2, 3], [4, [5]]])` gives `[1, 2, 3, 4, [5]]`.
+
+If this encounters invalid input, it will return undefined.
+
 ### Array iteration operations
 
 These run a function (usually an arrow function `x => ...`) over each element of an array. Most callbacks receive `(element, index)`, while `arrayReduce` receives `(accumulator, element, index)`. They are most powerful combined with arrow functions — see [Advanced expressions](scripting.md#functions).
@@ -377,6 +407,8 @@ Return whether `fn` returns true for at least one element (`arraySome`) or for a
 **arraySort(arr, fn)**
 
 Return a sorted copy of the array (the original is not changed). Without a comparator the elements are sorted as strings; provide `fn(a, b)` returning a negative, zero or positive number to control the order. `arraySort([3, 1, 2], (a, b) => a - b)` gives `[1, 2, 3]`.
+
+To sort strings (or objects by a string property) use `stringCompare` as the comparator, eg `arraySort($(custom:names), (a, b) => stringCompare(a, b))`. See [stringCompare](#string-operations) for details.
 
 **arrayReverse(arr)**
 

@@ -13,7 +13,7 @@ export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
 export type ReplaceableActionEntityModel = Pick<
 	ActionEntityModel,
-	'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex'
+	'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex' | 'storeResult'
 >
 export type ReplaceableFeedbackEntityModel = Pick<
 	FeedbackEntityModel,

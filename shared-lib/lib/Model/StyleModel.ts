@@ -59,6 +59,15 @@ export enum ButtonGraphicsDecorationType {
 	None = 'none',
 }
 
+/**
+ * A button decoration that has been fully resolved (global default + per-button override), so it is
+ * always a concrete value and never `FollowDefault`.
+ */
+export type ResolvedButtonGraphicsDecoration = Exclude<
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsDecorationType.FollowDefault
+>
+
 export enum ButtonGraphicsShowStatusIcons {
 	FollowDefault = 'default',
 	ShowAll = 'all',

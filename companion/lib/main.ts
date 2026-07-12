@@ -2,10 +2,10 @@
 
 // Setup segfault handler
 // prettier-ignore
-import '@julusian/segfault-raub';
+import '@julusian/segfault-raub'
 // Setup logging before anything else runs
 // prettier-ignore
-import logger from './Log/Controller.js';
+import logger from './Log/Controller.js'
 // End of special setup imports
 
 import net, { isIPv6 } from 'node:net'

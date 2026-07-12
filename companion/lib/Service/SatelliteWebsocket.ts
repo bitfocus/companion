@@ -25,6 +25,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 
 	#server: WebSocketServer | undefined = undefined
 
+	/** The number of currently open satellite connections */
 	get clientCount(): number {
 		return this.#server?.clients.size ?? 0
 	}
@@ -56,43 +57,44 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 					const socketLogger = LogController.createLogger(`Service/SatelliteWs/${name}`)
 
 					let lastReceived = Date.now()
-
-					// socket.setTimeout(5000)
-					socket.on('error', (e) => {
-						socketLogger.silly('socket error:', e)
-					})
-
-					const { processMessage, cleanupDevices } = this.#api.initSocket(
-						socketLogger,
-						new SatelliteWSSocket(socket, req.socket.remoteAddress)
-					)
+					let cleanupDevices: (() => number) | undefined
 
 					const timeoutCheck = setInterval(() => {
 						if (lastReceived < Date.now() - 5000) {
 							socketLogger.debug('socket timeout')
+							// terminate() forces the socket to 'close', which does the cleanup below
 							socket.terminate()
-							doCleanup()
 						}
 					}, 3000)
 
-					const doCleanup = () => {
-						const count = cleanupDevices()
+					// Anchor teardown on the 'close' event so the per-socket state is always cleaned up
+					// and the timeout interval always cleared - even if initSocket throws. Otherwise the
+					// state map and the interval would leak for every connection that failed to init.
+					socket.on('close', () => {
+						const count = cleanupDevices?.() ?? 0
 						socketLogger.info(`connection closed with ${count} connected surfaces`)
 
-						socket.removeAllListeners('data')
-						socket.removeAllListeners('close')
-
 						clearInterval(timeoutCheck)
-					}
-
-					socket.on('close', doCleanup)
-
-					socket.on('message', (data) => {
-						lastReceived = Date.now()
-
-						// eslint-disable-next-line @typescript-eslint/no-base-to-string
-						processMessage(data.toString())
 					})
+
+					socket.on('error', (e) => {
+						socketLogger.silly('socket error:', e)
+					})
+
+					try {
+						const api = this.#api.initSocket(socketLogger, new SatelliteWSSocket(socket, req.socket.remoteAddress))
+						cleanupDevices = api.cleanupDevices
+
+						socket.on('message', (data) => {
+							lastReceived = Date.now()
+
+							// eslint-disable-next-line @typescript-eslint/no-base-to-string
+							api.processMessage(data.toString())
+						})
+					} catch (e) {
+						socketLogger.error(`Failed to initialise satellite connection: ${e}`)
+						socket.terminate()
+					}
 				})
 			} catch (_e) {
 				this.logger.debug(`ERROR opening ws port ${this.port} for companion satellite devices`)

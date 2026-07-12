@@ -40,6 +40,7 @@
 @use 'scss/components/popover';
 @use 'scss/components/progress';
 @use 'scss/components/spinner';
+@use 'scss/components/step-selector';
 @use 'scss/components/tooltip';
 @use 'scss/components/image-input-field';
 @use 'scss/components/number-range';
@@ -52,6 +53,7 @@
 @use 'scss/common';
 @use 'scss/tablet';
 @use 'scss/emulator';
+@use 'scss/standalone-status';
 @use 'scss/modules-manage';
 @use 'scss/sidebar';
 
@@ -75,6 +77,7 @@
 @use 'scss/sticky-tables';
 @use 'scss/expression';
 @use 'scss/image-library';
+@use 'scss/wizard';
 
 // ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two
 [data-dnd-overlay]:not([data-dnd-dragging]) {

@@ -4,9 +4,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { ParseExpression, ResolveExpression } from '@companion-app/shared/Expressions.js'
 import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
@@ -167,9 +165,12 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 			const expression = ParseExpression(instanceInfo.remoteConfigMatches)
 			const doesMatch = (otherConfig: Record<string, any>) => {
 				try {
-					const val = ResolveExpression(
-						expression,
-						(props) => {
+					const val = ResolveExpression(expression, {
+						// Config-match expressions should be trivial - keep the budget tight
+						maxOperations: 1000,
+						maxCallDepth: 16,
+
+						getVariableValue: (props) => {
 							if (props.label === 'objA') {
 								return toJS(surfaceInfo.config[props.name])
 							} else if (props.label === 'objB') {
@@ -178,10 +179,11 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 								throw new Error(`Unknown variable "${props.variableId}"`)
 							}
 						},
-						ExpressionFunctions,
-						// Config-match expressions should be trivial - keep the budget tight
-						{ maxOperations: 1000, maxCallDepth: 16 }
-					)
+						parseVariables: null, // Not supported here
+						blink: undefined, // Not supported here
+
+						defaultTimezone: undefined, // no timezone context
+					})
 					return !!val && val !== 'false' && val !== '0'
 				} catch (e) {
 					console.error('Failed to resolve expression', e)

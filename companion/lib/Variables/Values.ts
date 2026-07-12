@@ -13,7 +13,7 @@ import EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	stringifyVariableValue,
@@ -22,6 +22,7 @@ import {
 } from '@companion-app/shared/Model/Variables.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesCache, VariableValueData } from './Util.js'
@@ -85,8 +86,12 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #blinker: VariablesBlinker
 	#variableValues: VariableValueData = Object.create(null)
 
-	constructor() {
+	readonly #userconfig: DataUserConfig
+
+	constructor(userconfig: DataUserConfig) {
 		super()
+
+		this.#userconfig = userconfig
 
 		this.#blinker = new VariablesBlinker((values) => {
 			this.setVariableValues('internal', values)
@@ -114,6 +119,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const thisValues = InjectedVariablesForLocation(controlLocation)
 
 		return new VariablesAndExpressionParser(
+			this.#userconfig,
 			this.#blinker,
 			this.#variableValues,
 			thisValues,

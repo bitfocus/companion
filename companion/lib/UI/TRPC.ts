@@ -1,4 +1,4 @@
-import { on, type EventEmitter } from 'node:events'
+import { EventEmitter, on } from 'node:events'
 import os from 'node:os'
 import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
 import { initTRPC, TRPCError, type inferRouterInputs, type inferRouterOutputs } from '@trpc/server'
@@ -223,6 +223,33 @@ export function toIterable<TEmitter extends EventEmitter, TKey extends string & 
 	signal: AbortSignal | undefined
 ): NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]> {
 	return on(ee, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
+}
+
+/**
+ * A single event source to merge, as an emitter+key with an optional predicate on the event args.
+ */
+export interface EventTriggerSource {
+	ee: EventEmitter<any>
+	key: string
+	/** Only forward the event as a trigger when this returns true. If omitted, every event triggers. */
+	filter?: (...args: any[]) => boolean
+}
+
+/**
+ * Merge several EventEmitter event streams into a single async iterator that yields once whenever any
+ * source fires (optionally filtered). Useful for subscriptions that must react to multiple unrelated
+ * events without duplicating the wiring. The listeners are removed automatically when `signal` aborts.
+ */
+export function mergeEventTriggers(signal: AbortSignal, sources: EventTriggerSource[]): NodeJS.AsyncIterator<[]> {
+	const local = new EventEmitter<{ trigger: [] }>()
+	for (const { ee, key, filter } of sources) {
+		const listener = (...args: any[]) => {
+			if (!filter || filter(...args)) local.emit('trigger')
+		}
+		ee.on(key, listener)
+		signal.addEventListener('abort', () => ee.off(key, listener), { once: true })
+	}
+	return toIterable(local, 'trigger', signal)
 }
 
 export type RouterInput = inferRouterInputs<AppRouter>

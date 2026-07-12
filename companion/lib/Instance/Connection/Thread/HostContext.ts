@@ -26,6 +26,7 @@ import {
 } from '@companion-module/host'
 import type { CompositeElementDefinition } from '../../Definitions.js'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
+import { VariableValueBatcher } from '../VariableValueBatcher.js'
 import { translateEntityInputFields } from './ConfigFields.js'
 import { ConvertPresetDefinitions } from './Presets.js'
 import { ConvertLayerPresetElements } from './PresetsLayered.js'
@@ -39,6 +40,14 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 	readonly #connectionId: string
 	readonly #currentUpgradeIndex: number
+
+	/**
+	 * Coalesce variable value updates before sending them over IPC, to avoid a flood of tiny messages
+	 * when a module pushes values very frequently (e.g. a stopwatch).
+	 */
+	readonly #variableValuesBatcher = new VariableValueBatcher<HostVariableValue>((values) =>
+		this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: values })
+	)
 
 	constructor(ipcWrapper: ModuleChildIpcWrapper, connectionId: string, currentUpgradeIndex: number) {
 		this.#ipcWrapper = ipcWrapper
@@ -168,8 +177,17 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	}
 	/** The connection has some new values for variables */
 	setVariableValues(values: HostVariableValue[]): void {
-		this.#ipcWrapper.sendWithNoCb('setVariableValues', { newValues: values })
+		this.#variableValuesBatcher.add(values)
 	}
+
+	/**
+	 * Tear down the context. Called when the connection is being destroyed, to release any pending timers
+	 * (e.g. the batched variable value flush) so the module thread can exit cleanly.
+	 */
+	destroy(): void {
+		this.#variableValuesBatcher.destroy()
+	}
+
 	/** The connection has some new values for feedbacks it is running */
 	updateFeedbackValues(values: HostFeedbackValue[]): void {
 		// Transform advanced feedback imageBuffers from Uint8Array to base64 strings, to make them json serializable
@@ -184,7 +202,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 							value: {
 								...valueObject,
 								// Backwards compatibility fixup, ensure the imageBuffer is a string
-								imageBuffer: uint8ArrayToBuffer(imageBuffer).toString('base64'),
+								imageBuffer: imageBuffer.toBase64(),
 							},
 						}
 					} else {
@@ -219,13 +237,13 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 					encodedArgs.push({ type: 'f', value: arg })
 				} else if (arg instanceof Uint8Array) {
 					// Future: use native toBase64 when available
-					encodedArgs.push({ type: 'b', value: uint8ArrayToBuffer(arg).toString('base64') })
+					encodedArgs.push({ type: 'b', value: arg.toBase64() })
 				} else if (arg && typeof arg === 'object') {
 					if (arg.type === 's' || arg.type === 'f' || arg.type === 'i') {
 						encodedArgs.push(arg)
 					} else if (arg.type === 'b' && arg.value instanceof Uint8Array) {
 						// Future: use native toBase64 when available
-						encodedArgs.push({ type: 'b', value: uint8ArrayToBuffer(arg.value).toString('base64') })
+						encodedArgs.push({ type: 'b', value: arg.value.toBase64() })
 					} else {
 						throw new Error(`Unsupported OSC argument type: ${JSON.stringify(arg)}`)
 					}
@@ -283,11 +301,4 @@ function shouldShowInvertForFeedback(options: SomeCompanionFeedbackInputField[])
 
 	// Nothing looked to be a user defined invert field
 	return true
-}
-
-/**
- * Note: explicitly copied away from Resources/Util.ts to avoid circular dependencies
- */
-function uint8ArrayToBuffer(arr: Uint8Array | Uint8ClampedArray): Buffer {
-	return Buffer.from(arr.buffer, arr.byteOffset, arr.byteLength)
 }

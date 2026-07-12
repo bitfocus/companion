@@ -87,7 +87,9 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 			<Grid.Col sm={3}></Grid.Col>
 
 			<Grid.Col sm={12}>
-				<p>You can change this at any time on the 'Settings' tab in the GUI.</p>
+				<p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+					You can change this at any time on the 'Settings' tab in the GUI.
+				</p>
 			</Grid.Col>
 		</Grid.Row>
 	)

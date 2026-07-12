@@ -1,4 +1,4 @@
-import type { ObservableMap, ObservableSet } from 'mobx'
+import type { IObservableValue, ObservableMap, ObservableSet } from 'mobx'
 import { createContext } from 'react'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
@@ -52,8 +52,11 @@ export interface RootAppStore {
 
 	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 
-	readonly showWizardEvent: EventTarget
-	readonly showWizard: () => void
+	/**
+	 * The setup wizard modal's open state. Set to `true` to open it; the modal sets it back to `false` on close.
+	 * Doubles as the signal the What's New modal watches so it can wait its turn.
+	 */
+	readonly wizardOpen: IObservableValue<boolean>
 
 	readonly viewControl: ViewControlStore
 }

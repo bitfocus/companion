@@ -69,9 +69,7 @@ const MAX_PRESET_ENTRY_DEPTH = 10
  *   evaluation, so an expression wrapper is replaced (with a warning) by the field default
  */
 type OptionConversion =
-	| { mode: 'passthrough' }
-	| { mode: 'expression' }
-	| { mode: 'noExpression'; defaultValue: JsonValue }
+	{ mode: 'passthrough' } | { mode: 'expression' } | { mode: 'noExpression'; defaultValue: JsonValue }
 
 interface InternalEntityTranslation {
 	definitionId: string

@@ -7,6 +7,7 @@ import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/La
 import type { ResolveButtonStylePropertiesConfig } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
@@ -35,7 +36,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 
 	const drawConfig = useComputed<ResolveButtonStylePropertiesConfig>(
 		() => ({
-			remove_topbar: userConfig.properties?.remove_topbar ?? false,
+			buttons_decoration: userConfig.properties?.buttons_decoration ?? ButtonGraphicsDecorationType.TopBar,
 			buttons_status_icons: userConfig.properties?.buttons_status_icons ?? 'show',
 		}),
 		[userConfig]

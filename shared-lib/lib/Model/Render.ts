@@ -1,10 +1,10 @@
 import type { ControlLocation } from './Common.js'
-import type { DrawStyleLayeredButtonModel } from './StyleModel.js'
+import type { DrawStyleLayeredButtonModel, ResolvedButtonGraphicsDecoration } from './StyleModel.js'
 
 export type RendererDrawStyle = RendererButtonStyle
 
 export interface RendererButtonStyle extends DrawStyleLayeredButtonModel {
-	show_topbar: boolean
+	decoration: ResolvedButtonGraphicsDecoration
 	show_status_icons: boolean
 	location: ControlLocation | undefined
 }

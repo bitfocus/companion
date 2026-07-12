@@ -124,6 +124,15 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData[1]).toContain('SUBSCRIPTIONS=1')
 		})
 
+		test('CAPS advertises the supported BITMAP_FORMATS', () => {
+			const { api, logger } = createService()
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('BITMAP_FORMATS="rgb,png,webp"')
+		})
+
 		test('returns processMessage and cleanupDevices', () => {
 			const { api, logger } = createService()
 			const socket = new TestSocketWrapper()
@@ -302,10 +311,37 @@ describe('ServiceSatelliteApi', () => {
 			expect(callArgs.transferVariables).toEqual([]) // default when VARIABLES not specified
 			expect(callArgs.gridSize).toEqual({ columns: 8, rows: 4 }) // LEGACY_MAX_BUTTONS=32 / LEGACY_BUTTONS_PER_ROW=8
 			expect(callArgs.surfaceManifestFromClient).toBe(false)
+			expect(callArgs.bitmapFormat).toBe('rgb') // default when BITMAP_FORMAT not specified
 
 			expect(socket.lastMessage).toContain('ADD-DEVICE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+		})
+
+		test.each(['png', 'webp'])('negotiates BITMAP_FORMAT=%s', (format) => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" BITMAP_FORMAT=${format}\n`)
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.bitmapFormat).toBe(format)
+		})
+
+		test('falls back to rgb for an unadvertised BITMAP_FORMAT', () => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" BITMAP_FORMAT=jpeg\n')
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.bitmapFormat).toBe('rgb')
 		})
 
 		test('adds device with custom KEYS_TOTAL and KEYS_PER_ROW', () => {
@@ -1432,6 +1468,23 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('ADD-SUB')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
+		})
+
+		test('negotiates BITMAP_FORMAT and sends the encoded data url in SUB-STATE', async () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockRender = mock<ImageResult>()
+			mockRender.drawNativeEncoded.mockResolvedValue('data:image/webp;base64,AQIDBA==')
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
+
+			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3" BITMAP=72 BITMAP_FORMAT=webp\n')
+
+			await expect.poll(() => socket.writtenData.some((m) => m.includes('SUB-STATE'))).toBe(true)
+
+			expect(mockRender.drawNativeEncoded).toHaveBeenCalledWith(72, 72, null, 'webp')
+			const subState = socket.writtenData.find((m) => m.includes('SUB-STATE'))
+			expect(subState).toContain('BITMAP="data:image/webp;base64,AQIDBA=="')
 		})
 
 		test('successfully adds subscription with base64 STYLE', () => {

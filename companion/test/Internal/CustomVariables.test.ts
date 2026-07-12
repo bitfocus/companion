@@ -6,13 +6,15 @@ import { InternalCustomVariables } from '../../lib/Internal/CustomVariables.js'
 import type { ActionForInternalExecution } from '../../lib/Internal/Types.js'
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 
 // ---- helpers ----------------------------------------------------------------
 
 const defaultVariables: VariableValueData = {}
+const userconfig = mockUserConfig({ timezone: '' })
 
 function createParser(variables: VariableValueData = defaultVariables): VariablesAndExpressionParser {
-	return new VariablesAndExpressionParser(null as any, variables, new Map(), null, null)
+	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, null)
 }
 
 function makeAction(

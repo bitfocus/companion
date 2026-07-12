@@ -40,11 +40,18 @@ class ImagePool extends ImagePoolBase<Image> {
 
 		const canvas = new Canvas(realwidth, realheight)
 		const context2d = canvas.getContext('2d')
-		context2d.scale(this.#oversampling, this.#oversampling)
-		// @ts-expect-error Unknown property but we may need it?
-		context2d.textWrap = false
 
-		return new Image(this, canvas, context2d, this.#width, this.#height, realwidth, realheight, textLayoutCache)
+		return new Image(
+			this,
+			canvas,
+			context2d,
+			this.#width,
+			this.#height,
+			realwidth,
+			realheight,
+			this.#oversampling,
+			textLayoutCache
+		)
 	}
 }
 
@@ -58,6 +65,8 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	readonly realwidth: number
 	readonly realheight: number
 
+	readonly #oversampling: number
+
 	get canvasImage(): Canvas {
 		return this.#canvas
 	}
@@ -70,6 +79,7 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		height: number,
 		realwidth: number,
 		realheight: number,
+		oversampling: number,
 		textLayoutCache: TextLayoutCache | null
 	) {
 		super(LogController.createLogger('Graphics/Image'), pool, context2d, width, height, textLayoutCache)
@@ -79,6 +89,18 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 
 		this.realwidth = realwidth
 		this.realheight = realheight
+		this.#oversampling = oversampling
+
+		this.initialiseContext()
+	}
+
+	/**
+	 * Re-apply the oversampling transform and other context state that gets wiped by `reset()`
+	 */
+	protected override initialiseContext(): void {
+		this.#context2d.scale(this.#oversampling, this.#oversampling)
+		// @ts-expect-error Unknown property but we may need it?
+		this.#context2d.textWrap = false
 	}
 
 	static create(width: number, height: number, oversampling: number, textLayoutCache: TextLayoutCache | null): Image {

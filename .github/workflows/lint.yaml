@@ -37,6 +37,35 @@ jobs:
           yarn build:graphics-types
           yarn lint
 
+  check-generated:
+    name: Generated files up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".node-version"
+      - name: yarn install
+        run: |
+          corepack enable
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn install --immutable
+
+      - name: Check generated config reference is up to date
+        run: |
+          yarn build:ts
+          yarn build:config-reference
+          git diff --exit-code docs/user-guide/1_getting-started/config-reference.generated.md
+
   spelling:
     name: Spell Check with Typos
     runs-on: ubuntu-latest
