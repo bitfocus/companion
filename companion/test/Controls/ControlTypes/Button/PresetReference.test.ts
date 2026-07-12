@@ -25,12 +25,14 @@ function makeModel(overrides: Partial<PresetReferenceButtonModel> = {}): PresetR
 describe('ControlButtonPresetReference', () => {
 	let definitions: EventEmitter & {
 		convertPresetToReferenceControlModel: ReturnType<typeof vi.fn>
+		doesConnectionSupportPresetReferences: ReturnType<typeof vi.fn>
 	}
 	let deps: ControlDependencies
 
 	beforeEach(() => {
 		definitions = Object.assign(new EventEmitter(), {
 			convertPresetToReferenceControlModel: vi.fn(),
+			doesConnectionSupportPresetReferences: vi.fn(() => true),
 			getEntityDefinition: vi.fn(() => undefined),
 		}) as any
 
@@ -153,6 +155,48 @@ describe('ControlButtonPresetReference', () => {
 
 			expect(control.setReferencedConnection('conn3')).toBe(false)
 			expect(control.connectionId).toBe('conn1')
+		})
+
+		it('returns false when the target connection does not support preset references', () => {
+			definitions.doesConnectionSupportPresetReferences.mockReturnValue(false)
+			const control = createControl()
+
+			expect(control.setReferencedConnection('conn3')).toBe(false)
+			expect(definitions.convertPresetToReferenceControlModel).not.toHaveBeenCalled()
+			expect(control.connectionId).toBe('conn1')
+		})
+
+		it('returns false when the target connection belongs to another module', () => {
+			// Another module could reuse the same preset-id for something unrelated
+			definitions.convertPresetToReferenceControlModel.mockReturnValue(
+				makeModel({
+					presetRef: { connectionId: 'conn3', moduleId: 'mod2', presetId: 'p1', variableValues: null },
+				})
+			)
+			const control = createControl()
+
+			expect(control.setReferencedConnection('conn3')).toBe(false)
+			expect(control.connectionId).toBe('conn1')
+			expect(control.moduleId).toBe('mod1')
+		})
+	})
+
+	describe('templated variable values', () => {
+		it('tracks the applied overrides reported by the updated model, dropping ones which no longer exist', () => {
+			// The module dropped the `channel` template variable and added `page`
+			definitions.convertPresetToReferenceControlModel.mockReturnValue(
+				makeModel({
+					presetRef: { connectionId: 'conn1', moduleId: 'mod1', presetId: 'p1', variableValues: { page: 2 } },
+				})
+			)
+			const control = createControl()
+
+			definitions.emit('updatePresets', 'conn1')
+
+			expect(control.getTemplateVariableNames()).toEqual(['page'])
+			expect(control.toJSON().presetRef.variableValues).toEqual({ page: 2 })
+			// The dropped variable is no longer editable
+			expect(control.setTemplateVariableValue('channel', 5)).toBe(false)
 		})
 	})
 

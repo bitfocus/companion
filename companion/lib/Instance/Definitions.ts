@@ -439,7 +439,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		if (!config) return null
 
 		const localVariables = structuredClone(definition.model.localVariables)
-		if (variableValues) injectOverriddenLocalVariableValues(localVariables, variableValues)
+		// Store the overrides that were actually applied, not the raw input.
+		const appliedVariableValues = variableValues
+			? injectOverriddenLocalVariableValues(localVariables, variableValues)
+			: null
 
 		return {
 			type: 'preset-reference',
@@ -452,7 +455,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				connectionId,
 				moduleId: config.moduleId,
 				presetId,
-				variableValues: variableValues ?? null,
+				variableValues: appliedVariableValues,
 			},
 		}
 	}

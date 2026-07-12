@@ -1,7 +1,7 @@
 import { faLink } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useId, useMemo } from 'react'
+import { useCallback, useContext, useId } from 'react'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -11,7 +11,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { PreventDefaultHandler } from '~/Resources/util.js'
+import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface PresetReferenceEditorProps {
@@ -35,7 +35,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 	const connectionInfo = connections.getInfo(connectionId)
 	const sourceAvailable = !!connectionInfo && connectionInfo.enabled
 
-	const connectionChoices = useMemo<DropdownChoice[]>(
+	const connectionChoices = useComputed<DropdownChoice[]>(
 		() =>
 			connections
 				.getAllOfModuleId(moduleId)

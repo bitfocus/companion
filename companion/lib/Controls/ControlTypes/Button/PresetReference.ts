@@ -164,9 +164,10 @@ export class ControlButtonPresetReference
 	 * Replace the cached data with a freshly built model and persist+redraw
 	 */
 	#applyUpdatedModel(updatedModel: PresetReferenceButtonModel): void {
-		// Keep the reference metadata in sync (module-id, and connection-id when switched)
+		// Keep the reference metadata in sync (module-id, and connection-id when switched).
 		this.#connectionId = updatedModel.presetRef.connectionId
 		this.#moduleId = updatedModel.presetRef.moduleId
+		this.#variableValues = updatedModel.presetRef.variableValues
 
 		this.drawing.loadElements(updatedModel.style.layers)
 		// `notes` is user-owned metadata, not part of the preset - preserve it across preset refreshes
@@ -215,12 +216,14 @@ export class ControlButtonPresetReference
 	}
 
 	/**
-	 * Switch the reference to point at another connection (intended to be one of the same module). The preset
-	 * is re-resolved from the new connection, re-applying the templated variable overrides. Returns false if
-	 * the new connection does not provide this preset.
+	 * Switch the reference to point at another connection of the same module. The preset is re-resolved from the
+	 * new connection, re-applying the templated variable overrides. Returns false if the new connection cannot
+	 * host this reference.
 	 */
 	setReferencedConnection(connectionId: string): boolean {
 		if (connectionId === this.#connectionId) return true
+
+		if (!this.deps.instance.definitions.doesConnectionSupportPresetReferences(connectionId)) return false
 
 		const updatedModel = this.deps.instance.definitions.convertPresetToReferenceControlModel(
 			connectionId,
@@ -228,6 +231,7 @@ export class ControlButtonPresetReference
 			this.#variableValues
 		)
 		if (!updatedModel) return false
+		if (updatedModel.presetRef.moduleId !== this.#moduleId) return false
 
 		this.#applyUpdatedModel(updatedModel)
 
