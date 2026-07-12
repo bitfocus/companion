@@ -7,7 +7,7 @@ export const MODULE_BASE_VERSIONS = [
 	'2.1.0',
 	// '2.1.0-0-nightly-main-20260626-140426-8370e66', // DEV version
 ]
-export const SURFACE_BASE_VERSION = '1.2.0'
+export const SURFACE_BASE_VERSION = '1.3.0'
 
 const moduleBaseRules = MODULE_BASE_VERSIONS.map((v) => {
 	const parsedVersion = semver.parse(v)
