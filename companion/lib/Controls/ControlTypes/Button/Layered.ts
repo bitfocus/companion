@@ -150,7 +150,7 @@ export class ControlButtonLayered
 			if (storage.type !== 'button-layered')
 				throw new Error(`Invalid type given to ControlButtonLayered: "${storage.type}"`)
 
-			this.drawing.loadElements(storage.style.layers)
+			this.drawing.loadElements(structuredClone(storage.style.layers))
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, true, isImport)
