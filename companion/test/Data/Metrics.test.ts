@@ -4,8 +4,8 @@ import supertest from 'supertest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import { DataMetrics } from '../../lib/Data/Metrics.js'
-import type { AppInfo } from '../../lib/Registry.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import type { AppInfo } from '../../lib/Registry.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
 
 const mockOptions = {
@@ -148,5 +148,88 @@ describe('DataMetrics', () => {
 		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
 		expect(second.text).toContain('companion_test_requests_total{result="cache_hit"} 10')
 		expect(second.text).toContain('companion_test_requests_total{result="render"} 2')
+	})
+
+	test('labeled counters drop series that disappear from the source', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		// Simulate per-instance counters where an instance can be removed at runtime
+		const instances = new Map<string, number>([
+			['inst-a', 4],
+			['inst-b', 9],
+		])
+		metrics.labeledCounter('companion_test_instance_total', 'A test labeled counter', ['instance_id'], () =>
+			Array.from(instances, ([instance_id, value]) => ({ labels: { instance_id }, value }))
+		)
+
+		const first = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(first.text).toContain('companion_test_instance_total{instance_id="inst-a"} 4')
+		expect(first.text).toContain('companion_test_instance_total{instance_id="inst-b"} 9')
+
+		// inst-b is removed - its series must not linger in later scrapes
+		instances.delete('inst-b')
+		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(second.text).toContain('companion_test_instance_total{instance_id="inst-a"} 4')
+		expect(second.text).not.toContain('instance_id="inst-b"')
+	})
+
+	// The instance restarts counter is bridged from a source (ProcessManager) that must stay monotonic per
+	// instance. These two tests pin the contract that makes that safe: a disable/re-enable keeps the total,
+	// a genuine delete drops it, and a source that ever goes backwards breaks the scrape (hence the total is
+	// persisted outside the disposable child, not reset when the child is recreated).
+	test('labeled counter survives a disable/re-enable with no scrape in between', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		// Mirror the ProcessManager pipeline: `restartsTotal` is the persisted, monotonic per-instance total,
+		// `live` is the set of instances currently present in #children (what getRuntimeMetrics iterates).
+		const restartsTotal = new Map<string, number>([['inst-a', 2]])
+		const live = new Set<string>(['inst-a'])
+		metrics.labeledCounter('companion_test_restarts_total', 'A test labeled counter', ['instance_id'], () =>
+			Array.from(live, (instance_id) => ({ labels: { instance_id }, value: restartsTotal.get(instance_id) ?? 0 }))
+		)
+
+		// Establish the bridge's lastValue at 2
+		const first = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(first.status).toBe(200)
+		expect(first.text).toContain('companion_test_restarts_total{instance_id="inst-a"} 2')
+
+		// Disable then re-enable between scrapes: the child is gone and recreated, but because the total is
+		// persisted outside it, the source value is unchanged. This must not throw a negative delta.
+		live.delete('inst-a')
+		live.add('inst-a')
+		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(second.status).toBe(200)
+		expect(second.text).toContain('companion_test_restarts_total{instance_id="inst-a"} 2')
+
+		// A further restart continues from the preserved total
+		restartsTotal.set('inst-a', 3)
+		const third = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(third.text).toContain('companion_test_restarts_total{instance_id="inst-a"} 3')
+
+		// A genuine delete drops both the live entry and the persisted total, so the series disappears
+		live.delete('inst-a')
+		restartsTotal.delete('inst-a')
+		const fourth = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(fourth.text).not.toContain('instance_id="inst-a"')
+	})
+
+	test('a source that decreases while its series is still present breaks the scrape', async () => {
+		// This is the failure the persisted total avoids: if restartsTotal were reset to 0 when a still-live
+		// instance's child is recreated, the bridge would try to increment by a negative delta. prom-client
+		// rejects that, and because one collector throwing fails the whole registry, the entire endpoint 500s.
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const source = new Map<string, number>([['inst-a', 2]])
+		metrics.labeledCounter('companion_test_broken_total', 'A test labeled counter', ['instance_id'], () =>
+			Array.from(source, ([instance_id, value]) => ({ labels: { instance_id }, value }))
+		)
+
+		const first = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(first.status).toBe(200)
+
+		// Same series, lower value - the non-monotonic case the fix prevents
+		source.set('inst-a', 0)
+		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(second.status).toBe(500)
 	})
 })

@@ -461,28 +461,39 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			}
 		)
 
-		// Cumulative feedback values received from each connection's module child (see #instanceCounters)
+		// Cumulative feedback values received from each connection's module child (see #instanceCounters).
 		metrics.labeledCounter(
 			'companion_connection_feedback_values_received_total',
 			'Cumulative feedback values received from a connection since startup',
 			['instance_id'],
-			() =>
-				Array.from(this.#instanceCounters, ([instance_id, c]) => ({
-					labels: { instance_id },
-					value: c.feedbackValuesReceived,
-				}))
+			() => {
+				const out: LabeledValue[] = []
+				for (const instance_id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					out.push({
+						labels: { instance_id },
+						value: this.#instanceCounters.get(instance_id)?.feedbackValuesReceived ?? 0,
+					})
+				}
+				return out
+			}
 		)
 
-		// Cumulative variable values received from each connection's module child (see #instanceCounters)
+		// Cumulative variable values received from each connection's module child (see #instanceCounters).
+		// Filtered to connection ids for the same reason as the feedback counter above.
 		metrics.labeledCounter(
 			'companion_connection_variable_values_received_total',
 			'Cumulative variable values received from a connection since startup',
 			['instance_id'],
-			() =>
-				Array.from(this.#instanceCounters, ([instance_id, c]) => ({
-					labels: { instance_id },
-					value: c.variableValuesReceived,
-				}))
+			() => {
+				const out: LabeledValue[] = []
+				for (const instance_id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					out.push({
+						labels: { instance_id },
+						value: this.#instanceCounters.get(instance_id)?.variableValuesReceived ?? 0,
+					})
+				}
+				return out
+			}
 		)
 
 		// Cumulative IPC messages exchanged with each instance's module child, by direction
@@ -893,6 +904,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#logger.debug(`Error while deleting instance "${label ?? connectionId}": `, e)
 		}
 
+		// Drop the per-instance metrics state so it doesn't linger for the lifetime of the process
+		this.processManager.forgetInstance(connectionId)
+		this.#instanceCounters.delete(connectionId)
+
 		this.status.forgetInstanceStatus(connectionId)
 		this.#configStore.forgetInstance(connectionId)
 
@@ -1057,6 +1072,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		} catch (e) {
 			this.#logger.debug(`Error while deleting surface integration "${label ?? instanceId}": `, e)
 		}
+
+		// Drop the per-instance metrics state so it doesn't linger for the lifetime of the process
+		this.processManager.forgetInstance(instanceId)
+		this.#instanceCounters.delete(instanceId)
 
 		this.status.forgetInstanceStatus(instanceId)
 		this.#configStore.forgetInstance(instanceId)

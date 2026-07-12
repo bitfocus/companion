@@ -908,6 +908,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
+			this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 			this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 		}
 

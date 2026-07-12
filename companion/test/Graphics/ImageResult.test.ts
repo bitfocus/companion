@@ -1,10 +1,6 @@
 import * as imageRs from '@julusian/image-rs'
 import { describe, expect, test, vi } from 'vitest'
-import {
-	getImageResultStats,
-	ImageResult,
-	type ImageResultProcessedStyle,
-} from '../../lib/Graphics/ImageResult.js'
+import { getImageResultStats, ImageResult, type ImageResultProcessedStyle } from '../../lib/Graphics/ImageResult.js'
 
 /**
  * Build a deterministic rgb test pattern of the given size.

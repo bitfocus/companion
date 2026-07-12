@@ -137,13 +137,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 
 		return this.#pool.exec(key, args).catch(async (e) => {
+			const isTermination = e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated')
+			if (!isTermination) throw e
+
+			// Count every worker termination, including the one on the final attempt where we give up and
+			// rethrow below - otherwise the metric undercounts crashes on the last retry.
+			this.#workerTerminationsTotal++
+
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (attempts > 1 && (e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated'))) {
+			if (attempts > 1) {
 				// Track termination timestamps in a sliding window
 
 				const now = Date.now()
 				this.#workerTerminationTimestamps.push(now)
-				this.#workerTerminationsTotal++
 				const cutoff = now - WORKER_TERMINATION_WINDOW_MS
 
 				// prune old timestamps

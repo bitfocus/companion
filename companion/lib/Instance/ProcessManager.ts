@@ -49,13 +49,15 @@ interface ModuleChild {
 	instanceId: string
 	logger: Logger
 	restartCount: number
-	/** Cumulative count of restarts since this child entry was created. Unlike restartCount, never reset - exposed as a metrics counter. */
-	restartsTotal: number
 	isReady: boolean
 	/** Wall-clock ms when the child last became ready. Used to derive connection uptime. undefined while not ready. */
 	readyAt: number | undefined
 	targetState: ModuleChildTargetState | null // Null if disabled
 	lastLabel: string
+	/**
+	 * Set when the instance is being permanently deleted (not just disabled), to perform some extra cleanup once stopped.
+	 */
+	forget?: boolean
 
 	monitor?: RespawnMonitor
 	handler?: ChildProcessHandlerBase
@@ -115,6 +117,12 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	readonly #startQueue: PQueue
 
 	#children: Map<string, ModuleChild>
+
+	/**
+	 * Cumulative restart count per instance.
+	 * Kept outside the disposable ModuleChild entry so it survives a disable/re-enable.
+	 */
+	readonly #restartsTotalByInstance = new Map<string, number>()
 
 	constructor(
 		connectionDeps: ConnectionChildHandlerDependencies,
@@ -182,11 +190,30 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				instanceId: child.instanceId,
 				moduleType: child.moduleType,
 				isReady: child.isReady,
-				restartsTotal: child.restartsTotal,
+				restartsTotal: this.#restartsTotalByInstance.get(child.instanceId) ?? 0,
 				readyAt: child.isReady ? child.readyAt : undefined,
 			})
 		}
 		return out
+	}
+
+	/**
+	 * Permanently forget an instance's persisted metrics state.
+	 * If the child is still around (its stop is usually only queued at this point) the cleanup
+	 * is deferred until the child is removed from #children. If the child is already gone, drop
+	 * the state immediately.
+	 */
+	forgetInstance(instanceId: string): void {
+		const child = this.#children.get(instanceId)
+		if (child) {
+			child.forget = true
+		} else {
+			this.#forgetInstanceNow(instanceId)
+		}
+	}
+
+	#forgetInstanceNow(instanceId: string) {
+		this.#restartsTotalByInstance.delete(instanceId)
 	}
 
 	/**
@@ -281,6 +308,11 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
 				// Delete the queue now that it is empty
 				this.#children.delete(instanceId)
+
+				// If a permanent removal was requested, do that now
+				if (child.forget) {
+					this.#forgetInstanceNow(instanceId)
+				}
 			}
 
 			// mark instance as disabled
@@ -321,7 +353,6 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				lifeCycleQueue: new PQueue({ concurrency: 1 }),
 				logger: LogController.createLogger(`Instance/Child/${targetState.label}`),
 				restartCount: 0,
-				restartsTotal: 0,
 				isReady: false,
 				readyAt: undefined,
 				targetState: targetState,
@@ -583,7 +614,10 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		const forceRestart = () => {
 			// Force restart the instance, as it failed to initialise and will be broken
 			child.restartCount++
-			child.restartsTotal++
+			this.#restartsTotalByInstance.set(
+				child.instanceId,
+				(this.#restartsTotalByInstance.get(child.instanceId) ?? 0) + 1
+			)
 
 			monitor.off('exit', forceRestart)
 

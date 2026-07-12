@@ -603,6 +603,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, msg.variables)
 
+		this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 	}
 

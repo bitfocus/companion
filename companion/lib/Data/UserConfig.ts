@@ -483,7 +483,12 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			this.#dbTable.set('userconfig', this.#data)
 		}
 
-		this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+		// Never log the value of secret keys - the prometheus token is a live scrape credential
+		if (key === 'prometheus_token') {
+			this.#logger.info(`set '${key}' to: <redacted>`)
+		} else {
+			this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+		}
 
 		this.emit('keyChanged', key, value, checkControlsInBounds)
 	}

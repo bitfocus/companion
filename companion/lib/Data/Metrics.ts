@@ -141,19 +141,34 @@ export class DataMetrics implements MetricsRegistry {
 	}
 
 	labeledCounter(name: string, help: string, labelNames: string[], getValues: () => LabeledValue[]): void {
-		// Track the last value per label combination so each series bridges its own monotonic source.
+		// Track the last value and labels per label combination so each series bridges its own monotonic
+		// source, and so retired combinations can be removed on a later scrape.
 		const lastValues = new Map<string, number>()
+		const lastLabels = new Map<string, Record<string, string>>()
 		new Counter({
 			name,
 			help,
 			labelNames,
 			registers: [this.#register],
 			collect() {
+				const seen = new Set<string>()
 				for (const { labels, value } of getValues()) {
 					const key = JSON.stringify(labels)
+					seen.add(key)
 					const lastValue = lastValues.get(key) ?? 0
 					this.inc(labels, value - lastValue)
 					lastValues.set(key, value)
+					lastLabels.set(key, labels)
+				}
+				// Drop series for combinations that no longer exist (e.g. a removed connection) rather than
+				// leaving them in the output forever. Also release their bridge state so the maps don't grow
+				// for the lifetime of the process.
+				for (const key of lastValues.keys()) {
+					if (seen.has(key)) continue
+					const labels = lastLabels.get(key)
+					if (labels) this.remove(...labelNames.map((labelName) => labels[labelName]))
+					lastValues.delete(key)
+					lastLabels.delete(key)
 				}
 			},
 		})
