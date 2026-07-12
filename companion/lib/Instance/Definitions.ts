@@ -402,10 +402,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
 		if (!definition || definition.type !== 'button') return null
 
-		if (!variableValues) return definition.model
+		if (!variableValues) return structuredClone(definition.model)
 
 		const model: LayeredButtonModel = {
-			...definition.model,
+			...structuredClone(definition.model),
 			localVariables: structuredClone(definition.model.localVariables),
 		}
 
