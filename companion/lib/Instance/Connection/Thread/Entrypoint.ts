@@ -5,7 +5,7 @@ import type { ModuleManifest } from '@companion-module/base/manifest'
 import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
 import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import { importModuleFromPath, sealParentIpcChannel } from '../../Common/ThreadUtil.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type {
 	ExecuteActionResponseMessage,
 	GetConfigFieldsResponseMessage,
@@ -46,13 +46,6 @@ const logger = createModuleLogger('Entrypoint')
 let instance: InstanceWrapper<any> | null = null
 let hostContext: HostContext<any, any> | null = null
 let instanceInitialized = false
-
-// Seal the parent IPC channel off `process` before any module code is loaded, so a module
-// can only reach the host via the sanctioned HostContext. Returns the still-working send.
-const parentSend = sealParentIpcChannel({
-	onMessage: (msg) => ipcWrapper.receivedMessage(msg),
-	onDisconnect: () => process.exit(),
-})
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(

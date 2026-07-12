@@ -29,7 +29,16 @@ export class FramedChannel {
 		this.#stream = stream
 
 		stream.on('data', (chunk: Buffer) => {
-			for (const frame of this.#decoder.push(chunk)) {
+			let frames
+			try {
+				frames = this.#decoder.push(chunk)
+			} catch (_e) {
+				// Unrecoverable framing error (e.g. an over-limit or corrupt length prefix) - the stream can't
+				// be resynced, so tear it down. The child lifecycle (crash/respawn) is owned by RespawnMonitor.
+				stream.destroy()
+				return
+			}
+			for (const frame of frames) {
 				onMessage(frame.message, frame.bodyBytes)
 			}
 		})

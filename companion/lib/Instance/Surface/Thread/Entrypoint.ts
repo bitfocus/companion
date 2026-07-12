@@ -9,7 +9,7 @@ import {
 } from '@companion-surface/host'
 import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import { importModuleFromPath, sealParentIpcChannel } from '../../Common/ThreadUtil.js'
+import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 import { HostContext } from './HostContext.js'
@@ -37,13 +37,6 @@ const logger = createModuleLogger('Entrypoint')
 
 let plugin: PluginWrapper | null = null
 let pluginInitialized = false
-
-// Seal the parent IPC channel off `process` before any module code is loaded, so a module
-// can only reach the host via the sanctioned HostContext. Returns the still-working send.
-const parentSend = sealParentIpcChannel({
-	onMessage: (msg) => ipcWrapper.receivedMessage(msg),
-	onDisconnect: () => process.exit(),
-})
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>(

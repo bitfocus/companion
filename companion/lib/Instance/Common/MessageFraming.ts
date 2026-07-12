@@ -15,6 +15,16 @@
 const HEADER_BYTES = 4
 
 /**
+ * Upper bound on a single frame body. The 4-byte length prefix is attacker-influenced (a module can
+ * write to its own fd), and without a cap a bogus/corrupt length makes the receiver accumulate toward
+ * ~4 GB waiting for a body that never arrives - an unbounded-memory DoS. This ceiling is far above any
+ * legitimate message (large base64 draw images, big preset sets) while keeping worst-case buffering
+ * bounded. An over-limit prefix means the stream is desynced and unrecoverable, so the transport tears
+ * the connection down (see FramedChannel).
+ */
+export const MAX_FRAME_BODY_BYTES = 256 * 1024 * 1024
+
+/**
  * Serialize a message to a length-prefixed frame. `bodyBytes` is the exact JSON byte count on the wire,
  * for metrics (the 4-byte header is fixed overhead and not counted).
  */
@@ -47,7 +57,13 @@ export class FrameDecoder {
 		for (;;) {
 			if (this.#expectedBody === null) {
 				if (this.#buffer.length < HEADER_BYTES) break
-				this.#expectedBody = this.#buffer.readUInt32BE(0)
+				const declared = this.#buffer.readUInt32BE(0)
+				if (declared > MAX_FRAME_BODY_BYTES) {
+					// The length prefix is desynced or hostile; the stream can no longer be framed. Throw so
+					// the transport can tear the connection down rather than buffer toward ~4 GB.
+					throw new Error(`Incoming frame body ${declared} bytes exceeds maximum ${MAX_FRAME_BODY_BYTES}`)
+				}
+				this.#expectedBody = declared
 				this.#buffer = this.#buffer.subarray(HEADER_BYTES)
 			}
 
