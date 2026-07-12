@@ -20,6 +20,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { CreateButtonTypeButtons } from './CreateButtonTypeButtons.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
+import { PresetReferenceEditor } from './PresetReferenceEditor.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -109,15 +110,16 @@ const EditButtonContent = observer(function EditButton({
 					<div className="d-flex flex-wrap align-items-center gap-1">
 						<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						<MyErrorBoundary>
-							{(config.type === 'pageup' || config.type === 'pagenum' || config.type === 'pagedown') && (
-								<ConvertToNormalButton location={location} />
-							)}
-							{config.type === 'button-layered' && (
+							{(config.type === 'pageup' ||
+								config.type === 'pagenum' ||
+								config.type === 'pagedown' ||
+								config.type === 'preset-reference') && <ConvertToNormalButton location={location} />}
+							{(config.type === 'button-layered' || config.type === 'preset-reference') && (
 								<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
 							)}
 						</MyErrorBoundary>
 					</div>
-					{config.type === 'button-layered' && (
+					{(config.type === 'button-layered' || config.type === 'preset-reference') && (
 						<MyErrorBoundary>
 							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-100 mt-1" />
 						</MyErrorBoundary>
@@ -145,6 +147,12 @@ const EditButtonContent = observer(function EditButton({
 					<h4 className="mt-1">Page down button</h4>
 					<p className="mt-3">No configuration available for page down buttons</p>
 				</NonIdealState>
+			)}
+
+			{config.type === 'preset-reference' && (
+				<MyErrorBoundary>
+					<PresetReferenceEditor config={config} location={location} />
+				</MyErrorBoundary>
 			)}
 
 			{config.type === 'button-layered' && (

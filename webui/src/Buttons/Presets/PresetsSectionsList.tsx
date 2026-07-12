@@ -1,9 +1,9 @@
-import { faArrowLeft, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faClone, faLink, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { UIPresetSection } from '@companion-app/shared/Model/Presets.js'
+import type { UIPresetSection, UIPresetSections } from '@companion-app/shared/Model/Presets.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Callout } from '~/Components/Callout.js'
@@ -13,9 +13,10 @@ import { NonIdealState } from '../../Components/NonIdealState.js'
 import { SearchBox } from '../../Components/SearchBox.js'
 import { fuzzyMatch } from './fuzzyMatch.js'
 import { PresetSectionCollapse } from './PresetSectionCollapse.js'
+import { usePresetPlacementMode } from './usePresetPlacementMode.js'
 
 interface PresetsSectionsListProps {
-	presets: Record<string, UIPresetSection | undefined> | undefined
+	presets: UIPresetSections | undefined
 	connectionInfo: ClientConnectionConfig | undefined
 	selectedConnectionId: string
 	clearSelectedConnectionId: () => void
@@ -28,9 +29,18 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 }: Readonly<PresetsSectionsListProps>): React.JSX.Element {
 	const [searchQuery, setSearchQuery] = useState('')
 
+	// Preset references (linked presets) are only supported by newer (2.0+) modules. For older modules the
+	// toggle is disabled and presets are always placed as a copy.
+	const supportsReferences = presets?.supportsReferences ?? false
+
+	// The mode newly placed presets actually use - forced to 'copy' when the module can't support references,
+	// regardless of the stored preference (which is left untouched so it applies again on a 2.0+ module).
+	const [storedPlacementMode] = usePresetPlacementMode()
+	const placementMode = supportsReferences ? storedPlacementMode : 'copy'
+
 	const allSections = useComputed(
 		() =>
-			Object.values(presets || {})
+			Object.values(presets?.sections || {})
 				.filter((p) => !!p)
 				.sort((a, b) => a.order - b.order),
 		[presets]
@@ -108,7 +118,12 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 	const allSectionIds = useMemo(() => allSections.map((s) => s.id), [allSections])
 
 	const sections = visibleSections.map((section) => (
-		<PresetSectionCollapse key={section.id} section={section} connectionId={selectedConnectionId} />
+		<PresetSectionCollapse
+			key={section.id}
+			section={section}
+			connectionId={selectedConnectionId}
+			placementMode={placementMode}
+		/>
 	))
 
 	return (
@@ -139,7 +154,12 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 				) : (
 					<>
 						<Callout color="info" className="my-2">
-							<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+							<div className="d-flex align-items-center justify-content-between gap-3">
+								<div>
+									<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
+								</div>
+								<PresetPlacementModeToggle supportsReferences={supportsReferences} />
+							</div>
 						</Callout>
 						<div className="collapsible-tree">{sections}</div>
 					</>
@@ -148,3 +168,47 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 		</PanelCollapseHelperProvider>
 	)
 })
+
+function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences: boolean }): React.JSX.Element {
+	const [mode, setMode] = usePresetPlacementMode()
+
+	// When the module doesn't support references, presets are always placed as a copy regardless of the
+	// stored preference. The stored value is left untouched so it takes effect again on a 2.0+ module.
+	const effectiveMode = supportsReferences ? mode : 'copy'
+	const unsupportedTitle = 'Linked presets require a module built for the 2.0 (or newer) module api'
+
+	return (
+		<div
+			className="d-flex align-items-center gap-2 flex-shrink-0"
+			title={!supportsReferences ? unsupportedTitle : undefined}
+		>
+			<span className="text-muted small text-nowrap">When placed:</span>
+			<ButtonGroup>
+				<Button
+					size="sm"
+					color={effectiveMode === 'reference' ? 'primary' : 'secondary'}
+					disabled={!supportsReferences}
+					onClick={() => setMode('reference')}
+					title={
+						supportsReferences
+							? 'Newly placed presets stay linked to the source preset and update automatically'
+							: unsupportedTitle
+					}
+				>
+					<FontAwesomeIcon icon={faLink} className="me-1" />
+					Linked
+				</Button>
+				<Button
+					size="sm"
+					color={effectiveMode === 'copy' ? 'primary' : 'secondary'}
+					disabled={!supportsReferences}
+					onClick={() => setMode('copy')}
+					title={supportsReferences ? 'Newly placed presets are a one-off copy you can freely edit' : unsupportedTitle}
+				>
+					<FontAwesomeIcon icon={faClone} className="me-1" />
+					Copy
+				</Button>
+			</ButtonGroup>
+		</div>
+	)
+}

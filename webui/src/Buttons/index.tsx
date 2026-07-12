@@ -137,6 +137,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					presetId: dropData.presetId,
 					location,
 					variableValues: dropData.variableValues,
+					mode: dropData.mode,
 				})
 				.catch(() => {
 					console.error('Preset import failed')

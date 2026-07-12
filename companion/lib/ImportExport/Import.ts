@@ -29,6 +29,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import {
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
 } from './ImportFixup.js'
@@ -389,6 +390,10 @@ export class ImportController {
 						}
 					} else if (control.type === 'button-layered') {
 						fixedControlObj = fixupLayeredButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
+					} else if (control.type === 'preset-reference') {
+						// Keep it a live reference: remap the referenced connection id the same way entity references
+						// are remapped during import, so it re-links to the re-created connection.
+						fixedControlObj = fixupPresetReferenceControl(this.#logger, control, referencesUpdater, instanceIdMap)
 					} else {
 						this.#logger.warn(`Unknown control type: ${control.type}`)
 						continue

@@ -921,7 +921,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				msg.presets
 			)
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets)
+			// This legacy handler only serves pre-2.0 modules, which should not be used as references due to ids not being very stable
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets, false)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 

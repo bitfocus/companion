@@ -609,7 +609,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			const presetsMap = new Map(Object.entries(msg.presets))
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets)
+			// This handler only serves 2.0+ modules, which all support presets being placed as references
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets, true)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 

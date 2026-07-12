@@ -12,6 +12,7 @@ import {
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
 } from '../../lib/ImportExport/ImportFixup.js'
@@ -574,5 +575,58 @@ describe('fixupLayeredButtonControl', () => {
 		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
 
 		expect((result.style.layers[0] as any).children[0].text.value).toBe('$(NewLabel:x)')
+	})
+})
+
+describe('fixupPresetReferenceControl', () => {
+	const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
+
+	function makeReferenceExport(overrides: Record<string, any> = {}): ExportControlv6 {
+		return {
+			type: 'preset-reference',
+			options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+			style: { layers: [] },
+			feedbacks: [],
+			steps: {},
+			localVariables: [],
+			presetRef: {
+				connectionId: 'old-conn',
+				moduleId: 'mod1',
+				presetId: 'p1',
+				variableValues: { channel: 3 },
+			},
+			...overrides,
+		}
+	}
+
+	function makeUpdater(connectionIdRemap: Record<string, string>) {
+		const internalModule = { visitReferences: vi.fn() } as any
+		return new VisitorReferencesUpdater(internalModule, {}, connectionIdRemap, undefined)
+	}
+
+	test('remaps the referenced connection id and keeps it a reference', () => {
+		const control = makeReferenceExport()
+		const instanceIdMap: InstanceAppliedRemappings = { 'old-conn': { id: 'new-conn', label: 'New' } }
+
+		const result = fixupPresetReferenceControl(logger, control, makeUpdater({ 'old-conn': 'new-conn' }), instanceIdMap)
+
+		expect(result.type).toBe('preset-reference')
+		expect(result.presetRef).toEqual({
+			connectionId: 'new-conn',
+			moduleId: 'mod1',
+			presetId: 'p1',
+			variableValues: { channel: 3 },
+		})
+	})
+
+	test('keeps the original connection id when there is no remap', () => {
+		const control = makeReferenceExport()
+		const instanceIdMap: InstanceAppliedRemappings = {}
+
+		const result = fixupPresetReferenceControl(logger, control, makeUpdater({}), instanceIdMap)
+
+		expect(result.presetRef.connectionId).toBe('old-conn')
+		expect(result.presetRef.moduleId).toBe('mod1')
+		expect(result.presetRef.variableValues).toEqual({ channel: 3 })
 	})
 })
