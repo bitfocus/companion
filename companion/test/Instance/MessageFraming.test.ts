@@ -1,7 +1,14 @@
 import { describe, expect, test } from 'vitest'
-import { encodeFrame, FrameDecoder } from '../../lib/Instance/Common/MessageFraming.js'
+import { encodeFrame, FrameDecoder, MAX_FRAME_BODY_BYTES } from '../../lib/Instance/Common/MessageFraming.js'
 
 describe('MessageFraming', () => {
+	test('rejects an over-limit frame body length', () => {
+		const decoder = new FrameDecoder()
+		const header = Buffer.allocUnsafe(4)
+		header.writeUInt32BE(MAX_FRAME_BODY_BYTES + 1, 0)
+		expect(() => decoder.push(header)).toThrow(/exceeds maximum/)
+	})
+
 	test('encodeFrame reports the exact JSON byte length', () => {
 		const message = { direction: 'call', name: 'hello', payload: { a: 1 }, callbackId: 5 }
 		const { frame, bodyBytes } = encodeFrame(message)

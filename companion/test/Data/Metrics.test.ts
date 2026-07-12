@@ -210,6 +210,7 @@ describe('DataMetrics', () => {
 		live.delete('inst-a')
 		restartsTotal.delete('inst-a')
 		const fourth = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(fourth.status).toBe(200)
 		expect(fourth.text).not.toContain('instance_id="inst-a"')
 	})
 

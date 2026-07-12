@@ -379,6 +379,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 		baseChild.targetState = targetState
 		if (targetState) baseChild.lastLabel = targetState.label
+		if (targetState) delete baseChild.forget
 
 		if (baseChild.lifeCycleQueue.size > 0) {
 			// Already a change waiting to be processed, so don't do anything
