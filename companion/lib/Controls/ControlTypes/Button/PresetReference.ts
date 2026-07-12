@@ -175,7 +175,8 @@ export class ControlButtonPresetReference
 		this.options = Object.assign(this.options, updatedModel.options || {})
 		this.options.notes = userNotes
 		this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
-		this.entities.loadStorage(updatedModel, false, false)
+		// Load as a clone, to generate new entity ids.
+		this.entities.loadStorage(updatedModel, false, true)
 		this.entities.stepExpressionUpdate(this.options)
 		this.entities.resubscribeEntities()
 

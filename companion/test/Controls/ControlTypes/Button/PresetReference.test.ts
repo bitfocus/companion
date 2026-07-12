@@ -1,8 +1,20 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonPresetReference } from '../../../../lib/Controls/ControlTypes/Button/PresetReference.js'
+
+/** A feedback as it comes from the preset definition - its id is owned by the definition, not by any control */
+function makeDefinitionFeedback(id: string) {
+	return {
+		id,
+		type: EntityModelType.Feedback,
+		definitionId: 'fb1',
+		connectionId: 'conn1',
+		options: {},
+	} as any
+}
 
 function makeModel(overrides: Partial<PresetReferenceButtonModel> = {}): PresetReferenceButtonModel {
 	return {
@@ -47,7 +59,11 @@ describe('ControlButtonPresetReference', () => {
 			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
 			instance: {
 				definitions,
-				processManager: {} as any,
+				processManager: {
+					connectionEntityUpdate: vi.fn(async () => undefined),
+					connectionEntityDelete: vi.fn(async () => undefined),
+					connectionEntityLearnOptions: vi.fn(async () => undefined),
+				} as any,
 				getInstanceStatus: vi.fn(() => undefined),
 			} as any,
 			variableValues: {
@@ -178,6 +194,30 @@ describe('ControlButtonPresetReference', () => {
 			expect(control.setReferencedConnection('conn3')).toBe(false)
 			expect(control.connectionId).toBe('conn1')
 			expect(control.moduleId).toBe('mod1')
+		})
+	})
+
+	describe('entity ids', () => {
+		it('generates new entity ids when refreshing from the preset definition', () => {
+			// The ids in the built model are owned by the preset definition, and are shared with every other
+			// reference to the same preset. They must not be adopted as-is
+			definitions.convertPresetToReferenceControlModel.mockReturnValue(
+				makeModel({ feedbacks: [makeDefinitionFeedback('definition-owned-id')] })
+			)
+			const control = createControl(makeModel({ feedbacks: [makeDefinitionFeedback('control-owned-id')] }))
+
+			definitions.emit('updatePresets', 'conn1')
+
+			const feedbacks = control.toJSON().feedbacks
+			expect(feedbacks).toHaveLength(1)
+			expect(feedbacks[0].id).not.toBe('definition-owned-id')
+			expect(feedbacks[0].id).not.toBe('control-owned-id')
+		})
+
+		it('keeps the stored entity ids when loading from the db', () => {
+			const control = createControl(makeModel({ feedbacks: [makeDefinitionFeedback('stored-id')] }))
+
+			expect(control.toJSON().feedbacks[0].id).toBe('stored-id')
 		})
 	})
 
