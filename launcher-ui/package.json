@@ -20,8 +20,8 @@
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.2",
     "terser": "^5.48.0",
-    "typescript": "npm:@typescript/typescript6@^6.0.0",
-    "typescript-7": "npm:typescript@rc",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2",
     "usehooks-ts": "^3.1.1",
     "vite": "^8.1.3"
   },

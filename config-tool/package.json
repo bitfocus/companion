@@ -18,8 +18,8 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "typescript": "npm:@typescript/typescript6@^6.0.0",
-    "typescript-7": "npm:typescript@rc"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2"
   },
   "dependencies": {
     "@companion-app/shared": "*",

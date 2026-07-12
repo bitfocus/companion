@@ -28,8 +28,8 @@
     "@docusaurus/module-type-aliases": "3.10.1",
     "@docusaurus/tsconfig": "3.10.1",
     "@docusaurus/types": "3.10.1",
-    "typescript": "npm:@typescript/typescript6@^6.0.0",
-    "typescript-7": "npm:typescript@rc"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2"
   },
   "browserslist": {
     "production": [
