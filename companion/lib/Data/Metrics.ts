@@ -19,7 +19,6 @@ import type { PageController } from '../Page/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import type { ServiceController } from '../Service/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
-import type { UIExpress } from '../UI/Express.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { DataUserConfig } from './UserConfig.js'
 
@@ -81,7 +80,14 @@ export class DataMetrics implements MetricsRegistry {
 	readonly #userConfigController: DataUserConfig
 	readonly #register = new Registry()
 
-	constructor(appInfo: AppInfo, userConfigController: DataUserConfig, uiExpress: UIExpress) {
+	/**
+	 * Express router serving the `/api/metrics` endpoint. Exposed so it can be mounted by UIExpress at its
+	 * construction, rather than DataMetrics reaching in to install it - this keeps the dependency flowing
+	 * one way (UI depends on metrics) and lets DataMetrics be constructed before the UI.
+	 */
+	readonly metricsRouter: Express.Router
+
+	constructor(appInfo: AppInfo, userConfigController: DataUserConfig) {
 		this.#userConfigController = userConfigController
 
 		// Passive process metrics: rss, heap, external, arrayBuffers, GC duration, event-loop lag, handles
@@ -95,7 +101,7 @@ export class DataMetrics implements MetricsRegistry {
 			registers: [this.#register],
 		}).set({ version: appInfo.appVersion, build: appInfo.appBuild, node_version: process.version }, 1)
 
-		uiExpress.metricsRouter = this.#createRouter()
+		this.metricsRouter = this.#createRouter()
 	}
 
 	gauge(name: string, help: string, getValue: () => number): void {

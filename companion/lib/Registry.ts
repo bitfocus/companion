@@ -191,7 +191,6 @@ export class Registry {
 
 		this.#logger.debug('constructing core modules')
 
-		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		LogController.init(this.#appInfo)
 
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
@@ -201,14 +200,17 @@ export class Registry {
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
+		// Constructed before the UI so its router can be handed to UIExpress at construction, and before
+		// graphics/surfaces/instance so those subsystems can register their own metrics inline as they build.
+		this.metrics = new DataMetrics(this.#appInfo, this.userconfig)
+
+		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
+
 		const activeLearningStore = new ActiveLearningStore()
 		const pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
-
-		// Constructed early so subsystems can register their own metrics inline as they are built
-		this.metrics = new DataMetrics(this.#appInfo, this.userconfig, this.ui.express)
 
 		this.graphics = new GraphicsController(
 			controlStore,

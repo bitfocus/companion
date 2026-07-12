@@ -74,6 +74,17 @@ interface ModuleChildTargetState {
 	moduleVersionId: string | null
 }
 
+/**
+ * Snapshot of a single instance's runtime state, pulled by the metrics registration at scrape time.
+ */
+export interface InstanceRuntimeMetrics {
+	instanceId: string
+	moduleType: ModuleInstanceType
+	isReady: boolean
+	restartsTotal: number
+	readyAt: number | undefined
+}
+
 export interface ChildProcessHandlerBase {
 	/**
 	 * Initialise the child process handler with configuration
@@ -177,14 +188,8 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	 * Snapshot of per-instance runtime state for metrics. Keeps #children encapsulated - the instance
 	 * controller registers the actual metrics and pulls this at scrape time.
 	 */
-	getRuntimeMetrics(): Array<{
-		instanceId: string
-		moduleType: ModuleInstanceType
-		isReady: boolean
-		restartsTotal: number
-		readyAt: number | undefined
-	}> {
-		const out = []
+	getRuntimeMetrics(): InstanceRuntimeMetrics[] {
+		const out: InstanceRuntimeMetrics[] = []
 		for (const child of this.#children.values()) {
 			out.push({
 				instanceId: child.instanceId,

@@ -1,12 +1,10 @@
 import express from 'express'
-import Express from 'express'
 import supertest from 'supertest'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import { DataMetrics } from '../../lib/Data/Metrics.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { AppInfo } from '../../lib/Registry.js'
-import type { UIExpress } from '../../lib/UI/Express.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -26,20 +24,13 @@ describe('DataMetrics', () => {
 			},
 		})
 
-		let metricsRouter = express.Router()
-		const appHandler = {
-			set metricsRouter(newRouter: express.Router) {
-				metricsRouter = newRouter
-			},
-		} as any as UIExpress
+		const metrics = new DataMetrics(appInfo, userconfig)
 
 		const app = express()
-		app.use('/api/metrics', (r, s, n) => metricsRouter(r, s, n))
+		app.use('/api/metrics', metrics.metricsRouter)
 		app.get('*any', (_req, res) => {
 			res.status(421).send('')
 		})
-
-		const metrics = new DataMetrics(appInfo, userconfig, appHandler)
 
 		return { app, userconfig, metrics }
 	}
