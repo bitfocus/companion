@@ -11,7 +11,16 @@ const FAILURE_DIR = join(__dirname, '../__failures__')
 export interface ImageSnapshotOptions {
 	/** Maximum ratio of differing pixels allowed (0–1). Default: 0.001 (0.1%) */
 	threshold?: number
+	/**
+	 * Maximum per-channel difference (0–255, premultiplied) for a pixel to still count as matching. Default: 4.
+	 * Skia is built per-platform, so anti-aliased edges rasterise ±1 differently between them; without
+	 * some tolerance those pixels count as mismatches and the snapshots only pass on the OS that wrote them.
+	 */
+	colorTolerance?: number
 }
+
+/** Default per-channel tolerance — see ImageSnapshotOptions.colorTolerance */
+const DEFAULT_COLOR_TOLERANCE = 4
 
 type SnapshotUpdateState = 'all' | 'new' | 'none'
 
@@ -42,6 +51,29 @@ async function decodePng(buffer: Buffer): Promise<PixelData> {
 	return { data: imageData.data, width: img.width, height: img.height }
 }
 
+/**
+ * Largest single-channel difference at pixel offset `i`, measured with the colour channels
+ * premultiplied by alpha.
+ *
+ * Skia composites premultiplied and getImageData un-premultiplies, which divides the colour
+ * channels by alpha. On a nearly-transparent pixel that turns a 1-unit rasterisation difference
+ * into an enormous apparent colour difference — rgba(0,191,255,4) and rgba(0,128,255,4) differ by
+ * 63 per the raw bytes, but composite identically. Comparing premultiplied keeps the metric
+ * proportional to what actually lands on screen.
+ */
+function maxChannelDiff(expected: PixelData, actual: PixelData, i: number): number {
+	const expectedAlpha = expected.data[i + 3] ?? 0
+	const actualAlpha = actual.data[i + 3] ?? 0
+
+	let maxDiff = Math.abs(expectedAlpha - actualAlpha)
+	for (let channel = 0; channel < 3; channel++) {
+		const expectedValue = ((expected.data[i + channel] ?? 0) * expectedAlpha) / 255
+		const actualValue = ((actual.data[i + channel] ?? 0) * actualAlpha) / 255
+		maxDiff = Math.max(maxDiff, Math.abs(expectedValue - actualValue))
+	}
+	return maxDiff
+}
+
 async function buildDiffPng(expected: PixelData, actual: PixelData): Promise<Buffer> {
 	const { width, height } = expected
 	const diffPixels = new Uint8ClampedArray(width * height * 4)
@@ -49,12 +81,7 @@ async function buildDiffPng(expected: PixelData, actual: PixelData): Promise<Buf
 	const amplification = 2.0
 
 	for (let i = 0; i < expected.data.length; i += 4) {
-		const maxDiff = Math.max(
-			Math.abs((expected.data[i] ?? 0) - (actual.data[i] ?? 0)),
-			Math.abs((expected.data[i + 1] ?? 0) - (actual.data[i + 1] ?? 0)),
-			Math.abs((expected.data[i + 2] ?? 0) - (actual.data[i + 2] ?? 0)),
-			Math.abs((expected.data[i + 3] ?? 0) - (actual.data[i + 3] ?? 0))
-		)
+		const maxDiff = maxChannelDiff(expected, actual, i)
 		const gray = Math.min(255, Math.round(Math.sqrt(maxDiff / 255) * 255 * amplification))
 		diffPixels[i] = gray
 		diffPixels[i + 1] = gray
@@ -68,16 +95,10 @@ async function buildDiffPng(expected: PixelData, actual: PixelData): Promise<Buf
 	return diffCanvas.encode('png')
 }
 
-function countDiffPixels(expected: PixelData, actual: PixelData): number {
+function countDiffPixels(expected: PixelData, actual: PixelData, colorTolerance: number): number {
 	let diffCount = 0
 	for (let i = 0; i < expected.data.length; i += 4) {
-		const maxDiff = Math.max(
-			Math.abs((expected.data[i] ?? 0) - (actual.data[i] ?? 0)),
-			Math.abs((expected.data[i + 1] ?? 0) - (actual.data[i + 1] ?? 0)),
-			Math.abs((expected.data[i + 2] ?? 0) - (actual.data[i + 2] ?? 0)),
-			Math.abs((expected.data[i + 3] ?? 0) - (actual.data[i + 3] ?? 0))
-		)
-		if (maxDiff > 0) diffCount++
+		if (maxChannelDiff(expected, actual, i) > colorTolerance) diffCount++
 	}
 	return diffCount
 }
@@ -89,6 +110,7 @@ export async function toMatchImageSnapshot(
 	options?: ImageSnapshotOptions
 ): Promise<{ pass: boolean; message: () => string }> {
 	const threshold = options?.threshold ?? 0.001
+	const colorTolerance = options?.colorTolerance ?? DEFAULT_COLOR_TOLERANCE
 	const snapshotName = sanitizeName(name ?? this.currentTestName ?? 'snapshot')
 	const snapshotPath = join(SNAPSHOT_DIR, `${snapshotName}.png`)
 	const updateState = this.snapshotState.snapshotUpdateState
@@ -128,7 +150,7 @@ export async function toMatchImageSnapshot(
 		}
 	}
 
-	const diffCount = countDiffPixels(expected, actual)
+	const diffCount = countDiffPixels(expected, actual, colorTolerance)
 	const totalPixels = expected.width * expected.height
 	const ratio = diffCount / totalPixels
 
@@ -145,7 +167,7 @@ export async function toMatchImageSnapshot(
 		return {
 			pass: false,
 			message: () =>
-				`Image snapshot mismatch: ${diffCount}/${totalPixels} pixels differ (${pct}% > threshold ${threshPct}%)\nFailure images written to: ${FAILURE_DIR}`,
+				`Image snapshot mismatch: ${diffCount}/${totalPixels} pixels differ by more than ${colorTolerance}/255 (${pct}% > threshold ${threshPct}%)\nFailure images written to: ${FAILURE_DIR}`,
 		}
 	}
 

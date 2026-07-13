@@ -10,10 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [
-            ubuntu-latest,
-            # windows-latest, macos-latest
-          ]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     timeout-minutes: 20
 
     steps:
@@ -37,3 +34,12 @@ jobs:
       - name: run tests
         run: |
           yarn test
+
+      - name: upload image snapshot failures
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-snapshot-failures-${{ matrix.os }}
+          path: companion/test/Graphics/__failures__/
+          if-no-files-found: ignore
+          retention-days: 7
