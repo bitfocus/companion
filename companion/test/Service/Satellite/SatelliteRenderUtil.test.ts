@@ -1,7 +1,17 @@
 import { describe, expect, test, vi } from 'vitest'
+import type { LedGaugeDescription } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { ImageResult, type ImageResultProcessedStyle } from '../../../lib/Graphics/ImageResult.js'
 import { buildSatelliteStyleArgs } from '../../../lib/Service/Satellite/SatelliteRenderUtil.js'
 import type { SatelliteControlStylePreset } from '../../../lib/Service/Satellite/SatelliteSurfaceManifestSchema.js'
+
+/** A description whose whole track is solid green, so every sampled segment is (0, 255, 0). */
+const GREEN_RING: LedGaugeDescription = {
+	isRing: true,
+	startAngle: 0,
+	endAngle: 360,
+	reverse: false,
+	arcs: [{ start: 0, end: 100, color: 0x00ff00 }],
+}
 
 function makeImage(
 	style: ImageResultProcessedStyle | null,
@@ -236,6 +246,37 @@ describe('buildSatelliteStyleArgs', () => {
 			const image = makeImage({ type: 'button' })
 			const result = await buildSatelliteStyleArgs(image, { textStyle: true }, null, 'rgb')
 			expect(result['FONT_SIZE']).toBe('auto')
+		})
+	})
+
+	describe('LEDS', () => {
+		test('is absent when style.leds is not set', async () => {
+			const image = makeImage({ type: 'button', leds: GREEN_RING })
+			const result = await buildSatelliteStyleArgs(image, {}, null, 'rgb')
+			expect(result['LEDS']).toBeUndefined()
+		})
+
+		test('is absent when the render has no baked leds', async () => {
+			const image = makeImage({ type: 'button' })
+			const result = await buildSatelliteStyleArgs(image, { leds: { segments: 3, mode: 'simple' } }, null, 'rgb')
+			expect(result['LEDS']).toBeUndefined()
+		})
+
+		test('is base64 of segments*3 raw RGB bytes when declared and rendered', async () => {
+			const image = makeImage({ type: 'button', leds: GREEN_RING })
+			const result = await buildSatelliteStyleArgs(image, { leds: { segments: 3, mode: 'simple' } }, null, 'rgb')
+
+			const expected = new Uint8Array([0, 255, 0, 0, 255, 0, 0, 255, 0])
+			expect(result['LEDS']).toBe(expected.toBase64())
+			// Round-trips to exactly segments * 3 bytes.
+			expect(Uint8Array.fromBase64(String(result['LEDS']))).toHaveLength(9)
+		})
+
+		test('stays raw RGB even when the bitmap format is png', async () => {
+			const image = makeImage({ type: 'button', leds: GREEN_RING })
+			const rgb = await buildSatelliteStyleArgs(image, { leds: { segments: 3, mode: 'simple' } }, null, 'rgb')
+			const png = await buildSatelliteStyleArgs(image, { leds: { segments: 3, mode: 'simple' } }, null, 'png')
+			expect(png['LEDS']).toBe(rgb['LEDS'])
 		})
 	})
 })

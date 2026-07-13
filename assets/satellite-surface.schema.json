@@ -23,6 +23,25 @@
 			"required": ["w", "h"],
 			"additionalProperties": false
 		},
+		"leds": {
+			"title": "SatelliteLedsConfig",
+			"description": "If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colours to be reported. Colours are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment.",
+			"type": "object",
+			"properties": {
+				"segments": {
+					"description": "The number of individually addressable LED segments.",
+					"type": "integer",
+					"minimum": 1
+				},
+				"mode": {
+					"description": "How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions.",
+					"type": "string",
+					"enum": ["full-ring", "simple"]
+				}
+			},
+			"required": ["segments", "mode"],
+			"additionalProperties": false
+		},
 		"stylePreset": {
 			"title": "SatelliteControlStylePreset",
 			"description": "Styling options that can be applied to controls. Can be used as the default style or as per-control overrides.",
@@ -44,6 +63,10 @@
 					"description": "If set, the control requests colours to be reported.",
 					"type": "string",
 					"enum": ["hex", "rgb"]
+				},
+				"leds": {
+					"description": "If set, the control has an addressable strip/ring of LEDs and requests LED colours to be reported.",
+					"$ref": "#/$defs/leds"
 				}
 			},
 			"additionalProperties": false

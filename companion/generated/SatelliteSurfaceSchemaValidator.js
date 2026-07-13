@@ -19,6 +19,23 @@ const schema31 = {
 			required: ['w', 'h'],
 			additionalProperties: false,
 		},
+		leds: {
+			title: 'SatelliteLedsConfig',
+			description:
+				'If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colours to be reported. Colours are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment.',
+			type: 'object',
+			properties: {
+				segments: { description: 'The number of individually addressable LED segments.', type: 'integer', minimum: 1 },
+				mode: {
+					description:
+						"How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions.",
+					type: 'string',
+					enum: ['full-ring', 'simple'],
+				},
+			},
+			required: ['segments', 'mode'],
+			additionalProperties: false,
+		},
 		stylePreset: {
 			title: 'SatelliteControlStylePreset',
 			description:
@@ -35,6 +52,11 @@ const schema31 = {
 					description: 'If set, the control requests colours to be reported.',
 					type: 'string',
 					enum: ['hex', 'rgb'],
+				},
+				leds: {
+					description:
+						'If set, the control has an addressable strip/ring of LEDs and requests LED colours to be reported.',
+					$ref: '#/$defs/leds',
 				},
 			},
 			additionalProperties: false,
@@ -94,6 +116,10 @@ const schema32 = {
 			type: 'string',
 			enum: ['hex', 'rgb'],
 		},
+		leds: {
+			description: 'If set, the control has an addressable strip/ring of LEDs and requests LED colours to be reported.',
+			$ref: '#/$defs/leds',
+		},
 	},
 	additionalProperties: false,
 }
@@ -106,6 +132,23 @@ const schema33 = {
 		h: { description: 'Height in pixels (non-negative).', type: 'number', minimum: 0 },
 	},
 	required: ['w', 'h'],
+	additionalProperties: false,
+}
+const schema34 = {
+	title: 'SatelliteLedsConfig',
+	description:
+		'If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colours to be reported. Colours are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment.',
+	type: 'object',
+	properties: {
+		segments: { description: 'The number of individually addressable LED segments.', type: 'integer', minimum: 1 },
+		mode: {
+			description:
+				"How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions.",
+			type: 'string',
+			enum: ['full-ring', 'simple'],
+		},
+	},
+	required: ['segments', 'mode'],
 	additionalProperties: false,
 }
 function validate21(
@@ -125,7 +168,7 @@ function validate21(
 		if (data && typeof data == 'object' && !Array.isArray(data)) {
 			const _errs1 = errors
 			for (const key0 in data) {
-				if (!(key0 === 'bitmap' || key0 === 'text' || key0 === 'textStyle' || key0 === 'colors')) {
+				if (!(key0 === 'bitmap' || key0 === 'text' || key0 === 'textStyle' || key0 === 'colors' || key0 === 'leds')) {
 					validate21.errors = [
 						{
 							instancePath,
@@ -334,6 +377,134 @@ function validate21(
 								var valid0 = _errs14 === errors
 							} else {
 								var valid0 = true
+							}
+							if (valid0) {
+								if (data.leds !== undefined) {
+									let data6 = data.leds
+									const _errs16 = errors
+									const _errs17 = errors
+									if (errors === _errs17) {
+										if (data6 && typeof data6 == 'object' && !Array.isArray(data6)) {
+											let missing1
+											if (
+												(data6.segments === undefined && (missing1 = 'segments')) ||
+												(data6.mode === undefined && (missing1 = 'mode'))
+											) {
+												validate21.errors = [
+													{
+														instancePath: instancePath + '/leds',
+														schemaPath: '#/$defs/leds/required',
+														keyword: 'required',
+														params: { missingProperty: missing1 },
+														message: "must have required property '" + missing1 + "'",
+													},
+												]
+												return false
+											} else {
+												const _errs19 = errors
+												for (const key2 in data6) {
+													if (!(key2 === 'segments' || key2 === 'mode')) {
+														validate21.errors = [
+															{
+																instancePath: instancePath + '/leds',
+																schemaPath: '#/$defs/leds/additionalProperties',
+																keyword: 'additionalProperties',
+																params: { additionalProperty: key2 },
+																message: 'must NOT have additional properties',
+															},
+														]
+														return false
+														break
+													}
+												}
+												if (_errs19 === errors) {
+													if (data6.segments !== undefined) {
+														let data7 = data6.segments
+														const _errs20 = errors
+														if (!(typeof data7 == 'number' && !(data7 % 1) && !isNaN(data7) && isFinite(data7))) {
+															validate21.errors = [
+																{
+																	instancePath: instancePath + '/leds/segments',
+																	schemaPath: '#/$defs/leds/properties/segments/type',
+																	keyword: 'type',
+																	params: { type: 'integer' },
+																	message: 'must be integer',
+																},
+															]
+															return false
+														}
+														if (errors === _errs20) {
+															if (typeof data7 == 'number' && isFinite(data7)) {
+																if (data7 < 1 || isNaN(data7)) {
+																	validate21.errors = [
+																		{
+																			instancePath: instancePath + '/leds/segments',
+																			schemaPath: '#/$defs/leds/properties/segments/minimum',
+																			keyword: 'minimum',
+																			params: { comparison: '>=', limit: 1 },
+																			message: 'must be >= 1',
+																		},
+																	]
+																	return false
+																}
+															}
+														}
+														var valid4 = _errs20 === errors
+													} else {
+														var valid4 = true
+													}
+													if (valid4) {
+														if (data6.mode !== undefined) {
+															let data8 = data6.mode
+															const _errs22 = errors
+															if (typeof data8 !== 'string') {
+																validate21.errors = [
+																	{
+																		instancePath: instancePath + '/leds/mode',
+																		schemaPath: '#/$defs/leds/properties/mode/type',
+																		keyword: 'type',
+																		params: { type: 'string' },
+																		message: 'must be string',
+																	},
+																]
+																return false
+															}
+															if (!(data8 === 'full-ring' || data8 === 'simple')) {
+																validate21.errors = [
+																	{
+																		instancePath: instancePath + '/leds/mode',
+																		schemaPath: '#/$defs/leds/properties/mode/enum',
+																		keyword: 'enum',
+																		params: { allowedValues: schema34.properties.mode.enum },
+																		message: 'must be equal to one of the allowed values',
+																	},
+																]
+																return false
+															}
+															var valid4 = _errs22 === errors
+														} else {
+															var valid4 = true
+														}
+													}
+												}
+											}
+										} else {
+											validate21.errors = [
+												{
+													instancePath: instancePath + '/leds',
+													schemaPath: '#/$defs/leds/type',
+													keyword: 'type',
+													params: { type: 'object' },
+													message: 'must be object',
+												},
+											]
+											return false
+										}
+									}
+									var valid0 = _errs16 === errors
+								} else {
+									var valid0 = true
+								}
 							}
 						}
 					}

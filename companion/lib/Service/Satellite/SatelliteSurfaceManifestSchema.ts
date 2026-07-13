@@ -40,6 +40,7 @@ export interface SatelliteControlStylePreset {
 	 * If set, the control requests colours to be reported.
 	 */
 	colors?: 'hex' | 'rgb'
+	leds?: SatelliteLedsConfig
 }
 /**
  * If set, bitmaps of the specified size will be reported.
@@ -53,6 +54,19 @@ export interface SatelliteConfigSize {
 	 * Height in pixels (non-negative).
 	 */
 	h: number
+}
+/**
+ * If set, the control has an addressable strip/ring of LEDs and requests LED colours to be reported.
+ */
+export interface SatelliteLedsConfig {
+	/**
+	 * The number of individually addressable LED segments.
+	 */
+	segments: number
+	/**
+	 * How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions.
+	 */
+	mode: 'full-ring' | 'simple'
 }
 /**
  * Single control definition. The id must be unique and may be user facing in logs. Typically the id would be in the form of 1/0, matching the row/column of the control.
