@@ -580,16 +580,16 @@ export class GraphicsLayeredButtonRenderer {
 		await img.usingTemporaryLayer(element.opacity, async (layer) => {
 			await layer.usingRotation(drawBounds, element.rotation, async () => {
 				// Whether the ring forms a complete circle (no ends to round).
-				const fullCircle = isRing && sweepDeg >= 360 && fillLo <= 1e-6 && fillHi >= 100 - 1e-6
+				const fullCircle = isRing && sweepDeg >= 360 && fillStart <= 1e-6 && fillEnd >= 100 - 1e-6
 				const partialRing = isRing && sweepDeg < 360
 
 				// --- Track pass: the parts of each run NOT covered by the fill. ---
 				const paintTrack = (target: ImageBase<any>) => {
 					for (const run of runs) {
-						const leftHi = Math.min(run.end, hasFill ? fillLo : run.end)
+						const leftHi = Math.min(run.end, hasFill ? fillStart : run.end)
 						if (leftHi > run.start) paintRunInterval(target, run.start, leftHi, run, trackTransform, false)
 						if (hasFill) {
-							const rightLo = Math.max(run.start, fillHi)
+							const rightLo = Math.max(run.start, fillEnd)
 							if (run.end > rightLo) paintRunInterval(target, rightLo, run.end, run, trackTransform, false)
 						}
 					}
@@ -628,8 +628,8 @@ export class GraphicsLayeredButtonRenderer {
 				// --- Fill pass: the active portion of each run (full width). ---
 				if (hasFill) {
 					for (const run of runs) {
-						const aLo = Math.max(run.start, fillLo)
-						const aHi = Math.min(run.end, fillHi)
+						const aLo = Math.max(run.start, fillStart)
+						const aHi = Math.min(run.end, fillEnd)
 						if (aHi <= aLo) continue
 						if (multiColour) {
 							paintRunInterval(layer, aLo, aHi, run, (c) => c, true)
@@ -649,7 +649,7 @@ export class GraphicsLayeredButtonRenderer {
 							// Use whichever stop colour the position is closer to.
 							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
 						}
-						for (const p of [fillLo, fillHi]) {
+						for (const p of [fillStart, fillEnd]) {
 							const ang = posToAngle(p)
 							layer.circle(
 								cx + arcRadius * Math.cos(ang),
@@ -672,7 +672,7 @@ export class GraphicsLayeredButtonRenderer {
 					const cap: CanvasLineCap = element.roundedEnds ? 'round' : 'butt'
 					// The marker follows the value: its leading edge(s). In symmetric mode that's both
 					// fill edges; otherwise the single value position.
-					const positions = symmetric ? [fillLo, fillHi] : [valuePos]
+					const positions = symmetric ? [fillStart, fillEnd] : [valuePos]
 					for (const rawP of positions) {
 						const p = Math.max(0, Math.min(100, rawP))
 						if (isRing) {

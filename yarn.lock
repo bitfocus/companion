@@ -1986,23 +1986,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:~1.3.0":
-  version: 1.3.0
-  resolution: "@companion-surface/base@npm:1.3.0"
-  dependencies:
-    tslib: "npm:^2.8.1"
-  checksum: 10c0/86b7a7955dfc6e9dd2bd269cee81b94a0b1acda107922262d76f4f198983548841b074c6a0698732e584b77ee2f2e80aa211482bb7b3e3b37623dc5c0bc2f0db
+"@companion-surface/base@npm:1.3.0-nightly-main-20260713-213316-a42afb9":
+  version: 1.3.0-nightly-main-20260713-213316-a42afb9
+  resolution: "@companion-surface/base@npm:1.3.0-nightly-main-20260713-213316-a42afb9"
+  checksum: 10c0/4932a44a2f6183d7f31179db8dcb9fcc7285a222fac524168b2337ac520e1434c497ad4fa8d7d40895dc73263fb3f202fe4e8f2ade0dec07dc05967ed60320b0
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:1.3.3":
-  version: 1.3.3
-  resolution: "@companion-surface/host@npm:1.3.3"
+"@companion-surface/host@npm:1.3.3-nightly-main-20260713-213540-a42afb9":
+  version: 1.3.3-nightly-main-20260713-213540-a42afb9
+  resolution: "@companion-surface/host@npm:1.3.3-nightly-main-20260713-213540-a42afb9"
   dependencies:
     "@companion-surface/base": "npm:~1.3.0"
     fast-deep-equal: "npm:^3.1.3"
-    tslib: "npm:^2.8.1"
-  checksum: 10c0/35cf849d69509db7465f4d3b1d330800243737fda89fe0b8be3b549d8b609d8e11fc90ecbca5b66895a36eefb840ea493427a98190f58a63c357f66364dbff25
+  checksum: 10c0/a1f99af3bc8c52b2777a187b2e01b4e30ceaeccbcddf8a0198295cf8d2bb1948477235bd64a22c93757c7fd0da5dfc09a93a3e16c89998ad5a731996d13b5581
   languageName: node
   linkType: hard
 
