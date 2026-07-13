@@ -232,7 +232,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Trigger a rescan of connected devices.
 	 */
 	triggerRefreshDevices = pDebounce(
-		pDebounce.promise(async () => this.#refreshDevices()),
+		pDebounce.promise(async () => this.#refreshDevices(), { after: true }),
 		50,
 		{ before: false }
 	)

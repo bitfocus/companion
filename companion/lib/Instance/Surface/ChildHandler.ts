@@ -185,11 +185,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		}
 		this.logger.debug(`Received features: ${JSON.stringify(this.features)}`)
 
-		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
-			// Register with the controller for scan events
-			this.#deps.surfaceController.registerSurfaceScanHandler(this.instanceId, this)
-		}
-
 		if (this.features.supportsRemote) {
 			this.#deps.surfaceController.outbound.events.on(`startStop:${this.instanceId}`, this.#startStopConnections)
 
@@ -230,6 +225,11 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 	async init(): Promise<void> {
 		// Initialize the plugin
 		await this.#ipcWrapper.sendWithCb('init', {})
+
+		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
+			// Register with the controller for scan events
+			this.#deps.surfaceController.registerSurfaceScanHandler(this.instanceId, this)
+		}
 
 		this.#deps.instanceStatus.updateInstanceStatus(this.instanceId, 'ok', null)
 	}
