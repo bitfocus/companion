@@ -12,9 +12,13 @@
  * of `postinstall` for that reason.
  */
 import { fileURLToPath } from 'url'
-import { $, fs } from 'zx'
+import { $, fs, usePowerShell } from 'zx'
 import { assertPresentationComplete, PAGE_ORDER, PRESENTATION } from '../config-tool/lib/presentation.ts'
 import { LAUNCH_OPTIONS, launchOptionFlagName, type LaunchOption } from '../shared-lib/lib/LaunchOptions.ts'
+
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
 
 // Fail loudly if a launch option is missing presentation metadata, rather than silently
 // emitting an incomplete reference.
