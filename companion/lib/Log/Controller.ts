@@ -106,9 +106,13 @@ class LogController {
 		}
 
 		if (process.env.VITEST_WORKER_ID) {
-			// Use a simpler log setup in tests
+			// Use a simpler log setup in tests, and suppress all logging by default to keep test output readable.
+			// Enable logging for a whole run with e.g. `COMPANION_TEST_LOG_LEVEL=debug yarn test`,
+			// or within a single test with `LogController.setLogLevel('debug')`.
+			const testLogLevel = process.env.COMPANION_TEST_LOG_LEVEL
 			this.#winston = winston.createLogger({
-				level: 'silly',
+				level: testLogLevel || 'silly',
+				silent: !testLogLevel,
 				transports: [
 					new winston.transports.Console({
 						format: winston.format.simple(),
@@ -160,6 +164,8 @@ class LogController {
 	 */
 	setLogLevel(level: string): void {
 		this.#winston.level = level
+		// Re-enable logging if it was suppressed (the default in tests)
+		this.#winston.silent = false
 	}
 
 	/**

@@ -3,7 +3,6 @@ import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import v9tov10 from '../../lib/Data/Upgrades/v9tov10.js'
 import LogController from '../../lib/Log/Controller.js'
-import { SuppressLogging } from '../Util.js'
 
 class DataDatabase extends DataStoreBase<any> {
 	constructor() {
@@ -23,8 +22,6 @@ function findSurfaceInstances(db: DataDatabase, moduleId: string) {
 }
 
 describe('v9tov10 upgradeStartup', () => {
-	SuppressLogging()
-
 	const db = new DataDatabase()
 	const logger = LogController.createLogger('test-logger')
 

@@ -3,7 +3,6 @@ import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import v14tov15 from '../../lib/Data/Upgrades/v14tov15.js'
 import LogController from '../../lib/Log/Controller.js'
-import { SuppressLogging } from '../Util.js'
 
 class DataDatabase extends DataStoreBase<any> {
 	constructor() {
@@ -29,8 +28,6 @@ function makeSurface(groupId: string | null, neverLock: boolean | undefined) {
 }
 
 describe('v14tov15 upgradeStartup', () => {
-	SuppressLogging()
-
 	const db = new DataDatabase()
 	const logger = LogController.createLogger('test-logger')
 

@@ -10,7 +10,7 @@ import {
 	type InstanceUdevRulesControllerOptions,
 } from '../../lib/Instance/UdevRules.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
-import { createMockTrpcContext, SuppressLogging } from '../Util.js'
+import { createMockTrpcContext } from '../Util.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 const HEADLESS_FILENAME = '50-companion-headless.rules'
@@ -61,8 +61,6 @@ async function readStatus(controller: InstanceUdevRulesController, ctx: TrpcCont
 }
 
 describe('InstanceUdevRulesController', () => {
-	SuppressLogging()
-
 	describe('status', () => {
 		it('reports needsApply when the installed rules are missing', async () => {
 			const { controller, generatedDir } = await setup()

@@ -4,7 +4,6 @@ import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import v3tov4 from '../../lib/Data/Upgrades/v3tov4.js'
 import LogController from '../../lib/Log/Controller.js'
-import { SuppressLogging } from '../Util.js'
 import { importTable } from './util.js'
 
 function CreateDataDatabase() {
@@ -31,8 +30,6 @@ class DataDatabase extends DataStoreBase<any> {
 }
 
 describe('upgrade', () => {
-	SuppressLogging()
-
 	it('empty', () => {
 		const db = CreateDataDatabase()
 		v3tov4.upgradeStartup(db, LogController.createLogger('test-logger'))

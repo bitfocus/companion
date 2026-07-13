@@ -1,7 +1,6 @@
 import EventEmitter from 'node:events'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { SurfaceGroup } from '../../lib/Surface/Group.js'
-import { SuppressLogging } from '../Util.js'
 
 /**
  * These tests exercise the `never_lock` masking behaviour of `SurfaceGroup`:
@@ -82,8 +81,6 @@ function makeGroup(opts: {
 }
 
 describe('SurfaceGroup never_lock masking', () => {
-	SuppressLogging()
-
 	describe('explicit (multi-surface) group', () => {
 		let group: SurfaceGroup
 		let s1: FakeSurface

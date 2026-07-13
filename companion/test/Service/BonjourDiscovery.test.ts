@@ -6,7 +6,7 @@ import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
 import { ServiceBonjourDiscovery } from '../../lib/Service/BonjourDiscovery.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
-import { createMockTrpcContext, SuppressLogging } from '../Util.js'
+import { createMockTrpcContext } from '../Util.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 // ── bonjour-service mock ──────────────────────────────────────────────────────
@@ -158,8 +158,6 @@ function expectedSvc(overrides: Record<string, any> = {}): Record<string, any> {
 const INPUT = { connectionId: 'conn1', queryId: 'q1' }
 
 describe('ServiceBonjourDiscovery', () => {
-	SuppressLogging()
-
 	beforeEach(() => {
 		hoisted.instances.length = 0
 		hoisted.constructError = null
