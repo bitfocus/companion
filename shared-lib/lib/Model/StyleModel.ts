@@ -79,6 +79,8 @@ export enum ButtonGraphicsElementUsage {
 	Text = 'text',
 	Color = 'color',
 	Image = 'image',
+	/** Drives a surface's addressable LED strip/ring. Internally `leds`; shown in the UI as "Gauge". */
+	Leds = 'leds',
 }
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'

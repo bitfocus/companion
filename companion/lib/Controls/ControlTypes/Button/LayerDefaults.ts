@@ -173,7 +173,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				markerColor: { value: 0xffffff, isExpression: false },
 				markerWidth: { value: 15, isExpression: false },
 				trackStyle: { value: 'transparent', isExpression: false },
-				trackAmount: { value: 70, isExpression: false },
+				trackAmount: { value: 30, isExpression: false },
 			}
 		case 'composite':
 			// Composite elements should not be created directly through this function

@@ -332,6 +332,7 @@ export class ControlButtonPreset
 			[ButtonGraphicsElementUsage.Text]: undefined,
 			[ButtonGraphicsElementUsage.Color]: undefined,
 			[ButtonGraphicsElementUsage.Image]: undefined,
+			[ButtonGraphicsElementUsage.Leds]: undefined,
 		}
 	}
 

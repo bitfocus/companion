@@ -125,4 +125,6 @@ const elementUsageChoices: DropdownChoice[] = [
 	{ id: ButtonGraphicsElementUsage.Text, label: 'Text' },
 	{ id: ButtonGraphicsElementUsage.Color, label: 'Color' },
 	{ id: ButtonGraphicsElementUsage.Image, label: 'Image' },
+	// Internally the `leds` usage; shown as "Gauge" for now since only gauges drive LEDs.
+	{ id: ButtonGraphicsElementUsage.Leds, label: 'Gauge' },
 ]
