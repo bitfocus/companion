@@ -63,10 +63,17 @@ let instance: InstanceWrapper<any> | null = null
 let hostContext: HostContext<any, any> | null = null
 let instanceInitialized = false
 
+// The connection id needed to build the instance only arrives in the response to 'register', so the module
+// cannot be imported until after we have registered. The host sends 'init' as soon as it has answered that
+// registration, which can easily beat the import - so 'init' waits for the instance rather than rejecting.
+const { promise: instanceReady, resolve: resolveInstanceReady } = Promise.withResolvers<void>()
+
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 	{
 		init: async (msg): Promise<InitResponseMessage> => {
+			// May arrive before the module import has finished; the host allows time for this
+			await instanceReady
 			if (!instance) throw new Error('Not ready for init')
 
 			const res = await instance.init(msg)
@@ -232,6 +239,9 @@ ipcWrapper
 			moduleUpgradeScripts,
 			msg.moduleApiVersion
 		)
+
+		// Release any 'init' that beat the import here
+		resolveInstanceReady()
 	})
 	.catch((err) => {
 		logger.error(`Module registration failed: ${err}`)
