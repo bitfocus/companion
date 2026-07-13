@@ -37,6 +37,11 @@ window.requestAnimationFrame = (fn: FrameRequestCallback): number => {
 }
 window.cancelAnimationFrame = () => {}
 
+// jsdom has no canvas implementation, and we deliberately don't install the `canvas` npm package.
+// jsdom's getContext already returns null (canvas-drawing code paths guard for this), but it also logs
+// a noisy "Not implemented" error on every call. Stub it to return null directly — same behaviour, no noise.
+HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
+
 // base-ui uses matchMedia for responsive behaviour
 Object.defineProperty(window, 'matchMedia', {
 	writable: true,

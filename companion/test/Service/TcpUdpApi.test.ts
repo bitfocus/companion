@@ -105,7 +105,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 down')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 down')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -142,7 +142,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1a/2/3 down')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1a/2/3 down')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -154,7 +154,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2a/3 down')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2a/3 down')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -166,7 +166,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3a down')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3a down')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -182,7 +182,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 up')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 up')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -219,7 +219,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1a/2/3 up')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1a/2/3 up')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -231,7 +231,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2a/3 up')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2a/3 up')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -243,7 +243,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3a up')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3a up')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -260,7 +260,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 press')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 press')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -302,7 +302,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1a/2/3 press')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1a/2/3 press')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -314,7 +314,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2a/3 press')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2a/3 press')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -326,7 +326,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3a press')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3a press')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
@@ -339,7 +339,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 rotate-left')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 rotate-left')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -376,7 +376,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1a/2/3 rotate-left')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1a/2/3 rotate-left')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
@@ -388,7 +388,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2a/3 rotate-left')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2a/3 rotate-left')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
@@ -400,7 +400,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3a rotate-left')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3a rotate-left')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
@@ -413,7 +413,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 rotate-right')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 rotate-right')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -450,7 +450,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1a/2/3 rotate-right')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1a/2/3 rotate-right')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
@@ -462,7 +462,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2a/3 rotate-right')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2a/3 rotate-right')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
@@ -474,7 +474,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3a rotate-right')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3a rotate-right')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
@@ -487,7 +487,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 set-step 2')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 set-step 2')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -508,7 +508,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 step')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3 step')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(0)
@@ -544,7 +544,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				expect(router.processMessage('location 1a/2/3 set-step 2')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1a/2/3 set-step 2')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
@@ -557,7 +557,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2a/3 set-step 2')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2a/3 set-step 2')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
@@ -570,7 +570,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3a set-step 2')).rejects.toHaveProperty('message', 'Syntax error')
+				await expect(router.processMessage('location 1/2/3a set-step 2')).rejects.toHaveProperty('message', 'Syntax error')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 			})
@@ -582,7 +582,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 style text abc')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 style text abc')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -688,7 +688,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 style color abc')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 style color abc')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 
@@ -746,7 +746,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				expect(router.processMessage('location 1/2/3 style bgcolor abc')).rejects.toEqual(
+				await expect(router.processMessage('location 1/2/3 style bgcolor abc')).rejects.toEqual(
 					new ApiMessageError('No control at location')
 				)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
