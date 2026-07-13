@@ -23,7 +23,7 @@ jobs:
           node-version-file: ".node-version"
       - name: yarn install
         run: |
-          corepack enable
+          npm install -g corepack --force
 
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
