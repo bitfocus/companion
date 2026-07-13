@@ -16,6 +16,8 @@ import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/InputFeatures'
 import { InternalCustomVariableDropdown } from '~/Controls/InternalModuleField'
+import { StaticTextFieldText } from '~/Controls/StaticTextField'
+import { assertNever } from '~/Resources/util'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: JsonValue | undefined) => void
@@ -60,6 +62,17 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	const fieldType = definition.type
 	switch (definition.type) {
+		case 'static-text':
+			control = (
+				<StaticTextFieldText
+					id={inputId}
+					value={definition.value}
+					label={definition.label}
+					tooltip={definition.tooltip}
+					allowImages
+				/>
+			)
+			break
 		case 'textinput':
 			control = (
 				<TextInputFieldSimple
@@ -129,6 +142,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			control = <InternalCustomVariableDropdown id={inputId} value={value} setValue={setValue2} includeNone={true} />
 			break
 		default:
+			assertNever(definition)
 			control = <p>Unknown field "{fieldType}"</p>
 			break
 	}
