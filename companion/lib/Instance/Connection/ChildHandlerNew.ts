@@ -16,7 +16,6 @@ import {
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type CompanionHTTPRequest, type LogLevel, type OSCMetaArgument } from '@companion-module/base'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
@@ -24,6 +23,7 @@ import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
 import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
@@ -89,7 +89,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 	constructor(
 		deps: ConnectionChildHandlerDependencies,
-		monitor: RespawnMonitor,
+		dataChannel: DataChannelServer,
 		connectionId: string,
 		apiVersion0: string,
 		onRegister: (verificationToken: string) => Promise<void>
@@ -132,12 +132,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
 		}
 
-		// Framed message transport over the dedicated 'pipe' fd (fd 4). Owning the serialization means one
+		// Framed message transport over the child's data channel socket. Owning the serialization means one
 		// JSON.stringify per message and an exact wire byte count for metrics - no object-mode double-encode.
-		// Created before the IpcWrapper: its onMessage uses #ipcWrapper lazily (no message arrives until
-		// monitor.start(), after this constructor), and the monitor isn't started yet so it only arms its
-		// 'spawn' listener now.
-		const transport = new HostFramedTransport(monitor, 4, (msg, bytes) => {
+		// Created before the IpcWrapper: its onMessage uses #ipcWrapper lazily (no message arrives until the
+		// child connects, after this constructor), so it only arms its listeners now.
+		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
 			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
 			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
 		})
@@ -157,8 +156,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.connectionId
 		)
 
-		// The transport binds to the monitor, which is discarded on restart; nothing persistent to unbind.
-		this.#unsubListeners = () => undefined
+		this.#unsubListeners = () => transport.destroy()
 	}
 
 	/**

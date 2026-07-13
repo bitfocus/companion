@@ -6,8 +6,15 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [
+            ubuntu-latest,
+            # windows-latest, macos-latest
+          ]
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v7
@@ -19,7 +26,7 @@ jobs:
           node-version-file: ".node-version"
       - name: yarn install
         run: |
-          corepack enable
+          npm install -g corepack --force
 
           # try and avoid timeout errors
           yarn config set httpTimeout 100000

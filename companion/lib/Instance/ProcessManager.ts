@@ -18,6 +18,7 @@ import type { SurfaceModuleManifest } from '@companion-surface/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { isPackaged } from '../Resources/Util.js'
+import { DataChannelServer } from './Common/DataChannelServer.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
 import type { ConnectionChildHandlerApi, ConnectionChildHandlerDependencies } from './Connection/ChildHandlerApi.js'
@@ -60,6 +61,8 @@ interface ModuleChild {
 	forget?: boolean
 
 	monitor?: RespawnMonitor
+	/** Listening socket carrying the framed message transport. Not used by legacy children. */
+	dataChannel?: DataChannelServer
 	handler?: ChildProcessHandlerBase
 	lifeCycleQueue: PQueue
 	authToken?: string
@@ -310,6 +313,12 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				delete child.monitor
 			}
 
+			if (child.dataChannel) {
+				// Stop listening once the child that would connect to it is gone
+				child.dataChannel.close()
+				delete child.dataChannel
+			}
+
 			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
 				// Delete the queue now that it is empty
 				this.#children.delete(instanceId)
@@ -528,22 +537,40 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				`** API version: ${runtimeInfo.apiVersion} **`
 			)
 
+			// New connections + surfaces carry their messages over a data channel socket (see DataChannelServer);
+			// legacy children only have the 'ipc' channel. The socket must be listening before the child is
+			// spawned, and its path baked into the env the child is spawned with.
+			let dataChannel: DataChannelServer | undefined
+			if (runtimeInfo.usesDataChannel) {
+				try {
+					dataChannel = await DataChannelServer.create(instanceId)
+				} catch (e) {
+					this.#logger.error(`Failed to open data channel for instance "${baseChild.lastLabel}": ${e}`)
+					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Failed to start')
+					this.emit('childStateChange', instanceId)
+					return
+				}
+				child.dataChannel = dataChannel
+			}
+
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
 					...PreserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
+					...(dataChannel ? { MODULE_DATA_CHANNEL: dataChannel.socketPath } : {}),
 					...runtimeInfo.env,
 				},
 				maxRestarts: -1,
 				kill: 5000,
 				cwd: moduleInfo.basePath,
 				fork: false,
-				// fd 3 = 'ipc' (legacy modules + registration/disconnect lifecycle); fd 4 = raw 'pipe' carrying
-				// the framed message transport for new connections + surfaces (see FramedMessageChannel). Legacy
-				// children simply never open fd 4.
-				stdio: ['pipe', 'pipe', 'pipe', 'ipc', 'pipe'],
+				stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 			})
+
+			// Arm the data channel for each incarnation of the child, so that the one connection it makes is
+			// accepted and anything else is rejected.
+			monitor.on('spawn', () => dataChannel?.expectConnection())
 
 			monitor.on('start', () => {
 				child.isReady = false
@@ -593,7 +620,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 			// Create handler and wait for registration + initialization
 			try {
-				await this.#createHandlerAndWaitForInit(child, monitor, runtimeInfo, moduleInfo)
+				await this.#createHandlerAndWaitForInit(child, monitor, dataChannel, runtimeInfo, moduleInfo)
 			} catch (error) {
 				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${error}`)
 				throw error
@@ -607,6 +634,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	async #createHandlerAndWaitForInit(
 		child: ModuleChild,
 		monitor: RespawnMonitor,
+		dataChannel: DataChannelServer | undefined,
 		runtimeInfo: RuntimeInfo,
 		moduleInfo: SomeModuleVersionInfo
 	): Promise<void> {
@@ -737,9 +765,11 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		switch (child.targetState.moduleType) {
 			case ModuleInstanceType.Connection:
 				if (doesModuleUseNewChildHandler(runtimeInfo.apiVersion)) {
+					if (!dataChannel) throw new Error('Missing data channel for connection')
+
 					child.handler = new ConnectionChildHandlerNew(
 						this.#connectionDeps,
-						monitor,
+						dataChannel,
 						child.instanceId,
 						runtimeInfo.apiVersion,
 						onRegisterReceived
@@ -755,9 +785,11 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				}
 				break
 			case ModuleInstanceType.Surface:
+				if (!dataChannel) throw new Error('Missing data channel for surface')
+
 				child.handler = new SurfaceChildHandler(
 					this.#surfaceDeps,
-					monitor,
+					dataChannel,
 					child.targetState.moduleId,
 					child.instanceId,
 					moduleInfo.manifest as SurfaceModuleManifest,
@@ -791,6 +823,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				moduleEntrypoint: string
 				apiVersion: string
 				env: Record<string, string>
+				usesDataChannel: boolean
 		  }
 		| { error: string }
 	> {
@@ -850,6 +883,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						env: {
 							MODULE_ENTRYPOINT: jsFullPath,
 						},
+						usesDataChannel: true,
 					}
 				} else {
 					return {
@@ -860,6 +894,8 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						env: {
 							CONNECTION_ID: instanceId,
 						},
+						// Legacy modules talk over the 'ipc' channel instead
+						usesDataChannel: false,
 					}
 				}
 			}
@@ -898,6 +934,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
+					usesDataChannel: true,
 				}
 			}
 			default:
@@ -938,6 +975,8 @@ interface RuntimeInfo {
 	entrypoint: string
 	apiVersion: string
 	env: Record<string, string>
+	/** Whether the child talks over a data channel socket, rather than the legacy 'ipc' channel */
+	usesDataChannel: boolean
 }
 
 function isConnectionChild(handler: ChildProcessHandlerBase): handler is ConnectionChildHandlerApi {
