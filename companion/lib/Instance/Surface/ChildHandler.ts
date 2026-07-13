@@ -1,11 +1,11 @@
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
 import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
+import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
 import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
@@ -90,7 +90,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 	constructor(
 		deps: SurfaceChildHandlerDependencies,
-		monitor: RespawnMonitor,
+		dataChannel: DataChannelServer,
 		moduleId: string,
 		instanceId: string,
 		manifest: SurfaceModuleManifest,
@@ -143,10 +143,10 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			'firmware-update-info': this.#handleFirmwareUpdateInfo.bind(this),
 		}
 
-		// Framed message transport over the dedicated 'pipe' fd (fd 4) - one JSON.stringify per message and an
+		// Framed message transport over the child's data channel socket - one JSON.stringify per message and an
 		// exact wire byte count for metrics, no object-mode double-encode. Created before the IpcWrapper (its
-		// onMessage uses #ipcWrapper lazily; no message arrives until monitor.start() after this constructor).
-		const transport = new HostFramedTransport(monitor, 4, (msg, bytes) => {
+		// onMessage uses #ipcWrapper lazily; no message arrives until the child connects, after this constructor).
+		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
 			this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
 			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
 		})
@@ -160,8 +160,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			5000
 		)
 
-		// The transport binds to the monitor, which is discarded on restart; nothing persistent to unbind.
-		this.#unsubListeners = () => undefined
+		this.#unsubListeners = () => transport.destroy()
 
 		// Build relevant HID devices map for quick lookup
 		for (const usbIds of manifest.usbIds || []) {

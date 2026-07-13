@@ -1,8 +1,8 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
-import net from 'node:net'
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
+import { connectDataChannel } from '../../Common/DataChannelClient.js'
 import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import { importModuleFromPath } from '../../Common/ThreadUtil.js'
@@ -41,7 +41,23 @@ const verificationToken = process.env.VERIFICATION_TOKEN
 if (typeof verificationToken !== 'string' || !verificationToken)
 	throw new Error('Module initialise is missing VERIFICATION_TOKEN')
 
+const dataChannelPath = process.env.MODULE_DATA_CHANNEL
+if (!dataChannelPath) throw new Error('Module initialise is missing MODULE_DATA_CHANNEL')
+
+// Everything the host passed us has now been captured, so take it back out of the environment. Module code
+// runs in this process and has no business reading these.
+delete process.env.MODULE_ENTRYPOINT
+delete process.env.MODULE_MANIFEST
+delete process.env.VERIFICATION_TOKEN
+delete process.env.MODULE_DATA_CHANNEL
+
 const logger = createModuleLogger('Entrypoint')
+
+// The host is listening before it spawns us, so this connects immediately. It is the only socket this
+// process will ever have: if it is lost the host will not accept a replacement, so we exit and let the
+// host respawn us.
+const dataSocket = await connectDataChannel(dataChannelPath)
+dataSocket.on('close', () => process.exit())
 
 let instance: InstanceWrapper<any> | null = null
 let hostContext: HostContext<any, any> | null = null
@@ -175,11 +191,9 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 	},
 	5000
 )
-// Framed message transport over the dedicated 'pipe' fd (fd 4), paired with the host side. The 'ipc'
-// channel (process.send) is retained only for the disconnect lifecycle signal below.
-const channel = new FramedChannel(new net.Socket({ fd: 4, readable: true, writable: true }), (msg) =>
-	ipcWrapper.receivedMessage(msg as any)
-)
+// Framed message transport over the data channel socket, paired with the host side.
+// The 'ipc' channel is retained only for the disconnect signal below.
+const channel = new FramedChannel(dataSocket, (msg) => ipcWrapper.receivedMessage(msg as any))
 
 process.on('disconnect', () => process.exit())
 
