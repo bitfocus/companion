@@ -90,7 +90,7 @@ export const rotationFields: SomeCompanionInputField[] = [
 		id: 'rotation',
 		label: 'Rotation (degrees)',
 		default: 0,
-		min: 0,
+		min: -360,
 		max: 360,
 		step: 1,
 	},
