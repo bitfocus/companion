@@ -486,6 +486,21 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 
+		test('single line taller than the box is still drawn (draw & clip, not vanish)', () => {
+			// Regression for #4305: a fixed-size glyph taller than the draw area must produce one line
+			// (drawn and allowed to overflow/clip) rather than an empty layout that renders nothing.
+			const context = createMockContext(10, 80) // line height 80 > box height 54
+			const result = computeTextLayout(context, 54, 54, [...'⏵'], fontDef)
+
+			expect(result).toEqual({
+				fontDefinition: fontDef,
+				lines: [{ text: '⏵', ascent: expect.closeTo(80 * 0.8, 5), descent: expect.closeTo(80 * 0.2, 5) }],
+				measuredLineHeight: expect.closeTo(80, 5),
+				measuredAscent: expect.closeTo(80 * 0.8, 5),
+				fits: false,
+			} satisfies TextLayoutResult)
+		})
+
 		test('leading space is stripped', () => {
 			const context = createMockContext(10, 14)
 			const result = computeTextLayout(context, w, h, [...' Hello'], fontDef)
@@ -852,14 +867,15 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 
-		test('very short height', () => {
+		test('very short height still draws one line (draw & clip)', () => {
+			// #4305: a line taller than the box must still be drawn (and clip), not vanish.
 			const context = createMockContext(10, 14)
 			const fontDef = '14px TestFont'
 			const result = computeTextLayout(context, 72, 10, [...'Hello'], fontDef)
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [],
+				lines: [{ text: 'Hello', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
 				measuredLineHeight: expect.closeTo(14, 5),
 				measuredAscent: expect.closeTo(14 * 0.8, 5),
 				fits: false,
@@ -882,14 +898,15 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 
-		test('height too short for one line', () => {
+		test('height too short for one line still draws it (draw & clip)', () => {
+			// #4305: even when a single line does not fit vertically, draw it rather than nothing.
 			const context = createMockContext(10, 14)
 			const fontDef = '14px TestFont'
 			const result = computeTextLayout(context, 72, 13, [...'Hi'], fontDef)
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [],
+				lines: [{ text: 'Hi', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
 				measuredLineHeight: expect.closeTo(14, 5),
 				measuredAscent: expect.closeTo(14 * 0.8, 5),
 				fits: false,
