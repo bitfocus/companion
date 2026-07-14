@@ -159,6 +159,7 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 					// Convert base64 back into a buffer. TODO: could this be done lazily/by the plugin on demand?
 					...d,
 					image: d.image ? Buffer.from(d.image, 'base64') : undefined,
+					leds: d.leds ? Buffer.from(d.leds, 'base64') : undefined,
 				}))
 			)
 		},

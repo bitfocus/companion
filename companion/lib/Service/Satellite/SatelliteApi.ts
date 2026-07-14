@@ -60,8 +60,9 @@ import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './Sate
  * 1.10.1 - LOCKED-STATE now includes ROTATION
  * 1.11.0 - Add NONSQUARE to CAPS to indicate support for non-square buttons
  * 1.12.0 - Add BITMAP_FORMATS to CAPS and BITMAP_FORMAT to ADD-DEVICE and ADD-SUB to negotiate bitmap encoding (rgb/png/webp)
+ * 1.13.0 - Add `leds` capability to advanced-mode style presets (addressable LED strips/rings)
  */
-export const API_VERSION = '1.12.0'
+export const API_VERSION = '1.13.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the

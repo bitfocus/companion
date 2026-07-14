@@ -1,4 +1,5 @@
 import * as imageRs from '@julusian/image-rs'
+import type { LedGaugeDescription } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
@@ -28,6 +29,10 @@ export interface ImageResultProcessedStyle {
 		pushed: boolean
 		showTopBar: boolean | 'default'
 	}
+	/**
+	 * The gauge element (selected via the `leds` usage) baked for driving a surface's LED strip/ring.
+	 */
+	leds?: LedGaugeDescription
 }
 
 export type ImageResultNativeDrawFn = (

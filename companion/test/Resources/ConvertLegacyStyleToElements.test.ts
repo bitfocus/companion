@@ -33,6 +33,7 @@ const defaultSelectedIds: { [usage in ButtonGraphicsElementUsage]: string | unde
 	[ButtonGraphicsElementUsage.Text]: 'text0',
 	[ButtonGraphicsElementUsage.Image]: 'image0',
 	[ButtonGraphicsElementUsage.Color]: 'box0',
+	[ButtonGraphicsElementUsage.Leds]: undefined,
 }
 
 const minimalStyle = {

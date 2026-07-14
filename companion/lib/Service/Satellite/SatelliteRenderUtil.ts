@@ -1,3 +1,4 @@
+import { sampleLedsToBuffer } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
@@ -82,6 +83,12 @@ export async function buildSatelliteStyleArgs(
 	}
 	if (style.textStyle) {
 		params['FONT_SIZE'] = drawStyle?.text?.size ?? 'auto'
+	}
+
+	if (style.leds && drawStyle?.leds) {
+		// Always raw RGB, base64-encoded. Unlike BITMAP, LEDS never follows the negotiated bitmapFormat.
+		const buffer = sampleLedsToBuffer(drawStyle.leds, style.leds.segments, style.leds.mode)
+		params['LEDS'] = buffer.toBase64()
 	}
 
 	return params

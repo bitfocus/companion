@@ -17,6 +17,7 @@ PNGs = "PNGs"
 
 [files]
 extend-exclude = [
+  'package.json',
   "assets/Fonts/*",
   "companion/test/Upgrade/*/*.json",
   "**/*.companionconfig",

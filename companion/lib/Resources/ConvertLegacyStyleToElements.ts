@@ -322,6 +322,7 @@ export function ConvertLegacyStyleToElements(
 		[ButtonGraphicsElementUsage.Text]: textElement.id,
 		[ButtonGraphicsElementUsage.Image]: imageElement.id,
 		[ButtonGraphicsElementUsage.Color]: backgroundElement.id,
+		[ButtonGraphicsElementUsage.Leds]: undefined, // Legacy styles have no gauge/LED element
 	}
 
 	const updateFeedback = (fb: SomeEntityModel): SomeEntityModel & { style?: undefined } => {

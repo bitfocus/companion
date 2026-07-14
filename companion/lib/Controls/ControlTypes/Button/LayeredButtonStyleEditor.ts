@@ -163,6 +163,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 			[ButtonGraphicsElementUsage.Text]: this.#selectLayerForUsage(ButtonGraphicsElementUsage.Text, 'text')?.id,
 			[ButtonGraphicsElementUsage.Image]: this.#selectLayerForUsage(ButtonGraphicsElementUsage.Image, 'image')?.id,
 			[ButtonGraphicsElementUsage.Color]: this.#selectLayerForUsage(ButtonGraphicsElementUsage.Color, 'box')?.id,
+			[ButtonGraphicsElementUsage.Leds]: this.#selectLayerForUsage(ButtonGraphicsElementUsage.Leds, 'gauge')?.id,
 		}
 	}
 

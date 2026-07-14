@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { sampleLedsToBuffer } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -232,6 +233,15 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 				if (controlDefinition.style.text) {
 					drawProps.text = style?.text?.text || ''
+				}
+
+				if (controlDefinition.style.leds && style?.leds) {
+					const buffer = sampleLedsToBuffer(
+						style.leds,
+						controlDefinition.style.leds.segments,
+						controlDefinition.style.leds.mode
+					)
+					drawProps.leds = buffer.toBase64() // base64 for the JSON IPC transport, like `image`
 				}
 				// if (controlDefinition.style.textStyle) {
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'

@@ -197,8 +197,10 @@ export interface DrawControlMessage {
 	drawProps: IpcDrawProps[]
 }
 
-export interface IpcDrawProps extends Omit<SurfaceDrawProps, 'image'> {
+export interface IpcDrawProps extends Omit<SurfaceDrawProps, 'image' | 'leds'> {
 	image?: string
+	/** Packed RGB LED buffer, base64-encoded (a Uint8Array does not survive the JSON IPC transport). */
+	leds?: string
 }
 
 export interface BlankSurfaceMessage {

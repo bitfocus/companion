@@ -14,6 +14,7 @@ import type {
 import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
+import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './GaugeColorModel.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import { DrawBounds, parseColor, rgbRev } from './Util.js'
 
@@ -476,84 +477,19 @@ export class GraphicsLayeredButtonRenderer {
 			return Number.isFinite(n) ? n : fallback
 		}
 
-		// --- Value mapping (authored Min..Max domain → 0–100 track position) ---
-		const min = finite(element.min, 0)
-		const max = finite(element.max, 100)
-		const range = max - min
-		const norm = (v: number): number => {
-			if (range === 0) return 0
-			return Math.max(0, Math.min(100, ((v - min) / range) * 100))
-		}
-
-		const valuePos = norm(finite(element.value, 0))
-		const originPos = norm(finite(element.origin, min))
-
-		// Active fill interval in track-position space (0–100).
-		// Non-symmetric: from the origin toward the value (handles normal bars, centre-bar, pan).
-		// Symmetric: a band of length = value, centred on the origin (handles stereo-width).
-		let fillLo: number
-		let fillHi: number
-		if (symmetric) {
-			const half = valuePos / 2
-			fillLo = Math.max(0, Math.min(100, originPos - half))
-			fillHi = Math.max(0, Math.min(100, originPos + half))
-		} else {
-			fillLo = Math.min(originPos, valuePos)
-			fillHi = Math.max(originPos, valuePos)
-		}
-		const hasFill = element.fillEnabled && fillHi > fillLo
+		// Shared value/colour model (0–100 track-position space): the fill interval, colour runs and
+		// fill colour. This also drives the LED baker (`bakeGaugeToLeds`), so LEDs match the pixels.
+		// The trivial per-element flags/geometry (above + below) stay local to the renderer.
+		const model = buildGaugeColorModel(element)
+		if (!model) return drawBounds
+		const { valuePos, fillStart, fillEnd, hasFill, trackAmount, runs, singleColor, rgbaAt } = model
 
 		const trackWidth = Math.max(0, Math.min(100, finite(element.trackWidth, 100))) / 100
-		const trackAmount = Math.max(0, Math.min(100, finite(element.trackAmount, 0))) / 100
 
-		// --- Colour stops → runs between consecutive stops, with the first anchored to position 0
-		//     and the last extended to 100 so the track never has an uncoloured gap. ---
-		const stops = [...element.stops]
-			.map((s) => ({ pos: norm(finite(s.value, 0)), color: finite(s.color, 0), gradient: !!s.gradient }))
-			.sort((a, b) => a.pos - b.pos)
-		if (stops.length === 0) return drawBounds
-
-		interface Run {
-			start: number
-			end: number
-			colorStart: number
-			colorEnd: number
-			gradient: boolean
-		}
-		const runs: Run[] = []
-		for (let i = 0; i < stops.length; i++) {
-			const start = i === 0 ? 0 : stops[i].pos
-			const end = i + 1 < stops.length ? stops[i + 1].pos : 100
-			if (end <= start) continue
-			const gradient = stops[i].gradient && i + 1 < stops.length
-			runs.push({
-				start,
-				end,
-				colorStart: stops[i].color,
-				colorEnd: gradient ? stops[i + 1].color : stops[i].color,
-				gradient,
-			})
-		}
-		if (runs.length === 0) return drawBounds
-
-		// Single-colour fill: colour of the highest stop whose position <= value.
-		let singleColor = stops[0].color
-		for (const s of stops) if (s.pos <= valuePos) singleColor = s.color
-
-		type RGBA = { r: number; g: number; b: number; a: number }
-		const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
-		const rgbaAt = (run: Run, p: number): RGBA => {
-			const c0 = rgbRev(run.colorStart, true)
-			if (!run.gradient) return c0
-			const c1 = rgbRev(run.colorEnd, true)
-			const span = run.end - run.start
-			const t = span > 0 ? Math.max(0, Math.min(1, (p - run.start) / span)) : 0
-			return { r: lerp(c0.r, c1.r, t), g: lerp(c0.g, c1.g, t), b: lerp(c0.b, c1.b, t), a: lerp(c0.a, c1.a, t) }
-		}
-		const cssOf = (c: RGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
+		const cssOf = (c: GaugeRGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
 		// Track (unfilled) colour. 'transparent' base colours are emitted at full alpha and composited
 		// through a temporary layer at trackAmount; 'dimmed' darkens the colour in place.
-		const trackTransform = (c: RGBA): RGBA => {
+		const trackTransform = (c: GaugeRGBA): GaugeRGBA => {
 			if (trackStyle === 'transparent') return c
 			return { r: c.r * trackAmount, g: c.g * trackAmount, b: c.b * trackAmount, a: c.a }
 		}
@@ -628,8 +564,8 @@ export class GraphicsLayeredButtonRenderer {
 			target: ImageBase<any>,
 			a: number,
 			b: number,
-			run: Run,
-			transform: (c: RGBA) => RGBA,
+			run: GaugeColorRun,
+			transform: (c: GaugeRGBA) => GaugeRGBA,
 			wide: boolean
 		): void => {
 			if (b - a <= 1e-6) return
@@ -644,16 +580,16 @@ export class GraphicsLayeredButtonRenderer {
 		await img.usingTemporaryLayer(element.opacity, async (layer) => {
 			await layer.usingRotation(drawBounds, element.rotation, async () => {
 				// Whether the ring forms a complete circle (no ends to round).
-				const fullCircle = isRing && sweepDeg >= 360 && fillLo <= 1e-6 && fillHi >= 100 - 1e-6
+				const fullCircle = isRing && sweepDeg >= 360 && fillStart <= 1e-6 && fillEnd >= 100 - 1e-6
 				const partialRing = isRing && sweepDeg < 360
 
 				// --- Track pass: the parts of each run NOT covered by the fill. ---
 				const paintTrack = (target: ImageBase<any>) => {
 					for (const run of runs) {
-						const leftHi = Math.min(run.end, hasFill ? fillLo : run.end)
+						const leftHi = Math.min(run.end, hasFill ? fillStart : run.end)
 						if (leftHi > run.start) paintRunInterval(target, run.start, leftHi, run, trackTransform, false)
 						if (hasFill) {
-							const rightLo = Math.max(run.start, fillHi)
+							const rightLo = Math.max(run.start, fillEnd)
 							if (run.end > rightLo) paintRunInterval(target, rightLo, run.end, run, trackTransform, false)
 						}
 					}
@@ -692,8 +628,8 @@ export class GraphicsLayeredButtonRenderer {
 				// --- Fill pass: the active portion of each run (full width). ---
 				if (hasFill) {
 					for (const run of runs) {
-						const aLo = Math.max(run.start, fillLo)
-						const aHi = Math.min(run.end, fillHi)
+						const aLo = Math.max(run.start, fillStart)
+						const aHi = Math.min(run.end, fillEnd)
 						if (aHi <= aLo) continue
 						if (multiColour) {
 							paintRunInterval(layer, aLo, aHi, run, (c) => c, true)
@@ -713,7 +649,7 @@ export class GraphicsLayeredButtonRenderer {
 							// Use whichever stop colour the position is closer to.
 							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
 						}
-						for (const p of [fillLo, fillHi]) {
+						for (const p of [fillStart, fillEnd]) {
 							const ang = posToAngle(p)
 							layer.circle(
 								cx + arcRadius * Math.cos(ang),
@@ -736,7 +672,7 @@ export class GraphicsLayeredButtonRenderer {
 					const cap: CanvasLineCap = element.roundedEnds ? 'round' : 'butt'
 					// The marker follows the value: its leading edge(s). In symmetric mode that's both
 					// fill edges; otherwise the single value position.
-					const positions = symmetric ? [fillLo, fillHi] : [valuePos]
+					const positions = symmetric ? [fillStart, fillEnd] : [valuePos]
 					for (const rawP of positions) {
 						const p = Math.max(0, Math.min(100, rawP))
 						if (isRing) {
