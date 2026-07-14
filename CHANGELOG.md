@@ -1,5 +1,20 @@
 # Bitfocus Companion
 
+## Companion v5.0.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- macos mdns collision messages
+- ensure control elements are cloned when imported/loaded #4306
+- launch gui button broken if all interfaces ipv4+ipv6 selected #4308
+- preserve first line of text when font is too tall to fit the bounding box
+- allow negative rotation values for graphics elements #4313
+- topbar border not very visible
+- surface config not allowing static-text fields
+- ensure connection thread is ready before init is executed
+- suppress udev rules sync messages when running in docker #4318
+- reduce default intensity of gauge tracks
+
 ## Companion v5.0.0 - Release Notes
 
 ### IMPORTANT CHANGES
