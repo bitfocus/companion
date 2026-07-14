@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { ParseExpression, ResolveExpression } from '@companion-app/shared/Expressions.js'

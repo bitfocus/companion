@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { action, observable } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import type { JsonValue } from 'type-fest'

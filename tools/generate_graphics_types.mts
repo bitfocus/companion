@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'url'
-// import { assertNever } from '../shared-lib/lib/Util.ts'
-import { capitalize, isEqual } from 'lodash-es'
+import isEqual from 'fast-deep-equal'
 import { $, fs, usePowerShell } from 'zx'
 import {
 	borderFields,
@@ -10,6 +9,7 @@ import {
 	rotationFields,
 } from '../shared-lib/lib/Graphics/ElementPropertiesSchemas.ts'
 import { SomeCompanionInputField } from '../shared-lib/lib/Model/Options.ts'
+import { capitalize } from '../shared-lib/lib/Util.ts'
 
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
