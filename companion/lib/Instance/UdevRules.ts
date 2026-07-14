@@ -32,6 +32,11 @@ export interface InstanceUdevRulesControllerOptions {
 	syncCommand?: string | undefined
 	/** The current platform. Defaults to `process.platform`. */
 	platform?: NodeJS.Platform
+	/**
+	 * Whether Companion is running inside a container, as we can't own the rules.
+	 * Defaults to the `COMPANION_IN_CONTAINER` env var, which the container tooling sets.
+	 */
+	isContainer?: boolean
 	/** The directory the rules must be installed to. Defaults to `/etc/udev/rules.d`. */
 	systemRulesDir?: string
 	/** Runs a shell command. Injectable for testing. */
@@ -64,6 +69,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 	readonly #isDesktopBuild: boolean
 	readonly #syncCommand: string | undefined
 	readonly #platform: NodeJS.Platform
+	readonly #isContainer: boolean
 	readonly #systemRulesDir: string
 	readonly #execAsync: ExecAsyncFn
 
@@ -84,13 +90,19 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 		this.#isDesktopBuild = options.isDesktopBuild ?? !!process.env.COMPANION_IPC_PARENT
 		this.#syncCommand = options.syncCommand ?? process.env.COMPANION_SYNC_UDEV_RULES_COMMAND
 		this.#platform = options.platform ?? process.platform
+		this.#isContainer = options.isContainer ?? !!process.env.COMPANION_IN_CONTAINER
 		this.#systemRulesDir = options.systemRulesDir ?? DEFAULT_SYSTEM_UDEV_RULES_DIR
 		this.#execAsync = options.execAsync ?? defaultExecAsync
 	}
 
+	/** Whether udev rules can do anything useful for this installation */
+	#isSupported(): boolean {
+		return this.#platform === 'linux' && !this.#isContainer
+	}
+
 	/** Trigger a (debounced) regeneration of the udev rules. Safe to call on any platform. */
 	triggerRegenerate = (): void => {
-		if (this.#platform !== 'linux') return
+		if (!this.#isSupported()) return
 		this.#regenerate().catch((e) => {
 			this.#logger.warn(`Error regenerating udev rules: `, e)
 		})
@@ -98,7 +110,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 
 	#regenerate = pDebounce(
 		async () => {
-			if (this.#platform !== 'linux') return
+			if (!this.#isSupported()) return
 
 			this.#logger.info('Regenerating udev rules for surface modules')
 
@@ -169,7 +181,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 
 		// canAutoApply is overridden per-connection in the subscription
 		const base: UdevRulesStatus = {
-			supported: this.#platform === 'linux',
+			supported: this.#isSupported(),
 			mode,
 			needsApply: false,
 			generatedPath,
@@ -232,7 +244,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 	 * (the graphical pkexec prompt only appears on the host's own display).
 	 */
 	async #canAutoApply(isLocalClient: boolean): Promise<boolean> {
-		if (this.#platform !== 'linux' || !this.#isDesktopBuild || !isLocalClient) return false
+		if (!this.#isSupported() || !this.#isDesktopBuild || !isLocalClient) return false
 		return this.#isPkexecAvailable()
 	}
 
