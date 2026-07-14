@@ -680,6 +680,11 @@ function fixupEntity(entity: SomeEntityModelV10, isTrigger: boolean): SomeEntity
 		}
 	}
 
+	if (!entity.options) {
+		entity.options = {}
+		changed = true
+	}
+
 	// ensure everything, for all modules is now an expression
 	for (const [key, value] of Object.entries(entity.options)) {
 		if (!isExpressionOrValue(value)) {
