@@ -1986,10 +1986,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:1.3.0-nightly-main-20260713-213316-a42afb9":
-  version: 1.3.0-nightly-main-20260713-213316-a42afb9
-  resolution: "@companion-surface/base@npm:1.3.0-nightly-main-20260713-213316-a42afb9"
-  checksum: 10c0/4932a44a2f6183d7f31179db8dcb9fcc7285a222fac524168b2337ac520e1434c497ad4fa8d7d40895dc73263fb3f202fe4e8f2ade0dec07dc05967ed60320b0
+"@companion-surface/base@npm:1.4.0-nightly-main-20260714-131236-17ba70a":
+  version: 1.4.0-nightly-main-20260714-131236-17ba70a
+  resolution: "@companion-surface/base@npm:1.4.0-nightly-main-20260714-131236-17ba70a"
+  checksum: 10c0/6cda7bb1aa57cd619e7b18cf60221d8e8c58d40ca8dc00020bfd08d1c6e83e70b6fb61c3ef7f6c200788c0020d3079cd36cd9ebb2410845f16cd374476a0c6e9
   languageName: node
   linkType: hard
 

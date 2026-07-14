@@ -95,7 +95,7 @@
     "node-gyp": "^12.3.0",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
     "webpack-bundle-analyzer": "^5.0.0",
-    "@companion-surface/base": "1.3.0-nightly-main-20260713-213316-a42afb9",
+    "@companion-surface/base": "1.4.0-nightly-main-20260714-131236-17ba70a",
     "@companion-surface/host": "1.3.3-nightly-main-20260713-213540-a42afb9"
   },
   "dependenciesMeta": {

@@ -25,6 +25,7 @@ export class HostContext implements SurfaceHostContext {
 
 	readonly capabilities: HostCapabilities = {
 		supportsNonSquareButtons: true,
+		supportsLeds: true,
 	}
 
 	readonly surfaceEvents: HostSurfaceEvents
