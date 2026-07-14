@@ -587,4 +587,10 @@ export interface AppOptions {
 	enableRestrictedModules: boolean
 	/** Express "trust proxy" value, so the real client ip can be determined behind a reverse proxy */
 	trustedProxies: string | undefined
+	/**
+	 * A fixed installation name chosen at launch. When set it overrides and locks the `installName`
+	 * user-config value (the UI field becomes readonly and it survives db resets). Undefined = the
+	 * name is managed normally via the user config.
+	 */
+	installNameOverride: string | undefined
 }

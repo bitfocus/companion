@@ -2,6 +2,7 @@ import { initTRPC } from '@trpc/server'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import type { AppInfo } from '../../lib/Registry.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
 import { FakeDataDatabase } from '../utils/FakeTableView.js'
@@ -10,13 +11,27 @@ import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 const t = initTRPC.context<TrpcContext>().create()
 const testCtx: TrpcContext = createMockTrpcContext()
 
-function createUserConfig(opts: { firstRun?: boolean; existing?: Partial<UserConfigModel> } = {}) {
+function makeAppInfo(installNameOverride?: string): AppInfo {
+	return {
+		options: {
+			notifications: true,
+			enableShellCommandSupport: false,
+			enableRestrictedModules: false,
+			trustedProxies: undefined,
+			installNameOverride,
+		},
+	} as AppInfo
+}
+
+function createUserConfig(
+	opts: { firstRun?: boolean; existing?: Partial<UserConfigModel>; installNameOverride?: string } = {}
+) {
 	const db = new FakeDataDatabase()
 	db.isFirstRun = opts.firstRun ?? true
 	const table = db.defaultTableView
 	if (opts.existing) table.data['userconfig'] = structuredClone(opts.existing)
 
-	const userconfig = new DataUserConfig(db.asDataDatabase())
+	const userconfig = new DataUserConfig(makeAppInfo(opts.installNameOverride), db.asDataDatabase())
 	const caller = t.createCallerFactory(userconfig.createTrpcRouter())(testCtx)
 
 	return { db, table, userconfig, caller }
@@ -81,6 +96,58 @@ describe('DataUserConfig', () => {
 				expect(userconfig.getKey(key as keyof UserConfigModel)).not.toBe(undefined)
 			}
 			expect(table.data['userconfig'].gridSize).toEqual(DataUserConfig.Defaults.gridSize)
+		})
+	})
+
+	describe('installName override', () => {
+		test('override is applied in-memory but not persisted', () => {
+			const { userconfig, table } = createUserConfig({ installNameOverride: 'Studio A' })
+
+			expect(userconfig.getKey('installName')).toBe('Studio A')
+			// The db keeps the default, so removing the env var later restores normal behaviour
+			expect(table.data['userconfig'].installName).toBe(DataUserConfig.Defaults.installName)
+		})
+
+		test('override is not persisted even when another key is written', () => {
+			const { userconfig, table } = createUserConfig({ installNameOverride: 'Studio A' })
+
+			// Writing an unrelated key persists the whole config - the override must not leak into it
+			userconfig.setKey('pin', '4321')
+
+			expect(table.data['userconfig'].installName).toBe(DataUserConfig.Defaults.installName)
+			expect(userconfig.getKey('installName')).toBe('Studio A')
+		})
+
+		test('override wins over a value stored in the db', () => {
+			const { userconfig } = createUserConfig({
+				firstRun: false,
+				existing: { installName: 'From DB' },
+				installNameOverride: 'Studio A',
+			})
+
+			expect(userconfig.getKey('installName')).toBe('Studio A')
+		})
+
+		test('writes to installName are ignored while overridden', () => {
+			const { userconfig } = createUserConfig({ installNameOverride: 'Studio A' })
+
+			userconfig.setKey('installName', 'Something else')
+			expect(userconfig.getKey('installName')).toBe('Studio A')
+		})
+
+		test('override survives a reset', () => {
+			const { userconfig } = createUserConfig({ installNameOverride: 'Studio A' })
+
+			userconfig.reset()
+			expect(userconfig.getKey('installName')).toBe('Studio A')
+		})
+
+		test('getLockedKeys reflects whether the override is set', async () => {
+			const locked = createUserConfig({ installNameOverride: 'Studio A' })
+			await expect(locked.caller.getLockedKeys()).resolves.toEqual(['installName'])
+
+			const unlocked = createUserConfig()
+			await expect(unlocked.caller.getLockedKeys()).resolves.toEqual([])
 		})
 	})
 

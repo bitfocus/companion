@@ -9,6 +9,6 @@ export class DataController {
 
 	constructor(appInfo: AppInfo, db: DataDatabase) {
 		this.cache = new DataCache(appInfo.configDir)
-		this.userconfig = new DataUserConfig(db)
+		this.userconfig = new DataUserConfig(appInfo, db)
 	}
 }

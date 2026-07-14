@@ -250,6 +250,7 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 			enableRestrictedModules:
 				!!options.enableRestrictedModules || isEnvTruthy(process.env.COMPANION_ENABLE_RESTRICTED_MODULES),
 			trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
+			installNameOverride: (options.installName ?? process.env.COMPANION_INSTALL_NAME)?.trim() || undefined,
 		},
 	})
 
