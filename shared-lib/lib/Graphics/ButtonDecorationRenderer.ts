@@ -20,10 +20,24 @@ export class ButtonDecorationRenderer {
 		const drawColor = emptyButton ? colorEmptyGrey : colorButtonYellow
 
 		let step = ''
-		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
-		img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
+
+		// The separator line is drawn in logical pixels. On small hardware buttons the high
+		// oversampling factor makes a 1px line render as several physical pixels, but on large
+		// previews (which use little/no oversampling) a 1px line renders as a single physical
+		// pixel and visually disappears. Scale the width up with the bar height, but sub-linearly
+		// (sqrt) and capped so it stays crisp on previews without becoming a heavy line on big bitmaps.
+		const lineWidth = Math.min(
+			4,
+			Math.max(1, Math.round(Math.sqrt(topBarBounds.height / ButtonDecorationRenderer.DEFAULT_HEIGHT)))
+		)
+		// Sit the line flush against the bottom edge of the bar; for lineWidth 1 this reduces to the
+		// original `maxY - 0.5` half-pixel placement.
+		const lineY = topBarBounds.maxY - lineWidth / 2
+
+		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, lineY, colorBlack)
+		img.line(topBarBounds.x, lineY, topBarBounds.maxX, lineY, {
 			color: drawColor,
-			width: 1,
+			width: lineWidth,
 		})
 
 		if (!emptyButton && drawStyle.stepCount > 1) {
