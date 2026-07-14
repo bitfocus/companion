@@ -40,6 +40,7 @@ async function setup(options: Partial<InstanceUdevRulesControllerOptions> & { us
 		{
 			platform: 'linux',
 			isDesktopBuild: false,
+			isContainer: false,
 			systemRulesDir: systemDir,
 			execAsync,
 			...controllerOptions,
@@ -125,6 +126,17 @@ describe('InstanceUdevRulesController', () => {
 
 		it('is not supported on a non-linux platform', async () => {
 			const { controller, generatedDir } = await setup({ platform: 'darwin' })
+			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
+
+			const status = await readStatus(controller)
+			expect(status.supported).toBe(false)
+			expect(status.needsApply).toBe(false)
+		})
+
+		// Inside a container we can only see the image's own rules dir, so the rules would always look out of
+		// date. They can only be applied on the host, and our images don't support USB passthrough anyway.
+		it('is not supported inside a container', async () => {
+			const { controller, generatedDir } = await setup({ isContainer: true })
 			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
 
 			const status = await readStatus(controller)
@@ -228,6 +240,20 @@ describe('InstanceUdevRulesController', () => {
 		it('does nothing on a non-linux platform', async () => {
 			const { controller, generatedDir, execAsync } = await setup({
 				platform: 'darwin',
+				syncCommand: 'my-sync-command',
+			})
+
+			controller.triggerRegenerate()
+			// Give any (incorrectly scheduled) async work a chance to run
+			await new Promise((resolve) => setTimeout(resolve, 80))
+
+			expect(await fs.pathExists(path.join(generatedDir, HEADLESS_FILENAME))).toBe(false)
+			expect(execAsync).not.toHaveBeenCalled()
+		})
+
+		it('does nothing inside a container', async () => {
+			const { controller, generatedDir, execAsync } = await setup({
+				isContainer: true,
 				syncCommand: 'my-sync-command',
 			})
 

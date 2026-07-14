@@ -5,6 +5,11 @@ set -e
 
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
+# USB surfaces are not usable from inside the container, so the udev rules which grant access to them are
+# irrelevant here. Without this, Companion would compare against the container's own (empty) udev rules
+# directory rather than the host's, and forever prompt to apply rules that cannot be applied from in here.
+export COMPANION_IN_CONTAINER=1
+
 if [ -d /app/module-local-dev ]; then
   echo "Installing dependencies for all local dev modules..."
   for module in $(ls /app/module-local-dev/); do

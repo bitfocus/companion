@@ -22,7 +22,7 @@ export interface AppUpdateInfo {
  * On non-Linux platforms `supported` is false and nothing else is meaningful.
  */
 export interface UdevRulesStatus {
-	/** Whether udev rules are relevant on this platform (linux only) */
+	/** Whether udev rules are relevant here (linux, and not inside a container) */
 	supported: boolean
 	/** Which build/file is in use */
 	mode: 'desktop' | 'headless'
