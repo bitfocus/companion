@@ -37,7 +37,7 @@ jobs:
 
       - name: upload image snapshot failures
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: image-snapshot-failures-${{ matrix.os }}
           path: companion/test/Graphics/__failures__/
