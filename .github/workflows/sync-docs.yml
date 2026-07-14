@@ -88,7 +88,7 @@ jobs:
 
       - name: Setup Node.js (release)
         if: github.ref != 'refs/heads/main' && steps.sync_release.outputs.versions_changed == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 26
 
