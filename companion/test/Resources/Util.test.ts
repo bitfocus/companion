@@ -237,58 +237,168 @@ describe('isTruthy', () => {
 // ── parseLineParameters ───────────────────────────────────────────────────────
 
 describe('parseLineParameters', () => {
-	test('parses a simple key=value pair', () => {
-		expect(parseLineParameters('key=value')).toEqual({ key: 'value' })
+	describe('basic key/value parsing', () => {
+		test('parses a single key=value pair', () => {
+			expect({ ...parseLineParameters('KEY=value') }).toEqual({ KEY: 'value' })
+		})
+
+		test('parses multiple space-separated pairs', () => {
+			expect({ ...parseLineParameters('A=1 B=2 C=3') }).toEqual({ A: '1', B: '2', C: '3' })
+		})
+
+		test('parses an empty value as an empty string', () => {
+			expect(parseLineParameters('KEY=').KEY).toBe('')
+		})
+
+		test('keeps the value verbatim (no numeric coercion)', () => {
+			const params = parseLineParameters('N=42 F=0')
+			expect(params.N).toBe('42')
+			expect(params.F).toBe('0')
+		})
 	})
 
-	test('parses a bare key (no value) as true', () => {
-		expect(parseLineParameters('FLAG')).toEqual({ FLAG: true })
+	describe('valueless flags', () => {
+		test('treats a token with no `=` as boolean true', () => {
+			expect(parseLineParameters('FLAG')).toMatchObject({ FLAG: true })
+		})
+
+		test('mixes flags and key/value pairs', () => {
+			expect({ ...parseLineParameters('A=1 FLAG B=2') }).toEqual({ A: '1', FLAG: true, B: '2' })
+		})
 	})
 
-	test('parses multiple space-separated parameters', () => {
-		expect(parseLineParameters('a=1 b=2 c=3')).toEqual({ a: '1', b: '2', c: '3' })
+	describe('values containing `=` (only split on the first)', () => {
+		test('preserves base64 `=` padding, e.g. a data-url bitmap', () => {
+			const value = 'iVBORw0KGgoAAAANSUhEUg=='
+			expect(parseLineParameters(`BITMAP=${value}`).BITMAP).toBe(value)
+		})
+
+		test('keeps every `=` after the first in the value', () => {
+			expect(parseLineParameters('X=a=b=c').X).toBe('a=b=c')
+		})
 	})
 
-	test('parses mixed bare keys and key=value pairs', () => {
-		expect(parseLineParameters('VERBOSE key=val')).toEqual({ VERBOSE: true, key: 'val' })
+	describe('quoted values', () => {
+		test('keeps spaces inside a quoted value and strips the quotes', () => {
+			expect(parseLineParameters('TEXT="hello world"').TEXT).toBe('hello world')
+		})
+
+		test('does not split on `=` inside a quoted value', () => {
+			expect({ ...parseLineParameters('PATH=0/0 X="a=b=c"') }).toEqual({ PATH: '0/0', X: 'a=b=c' })
+		})
+
+		test('strips quotes that appear mid-token', () => {
+			expect(parseLineParameters('KEY=va"lue"').KEY).toBe('value')
+		})
+
+		test('supports a quoted key containing spaces', () => {
+			expect(parseLineParameters('"quoted key"=v')['quoted key']).toBe('v')
+		})
 	})
 
-	test('handles quoted values with spaces', () => {
-		expect(parseLineParameters('msg="hello world"')).toEqual({ msg: 'hello world' })
+	describe('backslash escapes', () => {
+		test('unescapes a quote inside a quoted value', () => {
+			expect(parseLineParameters('KEY="a\\"b"').KEY).toBe('a"b')
+		})
+
+		test('unescapes a space so it does not split the token', () => {
+			expect(parseLineParameters('KEY=a\\ b').KEY).toBe('a b')
+		})
+
+		test('ignores a dangling trailing backslash instead of appending "undefined"', () => {
+			expect(parseLineParameters('KEY=a\\').KEY).toBe('a')
+			expect(parseLineParameters('FLAG\\')).toMatchObject({ FLAG: true })
+		})
 	})
 
-	test('handles escaped quote inside a quoted value', () => {
-		expect(parseLineParameters('msg="say \\"hi\\""')).toEqual({ msg: 'say "hi"' })
+	describe('whitespace handling', () => {
+		test('does not treat tabs as separators', () => {
+			expect(parseLineParameters('A=1\tB=2').A).toBe('1\tB=2')
+		})
+
+		test('ignores consecutive spaces (no empty-string key)', () => {
+			expect({ ...parseLineParameters('A=1  B=2') }).toEqual({ A: '1', B: '2' })
+		})
+
+		test('ignores leading and trailing spaces', () => {
+			expect({ ...parseLineParameters('  A=1 B=2  ') }).toEqual({ A: '1', B: '2' })
+		})
 	})
 
-	test('handles escaped space outside quotes', () => {
-		expect(parseLineParameters('key=hello\\ world')).toEqual({ key: 'hello world' })
+	describe('prototype-pollution hardening', () => {
+		test('returns a prototype-less object', () => {
+			expect(Object.getPrototypeOf(parseLineParameters('A=1'))).toBeNull()
+		})
+
+		test('drops dangerous keys (__proto__, constructor, prototype, ...)', () => {
+			const result = parseLineParameters('__proto__=injected constructor=bad prototype=x __defineGetter__=y normal=ok')
+			expect(result).not.toHaveProperty('__proto__')
+			expect(result).not.toHaveProperty('constructor')
+			expect(result).not.toHaveProperty('prototype')
+			expect(result).not.toHaveProperty('__defineGetter__')
+			expect(result.normal).toBe('ok')
+			expect(Object.prototype).not.toHaveProperty('injected')
+		})
+
+		test('drops a dangerous key even when its value contains =', () => {
+			const result = parseLineParameters('__proto__=a=b normal=ok')
+			expect(result).not.toHaveProperty('__proto__')
+			expect(result.normal).toBe('ok')
+		})
 	})
 
-	test('keeps a value that contains = (only splits on the first =)', () => {
-		expect(parseLineParameters('key=a=b=c')).toEqual({ key: 'a=b=c' })
+	describe('edge cases', () => {
+		test('maps an empty line to an empty object', () => {
+			expect({ ...parseLineParameters('') }).toEqual({})
+		})
+
+		test('maps a whitespace-only line to an empty object', () => {
+			expect({ ...parseLineParameters('   ') }).toEqual({})
+		})
 	})
 
-	test('preserves the base64 = padding of a data: url bitmap value', () => {
-		const dataUrl = 'data:image/png;base64,iVBORw0KGgo='
-		expect(parseLineParameters(`BITMAP="${dataUrl}"`)).toEqual({ BITMAP: dataUrl })
-	})
+	describe('draw parameters', () => {
+		test('extracts a base64 LEDS parameter alongside other params', () => {
+			// LEDS is always `segments * 3` bytes; this payload base64-encodes to a value containing `/`
+			const leds = Buffer.from([255, 0, 0, 0, 255, 0]).toString('base64')
+			expect(leds).toContain('/')
 
-	test('treats an empty value (trailing =) as an empty string', () => {
-		expect(parseLineParameters('key=')).toEqual({ key: '' })
-	})
+			const params = parseLineParameters(`DEVICEID=abc123 CONTROLID=0/0 LEDS=${leds} PRESSED=1`)
 
-	test('filters out BANNED_PROPS keys', () => {
-		const result = parseLineParameters('__proto__=injected constructor=bad normal=ok')
-		expect(result).not.toHaveProperty('__proto__')
-		expect(result).not.toHaveProperty('constructor')
-		expect(result.normal).toBe('ok')
-	})
+			expect(params).toMatchObject({
+				DEVICEID: 'abc123',
+				CONTROLID: '0/0',
+				LEDS: leds,
+				PRESSED: '1',
+			})
+		})
 
-	test('filters out a BANNED_PROPS key even when its value contains =', () => {
-		const result = parseLineParameters('__proto__=a=b normal=ok')
-		expect(result).not.toHaveProperty('__proto__')
-		expect(result.normal).toBe('ok')
+		test('round-trips a LEDS buffer through base64', () => {
+			const original = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9])
+			const params = parseLineParameters(`LEDS=${original.toString('base64')}`)
+
+			expect(typeof params.LEDS).toBe('string')
+			expect(Buffer.from(params.LEDS as string, 'base64')).toEqual(original)
+		})
+
+		test('preserves the base64 `=` padding of a quoted data: url bitmap', () => {
+			const dataUrl = 'data:image/png;base64,iVBORw0KGgo='
+			expect(parseLineParameters(`BITMAP="${dataUrl}"`).BITMAP).toBe(dataUrl)
+		})
+
+		test('parses a realistic KEY-STATE line with mixed value kinds', () => {
+			const params = parseLineParameters(
+				'DEVICEID=surface-1 KEY=5 COLOR=#ff0000 TEXT="Play Clip" BITMAP=aGVsbG8= PRESSED=0'
+			)
+			expect(params).toMatchObject({
+				DEVICEID: 'surface-1',
+				KEY: '5',
+				COLOR: '#ff0000',
+				TEXT: 'Play Clip',
+				BITMAP: 'aGVsbG8=',
+				PRESSED: '0',
+			})
+		})
 	})
 })
 
