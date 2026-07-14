@@ -167,7 +167,7 @@ export function parseLineParameters(line: string): ParsedParams {
 			if (c == '\\') {
 				// If char is a slash, the character following it is of interest
 				// Future: does this consider non \" chars?
-				fragments[fragments.length - 1] += line[o + 1]
+				fragments[fragments.length - 1] += line[o + 1] ?? ''
 
 				i = o + 2
 			} else {
@@ -194,11 +194,12 @@ export function parseLineParameters(line: string): ParsedParams {
 		// breaking image decoding.
 		const splitIndex = fragment.indexOf('=')
 		if (splitIndex === -1) {
-			if (BANNED_PROPS.has(fragment)) continue
+			// Skip empty fragments (from consecutive/leading/trailing spaces) and dangerous keys
+			if (fragment === '' || BANNED_PROPS.has(fragment)) continue
 			res[fragment] = true
 		} else {
 			const key = fragment.substring(0, splitIndex)
-			if (BANNED_PROPS.has(key)) continue
+			if (key === '' || BANNED_PROPS.has(key)) continue
 			res[key] = fragment.substring(splitIndex + 1)
 		}
 	}
