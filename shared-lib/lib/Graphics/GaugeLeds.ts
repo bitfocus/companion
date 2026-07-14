@@ -115,7 +115,8 @@ const mod360 = (deg: number): number => ((deg % 360) + 360) % 360
  *   degrees (segment 0 at 6 o'clock, clockwise), mapped through the ring geometry to a track position.
  *   Segments outside the swept arc (deadzone) are left off. Non-ring gauges fall back to `simple`.
  * - `simple`: the value is swept across all segments — segment `i` samples track position
- *   `(i + 0.5) / segments`, with segment 0 at the 0% end. Angles are ignored.
+ *   `(i + 0.5) / segments`, with segment 0 at the 0% end (the 100% end when `reverse`). Angles are
+ *   ignored.
  */
 export function sampleLedsToBuffer(
 	desc: LedGaugeDescription,
@@ -134,6 +135,7 @@ export function sampleLedsToBuffer(
 	}
 
 	const useRing = mode === 'full-ring' && desc.isRing && sweep > 0
+	const posAtFrac = (frac: number): number => (desc.reverse ? 1 - frac : frac) * 100
 
 	for (let i = 0; i < segments; i++) {
 		let color: number | null
@@ -144,12 +146,10 @@ export function sampleLedsToBuffer(
 			if (offset > sweep + 1e-6) {
 				color = null // deadzone
 			} else {
-				const frac = offset / sweep
-				const pos = (desc.reverse ? 1 - frac : frac) * 100
-				color = colorAtPos(pos)
+				color = colorAtPos(posAtFrac(offset / sweep))
 			}
 		} else {
-			color = colorAtPos(((i + 0.5) / segments) * 100)
+			color = colorAtPos(posAtFrac((i + 0.5) / segments))
 		}
 
 		const offset = i * 3
