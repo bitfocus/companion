@@ -1,73 +1,52 @@
-import fs from 'fs'
-import { Ajv2020 } from 'ajv/dist/2020.js'
-import standaloneCode from 'ajv/dist/standalone/index.js'
-import { compileFromFile } from 'json-schema-to-typescript'
-import { $, path, usePowerShell } from 'zx'
+import fs from 'node:fs'
+import path from 'node:path'
+import prettier from 'prettier'
+import { z } from 'zod'
+import { SatelliteConfigFieldsSchema } from '../companion/lib/Service/Satellite/SatelliteConfigFieldsSchema.js'
+import { SatelliteSurfaceLayoutSchema } from '../companion/lib/Service/Satellite/SatelliteSurfaceManifestSchema.js'
 
-if (process.platform === 'win32') {
-	usePowerShell() // to enable powershell
+/**
+ * The zod schemas are the source of truth. This generates the json-schema documents from them, so that satellite
+ * clients have a machine readable description of the protocol.
+ *
+ * Pass `--check` to verify the committed files are up to date, instead of writing them.
+ */
+
+const checkOnly = process.argv.includes('--check')
+
+const schemas: { schema: z.ZodType; outputPath: string }[] = [
+	{
+		schema: SatelliteSurfaceLayoutSchema,
+		outputPath: path.join(import.meta.dirname, '../assets/satellite-surface.schema.json'),
+	},
+	{
+		schema: SatelliteConfigFieldsSchema,
+		outputPath: path.join(import.meta.dirname, '../assets/satellite-config-fields.schema.json'),
+	},
+]
+
+const prettierConf = await prettier.resolveConfig(schemas[0].outputPath)
+
+let anyOutdated = false
+
+for (const { schema, outputPath } of schemas) {
+	// `io: 'input'` ensures unknown properties are not forbidden, so that the schema is forwards compatible
+	const jsonSchema = z.toJSONSchema(schema, { target: 'draft-2020-12', io: 'input' })
+
+	const formatted = await prettier.format(JSON.stringify(jsonSchema), { ...prettierConf, parser: 'json' })
+
+	if (checkOnly) {
+		const current = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : ''
+		if (current !== formatted) {
+			anyOutdated = true
+			console.error(`Out of date: ${outputPath}`)
+		}
+	} else {
+		fs.writeFileSync(outputPath, formatted, 'utf8')
+	}
 }
 
-const PrettierConf = JSON.parse(fs.readFileSync(new URL('../.prettierrc', import.meta.url), 'utf8'))
-
-interface CompileSchemaOptions {
-	schemaPath: string
-	validatorOutputPath: string
-	typescriptOutputPath: string
-	/** Passed to json-schema-to-typescript */
-	additionalProperties: boolean
-	/** Extra Ajv2020 options */
-	ajvOptions?: ConstructorParameters<typeof Ajv2020>[0]
+if (anyOutdated) {
+	console.error(`\nRun 'yarn build:satellite-schema' and commit the result.`)
+	process.exit(1)
 }
-
-async function compileSchema(opts: CompileSchemaOptions): Promise<void> {
-	const schema = JSON.parse(fs.readFileSync(opts.schemaPath, 'utf8'))
-
-	// The generated code will have a default export:
-	// `module.exports = <validateFunctionCode>;module.exports.default = <validateFunctionCode>;`
-	const ajv = new Ajv2020({
-		code: { source: true, esm: true },
-		...opts.ajvOptions,
-	})
-	const validate = ajv.compile(schema)
-	// @ts-expect-error - TS can't resolve the default export properly with node16 moduleResolution
-	const moduleCode = standaloneCode(ajv, validate)
-
-	fs.writeFileSync(opts.validatorOutputPath, moduleCode)
-	// Format with prettier so that it doesnt bloat git
-	await $`prettier -w ${opts.validatorOutputPath}`
-
-	// Compile to TypeScript types
-	const compiledTypescript = await compileFromFile(opts.schemaPath, {
-		additionalProperties: opts.additionalProperties,
-		style: PrettierConf,
-		enableConstEnums: false,
-	})
-	fs.writeFileSync(opts.typescriptOutputPath, compiledTypescript, 'utf8')
-}
-
-// ---- Surface manifest schema ----
-
-await compileSchema({
-	schemaPath: path.join(import.meta.dirname, '../assets/satellite-surface.schema.json'),
-	validatorOutputPath: path.join(import.meta.dirname, '../companion/generated/SatelliteSurfaceSchemaValidator.js'),
-	typescriptOutputPath: path.join(
-		import.meta.dirname,
-		'../companion/lib/Service/Satellite/SatelliteSurfaceManifestSchema.ts'
-	),
-	additionalProperties: true,
-	ajvOptions: { allowMatchingProperties: true }, // because of 'default' in stylePresets
-})
-
-// ---- Config fields schema ----
-
-await compileSchema({
-	schemaPath: path.join(import.meta.dirname, '../assets/satellite-config-fields.schema.json'),
-	validatorOutputPath: path.join(import.meta.dirname, '../companion/generated/SatelliteConfigFieldsSchemaValidator.js'),
-	typescriptOutputPath: path.join(
-		import.meta.dirname,
-		'../companion/lib/Service/Satellite/SatelliteConfigFieldsSchema.ts'
-	),
-	additionalProperties: true,
-	ajvOptions: { allowUnionTypes: true },
-})

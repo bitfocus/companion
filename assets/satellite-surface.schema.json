@@ -1,60 +1,32 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"stylePresets": {
+			"type": "object",
+			"properties": { "default": { "$ref": "#/$defs/SatelliteControlStylePreset" } },
+			"required": ["default"],
+			"additionalProperties": { "$ref": "#/$defs/SatelliteControlStylePreset" },
+			"description": "Named collection of style presets. The preset named `default` is required and is used as the fallback style for controls when no `stylePreset` is specified."
+		},
+		"controls": {
+			"type": "object",
+			"propertyNames": { "type": "string", "pattern": "^[a-zA-Z0-9\\-/]+$" },
+			"additionalProperties": { "$ref": "#/$defs/SatelliteControlDefinition" }
+		}
+	},
+	"required": ["stylePresets", "controls"],
 	"title": "Satellite Surface Layout",
 	"description": "Schema describing a satellite surface layout: default styling and a map of controls with positions and optional style overrides.",
-	"type": "object",
 	"$defs": {
-		"size": {
-			"title": "SatelliteConfigSize",
-			"description": "Pixel size for bitmap content.",
-			"type": "object",
-			"properties": {
-				"w": {
-					"description": "Width in pixels (non-negative).",
-					"type": "number",
-					"minimum": 0
-				},
-				"h": {
-					"description": "Height in pixels (non-negative).",
-					"type": "number",
-					"minimum": 0
-				}
-			},
-			"required": ["w", "h"],
-			"additionalProperties": false
-		},
-		"leds": {
-			"title": "SatelliteLedsConfig",
-			"description": "If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colours to be reported. Colours are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment.",
-			"type": "object",
-			"properties": {
-				"segments": {
-					"description": "The number of individually addressable LED segments.",
-					"type": "integer",
-					"minimum": 1
-				},
-				"mode": {
-					"description": "How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions.",
-					"type": "string",
-					"enum": ["full-ring", "simple"]
-				}
-			},
-			"required": ["segments", "mode"],
-			"additionalProperties": false
-		},
-		"stylePreset": {
-			"title": "SatelliteControlStylePreset",
-			"description": "Styling options that can be applied to controls. Can be used as the default style or as per-control overrides.",
+		"SatelliteControlStylePreset": {
 			"type": "object",
 			"properties": {
 				"bitmap": {
 					"description": "If set, bitmaps of the specified size will be reported.",
-					"$ref": "#/$defs/size"
+					"$ref": "#/$defs/SatelliteConfigSize"
 				},
-				"text": {
-					"description": "If true, the control requests text to be reported.",
-					"type": "boolean"
-				},
+				"text": { "description": "If true, the control requests text to be reported.", "type": "boolean" },
 				"textStyle": {
 					"description": "If true, the control requests text style properties to be reported",
 					"type": "boolean"
@@ -66,60 +38,55 @@
 				},
 				"leds": {
 					"description": "If set, the control has an addressable strip/ring of LEDs and requests LED colours to be reported.",
-					"$ref": "#/$defs/leds"
+					"$ref": "#/$defs/SatelliteLedsConfig"
 				}
 			},
-			"additionalProperties": false
-		}
-	},
-	"properties": {
-		"stylePresets": {
-			"description": "Named collection of style presets. The preset named `default` is required and is used as the fallback style for controls when no `stylePreset` is specified.",
+			"title": "SatelliteControlStylePreset",
+			"description": "Styling options that can be applied to controls. Can be used as the default style or as per-control overrides."
+		},
+		"SatelliteConfigSize": {
 			"type": "object",
 			"properties": {
-				"default": {
-					"$ref": "#/$defs/stylePreset"
-				}
+				"w": { "type": "number", "minimum": 0, "description": "Width in pixels (non-negative)." },
+				"h": { "type": "number", "minimum": 0, "description": "Height in pixels (non-negative)." }
 			},
-			"patternProperties": {
-				"^.+$": {
-					"$ref": "#/$defs/stylePreset"
-				}
-			},
-			"required": ["default"],
-			"additionalProperties": false
+			"required": ["w", "h"],
+			"title": "SatelliteConfigSize",
+			"description": "Pixel size for bitmap content."
 		},
-		"controls": {
+		"SatelliteLedsConfig": {
 			"type": "object",
-			"patternProperties": {
-				"^[a-zA-Z0-9\\-\\/]+$": {
-					"title": "SatelliteControlDefinition",
-					"description": "Single control definition. The id must be unique and may be user facing in logs. Typically the id would be in the form of 1/0, matching the row/column of the control.",
-					"type": "object",
-					"properties": {
-						"row": {
-							"description": "Zero-based row index for layout placement.",
-							"type": "number",
-							"minimum": 0
-						},
-						"column": {
-							"description": "Zero-based column index for layout placement.",
-							"type": "number",
-							"minimum": 0
-						},
-						"stylePreset": {
-							"description": "Optional name of a style preset defined in `stylePresets`. If present, the control will use the named preset instead of the default style.",
-							"type": "string",
-							"pattern": "^.+$"
-						}
-					},
-					"required": ["row", "column"],
-					"additionalProperties": false
+			"properties": {
+				"segments": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 200,
+					"description": "The number of individually addressable LED segments."
+				},
+				"mode": {
+					"type": "string",
+					"enum": ["full-ring", "simple"],
+					"description": "How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions."
 				}
 			},
-			"additionalProperties": false
+			"required": ["segments", "mode"],
+			"title": "SatelliteLedsConfig",
+			"description": "If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colours to be reported. Colours are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment."
+		},
+		"SatelliteControlDefinition": {
+			"type": "object",
+			"properties": {
+				"row": { "type": "number", "minimum": 0, "description": "Zero-based row index for layout placement." },
+				"column": { "type": "number", "minimum": 0, "description": "Zero-based column index for layout placement." },
+				"stylePreset": {
+					"description": "Optional name of a style preset defined in `stylePresets`. If present, the control will use the named preset instead of the default style.",
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"required": ["row", "column"],
+			"title": "SatelliteControlDefinition",
+			"description": "Single control definition. The id must be unique and may be user facing in logs. Typically the id would be in the form of 1/0, matching the row/column of the control."
 		}
-	},
-	"required": ["stylePresets", "controls"],
-	"additionalProperties": false
+	}
 }

@@ -66,6 +66,9 @@ jobs:
           yarn build:config-reference
           git diff --exit-code docs/user-guide/1_getting-started/config-reference.generated.md
 
+      - name: Check generated satellite schemas are up to date
+        run: yarn build:satellite-schema --check
+
   spelling:
     name: Spell Check with Typos
     runs-on: ubuntu-latest

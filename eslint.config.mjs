@@ -174,8 +174,6 @@ export default [
 			'webui/public/_deps/**/*',
 			'webui/post-install.ts',
 			'.yarnrc.yml',
-			'companion/generated/**/*',
-			'companion/lib/Service/Satellite/SatelliteSurfaceManifestSchema.ts',
 			// TMP
 			'companion/lib/Cloud/**/*',
 			'companion/test/**/*',

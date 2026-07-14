@@ -1,11 +1,8 @@
 import { nanoid } from 'nanoid'
+import { z } from 'zod'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-// eslint-disable-next-line n/no-missing-import
-import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
-// eslint-disable-next-line n/no-missing-import
-import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { type Logger } from '../../Log/Controller.js'
@@ -23,14 +20,18 @@ import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surfa
 import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import type { ServiceApi } from '../ServiceApi.js'
 import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
-import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
+import { SatelliteConfigFieldsSchema, type SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
 import {
 	buildSatelliteStyleArgs,
 	parseSatelliteBitmapFormat,
 	SATELLITE_BITMAP_FORMATS,
 	type SatelliteBitmapFormat,
 } from './SatelliteRenderUtil.js'
-import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
+import {
+	SatelliteSurfaceLayoutSchema,
+	type SatelliteControlStylePreset,
+	type SatelliteSurfaceLayout,
+} from './SatelliteSurfaceManifestSchema.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -199,14 +200,12 @@ export class ServiceSatelliteApi {
 		if (params.LAYOUT_MANIFEST) {
 			surfaceManifestFromClient = true
 			try {
-				surfaceManifest = JSON.parse(Buffer.from(String(params.LAYOUT_MANIFEST), 'base64').toString())
+				const parsed = SatelliteSurfaceLayoutSchema.safeParse(
+					JSON.parse(Buffer.from(String(params.LAYOUT_MANIFEST), 'base64').toString())
+				)
+				if (!parsed.success) throw new Error(`Failed with errors: ${z.prettifyError(parsed.error)}`)
 
-				if (!validateSurfaceManifest(surfaceManifest)) {
-					const errors = validateSurfaceManifest.errors
-					if (!errors) throw new Error(`Failed with unknown reason`)
-
-					throw new Error(`Failed with errors: ${JSON.stringify(errors)}`)
-				}
+				surfaceManifest = parsed.data
 			} catch (e) {
 				socketLogger.error(`Manifest validation failed: ${stringifyError(e)}`)
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid LAYOUT_MANIFEST')
@@ -296,13 +295,16 @@ export class ServiceSatelliteApi {
 			let decoded: unknown
 			try {
 				decoded = JSON.parse(Buffer.from(String(params.CONFIG_FIELDS), 'base64').toString())
+
+				const parsed = SatelliteConfigFieldsSchema.safeParse(decoded)
+				if (!parsed.success) {
+					socketLogger.error(`Config fields validation failed: ${z.prettifyError(parsed.error)}`)
+					return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
+				}
+				configFields = parsed.data
 			} catch (_e) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
 			}
-			if (!validateConfigFields(decoded)) {
-				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
-			}
-			configFields = decoded
 		}
 
 		const processedConfigFields = configFields

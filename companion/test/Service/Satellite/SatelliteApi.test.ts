@@ -773,6 +773,41 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('ERROR')
 			expect(socket.lastMessage).toContain('Invalid LAYOUT_MANIFEST')
 		})
+
+		test('accepts LAYOUT_MANIFEST with unknown properties, stripping them', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			// Properties from a hypothetical newer protocol version must be ignored, not rejected
+			const manifest = {
+				controls: {
+					btn1: { row: 0, column: 0, futureControlProp: 'ignore me' },
+				},
+				stylePresets: {
+					default: { text: true, futurePresetProp: 123 },
+				},
+				futureRootProp: { anything: true },
+			}
+			const encoded = Buffer.from(JSON.stringify(manifest)).toString('base64')
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" LAYOUT_MANIFEST="${encoded}"\n`)
+
+			expect(socket.lastMessage).toContain('ADD-DEVICE')
+			expect(socket.lastMessage).toContain('OK')
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.surfaceManifest).toEqual({
+				controls: {
+					btn1: { row: 0, column: 0 },
+				},
+				stylePresets: {
+					default: { text: true },
+				},
+			})
+		})
 	})
 
 	describe('REMOVE-DEVICE', () => {
