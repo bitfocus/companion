@@ -277,7 +277,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
 
 						// Track clock-sensitive presets so we can re-render them on each clock tick
-						if (buttonStyle?.style === 'button-layered' && buttonStyle.clockSensitive) {
+						if (buttonStyle && buttonStyle.clockSensitive) {
 							this.#clockSensitivePresets.add(args.controlId)
 						} else {
 							this.#clockSensitivePresets.delete(args.controlId)
@@ -347,7 +347,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 						// Track clock-sensitive locations so we can re-render them on each clock tick
 						const locationKey = `${location.pageNumber}/${location.row}/${location.column}`
-						if (buttonStyle.style === 'button-layered' && buttonStyle.clockSensitive) {
+						if (buttonStyle.clockSensitive) {
 							this.#clockSensitiveLocations.set(locationKey, location)
 						} else {
 							this.#clockSensitiveLocations.delete(locationKey)

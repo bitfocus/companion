@@ -1535,9 +1535,9 @@ describe('VariablesAndExpressionParser', () => {
 					.clockSensitive
 			).toBe(false)
 			// A missing value is never clock-sensitive
-			expect(
-				parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockSensitive
-			).toBe(false)
+			expect(parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockSensitive).toBe(
+				false
+			)
 		})
 
 		it('parseEntityOptions ORs clockSensitive across all fields', () => {
@@ -1593,18 +1593,34 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('rejects oscillate when the parser disallows clock-sensitive expressions', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null, {
-				allowClockSensitive: false,
-			})
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				defaultVariables,
+				new Map(),
+				null,
+				null,
+				{
+					allowClockSensitive: false,
+				}
+			)
 			const result = parser.executeExpression('oscillate(1000)', undefined)
 			expect(result.ok).toBe(false)
 			expect(result.clockSensitive).toBe(false)
 		})
 
 		it('child parsers inherit the allowClockSensitive setting', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null, {
-				allowClockSensitive: false,
-			})
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				defaultVariables,
+				new Map(),
+				null,
+				null,
+				{
+					allowClockSensitive: false,
+				}
+			)
 			const child = parser.createChildParser({})
 			expect(child.executeExpression('oscillate(1000)', undefined).ok).toBe(false)
 		})
