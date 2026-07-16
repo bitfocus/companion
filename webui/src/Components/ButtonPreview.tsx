@@ -75,12 +75,18 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 			if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
 			e.preventDefault()
 			e.stopPropagation()
-			// If a press was started (mobile long-press), release it before opening the menu
+
+			// Without a context menu (e.g. the Surface Emulator or the Tablet/Web buttons page) a
+			// long-press must not release the button - the press has to continue until the finger is
+			// lifted. Otherwise the browser's long-press gesture cancels a stationary hold (issue #4322).
+			if (!rawOnContextMenu) return
+
+			// A press was started (mobile long-press), release it before opening the menu
 			if (isPressedRef.current) {
 				isPressedRef.current = false
 				rawOnClick?.(rawLocation, false)
 			}
-			rawOnContextMenu?.(rawLocation, e.clientX, e.clientY)
+			rawOnContextMenu(rawLocation, e.clientX, e.clientY)
 		},
 		[rawOnContextMenu, rawOnClick, rawLocation]
 	)
@@ -93,7 +99,10 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 			// Prefer the newer pointer events
 			onPointerDown={hasPointerEvents ? doPress : undefined}
 			onPointerUp={hasPointerEvents ? doRelease : undefined}
-			onPointerCancel={hasPointerEvents ? doRelease : undefined}
+			// Only release on pointercancel when a context menu is present. For plain hold buttons
+			// (emulator/tablet), a stationary touch triggers a spurious pointercancel on Android Chrome
+			// that would release the button early; there we keep it held until pointerup (issue #4322).
+			onPointerCancel={hasPointerEvents && rawOnContextMenu ? doRelease : undefined}
 			// Setup the older mouse and touch events for compatibility
 			onMouseDown={!hasPointerEvents ? doPress : undefined}
 			onMouseUp={!hasPointerEvents ? doRelease : undefined}
