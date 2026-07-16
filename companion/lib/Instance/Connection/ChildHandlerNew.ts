@@ -378,7 +378,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 			// Note: for actions, this doesn't need to be reactive
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null, false)
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null, {
+				allowClockSensitive: false,
+			})
 			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 			if (!parseRes.ok) {
 				let location = 'Unknown'

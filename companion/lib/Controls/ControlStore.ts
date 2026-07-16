@@ -3,7 +3,10 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { IControlStore } from './IControlStore.js'
@@ -167,20 +170,15 @@ export class ControlStore implements IControlStore {
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
 		overrideVariableValues: VariableValues | null,
-		allowClockSensitive?: boolean
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 
 		// If the control exists and supports entities, use its parser for local variables
 		if (control && control.supportsEntities)
-			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, allowClockSensitive)
+			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(
-			null,
-			null,
-			overrideVariableValues,
-			allowClockSensitive
-		)
+		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, options)
 	}
 }

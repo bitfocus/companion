@@ -173,6 +173,7 @@ export class ControlTrigger
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			renderClock: deps.renderClock,
 		})
 
 		this.#eventBus = eventBus

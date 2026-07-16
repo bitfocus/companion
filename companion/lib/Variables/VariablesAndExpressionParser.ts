@@ -25,6 +25,18 @@ import {
 import type { VariablesBlinker } from './VariablesBlinker.js'
 
 /**
+ * Options controlling how an expression parser behaves in its evaluation context.
+ */
+export interface ExpressionParserOptions {
+	/**
+	 * Whether clock-sensitive expression functions (e.g. `oscillate()`) are permitted.
+	 * Defaults to `true`. Set `false` in contexts that have no render clock to drive re-evaluation
+	 * (e.g. when parsing action options), so such expressions are rejected rather than silently frozen.
+	 */
+	allowClockSensitive?: boolean
+}
+
+/**
  * A class to parse and execute expressions with variables
  * This allows for preparing any injected/lazy variables before executing multiple expressions
  */
@@ -63,11 +75,11 @@ export class VariablesAndExpressionParser {
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues | null,
-		allowClockSensitive = true
+		options?: ExpressionParserOptions
 	) {
 		this.#userconfig = userconfig
 		this.#blinker = blinker
-		this.#allowClockSensitive = allowClockSensitive
+		this.#allowClockSensitive = options?.allowClockSensitive ?? true
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
 		this.#overrideVariableValues = overrideVariableValues || {}
@@ -86,7 +98,7 @@ export class VariablesAndExpressionParser {
 				...this.#overrideVariableValues,
 				...overrideVariableValues,
 			},
-			this.#allowClockSensitive
+			{ allowClockSensitive: this.#allowClockSensitive }
 		)
 
 		// Manual clone the localValues

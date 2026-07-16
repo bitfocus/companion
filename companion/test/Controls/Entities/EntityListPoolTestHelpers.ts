@@ -89,6 +89,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		pageStore: pageStore as any,
 		controlId,
 		reportChange,
+		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 	}
 
 	return {

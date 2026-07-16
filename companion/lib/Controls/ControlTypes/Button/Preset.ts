@@ -116,6 +116,7 @@ export class ControlButtonPreset
 				processManager: deps.instance.processManager,
 				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
+				renderClock: deps.renderClock,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			(expression, requiredType) =>

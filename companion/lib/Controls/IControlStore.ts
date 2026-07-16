@@ -1,5 +1,8 @@
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 
@@ -48,7 +51,7 @@ export interface IControlStore {
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
 		overrideVariableValues: VariableValues | null,
-		allowClockSensitive?: boolean
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser
 
 	/**

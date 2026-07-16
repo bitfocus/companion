@@ -253,7 +253,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#registerMetrics(metrics)
 
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => {
-			for (const [, location] of this.#clockSensitiveLocations) {
+			for (const location of this.#clockSensitiveLocations.values()) {
 				this.invalidateButton(location)
 			}
 			for (const controlId of this.#clockSensitivePresets) {

@@ -84,10 +84,15 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		mockCreateVariablesAndExpressionParser.mockReturnValue(mockVariablesParser as any)
 
 		// Create a new instance for each test
-		manager = new EntityPoolSpecialExpressionManager('control-1', mockCreateVariablesAndExpressionParser, {
-			isInverted: mockUpdateIsInvertedFn,
-			storeResult: mockUpdateStoreResultFn,
-		})
+		manager = new EntityPoolSpecialExpressionManager(
+			'control-1',
+			mockCreateVariablesAndExpressionParser,
+			{
+				isInverted: mockUpdateIsInvertedFn,
+				storeResult: mockUpdateStoreResultFn,
+			},
+			{ subscribe: vi.fn(() => () => {}) } as any
+		)
 
 		vi.useFakeTimers()
 	})

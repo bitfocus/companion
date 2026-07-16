@@ -140,7 +140,7 @@ export class Registry {
 	readonly usageStatistics: DataUsageStatistics
 	readonly metrics: DataMetrics
 
-	#renderClock: RenderClock | null = null
+	readonly #renderClock: RenderClock
 
 	/**
 	 * The 'data' controller
@@ -215,8 +215,7 @@ export class Registry {
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
-		const renderClock = new RenderClock()
-		this.#renderClock = renderClock
+		this.#renderClock = new RenderClock()
 
 		this.graphics = new GraphicsController(
 			controlStore,
@@ -226,7 +225,7 @@ export class Registry {
 			this.db,
 			this.#internalApiRouter,
 			this.metrics,
-			renderClock
+			this.#renderClock
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -249,7 +248,7 @@ export class Registry {
 			this.surfaces,
 			oscSender,
 			this.metrics,
-			renderClock
+			this.#renderClock
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
@@ -268,7 +267,7 @@ export class Registry {
 			userconfig: this.userconfig,
 			graphics: this.graphics,
 			actionRunner: actionRunner,
-			renderClock: renderClock,
+			renderClock: this.#renderClock,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -277,7 +276,7 @@ export class Registry {
 			this.controls,
 			controlEvents,
 			localVariables,
-			renderClock
+			this.#renderClock
 		)
 
 		this.internalModule.init(
@@ -508,6 +507,8 @@ export class Registry {
 		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
+			this.#renderClock.destroy()
+
 			this.ui.close()
 
 			// Save the db to disk
@@ -525,9 +526,6 @@ export class Registry {
 			} catch (_e) {
 				//do nothing
 			}
-
-			this.#renderClock?.destroy()
-			this.#renderClock = null
 
 			if (fromInternal) {
 				// Inform the parent that we are shutting down

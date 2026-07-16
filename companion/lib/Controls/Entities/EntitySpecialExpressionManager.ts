@@ -206,11 +206,11 @@ export class EntityPoolSpecialExpressionManager {
 		updateFns: {
 			[Expression in SpecialExpression]: UpdateSpecialExpressionValuesFn<Expression>
 		},
-		renderClock?: RenderClock
+		renderClock: RenderClock
 	) {
 		this.#controlId = controlId
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
-		this.#unsubscribeRenderClock = renderClock?.subscribe(() => this.onRenderClockTick()) ?? null
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick()) ?? null
 
 		this.specialExpressions = {
 			isInverted: {
