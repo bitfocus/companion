@@ -45,7 +45,10 @@ export class VariablesAndExpressionParser {
 
 	readonly #blinker: VariablesBlinker
 
-	readonly #allowClockSensitive: boolean
+	/**
+	 * The resolved options for this parser.
+	 */
+	readonly #options: ExpressionParserOptions
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
@@ -75,11 +78,11 @@ export class VariablesAndExpressionParser {
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues | null,
-		options?: ExpressionParserOptions
+		options: ExpressionParserOptions | undefined
 	) {
 		this.#userconfig = userconfig
 		this.#blinker = blinker
-		this.#allowClockSensitive = options?.allowClockSensitive ?? true
+		this.#options = options ?? {}
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
 		this.#overrideVariableValues = overrideVariableValues || {}
@@ -98,7 +101,7 @@ export class VariablesAndExpressionParser {
 				...this.#overrideVariableValues,
 				...overrideVariableValues,
 			},
-			{ allowClockSensitive: this.#allowClockSensitive }
+			this.#options
 		)
 
 		// Manual clone the localValues
@@ -127,7 +130,8 @@ export class VariablesAndExpressionParser {
 			{},
 			new Map(),
 			null,
-			overrideVariableValues
+			overrideVariableValues,
+			this.#options
 		)
 	}
 
@@ -159,7 +163,7 @@ export class VariablesAndExpressionParser {
 			this.#valueCacheAccessor,
 			this.#userconfig.getKey('timezone') || undefined,
 			undefined,
-			this.#allowClockSensitive
+			this.#options.allowClockSensitive ?? true
 		)
 	}
 

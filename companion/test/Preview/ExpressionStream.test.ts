@@ -25,7 +25,7 @@ function createParser(
 ): VariablesAndExpressionParser {
 	// Mirror production's terminal construction (Values.createVariablesAndExpressionParser):
 	// overrides are applied via the constructor's overrideVariableValues arg, not createChildParser.
-	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides)
+	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides, undefined)
 }
 
 /**
