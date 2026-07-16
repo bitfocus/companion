@@ -276,7 +276,8 @@ export class Registry {
 			pageStore,
 			this.controls,
 			controlEvents,
-			localVariables
+			localVariables,
+			renderClock
 		)
 
 		this.internalModule.init(

@@ -1,6 +1,7 @@
 import type EventEmitter from 'node:events'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -21,17 +22,24 @@ export class PreviewController {
 		pageStore: IPageStore,
 		controlsController: ControlsController,
 		controlEvents: EventEmitter<ControlCommonEvents>,
-		localVariables: LocalVariablesController
+		localVariables: LocalVariablesController,
+		renderClock: RenderClock
 	) {
 		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController, controlEvents)
-		this.#expressionStream = new PreviewExpressionStream(controlsController, localVariables)
+		this.#expressionStream = new PreviewExpressionStream(controlsController, localVariables, renderClock)
 		this.#elementStream = new PreviewElementStream(
 			instanceDefinitions,
 			graphicsController,
 			pageStore,
 			controlsController,
-			controlEvents
+			controlEvents,
+			renderClock
 		)
+	}
+
+	destroy(): void {
+		this.#expressionStream.destroy()
+		this.#elementStream.destroy()
 	}
 
 	createTrpcRouter() {

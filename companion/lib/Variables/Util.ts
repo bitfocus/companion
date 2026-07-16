@@ -348,14 +348,29 @@ export function executeExpression(
 			},
 
 			getVariableValue,
-			oscillate(period: any, _waveform?: any): 0 | 1 {
+			oscillate(period: any, waveform?: any): number {
 				if (!allowClockSensitive) throw new Error('oscillate() is not supported in this context')
 
 				const p = Number(period)
 				if (isNaN(p) || p < 100) return 0
 
 				clockSensitive = true
-				return (Date.now() % p) / p < 0.5 ? 1 : 0
+				// Snap to the nearest 100ms grid to produce even steps regardless of when
+				// within the tick this is called.
+				const quantizedNow = Math.round(Date.now() / 100) * 100
+				const t = (quantizedNow % p) / p
+				switch (typeof waveform === 'string' ? waveform.toLowerCase() : 'sine') {
+					case 'sine':
+						return (Math.sin(2 * Math.PI * t - Math.PI / 2) + 1) / 2
+					case 'triangle':
+						return t < 0.5 ? 2 * t : 2 * (1 - t)
+					case 'sawtooth':
+						// Rescale so the last quantized step before the wrap maps to 1.0.
+						// Without this, t ranges over [0, 1) and never reaches full.
+						return p <= 100 ? 0 : Math.min((t * p) / (p - 100), 1)
+					default:
+						return t < 0.5 ? 1 : 0
+				}
 			},
 			blink(interval: any, dutyCycle: any): 0 | 1 {
 				// Validate the interval

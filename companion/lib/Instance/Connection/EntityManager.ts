@@ -83,7 +83,12 @@ export class ConnectionEntityManager {
 
 	readonly #unsubscribeRenderClock: () => void
 
-	constructor(adapter: EntityManagerAdapter, controlsStore: IControlStore, connectionId: string, renderClock: RenderClock) {
+	constructor(
+		adapter: EntityManagerAdapter,
+		controlsStore: IControlStore,
+		connectionId: string,
+		renderClock: RenderClock
+	) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
 		this.#adapter = adapter
 		this.controlsStore = controlsStore
@@ -188,10 +193,10 @@ export class ConnectionEntityManager {
 								} else {
 									updateOptions = parseRes.parsedOptions
 								}
-							wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
-							wrapper.lastClockSensitive =
-								entityModel.type === EntityModelType.Feedback ? parseRes.clockSensitive : false
-						} catch (e) {
+								wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
+								wrapper.lastClockSensitive =
+									entityModel.type === EntityModelType.Feedback ? parseRes.clockSensitive : false
+							} catch (e) {
 								this.#logger.warn(
 									`Error parsing options for entity ${entity.id} in control ${wrapper.controlId}, marking as inactive: ${stringifyError(e, false)}`
 								)

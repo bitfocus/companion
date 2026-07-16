@@ -176,6 +176,11 @@ export class ControlStore implements IControlStore {
 			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, allowClockSensitive)
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, allowClockSensitive)
+		return this.#variablesValues.createVariablesAndExpressionParser(
+			null,
+			null,
+			overrideVariableValues,
+			allowClockSensitive
+		)
 	}
 }

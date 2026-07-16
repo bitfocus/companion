@@ -90,7 +90,12 @@ describe('InstanceEntityManager', () => {
 		mockAdapter.upgradeFeedbacks.mockResolvedValue([])
 
 		// Create a new instance for each test
-		entityManager = new ConnectionEntityManager(mockAdapter as any, mockControlsController as any, 'test-connection-id', mockRenderClock as any)
+		entityManager = new ConnectionEntityManager(
+			mockAdapter as any,
+			mockControlsController as any,
+			'test-connection-id',
+			mockRenderClock as any
+		)
 
 		vi.useFakeTimers()
 	})

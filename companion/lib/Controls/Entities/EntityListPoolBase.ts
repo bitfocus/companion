@@ -15,12 +15,12 @@ import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { VariablesValues } from '../../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type { RenderClock } from '../RenderClock.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
-import type { RenderClock } from '../RenderClock.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
