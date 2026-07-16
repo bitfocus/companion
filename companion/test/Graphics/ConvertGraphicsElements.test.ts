@@ -1587,9 +1587,36 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.clockSensitive).toBe(true)
 			// The clock-sensitive element must recompute each tick, so it is not cached
 			expect(cache.get('osc')).toBeUndefined()
-			// A plain element that merely runs after a clock-sensitive one is not itself
-			// clock-sensitive (clockBefore was already true), so it is still cached
+			// A plain element running alongside a clock-sensitive one is not itself
+			// clock-sensitive, so it is still cached
 			expect(cache.get('plain')).toBeDefined()
+		})
+
+		test('does not cache either of two clock-sensitive siblings', async () => {
+			// Regression: clock sensitivity is tracked per element, not via a shared flag.
+			// Previously the first oscillating sibling set a shared flag, so the second was
+			// wrongly seen as clock-insensitive, cached, and frozen.
+			const cache = new ElementConversionCache()
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'osc1', text: expr('oscillate(1000)') }),
+				makeTextEl({ id: 'osc2', text: expr('oscillate(2000)') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+
+			expect(result.clockSensitive).toBe(true)
+			expect(cache.get('osc1')).toBeUndefined()
+			expect(cache.get('osc2')).toBeUndefined()
 		})
 	})
 

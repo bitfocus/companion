@@ -10,7 +10,7 @@ import {
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import { Complete } from '@companion-module/host'
+import type { Complete } from '@companion-module/host'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'

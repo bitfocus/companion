@@ -1498,6 +1498,34 @@ storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 
+		it('does not recompute a clock-sensitive no-variable entity until the clock ticks', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const oscEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(oscEntity, 'isInverted')
+			vi.runAllTimers()
+
+			// It is marked as computed (non-null referencedVariableIds) so later processing passes skip it
+			expect(isInvertedEntities().get('entity-osc')!.referencedVariableIds).not.toBe(null)
+			mockUpdateIsInvertedFn.mockClear()
+
+			// Tracking an unrelated entity triggers another processing pass; without a clock tick the
+			// already-computed clock-sensitive entity must not be recomputed as part of it.
+			const otherEntity = createMockFeedbackEntity('entity-other', { isExpression: false, value: true })
+			manager.trackEntity(otherEntity, 'isInverted')
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			const updatedMap = mockUpdateIsInvertedFn.mock.calls[0][0]
+			expect(updatedMap.has('entity-other')).toBe(true)
+			expect(updatedMap.has('entity-osc')).toBe(false)
+		})
+
 		it('is a no-op after destroy', () => {
 			mockParseExpressionResult = {
 				ok: true,

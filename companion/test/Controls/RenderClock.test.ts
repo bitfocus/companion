@@ -63,6 +63,26 @@ describe('RenderClock', () => {
 		clock.destroy()
 	})
 
+	test('a listener that throws does not prevent other listeners from firing', () => {
+		const clock = new RenderClock()
+		const throwing = vi.fn(() => {
+			throw new Error('boom')
+		})
+		const other = vi.fn()
+		clock.subscribe(throwing)
+		clock.subscribe(other)
+
+		expect(() => vi.advanceTimersByTime(100)).not.toThrow()
+		expect(throwing).toHaveBeenCalledTimes(1)
+		expect(other).toHaveBeenCalledTimes(1)
+
+		// And the throwing listener does not break subsequent ticks
+		vi.advanceTimersByTime(100)
+		expect(other).toHaveBeenCalledTimes(2)
+
+		clock.destroy()
+	})
+
 	test('subscribing the same function reference twice registers it once', () => {
 		const clock = new RenderClock()
 		const listener = vi.fn()

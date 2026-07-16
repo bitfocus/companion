@@ -1,6 +1,7 @@
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
+import type { ElementReferences } from './ConvertGraphicsElements/Helper.js'
 
 /**
  * Result of converting a single graphics element for drawing
@@ -8,8 +9,8 @@ import type { CompositeElementIdString } from '../Instance/Definitions.js'
 export interface ElementConversionCacheEntry {
 	/** The converted draw element, or null if the element was disabled and filtered out */
 	readonly drawElement: SomeButtonGraphicsDrawElement | null
-	/** Variables referenced during expression evaluation for this element */
-	readonly usedVariables: ReadonlySet<string>
+	/** Per-element references (variables used, clock sensitivity) accumulated during conversion */
+	readonly references: ElementReferences
 
 	/** Composite element information if this element is a composite */
 	readonly compositeElement: {
@@ -147,7 +148,7 @@ export class ElementConversionCache {
 		if (this.#changedVariables.size > 0) {
 			for (const [elementId, entry] of this.#cache) {
 				// Check if any of the element's used variables are in the changed set
-				if (!entry.usedVariables.isDisjointFrom(this.#changedVariables)) {
+				if (!entry.references.usedVariables.isDisjointFrom(this.#changedVariables)) {
 					this.#cache.delete(elementId)
 					continue
 				}

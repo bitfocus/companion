@@ -260,8 +260,10 @@ export class EntityPoolSpecialExpressionManager {
 							// Do not track a special expression that refers to no variables and is not clock-sensitive.
 							logger.silly(`Stopped tracking ${entity.id}/${type} as it refers to no variables`)
 							entities.delete(entity.id)
+						} else {
+							// Keep the entity in the map because it depends on the render clock
+							wrapper.referencedVariableIds = referencedVariableIds || new Set()
 						}
-						// else: keep the entity in the map because it depends on the render clock
 					} else {
 						wrapper.referencedVariableIds = referencedVariableIds
 					}
