@@ -793,6 +793,57 @@ describe('ElementExpressionHelper', () => {
 		})
 	})
 
+	describe('clockSensitive propagation', () => {
+		// Build a helper exposing its shared globalReferences so we can observe the propagation
+		function makeHelperWithRefs(
+			element: TestEl,
+			variableValues: Record<string, Record<string, string | number | boolean>> = {}
+		): { helper: ElementExpressionHelper<TestEl>; globalRefs: ExpressionReferences } {
+			const globalRefs = makeGlobalRefs()
+			const helper = new ElementExpressionHelper(
+				createMockParser(variableValues),
+				new Set<string>(),
+				element,
+				undefined,
+				globalRefs
+			)
+			return { helper, globalRefs }
+		}
+
+		test('an oscillate expression flips globalReferences.clockSensitive', () => {
+			const { helper, globalRefs } = makeHelperWithRefs(makeEl())
+			expect(globalRefs.clockSensitive).toBe(false)
+			helper.executeExpressionAndTrackVariables('oscillate(1000)', 'number')
+			expect(globalRefs.clockSensitive).toBe(true)
+		})
+
+		test('a non-oscillate expression leaves clockSensitive false', () => {
+			const { helper, globalRefs } = makeHelperWithRefs(makeEl(), { ns: { x: 1 } })
+			helper.executeExpressionAndTrackVariables('$(ns:x) + 1', 'number')
+			expect(globalRefs.clockSensitive).toBe(false)
+		})
+
+		test('property getters that evaluate an oscillate expression also propagate', () => {
+			const { helper, globalRefs } = makeHelperWithRefs(makeEl({ numProp: expr('oscillate(1000)') }))
+			helper.getNumber('numProp', 0)
+			expect(globalRefs.clockSensitive).toBe(true)
+		})
+
+		test('variable interpolation never sets clockSensitive', () => {
+			const { helper, globalRefs } = makeHelperWithRefs(makeEl(), { ns: { name: 'World' } })
+			helper.parseVariablesInString('Hello $(ns:name)', '')
+			expect(globalRefs.clockSensitive).toBe(false)
+		})
+
+		test('a child row helper shares the same globalReferences', () => {
+			const { helper, globalRefs } = makeHelperWithRefs(makeEl())
+			const rowHelper = helper.forRow({ cell: expr<number>('oscillate(1000)') })
+			rowHelper.getNumber('cell', 0)
+			// The oscillate in the child row flips the parent's shared references
+			expect(globalRefs.clockSensitive).toBe(true)
+		})
+	})
+
 	describe('elementOverrides', () => {
 		test('override takes precedence over element property value', () => {
 			const element = makeEl({ strProp: val('original') })

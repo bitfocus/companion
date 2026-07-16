@@ -1417,6 +1417,103 @@ storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?
 		})
 	})
 
+	describe('render clock', () => {
+		const isInvertedEntities = () => manager['specialExpressions'].isInverted.entities
+
+		it('keeps tracking an entity that references no variables but is clock-sensitive', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+
+			// A clock-sensitive entity is retained even with no referenced variables
+			const wrapper = isInvertedEntities().get('entity-osc')
+			expect(wrapper).not.toBe(undefined)
+			expect(wrapper!.dependsOnRenderClock).toBe(true)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
+		})
+
+		it('stops tracking an entity that references no variables and is not clock-sensitive', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: false,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-static', { isExpression: true, value: 'true' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+
+			// With no variables and no clock-sensitivity there is nothing to react to, so it is dropped
+			expect(isInvertedEntities().get('entity-static')).toBe(undefined)
+		})
+
+		it('re-evaluates a clock-sensitive entity on a render clock tick', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+			mockUpdateIsInvertedFn.mockClear()
+
+			manager.onRenderClockTick()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
+		})
+
+		it('does not re-evaluate a non-clock-sensitive entity on a render clock tick', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(['custom:var']),
+				clockSensitive: false,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-var', { isExpression: true, value: '$(custom:var)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+			mockUpdateIsInvertedFn.mockClear()
+
+			manager.onRenderClockTick()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+		})
+
+		it('is a no-op after destroy', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+			mockUpdateIsInvertedFn.mockClear()
+
+			manager.destroy()
+			manager.onRenderClockTick()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('weak reference cleanup', () => {
 		it('should handle garbage collected entities gracefully, isInverted', () => {
 			// This test verifies the WeakRef behavior - when an entity is garbage collected,

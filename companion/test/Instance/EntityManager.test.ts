@@ -710,6 +710,99 @@ describe('InstanceEntityManager', () => {
 		})
 	})
 
+	describe('onRenderClockTick (render clock)', () => {
+		const makeFeedback = (id = 'feedback-1') => ({
+			id,
+			type: EntityModelType.Feedback,
+			definitionId: 'feedback-def-1',
+			upgradeIndex: 5,
+			asEntityModel: vi.fn().mockReturnValue({
+				id,
+				type: EntityModelType.Feedback,
+				definitionId: 'feedback-def-1',
+				connectionId: 'connection-1',
+				options: {},
+				upgradeIndex: 5,
+			}),
+			getEntityDefinition: vi.fn().mockReturnValue({
+				hasLifecycleFunctions: true,
+				options: [],
+				optionsToIgnoreForSubscribe: [],
+			}),
+		})
+
+		const makeAction = (id = 'action-1') => ({
+			id,
+			type: EntityModelType.Action,
+			definitionId: 'action-def-1',
+			upgradeIndex: 5,
+			asEntityModel: vi.fn().mockReturnValue({
+				id,
+				type: EntityModelType.Action,
+				definitionId: 'action-def-1',
+				connectionId: 'connection-1',
+				options: {},
+				upgradeIndex: 5,
+			}),
+			getEntityDefinition: vi.fn().mockReturnValue({
+				hasLifecycleFunctions: true,
+				options: [],
+				optionsToIgnoreForSubscribe: [],
+			}),
+		})
+
+		// The constructor subscribes exactly one callback to the render clock; capture it to fire ticks
+		const getTick = (): (() => void) => mockRenderClock.subscribe.mock.calls[0][0] as () => void
+
+		const mockClockSensitive = (clockSensitive: boolean) => {
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
+				parsedOptions: {},
+				referencedVariableIds: new Set<string>(),
+				clockSensitive,
+			}))
+		}
+
+		it('re-evaluates a clock-sensitive feedback on a clock tick', () => {
+			mockClockSensitive(true)
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback() as any, 'control-1')
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			getTick()()
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalled()
+		})
+
+		it('does not re-evaluate a clock-sensitive action on a clock tick (actions are excluded)', () => {
+			mockClockSensitive(true)
+			entityManager.start(5)
+			entityManager.trackEntity(makeAction() as any, 'control-1')
+			vi.runAllTimers()
+			mockAdapter.updateActions.mockClear()
+
+			getTick()()
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
+		})
+
+		it('does not re-evaluate a non-clock-sensitive feedback on a clock tick', () => {
+			mockClockSensitive(false)
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback() as any, 'control-1')
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			getTick()()
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('Entity upgrade process', () => {
 		it('should send entity for upgrade when upgradeIndex is different', () => {
 			// Create entity with older upgrade index
