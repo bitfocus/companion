@@ -117,6 +117,59 @@ describe('Rosstalk', () => {
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
 		})
 
+		test('command with null terminator', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null as any, 'CC 12:24\0')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 12,
+				row: 2,
+				column: 7,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+		})
+
+		test('command with leading control characters', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null as any, '\0CC 12:24')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 12,
+				row: 2,
+				column: 7,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+		})
+
+		test('multiple null separated commands in one chunk', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null as any, 'CC 12:24\0CC 13/3/4\0')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(2)
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
+				pageNumber: 12,
+				row: 2,
+				column: 7,
+			})
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 13,
+				row: 3,
+				column: 4,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
+		})
+
 		test('multiple commands in one chunk', async () => {
 			const { serviceApi, service } = createService()
 			serviceApi.getControlIdAt.mockReturnValue('myControl')
