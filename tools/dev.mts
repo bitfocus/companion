@@ -139,11 +139,16 @@ const IGNORED_DIR_NAMES = new Set([
 const WATCHED_FILE_EXTENSIONS = ['.mjs', '.js', '.cjs', '.json']
 
 function isIgnoredPath(filePath: string, stats: fs.Stats | undefined): boolean {
-	if (stats?.isFile()) {
+	if (filePath.split(/[\\/]/).some((segment) => IGNORED_DIR_NAMES.has(segment))) {
+		return true
+	}
+
+	const looksLikeFile = stats?.isFile() ?? path.extname(filePath) !== ''
+	if (looksLikeFile) {
 		return !WATCHED_FILE_EXTENSIONS.some((ext) => filePath.endsWith(ext))
 	}
 
-	return filePath.split(path.sep).some((segment) => IGNORED_DIR_NAMES.has(segment))
+	return false
 }
 
 const mainWatcher = chokidar

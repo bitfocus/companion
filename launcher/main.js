@@ -310,11 +310,16 @@ if (!lock) {
 	 * @returns {boolean}
 	 */
 	function isIgnoredPath(filePath, stats) {
-		if (stats?.isFile()) {
+		if (filePath.split(/[\\/]/).some((segment) => ignoredDirNames.has(segment))) {
+			return true
+		}
+
+		const looksLikeFile = stats?.isFile() ?? path.extname(filePath) !== ''
+		if (looksLikeFile) {
 			return !watchedFileExtensions.some((ext) => filePath.endsWith(ext))
 		}
 
-		return filePath.split(path.sep).some((segment) => ignoredDirNames.has(segment))
+		return false
 	}
 
 	/** @type {ReturnType<typeof chokidar.watch> | null} */
