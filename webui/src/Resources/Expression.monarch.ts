@@ -191,9 +191,9 @@ export const builtinFunctionCompletions: Array<{
 	},
 	{
 		name: 'oscillate',
-		detail: 'oscillate(period_ms, ?waveform_shape)',
+		detail: 'oscillate(period_ms, ?waveform_shape, ?phase)',
 		documentation:
-			'A value that smoothly cycles between 0 and 1 over the specified interval in milliseconds. The optional second parameter selects the waveform shape: "sine" (default), "triangle", "sawtooth" or "square".',
+			'A value that smoothly cycles between 0 and 1 over the specified interval in milliseconds. The optional second parameter selects the waveform shape: "sine" (default), "triangle", "sawtooth" or "square". The optional third parameter offsets the phase by a fraction of a cycle (0-1), allowing multiple oscillators to be staggered against each other.',
 	},
 
 	// Object/array operations

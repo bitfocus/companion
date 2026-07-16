@@ -178,6 +178,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	readonly #clockSensitiveLocations = new Map<string, ControlLocation>()
 
+	/**
+	 * Preset controlIds whose draw style depends on the render clock (e.g. contain oscillate() expressions).
+	 * Presets have no location, so they are tracked separately from {@link #clockSensitiveLocations}.
+	 */
+	readonly #clockSensitivePresets = new Set<string>()
+
 	#unsubscribeRenderClock: (() => void) | null = null
 
 	#pendingVariables: VariableValues | null = null
@@ -250,6 +256,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			for (const [, location] of this.#clockSensitiveLocations) {
 				this.invalidateButton(location)
 			}
+			for (const controlId of this.#clockSensitivePresets) {
+				this.#drawAndCachePreset(controlId)
+			}
 		})
 
 		this.setMaxListeners(0)
@@ -266,6 +275,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (args.type === 'preset') {
 						const control = this.controlsStore.getControl(args.controlId)
 						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+
+						// Track clock-sensitive presets so we can re-render them on each clock tick
+						if (buttonStyle?.style === 'button-layered' && buttonStyle.clockSensitive) {
+							this.#clockSensitivePresets.add(args.controlId)
+						} else {
+							this.#clockSensitivePresets.delete(args.controlId)
+						}
 
 						let render: ImageResult | undefined
 						if (buttonStyle && buttonStyle.style === 'button-layered') {

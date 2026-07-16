@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
 import { executeExpression as executeExpressionRaw, VariableValueCache } from '../../lib/Variables/Util.js'
 import { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
@@ -380,6 +380,73 @@ describe('executeExpression', () => {
 
 			const res = executeExpression(blinker, 'blink(1000)', {}, undefined, new Map())
 			expect(res).toMatchObject({ value: 0 })
+		})
+	})
+
+	describe('oscillate function', () => {
+		// oscillate() reads Date.now() and snaps to a 100ms grid, so fake the clock for determinism.
+		beforeEach(() => {
+			vi.useFakeTimers()
+		})
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		test('sine is the default waveform and marks the result as clock-sensitive', () => {
+			// At the start of a cycle the sine wave sits at its trough (0)
+			vi.setSystemTime(10_000)
+			const res = executeExpression(mockBlinker, 'oscillate(1000)', {}, undefined, new Map())
+			expect(res).toMatchObject({ value: expect.closeTo(0), clockSensitive: true })
+
+			// Half way through the cycle it reaches its peak (1)
+			vi.setSystemTime(10_500)
+			const res2 = executeExpression(mockBlinker, 'oscillate(1000)', {}, undefined, new Map())
+			expect(res2).toMatchObject({ value: expect.closeTo(1) })
+		})
+
+		test('the phase offsets the waveform by a fraction of a cycle', () => {
+			// Base phase would be 0 (trough), but a 0.5 phase shifts it to the peak
+			vi.setSystemTime(10_000)
+			const res = executeExpression(mockBlinker, "oscillate(1000, 'sine', 0.5)", {}, undefined, new Map())
+			expect(res).toMatchObject({ value: expect.closeTo(1) })
+		})
+
+		test('phase wraps so negative and >1 values behave', () => {
+			vi.setSystemTime(10_000)
+			const wrapped = executeExpression(mockBlinker, "oscillate(1000, 'sine', 1.5)", {}, undefined, new Map())
+			const negative = executeExpression(mockBlinker, "oscillate(1000, 'sine', -0.5)", {}, undefined, new Map())
+			// 1.5 and -0.5 both wrap to a half-cycle offset, giving the peak
+			expect(wrapped).toMatchObject({ value: expect.closeTo(1) })
+			expect(negative).toMatchObject({ value: expect.closeTo(1) })
+		})
+
+		test('triangle and square waveforms are supported', () => {
+			vi.setSystemTime(10_500) // t = 0.5
+			expect(executeExpression(mockBlinker, "oscillate(1000, 'triangle')", {}, undefined, new Map())).toMatchObject({
+				value: expect.closeTo(1),
+			})
+			// An unrecognised waveform falls back to square: 1 for the first half, 0 for the second
+			vi.setSystemTime(10_100) // t = 0.1
+			expect(executeExpression(mockBlinker, "oscillate(1000, 'square')", {}, undefined, new Map())).toMatchObject({
+				value: 1,
+			})
+			vi.setSystemTime(10_600) // t = 0.6
+			expect(executeExpression(mockBlinker, "oscillate(1000, 'square')", {}, undefined, new Map())).toMatchObject({
+				value: 0,
+			})
+		})
+
+		test('periods below 100ms are clamped to 100ms', () => {
+			vi.setSystemTime(10_000)
+			const clamped = executeExpression(mockBlinker, 'oscillate(50)', {}, undefined, new Map())
+			const floor = executeExpression(mockBlinker, 'oscillate(100)', {}, undefined, new Map())
+			expect(clamped).toMatchObject({ value: floor.ok ? floor.value : undefined, clockSensitive: true })
+		})
+
+		test('an invalid period returns 0 and is not clock-sensitive', () => {
+			vi.setSystemTime(10_000)
+			const res = executeExpression(mockBlinker, "oscillate('abc')", {}, undefined, new Map())
+			expect(res).toMatchObject({ value: 0, clockSensitive: false })
 		})
 	})
 
