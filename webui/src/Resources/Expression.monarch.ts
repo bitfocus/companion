@@ -189,6 +189,12 @@ export const builtinFunctionCompletions: Array<{
 		documentation:
 			'A pulsing 0/1 value that cycles at the specified interval in milliseconds. The provided interval specifies how long each cycle should take. The second optional parameter specifies the portion of the time to spend in the on state.',
 	},
+	{
+		name: 'oscillate',
+		detail: 'oscillate(period_ms, ?waveform_shape)',
+		documentation:
+			'A value that smoothly cycles between 0 and 1 over the specified interval in milliseconds. The optional second parameter selects the waveform shape: "sine" (default), "triangle", "sawtooth" or "square".',
+	},
 
 	// Object/array operations
 	{
