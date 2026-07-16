@@ -13,6 +13,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
+import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
@@ -33,6 +34,8 @@ interface EntityWrapper {
 
 	state: EntityState
 	lastReferencedVariableIds?: ReadonlySet<string>
+	/** Whether the last parsed options for this feedback entity depended on the render clock */
+	lastClockSensitive?: boolean
 }
 
 export interface EntityManagerActionEntity {
@@ -78,10 +81,13 @@ export class ConnectionEntityManager {
 	#ready = false
 	#currentUpgradeIndex = 0
 
-	constructor(adapter: EntityManagerAdapter, controlsStore: IControlStore, connectionId: string) {
+	readonly #unsubscribeRenderClock: () => void
+
+	constructor(adapter: EntityManagerAdapter, controlsStore: IControlStore, connectionId: string, renderClock: RenderClock) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
 		this.#adapter = adapter
 		this.controlsStore = controlsStore
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
 	}
 
 	readonly #debounceProcessPending = debounceFn(
@@ -182,8 +188,10 @@ export class ConnectionEntityManager {
 								} else {
 									updateOptions = parseRes.parsedOptions
 								}
-								wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
-							} catch (e) {
+							wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
+							wrapper.lastClockSensitive =
+								entityModel.type === EntityModelType.Feedback ? parseRes.clockSensitive : false
+						} catch (e) {
 								this.#logger.warn(
 									`Error parsing options for entity ${entity.id} in control ${wrapper.controlId}, marking as inactive: ${stringifyError(e, false)}`
 								)
@@ -445,6 +453,7 @@ export class ConnectionEntityManager {
 	 * Cleanup is not performed, it is assumed that the module is no longer running.
 	 */
 	destroy(): void {
+		this.#unsubscribeRenderClock()
 		this.#debounceProcessPending.cancel()
 		this.#entities.clear()
 		this.#ready = false
@@ -551,6 +560,25 @@ export class ConnectionEntityManager {
 			}
 
 			// The entity is ready, so we need to re-parse the options
+			wrapper.state = EntityState.UNLOADED
+			anyInvalidated = true
+		}
+
+		if (anyInvalidated) this.#debounceProcessPending()
+	}
+
+	/**
+	 * Inform the entity manager that the render clock has ticked.
+	 * This will cause any feedback entities whose options depend on the render clock to be re-parsed.
+	 */
+	onRenderClockTick(): void {
+		let anyInvalidated = false
+
+		for (const wrapper of this.#entities.values()) {
+			if (wrapper.state !== EntityState.READY) continue
+			if (!wrapper.lastClockSensitive) continue
+			if (wrapper.entity.deref()?.type !== EntityModelType.Feedback) continue
+
 			wrapper.state = EntityState.UNLOADED
 			anyInvalidated = true
 		}

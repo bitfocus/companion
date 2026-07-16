@@ -56,6 +56,11 @@ describe('InstanceEntityManager', () => {
 		createVariablesAndExpressionParser: vi.fn().mockReturnValue(mockVariablesParser),
 	}
 
+	const mockRenderClock = {
+		subscribe: vi.fn().mockReturnValue(() => {}),
+		destroy: vi.fn(),
+	}
+
 	let entityManager: ConnectionEntityManager
 
 	// Reset mocks before each test
@@ -85,7 +90,7 @@ describe('InstanceEntityManager', () => {
 		mockAdapter.upgradeFeedbacks.mockResolvedValue([])
 
 		// Create a new instance for each test
-		entityManager = new ConnectionEntityManager(mockAdapter as any, mockControlsController as any, 'test-connection-id')
+		entityManager = new ConnectionEntityManager(mockAdapter as any, mockControlsController as any, 'test-connection-id', mockRenderClock as any)
 
 		vi.useFakeTimers()
 	})

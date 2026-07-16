@@ -18,13 +18,16 @@ describe('EntityPoolSpecialExpressionManager', () => {
 	const mockUpdateIsInvertedFn = vi.fn<UpdateSpecialExpressionValuesFn<'isInverted'>>()
 	const mockUpdateStoreResultFn = vi.fn<UpdateSpecialExpressionValuesFn<'storeResult'>>()
 
-	let mockParseExpressionResult: ReturnType<VariablesAndExpressionParser['executeExpression']>
+	type MockExprResult = { ok: boolean; value?: unknown; error?: string; variableIds: Set<string>; clockSensitive?: boolean }
+	let mockParseExpressionResult: MockExprResult
 	let mockParseVariablesResult: ReturnType<VariablesAndExpressionParser['parseVariables']>
 
 	const mockVariablesParser = {
 		executeExpression: vi
 			.fn<VariablesAndExpressionParser['executeExpression']>()
-			.mockImplementation((_expression: string, _type: string | undefined) => mockParseExpressionResult),
+			.mockImplementation((_expression: string, _type: string | undefined) =>
+				({ clockSensitive: false, ...mockParseExpressionResult }) as ReturnType<VariablesAndExpressionParser['executeExpression']>
+			),
 		parseVariables: vi
 			.fn<VariablesAndExpressionParser['parseVariables']>()
 			.mockImplementation((_str: string) => mockParseVariablesResult),

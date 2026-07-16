@@ -121,7 +121,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		allowClockSensitive = true
 	): VariablesAndExpressionParser {
 		const thisValues = InjectedVariablesForLocation(controlLocation)
 
@@ -131,7 +132,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			this.#variableValues,
 			thisValues,
 			localValues,
-			overrideVariableValues
+			overrideVariableValues,
+			allowClockSensitive
 		)
 	}
 

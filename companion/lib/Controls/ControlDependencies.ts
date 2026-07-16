@@ -16,6 +16,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { RenderClock } from './RenderClock.js'
 
 export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController
@@ -28,6 +29,8 @@ export interface ControlExternalDependencies {
 	readonly graphics: GraphicsController
 
 	readonly actionRunner: ActionRunner
+
+	readonly renderClock: RenderClock
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {

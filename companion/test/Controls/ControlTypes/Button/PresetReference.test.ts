@@ -75,6 +75,7 @@ describe('ControlButtonPresetReference', () => {
 			dbTable: { set: vi.fn(), delete: vi.fn() } as any,
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
+			renderClock: {} as any,
 		}
 	})
 

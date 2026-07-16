@@ -166,15 +166,16 @@ export class ControlStore implements IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		allowClockSensitive?: boolean
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 
 		// If the control exists and supports entities, use its parser for local variables
 		if (control && control.supportsEntities)
-			return control.entities.createVariablesAndExpressionParser(overrideVariableValues)
+			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, allowClockSensitive)
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues)
+		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, allowClockSensitive)
 	}
 }

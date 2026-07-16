@@ -47,7 +47,8 @@ export interface IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		allowClockSensitive?: boolean
 	): VariablesAndExpressionParser
 
 	/**

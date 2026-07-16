@@ -20,6 +20,7 @@ import { ControlEntityList, type ControlEntityListDefinition } from './EntityLis
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
+import type { RenderClock } from '../RenderClock.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
@@ -39,6 +40,7 @@ export interface ControlEntityListPoolProps {
 	pageStore: IPageStore
 	controlId: string
 	reportChange: (options: ControlEntityListChangeProps) => void
+	renderClock?: RenderClock
 }
 
 /**
@@ -102,7 +104,8 @@ export abstract class ControlEntityListPoolBase {
 			{
 				isInverted: this.updateIsInvertedValues.bind(this),
 				storeResult: this.updateStoreResultValues.bind(this),
-			}
+			},
+			props.renderClock
 		)
 	}
 
@@ -190,14 +193,18 @@ export abstract class ControlEntityListPoolBase {
 			})
 	}
 
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		allowClockSensitive?: boolean
+	): VariablesAndExpressionParser {
 		const controlLocation = this.#pageStore.getLocationOfControlId(this.controlId)
 		const variableEntities = this.getLocalVariableEntities()
 
 		return this.#variableValues.createVariablesAndExpressionParser(
 			controlLocation,
 			variableEntities,
-			overrideVariableValues
+			overrideVariableValues,
+			allowClockSensitive
 		)
 	}
 

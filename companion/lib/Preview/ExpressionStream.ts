@@ -69,7 +69,7 @@ export class PreviewExpressionStream {
 								contextResolution: input.contextResolution,
 								resolvedTargetControlId: undefined,
 
-								latestResult: { ok: true, value: undefined, variableIds: new Set() },
+								latestResult: { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false },
 								changes: new EventEmitter(),
 							}
 							self.#sessions.set(expressionId, session)
@@ -268,7 +268,10 @@ export class PreviewExpressionStream {
 		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, overrides)
 
 		const res = parser.parseVariables(session.expression)
-		return this.#withContextTracking({ ok: true, value: res.text, variableIds: res.variableIds }, extraVariableIds)
+		return this.#withContextTracking(
+			{ ok: true, value: res.text, variableIds: res.variableIds, clockSensitive: false },
+			extraVariableIds
+		)
 	}
 }
 

@@ -268,9 +268,11 @@ export function executeExpression(
 	requiredType: string | undefined,
 	cachedVariableValues: VariableValueCache,
 	defaultTimezone: string | undefined,
-	limits?: ResolveExpressionLimits
+	limits?: ResolveExpressionLimits,
+	allowClockSensitive = true
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
+	let clockSensitive = false
 
 	try {
 		const getVariableValue = (props: GetVariableValueProps): VariableValue | undefined => {
@@ -346,6 +348,15 @@ export function executeExpression(
 			},
 
 			getVariableValue,
+			oscillate(period: any, _waveform?: any): 0 | 1 {
+				if (!allowClockSensitive) throw new Error('oscillate() is not supported in this context')
+
+				const p = Number(period)
+				if (isNaN(p) || p < 100) return 0
+
+				clockSensitive = true
+				return (Date.now() % p) / p < 0.5 ? 1 : 0
+			},
 			blink(interval: any, dutyCycle: any): 0 | 1 {
 				// Validate the interval
 				const int = Number(interval)
@@ -399,6 +410,7 @@ export function executeExpression(
 				ok: false,
 				error: 'Unexpected return type',
 				variableIds: referencedVariableIds,
+				clockSensitive,
 			}
 		}
 
@@ -406,12 +418,14 @@ export function executeExpression(
 			ok: true,
 			value,
 			variableIds: referencedVariableIds,
+			clockSensitive,
 		}
 	} catch (e) {
 		return {
 			ok: false,
 			error: stringifyError(e, true) || 'Unknown error',
 			variableIds: referencedVariableIds,
+			clockSensitive,
 		}
 	}
 }

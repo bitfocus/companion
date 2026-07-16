@@ -692,8 +692,13 @@ export class ControlsController {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues?: VariableValues | null
+		overrideVariableValues?: VariableValues | null,
+		allowClockSensitive?: boolean
 	): VariablesAndExpressionParser {
-		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues ?? null)
+		return this.#store.createVariablesAndExpressionParser(
+			controlId,
+			overrideVariableValues ?? null,
+			allowClockSensitive
+		)
 	}
 }

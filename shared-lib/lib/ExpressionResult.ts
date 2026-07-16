@@ -5,11 +5,15 @@ export interface ExecuteExpressionResultOk {
 	ok: true
 	value: VariableValue | undefined
 	variableIds: ReadonlySet<string>
+	/** Whether this result depends on the render clock (e.g. oscillate() was called) */
+	clockSensitive: boolean
 }
 export interface ExecuteExpressionResultError {
 	ok: false
 	error: string
 	variableIds: ReadonlySet<string>
+	/** Whether this result depends on the render clock (e.g. oscillate() was called) */
+	clockSensitive: boolean
 }
 
 export type ExpressionStreamResult = ExpressionStreamResultOk | ExpressionStreamResultError

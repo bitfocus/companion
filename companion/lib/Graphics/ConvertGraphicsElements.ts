@@ -102,6 +102,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	usedCompositeElements: Set<CompositeElementIdString>
 	referencedLocations: Set<string>
 	cyclicLocations: Set<string>
+	clockSensitive: boolean
 }> {
 	// Apply any queued invalidations before processing
 	cache?.applyQueuedInvalidations()
@@ -111,6 +112,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		compositeElements: new Set(),
 		referencedLocations: new Set(),
 		cyclicLocations: new Set(),
+		clockSensitive: false,
 	}
 
 	// Track all processed element IDs (with prefixes) for cache purging
@@ -141,6 +143,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		usedCompositeElements: globalReferences.compositeElements,
 		referencedLocations: globalReferences.referencedLocations,
 		cyclicLocations: globalReferences.cyclicLocations,
+		clockSensitive: globalReferences.clockSensitive,
 	}
 }
 
@@ -159,6 +162,9 @@ async function convertElements(
 			let cacheEntry = context.cache?.get(elementId)
 			if (!cacheEntry) {
 				// No cache entry, compute from scratch
+
+				// Snapshot clock-sensitivity before to detect if THIS element uses the render clock
+				const clockBefore = context.globalReferences.clockSensitive
 
 				switch (element.type) {
 					case 'canvas': {
@@ -207,7 +213,9 @@ async function convertElements(
 				}
 
 				// Cache the result for cacheable element types (not groups/composites as they have children cached separately)
-				if (context.cache) {
+				// Clock-sensitive elements are not cached since their output changes with the render clock
+				const isElementClockSensitive = context.globalReferences.clockSensitive && !clockBefore
+				if (context.cache && !isElementClockSensitive) {
 					context.cache.set(elementId, cacheEntry)
 				}
 			}

@@ -182,6 +182,7 @@ class LayeredButtonDrawStyleParser {
 						ok: false,
 						error: 'Disposed',
 						variableIds: emptySet,
+						clockSensitive: false,
 					}
 
 				// Mark it as active, so we don't unsubscribe
@@ -222,6 +223,7 @@ class LayeredButtonDrawStyleParser {
 							ok: false,
 							error: 'Subscription failed',
 							variableIds: emptySet,
+							clockSensitive: false,
 						})
 					},
 				})

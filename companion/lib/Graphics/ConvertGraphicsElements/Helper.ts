@@ -24,6 +24,8 @@ export interface ExpressionReferences {
 	readonly referencedLocations: Set<string>
 	/** Locations where a cycle was detected during this conversion (subset of referencedLocations) */
 	readonly cyclicLocations: Set<string>
+	/** Whether any expression evaluated during this conversion depends on the render clock */
+	clockSensitive: boolean
 }
 
 export class ElementExpressionHelper<T> {
@@ -32,6 +34,9 @@ export class ElementExpressionHelper<T> {
 	/** Per-element references tracked during conversion */
 	readonly #usedVariables: Set<string>
 
+	/** Global references accumulated during conversion */
+	readonly #globalReferences: ExpressionReferences
+
 	readonly #element: T
 	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
 
@@ -39,10 +44,12 @@ export class ElementExpressionHelper<T> {
 		parser: VariablesAndExpressionParser,
 		usedVariables: Set<string>,
 		element: T,
-		elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
+		elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined,
+		globalReferences: ExpressionReferences
 	) {
 		this.#parser = parser
 		this.#usedVariables = usedVariables
+		this.#globalReferences = globalReferences
 
 		this.#element = element
 		this.#elementOverrides = elementOverrides
@@ -55,6 +62,9 @@ export class ElementExpressionHelper<T> {
 		for (const variable of result.variableIds) {
 			this.#usedVariables.add(variable)
 		}
+
+		// Propagate clock sensitivity to global references
+		if (result.clockSensitive) this.#globalReferences.clockSensitive = true
 
 		return result
 	}
@@ -233,7 +243,7 @@ export class ElementExpressionHelper<T> {
 				normalised[key] = isExpressionOrValue(val) ? val : { isExpression: false, value: val as JsonValue | undefined }
 			}
 		}
-		return new ElementExpressionHelper(this.#parser, this.#usedVariables, normalised, undefined)
+		return new ElementExpressionHelper(this.#parser, this.#usedVariables, normalised, undefined, this.#globalReferences)
 	}
 
 	getVerticalAlignment(propertyName: keyof T): VerticalAlignment {
@@ -341,7 +351,13 @@ export function createParseElementsContext(
 			// Create per-element references that will be merged into global references
 			const usedVariables = new Set<string>()
 
-			const helper = new ElementExpressionHelper(parser, usedVariables, element, feedbackOverrides.get(element.id))
+			const helper = new ElementExpressionHelper(
+				parser,
+				usedVariables,
+				element,
+				feedbackOverrides.get(element.id),
+				globalReferences
+			)
 
 			return { helper, usedVariables }
 		},

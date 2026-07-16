@@ -32,6 +32,7 @@ import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-a
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -171,6 +172,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		})
 	}
 
+	/**
+	 * Locations whose draw style depends on the render clock (e.g. contain oscillate() expressions).
+	 * Keyed by location string (e.g. '1/0/0') to avoid duplicate entries.
+	 */
+	readonly #clockSensitiveLocations = new Map<string, ControlLocation>()
+
+	#unsubscribeRenderClock: (() => void) | null = null
+
 	#pendingVariables: VariableValues | null = null
 	/**
 	 * Debounce updating the variables, as buttons are often drawn in floods
@@ -220,7 +229,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		variablesController: VariablesController,
 		db: DataDatabase,
 		internalApiRouter: Express.Router,
-		metrics: MetricsRegistry
+		metrics: MetricsRegistry,
+		renderClock: RenderClock
 	) {
 		super()
 
@@ -235,6 +245,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#logger.debug(`Render LRU cache initialized with size ${initialCacheSize}`)
 
 		this.#registerMetrics(metrics)
+
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => {
+			for (const [, location] of this.#clockSensitiveLocations) {
+				this.invalidateButton(location)
+			}
+		})
 
 		this.setMaxListeners(0)
 
@@ -256,9 +272,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							// Check if the image is already present in the render cache and if so, return it
 							// Use collected contentHashes instead of JSON.stringify on entire buttonStyle to avoid
 							// serializing large binary data (images can be 100KB+)
+							// clockSensitive is excluded from the cache key — it's metadata, not part of the visual output
+							const { clockSensitive: _cs, ...buttonStyleForKey } = buttonStyle
 							const cacheKey = JSON.stringify({
 								options: this.#drawOptions,
-								...buttonStyle,
+								...buttonStyleForKey,
 								elements: collectContentHashes(buttonStyle.elements),
 							})
 							render = this.#renderLRUCache.get(cacheKey)
@@ -311,11 +329,22 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							location: showButtonConfig.decoration === ButtonGraphicsDecorationType.TopBar ? location : undefined,
 						}
 
-						const cacheKeyObj: Record<string, any> = {
+						// Track clock-sensitive locations so we can re-render them on each clock tick
+						const locationKey = `${location.pageNumber}/${location.row}/${location.column}`
+						if (buttonStyle.style === 'button-layered' && buttonStyle.clockSensitive) {
+							this.#clockSensitiveLocations.set(locationKey, location)
+						} else {
+							this.#clockSensitiveLocations.delete(locationKey)
+						}
+
+						// clockSensitive must NOT appear in the cache key — it's metadata, not part of the visual output.
+						// The actual rendered content differs per clock tick and is content-hashed via elements.
+						const cacheKeyObj: Record<string, unknown> = {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 						}
+						delete cacheKeyObj['clockSensitive']
 						const cacheKey = JSON.stringify(cacheKeyObj)
 
 						// Check if the image is already present in the render cache and if so, return it
@@ -330,6 +359,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 							location
 						)
+
+						// No button at this location — clear any clock-sensitive tracking
+						if (location) {
+							const locationKey = `${location.pageNumber}/${location.row}/${location.column}`
+							this.#clockSensitiveLocations.delete(locationKey)
+						}
 					}
 
 					if (location && locationIsInBounds) {
@@ -538,6 +573,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	invalidateButton(location: ControlLocation): void {
 		this.#drawAndCacheButton(location)
+	}
+
+	/**
+	 * Clean up resources held by this controller
+	 */
+	destroy(): void {
+		this.#unsubscribeRenderClock?.()
+		this.#unsubscribeRenderClock = null
 	}
 
 	triggerRegenerateAll = debounceFn(() => this.#regenerateAll(), { wait: 100, maxWait: 500 })

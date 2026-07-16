@@ -33,6 +33,7 @@ export class VariablesAndExpressionParser {
 
 	readonly #blinker: VariablesBlinker
 
+	readonly #allowClockSensitive: boolean
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
@@ -61,10 +62,12 @@ export class VariablesAndExpressionParser {
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		allowClockSensitive = true
 	) {
 		this.#userconfig = userconfig
 		this.#blinker = blinker
+		this.#allowClockSensitive = allowClockSensitive
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
 		this.#overrideVariableValues = overrideVariableValues || {}
@@ -82,7 +85,8 @@ export class VariablesAndExpressionParser {
 			{
 				...this.#overrideVariableValues,
 				...overrideVariableValues,
-			}
+			},
+			this.#allowClockSensitive
 		)
 
 		// Manual clone the localValues
@@ -141,7 +145,9 @@ export class VariablesAndExpressionParser {
 			this.#rawVariableValues,
 			requiredType,
 			this.#valueCacheAccessor,
-			this.#userconfig.getKey('timezone') || undefined
+			this.#userconfig.getKey('timezone') || undefined,
+			undefined,
+			this.#allowClockSensitive
 		)
 	}
 
@@ -166,14 +172,17 @@ export class VariablesAndExpressionParser {
 				ok: true
 				parsedOptions: CompanionOptionValues
 				referencedVariableIds: Set<string>
+				clockSensitive: boolean
 		  }
 		| {
 				ok: false
 				optionErrors: Record<string, string | undefined>
 				referencedVariableIds: Set<string>
+				clockSensitive: boolean
 		  } {
 		const referencedVariableIds = new Set<string>()
 		const parseErrors: Record<string, string | undefined> = {}
+		let clockSensitive = false
 
 		const parsedOptions = visitEntityOptionsForVariables(entityDefinition, options, (field, optionValue, fieldType) => {
 			// For passthrough fields, skip all processing and just extract the raw value
@@ -201,13 +210,16 @@ export class VariablesAndExpressionParser {
 				}
 			}
 
+			// Track clock sensitivity
+			if (parsedValue.clockSensitive) clockSensitive = true
+
 			return sanitisedValue
 		})
 
 		if (Object.keys(parseErrors).length > 0) {
-			return { ok: false, optionErrors: parseErrors, referencedVariableIds }
+			return { ok: false, optionErrors: parseErrors, referencedVariableIds, clockSensitive }
 		} else {
-			return { ok: true, parsedOptions, referencedVariableIds }
+			return { ok: true, parsedOptions, referencedVariableIds, clockSensitive }
 		}
 	}
 
@@ -223,12 +235,14 @@ export class VariablesAndExpressionParser {
 	): {
 		value: JsonValue | undefined
 		referencedVariableIds: ReadonlySet<string>
+		clockSensitive: boolean
 	} {
 		// No object, so just return undefined
 		if (!rawValue) {
 			return {
 				value: undefined,
 				referencedVariableIds: new Set(),
+				clockSensitive: false,
 			}
 		}
 
@@ -240,6 +254,7 @@ export class VariablesAndExpressionParser {
 			return {
 				value: parseResult.value,
 				referencedVariableIds: parseResult.variableIds,
+				clockSensitive: parseResult.clockSensitive,
 			}
 		} else if ((!rawValue.isExpression || !options.allowExpression) && options.parseVariables) {
 			// Field needs parsing
@@ -249,12 +264,14 @@ export class VariablesAndExpressionParser {
 			return {
 				value: parseResult.text,
 				referencedVariableIds: parseResult.variableIds,
+				clockSensitive: false,
 			}
 		} else {
 			// 'expression-or-variables' with isExpression=false - just use the value as-is
 			return {
 				value: rawValue.value,
 				referencedVariableIds: new Set(),
+				clockSensitive: false,
 			}
 		}
 	}

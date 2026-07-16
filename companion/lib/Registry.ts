@@ -10,6 +10,7 @@ import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
+import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
@@ -139,6 +140,8 @@ export class Registry {
 	readonly usageStatistics: DataUsageStatistics
 	readonly metrics: DataMetrics
 
+	#renderClock: RenderClock | null = null
+
 	/**
 	 * The 'data' controller
 	 */
@@ -212,6 +215,9 @@ export class Registry {
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
+		const renderClock = new RenderClock()
+		this.#renderClock = renderClock
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
@@ -219,7 +225,8 @@ export class Registry {
 			this.variables,
 			this.db,
 			this.#internalApiRouter,
-			this.metrics
+			this.metrics,
+			renderClock
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -241,7 +248,8 @@ export class Registry {
 			this.variables,
 			this.surfaces,
 			oscSender,
-			this.metrics
+			this.metrics,
+			renderClock
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
@@ -260,6 +268,7 @@ export class Registry {
 			userconfig: this.userconfig,
 			graphics: this.graphics,
 			actionRunner: actionRunner,
+			renderClock: renderClock,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -515,6 +524,9 @@ export class Registry {
 			} catch (_e) {
 				//do nothing
 			}
+
+			this.#renderClock?.destroy()
+			this.#renderClock = null
 
 			if (fromInternal) {
 				// Inform the parent that we are shutting down
