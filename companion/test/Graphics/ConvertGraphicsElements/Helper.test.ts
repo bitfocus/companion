@@ -777,7 +777,13 @@ describe('ElementExpressionHelper', () => {
 			// missing properties that TypeScript's type claims are present.
 			const incompleteEl = { id: 'el1' } // no ExpressionOrValue properties at all
 			const usedVariables = new Set<string>()
-			const helper = new ElementExpressionHelper(createMockParser(), usedVariables, incompleteEl as any, undefined, makeGlobalRefs())
+			const helper = new ElementExpressionHelper(
+				createMockParser(),
+				usedVariables,
+				incompleteEl as any,
+				undefined,
+				makeGlobalRefs()
+			)
 
 			expect(() => helper.getNumber('numProp' as any, 0)).not.toThrow()
 			expect(helper.getNumber('numProp' as any, 0)).toBe(0)
