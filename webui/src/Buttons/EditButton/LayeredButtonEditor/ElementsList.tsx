@@ -207,8 +207,10 @@ const CanvasElementRow = observer(function CanvasElementRow({
 	element: SomeButtonGraphicsElement
 	styleStore: LayeredStyleStore
 }) {
+	const commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
+
 	return (
-		<div className={classNames('button-layer-elementlist-table-row last-row')}>
+		<div className={classNames(commonClasses, 'button-layer-elementlist-table-row last-row')}>
 			<div className="td-reorder-placeholder"></div>
 
 			<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
