@@ -524,14 +524,8 @@ export class ImportExportController {
 		const shouldReset = (value: ImportOrResetType): boolean => value !== 'unchanged'
 		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
-		const controls = this.#controlsController.getAllControls()
-
 		if (shouldReset(config.buttons)) {
-			for (const [controlId, control] of controls.entries()) {
-				if (control.type !== 'trigger') {
-					this.#controlsController.deleteControl(controlId)
-				}
-			}
+			this.#controlsController.deleteAllControlsOfType('bank')
 
 			// Reset page 1
 			this.#pagesController.resetPage(1) // Note: controls were already deleted above
@@ -572,11 +566,7 @@ export class ImportExportController {
 		}
 
 		if (shouldReset(config.triggers)) {
-			for (const [controlId, control] of controls.entries()) {
-				if (control.type === 'trigger') {
-					this.#controlsController.deleteControl(controlId)
-				}
-			}
+			this.#controlsController.deleteAllControlsOfType('trigger')
 			this.#controlsController.replaceTriggerCollections([])
 		}
 
@@ -586,12 +576,7 @@ export class ImportExportController {
 
 		if (shouldReset(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections([])
-
-			// Delete existing expression variables
-			const existingExpressionVariables = this.#controlsController.getAllExpressionVariables()
-			for (const control of existingExpressionVariables) {
-				this.#controlsController.deleteControl(control.controlId)
-			}
+			this.#controlsController.deleteAllControlsOfType('expression-variable')
 		}
 
 		if (shouldReset(config.userconfig)) {

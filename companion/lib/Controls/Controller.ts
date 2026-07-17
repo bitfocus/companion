@@ -3,7 +3,13 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import { CreateBankControlId, CreatePresetControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreatePresetControlId,
+	CreateTriggerControlId,
+	ParseControlId,
+	type ParsedControlIdType,
+} from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
@@ -566,6 +572,19 @@ export class ControlsController {
 
 		// Notify that control count has changed
 		this.#controlEvents.emit('controlCountChanged')
+	}
+
+	/**
+	 * Delete every control whose id is of the given type (see {@link ParseControlId})
+	 *
+	 * This parses the ids to ensure it is exhaustive and not relying on specific implementations of each type
+	 */
+	deleteAllControlsOfType(type: ParsedControlIdType['type']): void {
+		for (const controlId of this.#store.controls.keys()) {
+			if (ParseControlId(controlId)?.type === type) {
+				this.deleteControl(controlId)
+			}
+		}
 	}
 
 	exportTriggerCollections(): TriggerCollection[] {
