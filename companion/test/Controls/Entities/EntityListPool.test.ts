@@ -279,7 +279,7 @@ describe('EntityListPool - local variables', () => {
 
 		// controlLocation comes from the (mocked) pageStore which returns null, and there are no
 		// local-variable entities yet
-		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenCalledWith(null, [], null)
+		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenCalledWith(null, [], null, undefined)
 	})
 })
 

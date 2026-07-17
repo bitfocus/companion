@@ -4,8 +4,10 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import {
+	createElementReferences,
 	createParseElementsContext,
 	ElementExpressionHelper,
+	type ElementReferences,
 	type ExpressionReferences,
 } from '../../../lib/Graphics/ConvertGraphicsElements/Helper.js'
 import type { CompositeElementDefinition, InstanceDefinitions } from '../../../lib/Instance/Definitions.js'
@@ -89,10 +91,10 @@ function makeHelper(
 	variableValues: Record<string, Record<string, string | number | boolean>> = {},
 	overrides?: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
 ): { helper: ElementExpressionHelper<TestEl>; usedVariables: Set<string> } {
-	const usedVariables = new Set<string>()
+	const references = createElementReferences()
 	const parser = createMockParser(variableValues)
-	const helper = new ElementExpressionHelper(parser, usedVariables, element, overrides)
-	return { helper, usedVariables }
+	const helper = new ElementExpressionHelper(parser, references, element, overrides)
+	return { helper, usedVariables: references.usedVariables }
 }
 
 function makeGlobalRefs(): ExpressionReferences {
@@ -101,6 +103,7 @@ function makeGlobalRefs(): ExpressionReferences {
 		compositeElements: new Set(),
 		referencedLocations: new Set(),
 		cyclicLocations: new Set(),
+		clockSensitive: false,
 	}
 }
 
@@ -194,7 +197,6 @@ describe('ElementExpressionHelper', () => {
 		})
 
 		test('returns defaultValue and does not throw when parser throws', () => {
-			const usedVariables = new Set<string>()
 			const throwingParser = {
 				parseVariables: (): never => {
 					throw new Error('parse error')
@@ -204,7 +206,7 @@ describe('ElementExpressionHelper', () => {
 				},
 				createChildParser: () => throwingParser,
 			} as unknown as VariablesAndExpressionParser
-			const helper = new ElementExpressionHelper(throwingParser, usedVariables, makeEl(), undefined)
+			const helper = new ElementExpressionHelper(throwingParser, createElementReferences(), makeEl(), undefined)
 			expect(helper.parseVariablesInString('$(ns:x)', 'fallback')).toBe('fallback')
 		})
 
@@ -775,14 +777,63 @@ describe('ElementExpressionHelper', () => {
 			// Same crash as the forRow case: elements from deserialised / external data may be
 			// missing properties that TypeScript's type claims are present.
 			const incompleteEl = { id: 'el1' } // no ExpressionOrValue properties at all
-			const usedVariables = new Set<string>()
-			const helper = new ElementExpressionHelper(createMockParser(), usedVariables, incompleteEl as any, undefined)
+			const helper = new ElementExpressionHelper(
+				createMockParser(),
+				createElementReferences(),
+				incompleteEl as any,
+				undefined
+			)
 
 			expect(() => helper.getNumber('numProp' as any, 0)).not.toThrow()
 			expect(helper.getNumber('numProp' as any, 0)).toBe(0)
 			expect(helper.getEnum('enumProp' as any, ['a', 'b'], 'a')).toBe('a')
 			// getString follows val(undefined) contract: returns undefined, not defaultValue
 			expect(helper.getString('strProp' as any, 'fallback')).toBeUndefined()
+		})
+	})
+
+	describe('clockSensitive propagation', () => {
+		// Build a helper exposing its per-element references so we can observe the propagation
+		function makeHelperWithRefs(
+			element: TestEl,
+			variableValues: Record<string, Record<string, string | number | boolean>> = {}
+		): { helper: ElementExpressionHelper<TestEl>; refs: ElementReferences } {
+			const refs = createElementReferences()
+			const helper = new ElementExpressionHelper(createMockParser(variableValues), refs, element, undefined)
+			return { helper, refs }
+		}
+
+		test('an oscillate expression flips references.clockSensitive', () => {
+			const { helper, refs } = makeHelperWithRefs(makeEl())
+			expect(refs.clockSensitive).toBe(false)
+			helper.executeExpressionAndTrackVariables('oscillate(1000)', 'number')
+			expect(refs.clockSensitive).toBe(true)
+		})
+
+		test('a non-oscillate expression leaves clockSensitive false', () => {
+			const { helper, refs } = makeHelperWithRefs(makeEl(), { ns: { x: 1 } })
+			helper.executeExpressionAndTrackVariables('$(ns:x) + 1', 'number')
+			expect(refs.clockSensitive).toBe(false)
+		})
+
+		test('property getters that evaluate an oscillate expression also propagate', () => {
+			const { helper, refs } = makeHelperWithRefs(makeEl({ numProp: expr('oscillate(1000)') }))
+			helper.getNumber('numProp', 0)
+			expect(refs.clockSensitive).toBe(true)
+		})
+
+		test('variable interpolation never sets clockSensitive', () => {
+			const { helper, refs } = makeHelperWithRefs(makeEl(), { ns: { name: 'World' } })
+			helper.parseVariablesInString('Hello $(ns:name)', '')
+			expect(refs.clockSensitive).toBe(false)
+		})
+
+		test('a child row helper shares the same references', () => {
+			const { helper, refs } = makeHelperWithRefs(makeEl())
+			const rowHelper = helper.forRow({ cell: expr<number>('oscillate(1000)') })
+			rowHelper.getNumber('cell', 0)
+			// The oscillate in the child row flips the parent's shared references
+			expect(refs.clockSensitive).toBe(true)
 		})
 	})
 
@@ -828,11 +879,12 @@ describe('ElementExpressionHelper', () => {
 
 describe('createParseElementsContext', () => {
 	describe('createHelper', () => {
-		test('each call produces an independent usedVariables set', () => {
+		test('each call produces an independent references accumulator', () => {
 			const ctx = makeCtx({ variableValues: { ns: { x: 5 } } })
-			const { usedVariables: uv1 } = ctx.createHelper({ id: 'el1', enumProp: expr<string>('$(ns:x)') })
-			const { usedVariables: uv2 } = ctx.createHelper({ id: 'el2', enumProp: val('left') })
-			expect(uv1).not.toBe(uv2)
+			const { references: r1 } = ctx.createHelper({ id: 'el1', enumProp: expr<string>('$(ns:x)') })
+			const { references: r2 } = ctx.createHelper({ id: 'el2', enumProp: val('left') })
+			expect(r1).not.toBe(r2)
+			expect(r1.usedVariables).not.toBe(r2.usedVariables)
 		})
 
 		test('applies feedback overrides to the matching element ID only', () => {

@@ -57,6 +57,7 @@ import { ParseLocationString } from '../Internal/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {
 	createParseElementsContext,
+	mergeElementReferences,
 	type DrawPixelBuffers,
 	type ElementExpressionHelper,
 	type ExpressionReferences,
@@ -102,6 +103,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	usedCompositeElements: Set<CompositeElementIdString>
 	referencedLocations: Set<string>
 	cyclicLocations: Set<string>
+	clockSensitive: boolean
 }> {
 	// Apply any queued invalidations before processing
 	cache?.applyQueuedInvalidations()
@@ -111,6 +113,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		compositeElements: new Set(),
 		referencedLocations: new Set(),
 		cyclicLocations: new Set(),
+		clockSensitive: false,
 	}
 
 	// Track all processed element IDs (with prefixes) for cache purging
@@ -141,6 +144,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		usedCompositeElements: globalReferences.compositeElements,
 		referencedLocations: globalReferences.referencedLocations,
 		cyclicLocations: globalReferences.cyclicLocations,
+		clockSensitive: globalReferences.clockSensitive,
 	}
 }
 
@@ -159,7 +163,6 @@ async function convertElements(
 			let cacheEntry = context.cache?.get(elementId)
 			if (!cacheEntry) {
 				// No cache entry, compute from scratch
-
 				switch (element.type) {
 					case 'canvas': {
 						cacheEntry = convertCanvasElementForDrawing(context, element, idPrefix)
@@ -207,15 +210,14 @@ async function convertElements(
 				}
 
 				// Cache the result for cacheable element types (not groups/composites as they have children cached separately)
-				if (context.cache) {
+				// Clock-sensitive elements are not cached since their output changes with the render clock
+				if (context.cache && !cacheEntry.references.clockSensitive) {
 					context.cache.set(elementId, cacheEntry)
 				}
 			}
 
-			// Merge element's references into global references
-			for (const variable of cacheEntry.usedVariables) {
-				context.globalReferences.variables.add(variable)
-			}
+			// Merge the element's references into the global references (runs for cache hits too)
+			mergeElementReferences(context.globalReferences, cacheEntry.references)
 			if (cacheEntry.compositeElement?.elementId)
 				context.globalReferences.compositeElements.add(cacheEntry.compositeElement.elementId)
 			if (cacheEntry.referencedLocation) context.globalReferences.referencedLocations.add(cacheEntry.referencedLocation)
@@ -261,7 +263,7 @@ function convertCanvasElementForDrawing(
 	element: ButtonGraphicsCanvasElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	const drawElement: ButtonGraphicsCanvasDrawElement = {
 		id: idPrefix + element.id,
@@ -278,7 +280,7 @@ function convertCanvasElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 /**
@@ -289,11 +291,11 @@ function convertGroupElementForDrawing(
 	element: ButtonGraphicsGroupElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	// Note: Group hash is shallow - children have their own hashes
 	const drawElement: ButtonGraphicsGroupDrawElement = {
@@ -310,7 +312,7 @@ function convertGroupElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 /**
@@ -323,12 +325,12 @@ async function convertReferenceElementForDrawing(
 	element: ButtonGraphicsReferenceElement,
 	idPrefix: string
 ): Promise<ElementConversionCacheEntry> {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) {
-		return { drawElement: null, usedVariables, compositeElement: null }
+		return { drawElement: null, references, compositeElement: null }
 	}
 
 	const opacity = helper.getNumber('opacity', 1, 0.01)
@@ -401,7 +403,7 @@ async function convertReferenceElementForDrawing(
 			.digest('hex')
 	}
 
-	return { drawElement, usedVariables, compositeElement: null, referencedLocation: referencedLocationStr }
+	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
 function makeReferencePlaceholder(
@@ -562,7 +564,7 @@ async function convertCompositeElementForDrawing(
 	element: ButtonGraphicsCompositeElement,
 	idPrefix: string
 ): Promise<ElementConversionCacheEntry> {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	const compositeElementId: CompositeElementIdString = `${element.connectionId}:${element.elementId}`
 
@@ -573,7 +575,7 @@ async function convertCompositeElementForDrawing(
 	if (!childElement) {
 		return {
 			drawElement: null,
-			usedVariables,
+			references,
 			compositeElement: {
 				elementId: compositeElementId,
 				childIdPrefix: compositeFullId + '/',
@@ -592,7 +594,7 @@ async function convertCompositeElementForDrawing(
 	if (!enabled && context.onlyEnabled)
 		return {
 			drawElement: null,
-			usedVariables,
+			references,
 			compositeElement: {
 				elementId: compositeElementId,
 				childIdPrefix,
@@ -620,7 +622,7 @@ async function convertCompositeElementForDrawing(
 	drawElement.contentHash = computeElementContentHash(drawElement)
 	return {
 		drawElement,
-		usedVariables,
+		references,
 		compositeElement: {
 			elementId: compositeElementId,
 			childIdPrefix,
@@ -634,11 +636,11 @@ async function convertImageElementForDrawing(
 	element: ButtonGraphicsImageElement,
 	idPrefix: string
 ): Promise<ElementConversionCacheEntry> {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	// Hack: composite deprecated imageBuffers into a single base64 image
 	let base64Image: string | null = null
@@ -670,7 +672,7 @@ async function convertImageElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 function convertTextElementForDrawing(
@@ -678,11 +680,11 @@ function convertTextElementForDrawing(
 	element: ButtonGraphicsTextElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	const drawElement: ButtonGraphicsTextDrawElement = {
 		id: idPrefix + element.id,
@@ -704,7 +706,7 @@ function convertTextElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 function convertBoxElementForDrawing(
@@ -712,11 +714,11 @@ function convertBoxElementForDrawing(
 	element: ButtonGraphicsBoxElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	const drawElement: ButtonGraphicsBoxDrawElement = {
 		id: idPrefix + element.id,
@@ -733,7 +735,7 @@ function convertBoxElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 function convertLineElementForDrawing(
@@ -741,11 +743,11 @@ function convertLineElementForDrawing(
 	element: ButtonGraphicsLineElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	const drawElement: ButtonGraphicsLineDrawElement = {
 		id: idPrefix + element.id,
@@ -763,7 +765,7 @@ function convertLineElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 function convertDrawBounds(
@@ -782,11 +784,11 @@ function convertCircleElementForDrawing(
 	element: ButtonGraphicsCircleElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	const drawElement: ButtonGraphicsCircleDrawElement = {
 		id: idPrefix + element.id,
@@ -805,7 +807,7 @@ function convertCircleElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 function convertGaugeElementForDrawing(
@@ -813,10 +815,10 @@ function convertGaugeElementForDrawing(
 	element: ButtonGraphicsGaugeElement,
 	idPrefix: string
 ): ElementConversionCacheEntry {
-	const { helper, usedVariables } = context.createHelper(element)
+	const { helper, references } = context.createHelper(element)
 
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
 	// Colour stops carry values in the authored Min..Max domain; the renderer normalises them to
 	// track positions. Values are intentionally not clamped here so the renderer can map them.
@@ -865,7 +867,7 @@ function convertGaugeElementForDrawing(
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return { drawElement, usedVariables, compositeElement: null }
+	return { drawElement, references, compositeElement: null }
 }
 
 function convertBorderProperties(

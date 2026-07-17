@@ -26,7 +26,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesCache, VariableValueData } from './Util.js'
-import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
+import { VariablesAndExpressionParser, type ExpressionParserOptions } from './VariablesAndExpressionParser.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
@@ -121,7 +121,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
 		const thisValues = InjectedVariablesForLocation(controlLocation)
 
@@ -131,7 +132,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			this.#variableValues,
 			thisValues,
 			localValues,
-			overrideVariableValues
+			overrideVariableValues,
+			options
 		)
 	}
 

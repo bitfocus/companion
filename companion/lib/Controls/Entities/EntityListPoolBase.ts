@@ -14,7 +14,11 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type { VariablesValues } from '../../Variables/Values.js'
-import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../../Variables/VariablesAndExpressionParser.js'
+import type { RenderClock } from '../RenderClock.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
@@ -39,6 +43,7 @@ export interface ControlEntityListPoolProps {
 	pageStore: IPageStore
 	controlId: string
 	reportChange: (options: ControlEntityListChangeProps) => void
+	renderClock: RenderClock
 }
 
 /**
@@ -102,7 +107,8 @@ export abstract class ControlEntityListPoolBase {
 			{
 				isInverted: this.updateIsInvertedValues.bind(this),
 				storeResult: this.updateStoreResultValues.bind(this),
-			}
+			},
+			props.renderClock
 		)
 	}
 
@@ -190,14 +196,18 @@ export abstract class ControlEntityListPoolBase {
 			})
 	}
 
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
+	): VariablesAndExpressionParser {
 		const controlLocation = this.#pageStore.getLocationOfControlId(this.controlId)
 		const variableEntities = this.getLocalVariableEntities()
 
 		return this.#variableValues.createVariablesAndExpressionParser(
 			controlLocation,
 			variableEntities,
-			overrideVariableValues
+			overrideVariableValues,
+			options
 		)
 	}
 

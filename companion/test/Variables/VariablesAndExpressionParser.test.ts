@@ -17,6 +17,30 @@ const useVariablesMinimal = CompanionFieldVariablesSupport.Basic
 /** Userconfig mock with no configured timezone (date/time functions use process-local time) */
 const mockUserConfig = buildUserConfigMock({ timezone: '' })
 
+type ParserArgs = ConstructorParameters<typeof VariablesAndExpressionParser>
+/**
+ * Construct a parser for tests. The real constructor requires an explicit `options` arg (by design);
+ * this wrapper makes it optional for the many tests that just want the defaults.
+ */
+const newParser = (
+	userconfig: ParserArgs[0],
+	blinker: ParserArgs[1],
+	rawVariableValues: ParserArgs[2],
+	thisValues: ParserArgs[3],
+	localValues: ParserArgs[4],
+	overrideVariableValues: ParserArgs[5],
+	options?: ParserArgs[6]
+): VariablesAndExpressionParser =>
+	new VariablesAndExpressionParser(
+		userconfig,
+		blinker,
+		rawVariableValues,
+		thisValues,
+		localValues,
+		overrideVariableValues,
+		options
+	)
+
 function createDefinition(
 	partial: Pick<ClientEntityDefinition, 'options'> & Partial<ClientEntityDefinition>
 ): ClientEntityDefinition {
@@ -60,14 +84,7 @@ describe('VariablesAndExpressionParser', () => {
 		localValues: null = null,
 		overrideValues: null = null
 	): VariablesAndExpressionParser => {
-		return new VariablesAndExpressionParser(
-			mockUserConfig,
-			null as any,
-			variables,
-			thisValues,
-			localValues,
-			overrideValues
-		)
+		return newParser(mockUserConfig, null as any, variables, thisValues, localValues, overrideValues)
 	}
 
 	describe('parseVariables', () => {
@@ -1190,14 +1207,7 @@ describe('VariablesAndExpressionParser', () => {
 
 	describe('createChildParser', () => {
 		it('child inherits raw variable values from parent', () => {
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				defaultVariables,
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null)
 			const child = parser.createChildParser({})
 
 			const result = child.parseVariables('$(test:var1)')
@@ -1207,7 +1217,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('child inherits thisValues from parent', () => {
 			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, thisValues, null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, thisValues, null, null)
 			const child = parser.createChildParser({})
 
 			const result = child.parseVariables('$(custom:val)')
@@ -1215,7 +1225,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child inherits parent override values', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, {
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, {
 				'override:val': 'parent-override',
 			})
 			const child = parser.createChildParser({})
@@ -1225,7 +1235,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child new overrides take precedence over parent overrides', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, {
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, {
 				'override:val': 'parent-override',
 			})
 			const child = parser.createChildParser({ 'override:val': 'child-override' })
@@ -1235,7 +1245,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('non-overlapping parent overrides remain accessible in child', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, {
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, {
 				'override:parent-only': 'parent-value',
 			})
 			const child = parser.createChildParser({ 'override:child-only': 'child-value' })
@@ -1245,7 +1255,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child overrides do not affect parent', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, null)
 			const child = parser.createChildParser({ 'override:new': 'child-value' })
 
 			expect(parser.parseVariables('$(override:new)').text).toBe('$NA')
@@ -1260,7 +1270,7 @@ describe('VariablesAndExpressionParser', () => {
 				connectionId: 'non-internal',
 				definitionId: 'some-def',
 			} as unknown as ControlEntityInstance
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
 			const child = parser.createChildParser({})
 
 			const result = child.parseVariables('$(local:myvar)')
@@ -1276,7 +1286,7 @@ describe('VariablesAndExpressionParser', () => {
 				connectionId: 'non-internal',
 				definitionId: 'some-def',
 			} as unknown as ControlEntityInstance
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
 			const child = parser.createChildParser({ 'local:myvar': 'override-value' })
 
 			// localValues (inherited) take priority over overrideVariableValues
@@ -1285,14 +1295,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child executeExpression works with inherited raw variables', () => {
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				defaultVariables,
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null)
 			const child = parser.createChildParser({})
 
 			const result = child.executeExpression('$(test:num) + 1', undefined)
@@ -1301,7 +1304,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child executeExpression uses child override values', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, null)
 			const child = parser.createChildParser({ 'custom:num': 100 })
 
 			const result = child.executeExpression('$(custom:num) * 2', undefined)
@@ -1310,14 +1313,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('child override shadows parent raw variable', () => {
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				defaultVariables,
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null)
 			const child = parser.createChildParser({ 'test:var1': 'shadowed' })
 
 			expect(child.parseVariables('$(test:var1)').text).toBe('shadowed')
@@ -1326,13 +1322,13 @@ describe('VariablesAndExpressionParser', () => {
 
 		// context-variable injection (this:current / target:*) used by deferred-parse actions
 		it('injects $(this:current) via parseVariables', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, null)
 			const child = parser.createChildParser({ 'this:current': '42' })
 			expect(child.parseVariables('$(this:current)').text).toBe('42')
 		})
 
 		it('injects $(this:current) in an expression', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, null)
 			const child = parser.createChildParser({ 'this:current': 10 })
 			const result = child.executeExpression('$(this:current) + 1', undefined)
 			expect(result.ok).toBe(true)
@@ -1340,7 +1336,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('injects $(target:foo) via parseVariables', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, null)
 			const child = parser.createChildParser({ 'this:current': 0, 'target:counter': 5 })
 			expect(child.parseVariables('count=$(target:counter)').text).toBe('count=5')
 		})
@@ -1348,7 +1344,7 @@ describe('VariablesAndExpressionParser', () => {
 
 	describe('createIsolatedChildParser', () => {
 		it('resolves the injected override values', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, null)
 			const child = parser.createIsolatedChildParser({ 'options:label': 'injected' })
 
 			expect(child.parseVariables('$(options:label)').text).toBe('injected')
@@ -1358,14 +1354,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('does NOT inherit raw variable values from parent', () => {
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				defaultVariables,
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null)
 			const child = parser.createIsolatedChildParser({})
 
 			expect(child.parseVariables('$(test:var1)').text).toBe('$NA')
@@ -1373,14 +1362,14 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('does NOT inherit thisValues from parent', () => {
 			const thisValues: VariablesCache = new Map([['custom:val', 'from-this']])
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, thisValues, null, null)
+			const parser = newParser(mockUserConfig, null as any, {}, thisValues, null, null)
 			const child = parser.createIsolatedChildParser({})
 
 			expect(child.parseVariables('$(custom:val)').text).toBe('$NA')
 		})
 
 		it('does NOT inherit parent override values', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, {
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), null, {
 				'override:val': 'parent-override',
 			})
 			const child = parser.createIsolatedChildParser({})
@@ -1396,7 +1385,7 @@ describe('VariablesAndExpressionParser', () => {
 				connectionId: 'non-internal',
 				definitionId: 'some-def',
 			} as unknown as ControlEntityInstance
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
+			const parser = newParser(mockUserConfig, null as any, {}, new Map(), [mockEntity], null)
 			const child = parser.createIsolatedChildParser({})
 
 			expect(child.parseVariables('$(local:myvar)').text).toBe('$NA')
@@ -1437,14 +1426,7 @@ describe('VariablesAndExpressionParser', () => {
 		}
 
 		it('passes through a variable-string value without substitution', () => {
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				{ test: { foo: 'hello' } },
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, { test: { foo: 'hello' } }, new Map(), null, null)
 			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprVal('$(test:foo) world') })
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1454,14 +1436,7 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('passes through an expression string without evaluation', () => {
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				{ test: { num: 10 } },
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, { test: { num: 10 } }, new Map(), null, null)
 			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprExpr('$(test:num) + 5') })
 			expect(result.ok).toBe(true)
 			if (result.ok) expect(result.parsedOptions.value).toBe('$(test:num) + 5')
@@ -1484,14 +1459,7 @@ describe('VariablesAndExpressionParser', () => {
 				],
 			})
 
-			const parser = new VariablesAndExpressionParser(
-				mockUserConfig,
-				null as any,
-				{ test: { foo: 'hello' } },
-				new Map(),
-				null,
-				null
-			)
+			const parser = newParser(mockUserConfig, null as any, { test: { foo: 'hello' } }, new Map(), null, null)
 			const result = parser.parseEntityOptions(definition, { value: exprVal('$(test:foo) world') })
 
 			expect(result.ok).toBe(true)
@@ -1500,6 +1468,113 @@ describe('VariablesAndExpressionParser', () => {
 				expect(result.parsedOptions.value).toBe('hello world')
 				expect(result.referencedVariableIds.has('test:foo')).toBe(true)
 			}
+		})
+	})
+
+	describe('clockSensitive propagation', () => {
+		it('executeExpression reports clockSensitive only when oscillate is used', () => {
+			const parser = createParser()
+			expect(parser.executeExpression('oscillate(1000)', undefined).clockSensitive).toBe(true)
+			expect(parser.executeExpression('1 + 2', undefined).clockSensitive).toBe(false)
+		})
+
+		it('parseEntityOption passes through clockSensitive from an expression', () => {
+			const parser = createParser()
+			const sensitive = parser.parseEntityOption(exprExpr('oscillate(1000)'), {
+				allowExpression: true,
+				parseVariables: false,
+			})
+			expect(sensitive.clockSensitive).toBe(true)
+
+			const plain = parser.parseEntityOption(exprExpr('1 + 2'), { allowExpression: true, parseVariables: false })
+			expect(plain.clockSensitive).toBe(false)
+		})
+
+		it('parseEntityOption is never clockSensitive on the variable-interpolation or passthrough paths', () => {
+			const parser = createParser()
+			// A variable string is parsed by parseVariables, which cannot be clock-sensitive
+			expect(
+				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: true })
+					.clockSensitive
+			).toBe(false)
+			// A passthrough (nothing enabled) value is never clock-sensitive
+			expect(
+				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: false })
+					.clockSensitive
+			).toBe(false)
+			// A missing value is never clock-sensitive
+			expect(parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockSensitive).toBe(
+				false
+			)
+		})
+
+		it('parseEntityOptions ORs clockSensitive across all fields', () => {
+			const parser = createParser()
+			const definition = createDefinition({
+				options: [
+					{ id: 'plain', type: 'expression', label: 'Plain' },
+					{ id: 'osc', type: 'expression', label: 'Oscillating' },
+				],
+				optionsSupportExpressions: true,
+			})
+			const result = parser.parseEntityOptions(definition, {
+				plain: { isExpression: true, value: '1 + 2' },
+				osc: { isExpression: true, value: 'oscillate(1000)' },
+			})
+			expect(result.ok).toBe(true)
+			expect(result.clockSensitive).toBe(true)
+		})
+
+		it('parseEntityOptions reports clockSensitive false when no field uses oscillate', () => {
+			const parser = createParser()
+			const definition = createDefinition({
+				options: [
+					{ id: 'a', type: 'expression', label: 'A' },
+					{ id: 'b', type: 'textinput', label: 'B', useVariables: useVariablesMinimal },
+				],
+				optionsSupportExpressions: true,
+			})
+			const result = parser.parseEntityOptions(definition, {
+				a: { isExpression: true, value: '1 + 2' },
+				b: { isExpression: false, value: '$(test:var1)' },
+			})
+			expect(result.ok).toBe(true)
+			expect(result.clockSensitive).toBe(false)
+		})
+
+		it('an error result still carries the aggregated clockSensitive flag', () => {
+			const parser = createParser()
+			const definition = createDefinition({
+				options: [
+					{ id: 'osc', type: 'expression', label: 'Oscillating' },
+					// Out of range with no clamping/allowInvalidValues -> validation error -> ok:false
+					{ id: 'num', type: 'number', label: 'Number', min: 0, max: 100, default: 0 },
+				],
+				optionsSupportExpressions: true,
+			})
+			const result = parser.parseEntityOptions(definition, {
+				osc: { isExpression: true, value: 'oscillate(1000)' },
+				num: { isExpression: false, value: 200 },
+			})
+			expect(result.ok).toBe(false)
+			expect(result.clockSensitive).toBe(true)
+		})
+
+		it('rejects oscillate when the parser disallows clock-sensitive expressions', () => {
+			const parser = newParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null, {
+				allowClockSensitive: false,
+			})
+			const result = parser.executeExpression('oscillate(1000)', undefined)
+			expect(result.ok).toBe(false)
+			expect(result.clockSensitive).toBe(false)
+		})
+
+		it('child parsers inherit the allowClockSensitive setting', () => {
+			const parser = newParser(mockUserConfig, null as any, defaultVariables, new Map(), null, null, {
+				allowClockSensitive: false,
+			})
+			const child = parser.createChildParser({})
+			expect(child.executeExpression('oscillate(1000)', undefined).ok).toBe(false)
 		})
 	})
 })

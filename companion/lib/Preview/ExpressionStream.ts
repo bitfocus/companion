@@ -7,6 +7,7 @@ import { ExpressionOrJsonValueSchema, type ExpressionOrValue } from '@companion-
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
@@ -33,9 +34,20 @@ export class PreviewExpressionStream {
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(controlsController: ControlsController, localVariables: LocalVariablesController) {
+	readonly #unsubscribeRenderClock: () => void
+
+	constructor(
+		controlsController: ControlsController,
+		localVariables: LocalVariablesController,
+		renderClock: RenderClock
+	) {
 		this.#controlsController = controlsController
 		this.#localVariables = localVariables
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.#onRenderClockTick())
+	}
+
+	destroy(): void {
+		this.#unsubscribeRenderClock()
 	}
 
 	createTrpcRouter() {
@@ -69,7 +81,7 @@ export class PreviewExpressionStream {
 								contextResolution: input.contextResolution,
 								resolvedTargetControlId: undefined,
 
-								latestResult: { ok: true, value: undefined, variableIds: new Set() },
+								latestResult: { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false },
 								changes: new EventEmitter(),
 							}
 							self.#sessions.set(expressionId, session)
@@ -100,6 +112,17 @@ export class PreviewExpressionStream {
 					}
 				}),
 		})
+	}
+
+	#onRenderClockTick = (): void => {
+		for (const [, session] of this.#sessions) {
+			if (!session.latestResult.clockSensitive) continue
+
+			const newValue = session.isVariableString ? this.#parseVariables(session) : this.#executeExpression(session)
+			session.latestResult = newValue
+
+			session.changes.emit('change', convertExpressionResult(newValue))
+		}
 	}
 
 	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
@@ -268,7 +291,10 @@ export class PreviewExpressionStream {
 		const parser = this.#controlsController.createVariablesAndExpressionParser(session.controlId, overrides)
 
 		const res = parser.parseVariables(session.expression)
-		return this.#withContextTracking({ ok: true, value: res.text, variableIds: res.variableIds }, extraVariableIds)
+		return this.#withContextTracking(
+			{ ok: true, value: res.text, variableIds: res.variableIds, clockSensitive: false },
+			extraVariableIds
+		)
 	}
 }
 

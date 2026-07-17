@@ -18,13 +18,25 @@ describe('EntityPoolSpecialExpressionManager', () => {
 	const mockUpdateIsInvertedFn = vi.fn<UpdateSpecialExpressionValuesFn<'isInverted'>>()
 	const mockUpdateStoreResultFn = vi.fn<UpdateSpecialExpressionValuesFn<'storeResult'>>()
 
-	let mockParseExpressionResult: ReturnType<VariablesAndExpressionParser['executeExpression']>
+	type MockExprResult = {
+		ok: boolean
+		value?: unknown
+		error?: string
+		variableIds: Set<string>
+		clockSensitive?: boolean
+	}
+	let mockParseExpressionResult: MockExprResult
 	let mockParseVariablesResult: ReturnType<VariablesAndExpressionParser['parseVariables']>
 
 	const mockVariablesParser = {
 		executeExpression: vi
 			.fn<VariablesAndExpressionParser['executeExpression']>()
-			.mockImplementation((_expression: string, _type: string | undefined) => mockParseExpressionResult),
+			.mockImplementation(
+				(_expression: string, _type: string | undefined) =>
+					({ clockSensitive: false, ...mockParseExpressionResult }) as ReturnType<
+						VariablesAndExpressionParser['executeExpression']
+					>
+			),
 		parseVariables: vi
 			.fn<VariablesAndExpressionParser['parseVariables']>()
 			.mockImplementation((_str: string) => mockParseVariablesResult),
@@ -72,10 +84,15 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		mockCreateVariablesAndExpressionParser.mockReturnValue(mockVariablesParser as any)
 
 		// Create a new instance for each test
-		manager = new EntityPoolSpecialExpressionManager('control-1', mockCreateVariablesAndExpressionParser, {
-			isInverted: mockUpdateIsInvertedFn,
-			storeResult: mockUpdateStoreResultFn,
-		})
+		manager = new EntityPoolSpecialExpressionManager(
+			'control-1',
+			mockCreateVariablesAndExpressionParser,
+			{
+				isInverted: mockUpdateIsInvertedFn,
+				storeResult: mockUpdateStoreResultFn,
+			},
+			{ subscribe: vi.fn(() => () => {}) } as any
+		)
 
 		vi.useFakeTimers()
 	})
@@ -1402,6 +1419,131 @@ storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('render clock', () => {
+		const isInvertedEntities = () => manager['specialExpressions'].isInverted.entities
+
+		it('keeps tracking an entity that references no variables but is clock-sensitive', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+
+			// A clock-sensitive entity is retained even with no referenced variables
+			const wrapper = isInvertedEntities().get('entity-osc')
+			expect(wrapper).not.toBe(undefined)
+			expect(wrapper!.dependsOnRenderClock).toBe(true)
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
+		})
+
+		it('stops tracking an entity that references no variables and is not clock-sensitive', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: false,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-static', { isExpression: true, value: 'true' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+
+			// With no variables and no clock-sensitivity there is nothing to react to, so it is dropped
+			expect(isInvertedEntities().get('entity-static')).toBe(undefined)
+		})
+
+		it('re-evaluates a clock-sensitive entity on a render clock tick', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+			mockUpdateIsInvertedFn.mockClear()
+
+			manager.onRenderClockTick()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalled()
+		})
+
+		it('does not re-evaluate a non-clock-sensitive entity on a render clock tick', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(['custom:var']),
+				clockSensitive: false,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-var', { isExpression: true, value: '$(custom:var)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+			mockUpdateIsInvertedFn.mockClear()
+
+			manager.onRenderClockTick()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+		})
+
+		it('does not recompute a clock-sensitive no-variable entity until the clock ticks', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const oscEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(oscEntity, 'isInverted')
+			vi.runAllTimers()
+
+			// It is marked as computed (non-null referencedVariableIds) so later processing passes skip it
+			expect(isInvertedEntities().get('entity-osc')!.referencedVariableIds).not.toBe(null)
+			mockUpdateIsInvertedFn.mockClear()
+
+			// Tracking an unrelated entity triggers another processing pass; without a clock tick the
+			// already-computed clock-sensitive entity must not be recomputed as part of it.
+			const otherEntity = createMockFeedbackEntity('entity-other', { isExpression: false, value: true })
+			manager.trackEntity(otherEntity, 'isInverted')
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			const updatedMap = mockUpdateIsInvertedFn.mock.calls[0][0]
+			expect(updatedMap.has('entity-other')).toBe(true)
+			expect(updatedMap.has('entity-osc')).toBe(false)
+		})
+
+		it('is a no-op after destroy', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
+			manager.trackEntity(mockEntity, 'isInverted')
+			vi.runAllTimers()
+			mockUpdateIsInvertedFn.mockClear()
+
+			manager.destroy()
+			manager.onRenderClockTick()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
 		})
 	})
 

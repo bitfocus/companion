@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
+import type { RenderClock } from '../../lib/Controls/RenderClock.js'
 import { PreviewExpressionStream } from '../../lib/Preview/ExpressionStream.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import type { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
@@ -24,7 +25,7 @@ function createParser(
 ): VariablesAndExpressionParser {
 	// Mirror production's terminal construction (Values.createVariablesAndExpressionParser):
 	// overrides are applied via the constructor's overrideVariableValues arg, not createChildParser.
-	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides)
+	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides, undefined)
 }
 
 /**
@@ -53,7 +54,8 @@ function makeLocalVariablesMock(
 }
 
 function createStream(controlsController: ControlsController, localVariables: LocalVariablesController) {
-	const stream = new PreviewExpressionStream(controlsController, localVariables)
+	const renderClock = { subscribe: vi.fn(() => () => {}) } as unknown as RenderClock
+	const stream = new PreviewExpressionStream(controlsController, localVariables, renderClock)
 	const router = stream.createTrpcRouter()
 	const caller = t.createCallerFactory(router)(testCtx)
 	return { stream, caller }

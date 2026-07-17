@@ -1722,15 +1722,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-app/expressions@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "@companion-app/expressions@npm:0.5.0"
+"@companion-app/expressions@npm:0.5.0-nightly-feat-oscillate-20260716-193705-a6783bb":
+  version: 0.5.0-nightly-feat-oscillate-20260716-193705-a6783bb
+  resolution: "@companion-app/expressions@npm:0.5.0-nightly-feat-oscillate-20260716-193705-a6783bb"
   dependencies:
     acorn: "npm:^8.17.0"
     jsonpath-plus: "npm:^10.4.0"
     type-fest: "npm:^5.7.0"
     unicode-segmenter: "npm:^0.16.0"
-  checksum: 10c0/7525185b2c9195639915b36c32573c234583491ea479cd9119e95709a529961420a9470c81a67fed53aacdd6c579e56264d34ea0ec96d2c71620ae753a1a8855
+  checksum: 10c0/e3aca393c1e2dea33077d8e0f4f46643354891788450b3fafc0230e879adddbabfe54440d38a68af410c3c82435daf73aca827c0e4dff66cb4e8a47e63c19d58
   languageName: node
   linkType: hard
 
@@ -1791,7 +1791,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
-    "@companion-app/expressions": "npm:^0.5.0"
+    "@companion-app/expressions": "npm:0.5.0-nightly-feat-oscillate-20260716-193705-a6783bb"
     "@types/semver": "npm:^7.7.1"
     colord: "npm:^2.9.3"
     quick-lru: "npm:^7.3.0"
