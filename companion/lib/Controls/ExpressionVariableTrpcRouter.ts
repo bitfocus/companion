@@ -8,12 +8,14 @@ import type {
 	ExpressionVariableUpdate,
 	ExpressionVariableUpdateInitOp,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
+import type { ControlChangeEvents } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
+import type { ControlsFactory } from './Factory.js'
 import { validateExpressionVariableControlId } from './Util.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -22,7 +24,8 @@ export function createExpressionVariableTrpcRouter(
 	expressionVariableCollections: ExpressionVariableCollections,
 	controlStore: ControlStore,
 	expressionVariableNamesMap: ExpressionVariableNameMap,
-	deps: ControlDependencies
+	instanceDefinitions: InstanceDefinitions,
+	factory: ControlsFactory
 ) {
 	return router({
 		collections: expressionVariableCollections.createTrpcRouter(),
@@ -47,7 +50,7 @@ export function createExpressionVariableTrpcRouter(
 
 		create: publicProcedure.mutation(() => {
 			// Create the initial entity for the expression variable
-			const rootEntity = deps.instance.definitions.createEntityItem(
+			const rootEntity = instanceDefinitions.createEntityItem(
 				'internal',
 				EntityModelType.Feedback,
 				'expression_value',
@@ -56,7 +59,7 @@ export function createExpressionVariableTrpcRouter(
 			if (!rootEntity) throw new Error('Failed to get initial entity for expression variable')
 
 			const controlId = CreateExpressionVariableControlId(nanoid())
-			const newControl = new ControlExpressionVariable(deps, expressionVariableNamesMap, controlId, null, false)
+			const newControl = factory.createExpressionVariable(controlId)
 
 			if (!newControl.entities.entityAdd('feedbacks', null, rootEntity)) {
 				throw new Error('Failed to add feedback entity to expression variable')
@@ -115,13 +118,7 @@ export function createExpressionVariableTrpcRouter(
 			if (fromControl && fromControl instanceof ControlExpressionVariable) {
 				const controlJson = fromControl.toJSON(true)
 
-				const newControl = new ControlExpressionVariable(
-					deps,
-					expressionVariableNamesMap,
-					newControlId,
-					controlJson,
-					true
-				)
+				const newControl = factory.createExpressionVariable(newControlId, controlJson)
 				controlStore.controls.set(newControlId, newControl)
 
 				expressionVariableNamesMap.addExpressionVariable(newControlId, newControl.options.variableName)

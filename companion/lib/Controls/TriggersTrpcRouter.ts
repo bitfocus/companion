@@ -8,10 +8,11 @@ import type {
 	TriggersUpdateInitOp,
 } from '@companion-app/shared/Model/TriggerModel.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import type { ControlChangeEvents, ControlDependencies } from './ControlDependencies.js'
+import type { ControlChangeEvents } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
+import type { ControlsFactory } from './Factory.js'
 import type { TriggerCollections } from './TriggerCollections.js'
 import { validateTriggerControlId } from './Util.js'
 
@@ -20,7 +21,7 @@ export function createTriggersTrpcRouter(
 	changeEvents: EventEmitter<ControlChangeEvents>,
 	triggerCollections: TriggerCollections,
 	controlStore: ControlStore,
-	deps: ControlDependencies
+	factory: ControlsFactory
 ) {
 	return router({
 		collections: triggerCollections.createTrpcRouter(),
@@ -49,7 +50,7 @@ export function createTriggersTrpcRouter(
 		create: publicProcedure.mutation(() => {
 			const controlId = CreateTriggerControlId(nanoid())
 
-			const newControl = new ControlTrigger(deps, controlStore.triggerEvents, controlId, null, false)
+			const newControl = factory.createTrigger(controlId)
 			controlStore.controls.set(controlId, newControl)
 
 			// Add trigger to the end of the list
@@ -101,7 +102,7 @@ export function createTriggersTrpcRouter(
 			if (fromControl && fromControl instanceof ControlTrigger) {
 				const controlJson = fromControl.toJSON(true)
 
-				const newControl = new ControlTrigger(deps, controlStore.triggerEvents, newControlId, controlJson, true)
+				const newControl = factory.createTrigger(newControlId, controlJson)
 				controlStore.controls.set(newControlId, newControl)
 
 				setImmediate(() => {
