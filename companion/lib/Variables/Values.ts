@@ -80,6 +80,13 @@ export function InjectedVariablesForLocation(controlLocation: ControlLocation | 
 	)
 }
 
+/**
+ * Given a page number, return the local-variable entities of that page's `page:<pageId>` control, so
+ * they can be bound as `$(page:x)` when parsing a control on that page. Returns null if the page (or
+ * its page control) does not exist. Late-bound by {@link ControlsController} to avoid a circular dep.
+ */
+export type PageVariablesProvider = (pageNumber: number) => ControlEntityInstance[] | null
+
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
 
@@ -87,6 +94,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	#variableValues: VariableValueData = Object.create(null)
 
 	readonly #userconfig: DataUserConfig
+
+	#pageVariablesProvider: PageVariablesProvider | null = null
 
 	constructor(userconfig: DataUserConfig) {
 		super()
@@ -96,6 +105,13 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#blinker = new VariablesBlinker((values) => {
 			this.setVariableValues('internal', values)
 		})
+	}
+
+	/**
+	 * Register the resolver for `$(page:x)` variables. Called once during startup.
+	 */
+	setPageVariablesProvider(provider: PageVariablesProvider): void {
+		this.#pageVariablesProvider = provider
 	}
 
 	/**
@@ -125,13 +141,21 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	): VariablesAndExpressionParser {
 		const thisValues = InjectedVariablesForLocation(controlLocation)
 
+		// Resolve the page's variables for `$(page:x)`. Derived from the control's location, so every
+		// caller (drawing, feedbacks, actions, preview, ...) gets them without passing anything extra.
+		const pageValues =
+			controlLocation?.pageNumber != null && this.#pageVariablesProvider
+				? this.#pageVariablesProvider(controlLocation.pageNumber)
+				: null
+
 		return new VariablesAndExpressionParser(
 			this.#userconfig,
 			this.#blinker,
 			this.#variableValues,
 			thisValues,
 			localValues,
-			overrideVariableValues
+			overrideVariableValues,
+			pageValues
 		)
 	}
 

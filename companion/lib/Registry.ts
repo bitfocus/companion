@@ -4,6 +4,7 @@ import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
@@ -384,6 +385,14 @@ export class Registry {
 			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
 			this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
 			this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+
+			// A page control owns its page's variables. Its own change is self-scoped above (like any
+			// local variable), but the values are also exposed to the whole page as `$(page:x)`, so
+			// propagate the change to every control on that page.
+			const parsed = ParseControlId(fromControlId)
+			if (parsed?.type === 'page') {
+				this.#propagatePageVariablesChanged(parsed.pageId, all_changed_variables_set)
+			}
 		})
 
 		this.instance.definitions.on('updateCompositeElements', (elementIds) => {
@@ -401,6 +410,39 @@ export class Registry {
 	}
 
 	/**
+	 * Propagate a page control's variable change to every control on that page.
+	 * The page control names its variables `local:x`; they are exposed to the page as `$(page:x)`, so
+	 * remap the changed names and invalidate every control on the page (and their feedbacks/previews)
+	 * that references them. Nothing is stored in the global variable pool.
+	 */
+	#propagatePageVariablesChanged(pageId: string, changedLocalVariables: ReadonlySet<string>): void {
+		const pageNumber = this.page.store.getPageNumber(pageId)
+		if (pageNumber == null) return
+
+		const pageChangedSet = new Set<string>()
+		for (const name of changedLocalVariables) {
+			if (name.startsWith('local:')) pageChangedSet.add(`page:${name.slice('local:'.length)}`)
+		}
+		if (pageChangedSet.size === 0) return
+
+		const controlIds = this.page.store.getAllControlIdsOnPage(pageNumber)
+		if (controlIds.length === 0) return
+		const controlIdSet = new Set(controlIds)
+
+		// The internal/module/preview consumers scope by a single controlId, so notify per-control.
+		// Each call is cheap (a filtered iteration + debounce) and page-variable changes are debounced
+		// and infrequent. If this ever becomes hot, these could be taught to accept a control-id set.
+		for (const controlId of controlIds) {
+			this.internalModule.onVariablesChanged(pageChangedSet, controlId)
+			this.instance.processManager.onVariablesChanged(pageChangedSet, controlId)
+			this.preview.onVariablesChanged(pageChangedSet, controlId)
+		}
+
+		// Controls (drawing + entity special-expressions) can be scoped to the whole set in one pass.
+		this.controls.onPageControlsVariablesChanged(pageChangedSet, controlIdSet)
+	}
+
+	/**
 	 * Startup the application
 	 * @param extraModulePath - extra directory to search for modules
 	 * @param bindIp
@@ -415,6 +457,10 @@ export class Registry {
 			this.ui.update.startCycle()
 
 			this.controls.init()
+
+			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs)
+			this.page.ensurePageControlsExist()
+
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
 			knownConnectionIds.add('internal')
 			this.controls.verifyConnectionIds(knownConnectionIds)

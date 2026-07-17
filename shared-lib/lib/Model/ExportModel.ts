@@ -60,6 +60,9 @@ export interface ExportPageContentv6 {
 	name: string
 	controls: Record<number, Record<number, ExportControlv6>>
 
+	/** The `page:<id>` control that owns this page's local variables. Added in v5.x. Optional for backwards compatibility. */
+	pageVariables?: ExportControlv6
+
 	gridSize: UserConfigGridSize
 }
 

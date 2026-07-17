@@ -1188,6 +1188,56 @@ describe('VariablesAndExpressionParser', () => {
 		})
 	})
 
+	describe('page variables', () => {
+		const makePageEntity = (name: string, value: any) =>
+			({
+				rawLocalVariableName: name,
+				feedbackValue: value,
+				type: EntityModelType.Feedback,
+				connectionId: 'non-internal',
+				definitionId: 'some-def',
+			}) as unknown as ControlEntityInstance
+
+		it('resolves $(page:x) from bound page entities', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('brightness', 75),
+			])
+
+			const result = parser.parseVariables('$(page:brightness)')
+			expect(result.text).toBe('75')
+			expect(result.variableIds).toContain('page:brightness')
+		})
+
+		it('unknown $(page:x) resolves to unknown but still tracks the dependency', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('brightness', 75),
+			])
+
+			const result = parser.parseVariables('$(page:missing)')
+			expect(result.text).toBe('$NA')
+			expect(result.variableIds).toContain('page:missing')
+		})
+
+		it('page variables are usable in expressions', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('count', 4),
+			])
+
+			const result = parser.executeExpression('$(page:count) * 2', undefined)
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.value).toBe(8)
+		})
+
+		it('child parser inherits page variables', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('brightness', 75),
+			])
+			const child = parser.createChildParser({})
+
+			expect(child.parseVariables('$(page:brightness)').text).toBe('75')
+		})
+	})
+
 	describe('createChildParser', () => {
 		it('child inherits raw variable values from parent', () => {
 			const parser = new VariablesAndExpressionParser(

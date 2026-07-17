@@ -16,6 +16,7 @@ interface LocalVariablesEditorProps {
 	location: ControlLocation | undefined
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
+	heading?: string
 }
 export function LocalVariablesEditor({
 	className,
@@ -23,12 +24,13 @@ export function LocalVariablesEditor({
 	location,
 	variables,
 	localVariablesStore,
+	heading = 'Local Variables',
 }: LocalVariablesEditorProps): React.JSX.Element {
 	return (
 		<>
 			<ControlEntitiesEditor
 				className={className}
-				heading="Local Variables"
+				heading={heading}
 				subheading={
 					<StaticAlert color="info" className="mb-2 py-2">
 						Local variables are not supported by all modules or fields. Fields which support local variables can be

@@ -24,6 +24,7 @@ function createFixture(initialPages: PageModel[] | undefined = threePages()) {
 	const controls = {
 		deleteControl: vi.fn(),
 		createButtonControl: vi.fn(),
+		createPageControl: vi.fn(),
 		getControl: vi.fn((controlId: string) => {
 			let control = controlInstances.get(controlId)
 			if (!control) {
@@ -96,8 +97,10 @@ describe('PageController', () => {
 			const removed = controller.deletePage(2)
 			expect(removed.sort()).toEqual(['control-b1', 'control-b2'])
 
-			// Deleting the controls is the caller's responsibility
-			expect(controls.deleteControl).not.toHaveBeenCalled()
+			// Deleting the grid controls is the caller's responsibility; only the page's own
+			// variables control (page:<pageId>) is removed here, as it is intrinsic to the page.
+			expect(controls.deleteControl).toHaveBeenCalledTimes(1)
+			expect(controls.deleteControl).toHaveBeenCalledWith('page:page-b')
 
 			expect(store.getPageIds()).toEqual(['page-a', 'page-c'])
 			// The location cache was rebuilt for the renumbered pages

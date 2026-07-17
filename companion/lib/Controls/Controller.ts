@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import z from 'zod'
 import {
 	CreateBankControlId,
+	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
 	ParseControlId,
@@ -17,6 +18,7 @@ import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
@@ -40,6 +42,7 @@ import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
+import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
@@ -123,6 +126,19 @@ export class ControlsController {
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
 		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
+
+		// Teach the variable parser how to resolve `$(page:x)`: for any control being parsed, its page's
+		// `page:<pageId>` control supplies the page-variable entities. This single hook means every
+		// control-owned parser (drawing, feedbacks, actions, preview, ...) resolves page variables.
+		this.#deps.variableValues.setPageVariablesProvider((pageNumber) => {
+			const pageId = this.#deps.pageStore.getPageId(pageNumber)
+			if (!pageId) return null
+
+			const control = this.#store.getControl(CreatePageControlId(pageId))
+			if (!control || !control.supportsEntities) return null
+
+			return control.entities.getLocalVariableEntities()
+		})
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -326,6 +342,12 @@ export class ControlsController {
 				)
 
 				return variable
+			}
+		}
+
+		if (category === 'all') {
+			if (controlObj2?.type === 'page' || (controlType === 'page' && !controlObj2)) {
+				return new ControlPage(this.#createControlDependencies(), controlId, controlObj2, isImport)
 			}
 		}
 
@@ -537,6 +559,23 @@ export class ControlsController {
 	}
 
 	/**
+	 * Propagate a page-variable change to a specific set of controls (the controls on that page).
+	 * Unlike {@link onVariablesChanged}, which scopes to a single control, this scopes to a set - a
+	 * page variable is owned by the page control but influences every control on the page. The changed
+	 * set uses the `page:` namespace; each control's existing disjoint-set check does the rest.
+	 */
+	onPageControlsVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIds: ReadonlySet<string>): void {
+		if (changedVariablesSet.size === 0 || controlIds.size === 0) return
+
+		for (const control of this.#store.controls.values()) {
+			if (!controlIds.has(control.controlId)) continue
+
+			if (control.supportsEntities) control.entities.onVariablesChanged(changedVariablesSet)
+			control.drawing?.onVariablesChanged(changedVariablesSet)
+		}
+	}
+
+	/**
 	 * Propagate composite element changes
 	 * @param allChangedElementIds - composite element ids with changes
 	 */
@@ -626,6 +665,38 @@ export class ControlsController {
 
 		// Force a redraw
 		this.#controlEvents.emit('invalidateLocationRender', location)
+
+		// Notify that control count has changed
+		this.#controlEvents.emit('controlCountChanged')
+
+		return controlId
+	}
+
+	/**
+	 * Create (or import) the page control that owns a page's local variables.
+	 * There is exactly one per page, keyed by the page's stable id. Safe to call for a page that already
+	 * has one during reconciliation (it becomes a no-op unless a `storage` model is given to import).
+	 * @param pageId Stable id of the page
+	 * @param storage Persisted model to import, or null/undefined to create an empty one
+	 * @param isImport Whether this is an import, and needs additional processing
+	 * @returns the page controlId
+	 */
+	createPageControl(pageId: string, storage?: PageControlModel | null, isImport = false): string {
+		const controlId = CreatePageControlId(pageId)
+
+		const existing = this.#store.getControl(controlId)
+		if (existing) {
+			// Nothing to do during reconciliation if we're not importing new data
+			if (!storage) return controlId
+
+			// Replace the existing control with the imported data
+			this.deleteControl(controlId)
+		}
+
+		const newControl = this.createClassForControl(controlId, 'all', storage ?? 'page', isImport)
+		if (!newControl) throw new Error(`Failed to create page control for page "${pageId}"`)
+
+		this.#store.controls.set(controlId, newControl)
 
 		// Notify that control count has changed
 		this.#controlEvents.emit('controlCountChanged')

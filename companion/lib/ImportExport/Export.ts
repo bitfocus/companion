@@ -18,7 +18,7 @@ import fs from 'fs-extra'
 import type { ParsedQs } from 'qs'
 import yazl from 'yazl'
 import { ZodError } from 'zod'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type {
@@ -515,6 +515,21 @@ export class ExportController {
 						referencedVariables
 					)
 				}
+			}
+		}
+
+		// Include the page's local-variables control (page:<id>). It is not on the grid, so it is
+		// serialized separately. This flows through both the full and single-page export paths.
+		if (pageInfo.id) {
+			const pageControl = this.#controlsController.getControl(CreatePageControlId(pageInfo.id))
+			if (pageControl && pageControl.type === 'page') {
+				pageExport.pageVariables = pageControl.toJSON(false)
+
+				pageControl.collectReferencedConnectionsAndVariables(
+					referencedConnectionIds,
+					referencedConnectionLabels,
+					referencedVariables
+				)
 			}
 		}
 

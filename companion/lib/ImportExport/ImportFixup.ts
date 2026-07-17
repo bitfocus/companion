@@ -8,6 +8,7 @@ import type {
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { InternalController } from '../Internal/Controller.js'
 import type { Logger } from '../Log/Controller.js'
@@ -106,6 +107,42 @@ export function fixupExpressionVariableControl(
 		outboundSurfaceIdRemap
 	).visitEntities([], result.localVariables)
 	if (result.entity) visitor.visitEntities([], [result.entity])
+
+	return result
+}
+
+export function fixupPageControl(
+	internalModule: InternalController,
+	control: PageControlModel,
+	instanceIdMap: InstanceAppliedRemappings,
+	outboundSurfaceIdRemap: Record<string, string> | undefined
+): PageControlModel {
+	// Future: this does not feel durable
+
+	const connectionLabelRemap: Record<string, string> = {}
+	const connectionIdRemap: Record<string, string> = {}
+	for (const [oldId, info] of Object.entries(instanceIdMap)) {
+		if (info.oldLabel && info.label !== info.oldLabel) {
+			connectionLabelRemap[info.oldLabel] = info.label
+		}
+		if (info.id && info.id !== oldId) {
+			connectionIdRemap[oldId] = info.id
+		}
+	}
+
+	const result: PageControlModel = {
+		type: 'page',
+		localVariables: control.localVariables
+			? fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
+			: [],
+	}
+
+	new VisitorReferencesUpdater(
+		internalModule,
+		connectionLabelRemap,
+		connectionIdRemap,
+		outboundSurfaceIdRemap
+	).visitEntities([], result.localVariables)
 
 	return result
 }
