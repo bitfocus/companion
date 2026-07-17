@@ -1,6 +1,5 @@
 import type { JsonValue } from 'type-fest'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
@@ -60,7 +59,6 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 	protected readonly steps = new Map<string, ControlEntityListActionStep>()
 
-	readonly #executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult
 	protected readonly sendRuntimePropsChange: () => void
 
 	/**
@@ -82,15 +80,9 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		}
 	}
 
-	constructor(
-		props: ControlEntityListPoolProps,
-		sendRuntimePropsChange: () => void,
-		executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult,
-		isLayeredButton: boolean
-	) {
+	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void, isLayeredButton: boolean) {
 		super(props, isLayeredButton)
 
-		this.#executeExpressionInControl = executeExpressionInControl
 		this.sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = this.createEntityList({
@@ -420,7 +412,9 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 		const stepIds = this.getStepIds()
 
-		const latestValue = this.#executeExpressionInControl(this.currentStep.expression, 'number')
+		const parser = this.createVariablesAndExpressionParser(null)
+
+		const latestValue = parser.executeExpression(this.currentStep.expression, 'number')
 		if (latestValue.ok) {
 			let latestIndex = Math.max(Math.min(Number(latestValue.value) - 1, stepIds.length - 1), 0)
 			if (isNaN(latestIndex)) latestIndex = 0
@@ -710,6 +704,5 @@ export type SomeButtonEntityPool = ControlEntityListPoolButton | EditableControl
 export type ButtonEntityPoolConstructor<TPool extends SomeButtonEntityPool> = new (
 	props: ControlEntityListPoolProps,
 	sendRuntimePropsChange: () => void,
-	executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult,
 	isLayeredButton: boolean
 ) => TPool

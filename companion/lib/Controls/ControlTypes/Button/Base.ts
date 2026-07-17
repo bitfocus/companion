@@ -103,14 +103,6 @@ export abstract class ButtonControlRuntimeBase<
 				pageStore: deps.pageStore,
 			},
 			this.sendRuntimePropsChange.bind(this),
-			(expression, requiredType) =>
-				deps.variableValues
-					.createVariablesAndExpressionParser(
-						deps.pageStore.getLocationOfControlId(this.controlId),
-						this.entities.getLocalVariableEntities(),
-						null
-					)
-					.executeExpression(expression, requiredType),
 			isLayered
 		)
 	}
