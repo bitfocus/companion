@@ -8,7 +8,6 @@ import type {
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { InternalController } from '../Internal/Controller.js'
 import type { Logger } from '../Log/Controller.js'
@@ -111,12 +110,12 @@ export function fixupExpressionVariableControl(
 	return result
 }
 
-export function fixupPageControl(
+export function fixupPageVariables(
 	internalModule: InternalController,
-	control: PageControlModel,
+	localVariables: SomeEntityModel[] | undefined,
 	instanceIdMap: InstanceAppliedRemappings,
 	outboundSurfaceIdRemap: Record<string, string> | undefined
-): PageControlModel {
+): SomeEntityModel[] {
 	// Future: this does not feel durable
 
 	const connectionLabelRemap: Record<string, string> = {}
@@ -130,19 +129,14 @@ export function fixupPageControl(
 		}
 	}
 
-	const result: PageControlModel = {
-		type: 'page',
-		localVariables: control.localVariables
-			? fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
-			: [],
-	}
+	const result = localVariables ? fixupEntitiesRecursive(instanceIdMap, structuredClone(localVariables)) : []
 
 	new VisitorReferencesUpdater(
 		internalModule,
 		connectionLabelRemap,
 		connectionIdRemap,
 		outboundSurfaceIdRemap
-	).visitEntities([], result.localVariables)
+	).visitEntities([], result)
 
 	return result
 }

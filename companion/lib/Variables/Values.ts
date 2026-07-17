@@ -80,6 +80,18 @@ export function InjectedVariablesForLocation(controlLocation: ControlLocation | 
 	)
 }
 
+/** The `this:*` variables that make sense for a page control - a page has no row/column. */
+export const ThisPageVariablesSet: ReadonlySet<string> = new Set(['this:page', 'this:page_name'])
+
+export function InjectedVariablesForPage(pageNumber: number | null | undefined): VariablesCache {
+	const values: VariablesCache = new Map()
+	if (pageNumber != null) {
+		values.set('this:page', pageNumber)
+		values.set('this:page_name', `$(internal:page_number_${pageNumber}_name)`)
+	}
+	return values
+}
+
 /**
  * Given a page number, return the local-variable entities of that page's `page:<pageId>` control, so
  * they can be bound as `$(page:x)` when parsing a control on that page. Returns null if the page (or
@@ -156,6 +168,25 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			localValues,
 			overrideVariableValues,
 			pageValues
+		)
+	}
+
+	/**
+	 * Build a parser for a page control's own variables. It has no grid location, so only the
+	 * page-relevant `this:page`/`this:page_name` are injected (not the button-specific `this:*`).
+	 */
+	createVariablesAndExpressionParserForPage(
+		pageNumber: number | null | undefined,
+		localValues: ControlEntityInstance[] | null,
+		overrideVariableValues: VariableValues | null
+	): VariablesAndExpressionParser {
+		return new VariablesAndExpressionParser(
+			this.#userconfig,
+			this.#blinker,
+			this.#variableValues,
+			InjectedVariablesForPage(pageNumber),
+			localValues,
+			overrideVariableValues
 		)
 	}
 

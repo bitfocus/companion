@@ -9,6 +9,7 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { VariablesCache, VariableValueData, VisitEntityOptionValueOptions } from '../../lib/Variables/Util.js'
+import { InjectedVariablesForPage } from '../../lib/Variables/Values.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 import { mockUserConfig as buildUserConfigMock } from '../utils/MockUserConfig.js'
 
@@ -1235,6 +1236,20 @@ describe('VariablesAndExpressionParser', () => {
 			const child = parser.createChildParser({})
 
 			expect(child.parseVariables('$(page:brightness)').text).toBe('75')
+		})
+
+		it('this:page and this:page_name resolve for a page context', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, InjectedVariablesForPage(3), null, null)
+
+			expect(parser.parseVariables('$(this:page)').text).toBe('3')
+			expect(parser.parseVariables('$(this:page_name)').variableIds).toContain('internal:page_number_3_name')
+		})
+
+		it('button-specific this: variables are absent for a page context', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, InjectedVariablesForPage(3), null, null)
+
+			expect(parser.parseVariables('$(this:row)').text).toBe('$NA')
+			expect(parser.parseVariables('$(this:column)').text).toBe('$NA')
 		})
 	})
 

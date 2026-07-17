@@ -518,12 +518,12 @@ export class ExportController {
 			}
 		}
 
-		// Include the page's local-variables control (page:<id>). It is not on the grid, so it is
-		// serialized separately. This flows through both the full and single-page export paths.
+		// Include the page's local variables (from the page:<id> control, which is not on the grid).
+		// This flows through both the full and single-page export paths.
 		if (pageInfo.id) {
 			const pageControl = this.#controlsController.getControl(CreatePageControlId(pageInfo.id))
 			if (pageControl && pageControl.type === 'page') {
-				pageExport.pageVariables = pageControl.toJSON(false)
+				pageExport.pageVariables = pageControl.toJSON(false).localVariables
 
 				pageControl.collectReferencedConnectionsAndVariables(
 					referencedConnectionIds,

@@ -1,5 +1,6 @@
 import type { ConnectionCollection } from './Connections.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
+import type { SomeEntityModel } from './EntityModel.js'
 import type { ExpressionVariableCollection, ExpressionVariableModel } from './ExpressionVariableModel.js'
 import type { ImageLibraryCollection, ImageLibraryExportData } from './ImageLibraryModel.js'
 import type { InstanceConfig, InstanceVersionUpdatePolicy } from './Instance.js'
@@ -60,8 +61,8 @@ export interface ExportPageContentv6 {
 	name: string
 	controls: Record<number, Record<number, ExportControlv6>>
 
-	/** The `page:<id>` control that owns this page's local variables. Added in v5.x. Optional for backwards compatibility. */
-	pageVariables?: ExportControlv6
+	/** This page's local variables (the `page:<id>` control's entities). Added in v5.x. Optional for backwards compatibility. */
+	pageVariables?: SomeEntityModel[]
 
 	gridSize: UserConfigGridSize
 }

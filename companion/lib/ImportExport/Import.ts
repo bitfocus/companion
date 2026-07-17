@@ -14,7 +14,6 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -30,7 +29,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import {
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
-	fixupPageControl,
+	fixupPageVariables,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
@@ -411,18 +410,18 @@ export class ImportController {
 			}
 		}
 
-		// Import the page's local-variables control (page:<pageId>). It is recreated against the
-		// TARGET page's stable id (not the exported source id), so it re-links to the right page.
+		// Import the page's local variables into its page control (page:<pageId>), recreated against the
+		// TARGET page's stable id (not the exported source id) so it re-links to the right page.
 		if (pageInfo.pageVariables) {
 			const pageId = this.#pagesController.store.getPageId(Number(topage))
 			if (pageId) {
-				const fixedPageControl = fixupPageControl(
+				const localVariables = fixupPageVariables(
 					this.#internalModule,
-					pageInfo.pageVariables as PageControlModel,
+					pageInfo.pageVariables,
 					instanceIdMap,
 					outboundSurfaceIdRemap
 				)
-				this.#controlsController.createPageControl(pageId, fixedPageControl, true)
+				this.#controlsController.createPageControl(pageId, { type: 'page', localVariables }, true)
 			}
 		}
 	}

@@ -3,6 +3,7 @@ import { action, makeObservable, observable } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { useEffect, useMemo } from 'react'
 import type { Equal, Expect } from 'type-testing'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -44,6 +45,9 @@ export class LocalVariablesStore {
 				if (internalParser && entityType === EntityModelType.Action) {
 					fixedVariables = ControlWithInternalLocalVariables
 				}
+			} else if (ParseControlId(this.controlId)?.type === 'page') {
+				// A page control has no grid location, but its variables belong to a page
+				fixedVariables = PageLocalVariables
 			}
 
 			const dynamicVariables: DropdownChoiceInt[] = []
@@ -146,6 +150,12 @@ export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:surface_id',
 		label: 'The id of the surface triggering this action',
 	},
+]
+
+/** The subset of `this:*` variables that make sense for a page control (no grid location). */
+export const PageLocalVariables: DropdownChoiceInt[] = [
+	{ value: 'this:page', label: 'This page' },
+	{ value: 'this:page_name', label: 'This page name' },
 ]
 
 /** Variable picker entry injected for fields that use deferred parsing (e.g. set-value actions). */

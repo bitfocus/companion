@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -6,6 +7,9 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { IPageStore } from '../../Page/Store.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
@@ -23,14 +27,32 @@ import type { NewFeedbackValue } from './Types.js'
  */
 export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolBase) {
 	#localVariables: ControlEntityList
+	readonly #pageStore: IPageStore
 
 	constructor(props: ControlEntityListPoolProps) {
 		super(props, false)
+
+		this.#pageStore = props.pageStore
 
 		this.#localVariables = this.createEntityList({
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Value,
 		})
+	}
+
+	/**
+	 * A page control has no grid location, so its parser gets the page's own `this:` context
+	 * (`this:page`/`this:page_name`) rather than a grid location.
+	 */
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		const parsed = ParseControlId(this.controlId)
+		const pageNumber = parsed?.type === 'page' ? this.#pageStore.getPageNumber(parsed.pageId) : null
+
+		return this.variableValues.createVariablesAndExpressionParserForPage(
+			pageNumber,
+			this.getLocalVariableEntities(),
+			overrideVariableValues
+		)
 	}
 
 	loadStorage(storage: PageControlModel, skipSubscribe: boolean, isImport: boolean): void {
