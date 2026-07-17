@@ -576,6 +576,30 @@ export class ControlsController {
 	}
 
 	/**
+	 * A control moved to a different page, so its `$(page:x)` references now resolve against a different
+	 * page control. Report the affected `page:*` ids (from both the old and new pages) scoped to this
+	 * control, so the existing disjoint-set invalidation re-evaluates ONLY its feedbacks that actually use
+	 * page variables. No-op for same-page moves / reorders (the page identity is unchanged). Actions need
+	 * nothing here - they parse at execution time and pick up the new page then.
+	 */
+	notifyControlMovedPage(controlId: string, fromPageNumber: number, toPageNumber: number): void {
+		const fromPageId = this.#deps.pageStore.getPageId(fromPageNumber)
+		const toPageId = this.#deps.pageStore.getPageId(toPageNumber)
+		if (!fromPageId || !toPageId || fromPageId === toPageId) return
+
+		const changed = new Set<string>()
+		for (const pageNumber of [fromPageNumber, toPageNumber]) {
+			for (const entity of this.#getPageVariableEntities(pageNumber) ?? []) {
+				const name = entity.rawLocalVariableName
+				if (name) changed.add(`page:${name}`)
+			}
+		}
+		if (changed.size === 0) return
+
+		this.#deps.variableValues.emit('local_variables_changed', changed, controlId)
+	}
+
+	/**
 	 * Propagate composite element changes
 	 * @param allChangedElementIds - composite element ids with changes
 	 */
@@ -697,9 +721,6 @@ export class ControlsController {
 		if (!newControl) throw new Error(`Failed to create page control for page "${pageId}"`)
 
 		this.#store.controls.set(controlId, newControl)
-
-		// Notify that control count has changed
-		this.#controlEvents.emit('controlCountChanged')
 
 		return controlId
 	}
