@@ -30,9 +30,20 @@ import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
-	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
-	local_variables_changed: [changed: ReadonlySet<string>, fromControlId: string]
+	/**
+	 * A set of variables changed.
+	 * `targetControlId` is null for a normal (global) change, or the id of the control whose local
+	 * variables changed - in which case only that control need react.
+	 */
+	variablesChanged: [
+		changed: ReadonlySet<string>,
+		connectionLabels: ReadonlySet<string>,
+		targetControlId: string | null,
+	]
 }
+
+/** Shared empty set of connection labels, for local variable changes which have no connection */
+export const NO_CONNECTION_LABELS: ReadonlySet<string> = new Set()
 
 const ThisLocationVariables: Record<
 	ThisLocationVariable,
@@ -227,7 +238,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	#emitVariablesChanged(all_changed_variables_set: ReadonlySet<string>, connection_labels: ReadonlySet<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
-				this.emit('variables_changed', all_changed_variables_set, connection_labels)
+				this.emit('variablesChanged', all_changed_variables_set, connection_labels, null)
 			}
 		} catch (e) {
 			this.#logger.error(`Failed to process variables update: ${e}`)
@@ -235,7 +246,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	triggerLocationVariablesChange(controlId: string): void {
-		this.emit('local_variables_changed', ThisLocationVariablesSet, controlId)
+		this.emit('variablesChanged', ThisLocationVariablesSet, NO_CONNECTION_LABELS, controlId)
 	}
 }
 

@@ -20,7 +20,7 @@ import type { VariablesCustomVariableEvents } from '../Variables/CustomVariable.
 import type { VariablesValuesEvents } from '../Variables/Values.js'
 
 interface ServiceApiEvents {
-	variables_changed: VariablesValuesEvents['variables_changed']
+	variablesChanged: VariablesValuesEvents['variablesChanged']
 	custom_variable_definition_changed: VariablesCustomVariableEvents['custom_variable_definition_changed']
 	action_recorder_is_running: ActionRecorderEvents['action_recorder_is_running']
 	updateButtonState: ControlCommonEvents['updateButtonState']
@@ -80,8 +80,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 			this.emit('action_recorder_is_running', ...args)
 		})
 
-		this.#variablesController.values.on('variables_changed', (...args) => {
-			this.emit('variables_changed', ...args)
+		this.#variablesController.values.on('variablesChanged', (...args) => {
+			this.emit('variablesChanged', ...args)
 		})
 		this.#variablesController.custom.on('custom_variable_definition_changed', (...args) => {
 			this.emit('custom_variable_definition_changed', ...args)

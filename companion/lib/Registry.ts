@@ -372,18 +372,14 @@ export class Registry {
 			}
 		})
 
-		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, null)
-			this.controls.onVariablesChanged(all_changed_variables_set, null)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, null)
-			this.preview.onVariablesChanged(all_changed_variables_set, null)
-			this.surfaces.onVariablesChanged(all_changed_variables_set)
-		})
-		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+		this.variables.values.on('variablesChanged', (all_changed_variables_set, _connectionLabels, targetControlId) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, targetControlId)
+			this.controls.onVariablesChanged(all_changed_variables_set, targetControlId)
+			this.instance.processManager.onVariablesChanged(all_changed_variables_set, targetControlId)
+			this.preview.onVariablesChanged(all_changed_variables_set, targetControlId)
+
+			// Surfaces only care about global changes, not a single control's local variables
+			if (!targetControlId) this.surfaces.onVariablesChanged(all_changed_variables_set)
 		})
 
 		this.instance.definitions.on('updateCompositeElements', (elementIds) => {
