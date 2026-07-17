@@ -27,6 +27,24 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from './StyleStore.js'
 
+const ELEMENT_TYPE_ICONS: Record<string, IconProp> = {
+	text: faT,
+	image: faImage,
+	box: faSquare,
+	line: faMinus,
+	group: faLayerGroup,
+	circle: faCircle,
+	gauge: faGauge,
+	reference: faLink,
+	composite: faCube,
+}
+
+// Icon representing an element's type, matching the icons in the add-element dropdown. Composite elements
+// (whose stored type is `composite`, or `connectionId;elementId` in the dropdown) fall back to the cube.
+export function getElementTypeIcon(type: string): IconProp {
+	return ELEMENT_TYPE_ICONS[type] ?? faCube
+}
+
 export function RemoveElementButton({
 	controlId,
 	elementId,
@@ -122,13 +140,11 @@ function AddElementDropdownPopoverButton({
 	controlId,
 	elementType,
 	label,
-	icon,
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
 	elementType: SomeButtonGraphicsElement['type'] | string
 	label: string
-	icon: IconProp
 }) {
 	const addElementMutation = useMutationExt(trpc.controls.styles.addElement.mutationOptions())
 
@@ -146,7 +162,7 @@ function AddElementDropdownPopoverButton({
 
 	return (
 		<Popover.Item onClick={addCallback} title={`Add ${label}`}>
-			<FontAwesomeIcon icon={icon} className="me-2" />
+			<FontAwesomeIcon icon={getElementTypeIcon(elementType)} className="me-2" />
 			{label}
 		</Popover.Item>
 	)
@@ -191,7 +207,6 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 							controlId={controlId}
 							elementType={`${group.connectionId};${elementId}`}
 							label={definition.name}
-							icon={faCube}
 						/>
 					))}
 				</Accordion.Panel>
@@ -238,56 +253,33 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 				controlId={controlId}
 				elementType="group"
 				label="Group"
-				icon={faLayerGroup}
 			/>
-			<AddElementDropdownPopoverButton
-				styleStore={styleStore}
-				controlId={controlId}
-				elementType="text"
-				label="Text"
-				icon={faT}
-			/>
+			<AddElementDropdownPopoverButton styleStore={styleStore} controlId={controlId} elementType="text" label="Text" />
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="image"
 				label="Image"
-				icon={faImage}
 			/>
-			<AddElementDropdownPopoverButton
-				styleStore={styleStore}
-				controlId={controlId}
-				elementType="box"
-				label="Box"
-				icon={faSquare}
-			/>
-			<AddElementDropdownPopoverButton
-				styleStore={styleStore}
-				controlId={controlId}
-				elementType="line"
-				label="Line"
-				icon={faMinus}
-			/>
+			<AddElementDropdownPopoverButton styleStore={styleStore} controlId={controlId} elementType="box" label="Box" />
+			<AddElementDropdownPopoverButton styleStore={styleStore} controlId={controlId} elementType="line" label="Line" />
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="circle"
 				label="Circle"
-				icon={faCircle}
 			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="gauge"
 				label="Gauge"
-				icon={faGauge}
 			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="reference"
 				label="Reference"
-				icon={faLink}
 			/>
 
 			{/* Composite Elements grouped by connection */}
