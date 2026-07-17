@@ -25,6 +25,7 @@ function createFixture(initialPages: PageModel[] | undefined = threePages()) {
 		deleteControl: vi.fn(),
 		createButtonControl: vi.fn(),
 		createPageControl: vi.fn(),
+		clearPageVariables: vi.fn(),
 		getControl: vi.fn((controlId: string) => {
 			let control = controlInstances.get(controlId)
 			if (!control) {
@@ -146,7 +147,7 @@ describe('PageController', () => {
 		})
 
 		test('inserts pages and renumbers later pages', () => {
-			const { controller, store, controlInstances } = createFixture()
+			const { controller, store, controlInstances, controls } = createFixture()
 
 			const clientUpdate = vi.fn()
 			controller.on('clientUpdate', clientUpdate)
@@ -155,6 +156,10 @@ describe('PageController', () => {
 
 			const newIds = controller.insertPages(2, ['X', 'Y'])
 			expect(newIds).toHaveLength(2)
+
+			// Each new page gets its own variables control
+			expect(controls.createPageControl).toHaveBeenCalledWith(newIds[0])
+			expect(controls.createPageControl).toHaveBeenCalledWith(newIds[1])
 
 			expect(store.getPageIds()).toEqual(['page-a', newIds[0], newIds[1], 'page-b', 'page-c'])
 			expect(store.getPageName(2)).toBe('X')
@@ -242,7 +247,7 @@ describe('PageController', () => {
 
 	describe('resetPage', () => {
 		test('clears the controls and resets the name', () => {
-			const { controller, store } = createFixture()
+			const { controller, store, controls } = createFixture()
 
 			const clientUpdate = vi.fn()
 			controller.on('clientUpdate', clientUpdate)
@@ -254,6 +259,9 @@ describe('PageController', () => {
 
 			expect(store.getPageName(2)).toBe('PAGE')
 			expect(store.getAllControlIdsOnPage(2)).toEqual([])
+
+			// Wiping the page also clears its local variables
+			expect(controls.clearPageVariables).toHaveBeenCalledWith('page-b')
 
 			// Each populated location is reported as cleared
 			expect(clientUpdate).toHaveBeenCalledWith({

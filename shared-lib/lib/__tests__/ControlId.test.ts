@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateExpressionVariableControlId,
+	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
 	formatLocation,
@@ -116,6 +117,17 @@ describe('CreateExpressionVariableControlId', () => {
 	})
 })
 
+describe('CreatePageControlId', () => {
+	test('prefixes id with "page:"', () => {
+		expect(CreatePageControlId('page-abc')).toBe('page:page-abc')
+	})
+
+	test('roundtrips through ParseControlId', () => {
+		const pageId = 'nanoid-1234'
+		expect(ParseControlId(CreatePageControlId(pageId))).toEqual({ type: 'page', pageId })
+	})
+})
+
 describe('CreatePresetControlId', () => {
 	test('joins connectionId, presetId, variablesHash with colons', () => {
 		expect(CreatePresetControlId('conn1', 'btn_01', 'abc')).toBe('preset:conn1:btn_01:abc')
@@ -138,6 +150,10 @@ describe('ParseControlId', () => {
 			type: 'expression-variable',
 			variableId: 'myVar',
 		})
+	})
+
+	test('parses a page control id', () => {
+		expect(ParseControlId('page:page-abc')).toEqual({ type: 'page', pageId: 'page-abc' })
 	})
 
 	test('parses a preset control id', () => {

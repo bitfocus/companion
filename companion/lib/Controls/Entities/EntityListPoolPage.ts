@@ -41,6 +41,26 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 		return this.#localVariables.getDirectEntities()
 	}
 
+	/**
+	 * Remove all of the page's variables (used when the page is wiped). Clears in place on the existing
+	 * instance (so any live editor subscription just receives an empty list), persists, and notifies so
+	 * that any control still referencing them re-evaluates to unknown.
+	 * @returns true if anything was removed
+	 */
+	clearVariables(): boolean {
+		const entities = this.#localVariables.getDirectEntities()
+		if (entities.length === 0) return false
+
+		const removedNames = entities.map((e) => e.localVariableName).filter((name): name is string => !!name)
+
+		this.#localVariables.loadStorage([], false, false)
+
+		this.reportChange({ redraw: false })
+		this.tryTriggerLocalVariablesChanged(...removedNames)
+
+		return true
+	}
+
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
 		if (listId === 'local-variables') return this.#localVariables
 		return undefined

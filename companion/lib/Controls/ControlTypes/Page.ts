@@ -170,6 +170,14 @@ export class ControlPage
 		this.sendRuntimePropsChange()
 	}
 
+	/**
+	 * Remove all of this page's variables. Used when the page is wiped/cleared.
+	 * @returns true if anything was removed
+	 */
+	clearVariables(): boolean {
+		return this.entities.clearVariables()
+	}
+
 	destroy(): void {
 		this.entities.destroy()
 

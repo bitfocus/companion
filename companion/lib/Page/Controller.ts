@@ -418,6 +418,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
+		// Wiping the page also clears its local variables (the page control is kept, just emptied)
+		this.#controlsController.clearPageVariables(pageInfo.id)
+
 		const controlChanges: PageModelChangesItem['controls'] = []
 
 		// Report each populated location as cleared

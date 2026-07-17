@@ -8,10 +8,12 @@ import {
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
+import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import {
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupPageControl,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
@@ -405,6 +407,71 @@ describe('fixupExpressionVariableControl', () => {
 		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
 
 		expect((result.entity?.options.src as any).value).toBe('$(NewLabel:x)')
+	})
+})
+
+// ── fixupPageControl ────────────────────────────────────────────────────────────
+
+describe('fixupPageControl', () => {
+	let internalModule: InternalController
+	beforeEach(() => {
+		internalModule = mockInternalModule()
+	})
+
+	function makePageControl(overrides: Partial<PageControlModel> = {}): PageControlModel {
+		return {
+			type: 'page',
+			localVariables: [],
+			...overrides,
+		}
+	}
+
+	test('defaults to an empty page control', () => {
+		const result = fixupPageControl(internalModule, makePageControl(), standardMap(), {})
+
+		expect(result.type).toBe('page')
+		expect(result.localVariables).toEqual([])
+	})
+
+	test('remaps connectionId on page variables', () => {
+		const control = makePageControl({
+			localVariables: [makeFeedback({ connectionId: 'conn-old' })],
+		})
+
+		const result = fixupPageControl(internalModule, control, standardMap(), {})
+
+		expect(result.localVariables[0].connectionId).toBe('conn-new')
+	})
+
+	test('drops a page variable whose connection is unknown', () => {
+		const control = makePageControl({
+			localVariables: [makeFeedback({ connectionId: 'unknown-connection' })],
+		})
+
+		const result = fixupPageControl(internalModule, control, standardMap(), {})
+
+		expect(result.localVariables).toEqual([])
+	})
+
+	test('rewrites label references inside page variable options', () => {
+		const control = makePageControl({
+			localVariables: [makeFeedback({ connectionId: 'conn-old', options: { src: exprVal('$(OldLabel:x)') } })],
+		})
+
+		const result = fixupPageControl(internalModule, control, standardMap(), {})
+
+		expect((result.localVariables[0].options.src as any).value).toBe('$(NewLabel:x)')
+	})
+
+	test('does not mutate the input control', () => {
+		const control = makePageControl({
+			localVariables: [makeFeedback({ connectionId: 'conn-old' })],
+		})
+
+		fixupPageControl(internalModule, control, standardMap(), {})
+
+		// original untouched (structuredClone inside)
+		expect(control.localVariables[0].connectionId).toBe('conn-old')
 	})
 })
 

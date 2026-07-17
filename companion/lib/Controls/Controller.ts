@@ -704,6 +704,15 @@ export class ControlsController {
 		return controlId
 	}
 
+	/**
+	 * Clear all of a page's local variables (used when the page is wiped). No-op if the page has no
+	 * page control (e.g. it was already deleted).
+	 */
+	clearPageVariables(pageId: string): void {
+		const control = this.#store.getControl(CreatePageControlId(pageId))
+		if (control instanceof ControlPage) control.clearVariables()
+	}
+
 	setTriggerCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
 		this.#triggerCollections.setCollectionEnabled(collectionId, enabled)
 	}
