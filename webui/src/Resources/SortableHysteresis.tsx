@@ -23,9 +23,9 @@ function usesHoverReorder(source: { data?: unknown } | null | undefined): boolea
 	const data = source?.data as { kind?: string } | undefined
 	if (!data) return false
 	// These apply their move on hover (via their own monitors) instead of dnd-kit's optimistic sorting:
-	// entity rows, and CollectionsNestingTable item rows/tiles (which can be dropped into empty
-	// collections / onto headers - targets native sorting can't place into without corrupting state).
-	return data.kind === 'entity' || data.kind === 'cnt-item'
+	// entity rows, CollectionsNestingTable item rows/tiles, and layered-button style elements (which can
+	// be dropped into empty groups - targets native sorting can't place into without corrupting state).
+	return data.kind === 'entity' || data.kind === 'cnt-item' || data.kind === 'layer-element'
 }
 
 export function SortableHysteresis(): null {

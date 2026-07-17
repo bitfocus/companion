@@ -412,12 +412,17 @@
 				padding-right: 0.2rem;
 			}
 
-			// dnd-kit sortable feedback (no blur - a filter on the top-layer popover breaks rendering)
-			&[data-dnd-placeholder] {
+			// Reorders on hover: dim the in-place source row; the floating preview clone gets the lifted look
+			&.row-dragging {
 				opacity: 0.4;
 			}
-			&[data-dnd-dragging] {
+			&.dnd-drag-preview {
 				@include dragging-style(#fff);
+
+				// Blend the reorder handle into the lifted card
+				.td-reorder {
+					background-color: transparent;
+				}
 			}
 
 			&.last-row {
