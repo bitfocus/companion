@@ -1,7 +1,7 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDragDropMonitor, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -13,6 +13,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import {
 	AddElementDropdownButton,
 	DuplicateElementButton,
+	getElementTypeIcon,
 	RemoveElementButton,
 	ToggleVisibilityButton,
 } from './Buttons.js'
@@ -253,6 +254,7 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
+					<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="me-1" fixedWidth />
 					{element.name || element.type}
 				</div>
 
@@ -302,6 +304,7 @@ const CanvasElementRow = observer(function CanvasElementRow({
 			<div className="td-reorder-placeholder"></div>
 
 			<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
+				<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
 				{element.name || 'Background'}
 			</div>
 
