@@ -192,7 +192,8 @@ export class LayeredButtonDrawer {
 		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
 			location,
 			this.#host.entities?.getLocalVariableEntities() ?? null,
-			injectedVariableValues
+			injectedVariableValues,
+			location ? this.deps.getPageVariableEntities(location.pageNumber) : null
 		)
 
 		const locationStr = location ? formatLocation(location) : null

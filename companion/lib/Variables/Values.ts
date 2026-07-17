@@ -12,7 +12,7 @@
 import EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
+import type { ThisLocationVariable, ThisPageVariable } from '@companion-app/shared/ControlLocation.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
@@ -80,24 +80,26 @@ export function InjectedVariablesForLocation(controlLocation: ControlLocation | 
 	)
 }
 
-/** The `this:*` variables that make sense for a page control - a page has no row/column. */
-export const ThisPageVariablesSet: ReadonlySet<string> = new Set(['this:page', 'this:page_name'])
+/**
+ * The `this:*` variables for a page control (a page has no row/column). Keyed by {@link ThisPageVariable}
+ * so it stays in lockstep with the shared type - and thus with the UI dropdown that is checked against it.
+ */
+const ThisPageVariables: Record<ThisPageVariable, (pageNumber: number) => VariableValue> = {
+	'this:page': (pageNumber) => pageNumber,
+	'this:page_name': (pageNumber) => `$(internal:page_number_${pageNumber}_name)`,
+}
+
+export const ThisPageVariablesSet: ReadonlySet<string> = new Set(Object.keys(ThisPageVariables))
 
 export function InjectedVariablesForPage(pageNumber: number | null | undefined): VariablesCache {
 	const values: VariablesCache = new Map()
 	if (pageNumber != null) {
-		values.set('this:page', pageNumber)
-		values.set('this:page_name', `$(internal:page_number_${pageNumber}_name)`)
+		for (const [variableId, computeVariable] of Object.entries(ThisPageVariables)) {
+			values.set(variableId, computeVariable(pageNumber))
+		}
 	}
 	return values
 }
-
-/**
- * Given a page number, return the local-variable entities of that page's `page:<pageId>` control, so
- * they can be bound as `$(page:x)` when parsing a control on that page. Returns null if the page (or
- * its page control) does not exist. Late-bound by {@link ControlsController} to avoid a circular dep.
- */
-export type PageVariablesProvider = (pageNumber: number) => ControlEntityInstance[] | null
 
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
@@ -107,8 +109,6 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 	readonly #userconfig: DataUserConfig
 
-	#pageVariablesProvider: PageVariablesProvider | null = null
-
 	constructor(userconfig: DataUserConfig) {
 		super()
 
@@ -117,13 +117,6 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		this.#blinker = new VariablesBlinker((values) => {
 			this.setVariableValues('internal', values)
 		})
-	}
-
-	/**
-	 * Register the resolver for `$(page:x)` variables. Called once during startup.
-	 */
-	setPageVariablesProvider(provider: PageVariablesProvider): void {
-		this.#pageVariablesProvider = provider
 	}
 
 	/**
@@ -149,22 +142,14 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		pageValues: ControlEntityInstance[] | null = null
 	): VariablesAndExpressionParser {
-		const thisValues = InjectedVariablesForLocation(controlLocation)
-
-		// Resolve the page's variables for `$(page:x)`. Derived from the control's location, so every
-		// caller (drawing, feedbacks, actions, preview, ...) gets them without passing anything extra.
-		const pageValues =
-			controlLocation?.pageNumber != null && this.#pageVariablesProvider
-				? this.#pageVariablesProvider(controlLocation.pageNumber)
-				: null
-
 		return new VariablesAndExpressionParser(
 			this.#userconfig,
 			this.#blinker,
 			this.#variableValues,
-			thisValues,
+			InjectedVariablesForLocation(controlLocation),
 			localValues,
 			overrideVariableValues,
 			pageValues

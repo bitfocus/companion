@@ -4,7 +4,7 @@ import { computedFn } from 'mobx-utils'
 import { useEffect, useMemo } from 'react'
 import type { Equal, Expect } from 'type-testing'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
-import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
+import type { ThisLocationVariable, ThisPageVariable } from '@companion-app/shared/ControlLocation.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
@@ -153,10 +153,15 @@ export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 ]
 
 /** The subset of `this:*` variables that make sense for a page control (no grid location). */
-export const PageLocalVariables: DropdownChoiceInt[] = [
+export const PageLocalVariables = [
 	{ value: 'this:page', label: 'This page' },
 	{ value: 'this:page_name', label: 'This page name' },
-]
+] as const satisfies DropdownChoiceInt[]
+
+// @ts-expect-error Type used only to assert a type condition
+type _VerifyPageVariablesDropdownIsComplete = Expect<
+	Equal<(typeof PageLocalVariables)[number]['value'], ThisPageVariable>
+>
 
 /** Variable picker entry injected for fields that use deferred parsing (e.g. set-value actions). */
 export const DeferredParsingContextVariables: DropdownChoiceInt[] = [

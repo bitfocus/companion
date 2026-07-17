@@ -77,6 +77,7 @@ export class ControlPage
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
 		if (!storage) {

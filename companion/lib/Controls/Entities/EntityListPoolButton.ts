@@ -63,6 +63,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	protected readonly steps = new Map<string, ControlEntityListActionStep>()
 
 	readonly #pageStore: IPageStore
+	readonly #getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 	readonly #executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult
 	protected readonly sendRuntimePropsChange: () => void
 
@@ -94,6 +95,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		super(props, isLayeredButton)
 
 		this.#pageStore = props.pageStore
+		this.#getPageVariableEntities = props.getPageVariableEntities
 		this.#executeExpressionInControl = executeExpressionInControl
 		this.sendRuntimePropsChange = sendRuntimePropsChange
 
@@ -139,12 +141,18 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		return this.#localVariables.getAllEntities()
 	}
 
-	/** A button lives on the grid, so its parser gets the full `this:*` context from its location. */
+	/**
+	 * A button lives on the grid, so its parser gets the full `this:*` context from its location, plus
+	 * its page's `$(page:x)` variables.
+	 */
 	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		const location = this.#pageStore.getLocationOfControlId(this.controlId)
+
 		return this.variableValues.createVariablesAndExpressionParser(
-			this.#pageStore.getLocationOfControlId(this.controlId),
+			location,
 			this.getLocalVariableEntities(),
-			overrideVariableValues
+			overrideVariableValues,
+			location ? this.#getPageVariableEntities(location.pageNumber) : null
 		)
 	}
 

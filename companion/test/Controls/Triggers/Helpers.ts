@@ -47,6 +47,7 @@ export function createMockControlDependencies(): MockControlDependencies {
 	const deps: ControlDependencies = {
 		surfaces: null as any,
 		pageStore: null as any,
+		getPageVariableEntities: () => null,
 		internalModule: null as any,
 		instance: {
 			definitions: null as any,

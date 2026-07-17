@@ -56,6 +56,7 @@ describe('ControlButtonPresetReference', () => {
 		deps = {
 			surfaces: {} as any,
 			pageStore: { getLocationOfControlId: vi.fn(() => null) } as any,
+			getPageVariableEntities: () => null,
 			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
 			instance: {
 				definitions,

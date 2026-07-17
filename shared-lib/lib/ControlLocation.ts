@@ -22,3 +22,8 @@ export type ThisLocationVariable =
 	| 'this:step_count'
 	| 'this:actions_running'
 	| 'this:button_status'
+
+/**
+ * The builtin variables that are available for page variables
+ */
+export type ThisPageVariable = 'this:page' | 'this:page_name'

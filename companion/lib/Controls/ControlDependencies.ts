@@ -16,6 +16,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
 export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController
@@ -36,6 +37,9 @@ export interface ControlDependencies extends ControlExternalDependencies {
 	readonly events: EventEmitter<ControlCommonEvents>
 
 	readonly changeEvents: EventEmitter<ControlChangeEvents>
+
+	/** Resolve the given page's local-variable entities (its `page:<pageId>` control), for `$(page:x)`. */
+	readonly getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 }
 
 export interface ControlCommonEvents {

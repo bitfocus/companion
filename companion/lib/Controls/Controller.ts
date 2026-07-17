@@ -47,6 +47,7 @@ import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
+import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
 import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
@@ -126,19 +127,17 @@ export class ControlsController {
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
 		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
+	}
 
-		// Teach the variable parser how to resolve `$(page:x)`: for any control being parsed, its page's
-		// `page:<pageId>` control supplies the page-variable entities. This single hook means every
-		// control-owned parser (drawing, feedbacks, actions, preview, ...) resolves page variables.
-		this.#deps.variableValues.setPageVariablesProvider((pageNumber) => {
-			const pageId = this.#deps.pageStore.getPageId(pageNumber)
-			if (!pageId) return null
+	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
+	#getPageVariableEntities = (pageNumber: number): ControlEntityInstance[] | null => {
+		const pageId = this.#deps.pageStore.getPageId(pageNumber)
+		if (!pageId) return null
 
-			const control = this.#store.getControl(CreatePageControlId(pageId))
-			if (!control || !control.supportsEntities) return null
+		const control = this.#store.getControl(CreatePageControlId(pageId))
+		if (!control || !control.supportsEntities) return null
 
-			return control.entities.getLocalVariableEntities()
-		})
+		return control.entities.getLocalVariableEntities()
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -201,6 +200,7 @@ export class ControlsController {
 			dbTable: this.#store.dbTable,
 			events: this.#controlEvents,
 			changeEvents: this.#controlChangeEvents,
+			getPageVariableEntities: this.#getPageVariableEntities,
 		}
 	}
 

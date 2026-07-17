@@ -173,6 +173,7 @@ export class ControlTrigger
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
 		this.#eventBus = eventBus

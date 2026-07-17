@@ -89,6 +89,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		pageStore: pageStore as any,
 		controlId,
 		reportChange,
+		getPageVariableEntities: () => null,
 	}
 
 	return {

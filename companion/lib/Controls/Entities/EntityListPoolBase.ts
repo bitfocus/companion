@@ -39,6 +39,8 @@ export interface ControlEntityListPoolProps {
 	pageStore: IPageStore
 	controlId: string
 	reportChange: (options: ControlEntityListChangeProps) => void
+	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
+	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 }
 
 /**
