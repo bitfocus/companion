@@ -69,6 +69,11 @@ export function createMockControlDependencies(): MockControlDependencies {
 		} as any,
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
+		controlsAccessor: {
+			getControl: vi.fn(() => undefined),
+			pressControl: vi.fn(() => false),
+			rotateControl: vi.fn(() => false),
+		},
 	}
 
 	return { deps, bus, dbSet, runMultipleActions }

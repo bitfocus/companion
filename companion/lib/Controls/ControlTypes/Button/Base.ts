@@ -350,7 +350,7 @@ export abstract class ButtonControlRuntimeBase<
 	 * @param rightward Whether the control was rotated to the right
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(rightward: boolean, surfaceId: string | undefined): void {
+	override rotateControl(rightward: boolean, surfaceId: string | undefined): boolean {
 		const actions = this.entities.getActionsToExecuteForSet(rightward ? 'rotate_right' : 'rotate_left')
 
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
@@ -364,6 +364,8 @@ export abstract class ButtonControlRuntimeBase<
 			.catch((e) => {
 				this.logger.error(`action execution failed: ${e}`)
 			})
+
+		return true
 	}
 
 	/**

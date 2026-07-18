@@ -110,13 +110,7 @@ export class ControlStore implements IControlStore {
 	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
-		const control = this.getControl(controlId)
-		if (control && control.supportsActionSets) {
-			control.rotateControl(rightward, surfaceId)
-			return true
-		}
-
-		return false
+		return this.getControl(controlId)?.rotateControl(rightward, surfaceId) ?? false
 	}
 
 	/**
