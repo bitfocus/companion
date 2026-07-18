@@ -195,13 +195,6 @@ export interface ControlWithActionSets extends ControlBase<any> {
 	 * for a button they are the same pool object.)
 	 */
 	readonly actionSets: SomeStepManager
-
-	/**
-	 * Execute a rotate of this control
-	 * @param rightward Whether the control was rotated to the right
-	 * @param surfaceId The surface that initiated this rotate
-	 */
-	rotateControl(rightward: boolean, surfaceId: string | undefined): void
 }
 
 export interface ControlWithoutActionSets extends ControlBase<any> {
