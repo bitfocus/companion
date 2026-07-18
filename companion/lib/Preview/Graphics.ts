@@ -285,13 +285,13 @@ export class PreviewGraphics {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: ReadonlySet<string>, fromControlId: string | null): void {
+	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.size) continue
 
-			// If the changed variables belong to a control, only update if the query is for that control
-			if (fromControlId && previewSession.controlId != fromControlId) continue
+			// If the change is scoped to specific control(s), only update sessions for those
+			if (controlIdFilter && !controlIdFilter.has(previewSession.controlId)) continue
 
 			if (previewSession.referencedVariableIds.isDisjointFrom(allChangedSet)) continue
 

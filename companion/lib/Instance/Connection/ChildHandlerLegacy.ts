@@ -358,14 +358,15 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		changedVariableIds: string[],
-		fromControlId: string | null
+		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void> {
 		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
+			this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
 			return
 		}
 
 		// Old flow means informing the module about any variable changes so that it can check for anything to invalidate
+		if (controlIdFilter) return
 		this.#ipcWrapper.sendWithNoCb('variablesChanged', {
 			variablesIds: changedVariableIds,
 		})

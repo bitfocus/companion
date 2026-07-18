@@ -102,16 +102,17 @@ export class PreviewExpressionStream {
 		})
 	}
 
-	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
-			// Always re-evaluate when the resolved target control's local variables change
+			// Always re-evaluate when the scoped change hits the resolved target control's local variables
 			const isTargetControlChange =
-				!!fromControlId &&
+				controlIdFilter !== null &&
 				session.contextResolution?.type === 'localVariable' &&
-				session.resolvedTargetControlId === fromControlId
+				session.resolvedTargetControlId != null &&
+				controlIdFilter.has(session.resolvedTargetControlId)
 
 			if (!isTargetControlChange) {
-				if (fromControlId && session.controlId !== fromControlId) continue
+				if (controlIdFilter && (session.controlId == null || !controlIdFilter.has(session.controlId))) continue
 				if (session.latestResult.variableIds.isDisjointFrom(changed)) continue
 			}
 

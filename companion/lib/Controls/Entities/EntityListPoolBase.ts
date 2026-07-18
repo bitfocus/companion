@@ -153,7 +153,7 @@ export abstract class ControlEntityListPoolBase {
 		if (!this.#isSyncUpdatingInternalFeedbacks) {
 			this.#isSyncUpdatingInternalFeedbacks = true
 			try {
-				this.#internalModule.onVariablesChanged(changedVariableNames, this.controlId)
+				this.#internalModule.onVariablesChanged(changedVariableNames, new Set([this.controlId]))
 			} finally {
 				this.#isSyncUpdatingInternalFeedbacks = false
 			}

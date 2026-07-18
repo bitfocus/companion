@@ -201,7 +201,7 @@ describe('localVariable context resolution', () => {
 		// Update context (simulates local variable changing on ctrl1)
 		context = { 'this:current': 9, 'target:counter': 9 }
 		// The resolved target controlId is 'ctrl1' (set during first resolution)
-		stream.onVariablesChanged(new Set(['local:counter']), 'ctrl1')
+		stream.onVariablesChanged(new Set(['local:counter']), new Set(['ctrl1']))
 
 		await sub.expectValue({ ok: true, value: 10 }) // 9 + 1
 		await sub.cleanup()
@@ -230,7 +230,7 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// Change from a different control — must not trigger re-evaluation
-		stream.onVariablesChanged(new Set(['local:counter']), 'different-ctrl')
+		stream.onVariablesChanged(new Set(['local:counter']), new Set(['different-ctrl']))
 
 		// No re-evaluation expected — the parser factory was not invoked again
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
@@ -381,7 +381,7 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// A local-variable change on an unrelated control must not trigger a resolution retry
-		stream.onVariablesChanged(new Set(['local:whatever']), 'other-ctrl')
+		stream.onVariablesChanged(new Set(['local:whatever']), new Set(['other-ctrl']))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -447,7 +447,7 @@ describe('localVariable context resolution', () => {
 		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
 		const callsBefore = parserFactory.mock.calls.length
 
-		stream.onVariablesChanged(new Set(['local:whatever']), 'other-ctrl')
+		stream.onVariablesChanged(new Set(['local:whatever']), new Set(['other-ctrl']))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -563,7 +563,7 @@ describe('no contextResolution', () => {
 
 		variables = { test: { val: 8 } }
 		// fromControlId matches session.controlId
-		stream.onVariablesChanged(new Set(['test:val']), 'ctrl1')
+		stream.onVariablesChanged(new Set(['test:val']), new Set(['ctrl1']))
 
 		await sub.expectValue({ ok: true, value: 8 })
 		await sub.cleanup()

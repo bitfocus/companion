@@ -63,7 +63,7 @@ describe('TriggersEventVariables', () => {
 		variables.setEnabled(true)
 		variables.setVariableChanged('a', 'local:my_var')
 
-		bus.emit('variables_changed', new Set(['local:my_var']), 'trigger:some-other-trigger')
+		bus.emit('variables_changed', new Set(['local:my_var']), new Set(['trigger:some-other-trigger']))
 		vi.runAllTimers()
 		expect(executeActions).not.toHaveBeenCalled()
 	})
@@ -73,7 +73,7 @@ describe('TriggersEventVariables', () => {
 		variables.setEnabled(true)
 		variables.setVariableChanged('a', 'local:my_var')
 
-		bus.emit('variables_changed', new Set(['local:my_var']), CONTROL_ID)
+		bus.emit('variables_changed', new Set(['local:my_var']), new Set([CONTROL_ID]))
 		vi.runAllTimers()
 		expect(executeActions).toHaveBeenCalledTimes(1)
 	})

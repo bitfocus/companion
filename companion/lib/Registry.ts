@@ -373,10 +373,11 @@ export class Registry {
 		})
 
 		this.variables.values.on('variablesChanged', (all_changed_variables_set, _connectionLabels, targetControlId) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, targetControlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, targetControlId)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, targetControlId)
-			this.preview.onVariablesChanged(all_changed_variables_set, targetControlId)
+			const targetControlIdSet = targetControlId == null ? null : new Set([targetControlId])
+			this.internalModule.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
+			this.controls.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
+			this.instance.processManager.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
+			this.preview.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
 
 			// Surfaces only care about global changes, not a single control's local variables
 			if (!targetControlId) this.surfaces.onVariablesChanged(all_changed_variables_set)
