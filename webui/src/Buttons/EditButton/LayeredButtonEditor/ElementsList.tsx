@@ -6,6 +6,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useRef } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { capitalize } from '@companion-app/shared/Util.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import {
@@ -153,6 +154,7 @@ const ElementListItem = observer(function ElementListItem({
 	const { ref, handleRef } = useSortable({ id: element.id, index, type: DRAG_ID, group, transition: null })
 
 	const commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
+	const elementType = capitalize(element.type)
 
 	return (
 		<>
@@ -169,8 +171,10 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
-					<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="me-1" fixedWidth />
-					{element.name || element.type}
+					<span title={elementType}>
+						<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="me-1" fixedWidth />
+					</span>
+					{element.name || elementType}
 				</div>
 
 				<div className="element-buttons">
@@ -216,8 +220,10 @@ const CanvasElementRow = observer(function CanvasElementRow({
 			<div className="td-reorder-placeholder"></div>
 
 			<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
-				<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
-				{element.name || 'Background'}
+				<span title="Canvas Settings">
+					<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
+				</span>
+				{element.name || 'Canvas'}
 			</div>
 
 			<div></div>
