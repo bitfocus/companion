@@ -282,18 +282,9 @@ export class GraphicsRenderer {
 					img.fillColor('rgb(0, 0, 0)')
 
 					// Draw a centered padlock unicode character in light grey
-					img.drawAlignedText(
-						0,
-						0,
-						dimensions[0],
-						dimensions[1],
-						'🔒',
-						'rgb(200, 200, 200)',
-						Math.floor(dimensions[1] * 0.6),
-						false,
-						'center',
-						'center'
-					)
+					img.drawAlignedText(0, 0, dimensions[0], dimensions[1], '🔒', 'rgb(200, 200, 200)', Math.floor(dimensions[1] * 0.6), {
+						allowShrink: false,
+					})
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)
 				}

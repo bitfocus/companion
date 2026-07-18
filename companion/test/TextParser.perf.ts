@@ -168,18 +168,9 @@ function runBenchmark(testCase: BenchmarkCase, iterations: number): BenchmarkRes
 		image.fillColor('#000000')
 
 		// Run the text drawing
-		image.drawAlignedText(
-			0,
-			0,
-			testCase.width,
-			testCase.height,
-			testCase.text,
-			'#ffffff',
-			testCase.fontSize ?? testCase.height,
-			testCase.allowShrink,
-			'center',
-			'center'
-		)
+		image.drawAlignedText(0, 0, testCase.width, testCase.height, testCase.text, '#ffffff', testCase.fontSize ?? testCase.height, {
+			allowShrink: testCase.allowShrink,
+		})
 	}
 
 	const endTime = performance.now()

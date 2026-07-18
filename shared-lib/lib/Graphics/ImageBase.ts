@@ -52,6 +52,27 @@ export interface LineStyle {
 	cap?: CanvasLineCap
 }
 
+export interface DrawAlignedTextOptions {
+	/** whether to allow the font size to shrink to fit the box (default true) */
+	allowShrink?: boolean
+	/** horizontal alignment left, center, right (default center) */
+	halign?: HorizontalAlignment
+	/** vertical alignment top, center, bottom (default center) */
+	valign?: VerticalAlignment
+	/** optional outline style, if not provided there will be no outline */
+	outlineStyle?: LineStyle
+	/** optional font family, if not provided the default font will be used */
+	font?: ButtonGraphicsTextDrawElement['font']
+	/** font weight (default 'normal') */
+	weight?: ButtonGraphicsTextDrawElement['weight']
+	/** render italic (default false) */
+	italic?: boolean
+	/** render an underline (default false) */
+	underline?: boolean
+	/** render a strikethrough (default false) */
+	strikethrough?: boolean
+}
+
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
 export type CompanionImageContext2D = Omit<
 	CanvasRenderingContext2D,
@@ -728,11 +749,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param text the text to draw
 	 * @param color CSS color string
 	 * @param fontsize height of font, either pixels or 'auto'
-	 * @param allowShrink whether to allow the font size to shrink to fit the box
-	 * @param halign horizontal alignment left, center, right
-	 * @param valign vertical alignment top, center, bottom
-	 * @param outlineStyle optional outline style, if not provided there will be no outline
-	 * @param font optional font family, if not provided the default font will be used
+	 * @param options optional styling: allowShrink, alignment, outline, font, weight and character styles
 	 */
 	drawAlignedText(
 		x: number,
@@ -742,12 +759,20 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		text: string,
 		color: string,
 		fontsize: number,
-		allowShrink = true,
-		halign: HorizontalAlignment = 'center',
-		valign: VerticalAlignment = 'center',
-		outlineStyle?: LineStyle,
-		font?: ButtonGraphicsTextDrawElement['font']
+		options: DrawAlignedTextOptions = {}
 	): void {
+		const {
+			allowShrink = true,
+			halign = 'center',
+			valign = 'center',
+			outlineStyle,
+			font,
+			weight = 'normal',
+			italic = false,
+			underline = false,
+			strikethrough = false,
+		} = options
+
 		if (w <= 0 || h <= 0) return
 
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
@@ -779,6 +804,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		const upScale = h / NORM_H
 		const fontNameStr = resolveFontName(font)
 
+		// CSS font shorthand prefix: `font-style font-weight` (skia/browsers synthesize faux italic/bold).
+		// Must be part of the measured spec too, as it affects glyph widths (and the layout cache key).
+		const fontStylePrefix = `${italic ? 'italic ' : ''}${weight === 'bold' ? 'bold ' : ''}`
+
 		// If we hit the character limit, only the smallest font size could possibly fit
 		const normCheckSizes =
 			allowShrink && wasTruncated
@@ -790,7 +819,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let usedNormSize = normCheckSizes[0]
 		for (const normSize of normCheckSizes) {
 			usedNormSize = normSize
-			const normFontSpec = `${normSize}px/${normSize * 1.1}px ${fontNameStr}`
+			const normFontSpec = `${fontStylePrefix}${normSize}px/${normSize * 1.1}px ${fontNameStr}`
 
 			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
 			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
@@ -810,7 +839,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Scale the normalized layout up to the actual canvas dimensions for rendering
 		const actualSize = usedNormSize * upScale
 		const textLayout: TextLayoutResult = {
-			fontDefinition: `${actualSize}px/${actualSize * 1.1}px ${fontNameStr}`,
+			fontDefinition: `${fontStylePrefix}${actualSize}px/${actualSize * 1.1}px ${fontNameStr}`,
 			lines: normLayout.lines,
 			measuredLineHeight: normLayout.measuredLineHeight * upScale,
 			measuredAscent: normLayout.measuredAscent * upScale,
@@ -818,7 +847,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		}
 
 		// Perform the draw
-		this.#drawTextLayout(x, y, w, h, textLayout, color, halign, valign, outlineStyle)
+		this.#drawTextLayout(x, y, w, h, textLayout, color, halign, valign, outlineStyle, underline, strikethrough)
 	}
 
 	/**
@@ -833,7 +862,9 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		color: string,
 		halign: HorizontalAlignment,
 		valign: VerticalAlignment,
-		outlineStyle: LineStyle | undefined
+		outlineStyle: LineStyle | undefined,
+		underline = false,
+		strikethrough = false
 	): void {
 		if (layout.lines.length < 1) return
 
@@ -883,6 +914,26 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			}
 
 			this.context2d.fillText(line.text, xAnchor, yAnchor)
+
+			// Underline/strikethrough have no native canvas support, so draw them manually.
+			// fillStyle is still `color` here, so the decorations match the text colour.
+			if (underline || strikethrough) {
+				const metrics = this.context2d.measureText(line.text)
+				const width = metrics.width
+				if (width > 0) {
+					const ascent = metrics.fontBoundingBoxAscent
+					const descent = metrics.fontBoundingBoxDescent
+					const thickness = Math.max(1, (ascent + descent) / 14)
+					// textAlign is set above, so derive the line's left edge from the anchor.
+					const left = halign === 'center' ? xAnchor - width / 2 : halign === 'right' ? xAnchor - width : xAnchor
+					if (underline) {
+						this.context2d.fillRect(left, yAnchor + descent * 0.5, width, thickness)
+					}
+					if (strikethrough) {
+						this.context2d.fillRect(left, yAnchor - ascent * 0.3, width, thickness)
+					}
+				}
+			}
 
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
 			// this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
