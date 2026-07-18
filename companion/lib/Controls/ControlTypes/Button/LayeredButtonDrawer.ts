@@ -17,6 +17,7 @@ import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import LogController, { type Logger } from '../../../Log/Controller.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
+import type { IButtonDrawer } from '../../IButtonDrawer.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 
 /** Anything that can visit the draw elements (e.g. the reference collector/updater visitors). */
@@ -55,7 +56,7 @@ const emptyFeedbackOverrides: ReadonlyMap<string, never> = new Map<string, never
  *
  * The `protected` element/cache/deps members are the surface that subclass exposes its editing operations on.
  */
-export class LayeredButtonDrawer {
+export class LayeredButtonDrawer implements IButtonDrawer {
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
 	protected readonly controlId: string

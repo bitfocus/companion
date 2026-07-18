@@ -117,13 +117,7 @@ export class ControlStore implements IControlStore {
 		// accidentally run the `rotate_left` set (chosen when `delta > 0` is false) for a zero delta.
 		if (!Number.isFinite(delta) || delta === 0) return false
 
-		const control = this.getControl(controlId)
-		if (control && control.supportsActionSets) {
-			control.rotateControl(delta, surfaceId)
-			return true
-		}
-
-		return false
+		return this.getControl(controlId)?.rotateControl(delta, surfaceId) ?? false
 	}
 
 	/**
