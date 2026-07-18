@@ -70,6 +70,8 @@ function makeTextElement(overrides: Partial<ButtonGraphicsTextDrawElement> = {})
 		fontsize: 100,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff, // white
 		outlineColor: 0xff000000, // alpha=0 → no outline
 		halign: 'center',

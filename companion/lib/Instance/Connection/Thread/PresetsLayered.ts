@@ -184,6 +184,8 @@ function convertLayeredPresetElement(
 					isExpression: false,
 				}),
 				font: convertModuleExpressionOrValue(element.font, { value: 'companion-sans', isExpression: false }),
+				weight: { value: 'normal', isExpression: false },
+				styles: { value: [], isExpression: false },
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
 				halign: convertModuleExpressionOrValue(element.halign, { value: 'center', isExpression: false }),
 				valign: convertModuleExpressionOrValue(element.valign, { value: 'center', isExpression: false }),

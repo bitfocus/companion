@@ -28,6 +28,8 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
 				fontsizeAllowShrink: { value: true, isExpression: false },
 				font: { value: 'companion-sans', isExpression: false },
+				weight: { value: 'normal', isExpression: false },
+				styles: { value: [], isExpression: false },
 				outlineColor: { value: 0xff000000, isExpression: false },
 			}
 		case 'image':

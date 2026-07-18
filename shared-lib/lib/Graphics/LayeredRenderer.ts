@@ -338,6 +338,10 @@ export class GraphicsLayeredButtonRenderer {
 									}
 								: undefined,
 						font: element.font,
+						weight: element.weight,
+						italic: element.styles.includes('italic'),
+						underline: element.styles.includes('underline'),
+						strikethrough: element.styles.includes('strikethrough'),
 					}
 				)
 			})

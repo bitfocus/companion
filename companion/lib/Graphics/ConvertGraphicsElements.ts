@@ -81,6 +81,9 @@ const CANVAS_DECORATION_CHOICES = dropdownChoices<ButtonGraphicsDecorationType>(
 const CANVAS_SHOW_STATUS_ICONS_CHOICES = dropdownChoices<ButtonGraphicsShowStatusIcons>('canvas', 'showStatusIcons')
 const IMAGE_FILL_MODE_CHOICES = dropdownChoices<ButtonGraphicsImageDrawElement['fillMode']>('image', 'fillMode')
 const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>('text', 'font')
+const TEXT_WEIGHT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['weight']>('text', 'weight')
+// The `styles` field is an internal:text-styles multi-toggle with a fixed set of values (no schema choices).
+const TEXT_STYLE_VALUES = ['italic', 'underline', 'strikethrough'] as const
 // borderPosition is shared across box/line/circle — all use the same choices from borderFields.
 const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
 const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
@@ -442,6 +445,8 @@ function makeReferencePlaceholder(
 		fontsize: FONTSIZE_SHRINK_DEFAULT,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff,
 		outlineColor: 0,
 		halign: 'center',
@@ -530,6 +535,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:surface_serial':
 			case 'internal:outbound_surface_id':
 			case 'internal:vertical-alignment':
+			case 'internal:text-styles':
 			case 'internal:trigger':
 			case 'internal:trigger_collection':
 			case 'internal:variable':
@@ -696,6 +702,8 @@ function convertTextElementForDrawing(
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
+		weight: helper.getEnum('weight', TEXT_WEIGHT_CHOICES, 'normal'),
+		styles: helper.getEnumArray('styles', TEXT_STYLE_VALUES, []),
 		color: helper.getNumber('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),

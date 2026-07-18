@@ -9,6 +9,7 @@ import type {
 	ButtonGraphicsShowStatusIcons,
 	CompositeElementOptionKey,
 	HorizontalAlignment,
+	TextStyle,
 	VerticalAlignment,
 } from './StyleModel.js'
 
@@ -84,6 +85,8 @@ export interface ButtonGraphicsTextDrawElement
 	fontsize: number
 	fontsizeAllowShrink: boolean
 	font: 'companion-sans' | 'companion-mono'
+	weight: 'normal' | 'bold'
+	styles: TextStyle[]
 	color: number
 	outlineColor: number
 	halign: HorizontalAlignment
@@ -97,6 +100,8 @@ export interface ButtonGraphicsTextElement
 	fontsize: ExpressionOrValue<number>
 	fontsizeAllowShrink: ExpressionOrValue<boolean>
 	font: ExpressionOrValue<'companion-sans' | 'companion-mono'>
+	weight: ExpressionOrValue<'normal' | 'bold'>
+	styles: ExpressionOrValue<TextStyle[]>
 	color: ExpressionOrValue<number>
 	outlineColor: ExpressionOrValue<number>
 	halign: ExpressionOrValue<HorizontalAlignment>
