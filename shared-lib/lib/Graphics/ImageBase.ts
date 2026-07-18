@@ -863,8 +863,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		halign: HorizontalAlignment,
 		valign: VerticalAlignment,
 		outlineStyle: LineStyle | undefined,
-		underline = false,
-		strikethrough = false
+		underline: boolean,
+		strikethrough: boolean
 	): void {
 		if (layout.lines.length < 1) return
 
