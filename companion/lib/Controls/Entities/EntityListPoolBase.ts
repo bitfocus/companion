@@ -13,7 +13,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
-import type { VariablesValues } from '../../Variables/Values.js'
+import { NO_CONNECTION_LABELS, type VariablesValues } from '../../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
@@ -167,7 +167,7 @@ export abstract class ControlEntityListPoolBase {
 			const allChangedVariables = this.#pendingChangedVariables
 			this.#pendingChangedVariables = new Set()
 
-			this.variableValues.emit('local_variables_changed', allChangedVariables, this.controlId)
+			this.variableValues.emit('variablesChanged', allChangedVariables, NO_CONNECTION_LABELS, this.controlId)
 		},
 		{
 			wait: 5,

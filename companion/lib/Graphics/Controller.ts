@@ -31,6 +31,7 @@ import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/
 import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { MetricsRegistry } from '../Data/Metrics.js'
@@ -270,7 +271,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
-								render = await this.#drawImageResult(renderStyle)
+								render = await this.#drawImageResult(cacheKey, renderStyle)
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -280,7 +281,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							)
 						}
 
-						this.emit('presetDrawn', args.controlId, render)
+						// `lastRender` still holds the previous render here: the control's own `presetDrawn`
+						// listener updates it synchronously *after* this emit. Swallow the emit if unchanged.
+						const presetControl = control as ControlButtonPreset | undefined
+						const unchanged = !!render.cacheKey && presetControl?.lastRender?.cacheKey === render.cacheKey
+						if (!unchanged) {
+							this.emit('presetDrawn', args.controlId, render)
+						}
 						return
 					}
 
@@ -322,7 +329,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
-							render = await this.#drawImageResult(renderStyle, buttonStyle.elements, buttonStyle.referencedLocations)
+							render = await this.#drawImageResult(
+								cacheKey,
+								renderStyle,
+								buttonStyle.elements,
+								buttonStyle.referencedLocations
+							)
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
@@ -371,7 +383,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					// Only cache the render, if it is within the valid bounds
 					if (locationIsInBounds && location) {
-						this.#updateCacheWithRender(location, render)
+						const changed = this.#updateCacheWithRender(location, render)
+						// If the render is identical to the previous one for this location, we can skip emitting the event
+						skipInvalidation = skipInvalidation || !changed
 					}
 
 					if (!skipInvalidation) {
@@ -443,16 +457,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					location
 				)
 
-				this.#updateCacheWithRender(location, blankRender)
-				this.emit('button_drawn', location, blankRender)
+				const changed = this.#updateCacheWithRender(location, blankRender)
+				if (changed) {
+					this.emit('button_drawn', location, blankRender)
+				}
 			}
 		}
 	}
 
 	/**
-	 * Store a new render
+	 * Store a new render for a location.
+	 * @returns whether it differs from the previous render there (an undefined cacheKey always counts as changed).
 	 */
-	#updateCacheWithRender(location: ControlLocation, render: ImageResult): void {
+	#updateCacheWithRender(location: ControlLocation, render: ImageResult): boolean {
 		let pageCache = this.#renderCache.get(location.pageNumber)
 		if (!pageCache) {
 			pageCache = new Map()
@@ -465,7 +482,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			pageCache.set(location.row, rowCache)
 		}
 
+		const previous = rowCache.get(location.column)
 		rowCache.set(location.column, render)
+
+		return !render.cacheKey || previous?.cacheKey !== render.cacheKey
 	}
 
 	/**
@@ -493,7 +513,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			location: undefined,
 		}
 
-		return this.#drawImageResult(drawStyle)
+		// One-off preview: never cached or emitted, so it has no content key (never deduped).
+		return this.#drawImageResult(undefined, drawStyle)
 	}
 
 	/**
@@ -715,6 +736,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	async #drawImageResult(
+		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
@@ -722,6 +744,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 		return new ImageResult(
+			cacheKey,
 			processedStyle,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(

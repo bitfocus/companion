@@ -423,12 +423,7 @@ describe('fixupPageVariables', () => {
 	})
 
 	test('remaps connectionId on page variables', () => {
-		const result = fixupPageVariables(
-			internalModule,
-			[makeFeedback({ connectionId: 'conn-old' })],
-			standardMap(),
-			{}
-		)
+		const result = fixupPageVariables(internalModule, [makeFeedback({ connectionId: 'conn-old' })], standardMap(), {})
 
 		expect(result[0].connectionId).toBe('conn-new')
 	})

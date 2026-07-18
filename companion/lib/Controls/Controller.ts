@@ -13,7 +13,7 @@ import {
 } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { SomeControlModel, UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -30,16 +30,11 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
-import type {
-	ControlChangeEvents,
-	ControlCommonEvents,
-	ControlDependencies,
-	ControlExternalDependencies,
-} from './ControlDependencies.js'
+import type { ControlChangeEvents, ControlCommonEvents, ControlExternalDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
-import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
+import type { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
@@ -54,6 +49,7 @@ import { createEventsTrpcRouter } from './EventsTrpcRouter.js'
 import { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
 import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
+import { ControlsFactory } from './Factory.js'
 import type { SomeControl } from './IControlFragments.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
@@ -82,6 +78,7 @@ export class ControlsController {
 
 	readonly #deps: ControlExternalDependencies
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
+	readonly #factory: ControlsFactory
 
 	/**
 	 * The control store (IControlStore implementation)
@@ -104,6 +101,17 @@ export class ControlsController {
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
+	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
+	readonly #getPageVariableEntities = (pageNumber: number): ControlEntityInstance[] | null => {
+		const pageId = this.#deps.pageStore.getPageId(pageNumber)
+		if (!pageId) return null
+
+		const control = this.#store.getControl(CreatePageControlId(pageId))
+		if (!control || !control.supportsEntities) return null
+
+		return control.entities.getLocalVariableEntities()
+	}
+
 	constructor(
 		db: DataDatabase,
 		store: ControlStore,
@@ -116,6 +124,18 @@ export class ControlsController {
 		this.#controlEvents = controlEvents
 		this.#activeLearningStore = activeLearningStore
 
+		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
+
+		this.#factory = new ControlsFactory({
+			...this.#deps,
+			dbTable: this.#store.dbTable,
+			events: this.#controlEvents,
+			changeEvents: this.#controlChangeEvents,
+			getPageVariableEntities: this.#getPageVariableEntities,
+			triggerEvents: this.#store.triggerEvents,
+			expressionVariableNamesMap: this.#expressionVariableNamesMap,
+		})
+
 		this.#triggerCollections = new TriggerCollections(
 			db,
 			this.#store.triggerEvents,
@@ -126,18 +146,6 @@ export class ControlsController {
 		this.#expressionVariableCollections = new ExpressionVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
-		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
-	}
-
-	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
-	#getPageVariableEntities = (pageNumber: number): ControlEntityInstance[] | null => {
-		const pageId = this.#deps.pageStore.getPageId(pageNumber)
-		if (!pageId) return null
-
-		const control = this.#store.getControl(CreatePageControlId(pageId))
-		if (!control || !control.supportsEntities) return null
-
-		return control.entities.getLocalVariableEntities()
 	}
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -194,16 +202,6 @@ export class ControlsController {
 		this.#store.abortAllDelayedActions(exceptSignal)
 	}
 
-	#createControlDependencies(): ControlDependencies {
-		return {
-			...this.#deps,
-			dbTable: this.#store.dbTable,
-			events: this.#controlEvents,
-			changeEvents: this.#controlChangeEvents,
-			getPageVariableEntities: this.#getPageVariableEntities,
-		}
-	}
-
 	/**
 	 * Check the connection-status of every control
 	 */
@@ -231,14 +229,15 @@ export class ControlsController {
 				this.#controlChangeEvents,
 				this.#triggerCollections,
 				this.#store,
-				this.#createControlDependencies()
+				this.#factory
 			),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,
 				this.#store,
 				this.#expressionVariableNamesMap,
-				this.#createControlDependencies()
+				this.#deps.instance.definitions,
+				this.#factory
 			),
 			events: createEventsTrpcRouter(this.#store.controls, this.#deps.instance.definitions),
 			entities: createEntitiesTrpcRouter(
@@ -256,7 +255,8 @@ export class ControlsController {
 				this.#deps.pageStore,
 				this.#deps.instance.definitions,
 				this.#controlEvents,
-				this
+				this,
+				this.#factory
 			),
 
 			watchControl: publicProcedure
@@ -282,78 +282,6 @@ export class ControlsController {
 					}
 				}),
 		})
-	}
-
-	/**
-	 * Create a new control class instance
-	 * TODO: This should be private
-	 * @param controlId Id of the control
-	 * @param category 'button' | 'trigger' | 'expression-variable' | 'all'
-	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
-	 * @param isImport Whether this is an import, and needs additional processing
-	 */
-	createClassForControl(
-		controlId: string,
-		category: 'button' | 'trigger' | 'expression-variable' | 'all',
-		controlObj: SomeControlModel | string,
-		isImport: boolean
-	): SomeControl<any> | null {
-		const controlType = typeof controlObj === 'object' ? controlObj.type : controlObj
-		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
-		if (category === 'all' || category === 'button') {
-			if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
-				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			} else if (controlObj2?.type === 'preset-reference') {
-				return new ControlButtonPresetReference(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
-				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
-				return new ControlButtonPageUp(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			} else if (controlObj2?.type === 'pagedown' || (controlType === 'pagedown' && !controlObj2)) {
-				return new ControlButtonPageDown(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			}
-		}
-
-		if (category === 'all' || category === 'trigger') {
-			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				const trigger = new ControlTrigger(
-					this.#createControlDependencies(),
-					this.triggerEvents,
-					controlId,
-					controlObj2,
-					isImport
-				)
-				setImmediate(() => {
-					// Ensure the trigger is enabled, on a slight debounce
-					trigger.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(trigger.options.collectionId))
-				})
-				return trigger
-			}
-		}
-
-		if (category === 'all' || category === 'expression-variable') {
-			if (controlObj2?.type === 'expression-variable' || (controlType === 'expression-variable' && !controlObj2)) {
-				const variable = new ControlExpressionVariable(
-					this.#createControlDependencies(),
-					this.#expressionVariableNamesMap,
-					controlId,
-					controlObj2,
-					isImport
-				)
-
-				return variable
-			}
-		}
-
-		if (category === 'all') {
-			if (controlObj2?.type === 'page' || (controlType === 'page' && !controlObj2)) {
-				return new ControlPage(this.#createControlDependencies(), controlId, controlObj2, isImport)
-			}
-		}
-
-		// Unknown type
-		this.#logger.warn(`Cannot create control "${controlId}" of unknown type "${controlType}"`)
-		return null
 	}
 
 	/**
@@ -448,7 +376,7 @@ export class ControlsController {
 		}
 
 		const newControlId = forceControlId || CreateBankControlId(nanoid())
-		const newControl = this.createClassForControl(newControlId, 'button', definition, true)
+		const newControl = this.#factory.createClassForControl(newControlId, 'button', definition, true)
 		if (newControl) {
 			this.#store.controls.set(newControlId, newControl)
 
@@ -474,9 +402,16 @@ export class ControlsController {
 
 		if (this.#store.controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
 
-		const newControl = this.createClassForControl(controlId, 'trigger', definition, true)
+		const newControl = this.#factory.createClassForControl(controlId, 'trigger', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
+
+			if (newControl instanceof ControlTrigger) {
+				setImmediate(() => {
+					// Ensure the trigger is enabled, on a slight debounce
+					newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
+				})
+			}
 
 			// Ensure it is stored to the db
 			newControl.commitChange()
@@ -501,7 +436,7 @@ export class ControlsController {
 
 		if (this.#store.controls.has(controlId)) throw new Error(`ExpressionVariable ${controlId} already exists`)
 
-		const newControl = this.createClassForControl(controlId, 'expression-variable', definition, true)
+		const newControl = this.#factory.createClassForControl(controlId, 'expression-variable', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
 
@@ -526,8 +461,15 @@ export class ControlsController {
 		const config = this.#store.dbTable.all()
 		for (const [controlId, controlObj] of Object.entries(config)) {
 			if (controlObj && controlObj.type) {
-				const inst = this.createClassForControl(controlId, 'all', controlObj, false)
-				if (inst) this.#store.controls.set(controlId, inst)
+				const inst = this.#factory.createClassForControl(controlId, 'all', controlObj, false)
+				if (inst) {
+					this.#store.controls.set(controlId, inst)
+
+					// Ensure newly loaded triggers respect their collection's enabled state
+					if (inst instanceof ControlTrigger) {
+						inst.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(inst.options.collectionId))
+					}
+				}
 			}
 		}
 
@@ -678,7 +620,7 @@ export class ControlsController {
 		if (!this.#deps.pageStore.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
-		const newControl = this.createClassForControl(controlId, 'button', newType, false)
+		const newControl = this.#factory.createClassForControl(controlId, 'button', newType, false)
 		if (!newControl) return null
 
 		this.#store.controls.set(controlId, newControl)
@@ -717,7 +659,7 @@ export class ControlsController {
 			this.deleteControl(controlId)
 		}
 
-		const newControl = this.createClassForControl(controlId, 'all', storage ?? 'page', isImport)
+		const newControl = this.#factory.createClassForControl(controlId, 'all', storage ?? 'page', isImport)
 		if (!newControl) throw new Error(`Failed to create page control for page "${pageId}"`)
 
 		this.#store.controls.set(controlId, newControl)
@@ -774,13 +716,7 @@ export class ControlsController {
 		const control = this.#store.controls.get(controlId)
 		if (control) return control as ControlButtonPreset
 
-		const newControl = new ControlButtonPreset(
-			this.#createControlDependencies(),
-			connectionId,
-			presetId,
-			variablesHash,
-			presetModel
-		)
+		const newControl = this.#factory.createPresetControl(connectionId, presetId, variablesHash, presetModel)
 
 		this.#store.controls.set(controlId, newControl)
 

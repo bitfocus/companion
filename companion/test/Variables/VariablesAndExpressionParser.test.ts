@@ -1239,14 +1239,28 @@ describe('VariablesAndExpressionParser', () => {
 		})
 
 		it('this:page and this:page_name resolve for a page context', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, InjectedVariablesForPage(3), null, null)
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				{},
+				InjectedVariablesForPage(3),
+				null,
+				null
+			)
 
 			expect(parser.parseVariables('$(this:page)').text).toBe('3')
 			expect(parser.parseVariables('$(this:page_name)').variableIds).toContain('internal:page_number_3_name')
 		})
 
 		it('button-specific this: variables are absent for a page context', () => {
-			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, InjectedVariablesForPage(3), null, null)
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				{},
+				InjectedVariablesForPage(3),
+				null,
+				null
+			)
 
 			expect(parser.parseVariables('$(this:row)').text).toBe('$NA')
 			expect(parser.parseVariables('$(this:column)').text).toBe('$NA')

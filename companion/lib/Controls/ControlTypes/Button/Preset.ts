@@ -119,8 +119,6 @@ export class ControlButtonPreset
 				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
-			(expression, requiredType) =>
-				this.entities.createVariablesAndExpressionParser(null).executeExpression(expression, requiredType),
 			false
 		)
 

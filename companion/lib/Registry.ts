@@ -373,25 +373,23 @@ export class Registry {
 			}
 		})
 
-		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, null)
-			this.controls.onVariablesChanged(all_changed_variables_set, null)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, null)
-			this.preview.onVariablesChanged(all_changed_variables_set, null)
-			this.surfaces.onVariablesChanged(all_changed_variables_set)
-		})
-		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+		this.variables.values.on('variablesChanged', (all_changed_variables_set, _connectionLabels, targetControlId) => {
+			this.internalModule.onVariablesChanged(all_changed_variables_set, targetControlId)
+			this.controls.onVariablesChanged(all_changed_variables_set, targetControlId)
+			this.instance.processManager.onVariablesChanged(all_changed_variables_set, targetControlId)
+			this.preview.onVariablesChanged(all_changed_variables_set, targetControlId)
 
-			// A page control owns its page's variables. Its own change is self-scoped above (like any
-			// local variable), but the values are also exposed to the whole page as `$(page:x)`, so
-			// propagate the change to every control on that page.
-			const parsed = ParseControlId(fromControlId)
-			if (parsed?.type === 'page') {
-				this.#propagatePageVariablesChanged(parsed.pageId, all_changed_variables_set)
+			// Surfaces only care about global changes, not a single control's local variables
+			if (!targetControlId) {
+				this.surfaces.onVariablesChanged(all_changed_variables_set)
+			} else {
+				// A page control owns its page's variables. Its own change is self-scoped above (like any
+				// local variable), but the values are also exposed to the whole page as `$(page:x)`, so
+				// propagate the change to every control on that page.
+				const parsed = ParseControlId(targetControlId)
+				if (parsed?.type === 'page') {
+					this.#propagatePageVariablesChanged(parsed.pageId, all_changed_variables_set)
+				}
 			}
 		})
 

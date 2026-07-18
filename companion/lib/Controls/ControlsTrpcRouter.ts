@@ -11,6 +11,7 @@ import { publicProcedure } from '../UI/TRPC.js'
 import type { ControlCommonEvents } from './ControlDependencies.js'
 import type { ControlsController } from './Controller.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
+import type { ControlsFactory } from './Factory.js'
 import type { SomeControl } from './IControlFragments.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -20,7 +21,8 @@ export function createControlsTrpcRouter(
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
-	controlsController: ControlsController
+	controlsController: ControlsController,
+	factory: ControlsFactory
 ) {
 	return {
 		importPreset: publicProcedure
@@ -210,7 +212,7 @@ export function createControlsTrpcRouter(
 				}
 
 				const newControlId = CreateBankControlId(nanoid())
-				const newControl = controlsController.createClassForControl(newControlId, 'button', controlJson, true)
+				const newControl = factory.createClassForControl(newControlId, 'button', controlJson, true)
 				if (newControl) {
 					controlsMap.set(newControlId, newControl)
 

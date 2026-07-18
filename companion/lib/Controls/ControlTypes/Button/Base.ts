@@ -104,8 +104,6 @@ export abstract class ButtonControlRuntimeBase<
 				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
-			(expression, requiredType) =>
-				this.entities.createVariablesAndExpressionParser(null).executeExpression(expression, requiredType),
 			isLayered
 		)
 	}

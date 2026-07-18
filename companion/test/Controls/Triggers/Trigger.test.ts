@@ -4,21 +4,19 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import { ControlTrigger } from '../../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
-import { createMockControlDependencies, MockTriggerEventBus, type MockControlDependencies } from './Helpers.js'
+import { createMockControlDependencies, type MockControlDependencies } from './Helpers.js'
 
 const CONTROL_ID = 'trigger:test01'
 
 interface TriggerTestContext extends MockControlDependencies {
-	bus: MockTriggerEventBus
 	trigger: ControlTrigger
 }
 
 function createTrigger(storage: TriggerModel | null = null): TriggerTestContext {
 	const mocks = createMockControlDependencies()
-	const bus = new MockTriggerEventBus()
-	const trigger = new ControlTrigger(mocks.deps, bus.asTriggerEvents(), CONTROL_ID, storage, false)
+	const trigger = new ControlTrigger(mocks.deps, CONTROL_ID, storage, false)
 	vi.runAllTimers() // flush the deferred event setup
-	return { ...mocks, bus, trigger }
+	return { ...mocks, trigger }
 }
 
 /** Create a trigger with both options.enabled and the parent collection enabled */
@@ -66,11 +64,10 @@ describe('ControlTrigger', () => {
 
 		test('reports itself as disabled on the event bus during setup', () => {
 			const mocks = createMockControlDependencies()
-			const bus = new MockTriggerEventBus()
 			const listener = vi.fn()
-			bus.on('trigger_enabled', listener)
+			mocks.bus.on('trigger_enabled', listener)
 
-			new ControlTrigger(mocks.deps, bus.asTriggerEvents(), CONTROL_ID, null, false)
+			new ControlTrigger(mocks.deps, CONTROL_ID, null, false)
 			vi.runAllTimers()
 
 			expect(listener).toHaveBeenCalledWith(CONTROL_ID, false)
@@ -78,11 +75,8 @@ describe('ControlTrigger', () => {
 
 		test('storage of the wrong type throws', () => {
 			const mocks = createMockControlDependencies()
-			const bus = new MockTriggerEventBus()
 
-			expect(
-				() => new ControlTrigger(mocks.deps, bus.asTriggerEvents(), CONTROL_ID, { type: 'button' } as any, false)
-			).toThrow(/Invalid type/)
+			expect(() => new ControlTrigger(mocks.deps, CONTROL_ID, { type: 'button' } as any, false)).toThrow(/Invalid type/)
 		})
 
 		test('loads options and events from storage without re-saving', () => {
@@ -354,11 +348,10 @@ describe('ControlTrigger', () => {
 	describe('client change events', () => {
 		test('emits an add followed by update patches', () => {
 			const mocks = createMockControlDependencies()
-			const bus = new MockTriggerEventBus()
 			const listener = vi.fn()
 			mocks.deps.changeEvents.on('triggerChange', listener)
 
-			const trigger = new ControlTrigger(mocks.deps, bus.asTriggerEvents(), CONTROL_ID, null, false)
+			const trigger = new ControlTrigger(mocks.deps, CONTROL_ID, null, false)
 			vi.runAllTimers()
 
 			expect(listener).toHaveBeenCalledWith(
