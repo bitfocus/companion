@@ -116,7 +116,12 @@ export class GraphicsRenderer {
 		// the full oversampling: cap at 1 when there are no edges to antialias, 2 for the topbar text.
 		const maxOversampling = showTopbar ? 2 : 1
 
-		return new ImageResult(null, async (width, height, rotation, format) => {
+		// Without a topbar every blank is an identical black fill; a topbar adds location-derived text.
+		const cacheKey = showTopbar
+			? `blank:${location ? `${location.pageNumber}/${location.row}/${location.column}` : 'bar'}`
+			: `blank:no-bar`
+
+		return new ImageResult(cacheKey, null, async (width, height, rotation, format) => {
 			const dimensions = rotateResolution(width, height, rotation)
 			return GraphicsRenderer.#getCachedImage(
 				dimensions[0],
@@ -265,7 +270,8 @@ export class GraphicsRenderer {
 	 * @param height Height of the image
 	 */
 	static drawLockIcon(): ImageResult {
-		return new ImageResult(LOCK_ICON_STYLE, async (width, height, rotation, format) => {
+		// The lock icon is an invariant render, so it has a single fixed content key.
+		return new ImageResult('lock-icon', LOCK_ICON_STYLE, async (width, height, rotation, format) => {
 			const dimensions = rotateResolution(width, height, rotation)
 			return GraphicsRenderer.#getCachedImage(
 				dimensions[0],

@@ -22,7 +22,7 @@ function createImage(
 	style: ImageResultProcessedStyle | null = null,
 	drawNative = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]))
 ) {
-	const image = new ImageResult(style, drawNative)
+	const image = new ImageResult(undefined, style, drawNative)
 	return { image, drawNative }
 }
 
@@ -53,7 +53,7 @@ describe('ImageResult', () => {
 
 		test('drawElements is stored when provided', () => {
 			const drawElements: never[] = []
-			const image = new ImageResult(null, vi.fn(), drawElements)
+			const image = new ImageResult(undefined, null, vi.fn(), drawElements)
 			expect(image.drawElements).toBe(drawElements)
 		})
 
@@ -65,8 +65,18 @@ describe('ImageResult', () => {
 
 		test('referencedLocations is stored when provided', () => {
 			const locations = new Set(['1/0/0', '2/1/3'])
-			const image = new ImageResult(null, vi.fn(), null, locations)
+			const image = new ImageResult(undefined, null, vi.fn(), null, locations)
 			expect(image.referencedLocations).toBe(locations)
+		})
+
+		test('cacheKey can be undefined', () => {
+			const { image } = createImage(null)
+			expect(image.cacheKey).toBeUndefined()
+		})
+
+		test('cacheKey is stored when provided', () => {
+			const image = new ImageResult('some-content-key', null, vi.fn())
+			expect(image.cacheKey).toBe('some-content-key')
 		})
 	})
 
