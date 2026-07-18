@@ -288,18 +288,9 @@ export class GraphicsLayeredButtonRenderer {
 
 					// "image error" label immediately below the icon
 					const textY = iconTop + iconSize + Math.round(height * 0.04)
-					img.drawAlignedText(
-						x,
-						textY,
-						width,
-						maxY - textY,
-						'image error',
-						'#ffffff',
-						maxY - textY,
-						true,
-						'center',
-						'center'
-					)
+					img.drawAlignedText(x, textY, width, maxY - textY, 'image error', '#ffffff', maxY - textY, {
+						allowShrink: true,
+					})
 				})
 			})
 		}
@@ -335,16 +326,23 @@ export class GraphicsLayeredButtonRenderer {
 					element.text,
 					parseColor(element.color),
 					fontSize,
-					element.fontsizeAllowShrink,
-					element.halign,
-					element.valign,
-					rgbRev(element.outlineColor, true).a > 0
-						? {
-								width: fontSize * TEXT_OUTLINE_FACTOR,
-								color: parseColor(element.outlineColor),
-							}
-						: undefined,
-					element.font
+					{
+						allowShrink: element.fontsizeAllowShrink,
+						halign: element.halign,
+						valign: element.valign,
+						outlineStyle:
+							rgbRev(element.outlineColor, true).a > 0
+								? {
+										width: fontSize * TEXT_OUTLINE_FACTOR,
+										color: parseColor(element.outlineColor),
+									}
+								: undefined,
+						font: element.font,
+						weight: element.weight,
+						italic: element.styles.includes('italic'),
+						underline: element.styles.includes('underline'),
+						strikethrough: element.styles.includes('strikethrough'),
+					}
 				)
 			})
 		})

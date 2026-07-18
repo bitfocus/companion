@@ -19,6 +19,8 @@ interface FormPropertyFieldProps {
 	property: string
 	label: string
 	tooltip: string | undefined
+	description?: string
+	expressionDescription?: string
 	features: InputFeatureIconsProps | undefined
 	disableAutoExpression: boolean | undefined
 	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn, inputId: string) => React.ReactNode
@@ -28,6 +30,8 @@ export const FormPropertyField = observer(function FormPropertyField({
 	property,
 	label,
 	tooltip,
+	description,
+	expressionDescription,
 	features,
 	disableAutoExpression,
 	children,
@@ -56,6 +60,8 @@ export const FormPropertyField = observer(function FormPropertyField({
 		<PropertyFieldRow
 			label={label}
 			tooltip={tooltip}
+			description={description}
+			expressionDescription={expressionDescription}
 			features={features}
 			isOverridden={isOverridden}
 			value={elementProp}

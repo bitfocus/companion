@@ -17,6 +17,12 @@ style (text, font size, background image, colours) is still here — it's just b
 **elements** that you can add, remove, reposition and restyle individually. A plain button with some
 text and a background image is now two elements: an Image element and a Text element. Nothing you
 could do before has gone away; but you can now do a lot more.
+
+The old **background colour** is now the element named **Background** near the bottom of the stack.
+There's no dedicated "background" element type — it's simply a **Box** element that's been sized to
+fill the whole button (X 0, Y 0, Width 100, Height 100) with no border. You can restyle it, rename
+it, or delete it like any other element. If you remove it and later want it back, add a **Box**
+element.
 :::
 
 ## How the layered editor works

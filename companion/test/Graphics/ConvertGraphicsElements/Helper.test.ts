@@ -69,6 +69,7 @@ type TestEl = {
 	numProp: ExpressionOrValue<number>
 	boolProp: ExpressionOrValue<boolean>
 	enumProp: ExpressionOrValue<string>
+	arrProp: ExpressionOrValue<string[]>
 	anyProp: ExpressionOrValue<JsonValue | undefined>
 }
 
@@ -79,6 +80,7 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 		numProp: val(42),
 		boolProp: val(true),
 		enumProp: val('left'),
+		arrProp: val([]),
 		anyProp: val(99),
 		...overrides,
 	}
@@ -439,6 +441,45 @@ describe('ElementExpressionHelper', () => {
 		test('returns defaultValue for empty expression string', () => {
 			const { helper } = makeHelper(makeEl({ enumProp: expr('') }))
 			expect(helper.getEnum('enumProp', ['left', 'center', 'right'], 'center')).toBe('center')
+		})
+	})
+
+	describe('getEnumArray', () => {
+		const STYLES = ['italic', 'underline', 'strikethrough'] as const
+
+		test('returns the plain array when all values are in the allowed list', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['italic', 'underline']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'underline'])
+		})
+
+		test('filters out values that are not in the allowed list', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['italic', 'bogus', 'strikethrough']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'strikethrough'])
+		})
+
+		test('returns empty array when no values match', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['bogus', 'nope']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual([])
+		})
+
+		test('returns defaultValue when the plain value is not an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val('italic' as unknown as string[]) }))
+			expect(helper.getEnumArray('arrProp', STYLES, ['underline'])).toEqual(['underline'])
+		})
+
+		test('evaluates an expression that produces an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr('["italic", "strikethrough"]') }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'strikethrough'])
+		})
+
+		test('returns defaultValue when the expression result is not an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr('"italic"') }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual([])
+		})
+
+		test('returns defaultValue when the expression fails', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr(')') }))
+			expect(helper.getEnumArray('arrProp', STYLES, ['italic'])).toEqual(['italic'])
 		})
 	})
 

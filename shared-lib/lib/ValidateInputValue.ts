@@ -345,6 +345,7 @@ export function validateInputValue(
 		case 'internal:trigger_collection':
 		case 'internal:horizontal-alignment':
 		case 'internal:vertical-alignment':
+		case 'internal:text-styles':
 		case 'internal:image-file':
 			// Not supported - nothing to validate
 			return makeResult(value, undefined, false)
