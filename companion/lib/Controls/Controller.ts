@@ -28,6 +28,7 @@ import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
+import { NO_CONNECTION_LABELS } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlExternalDependencies } from './ControlDependencies.js'
@@ -521,7 +522,7 @@ export class ControlsController {
 		}
 		if (changed.size === 0) return
 
-		this.#deps.variableValues.emit('local_variables_changed', changed, controlId)
+		this.#deps.variableValues.emit('variablesChanged', changed, NO_CONNECTION_LABELS, controlId)
 	}
 
 	/**

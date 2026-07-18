@@ -24,7 +24,7 @@ import type {
  * page). It has no drawing and no options - it exists purely to own the page's local variables, which
  * are exposed to the rest of the page as `$(page:varname)`. Values propagate to the page's other
  * controls through the standard local-variables change path (see `EntityListPoolBase` and the
- * `local_variables_changed` handling in `Registry`).
+ * `variablesChanged` handling in `Registry`).
  *
  * @author Julian Waller <me@julusian.co.uk>
  * @since 5.1.0

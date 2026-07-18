@@ -384,7 +384,7 @@ describe('VariablesValues', () => {
 	})
 
 	describe('triggerLocationVariablesChange', () => {
-		test('emits the local_variables_changed event', () => {
+		test('emits the variablesChanged event', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
 
