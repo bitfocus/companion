@@ -85,22 +85,20 @@ export class ControlExpressionVariable
 	readonly entities: EntityListPoolExpressionVariable
 
 	/**
-	 * @param registry - the application core
-	 * @param eventBus - the main trigger event bus
+	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(
 		deps: ControlDependencies,
-		expressionVariableNameMap: ExpressionVariableNameMap,
 		controlId: string,
 		storage: ExpressionVariableModel | null,
 		isImport: boolean
 	) {
 		super(deps, controlId, `Controls/ControlTypes/ExpressionVariable/${controlId}`)
 
-		this.#expressionVariableNameMap = expressionVariableNameMap
+		this.#expressionVariableNameMap = deps.expressionVariableNamesMap
 
 		this.entities = new EntityListPoolExpressionVariable({
 			controlId,

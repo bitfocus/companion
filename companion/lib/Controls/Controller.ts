@@ -111,13 +111,14 @@ export class ControlsController {
 
 		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
 
-		this.#factory = new ControlsFactory(
-			this.#deps,
-			this.#store,
-			this.#controlEvents,
-			this.#controlChangeEvents,
-			this.#expressionVariableNamesMap
-		)
+		this.#factory = new ControlsFactory({
+			...this.#deps,
+			dbTable: this.#store.dbTable,
+			events: this.#controlEvents,
+			changeEvents: this.#controlChangeEvents,
+			triggerEvents: this.#store.triggerEvents,
+			expressionVariableNamesMap: this.#expressionVariableNamesMap,
+		})
 
 		this.#triggerCollections = new TriggerCollections(
 			db,

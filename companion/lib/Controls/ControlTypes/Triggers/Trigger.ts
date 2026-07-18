@@ -148,20 +148,15 @@ export class ControlTrigger
 	#isRateLimited: boolean = false
 
 	/**
-	 * @param registry - the application core
-	 * @param eventBus - the main trigger event bus
+	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(
-		deps: ControlDependencies,
-		eventBus: TriggerEvents,
-		controlId: string,
-		storage: TriggerModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: string, storage: TriggerModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
+
+		const eventBus = deps.triggerEvents
 
 		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerInvalidation.bind(this))
 

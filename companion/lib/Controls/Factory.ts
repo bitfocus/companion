@@ -1,16 +1,9 @@
-import type { EventEmitter } from 'node:events'
 import type { PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import LogController from '../Log/Controller.js'
-import type {
-	ControlChangeEvents,
-	ControlCommonEvents,
-	ControlDependencies,
-	ControlExternalDependencies,
-} from './ControlDependencies.js'
-import type { ControlStore } from './ControlStore.js'
+import type { ControlDependencies } from './ControlDependencies.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
@@ -19,7 +12,6 @@ import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
-import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
 
 /**
@@ -32,33 +24,10 @@ import type { SomeControl } from './IControlFragments.js'
 export class ControlsFactory {
 	readonly #logger = LogController.createLogger('Controls/Factory')
 
-	readonly #deps: ControlExternalDependencies
-	readonly #store: ControlStore
-	readonly #controlEvents: EventEmitter<ControlCommonEvents>
-	readonly #controlChangeEvents: EventEmitter<ControlChangeEvents>
-	readonly #expressionVariableNamesMap: ExpressionVariableNameMap
+	readonly #controlDeps: ControlDependencies
 
-	constructor(
-		deps: ControlExternalDependencies,
-		store: ControlStore,
-		controlEvents: EventEmitter<ControlCommonEvents>,
-		controlChangeEvents: EventEmitter<ControlChangeEvents>,
-		expressionVariableNamesMap: ExpressionVariableNameMap
-	) {
-		this.#deps = deps
-		this.#store = store
-		this.#controlEvents = controlEvents
-		this.#controlChangeEvents = controlChangeEvents
-		this.#expressionVariableNamesMap = expressionVariableNamesMap
-	}
-
-	#createControlDependencies(): ControlDependencies {
-		return {
-			...this.#deps,
-			dbTable: this.#store.dbTable,
-			events: this.#controlEvents,
-			changeEvents: this.#controlChangeEvents,
-		}
+	constructor(controlDeps: ControlDependencies) {
+		this.#controlDeps = controlDeps
 	}
 
 	/**
@@ -78,39 +47,27 @@ export class ControlsFactory {
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if (category === 'all' || category === 'button') {
 			if (controlObj2?.type === 'button-layered' || (controlType === 'button-layered' && !controlObj2)) {
-				return new ControlButtonLayered(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				return new ControlButtonLayered(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'preset-reference') {
-				return new ControlButtonPresetReference(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				return new ControlButtonPresetReference(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
-				return new ControlButtonPageNumber(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				return new ControlButtonPageNumber(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
-				return new ControlButtonPageUp(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				return new ControlButtonPageUp(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagedown' || (controlType === 'pagedown' && !controlObj2)) {
-				return new ControlButtonPageDown(this.#createControlDependencies(), controlId, controlObj2, isImport)
+				return new ControlButtonPageDown(this.#controlDeps, controlId, controlObj2, isImport)
 			}
 		}
 
 		if (category === 'all' || category === 'trigger') {
 			if (controlObj2?.type === 'trigger' || (controlType === 'trigger' && !controlObj2)) {
-				return new ControlTrigger(
-					this.#createControlDependencies(),
-					this.#store.triggerEvents,
-					controlId,
-					controlObj2,
-					isImport
-				)
+				return new ControlTrigger(this.#controlDeps, controlId, controlObj2, isImport)
 			}
 		}
 
 		if (category === 'all' || category === 'expression-variable') {
 			if (controlObj2?.type === 'expression-variable' || (controlType === 'expression-variable' && !controlObj2)) {
-				return new ControlExpressionVariable(
-					this.#createControlDependencies(),
-					this.#expressionVariableNamesMap,
-					controlId,
-					controlObj2,
-					isImport
-				)
+				return new ControlExpressionVariable(this.#controlDeps, controlId, controlObj2, isImport)
 			}
 		}
 
@@ -120,26 +77,14 @@ export class ControlsFactory {
 	}
 
 	createTrigger(controlId: string, storage: TriggerModel | null = null): ControlTrigger {
-		return new ControlTrigger(
-			this.#createControlDependencies(),
-			this.#store.triggerEvents,
-			controlId,
-			storage,
-			!!storage
-		)
+		return new ControlTrigger(this.#controlDeps, controlId, storage, !!storage)
 	}
 
 	createExpressionVariable(
 		controlId: string,
 		storage: ExpressionVariableModel | null = null
 	): ControlExpressionVariable {
-		return new ControlExpressionVariable(
-			this.#createControlDependencies(),
-			this.#expressionVariableNamesMap,
-			controlId,
-			storage,
-			!!storage
-		)
+		return new ControlExpressionVariable(this.#controlDeps, controlId, storage, !!storage)
 	}
 
 	createPresetControl(
@@ -148,12 +93,6 @@ export class ControlsFactory {
 		variablesHash: string,
 		presetModel: PresetButtonModel
 	): ControlButtonPreset {
-		return new ControlButtonPreset(
-			this.#createControlDependencies(),
-			connectionId,
-			presetId,
-			variablesHash,
-			presetModel
-		)
+		return new ControlButtonPreset(this.#controlDeps, connectionId, presetId, variablesHash, presetModel)
 	}
 }

@@ -32,6 +32,7 @@ export class MockTriggerEventBus extends EventEmitter<any> {
 
 export interface MockControlDependencies {
 	deps: ControlDependencies
+	bus: MockTriggerEventBus
 	dbSet: Mock
 	runMultipleActions: Mock
 }
@@ -43,10 +44,13 @@ export interface MockControlDependencies {
 export function createMockControlDependencies(): MockControlDependencies {
 	const dbSet = vi.fn()
 	const runMultipleActions = vi.fn().mockResolvedValue(undefined)
+	const bus = new MockTriggerEventBus()
 
 	const deps: ControlDependencies = {
 		surfaces: null as any,
 		pageStore: null as any,
+		triggerEvents: bus.asTriggerEvents(),
+		expressionVariableNamesMap: null as any,
 		internalModule: null as any,
 		instance: {
 			definitions: null as any,
@@ -66,5 +70,5 @@ export function createMockControlDependencies(): MockControlDependencies {
 		changeEvents: new EventEmitter() as any,
 	}
 
-	return { deps, dbSet, runMultipleActions }
+	return { deps, bus, dbSet, runMultipleActions }
 }
