@@ -581,6 +581,59 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.elements[0]).toMatchObject({ type: 'text', font: 'companion-sans' })
 			expect(result.elements[1]).toMatchObject({ type: 'text', font: 'companion-mono' })
 		})
+
+		test('resolves weight and styles properties', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'text-plain', text: val('Plain') }),
+				makeTextEl({
+					id: 'text-styled',
+					text: val('Styled'),
+					weight: val('bold'),
+					styles: val(['italic', 'underline']),
+				}),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements).toHaveLength(2)
+			expect(result.elements[0]).toMatchObject({ type: 'text', weight: 'normal', styles: [] })
+			expect(result.elements[1]).toMatchObject({ type: 'text', weight: 'bold', styles: ['italic', 'underline'] })
+		})
+
+		test('filters invalid style values and defaults unknown weight', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({
+					id: 'text-bad',
+					text: val('Bad'),
+					weight: val('heavy' as 'normal'),
+					styles: val(['italic', 'bogus'] as ('italic' | 'underline' | 'strikethrough')[]),
+				}),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'text', weight: 'normal', styles: ['italic'] })
+		})
 	})
 
 	describe('box element conversion', () => {

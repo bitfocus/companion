@@ -892,6 +892,58 @@ describe('Image drawing', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('bold weight', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Bold', '#ffffff', 20, { allowShrink: false, weight: 'bold' })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('italic', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Italic', '#ffffff', 20, { allowShrink: false, italic: true })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('underline', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Under', '#ffffff', 20, { allowShrink: false, underline: true })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('strikethrough', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Strike', '#ffffff', 20, { allowShrink: false, strikethrough: true })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('all styles combined', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'All', '#ffffff', 20, {
+				allowShrink: false,
+				weight: 'bold',
+				italic: true,
+				underline: true,
+				strikethrough: true,
+			})
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('underline left-aligned multiline', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Line 1\nLonger 2', '#ffffff', 12, {
+				allowShrink: false,
+				halign: 'left',
+				underline: true,
+			})
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('at 144x58 (wide)', async () => {
 			const img = Image.create(144, 58, 1, null)
 			img.fillColor('#000000')
