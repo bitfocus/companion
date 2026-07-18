@@ -167,6 +167,25 @@ export const textElementSchema: ElementSchemaSection[] = [
 				disableAutoExpression: true, // I think this will just be confusing to know what values to provide..
 			},
 			{
+				type: 'dropdown',
+				id: 'weight',
+				label: 'Weight',
+				choices: [
+					{ id: 'normal', label: 'Normal' },
+					{ id: 'bold', label: 'Bold' },
+				],
+				default: 'normal',
+				disableAutoExpression: true,
+			},
+			{
+				type: 'internal:text-styles',
+				id: 'styles',
+				label: 'Styles',
+				default: [],
+				expressionDescription:
+					"Expects an array of styles to apply. Valid values: 'italic', 'underline', 'strikethrough'. e.g. `['italic', 'underline']`",
+			},
+			{
 				type: 'colorpicker',
 				id: 'color',
 				label: 'Color',

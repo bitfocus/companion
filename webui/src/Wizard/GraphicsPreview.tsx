@@ -96,6 +96,8 @@ function buildElements(phase: number): SomeButtonGraphicsDrawElement[] {
 			fontsize: 65,
 			fontsizeAllowShrink: true,
 			font: 'companion-sans',
+			weight: 'normal',
+			styles: [],
 			color: 0xffffff,
 			outlineColor: 0x000000,
 			halign: 'center',

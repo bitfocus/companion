@@ -290,9 +290,9 @@ export class GraphicsRenderer {
 						'🔒',
 						'rgb(200, 200, 200)',
 						Math.floor(dimensions[1] * 0.6),
-						false,
-						'center',
-						'center'
+						{
+							allowShrink: false,
+						}
 					)
 
 					return this.#RotateAndConvertImage(img, width, height, rotation, format)

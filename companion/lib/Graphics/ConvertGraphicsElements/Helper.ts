@@ -163,6 +163,26 @@ export class ElementExpressionHelper<T> {
 	}
 
 	/**
+	 * Like getEnum, but for a field whose value is an array of enum values (e.g. a multi-toggle).
+	 * Resolves an expression if present, requires an array result, and filters to the allowed values.
+	 */
+	getEnumArray<TVal extends string>(propertyName: keyof T, values: readonly TVal[], defaultValue: TVal[]): TVal[] {
+		const value = this.#getValue(propertyName)
+
+		let actualValue: unknown = value.value
+		if (value.isExpression) {
+			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+			if (!result.ok) {
+				return defaultValue
+			}
+			actualValue = result.value
+		}
+
+		if (!Array.isArray(actualValue)) return defaultValue
+		return actualValue.filter((v): v is TVal => (values as readonly string[]).includes(v))
+	}
+
+	/**
 	 * Like getEnum, but compares the string value to the enum values in a tolerant way:
 	 * Matches only the first non-whitespace character, case-insensitively.
 	 */

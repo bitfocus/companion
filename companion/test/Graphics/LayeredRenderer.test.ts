@@ -70,6 +70,8 @@ function makeTextElement(overrides: Partial<ButtonGraphicsTextDrawElement> = {})
 		fontsize: 100,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff, // white
 		outlineColor: 0xff000000, // alpha=0 → no outline
 		halign: 'center',
@@ -280,6 +282,28 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({ ...drawOpts, elements: [makeTextElement({ outlineColor: 0xff0000 })] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('text element with weight and styles', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeTextElement({
+							fontsize: 30,
+							fontsizeAllowShrink: false,
+							weight: 'bold',
+							styles: ['italic', 'underline', 'strikethrough'],
+						}),
+					],
+				}),
 				new Set(),
 				null,
 				DEFAULT_PADDING
