@@ -483,37 +483,20 @@ export class ControlsController {
 	}
 
 	/**
-	 * Propagate variable changes to the controls
+	 * Propagate variable changes to the controls (and triggers). `controlIdFilter` scopes the change:
+	 * null for a global change, or a set of control ids - a single control's local variables, or a page's
+	 * variables affecting every control on it.
 	 */
-	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
-		// Inform triggers of the change
-		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, fromControlId)
+	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#store.controls.values()) {
-				// If the changes are local variables and from another control, ignore them
-				if (fromControlId && fromControlId !== control.controlId) continue
+				if (controlIdFilter && !controlIdFilter.has(control.controlId)) continue
 
 				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
 				control.drawing?.onVariablesChanged(allChangedVariablesSet)
 			}
-		}
-	}
-
-	/**
-	 * Propagate a page-variable change to a specific set of controls (the controls on that page).
-	 * Unlike {@link onVariablesChanged}, which scopes to a single control, this scopes to a set - a
-	 * page variable is owned by the page control but influences every control on the page. The changed
-	 * set uses the `page:` namespace; each control's existing disjoint-set check does the rest.
-	 */
-	onPageControlsVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIds: ReadonlySet<string>): void {
-		if (changedVariablesSet.size === 0 || controlIds.size === 0) return
-
-		for (const control of this.#store.controls.values()) {
-			if (!controlIds.has(control.controlId)) continue
-
-			if (control.supportsEntities) control.entities.onVariablesChanged(changedVariablesSet)
-			control.drawing?.onVariablesChanged(changedVariablesSet)
 		}
 	}
 

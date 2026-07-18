@@ -374,15 +374,10 @@ export class Registry {
 		})
 
 		this.variables.values.on('variablesChanged', (all_changed_variables_set, _connectionLabels, targetControlId) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, targetControlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, targetControlId)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, targetControlId)
-			this.preview.onVariablesChanged(all_changed_variables_set, targetControlId)
+			const targetControlIdSet = targetControlId == null ? null : new Set([targetControlId])
+			this.#dispatchVariablesChanged(all_changed_variables_set, targetControlIdSet)
 
-			// Surfaces only care about global changes, not a single control's local variables
-			if (!targetControlId) {
-				this.surfaces.onVariablesChanged(all_changed_variables_set)
-			} else {
+			if (targetControlId) {
 				// A page control owns its page's variables. Its own change is self-scoped above (like any
 				// local variable), but the values are also exposed to the whole page as `$(page:x)`, so
 				// propagate the change to every control on that page.
@@ -425,19 +420,24 @@ export class Registry {
 
 		const controlIds = this.page.store.getAllControlIdsOnPage(pageNumber)
 		if (controlIds.length === 0) return
-		const controlIdSet = new Set(controlIds)
 
-		// The internal/module/preview consumers scope by a single controlId, so notify per-control.
-		// Each call is cheap (a filtered iteration + debounce) and page-variable changes are debounced
-		// and infrequent. If this ever becomes hot, these could be taught to accept a control-id set.
-		for (const controlId of controlIds) {
-			this.internalModule.onVariablesChanged(pageChangedSet, controlId)
-			this.instance.processManager.onVariablesChanged(pageChangedSet, controlId)
-			this.preview.onVariablesChanged(pageChangedSet, controlId)
+		this.#dispatchVariablesChanged(pageChangedSet, new Set(controlIds))
+	}
+
+	/**
+	 * Fan a variable change out to every consumer that scopes by control. `controlIdFilter` is null for a
+	 * global change, or the set of controls it applies to.
+	 */
+	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
+		this.controls.onVariablesChanged(changedSet, controlIdFilter)
+		this.instance.processManager.onVariablesChanged(changedSet, controlIdFilter)
+		this.preview.onVariablesChanged(changedSet, controlIdFilter)
+
+		// Surfaces only care about global changes, not control-scoped (local/page) variables
+		if (controlIdFilter === null) {
+			this.surfaces.onVariablesChanged(changedSet)
 		}
-
-		// Controls (drawing + entity special-expressions) can be scoped to the whole set in one pass.
-		this.controls.onPageControlsVariablesChanged(pageChangedSet, controlIdSet)
 	}
 
 	/**

@@ -47,10 +47,10 @@ export class PreviewController {
 		this.#expressionStream.onControlIdsLocationChanged(controlIds)
 	}
 
-	onVariablesChanged(allChangedSet: ReadonlySet<string>, fromControlId: string | null): void {
-		this.#graphics.onVariablesChanged(allChangedSet, fromControlId)
-		this.#expressionStream.onVariablesChanged(allChangedSet, fromControlId)
-		this.#elementStream.onVariablesChanged(allChangedSet, fromControlId)
+	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+		this.#graphics.onVariablesChanged(allChangedSet, controlIdFilter)
+		this.#expressionStream.onVariablesChanged(allChangedSet, controlIdFilter)
+		this.#elementStream.onVariablesChanged(allChangedSet, controlIdFilter)
 	}
 
 	onConnectionCompositeElementsChanged(elementIds: ReadonlySet<CompositeElementIdString>): void {

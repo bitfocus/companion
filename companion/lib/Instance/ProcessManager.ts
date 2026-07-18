@@ -242,14 +242,19 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: ReadonlySet<string>, fromControlId: string | null): void {
+	onVariablesChanged(
+		all_changed_variables_set: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<string> | null
+	): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
-				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds, fromControlId).catch((e) => {
-					this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
-				})
+				child.handler
+					.sendVariablesChanged(all_changed_variables_set, changedVariableIds, controlIdFilter)
+					.catch((e) => {
+						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
+					})
 			}
 		}
 	}

@@ -592,7 +592,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Simulate variables changing for only control-1
-			entityManager.onVariablesChanged(new Set(['var1']), 'control-1')
+			entityManager.onVariablesChanged(new Set(['var1']), new Set(['control-1']))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-1
@@ -674,7 +674,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateFeedbacks.mockClear()
 
 			// Simulate variables changing for only control-2
-			entityManager.onVariablesChanged(new Set(['control-var']), 'control-2')
+			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-2']))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-2, not entity-1
