@@ -20,11 +20,8 @@ import type {
 /**
  * Class for a "page" control.
  *
- * There is exactly one of these per page (id `page:<pageId>`, auto-created and destroyed with the
- * page). It has no drawing and no options - it exists purely to own the page's local variables, which
- * are exposed to the rest of the page as `$(page:varname)`. Values propagate to the page's other
- * controls through the standard local-variables change path (see `EntityListPoolBase` and the
- * `variablesChanged` handling in `Registry`).
+ * One per page (id `page:<pageId>`, auto-created/destroyed with the page). No drawing or options - it
+ * exists purely to own the page's local variables, exposed to the rest of the page as `$(page:varname)`.
  *
  * @author Julian Waller <me@julusian.co.uk>
  * @since 5.1.0
@@ -97,8 +94,7 @@ export class ControlPage
 		if (!options.noSave) {
 			this.commitChange(false)
 		}
-		// Page controls do not draw, so there is nothing to redraw here. Value propagation to the
-		// page's other controls happens via the local-variables change path in the entity pool.
+		// Page controls don't draw, so nothing to redraw
 	}
 
 	/**
@@ -185,10 +181,7 @@ export class ControlPage
 		super.destroy()
 	}
 
-	/**
-	 * Page controls do not draw and do not publish a single value, so invalidation is a no-op.
-	 * (Value propagation to the page's other controls happens via the local-variables change path.)
-	 */
+	/** Page controls don't draw, so invalidation is a no-op. */
 	protected triggerInvalidation(): void {
 		// Nothing to do
 	}

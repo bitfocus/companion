@@ -378,9 +378,8 @@ export class Registry {
 			this.#dispatchVariablesChanged(all_changed_variables_set, targetControlIdSet)
 
 			if (targetControlId) {
-				// A page control owns its page's variables. Its own change is self-scoped above (like any
-				// local variable), but the values are also exposed to the whole page as `$(page:x)`, so
-				// propagate the change to every control on that page.
+				// A page control's variables are also exposed to the whole page as `$(page:x)`, so
+				// propagate its changes to every control on the page.
 				const parsed = ParseControlId(targetControlId)
 				if (parsed?.type === 'page') {
 					this.#propagatePageVariablesChanged(parsed.pageId, all_changed_variables_set)
@@ -403,10 +402,8 @@ export class Registry {
 	}
 
 	/**
-	 * Propagate a page control's variable change to every control on that page.
-	 * The page control names its variables `local:x`; they are exposed to the page as `$(page:x)`, so
-	 * remap the changed names and invalidate every control on the page (and their feedbacks/previews)
-	 * that references them. Nothing is stored in the global variable pool.
+	 * Propagate a page control's `local:x` variable changes to every control on the page, remapped to
+	 * the `$(page:x)` names they are exposed under.
 	 */
 	#propagatePageVariablesChanged(pageId: string, changedLocalVariables: ReadonlySet<string>): void {
 		const pageNumber = this.page.store.getPageNumber(pageId)

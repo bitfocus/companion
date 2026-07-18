@@ -167,10 +167,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		)
 	}
 
-	/**
-	 * Build a parser for a page control's own variables. It has no grid location, so only the
-	 * page-relevant `this:page`/`this:page_name` are injected (not the button-specific `this:*`).
-	 */
+	/** Build a parser for a page control's variables - no grid location, so only `this:page`/`this:page_name` are injected. */
 	createVariablesAndExpressionParserForPage(
 		pageNumber: number | null | undefined,
 		localValues: ControlEntityInstance[] | null,

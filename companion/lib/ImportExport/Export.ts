@@ -519,7 +519,6 @@ export class ExportController {
 		}
 
 		// Include the page's local variables (from the page:<id> control, which is not on the grid).
-		// This flows through both the full and single-page export paths.
 		if (pageInfo.id) {
 			const pageControl = this.#controlsController.getControl(CreatePageControlId(pageInfo.id))
 			if (pageControl && pageControl.type === 'page') {

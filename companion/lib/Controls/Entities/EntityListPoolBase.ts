@@ -190,11 +190,7 @@ export abstract class ControlEntityListPoolBase {
 			})
 	}
 
-	/**
-	 * Build a parser for this control's variables, injecting the appropriate `this:*` context. This is
-	 * control-type specific (a button has a grid location, a trigger/expression-variable has none, a page
-	 * control has a page context), so each pool provides its own.
-	 */
+	/** Build a parser for this control's variables. The injected `this:*` context is control-type specific, so each pool provides its own. */
 	abstract createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null
 	): VariablesAndExpressionParser

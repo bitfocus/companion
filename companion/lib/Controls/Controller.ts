@@ -484,9 +484,8 @@ export class ControlsController {
 	}
 
 	/**
-	 * Propagate variable changes to the controls (and triggers). `controlIdFilter` scopes the change:
-	 * null for a global change, or a set of control ids - a single control's local variables, or a page's
-	 * variables affecting every control on it.
+	 * Propagate variable changes to the controls and triggers. `controlIdFilter` is null for a global
+	 * change, or the set of controls the change is scoped to.
 	 */
 	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
@@ -503,10 +502,7 @@ export class ControlsController {
 
 	/**
 	 * A control moved to a different page, so its `$(page:x)` references now resolve against a different
-	 * page control. Report the affected `page:*` ids (from both the old and new pages) scoped to this
-	 * control, so the existing disjoint-set invalidation re-evaluates ONLY its feedbacks that actually use
-	 * page variables. No-op for same-page moves / reorders (the page identity is unchanged). Actions need
-	 * nothing here - they parse at execution time and pick up the new page then.
+	 * page control - re-evaluate its page-variable feedbacks. No-op if the page is unchanged.
 	 */
 	notifyControlMovedPage(controlId: string, fromPageNumber: number, toPageNumber: number): void {
 		const fromPageId = this.#deps.pageStore.getPageId(fromPageNumber)

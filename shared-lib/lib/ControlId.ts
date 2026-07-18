@@ -57,9 +57,7 @@ export function CreateExpressionVariableControlId(variableId: string): string {
 }
 
 /**
- * Create full page control id.
- * A page control is the (non-grid) control that owns a page's local variables. There is exactly one
- * per page, keyed by the page's stable id.
+ * Create the full control id for a page's local-variables control (one per page, keyed by page id).
  */
 export function CreatePageControlId(pageId: string): string {
 	return `page:${pageId}`

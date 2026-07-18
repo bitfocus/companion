@@ -18,12 +18,8 @@ import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { NewFeedbackValue } from './Types.js'
 
 /**
- * The page-control entity pool. A page control has no drawing and no "root" entity - it exists purely
- * to own a page's local variables, which are exposed to the rest of the page as `$(page:varname)`.
- *
- * So, unlike {@link ./EntityListPoolExpressionVariable.js EntityListPoolExpressionVariable}, this pool
- * has ONLY the `local-variables` list. Always editable, so this single class is the editable pool
- * (mutators mixed in via {@link WithEntityEditing}).
+ * The page-control entity pool. A page control exists purely to own a page's local variables,
+ * which are exposed to the rest of the page as `$(page:varname)`.
  */
 export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolBase) {
 	#localVariables: ControlEntityList
@@ -40,10 +36,7 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 		})
 	}
 
-	/**
-	 * A page control has no grid location, so its parser gets the page's own `this:` context
-	 * (`this:page`/`this:page_name`) rather than a grid location.
-	 */
+	/** A page control has no grid location, so its parser gets the page's `this:page` context instead. */
 	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
 		const parsed = ParseControlId(this.controlId)
 		const pageNumber = parsed?.type === 'page' ? this.#pageStore.getPageNumber(parsed.pageId) : null
@@ -64,9 +57,7 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 	}
 
 	/**
-	 * Remove all of the page's variables (used when the page is wiped). Clears in place on the existing
-	 * instance (so any live editor subscription just receives an empty list), persists, and notifies so
-	 * that any control still referencing them re-evaluates to unknown.
+	 * Remove all of the page's variables (used when the page is wiped).
 	 * @returns true if anything was removed
 	 */
 	clearVariables(): boolean {

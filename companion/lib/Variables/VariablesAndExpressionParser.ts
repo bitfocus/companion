@@ -145,8 +145,7 @@ export class VariablesAndExpressionParser {
 
 	/**
 	 * Bind a page's local-variable entities so they resolve as `$(page:x)` for controls on that page.
-	 * Same as {@link #bindLocalVariables} but under the `page:` namespace (the entities belong to the
-	 * page control, whose own name for them is `local:x`).
+	 * Like {@link #bindLocalVariables}, but under the `page:` namespace.
 	 */
 	#bindPageVariables(entities: ControlEntityInstance[]) {
 		for (const entity of entities) {
