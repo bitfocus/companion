@@ -283,7 +283,7 @@ describe('Image drawing', () => {
 	describe('arcStroke', () => {
 		function pixelAt(buf: Buffer, width: number, x: number, y: number) {
 			const idx = (y * width + x) * 4
-			return { r: buf[idx]!, g: buf[idx + 1]!, b: buf[idx + 2]!, a: buf[idx + 3]! }
+			return { r: buf[idx], g: buf[idx + 1], b: buf[idx + 2], a: buf[idx + 3] }
 		}
 
 		test('full circle - arc pixels are colored, center is transparent', () => {

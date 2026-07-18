@@ -298,7 +298,7 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			definitionId: 'def-new',
 			options: {},
 			upgradeIndex: undefined,
-		} as SomeReplaceableEntityModel)
+		})
 
 		expect(result).toBeUndefined()
 	})

@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /**
  * Performance benchmark for drawAlignedText
  *

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { mock, mockDeep } from 'vitest-mock-extended'
+import { mockDeep } from 'vitest-mock-extended'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { ServiceRosstalk } from '../../lib/Service/Rosstalk.js'
 import type { ServiceApi } from '../../lib/Service/ServiceApi.js'

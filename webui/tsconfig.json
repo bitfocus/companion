@@ -1,5 +1,13 @@
 {
-	"include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx", ".storybook/**/*"],
+	"include": [
+		"src/**/*.js",
+		"src/**/*.jsx",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		".storybook/**/*",
+		"test/**/*.ts",
+		"test/**/*.tsx"
+	],
 	"exclude": ["node_modules/**"],
 	"compilerOptions": {
 		"outDir": "./dist",

@@ -7,6 +7,7 @@ import {
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { visitEntityOptionsForVariables } from '../../lib/Variables/Util.js'
 
 function createDefinition(
@@ -503,7 +504,7 @@ describe('visitEntityOptionsForVariables', () => {
 			const visitorCalls: Array<{ field: SomeCompanionInputField; value: any; fieldType: any }> = []
 			visitEntityOptionsForVariables(definition, options, (field, value, fieldType) => {
 				visitorCalls.push({ field, value, fieldType })
-				return `transformed_${value}`
+				return `transformed_${stringifyVariableValue(value)}`
 			})
 
 			expect(visitorCalls).toHaveLength(2)
@@ -540,7 +541,7 @@ describe('visitEntityOptionsForVariables', () => {
 				field2: exprVal(50),
 			}
 
-			const result = visitEntityOptionsForVariables(definition, options, (field, value, fieldType) => {
+			const result = visitEntityOptionsForVariables(definition, options, (field, _value, _fieldType) => {
 				return `transformed_${field.id}`
 			})
 
@@ -578,7 +579,7 @@ describe('visitEntityOptionsForVariables', () => {
 			}
 
 			const visitorCalls: Array<{ field: SomeCompanionInputField; value: any }> = []
-			const result = visitEntityOptionsForVariables(definition, options, (field, value, fieldType) => {
+			const result = visitEntityOptionsForVariables(definition, options, (field, value, _fieldType) => {
 				visitorCalls.push({ field, value })
 				return value ?? 'default'
 			})
@@ -599,7 +600,7 @@ describe('visitEntityOptionsForVariables', () => {
 
 			const options: ExpressionableOptionsObject = {}
 
-			const result = visitEntityOptionsForVariables(definition, options, (field, value, fieldType) => {
+			const result = visitEntityOptionsForVariables(definition, options, (_field, value, _fieldType) => {
 				return value
 			})
 
@@ -623,7 +624,7 @@ describe('visitEntityOptionsForVariables', () => {
 			const options: ExpressionableOptionsObject = {}
 
 			const visitorCalls: Array<{ value: any }> = []
-			visitEntityOptionsForVariables(definition, options, (field, value, fieldType) => {
+			visitEntityOptionsForVariables(definition, options, (_field, value, _fieldType) => {
 				visitorCalls.push({ value })
 				return value
 			})

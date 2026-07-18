@@ -6,7 +6,7 @@ import {
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
-import type { SomePresetActionEntry, SomePresetConditionEntry } from '@companion-module/host'
+import type { SomePresetConditionEntry } from '@companion-module/host'
 import {
 	convertPresetActionEntries,
 	convertPresetConditionEntries,
@@ -42,10 +42,7 @@ describe('PresetInternalEntities', () => {
 
 	describe('flat internal actions', () => {
 		it('translates internal:wait with a literal time to an expression', () => {
-			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:wait', options: { time: 100 } } as SomePresetActionEntry],
-				ctx
-			)
+			const entities = convertPresetActionEntries([{ actionId: 'internal:wait', options: { time: 100 } }], ctx)
 
 			expect(entities).toHaveLength(1)
 			expect(entities[0]).toMatchObject({
@@ -59,7 +56,7 @@ describe('PresetInternalEntities', () => {
 
 		it('translates internal:wait with an expression wrapper', () => {
 			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:wait', options: { time: { value: '$(foo) * 2', isExpression: true } } } as any],
+				[{ actionId: 'internal:wait', options: { time: { value: '$(foo) * 2', isExpression: true } } }],
 				ctx
 			)
 
@@ -87,7 +84,7 @@ describe('PresetInternalEntities', () => {
 
 		it('translates internal:abortButton, remapping keys and injecting the self location', () => {
 			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:abortButton', options: { skipReleaseActions: true } } as any],
+				[{ actionId: 'internal:abortButton', options: { skipReleaseActions: true } }],
 				ctx
 			)
 
@@ -102,7 +99,7 @@ describe('PresetInternalEntities', () => {
 		})
 
 		it('defaults internal:abortButton skipReleaseActions when absent', () => {
-			const entities = convertPresetActionEntries([{ actionId: 'internal:abortButton', options: {} } as any], ctx)
+			const entities = convertPresetActionEntries([{ actionId: 'internal:abortButton', options: {} }], ctx)
 
 			expect(entities[0].options).toEqual({ unlatch: exprVal(false), location: SELF_LOCATION })
 			expect(logger.warn).not.toHaveBeenCalled()
@@ -114,7 +111,7 @@ describe('PresetInternalEntities', () => {
 					{
 						actionId: 'internal:abortButton',
 						options: { skipReleaseActions: { value: '1 > 0', isExpression: true } },
-					} as any,
+					},
 				],
 				ctx
 			)
@@ -125,7 +122,7 @@ describe('PresetInternalEntities', () => {
 
 		it('translates internal:localVariableSet, injecting the self location', () => {
 			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:localVariableSet', options: { name: 'myvar', value: '42' } } as any],
+				[{ actionId: 'internal:localVariableSet', options: { name: 'myvar', value: '42' } }],
 				ctx
 			)
 
@@ -142,7 +139,7 @@ describe('PresetInternalEntities', () => {
 
 		it('maps unknown option keys 1:1 for forward compatibility', () => {
 			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:wait', options: { time: 100, futureOption: 'abc' } } as any],
+				[{ actionId: 'internal:wait', options: { time: 100, futureOption: 'abc' } }],
 				ctx
 			)
 
@@ -177,7 +174,7 @@ describe('PresetInternalEntities', () => {
 		})
 
 		it('dispatches internal entries via convertActionsDelay with relative delays', () => {
-			const entities = convertActionsDelay([{ actionId: 'internal:wait', options: { time: 10 } } as any], true, ctx)
+			const entities = convertActionsDelay([{ actionId: 'internal:wait', options: { time: 10 } }], true, ctx)
 
 			expect(entities).toHaveLength(1)
 			expect(entities[0]).toMatchObject({ definitionId: 'wait', connectionId: 'internal' })
@@ -186,7 +183,7 @@ describe('PresetInternalEntities', () => {
 
 	describe('building blocks', () => {
 		it('translates internal:actionGroup with defaults', () => {
-			const entities = convertPresetActionEntries([{ actionId: 'internal:actionGroup', options: {} } as any], ctx)
+			const entities = convertPresetActionEntries([{ actionId: 'internal:actionGroup', options: {} }], ctx)
 
 			expect(entities[0]).toMatchObject({
 				definitionId: 'action_group',
@@ -198,7 +195,7 @@ describe('PresetInternalEntities', () => {
 
 		it('warns and uses the default for an expression executionMode', () => {
 			const entities = convertPresetActionEntries(
-				[{ actionId: 'internal:actionGroup', options: { executionMode: { value: 'x', isExpression: true } } } as any],
+				[{ actionId: 'internal:actionGroup', options: { executionMode: { value: 'x', isExpression: true } } }],
 				ctx
 			)
 
@@ -538,11 +535,7 @@ describe('PresetInternalEntities', () => {
 		const legacyCtx: PresetEntryConversionContext = { ...ctx, allowInternalEntities: false }
 
 		it('does not translate internal action ids, leaving them as module entities', () => {
-			const entities = convertActionsDelay(
-				[{ actionId: 'internal:wait', options: { time: 100 } } as any],
-				true,
-				legacyCtx
-			)
+			const entities = convertActionsDelay([{ actionId: 'internal:wait', options: { time: 100 } }], true, legacyCtx)
 
 			expect(entities).toHaveLength(1)
 			expect(entities[0]).toMatchObject({

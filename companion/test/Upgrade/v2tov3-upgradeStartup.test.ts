@@ -15,10 +15,9 @@ vi.mock('nanoid', () => {
 function CreateDataDatabase() {
 	const db = new DataDatabase()
 
-	let data = fs.readFileSync('./companion/test/Upgrade/v2tov3/db.v2.json', 'utf8')
-	data = JSON.parse(data)
+	const data = fs.readFileSync('./companion/test/Upgrade/v2tov3/db.v2.json', 'utf8')
 
-	importTable(db.defaultTableView, data)
+	importTable(db.defaultTableView, JSON.parse(data))
 
 	return db
 }

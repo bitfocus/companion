@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { EntityModelType, RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import {
@@ -8,10 +8,9 @@ import {
 } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type {
 	NewSpecialExpressionValue,
-	SpecialExpression,
 	UpdateSpecialExpressionValuesFn,
 } from '../../../lib/Controls/Entities/SpecialExpressions.js'
-import { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
+import type { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
 
 describe('EntityPoolSpecialExpressionManager', () => {
 	// Create mock functions
@@ -483,8 +482,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 				// Unexpected state.
 				expect('unexpected state').toBe(`
-isInvertedW=${isInvertedW}, isInvertedW.referencedVariableIds=${isInvertedW?.referencedVariableIds?.values().toArray()}
-storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?.referencedVariableIds?.values().toArray()}
+isInvertedW=${JSON.stringify(isInvertedW)}, isInvertedW.referencedVariableIds=${isInvertedW?.referencedVariableIds?.values().toArray()}
+storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds=${storeResultW?.referencedVariableIds?.values().toArray()}
 `)
 			}
 

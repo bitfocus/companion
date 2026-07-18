@@ -22,14 +22,14 @@ function val<T>(value: T): ExpressionOrValue<T> {
 }
 
 function expr<T>(value: string): ExpressionOrValue<T> {
-	return { isExpression: true, value } as ExpressionOrValue<T>
+	return { isExpression: true, value }
 }
 
 function createMockParser(
 	variableValues: Record<string, Record<string, string | number | boolean>> = {}
 ): VariablesAndExpressionParser {
 	const rawVariableValues: VariableValueData = variableValues
-	const createCache = (): VariableValueCache => new Map() as unknown as VariableValueCache
+	const createCache = (): VariableValueCache => new Map()
 	const blinker = null as any
 
 	const buildParser = (raw: VariableValueData, overrides: VariableValues): VariablesAndExpressionParser => {
@@ -37,14 +37,14 @@ function createMockParser(
 			executeExpression: (str: string, requiredType: string | undefined) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
-					cache.set(key, value as any)
+					cache.set(key, value)
 				}
 				return executeExpression(blinker, str, raw, requiredType, cache, undefined)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
-					cache.set(key, value as any)
+					cache.set(key, value)
 				}
 				return parseVariablesInString(str, raw, cache, VARIABLE_UNKNOWN_VALUE)
 			},
@@ -79,7 +79,7 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 		numProp: val(42),
 		boolProp: val(true),
 		enumProp: val('left'),
-		anyProp: val(99 as JsonValue),
+		anyProp: val(99),
 		...overrides,
 	}
 }
@@ -229,7 +229,7 @@ describe('ElementExpressionHelper', () => {
 
 	describe('getUnknown', () => {
 		test('returns plain value directly without calling parser', () => {
-			const { helper, usedVariables } = makeHelper(makeEl({ anyProp: val(42 as JsonValue) }))
+			const { helper, usedVariables } = makeHelper(makeEl({ anyProp: val(42) }))
 			expect(helper.getUnknown('anyProp', 0)).toBe(42)
 			expect(usedVariables.size).toBe(0)
 		})
@@ -789,18 +789,14 @@ describe('ElementExpressionHelper', () => {
 	describe('elementOverrides', () => {
 		test('override takes precedence over element property value', () => {
 			const element = makeEl({ strProp: val('original') })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', val('overridden' as JsonValue)],
-			])
+			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getString('strProp', '')).toBe('overridden')
 		})
 
 		test('non-overridden properties use the element value', () => {
 			const element = makeEl({ strProp: val('original'), numProp: val(42) })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', val('overridden' as JsonValue)],
-			])
+			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getNumber('numProp', 0)).toBe(42)
 		})
@@ -837,7 +833,7 @@ describe('createParseElementsContext', () => {
 
 		test('applies feedback overrides to the matching element ID only', () => {
 			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['el1', new Map([['strProp', val('overridden' as JsonValue)]])],
+				['el1', new Map([['strProp', val('overridden')]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 
@@ -850,7 +846,7 @@ describe('createParseElementsContext', () => {
 
 		test('element without matching feedback override uses its own property', () => {
 			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['other-id', new Map([['strProp', val('overridden' as JsonValue)]])],
+				['other-id', new Map([['strProp', val('overridden')]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 			const { helper } = ctx.createHelper({ id: 'el1', strProp: val('original') })

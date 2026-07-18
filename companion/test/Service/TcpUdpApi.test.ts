@@ -124,7 +124,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 down')
+				await router.processMessage('location 1/2/3 down')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -201,7 +201,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 up')
+				await router.processMessage('location 1/2/3 up')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -279,7 +279,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 press')
+				await router.processMessage('location 1/2/3 press')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -358,7 +358,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 rotate-left')
+				await router.processMessage('location 1/2/3 rotate-left')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -441,7 +441,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 rotate-right')
+				await router.processMessage('location 1/2/3 rotate-right')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -542,7 +542,7 @@ describe('TcpUdpApi', () => {
 				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 set-step 2')
+				await router.processMessage('location 1/2/3 set-step 2')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -634,7 +634,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 style text def two')
+				await router.processMessage('location 1/2/3 style text def two')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -663,7 +663,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 style text de/f two')
+				await router.processMessage('location 1/2/3 style text de/f two')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -692,7 +692,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('location 1/2/3 style text')
+				await router.processMessage('location 1/2/3 style text')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -742,7 +742,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage(`location 1/2/3 style color ${input}`)
+				await router.processMessage(`location 1/2/3 style color ${input}`)
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -799,7 +799,7 @@ describe('TcpUdpApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage(`location 1/2/3 style bgcolor ${input}`)
+				await router.processMessage(`location 1/2/3 style bgcolor ${input}`)
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
