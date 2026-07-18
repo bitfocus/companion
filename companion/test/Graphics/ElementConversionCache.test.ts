@@ -229,8 +229,8 @@ describe('ElementConversionCache', () => {
 			const cache = new ElementConversionCache()
 			const entry = makeEntry()
 			// Omit referencedLocation entirely by deleting it from the spread result
-			const { referencedLocation: _, ...entryWithoutRef } = entry
-			cache.set('elem1', entryWithoutRef as ElementConversionCacheEntry)
+			const { referencedLocation: _referencedLocation, ...entryWithoutRef } = entry
+			cache.set('elem1', entryWithoutRef)
 			cache.queueInvalidateReferencedLocation('1/0/0')
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elem1')).toBeDefined()

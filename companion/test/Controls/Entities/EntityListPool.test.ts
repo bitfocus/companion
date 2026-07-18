@@ -377,7 +377,7 @@ describe('EntityListPool - storage round-trip (button)', () => {
 			localVariables: [],
 			steps: {},
 			...overrides,
-		} as ButtonModelBase
+		}
 	}
 
 	test('loadStorage routes feedbacks, local variables and steps into their lists', () => {

@@ -135,7 +135,7 @@ describe('VariablesValues', () => {
 		})
 
 		test('silently skips BANNED_PROPS and does not store them', () => {
-			const banned = [...BANNED_PROPS][0]!
+			const banned = [...BANNED_PROPS][0]
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
 

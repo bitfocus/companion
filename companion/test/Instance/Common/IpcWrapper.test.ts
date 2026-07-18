@@ -49,14 +49,13 @@ function createWrapper(handlers: IpcEventHandlers<TestApi> = makeHandlers(), tim
 
 /** Wire two wrappers together so messages from one are delivered to the other. */
 function createPair(handlersB: IpcEventHandlers<TestApi> = makeHandlers(), timeout = 1000) {
-	let wrapperB: IpcWrapper<EmptyApi, TestApi>
 	const wrapperA = new IpcWrapper<TestApi, EmptyApi>({}, (msg) => wrapperB.receivedMessage(msg), timeout)
-	wrapperB = new IpcWrapper<EmptyApi, TestApi>(handlersB, (msg) => wrapperA.receivedMessage(msg), timeout)
+	const wrapperB = new IpcWrapper<EmptyApi, TestApi>(handlersB, (msg) => wrapperA.receivedMessage(msg), timeout)
 	return { wrapperA, wrapperB }
 }
 
 /** Flush pending microtasks/macrotasks so async handlers can settle (real timers only). */
-const tick = () => new Promise<void>((resolve) => setImmediate(resolve))
+const tick = async () => new Promise<void>((resolve) => setImmediate(resolve))
 
 describe('IpcWrapper', () => {
 	describe('sendWithCb', () => {

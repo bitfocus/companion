@@ -1,10 +1,10 @@
 import { vi } from 'vitest'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -83,7 +83,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	}
 
 	const deps: ControlEntityListPoolProps = {
-		instanceDefinitions: { getEntityDefinition } as any,
+		instanceDefinitions: { getEntityDefinition },
 		internalModule: internalModule as any,
 		processManager: processManager as any,
 		variableValues: variableValues as any,

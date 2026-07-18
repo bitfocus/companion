@@ -1,3 +1,5 @@
+/* eslint-disable n/no-process-exit */
+
 /*
  * Stands in for a module child process, for the data channel integration test. Deliberately hand-rolls the
  * framing (see MessageFraming.ts, which is unit tested separately) rather than importing the typescript

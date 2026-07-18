@@ -1,11 +1,11 @@
-import { DataStoreTableView } from '../../lib/Data/StoreBase.js'
+import type { DataStoreTableView } from '../../lib/Data/StoreBase.js'
 
 /**
  * Import raw data into a table
  * @param table - the table to import to
  * @param data - the data
  */
-export function importTable(table: DataStoreTableView<any>, data: any) {
+export function importTable(table: DataStoreTableView<any>, data: Record<string, any>): void {
 	if (data && typeof data === 'object') {
 		for (const [key, value] of Object.entries(data)) {
 			if (typeof value === 'string') {

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 // Import the mocked class so test instances pass instanceof checks in the source
 import { ControlExpressionVariable } from '../../lib/Controls/ControlTypes/ExpressionVariable.js'
 import { ExpressionVariableNameMap } from '../../lib/Controls/ExpressionVariableNameMap.js'

@@ -1,4 +1,4 @@
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -47,7 +47,7 @@ function val<T>(value: T): ExpressionOrValue<T> {
 }
 
 function expr<T>(value: string): ExpressionOrValue<T> {
-	return { isExpression: true, value } as ExpressionOrValue<T>
+	return { isExpression: true, value }
 }
 
 // Element factories — provide sensible defaults so each test only specifies what matters.
@@ -2723,8 +2723,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					})
 				)
 			)
-			expect(el.stops[0]!.gradient).toBe(true)
-			expect(el.stops[1]!.gradient).toBe(false)
+			expect(el.stops[0].gradient).toBe(true)
+			expect(el.stops[1].gradient).toBe(false)
 		})
 
 		test('stop values are NOT clamped (authored domain, mapped by renderer)', async () => {
@@ -2740,8 +2740,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					})
 				)
 			)
-			expect(el.stops[0]!.value).toBe(-100)
-			expect(el.stops[1]!.value).toBe(100)
+			expect(el.stops[0].value).toBe(-100)
+			expect(el.stops[1].value).toBe(100)
 		})
 
 		test('partial stop rows fall back to defaults without throwing', async () => {
