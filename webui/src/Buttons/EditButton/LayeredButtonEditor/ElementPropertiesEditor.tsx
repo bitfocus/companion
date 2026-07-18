@@ -175,6 +175,8 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			property={field.id}
 			label={field.label}
 			tooltip={field.tooltip}
+			description={field.description}
+			expressionDescription={field.expressionDescription}
 			features={features}
 			disableAutoExpression={field.disableAutoExpression}
 		>

@@ -182,6 +182,8 @@ export const textElementSchema: ElementSchemaSection[] = [
 				id: 'styles',
 				label: 'Styles',
 				default: [],
+				expressionDescription:
+					"Expects an array of styles to apply. Valid values: 'italic', 'underline', 'strikethrough'. e.g. `['italic', 'underline']`",
 			},
 			{
 				type: 'colorpicker',
