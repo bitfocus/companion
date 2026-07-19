@@ -50,6 +50,8 @@ export class ServiceSatelliteTcp extends ServiceBase {
 
 			this.#clients.add(socket)
 
+			socket.setNoDelay(true)
+
 			let cleanupDevices: (() => number) | undefined
 
 			// Anchor all teardown on the 'close' event, which node guarantees fires exactly once for
