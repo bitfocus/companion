@@ -1,10 +1,16 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
+import type { ExpressionOrValue } from './Options.js'
 import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
 import type { VariableValues } from './Variables.js'
 
 export type SomeButtonModel =
-	PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | LayeredButtonModel | PresetReferenceButtonModel
+	| PageNumberButtonModel
+	| PageUpButtonModel
+	| PageDownButtonModel
+	| LayeredButtonModel
+	| PresetReferenceButtonModel
+	| ButtonReferenceButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
@@ -74,6 +80,22 @@ export interface PresetReferenceButtonModel extends ButtonModelBase {
 		moduleId: string
 		presetId: string
 		variableValues: VariableValues | null
+	}
+}
+
+/**
+ * A button that mirrors another button at a grid location. It has no style/entities of its own: it renders the
+ * target button's full draw output (canvas, layers and runtime state) and forwards presses/rotation to the target.
+ * The `location` is a page/row/column string, editable as plain text or an expression. Editing it in the UI
+ * snapshots the target into a normal `button-layered` control (breaking the link).
+ */
+export interface ButtonReferenceButtonModel {
+	readonly type: 'button-reference'
+
+	options: {
+		/** The grid location (page/row/column) of the button to mirror. */
+		location: ExpressionOrValue<string>
+		notes?: string
 	}
 }
 

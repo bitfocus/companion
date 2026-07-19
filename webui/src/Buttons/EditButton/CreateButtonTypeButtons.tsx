@@ -1,4 +1,4 @@
-import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
+import { faClone, faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -57,6 +57,15 @@ export function CreateButtonTypeButtons({ location }: { location: ControlLocatio
 				>
 					<FontAwesomeIcon icon={faFileArrowDown} />
 					<span>Page down</span>
+				</Button>
+				<Button
+					variant="outline"
+					className="empty-button-type-tile"
+					onClick={() => setButtonType('button-reference')}
+					title="Create a button that mirrors another button."
+				>
+					<FontAwesomeIcon icon={faClone} />
+					<span>Button reference</span>
 				</Button>
 			</div>
 		</div>

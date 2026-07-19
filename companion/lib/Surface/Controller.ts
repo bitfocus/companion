@@ -54,6 +54,7 @@ import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
+import { stripReferenceSurfaceId } from './ReferenceSurfaceId.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 
 /**
@@ -1993,6 +1994,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Get the `SurfaceGroup` for a surfaceId or groupId
 	 */
 	#getGroupForId(surfaceOrGroupId: string, looseIdMatching = false): SurfaceGroup | undefined {
+		// A button-reference forwards presses with the reference control id appended; recover the real id
+		surfaceOrGroupId = stripReferenceSurfaceId(surfaceOrGroupId)
+
 		const matchingGroup = this.#surfaceGroups.get(surfaceOrGroupId)
 		if (matchingGroup) return matchingGroup
 
@@ -2011,6 +2015,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param looseIdMatching Loosely match the id, to handle old device naming
 	 */
 	#getSurfaceHandlerForId(surfaceId: string, looseIdMatching: boolean): SurfaceHandler | undefined {
+		// A button-reference forwards presses with the reference control id appended; recover the real id
+		surfaceId = stripReferenceSurfaceId(surfaceId)
+
 		if (surfaceId === 'emulator') surfaceId = 'emulator:emulator'
 
 		const surfaces = this.#surfaceHandlers.values().toArray()

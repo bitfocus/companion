@@ -27,6 +27,7 @@ import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdate
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import {
+	fixupButtonReferenceControl,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
 	fixupPageVariables,
@@ -395,6 +396,9 @@ export class ImportController {
 						// Keep it a live reference: remap the referenced connection id the same way entity references
 						// are remapped during import, so it re-links to the re-created connection.
 						fixedControlObj = fixupPresetReferenceControl(this.#logger, control, referencesUpdater, instanceIdMap)
+					} else if (control.type === 'button-reference') {
+						// Keep it a live mirror: remap any connection labels used in the location expression.
+						fixedControlObj = fixupButtonReferenceControl(control, referencesUpdater)
 					} else {
 						this.#logger.warn(`Unknown control type: ${control.type}`)
 						continue
