@@ -17,6 +17,7 @@ interface LocalVariablesEditorProps {
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
 	heading?: string
+	localVariablePrefix?: string
 }
 export function LocalVariablesEditor({
 	className,
@@ -25,6 +26,7 @@ export function LocalVariablesEditor({
 	variables,
 	localVariablesStore,
 	heading = 'Local Variables',
+	localVariablePrefix = 'local',
 }: LocalVariablesEditorProps): React.JSX.Element {
 	return (
 		<>
@@ -45,7 +47,7 @@ export function LocalVariablesEditor({
 				entityTypeLabel="variable"
 				feedbackListType={FeedbackEntitySubType.Value}
 				localVariablesStore={localVariablesStore}
-				localVariablePrefix="local"
+				localVariablePrefix={localVariablePrefix}
 			/>
 		</>
 	)

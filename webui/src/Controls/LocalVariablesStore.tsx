@@ -38,6 +38,8 @@ export class LocalVariablesStore {
 
 	getOptions = computedFn(
 		(entityType: EntityModelType | null, internalParser: boolean, isLocatedInGrid: boolean): DropdownChoiceInt[] => {
+			const isPageControl = ParseControlId(this.controlId)?.type === 'page'
+
 			let fixedVariables: DropdownChoiceInt[] = []
 
 			if (isLocatedInGrid) {
@@ -45,10 +47,13 @@ export class LocalVariablesStore {
 				if (internalParser && entityType === EntityModelType.Action) {
 					fixedVariables = ControlWithInternalLocalVariables
 				}
-			} else if (ParseControlId(this.controlId)?.type === 'page') {
+			} else if (isPageControl) {
 				// A page control has no grid location, but its variables belong to a page
 				fixedVariables = PageLocalVariables
 			}
+
+			// A page control's variables are exposed to the page as `$(page:x)`
+			const namespace = isPageControl ? 'page' : 'local'
 
 			const dynamicVariables: DropdownChoiceInt[] = []
 			for (const entity of this.#variables.values()) {
@@ -56,7 +61,7 @@ export class LocalVariablesStore {
 				if (entity.disabled || !entity.variableName) continue
 
 				dynamicVariables.push({
-					value: `local:${entity.variableName}`,
+					value: `${namespace}:${entity.variableName}`,
 					label: entity.headline || entity.variableName,
 				})
 			}

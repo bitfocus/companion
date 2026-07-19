@@ -4,7 +4,7 @@ import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
@@ -415,10 +415,12 @@ export class Registry {
 		}
 		if (pageChangedSet.size === 0) return
 
-		const controlIds = this.page.store.getAllControlIdsOnPage(pageNumber)
-		if (controlIds.length === 0) return
+		// Include the page control itself, so a page variable referencing a sibling as `$(page:x)` in its
+		// own expression re-evaluates
+		const targetControlIds = new Set(this.page.store.getAllControlIdsOnPage(pageNumber))
+		targetControlIds.add(CreatePageControlId(pageId))
 
-		this.#dispatchVariablesChanged(pageChangedSet, new Set(controlIds))
+		this.#dispatchVariablesChanged(pageChangedSet, targetControlIds)
 	}
 
 	/**

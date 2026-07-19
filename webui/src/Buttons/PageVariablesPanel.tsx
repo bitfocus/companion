@@ -43,6 +43,7 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 						location={undefined}
 						variables={localVariables ?? []}
 						localVariablesStore={localVariablesStore}
+						localVariablePrefix="page"
 					/>
 				</MyErrorBoundary>
 			)}

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
 import { mockUserConfig } from '../utils/MockUserConfig.js'
@@ -381,6 +383,26 @@ describe('VariablesValues', () => {
 				expect(cache.get('this:button_status')).toBe(VARIABLE_UNKNOWN_VALUE)
 			}
 		)
+	})
+
+	describe('createVariablesAndExpressionParserForPage', () => {
+		// A page control owns its variables, so within its own expressions a sibling resolves both as
+		// `$(local:x)` (its own name) and `$(page:x)` (how the rest of the page sees it).
+		const pageEntity = {
+			localVariableName: 'local:brightness',
+			rawLocalVariableName: 'brightness',
+			feedbackValue: 75,
+			type: EntityModelType.Feedback,
+			connectionId: 'non-internal',
+			definitionId: 'some-def',
+		} as unknown as ControlEntityInstance
+
+		test('resolves its own variables as both $(local:x) and $(page:x)', () => {
+			const parser = values.createVariablesAndExpressionParserForPage(1, [pageEntity], null)
+
+			expect(parser.parseVariables('$(local:brightness)').text).toBe('75')
+			expect(parser.parseVariables('$(page:brightness)').text).toBe('75')
+		})
 	})
 
 	describe('triggerLocationVariablesChange', () => {

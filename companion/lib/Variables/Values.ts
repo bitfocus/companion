@@ -179,7 +179,10 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			this.#variableValues,
 			InjectedVariablesForPage(pageNumber),
 			localValues,
-			overrideVariableValues
+			overrideVariableValues,
+			// A page control owns these variables, so within its own expressions they resolve both as
+			// `$(local:x)` and `$(page:x)`.
+			localValues
 		)
 	}
 
