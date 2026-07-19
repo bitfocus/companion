@@ -11,13 +11,12 @@ const SEP = '#ref#'
 /** How many reference hops a forwarded press may take before it is treated as a loop and dropped. */
 export const MAX_REFERENCE_DEPTH = 8
 
-/** Append a reference control id to a surfaceId. Returns `undefined` unchanged (a legitimate no-surface press). */
-export function mangleReferenceSurfaceId(
-	surfaceId: string | undefined,
-	referenceControlId: string
-): string | undefined {
-	if (surfaceId === undefined) return undefined
-	return `${surfaceId}${SEP}${referenceControlId}`
+/**
+ * Append a reference control id to a surfaceId. A missing surfaceId becomes an empty real part, so the result is
+ * still depth-countable - this is what bounds a surface-less reference cycle via {@link referenceSurfaceIdDepth}.
+ */
+export function mangleReferenceSurfaceId(surfaceId: string | undefined, referenceControlId: string): string {
+	return `${surfaceId ?? ''}${SEP}${referenceControlId}`
 }
 
 /** Recover the real surfaceId by dropping any appended reference control id(s). A no-op on unmangled ids. */

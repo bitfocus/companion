@@ -6,7 +6,6 @@ import type {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { exprVal, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import type { ButtonGraphicsReferenceElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
@@ -28,7 +27,6 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
-import { CreateElementOfType } from './LayerDefaults.js'
 import { ControlButtonLayered } from './Layered.js'
 import { MirrorButtonDrawer } from './MirrorButtonDrawer.js'
 
@@ -114,7 +112,12 @@ export class ControlButtonReference
 	/** Resolve the mirrored location, evaluating the expression/variables in the `location` field. */
 	#resolveTargetLocation(): ControlLocation | null {
 		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(myLocation, null, null)
+		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
+			myLocation,
+			null,
+			null,
+			myLocation ? this.deps.getPageVariableEntities(myLocation.pageNumber) : null
+		)
 
 		const location = this.options.location
 		let raw: string
@@ -135,7 +138,7 @@ export class ControlButtonReference
 
 	pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void {
 		// Loop guard: stop forwarding once a press has hopped through too many references
-		if (surfaceId && referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return
+		if (referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return
 
 		const targetControlId = this.#resolveTargetControlId()
 		if (!targetControlId || targetControlId === this.controlId) return
@@ -149,7 +152,7 @@ export class ControlButtonReference
 	}
 
 	override rotateControl(rightward: boolean, surfaceId: string | undefined): boolean {
-		if (surfaceId && referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return false
+		if (referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return false
 
 		const targetControlId = this.#resolveTargetControlId()
 		if (!targetControlId || targetControlId === this.controlId) return false
@@ -176,7 +179,6 @@ export class ControlButtonReference
 			if (!isExpressionOrValue(value)) return false
 			this.options.location = value
 			this.commitChange(true)
-			this.#drawing.invalidate()
 			return true
 		}
 
@@ -222,30 +224,20 @@ export class ControlButtonReference
 			foundVariables,
 			undefined
 		)
-		collector.visitDrawElements([this.#locationAsElement()])
+		collector.visitExpressionOrValue(this.options.location, true)
 	}
 
 	renameVariables(labelFrom: string, labelTo: string): void {
-		const element = this.#locationAsElement()
-
 		const updater = new VisitorReferencesUpdater(
 			this.deps.internalModule,
 			{ [labelFrom]: labelTo },
 			undefined,
 			undefined
 		)
-		updater.visitDrawElements([element])
+		// Renames the label in-place within the location expression/variable-string
+		updater.visitExpressionOrValue(this.options.location, true)
 
-		// The visitor mutates the element's location in-place; mirror it back and persist it
-		this.options.location = element.location
-		this.commitChange(true)
-	}
-
-	/** Build a throwaway reference element carrying the `location` expression, for the references visitors. */
-	#locationAsElement(): ButtonGraphicsReferenceElement {
-		const element = CreateElementOfType('reference') as ButtonGraphicsReferenceElement
-		element.location = this.options.location
-		return element
+		if (updater.hasChanges()) this.commitChange(true)
 	}
 
 	triggerLocationHasChanged(): void {

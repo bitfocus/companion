@@ -15,15 +15,26 @@ describe('ReferenceSurfaceId', () => {
 			expect(mangled).not.toBe('streamdeck:ABC123')
 		})
 
-		it('passes undefined through unchanged (a no-surface press)', () => {
-			expect(mangleReferenceSurfaceId(undefined, 'bank:1-0-0')).toBeUndefined()
+		it('mangles a missing surfaceId to a depth-countable id with an empty real part', () => {
+			// This is what bounds a surface-less reference cycle: the depth still grows
+			const mangled = mangleReferenceSurfaceId(undefined, 'bank:1-0-0')
+			expect(referenceSurfaceIdDepth(mangled)).toBe(1)
+			expect(stripReferenceSurfaceId(mangled)).toBe('')
+		})
+
+		it('grows depth to the cap when forwarded through a surface-less cycle', () => {
+			let id = mangleReferenceSurfaceId(undefined, 'bank:1-0-0')
+			for (let i = 0; i < MAX_REFERENCE_DEPTH * 2; i++) {
+				if (referenceSurfaceIdDepth(id) >= MAX_REFERENCE_DEPTH) break
+				id = mangleReferenceSurfaceId(id, 'bank:1-0-0')
+			}
+			expect(referenceSurfaceIdDepth(id)).toBeGreaterThanOrEqual(MAX_REFERENCE_DEPTH)
 		})
 
 		it('is reversible via strip regardless of hop count', () => {
-			let id: string | undefined = 'emulator:emulator'
-			id = mangleReferenceSurfaceId(id, 'bank:1-0-0')
+			let id = mangleReferenceSurfaceId('emulator:emulator', 'bank:1-0-0')
 			id = mangleReferenceSurfaceId(id, 'bank:2-0-0')
-			expect(stripReferenceSurfaceId(id!)).toBe('emulator:emulator')
+			expect(stripReferenceSurfaceId(id)).toBe('emulator:emulator')
 		})
 	})
 
@@ -36,7 +47,7 @@ describe('ReferenceSurfaceId', () => {
 		)
 
 		it('recovers the real id after a single hop', () => {
-			const mangled = mangleReferenceSurfaceId('streamdeck:ABC123', 'bank:1-0-0')!
+			const mangled = mangleReferenceSurfaceId('streamdeck:ABC123', 'bank:1-0-0')
 			expect(stripReferenceSurfaceId(mangled)).toBe('streamdeck:ABC123')
 		})
 	})
