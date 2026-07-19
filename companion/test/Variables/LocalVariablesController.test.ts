@@ -109,6 +109,54 @@ describe('LocalVariablesController', () => {
 		})
 	})
 
+	describe('pageVariableFor', () => {
+		test('a missing name returns null', () => {
+			const { controller } = createController()
+
+			expect(controller.pageVariableFor(2, undefined, 1)).toBe(null)
+			expect(controller.pageVariableFor(2, '', 1)).toBe(null)
+		})
+
+		test('an explicit page number resolves to its page control', () => {
+			const { controller } = createController()
+
+			expect(controller.pageVariableFor(2, 'my_var', 1)).toEqual({
+				controlId: 'page:page-b',
+				name: 'my_var',
+			})
+		})
+
+		test('page 0 ("this page") resolves against the provided page number', () => {
+			const { controller } = createController()
+
+			expect(controller.pageVariableFor(0, 'my_var', 1)).toEqual({
+				controlId: 'page:page-a',
+				name: 'my_var',
+			})
+		})
+
+		test('page 0 with no "this page" returns null', () => {
+			const { controller } = createController()
+
+			expect(controller.pageVariableFor(0, 'my_var', null)).toBe(null)
+		})
+
+		test('an out-of-range page number returns null', () => {
+			const { controller } = createController()
+
+			expect(controller.pageVariableFor(99, 'my_var', 1)).toBe(null)
+		})
+
+		test('a non-string name is coerced', () => {
+			const { controller } = createController()
+
+			expect(controller.pageVariableFor(3, 42, 1)).toEqual({
+				controlId: 'page:page-c',
+				name: '42',
+			})
+		})
+	})
+
 	describe('setLocalVariable', () => {
 		test('sets the value on the matching entity', () => {
 			const entity = makeVariableEntity('my_var')

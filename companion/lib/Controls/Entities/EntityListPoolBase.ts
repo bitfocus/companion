@@ -39,6 +39,8 @@ export interface ControlEntityListPoolProps {
 	pageStore: IPageStore
 	controlId: string
 	reportChange: (options: ControlEntityListChangeProps) => void
+	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
+	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 }
 
 /**
@@ -69,10 +71,9 @@ export abstract class ControlEntityListPoolBase {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalController
 	readonly #processManager: InstanceProcessManager
-	readonly #variableValues: VariablesValues
+	protected readonly variableValues: VariablesValues
 	readonly #isLayeredDrawing: boolean
 	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
-	readonly #pageStore: IPageStore
 
 	protected readonly controlId: string
 
@@ -92,9 +93,8 @@ export abstract class ControlEntityListPoolBase {
 		this.#instanceDefinitions = props.instanceDefinitions
 		this.#internalModule = props.internalModule
 		this.#processManager = props.processManager
-		this.#variableValues = props.variableValues
+		this.variableValues = props.variableValues
 		this.#isLayeredDrawing = isLayeredDrawing
-		this.#pageStore = props.pageStore
 
 		this.#specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			props.controlId,
@@ -167,7 +167,7 @@ export abstract class ControlEntityListPoolBase {
 			const allChangedVariables = this.#pendingChangedVariables
 			this.#pendingChangedVariables = new Set()
 
-			this.#variableValues.emit('variablesChanged', allChangedVariables, NO_CONNECTION_LABELS, this.controlId)
+			this.variableValues.emit('variablesChanged', allChangedVariables, NO_CONNECTION_LABELS, this.controlId)
 		},
 		{
 			wait: 5,
@@ -190,16 +190,10 @@ export abstract class ControlEntityListPoolBase {
 			})
 	}
 
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
-		const controlLocation = this.#pageStore.getLocationOfControlId(this.controlId)
-		const variableEntities = this.getLocalVariableEntities()
-
-		return this.#variableValues.createVariablesAndExpressionParser(
-			controlLocation,
-			variableEntities,
-			overrideVariableValues
-		)
-	}
+	/** Build a parser for this control's variables. The injected `this:*` context is control-type specific, so each pool provides its own. */
+	abstract createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null
+	): VariablesAndExpressionParser
 
 	/**
 	 * Prepare this control for deletion

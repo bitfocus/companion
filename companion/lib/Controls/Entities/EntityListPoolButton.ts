@@ -9,9 +9,11 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlStepsRuntimeManager } from './ControlActionSetAndStepsManager.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
@@ -59,6 +61,8 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 	protected readonly steps = new Map<string, ControlEntityListActionStep>()
 
+	readonly #pageStore: IPageStore
+	readonly #getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 	protected readonly sendRuntimePropsChange: () => void
 
 	/**
@@ -83,6 +87,8 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void, isLayeredButton: boolean) {
 		super(props, isLayeredButton)
 
+		this.#pageStore = props.pageStore
+		this.#getPageVariableEntities = props.getPageVariableEntities
 		this.sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = this.createEntityList({
@@ -125,6 +131,21 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	 */
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return this.#localVariables.getAllEntities()
+	}
+
+	/**
+	 * A button lives on the grid, so its parser gets the full `this:*` context from its location, plus
+	 * its page's `$(page:x)` variables.
+	 */
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		const location = this.#pageStore.getLocationOfControlId(this.controlId)
+
+		return this.variableValues.createVariablesAndExpressionParser(
+			location,
+			this.getLocalVariableEntities(),
+			overrideVariableValues,
+			location ? this.#getPageVariableEntities(location.pageNumber) : null
+		)
 	}
 
 	asNormalButtonSteps(): NormalButtonSteps {

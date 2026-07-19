@@ -9,6 +9,7 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { VariablesCache, VariableValueData, VisitEntityOptionValueOptions } from '../../lib/Variables/Util.js'
+import { InjectedVariablesForPage } from '../../lib/Variables/Values.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 import { mockUserConfig as buildUserConfigMock } from '../utils/MockUserConfig.js'
 
@@ -1185,6 +1186,84 @@ describe('VariablesAndExpressionParser', () => {
 				expect(result.parsedOptions).toEqual({})
 			}
 			expect(result.referencedVariableIds.size).toBe(0)
+		})
+	})
+
+	describe('page variables', () => {
+		const makePageEntity = (name: string, value: any) =>
+			({
+				rawLocalVariableName: name,
+				feedbackValue: value,
+				type: EntityModelType.Feedback,
+				connectionId: 'non-internal',
+				definitionId: 'some-def',
+			}) as unknown as ControlEntityInstance
+
+		it('resolves $(page:x) from bound page entities', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('brightness', 75),
+			])
+
+			const result = parser.parseVariables('$(page:brightness)')
+			expect(result.text).toBe('75')
+			expect(result.variableIds).toContain('page:brightness')
+		})
+
+		it('unknown $(page:x) resolves to unknown but still tracks the dependency', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('brightness', 75),
+			])
+
+			const result = parser.parseVariables('$(page:missing)')
+			expect(result.text).toBe('$NA')
+			expect(result.variableIds).toContain('page:missing')
+		})
+
+		it('page variables are usable in expressions', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('count', 4),
+			])
+
+			const result = parser.executeExpression('$(page:count) * 2', undefined)
+			expect(result.ok).toBe(true)
+			if (result.ok) expect(result.value).toBe(8)
+		})
+
+		it('child parser inherits page variables', () => {
+			const parser = new VariablesAndExpressionParser(mockUserConfig, null as any, {}, new Map(), null, null, [
+				makePageEntity('brightness', 75),
+			])
+			const child = parser.createChildParser({})
+
+			expect(child.parseVariables('$(page:brightness)').text).toBe('75')
+		})
+
+		it('this:page and this:page_name resolve for a page context', () => {
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				{},
+				InjectedVariablesForPage(3),
+				null,
+				null
+			)
+
+			expect(parser.parseVariables('$(this:page)').text).toBe('3')
+			expect(parser.parseVariables('$(this:page_name)').variableIds).toContain('internal:page_number_3_name')
+		})
+
+		it('button-specific this: variables are absent for a page context', () => {
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig,
+				null as any,
+				{},
+				InjectedVariablesForPage(3),
+				null,
+				null
+			)
+
+			expect(parser.parseVariables('$(this:row)').text).toBe('$NA')
+			expect(parser.parseVariables('$(this:column)').text).toBe('$NA')
 		})
 	})
 

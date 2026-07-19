@@ -54,7 +54,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		styleStore.updateOverridesData(config.feedbacks || [])
 	}, [styleStore, config.feedbacks])
 
-	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, location.pageNumber)
 
 	return (
 		<div className="grow flex flex-column min-h-0">

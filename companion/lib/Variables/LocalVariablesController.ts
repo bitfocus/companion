@@ -9,6 +9,7 @@
  * this program.
  */
 
+import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from '@companion-module/host'
@@ -100,6 +101,30 @@ export class LocalVariablesController {
 		if (!controlId) return null
 
 		return { controlId, name }
+	}
+
+	/**
+	 * Get a descriptor for the page variable identified by the provided page/name.
+	 * The page value comes from an `internal:page` picker, where `0` means "this page".
+	 * `thisPageNumber` is the page that `0` resolves to (the page of the control in context,
+	 * or `null` if it has none).
+	 */
+	pageVariableFor(
+		page: JsonValue | undefined,
+		name: JsonValue | undefined,
+		thisPageNumber: number | null
+	): LocalVariable | null {
+		if (!name) return null
+
+		let pageNumber = Number(page)
+		if (pageNumber === 0) pageNumber = thisPageNumber ?? NaN
+		if (!pageNumber || isNaN(pageNumber)) return null
+
+		const pageId = this.#pageStore.getPageId(pageNumber)
+		if (!pageId) return null
+
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		return { controlId: CreatePageControlId(pageId), name: String(name) }
 	}
 
 	/**

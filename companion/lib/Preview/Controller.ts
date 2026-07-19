@@ -24,7 +24,7 @@ export class PreviewController {
 		localVariables: LocalVariablesController
 	) {
 		this.#graphics = new PreviewGraphics(graphicsController, pageStore, controlsController, controlEvents)
-		this.#expressionStream = new PreviewExpressionStream(controlsController, localVariables)
+		this.#expressionStream = new PreviewExpressionStream(controlsController, pageStore, localVariables)
 		this.#elementStream = new PreviewElementStream(
 			instanceDefinitions,
 			graphicsController,

@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { JsonValue } from '@companion-module/host'
+import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
@@ -87,6 +87,21 @@ export class ActionRunner {
 				this.#localVariablesController.setLocalVariable(localVariable, result)
 				break
 			}
+			case 'page-variable': {
+				const { page, variableName: name } = storeResult
+				const pageVariable = this.#localVariablesController.pageVariableFor(
+					page,
+					name,
+					extras.location?.pageNumber ?? null
+				)
+				if (!pageVariable) {
+					this.#logger.warn(`Page variable ${name} on page \`${page}\` is invalid`)
+					break
+				}
+
+				this.#localVariablesController.setLocalVariable(pageVariable, result)
+				break
+			}
 			case 'custom-variable': {
 				const variableName = storeResult.variableName
 				if (variableName) {
@@ -102,6 +117,7 @@ export class ActionRunner {
 				break
 			}
 			default:
+				assertNever(storeResult)
 				this.#logger.warn(`Invalid store result target: ${JSON.stringify(storeResult)}`)
 				break
 		}

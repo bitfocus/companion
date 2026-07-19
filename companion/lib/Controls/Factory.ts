@@ -8,6 +8,7 @@ import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
+import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
@@ -68,6 +69,12 @@ export class ControlsFactory {
 		if (category === 'all' || category === 'expression-variable') {
 			if (controlObj2?.type === 'expression-variable' || (controlType === 'expression-variable' && !controlObj2)) {
 				return new ControlExpressionVariable(this.#controlDeps, controlId, controlObj2, isImport)
+			}
+		}
+
+		if (category === 'all') {
+			if (controlObj2?.type === 'page' || (controlType === 'page' && !controlObj2)) {
+				return new ControlPage(this.#controlDeps, controlId, controlObj2, isImport)
 			}
 		}
 

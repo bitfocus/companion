@@ -120,6 +120,7 @@ export interface CompanionInputFieldBaseExtended {
 
 export type ContextVariableResolution =
 	| { type: 'localVariable'; locationFieldId: string; nameFieldId: string }
+	| { type: 'pageVariable'; pageFieldId: string; nameFieldId: string }
 	| { type: 'customVariable'; nameFieldId: string }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {

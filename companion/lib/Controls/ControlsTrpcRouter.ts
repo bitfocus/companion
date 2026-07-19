@@ -166,6 +166,9 @@ export function createControlsTrpcRouter(
 				const control = controlsMap.get(fromControlId)
 				if (control) control.triggerLocationHasChanged()
 
+				// If it changed page, re-evaluate its feedbacks that reference page variables
+				controlsController.notifyControlMovedPage(fromControlId, fromLocation.pageNumber, toLocation.pageNumber)
+
 				// Force a redraw
 				controlEvents.emit('invalidateLocationRender', fromLocation)
 				controlEvents.emit('invalidateLocationRender', toLocation)
@@ -266,6 +269,12 @@ export function createControlsTrpcRouter(
 				if (controlA) controlA.triggerLocationHasChanged()
 				const controlB = toControlId && controlsMap.get(toControlId)
 				if (controlB) controlB.triggerLocationHasChanged()
+
+				// If either changed page, re-evaluate its feedbacks that reference page variables
+				if (fromControlId)
+					controlsController.notifyControlMovedPage(fromControlId, fromLocation.pageNumber, toLocation.pageNumber)
+				if (toControlId)
+					controlsController.notifyControlMovedPage(toControlId, toLocation.pageNumber, fromLocation.pageNumber)
 
 				// Force a redraw
 				controlEvents.emit('invalidateLocationRender', fromLocation)

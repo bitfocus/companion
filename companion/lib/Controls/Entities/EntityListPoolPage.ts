@@ -1,12 +1,14 @@
 import type { JsonValue } from 'type-fest'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { IPageStore } from '../../Page/Store.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
@@ -16,30 +18,37 @@ import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { NewFeedbackValue } from './Types.js'
 
 /**
- * The expression-variable entity pool. Always editable, so this single exported class IS the editable pool
- * (entity-edit mutators mixed in via {@link WithEntityEditing}); there is no separate read-only variant. The
- * shared read-only machinery lives on the internal {@link ControlEntityListPoolBase}.
+ * The page-control entity pool. A page control exists purely to own a page's local variables,
+ * which are exposed to the rest of the page as `$(page:varname)`.
  */
-export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlEntityListPoolBase) {
-	#entities: ControlEntityList
+export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolBase) {
 	#localVariables: ControlEntityList
+	readonly #pageStore: IPageStore
 
 	constructor(props: ControlEntityListPoolProps) {
 		super(props, false)
 
-		this.#entities = this.createEntityList({
-			type: EntityModelType.Feedback,
-			feedbackListType: FeedbackEntitySubType.Value,
-			maximumChildren: 1,
-		})
+		this.#pageStore = props.pageStore
+
 		this.#localVariables = this.createEntityList({
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Value,
 		})
 	}
 
-	loadStorage(storage: ExpressionVariableModel, skipSubscribe: boolean, isImport: boolean): void {
-		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], skipSubscribe, isImport)
+	/** A page control has no grid location, so its parser gets the page's `this:page` context instead. */
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		const parsed = ParseControlId(this.controlId)
+		const pageNumber = parsed?.type === 'page' ? this.#pageStore.getPageNumber(parsed.pageId) : null
+
+		return this.variableValues.createVariablesAndExpressionParserForPage(
+			pageNumber,
+			this.getLocalVariableEntities(),
+			overrideVariableValues
+		)
+	}
+
+	loadStorage(storage: PageControlModel, skipSubscribe: boolean, isImport: boolean): void {
 		this.#localVariables.loadStorage(storage.localVariables, skipSubscribe, isImport)
 	}
 
@@ -47,46 +56,40 @@ export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlE
 		return this.#localVariables.getDirectEntities()
 	}
 
-	/** An expression variable has no location, so its parser gets no `this:*` context. */
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
-		return this.variableValues.createVariablesAndExpressionParser(
-			null,
-			this.getLocalVariableEntities(),
-			overrideVariableValues
-		)
-	}
-
 	/**
-	 * Get direct the entities
+	 * Remove all of the page's variables (used when the page is wiped).
+	 * @returns true if anything was removed
 	 */
-	getRootEntity(): ControlEntityInstance | undefined {
-		return this.#entities.getDirectEntities()[0]
+	clearVariables(): boolean {
+		const entities = this.#localVariables.getDirectEntities()
+		if (entities.length === 0) return false
+
+		const removedNames = entities.map((e) => e.localVariableName).filter((name): name is string => !!name)
+
+		this.#localVariables.loadStorage([], false, false)
+
+		this.reportChange({ redraw: false })
+		this.tryTriggerLocalVariablesChanged(...removedNames)
+
+		return true
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {
-		if (listId === 'feedbacks') return this.#entities
 		if (listId === 'local-variables') return this.#localVariables
 		return undefined
 	}
 
 	protected getAllEntityLists(): ControlEntityList[] {
-		return [this.#entities, this.#localVariables]
+		return [this.#localVariables]
 	}
 
 	/**
-	 * Update the feedbacks on the button with new values
+	 * Update the feedbacks on the control with new values
 	 * @param connectionId The instance the feedbacks are for
 	 * @param newValues The new feedback values
 	 */
 	updateFeedbackValues(connectionId: string, newValues: ReadonlyMap<string, NewFeedbackValue>): void {
 		const changedVariableEntities = this.#localVariables.updateFeedbackValues(connectionId, newValues)
-
-		if (this.#entities.updateFeedbackValues(connectionId, newValues).length > 0) {
-			this.reportChange({
-				redraw: true,
-				noSave: true,
-			})
-		}
 
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
@@ -105,23 +108,13 @@ export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlE
 	override updateIsInvertedValues(newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>): void {
 		const changedVariableEntities = this.#localVariables.updateIsInvertedValues(newValues)
 
-		if (this.#entities.updateIsInvertedValues(newValues).length > 0) {
-			this.reportChange({
-				redraw: true,
-				noSave: true,
-			})
-		}
-
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
 	/**
-	 * Update the storeResult values on the control with new calculated
-	 * storeResult values
-	 * @param _newValues The new storeResult values
+	 * Update the storeResult values on the control with new calculated storeResult values
 	 */
 	override updateStoreResultValues(_newValues: ReadonlyMap<string, NewSpecialExpressionValue<'storeResult'>>): void {
-		// this.#entities and this.#localVariables contain feedbacks, not actions,
-		// so nothing to do
+		// this.#localVariables contains feedbacks, not actions, so nothing to do
 	}
 }

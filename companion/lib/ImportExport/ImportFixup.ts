@@ -110,6 +110,37 @@ export function fixupExpressionVariableControl(
 	return result
 }
 
+export function fixupPageVariables(
+	internalModule: InternalController,
+	localVariables: SomeEntityModel[] | undefined,
+	instanceIdMap: InstanceAppliedRemappings,
+	outboundSurfaceIdRemap: Record<string, string> | undefined
+): SomeEntityModel[] {
+	// Future: this does not feel durable
+
+	const connectionLabelRemap: Record<string, string> = {}
+	const connectionIdRemap: Record<string, string> = {}
+	for (const [oldId, info] of Object.entries(instanceIdMap)) {
+		if (info.oldLabel && info.label !== info.oldLabel) {
+			connectionLabelRemap[info.oldLabel] = info.label
+		}
+		if (info.id && info.id !== oldId) {
+			connectionIdRemap[oldId] = info.id
+		}
+	}
+
+	const result = localVariables ? fixupEntitiesRecursive(instanceIdMap, structuredClone(localVariables)) : []
+
+	new VisitorReferencesUpdater(
+		internalModule,
+		connectionLabelRemap,
+		connectionIdRemap,
+		outboundSurfaceIdRemap
+	).visitEntities([], result)
+
+	return result
+}
+
 export function fixupLayeredButtonControl(
 	logger: Logger,
 	control: ExportControlv6,

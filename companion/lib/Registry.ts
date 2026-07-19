@@ -4,6 +4,7 @@ import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
+import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
@@ -374,13 +375,16 @@ export class Registry {
 
 		this.variables.values.on('variablesChanged', (all_changed_variables_set, _connectionLabels, targetControlId) => {
 			const targetControlIdSet = targetControlId == null ? null : new Set([targetControlId])
-			this.internalModule.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
-			this.controls.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
-			this.preview.onVariablesChanged(all_changed_variables_set, targetControlIdSet)
+			this.#dispatchVariablesChanged(all_changed_variables_set, targetControlIdSet)
 
-			// Surfaces only care about global changes, not a single control's local variables
-			if (!targetControlId) this.surfaces.onVariablesChanged(all_changed_variables_set)
+			if (targetControlId) {
+				// A page control's variables are also exposed to the whole page as `$(page:x)`, so
+				// propagate its changes to every control on the page.
+				const parsed = ParseControlId(targetControlId)
+				if (parsed?.type === 'page') {
+					this.#propagatePageVariablesChanged(parsed.pageId, all_changed_variables_set)
+				}
+			}
 		})
 
 		this.instance.definitions.on('updateCompositeElements', (elementIds) => {
@@ -398,6 +402,44 @@ export class Registry {
 	}
 
 	/**
+	 * Propagate a page control's `local:x` variable changes to every control on the page, remapped to
+	 * the `$(page:x)` names they are exposed under.
+	 */
+	#propagatePageVariablesChanged(pageId: string, changedLocalVariables: ReadonlySet<string>): void {
+		const pageNumber = this.page.store.getPageNumber(pageId)
+		if (pageNumber == null) return
+
+		const pageChangedSet = new Set<string>()
+		for (const name of changedLocalVariables) {
+			if (name.startsWith('local:')) pageChangedSet.add(`page:${name.slice('local:'.length)}`)
+		}
+		if (pageChangedSet.size === 0) return
+
+		// Include the page control itself, so a page variable referencing a sibling as `$(page:x)` in its
+		// own expression re-evaluates
+		const targetControlIds = new Set(this.page.store.getAllControlIdsOnPage(pageNumber))
+		targetControlIds.add(CreatePageControlId(pageId))
+
+		this.#dispatchVariablesChanged(pageChangedSet, targetControlIds)
+	}
+
+	/**
+	 * Fan a variable change out to every consumer that scopes by control. `controlIdFilter` is null for a
+	 * global change, or the set of controls it applies to.
+	 */
+	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
+		this.controls.onVariablesChanged(changedSet, controlIdFilter)
+		this.instance.processManager.onVariablesChanged(changedSet, controlIdFilter)
+		this.preview.onVariablesChanged(changedSet, controlIdFilter)
+
+		// Surfaces only care about global changes, not control-scoped (local/page) variables
+		if (controlIdFilter === null) {
+			this.surfaces.onVariablesChanged(changedSet)
+		}
+	}
+
+	/**
 	 * Startup the application
 	 * @param extraModulePath - extra directory to search for modules
 	 * @param bindIp
@@ -412,6 +454,10 @@ export class Registry {
 			this.ui.update.startCycle()
 
 			this.controls.init()
+
+			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs)
+			this.page.ensurePageControlsExist()
+
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
 			knownConnectionIds.add('internal')
 			this.controls.verifyConnectionIds(knownConnectionIds)

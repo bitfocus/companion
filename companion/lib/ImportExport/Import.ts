@@ -29,6 +29,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import {
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupPageVariables,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
@@ -406,6 +407,21 @@ export class ImportController {
 					}
 					this.#controlsController.importControl(location, fixedControlObj)
 				}
+			}
+		}
+
+		// Import the page's local variables into its page control (page:<pageId>), recreated against the
+		// TARGET page's stable id (not the exported source id) so it re-links to the right page.
+		if (pageInfo.pageVariables) {
+			const pageId = this.#pagesController.store.getPageId(Number(topage))
+			if (pageId) {
+				const localVariables = fixupPageVariables(
+					this.#internalModule,
+					pageInfo.pageVariables,
+					instanceIdMap,
+					outboundSurfaceIdRemap
+				)
+				this.#controlsController.createPageControl(pageId, { type: 'page', localVariables }, true)
 			}
 		}
 	}
