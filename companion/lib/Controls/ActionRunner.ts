@@ -4,7 +4,7 @@ import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
@@ -48,7 +48,12 @@ export class ActionRunner {
 	 * Run a single action
 	 */
 	async #runAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<void> {
-		this.#logger.silly('Running action', action)
+		const entityModel = action.asEntityModel(false)
+
+		this.#logger.silly('Running action', entityModel)
+
+		if (entityModel.type !== EntityModelType.Action)
+			throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
 
 		let result: JsonValue | undefined
 		if (action.connectionId === 'internal') {
@@ -60,11 +65,11 @@ export class ActionRunner {
 				return
 			}
 
-			const entityModel = action.asEntityModel(false)
-			if (entityModel.type !== EntityModelType.Action)
-				throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
 			result = await instance.actionRun(entityModel, extras)
 		}
+
+		// Don't store the result if the chain was aborted while the action was running
+		if (extras.abortDelayed.aborted) return
 
 		// Store the result if necessary, then return.
 		const storeResult = action.storeResult
@@ -201,6 +206,7 @@ interface GroupedActionEntityModels {
 }
 
 export class ControlActionRunner {
+	readonly #logger: Logger
 	readonly #actionRunner: ActionRunner
 	readonly #controlId: string
 	readonly #triggerRedraw: () => void
@@ -212,6 +218,7 @@ export class ControlActionRunner {
 	}
 
 	constructor(actionRunner: ActionRunner, controlId: string, triggerRedraw: () => void) {
+		this.#logger = LogController.createLogger(`Control/ActionRunner/${controlId}`)
 		this.#actionRunner = actionRunner
 		this.#controlId = controlId
 		this.#triggerRedraw = triggerRedraw
@@ -247,9 +254,7 @@ export class ControlActionRunner {
 	}
 
 	abortAll(exceptSignal: AbortSignal | null): boolean {
-		if (this.#runningChains.size === 0) {
-			return false
-		}
+		let aborted = false
 
 		for (const [chainId, controller] of this.#runningChains.entries()) {
 			// Skip the chain if it's the one we're supposed to ignore
@@ -257,31 +262,30 @@ export class ControlActionRunner {
 
 			controller.abort()
 			this.#runningChains.delete(chainId)
-			console.log('Aborted an action', chainId)
+			this.#logger.silly(`Aborted an action: ${chainId}`)
+			aborted = true
 		}
 
-		this.#triggerRedraw()
+		if (aborted) this.#triggerRedraw()
 
-		return true
+		return aborted
 	}
 
-	abortSingle(exceptSignal: AbortSignal): boolean {
-		if (this.#runningChains.size === 0) {
-			return false
-		}
+	abortSingle(onlySignal: AbortSignal): boolean {
+		let aborted = false
 
-		console.log('Aborting single action', this.#runningChains.size, exceptSignal)
 		for (const [chainId, controller] of this.#runningChains.entries()) {
 			// Skip the chain if it's not the one we're supposed to abort
-			if (exceptSignal !== controller.signal) continue
+			if (onlySignal !== controller.signal) continue
 
 			controller.abort()
 			this.#runningChains.delete(chainId)
-			console.log('Aborted single action', chainId)
+			this.#logger.silly(`Aborted single action: ${chainId}`)
+			aborted = true
 		}
 
-		this.#triggerRedraw()
+		if (aborted) this.#triggerRedraw()
 
-		return true
+		return aborted
 	}
 }
