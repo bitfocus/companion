@@ -401,7 +401,7 @@ export class ImportExportController {
 						null
 					)
 
-					const res = await this.#graphicsController.drawPreview(drawType, elements)
+					const res = this.#graphicsController.generatePreviewImage(drawType, elements)
 					if (!res?.style) return null
 					return await res.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 				}),

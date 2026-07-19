@@ -271,11 +271,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
-								render = await this.#drawImageResult(cacheKey, renderStyle)
+								render = this.#generateImageResult(cacheKey, renderStyle)
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank(
+							render = GraphicsRenderer.generateBlankImage(
 								this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 								null
 							)
@@ -329,7 +329,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
-							render = await this.#drawImageResult(
+							render = this.#generateImageResult(
 								cacheKey,
 								renderStyle,
 								buttonStyle.elements,
@@ -338,7 +338,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(
+						render = GraphicsRenderer.generateBlankImage(
 							this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 							location
 						)
@@ -452,7 +452,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(
+				const blankRender = GraphicsRenderer.generateBlankImage(
 					this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 					location
 				)
@@ -491,10 +491,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Draw a preview of a button
 	 */
-	async drawPreview(
+	generatePreviewImage(
 		drawType: RendererButtonStyle['drawType'],
 		elements: SomeButtonGraphicsDrawElement[]
-	): Promise<ImageResult> {
+	): ImageResult {
 		const drawStyle: RendererButtonStyle = {
 			style: 'button-layered',
 			drawType,
@@ -514,7 +514,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
-		return this.#drawImageResult(undefined, drawStyle)
+		return this.#generateImageResult(undefined, drawStyle)
 	}
 
 	/**
@@ -631,7 +631,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(
+		return GraphicsRenderer.generateBlankImage(
 			this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 			location
 		)
@@ -735,12 +735,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		})
 	}
 
-	async #drawImageResult(
+	#generateImageResult(
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
-	): Promise<ImageResult> {
+	): ImageResult {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 		return new ImageResult(

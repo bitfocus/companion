@@ -96,39 +96,41 @@ describe('GraphicsRenderer', () => {
 
 		describe('cacheKey', () => {
 			test('without a topbar every blank shares one key', () => {
-				expect(GraphicsRenderer.drawBlank(false, location).cacheKey).toBe('blank:no-bar')
-				expect(GraphicsRenderer.drawBlank(false, { pageNumber: 9, row: 9, column: 9 }).cacheKey).toBe('blank:no-bar')
-				expect(GraphicsRenderer.drawBlank(false, null).cacheKey).toBe('blank:no-bar')
+				expect(GraphicsRenderer.generateBlankImage(false, location).cacheKey).toBe('blank:no-bar')
+				expect(GraphicsRenderer.generateBlankImage(false, { pageNumber: 9, row: 9, column: 9 }).cacheKey).toBe(
+					'blank:no-bar'
+				)
+				expect(GraphicsRenderer.generateBlankImage(false, null).cacheKey).toBe('blank:no-bar')
 			})
 
 			test('with a topbar the key is derived from the location', () => {
-				expect(GraphicsRenderer.drawBlank(true, location).cacheKey).toBe('blank:1/2/3')
+				expect(GraphicsRenderer.generateBlankImage(true, location).cacheKey).toBe('blank:1/2/3')
 			})
 
 			test('with a topbar, different locations get different keys', () => {
-				const a = GraphicsRenderer.drawBlank(true, { pageNumber: 1, row: 0, column: 0 })
-				const b = GraphicsRenderer.drawBlank(true, { pageNumber: 1, row: 0, column: 1 })
+				const a = GraphicsRenderer.generateBlankImage(true, { pageNumber: 1, row: 0, column: 0 })
+				const b = GraphicsRenderer.generateBlankImage(true, { pageNumber: 1, row: 0, column: 1 })
 				expect(a.cacheKey).not.toBe(b.cacheKey)
 			})
 
 			test('with a topbar but no location falls back to a stable key', () => {
-				expect(GraphicsRenderer.drawBlank(true, null).cacheKey).toBe('blank:bar')
+				expect(GraphicsRenderer.generateBlankImage(true, null).cacheKey).toBe('blank:bar')
 			})
 
 			test('topbar and no-topbar blanks never collide', () => {
-				expect(GraphicsRenderer.drawBlank(true, location).cacheKey).not.toBe(
-					GraphicsRenderer.drawBlank(false, location).cacheKey
+				expect(GraphicsRenderer.generateBlankImage(true, location).cacheKey).not.toBe(
+					GraphicsRenderer.generateBlankImage(false, location).cacheKey
 				)
 			})
 		})
 
 		describe('render', () => {
 			test('style is null (a blank has no processed style)', () => {
-				expect(GraphicsRenderer.drawBlank(false, location).style).toBeNull()
+				expect(GraphicsRenderer.generateBlankImage(false, location).style).toBeNull()
 			})
 
 			test('produces a buffer of width*height*channels for rgb and rgba', async () => {
-				const render = GraphicsRenderer.drawBlank(false, location)
+				const render = GraphicsRenderer.generateBlankImage(false, location)
 				const rgb = await render.drawNative(72, 72, null, 'rgb')
 				const rgba = await render.drawNative(72, 72, null, 'rgba')
 				expect(rgb).toHaveLength(72 * 72 * CHANNELS.rgb)
@@ -136,13 +138,13 @@ describe('GraphicsRenderer', () => {
 			})
 
 			test('renders the topbar variant (needs fonts) to the requested size', async () => {
-				const render = GraphicsRenderer.drawBlank(true, location)
+				const render = GraphicsRenderer.generateBlankImage(true, location)
 				const buffer = await render.drawNative(72, 72, null, 'rgba')
 				expect(buffer).toHaveLength(72 * 72 * CHANNELS.rgba)
 			})
 
 			test('output is sized to the requested target regardless of rotation', async () => {
-				const render = GraphicsRenderer.drawBlank(false, location)
+				const render = GraphicsRenderer.generateBlankImage(false, location)
 				const buffer = await render.drawNative(96, 96, 90, 'rgba')
 				expect(buffer).toHaveLength(96 * 96 * CHANNELS.rgba)
 			})
