@@ -357,6 +357,18 @@ describe('page_variable_sync_to_default', () => {
 	})
 })
 
+describe('debug_action_result', () => {
+	it('returns the evaluated expression as the action result', () => {
+		const module = new InternalVariables(makeFullLocalVariablesController(null))
+
+		// optionsSupportExpressions parses the expression before executeAction, so options.expression
+		// is already the evaluated blob.
+		const action = makeAction('debug_action_result', { expression: { foo: 1 } }, { expression: exprExpr('{ foo: 1 }') })
+
+		expect(module.executeAction(action, fakeExtras, createParser())).toEqual({ result: { foo: 1 } })
+	})
+})
+
 describe('executeAction - unknown', () => {
 	it('returns null for an unrecognised action', () => {
 		const module = new InternalVariables(makeFullLocalVariablesController(null))
@@ -470,15 +482,17 @@ describe('executeFeedback - expression based', () => {
 describe('definitions', () => {
 	const module = new InternalVariables(makeFullLocalVariablesController(null))
 
-	it('exposes the local and page variable actions', () => {
-		expect(Object.keys(module.getActionDefinitions()).sort()).toEqual([
-			'local_variable_reset_to_default',
-			'local_variable_set_value',
-			'local_variable_sync_to_default',
-			'page_variable_reset_to_default',
-			'page_variable_set_value',
-			'page_variable_sync_to_default',
-		])
+	it('exposes the local and page variable actions (debug action only when not packaged)', () => {
+		expect(Object.keys(module.getActionDefinitions())).toEqual(
+			expect.arrayContaining([
+				'local_variable_reset_to_default',
+				'local_variable_set_value',
+				'local_variable_sync_to_default',
+				'page_variable_reset_to_default',
+				'page_variable_set_value',
+				'page_variable_sync_to_default',
+			])
+		)
 	})
 
 	it('exposes the variable feedbacks (debug feedback only when not packaged)', () => {

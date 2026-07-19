@@ -16,6 +16,7 @@ import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.j
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
+import type { JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { isPackaged } from '../Resources/Util.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
@@ -238,7 +239,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
-		return {
+		const actions: Record<string, InternalActionDefinition> = {
 			local_variable_set_value: {
 				label: 'Local Variable: Set value',
 				description: undefined,
@@ -313,6 +314,27 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				optionsSupportExpressions: true,
 			},
 		}
+
+		if (!isPackaged()) {
+			actions.debug_action_result = {
+				label: '(Debug) Action Result',
+				description: 'Return a provided expression/JSON blob as the action result, for testing store-result targets',
+				options: [
+					{
+						type: 'expression',
+						label: 'Expression',
+						id: 'expression',
+						default: '{}',
+						disableAutoExpression: true,
+						allowInvalidValues: true,
+					},
+				],
+				actionHasResult: true,
+				optionsSupportExpressions: true,
+			}
+		}
+
+		return actions
 	}
 
 	/**
@@ -428,6 +450,9 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 				break
 			}
+			case 'debug_action_result':
+				// The expression option is already evaluated (optionsSupportExpressions), so its value is the result.
+				return { result: action.options.expression as JsonValue }
 			default:
 				return null
 		}
