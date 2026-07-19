@@ -111,7 +111,7 @@ export class GraphicsRenderer {
 	/**
 	 * Draw the image for an empty button
 	 */
-	static drawBlank(showTopbar: boolean, location: ControlLocation | null): ImageResult {
+	static generateBlankImage(showTopbar: boolean, location: ControlLocation | null): ImageResult {
 		// A blank is a solid fill, plus (with a topbar) some small secondary text. So it never needs
 		// the full oversampling: cap at 1 when there are no edges to antialias, 2 for the topbar text.
 		const maxOversampling = showTopbar ? 2 : 1
