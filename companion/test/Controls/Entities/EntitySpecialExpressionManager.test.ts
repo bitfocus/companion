@@ -665,6 +665,54 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			)
 		})
 
+		it('should parse storeResult special expression, page variable', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: '2',
+				variableIds: new Set(['custom:varname']),
+			}
+			mockParseVariablesResult = {
+				text: 'parsed-variable-name',
+				variableIds: new Set<string>(['page:foo']),
+			}
+
+			const mockEntity = createMockActionEntity('entity-18', {
+				type: 'page-variable',
+				page: {
+					isExpression: true,
+					value: `'expression'`,
+				},
+				variableName: {
+					isExpression: false,
+					value: '$(custom:variableName)t',
+				},
+			})
+
+			manager.trackEntity(mockEntity, 'storeResult')
+
+			vi.runAllTimers()
+
+			expect(mockVariablesParser.executeExpression).toHaveBeenCalledWith(`'expression'`, 'string')
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(custom:variableName)t')
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+			expect(mockUpdateStoreResultFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'storeResult'>>([
+					[
+						'entity-18',
+						{
+							entityId: 'entity-18',
+							controlId: 'control-1',
+							value: {
+								type: 'page-variable',
+								page: '2',
+								variableName: 'parsed-variable-name',
+							},
+						},
+					],
+				])
+			)
+		})
+
 		it('should handle isInverted expression parse error and default to false', () => {
 			mockParseExpressionResult = {
 				ok: false,

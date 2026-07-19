@@ -51,6 +51,7 @@ describe('local_variable_set_value deferred parse', () => {
 	): LocalVariablesController {
 		return {
 			localVariableFor: vi.fn().mockReturnValue(localVariable),
+			pageVariableFor: vi.fn().mockReturnValue(localVariable),
 			getLocalVariableContextFor: vi.fn().mockReturnValue(context),
 			setLocalVariable: vi.fn(),
 		} as unknown as LocalVariablesController
@@ -179,6 +180,7 @@ describe('local_variable_set_value deferred parse', () => {
 function makeFullLocalVariablesController(localVariable: LocalVariable | null): LocalVariablesController {
 	return {
 		localVariableFor: vi.fn().mockReturnValue(localVariable),
+		pageVariableFor: vi.fn().mockReturnValue(localVariable),
 		getLocalVariableContextFor: vi.fn().mockReturnValue({}),
 		setLocalVariable: vi.fn(),
 		resetLocalVariable: vi.fn(),
@@ -249,6 +251,109 @@ describe('local_variable_sync_to_default', () => {
 		module.executeAction(action, fakeExtras, createParser())
 
 		expect(localVariables.writeLocalVariableStartupValue).not.toHaveBeenCalled()
+	})
+})
+
+// ---- page_variable_* --------------------------------------------------------
+
+describe('page_variable_set_value deferred parse', () => {
+	function makePageVariablesController(
+		pageVariable: LocalVariable | null,
+		context: Record<string, unknown> | null
+	): LocalVariablesController {
+		return {
+			pageVariableFor: vi.fn().mockReturnValue(pageVariable),
+			getLocalVariableContextFor: vi.fn().mockReturnValue(context),
+			setLocalVariable: vi.fn(),
+		} as unknown as LocalVariablesController
+	}
+
+	it('sets the page variable to the expression result using $(this:current)', () => {
+		const pageVar: LocalVariable = { controlId: 'page:abc', name: 'counter' }
+		const context = { 'this:current': 5, 'target:counter': 5 }
+		const pageVariables = makePageVariablesController(pageVar, context)
+
+		const module = new InternalVariables(pageVariables)
+
+		const action = makeAction(
+			'page_variable_set_value',
+			{ page: 0, name: 'counter', value: '$(this:current) + 1' },
+			{
+				page: exprVal(0),
+				name: exprVal('counter'),
+				value: exprExpr('$(this:current) + 1'),
+			}
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(pageVariables.setLocalVariable).toHaveBeenCalledWith(pageVar, 6)
+	})
+
+	it('does nothing if the page variable is not found', () => {
+		const pageVariables = makePageVariablesController(null, null)
+		const module = new InternalVariables(pageVariables)
+
+		const action = makeAction(
+			'page_variable_set_value',
+			{ page: 2, name: 'missing', value: 'x' },
+			{ page: exprVal(2), name: exprVal('missing'), value: exprVal('x') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(pageVariables.setLocalVariable).not.toHaveBeenCalled()
+	})
+})
+
+describe('page_variable_reset_to_default', () => {
+	it('resets the resolved page variable', () => {
+		const pageVar: LocalVariable = { controlId: 'page:abc', name: 'counter' }
+		const pageVariables = makeFullLocalVariablesController(pageVar)
+		const module = new InternalVariables(pageVariables)
+
+		const action = makeAction(
+			'page_variable_reset_to_default',
+			{ page: 0, name: 'counter' },
+			{ page: exprVal(0), name: exprVal('counter') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(pageVariables.resetLocalVariable).toHaveBeenCalledWith(pageVar)
+	})
+
+	it('does nothing when the page variable is not found', () => {
+		const pageVariables = makeFullLocalVariablesController(null)
+		const module = new InternalVariables(pageVariables)
+
+		const action = makeAction(
+			'page_variable_reset_to_default',
+			{ page: 0, name: 'missing' },
+			{ page: exprVal(0), name: exprVal('missing') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(pageVariables.resetLocalVariable).not.toHaveBeenCalled()
+	})
+})
+
+describe('page_variable_sync_to_default', () => {
+	it('writes the current value to the startup value', () => {
+		const pageVar: LocalVariable = { controlId: 'page:abc', name: 'counter' }
+		const pageVariables = makeFullLocalVariablesController(pageVar)
+		const module = new InternalVariables(pageVariables)
+
+		const action = makeAction(
+			'page_variable_sync_to_default',
+			{ page: 0, name: 'counter' },
+			{ page: exprVal(0), name: exprVal('counter') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(pageVariables.writeLocalVariableStartupValue).toHaveBeenCalledWith(pageVar)
 	})
 })
 
@@ -365,11 +470,14 @@ describe('executeFeedback - expression based', () => {
 describe('definitions', () => {
 	const module = new InternalVariables(makeFullLocalVariablesController(null))
 
-	it('exposes the three local variable actions', () => {
+	it('exposes the local and page variable actions', () => {
 		expect(Object.keys(module.getActionDefinitions()).sort()).toEqual([
 			'local_variable_reset_to_default',
 			'local_variable_set_value',
 			'local_variable_sync_to_default',
+			'page_variable_reset_to_default',
+			'page_variable_set_value',
+			'page_variable_sync_to_default',
 		])
 	})
 

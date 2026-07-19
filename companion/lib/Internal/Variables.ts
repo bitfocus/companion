@@ -11,7 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
-import { LocalVariableNameOption } from '@companion-app/shared/LocalVariable.js'
+import { LocalVariableNameOption, PageVariableNameOption } from '@companion-app/shared/LocalVariable.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -47,6 +47,15 @@ const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	],
 	disableAutoExpression: true,
 }
+
+const PAGE_OPTION = {
+	type: 'internal:page',
+	label: 'Page',
+	id: 'page',
+	includeStartup: false,
+	includeDirection: false,
+	default: 0,
+} as const
 
 function compareValues(op: any, value: any, value2: any): boolean {
 	switch (op) {
@@ -266,6 +275,43 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				options: [ControlLocationOption, LocalVariableNameOption],
 				optionsSupportExpressions: true,
 			},
+
+			page_variable_set_value: {
+				label: 'Page Variable: Set value',
+				description: undefined,
+				options: [
+					PAGE_OPTION,
+					PageVariableNameOption,
+					{
+						type: 'textinput',
+						label: 'Value',
+						id: 'value',
+						default: '',
+						description:
+							'Supports $(this:current) for the current value, and $(target:name) for page variables on the target page.',
+						expressionDescription:
+							'Supports $(this:current) for the current value, and $(target:name) for page variables on the target page. The expression result is written to the variable.',
+						allowInvalidValues: true,
+						disableSanitisation: true,
+						deferParsing: true,
+						contextVariableResolution: { type: 'pageVariable', pageFieldId: 'page', nameFieldId: 'name' },
+					},
+				],
+
+				optionsSupportExpressions: true,
+			},
+			page_variable_reset_to_default: {
+				label: 'Page Variable: Reset to startup value',
+				description: undefined,
+				options: [PAGE_OPTION, PageVariableNameOption],
+				optionsSupportExpressions: true,
+			},
+			page_variable_sync_to_default: {
+				label: 'Page Variable: Write current value to startup value',
+				description: undefined,
+				options: [PAGE_OPTION, PageVariableNameOption],
+				optionsSupportExpressions: true,
+			},
 		}
 	}
 
@@ -347,6 +393,38 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				if (!localVariable) break
 
 				this.#localVariables.writeLocalVariableStartupValue(localVariable)
+
+				break
+			}
+			case 'page_variable_set_value': {
+				const { page, name } = action.options
+				const pageVariable = this.#localVariables.pageVariableFor(page, name, extras.location?.pageNumber ?? null)
+				if (!pageVariable) break
+
+				const context = this.#localVariables.getLocalVariableContextFor(pageVariable) ?? {}
+				const childParser = parser.createChildParser(context)
+				const rawValue = action.rawEntity.rawOptions['value']
+				const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+
+				this.#localVariables.setLocalVariable(pageVariable, value)
+
+				break
+			}
+			case 'page_variable_reset_to_default': {
+				const { page, name } = action.options
+				const pageVariable = this.#localVariables.pageVariableFor(page, name, extras.location?.pageNumber ?? null)
+				if (!pageVariable) break
+
+				this.#localVariables.resetLocalVariable(pageVariable)
+
+				break
+			}
+			case 'page_variable_sync_to_default': {
+				const { page, name } = action.options
+				const pageVariable = this.#localVariables.pageVariableFor(page, name, extras.location?.pageNumber ?? null)
+				if (!pageVariable) break
+
+				this.#localVariables.writeLocalVariableStartupValue(pageVariable)
 
 				break
 			}
