@@ -62,6 +62,8 @@ export abstract class ServiceTcpBase extends ServiceBase {
 
 					this.clients.add(client)
 
+					client.setNoDelay(true)
+
 					this.logger.debug('Client connected: ' + clientInfo.name)
 
 					client.on('data', this.processIncoming.bind(this, clientInfo))
