@@ -128,6 +128,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	// Cumulative count of worker terminations since startup, exposed as a metrics counter
 	#workerTerminationsTotal = 0
 
+	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
+	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
+	// almost always catch it at ~0; a fast sampler (#poolStatsSampler) tracks the peak between scrapes.
+	#poolPendingMax = 0
+	#poolActiveMax = 0
+	#poolStatsSampler: NodeJS.Timeout | undefined
+
 	#poolExec = async <TKey extends keyof typeof GraphicsThreadMethods>(
 		key: TKey,
 		args: Parameters<(typeof GraphicsThreadMethods)[TKey]>,
@@ -682,11 +689,61 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			}
 		)
 
-		// Render queue depth, one series per state
+		// Render queue depth, one series per state. This is the app-level ImageWriteQueue that sits in front of
+		// the worker pool, distinct from the pool's own internal queue below.
 		metrics.labeledGauge('companion_render_queue_tasks', 'Button render tasks by state', ['state'], () => [
 			{ labels: { state: 'pending' }, value: this.#renderQueue.pending },
 			{ labels: { state: 'in_progress' }, value: this.#renderQueue.inProgress },
 		])
+
+		// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
+		// tasks currently executing on a thread (active). This is the true render-thread backlog.
+		metrics.labeledGauge('companion_render_pool_tasks', 'Render worker-pool tasks by state', ['state'], () => {
+			const stats = this.#pool.stats()
+			return [
+				{ labels: { state: 'pending' }, value: stats.pendingTasks },
+				{ labels: { state: 'active' }, value: stats.activeTasks },
+			]
+		})
+
+		// Peak pool tasks since the previous scrape - catches bursts that a scrape-time snapshot would miss.
+		// Read-and-reset per scrape, seeding the new window with the current reading so an in-flight burst
+		// isn't lost between reset and the next sampler tick.
+		metrics.labeledGauge(
+			'companion_render_pool_tasks_max',
+			'Peak render worker-pool tasks by state since the previous scrape',
+			['state'],
+			() => {
+				const stats = this.#pool.stats()
+				const pending = Math.max(this.#poolPendingMax, stats.pendingTasks)
+				const active = Math.max(this.#poolActiveMax, stats.activeTasks)
+				this.#poolPendingMax = stats.pendingTasks
+				this.#poolActiveMax = stats.activeTasks
+				return [
+					{ labels: { state: 'pending' }, value: pending },
+					{ labels: { state: 'active' }, value: active },
+				]
+			}
+		)
+
+		// Worker pool threads by state, for saturation context (busy vs idle against the max worker count).
+		metrics.labeledGauge('companion_render_pool_workers', 'Render worker-pool threads by state', ['state'], () => {
+			const stats = this.#pool.stats()
+			return [
+				{ labels: { state: 'busy' }, value: stats.busyWorkers },
+				{ labels: { state: 'idle' }, value: stats.idleWorkers },
+				{ labels: { state: 'total' }, value: stats.totalWorkers },
+			]
+		})
+
+		// Sample the pool backlog on a fast interval to maintain the high-water marks above. unref so it never
+		// keeps the process alive.
+		this.#poolStatsSampler = setInterval(() => {
+			const stats = this.#pool.stats()
+			if (stats.pendingTasks > this.#poolPendingMax) this.#poolPendingMax = stats.pendingTasks
+			if (stats.activeTasks > this.#poolActiveMax) this.#poolActiveMax = stats.activeTasks
+		}, 1000)
+		this.#poolStatsSampler.unref()
 
 		// Current ImageResults retained in memory
 		metrics.gauge('companion_image_results_live', 'ImageResult objects currently retained in memory', () => {

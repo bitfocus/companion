@@ -343,6 +343,10 @@ export class Registry {
 			controls: this.controls,
 			variables: this.variables,
 			services: this.services,
+			databases: [
+				{ name: 'main', store: this.db },
+				{ name: 'cache', store: this.#data.cache },
+			],
 		})
 
 		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
