@@ -200,10 +200,10 @@ function convertLayeredPresetElement(
 				toX: convertModuleExpressionOrValue(element.toX, { value: 100, isExpression: false }),
 				toY: convertModuleExpressionOrValue(element.toY, { value: 100, isExpression: false }),
 
-				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
-				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),
+				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0xffffff, isExpression: false }),
+				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 2, isExpression: false }),
 				borderPosition: convertModuleExpressionOrValue(element.borderPosition, {
-					value: 'inside',
+					value: 'center',
 					isExpression: false,
 				}),
 			} satisfies ButtonGraphicsLineElement
@@ -318,7 +318,7 @@ function convertElementBasicProperties(
 		name: element.name ?? defaultName,
 		usage: ButtonGraphicsElementUsage.Automatic,
 		enabled: convertModuleExpressionOrValue(element.enabled, { value: true, isExpression: false }),
-		opacity: convertModuleExpressionOrValue(element.opacity, { value: 1, isExpression: false }),
+		opacity: convertModuleExpressionOrValue(element.opacity, { value: 100, isExpression: false }),
 	}
 }
 
