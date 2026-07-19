@@ -436,6 +436,37 @@ describe('ActionRunner', () => {
 			expect(localVariablesController.setLocalVariable).not.toHaveBeenCalled()
 		})
 
+		test('stores into a page variable using the current page', async () => {
+			const { runner, actionRun, localVariablesController } = createRunner()
+			const { extras } = makeExtras()
+			actionRun.mockResolvedValue('page-result')
+			const targetVariable = { controlId: 'page:abc', name: 'pv' }
+			localVariablesController.pageVariableFor.mockReturnValue(targetVariable)
+
+			const action = fakeEntity({
+				storeResult: { type: 'page-variable', page: '4', variableName: 'pv' },
+			})
+			await runner.runMultipleActions([action], extras)
+
+			expect(localVariablesController.pageVariableFor).toHaveBeenCalledWith('4', 'pv', extras.location?.pageNumber)
+			expect(localVariablesController.setLocalVariable).toHaveBeenCalledWith(targetVariable, 'page-result')
+		})
+
+		test('page variable resolves with null page when the control has no location', async () => {
+			const { runner, actionRun, localVariablesController } = createRunner()
+			const { extras } = makeExtras({ location: undefined })
+			actionRun.mockResolvedValue('page-result')
+			localVariablesController.pageVariableFor.mockReturnValue(null)
+
+			const action = fakeEntity({
+				storeResult: { type: 'page-variable', page: '0', variableName: 'pv' },
+			})
+			await runner.runMultipleActions([action], extras)
+
+			expect(localVariablesController.pageVariableFor).toHaveBeenCalledWith('0', 'pv', null)
+			expect(localVariablesController.setLocalVariable).not.toHaveBeenCalled()
+		})
+
 		test('stores into an existing custom variable', async () => {
 			const { runner, actionRun, variablesController } = createRunner()
 			const { extras } = makeExtras()
