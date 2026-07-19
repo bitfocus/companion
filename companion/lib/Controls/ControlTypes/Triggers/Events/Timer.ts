@@ -348,30 +348,48 @@ export class TriggersEventTimer {
 		// convert 0 or 1 to sunrise or sunset
 		const sunset = input.type == 'sunset'
 
-		// get sunrise/set time for today (nextDay is set to 0)
-		let time = getSunEvent(sunset, latitude, longitude, offset, 0)
+		const tz = this.#getTimezone()
+		const now = Date.now()
 
-		// if time is in the past, get the sun event for the next day
-		const now = new Date()
+		// Determine the current calendar date as observed in the configured timezone
+		const parts = getZonedDateParts(new Date(now), tz)
+		if (!parts) return NaN
+
+		// get sunrise/set time for today
+		let time = getSunEvent(sunset, latitude, longitude, offset, parts.year, parts.month, parts.day)
+
+		// if time is in the past, get the sun event for the next calendar day
 		if (time < now) {
-			// call the function for tomorrow (nextDay is set to 1)
-			time = getSunEvent(sunset, latitude, longitude, offset, 1)
+			const next = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1))
+			time = getSunEvent(
+				sunset,
+				latitude,
+				longitude,
+				offset,
+				next.getUTCFullYear(),
+				next.getUTCMonth() + 1,
+				next.getUTCDate()
+			)
 		}
 
-		return time.getTime()
+		return time
 
 		// Modified function to calculate the sunrise/set time by adam-carter-fms
 		// https://gist.github.com/adam-carter-fms/a44a14c0a8cdacbbc38276f6d553e024#file-sunriseset-js-L12
-		function getSunEvent(sunset: boolean, latitude: number, longitude: number, offset: number, nextDay: number): Date {
-			const res = new Date()
-			res.setDate(res.getDate() + nextDay)
-			const now = res
-
-			const start = new Date(now.getFullYear(), 0, 0)
-			// @ts-expect-error TS claims dates can't be subtracted, this should be revisited but I don't want to touch what works
-			const diff = now - start + (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000
-			const oneDay = 1000 * 60 * 60 * 24
-			const day = Math.floor(diff / oneDay)
+		//
+		// Works entirely in UTC so DST transitions never shift the result (issue #3737): both the
+		// day-of-year and the final instant are derived with UTC calendar arithmetic.
+		function getSunEvent(
+			sunset: boolean,
+			latitude: number,
+			longitude: number,
+			offset: number,
+			year: number,
+			month: number,
+			dayOfMonth: number
+		): number {
+			// Day of year (Jan 1 = 1), using UTC arithmetic so DST never affects it
+			const day = Math.floor((Date.UTC(year, month - 1, dayOfMonth) - Date.UTC(year, 0, 0)) / 86400000)
 
 			const zenith = 90.83333333333333
 			const D2R = Math.PI / 180
@@ -437,18 +455,11 @@ export class TriggersEventTimer {
 				UT = UT + 24
 			}
 
-			const ms = UT * 60 * 60 * 1000
-
-			const sunEventTime = new Date(ms)
-			sunEventTime.setFullYear(now.getFullYear())
-			sunEventTime.setMonth(now.getMonth())
-			sunEventTime.setDate(now.getDate())
-
-			const temp_minutes = sunEventTime.getMinutes()
-
-			// add offset to time
-			sunEventTime.setMinutes(temp_minutes + 60 + offset)
-			return sunEventTime
+			// UT is the event's UTC time-of-day (decimal hours). Stamp it onto the same calendar date
+			// (interpreted as a UTC date) and apply the user offset in real minutes.
+			// Note: for extreme longitudes near the date line the UTC date can differ from the local date
+			// by a day; accepted here as the caller only needs the next event within ~24-48h.
+			return Date.UTC(year, month - 1, dayOfMonth) + Math.round(UT * 3600 * 1000) + offset * 60 * 1000
 		}
 	}
 
