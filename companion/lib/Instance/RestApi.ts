@@ -1,7 +1,11 @@
 import express from 'express'
 import type { Logger } from '../Log/Controller.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
-import { createConnectionsRouter, registerConnectionPaths } from './Connection/ConnectionsRestApi.js'
+import {
+	CONNECTIONS_API_BASE_PATH,
+	createConnectionsRouter,
+	registerConnectionPaths,
+} from './Connection/ConnectionsRestApi.js'
 import type { InstanceController } from './Controller.js'
 
 export function createInstanceRestApiRouter(
@@ -12,7 +16,7 @@ export function createInstanceRestApiRouter(
 	const router = express.Router()
 
 	router.use(
-		'/connections/v1',
+		CONNECTIONS_API_BASE_PATH,
 		createConnectionsRouter(logger.child({ source: 'connection/v1' }), instanceController, configStore)
 	)
 

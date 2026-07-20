@@ -3223,7 +3223,7 @@
 	"servers": [
 		{
 			"description": "REST API (resources versioned independently)",
-			"url": "/api"
+			"url": "/api/v2"
 		}
 	]
 }

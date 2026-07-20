@@ -8,6 +8,7 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { Logger } from '../../Log/Controller.js'
+import { REST_API_BASE_PATH } from '../../Service/RestApi/constants.js'
 import { RestApiError } from '../../Service/RestApi/errors.js'
 import { registry } from '../../Service/RestApi/registry.js'
 import {
@@ -324,7 +325,7 @@ export function buildConnectionResponse(
 	return ConnectionResponseSchema.parse(response)
 }
 
-const CONNECTIONS_API_BASE_PATH = '/connections/v1'
+export const CONNECTIONS_API_BASE_PATH = '/connections/v1'
 const CONNECTIONS_API_TAGS = ['Connections']
 
 type ConnectionsRestContext = {
@@ -374,7 +375,7 @@ function defineConnectionEndpointSpec<
 }
 
 /**
- * Create the connections router for /api/connections/v1
+ * Create the connections router for /api/v2/connections/v1
  */
 export function createConnectionsRouter(
 	logger: Logger,
@@ -756,7 +757,11 @@ const connectionEndpointSpecs = [
 					disabled,
 				})
 
-				return { status: 201, location: `/api/connections/v1/${id}`, body: successResponse({ id }) }
+				return {
+					status: 201,
+					location: `${REST_API_BASE_PATH}${CONNECTIONS_API_BASE_PATH}/${id}`,
+					body: successResponse({ id }),
+				}
 			} catch (e) {
 				throw mapConnectionOperationError(e)
 			}

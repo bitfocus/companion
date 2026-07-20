@@ -1,17 +1,16 @@
 import Express from 'express'
 import LogController from '../../Log/Controller.js'
 import type { AppInfo, Registry } from '../../Registry.js'
+import { RestApiError } from './errors.js'
 import { restApiErrorHandler } from './middleware/errorHandler.js'
 import { generateOpenApiDocument } from './openapi.js'
 import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
 import { createSwaggerUiRouter } from './SwaggerUi.js'
 
-const REST_RESOURCE_PATH_PREFIXES = ['/connections/v1']
-
 /**
  * Create the main REST API router.
- * Mounted at /api/ on the admin Express app.
- * Each resource type is versioned independently: /api/connections/v1/, /api/pages/v1/, etc.
+ * Mounted at /api/v2/ on the admin Express app.
+ * Each resource type is versioned independently: /api/v2/connections/v1/, /api/v2/pages/v1/, etc.
  *
  * Only created when the REST API is enabled at startup (checked in RestApiService).
  */
@@ -33,23 +32,14 @@ export function createRestApiRouter(
 	router.use('/docs', createSwaggerUiRouter())
 
 	// Mount resource routers — each versioned independently
-	router.use((req, _res, next) => {
-		if (!isRestResourcePath(req.path)) {
-			next('router')
-			return
-		}
-
-		next()
-	})
 	router.use(createAuthMiddleware(logger, tokenStore))
 	router.use(registry.instance.createRestApiRouter(logger))
 
-	// Global error handler (unmatched routes fall through to the legacy /api router)
+	// Do not allow unknown v2 routes to fall through into the legacy /api router.
+	router.use((_req, _res, next) => next(RestApiError.notFound()))
+
+	// Global error handler
 	router.use(restApiErrorHandler)
 
 	return router
-}
-
-function isRestResourcePath(path: string): boolean {
-	return REST_RESOURCE_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
 }

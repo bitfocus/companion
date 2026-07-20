@@ -1,6 +1,7 @@
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
 import { registerInstanceRestApiPaths } from '../../Instance/RestApi.js'
 import type { AppInfo } from '../../Registry.js'
+import { REST_API_BASE_PATH } from './constants.js'
 import { registry } from './registry.js'
 
 /**
@@ -22,7 +23,7 @@ export function generateOpenApiDocument(
 			version: appInfo.appVersion,
 			description: 'REST API for programmatic configuration management of Bitfocus Companion.',
 		},
-		servers: [{ url: '/api', description: 'REST API (resources versioned independently)' }],
+		servers: [{ url: REST_API_BASE_PATH, description: 'REST API (resources versioned independently)' }],
 		security: [{ bearerAuth: [] }],
 	})
 }
