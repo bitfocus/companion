@@ -10,7 +10,6 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 import type { Logger } from '../../Log/Controller.js'
 import { RestApiError } from '../../Service/RestApi/errors.js'
 import { registry } from '../../Service/RestApi/registry.js'
-import { hasScope } from '../../Service/RestApi/RestApiAuth.js'
 import {
 	collectionResponse,
 	createCollectionSchema,
@@ -445,7 +444,7 @@ const restartConnectionResponseSchema = createSuccessSchema(
 const listConnectionsEndpoint = defineRestEndpointContract({
 	method: 'get',
 	path: '/',
-	scope: 'read',
+	scopes: ['connections', 'read'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'List all connections',
 	description: 'Returns all connections with their current status. Use query parameters to include config and secrets.',
@@ -466,7 +465,7 @@ const listConnectionsEndpoint = defineRestEndpointContract({
 const getConnectionsTreeEndpoint = defineRestEndpointContract({
 	method: 'get',
 	path: '/tree',
-	scope: 'read',
+	scopes: ['connections', 'read'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Get the connection arrangement',
 	description:
@@ -488,7 +487,7 @@ const getConnectionsTreeEndpoint = defineRestEndpointContract({
 const moveConnectionsEndpoint = defineRestEndpointContract({
 	method: 'patch',
 	path: '/move',
-	scope: 'write',
+	scopes: ['connections', 'write'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Move connections',
 	description:
@@ -509,7 +508,7 @@ const moveConnectionsEndpoint = defineRestEndpointContract({
 const createConnectionEndpoint = defineRestEndpointContract({
 	method: 'post',
 	path: '/',
-	scope: 'write',
+	scopes: ['connections', 'write'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Create a connection',
 	description:
@@ -532,7 +531,7 @@ const createConnectionEndpoint = defineRestEndpointContract({
 const getConnectionEndpoint = defineRestEndpointContract({
 	method: 'get',
 	path: '/:connectionId',
-	scope: 'read',
+	scopes: ['connections', 'read'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Get a connection',
 	description: 'Returns a single connection by ID with its configuration and current status.',
@@ -554,7 +553,7 @@ const getConnectionEndpoint = defineRestEndpointContract({
 const getConnectionConfigFieldsEndpoint = defineRestEndpointContract({
 	method: 'get',
 	path: '/:connectionId/config-fields',
-	scope: 'read',
+	scopes: ['connections', 'read'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Get connection config field definitions',
 	description:
@@ -582,7 +581,7 @@ const getConnectionConfigFieldsEndpoint = defineRestEndpointContract({
 const patchConnectionEndpoint = defineRestEndpointContract({
 	method: 'patch',
 	path: '/:connectionId',
-	scope: 'write',
+	scopes: ['connections', 'write'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Update a connection',
 	description: 'Partially update a connection. Only send the fields you want to change.',
@@ -605,7 +604,7 @@ const patchConnectionEndpoint = defineRestEndpointContract({
 const deleteConnectionEndpoint = defineRestEndpointContract({
 	method: 'delete',
 	path: '/:connectionId',
-	scope: 'write',
+	scopes: ['connections', 'write'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Delete a connection',
 	description: 'Delete a connection and all its associated configuration.',
@@ -622,7 +621,7 @@ const deleteConnectionEndpoint = defineRestEndpointContract({
 const restartConnectionEndpoint = defineRestEndpointContract({
 	method: 'post',
 	path: '/:connectionId/restart',
-	scope: 'execute',
+	scopes: ['connections', 'write'],
 	tags: CONNECTIONS_API_TAGS,
 	summary: 'Restart a connection',
 	description: 'Force-restart the connection process. Fails if the connection is disabled.',
@@ -648,7 +647,7 @@ const restartConnectionEndpoint = defineRestEndpointContract({
 
 const connectionEndpointSpecs = [
 	defineConnectionEndpointSpec(listConnectionsEndpoint, ({ instanceController }) => {
-		return ({ query, token }) => {
+		return ({ query }) => {
 			const includeConfig = query.include_config === 'true'
 			const includeSecrets = query.include_secrets === 'true'
 
@@ -656,9 +655,6 @@ const connectionEndpointSpecs = [
 				throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
 			}
 
-			if (includeSecrets && !hasScope(token.scopes, 'secrets')) {
-				throw RestApiError.forbidden("Insufficient scope: requires 'secrets'")
-			}
 			const clientConnections = instanceController.getConnectionClientJson(true)
 
 			const connections = Object.entries(clientConnections).map(([id, config]) => {
@@ -677,17 +673,13 @@ const connectionEndpointSpecs = [
 	}),
 
 	defineConnectionEndpointSpec(getConnectionsTreeEndpoint, ({ instanceController }) => {
-		return ({ query, token }) => {
+		return ({ query }) => {
 			const includeConfig = query.include_config === 'true'
 			const includeSecrets = query.include_secrets === 'true'
 
 			if (includeSecrets && !includeConfig) {
 				throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
 			}
-			if (includeSecrets && !hasScope(token.scopes, 'secrets')) {
-				throw RestApiError.forbidden("Insufficient scope: requires 'secrets'")
-			}
-
 			const clientConnections = instanceController.getConnectionClientJson(true)
 			const responses = new Map<string, ConnectionResponse>()
 			for (const [id, config] of Object.entries(clientConnections)) {
@@ -772,13 +764,10 @@ const connectionEndpointSpecs = [
 	}),
 
 	defineConnectionEndpointSpec(getConnectionEndpoint, ({ instanceController }) => {
-		return ({ params, query, token }) => {
+		return ({ params, query }) => {
 			const { connectionId } = params
 			const includeSecrets = query.include_secrets === 'true'
 
-			if (includeSecrets && !hasScope(token.scopes, 'secrets')) {
-				throw RestApiError.forbidden("Insufficient scope: requires 'secrets'")
-			}
 			const clientConnections = instanceController.getConnectionClientJson(true)
 			const config = clientConnections[connectionId]
 
@@ -795,15 +784,10 @@ const connectionEndpointSpecs = [
 	}),
 
 	defineConnectionEndpointSpec(patchConnectionEndpoint, ({ logger, instanceController, connectionOperations }) => {
-		return async ({ params, body, token }) => {
+		return async ({ params, body }) => {
 			const { connectionId } = params
 
 			const { label, disabled, config, secrets, updatePolicy, versionId } = body
-
-			// Require 'secrets' scope to update secrets
-			if (secrets && !hasScope(token.scopes, 'secrets')) {
-				throw RestApiError.forbidden("Insufficient scope: requires 'secrets'")
-			}
 
 			try {
 				await connectionOperations.patchConnection({

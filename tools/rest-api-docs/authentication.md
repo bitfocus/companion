@@ -16,10 +16,14 @@ Tokens can be created in the admin UI (in development).
 
 ## Scopes
 
-| Scope     | Grants                                                            |
-| --------- | ----------------------------------------------------------------- |
-| `read`    | Read resources (GET endpoints)                                    |
-| `write`   | Create, update, delete resources (implies `read`)                 |
-| `execute` | Trigger actions like execute triggers or buttons (implies `read`) |
-| `secrets` | Access secret values when an endpoint explicitly requires it      |
-| `admin`   | Full access (implies all scopes)                                  |
+| Scope         | Grants                                                            |
+| ------------- | ----------------------------------------------------------------- |
+| `read`        | Read resources (GET endpoints)                                    |
+| `write`       | Create, update, delete resources (implies `read`)                 |
+| `execute`     | Trigger actions like execute triggers or buttons (implies `read`) |
+| `connections` | Access connection operations when combined with `read` or `write` |
+| `admin`       | Full access (implies all scopes)                                  |
+
+Connection endpoints require both the `connections` scope and an access scope. Use `connections` + `read` for
+read operations, or `connections` + `write` for create, update, delete, move, and restart operations. Connection
+secrets follow the same rules as the rest of the connection configuration.

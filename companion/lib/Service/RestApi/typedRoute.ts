@@ -2,7 +2,7 @@ import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi'
 import type Express from 'express'
 import type z from 'zod'
 import { RestApiError } from './errors.js'
-import { requireScope, type ApiToken, type RequiredScope, type RestApiResponse } from './RestApiAuth.js'
+import { requireScopes, type ApiToken, type RequiredScope, type RestApiResponse } from './RestApiAuth.js'
 
 type RegisterPathConfig = Parameters<OpenAPIRegistry['registerPath']>[0]
 type HttpMethod = 'get' | 'post' | 'patch' | 'delete'
@@ -42,7 +42,7 @@ export interface RestEndpointContract<
 > {
 	method: HttpMethod
 	path: string
-	scope: RequiredScope
+	scopes: readonly RequiredScope[]
 	tags: string[]
 	summary: string
 	description?: string
@@ -112,7 +112,7 @@ export function mountRestEndpoint(
 		z.ZodType | undefined
 	>
 ): void {
-	router[endpoint.method](endpoint.path, requireScope(endpoint.scope), async (req, res: RestApiResponse, next) => {
+	router[endpoint.method](endpoint.path, requireScopes(endpoint.scopes), async (req, res: RestApiResponse, next) => {
 		try {
 			const token = res.locals.apiToken
 			if (!token) throw RestApiError.unauthorized()
@@ -170,7 +170,7 @@ export function registerRestEndpoint(
 		tags: endpoint.tags,
 		summary: endpoint.summary,
 		description: endpoint.description,
-		security: [{ bearerAuth: [] }],
+		security: [{ bearerAuth: [...endpoint.scopes] }],
 		request,
 		responses: {
 			[endpoint.response.status]: createOpenApiResponse(endpoint.response, endpoint.examples?.response),

@@ -16,11 +16,17 @@ const STATIC_DEV_TOKENS: Record<string, ApiToken> = {
 		token: 'cpn_write',
 		scopes: ['read', 'write'],
 	},
-	cpn_secrets: {
-		id: 'static-secrets',
-		name: 'Dev Secrets Token',
-		token: 'cpn_secrets',
-		scopes: ['read', 'write', 'secrets'],
+	cpn_connections_read: {
+		id: 'static-connections-read',
+		name: 'Dev Connections Read Token',
+		token: 'cpn_connections_read',
+		scopes: ['connections', 'read'],
+	},
+	cpn_connections_write: {
+		id: 'static-connections-write',
+		name: 'Dev Connections Write Token',
+		token: 'cpn_connections_write',
+		scopes: ['connections', 'read', 'write'],
 	},
 	cpn_admin: {
 		id: 'static-admin',

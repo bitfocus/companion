@@ -2,7 +2,7 @@ import type Express from 'express'
 import type { Logger } from '../../Log/Controller.js'
 import { RestApiError } from './errors.js'
 
-export type ApiTokenScope = 'read' | 'write' | 'execute' | 'secrets' | 'admin'
+export type ApiTokenScope = 'read' | 'write' | 'execute' | 'connections' | 'admin'
 
 export interface ApiToken {
 	id: string
@@ -18,7 +18,7 @@ export interface RestApiLocals extends Record<string, unknown> {
 export type RestApiResponse = Express.Response<unknown, RestApiLocals>
 
 /** Maps HTTP method + route semantics to the required scope */
-export type RequiredScope = 'read' | 'write' | 'execute' | 'secrets' | 'admin'
+export type RequiredScope = ApiTokenScope
 
 /**
  * Check if a token's scopes satisfy the required scope.
@@ -30,6 +30,11 @@ export function hasScope(tokenScopes: ApiTokenScope[], required: RequiredScope):
 		return tokenScopes.includes('read') || tokenScopes.includes('write') || tokenScopes.includes('execute')
 	}
 	return tokenScopes.includes(required)
+}
+
+/** Check that a token satisfies every required scope. */
+export function hasScopes(tokenScopes: ApiTokenScope[], required: readonly RequiredScope[]): boolean {
+	return required.every((scope) => hasScope(tokenScopes, scope))
 }
 
 export interface ApiTokenStore {
@@ -65,9 +70,9 @@ export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) 
 }
 
 /**
- * Create scope-checking middleware for a specific required scope.
+ * Create scope-checking middleware for a set of required scopes.
  */
-export function requireScope(scope: RequiredScope) {
+export function requireScopes(scopes: readonly RequiredScope[]) {
 	return (_req: Express.Request, res: RestApiResponse, next: Express.NextFunction): void => {
 		const token = res.locals.apiToken
 		if (!token) {
@@ -75,8 +80,8 @@ export function requireScope(scope: RequiredScope) {
 			return
 		}
 
-		if (!hasScope(token.scopes, scope)) {
-			next(RestApiError.forbidden(`Insufficient scope: requires '${scope}'`))
+		if (!hasScopes(token.scopes, scopes)) {
+			next(RestApiError.forbidden(`Insufficient scope: requires '${scopes.join("' and '")}'`))
 			return
 		}
 

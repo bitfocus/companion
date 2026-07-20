@@ -28,9 +28,10 @@ const mockAppInfo = {
 
 const tokens = {
 	admin: 'cpn_admin',
-	readOnly: 'cpn_read',
-	write: 'cpn_write',
-	secrets: 'cpn_secrets',
+	readOnly: 'cpn_connections_read',
+	write: 'cpn_connections_write',
+	genericRead: 'cpn_read',
+	genericWrite: 'cpn_write',
 }
 
 type TestService = {
@@ -41,7 +42,8 @@ type TestService = {
 	validToken: string
 	readOnlyToken: string
 	writeToken: string
-	secretsToken: string
+	genericReadToken: string
+	genericWriteToken: string
 }
 
 function createTestRegistry(instanceController: InstanceController, configStore: InstanceConfigStore): Registry {
@@ -74,7 +76,8 @@ function createService(): TestService {
 		validToken: tokens.admin,
 		readOnlyToken: tokens.readOnly,
 		writeToken: tokens.write,
-		secretsToken: tokens.secrets,
+		genericReadToken: tokens.genericRead,
+		genericWriteToken: tokens.genericWrite,
 	}
 }
 
@@ -182,7 +185,7 @@ describe('REST API v1 — Connections', () => {
 	})
 
 	describe('scope enforcement', () => {
-		test('read-only token can access GET endpoints', async () => {
+		test('connections + read token can access GET endpoints', async () => {
 			const { app, instanceController, readOnlyToken } = createService()
 			instanceController.getConnectionClientJson.mockReturnValue({})
 
@@ -190,7 +193,7 @@ describe('REST API v1 — Connections', () => {
 			expect(res.status).toBe(200)
 		})
 
-		test('read-only token gets 403 on write endpoints', async () => {
+		test('connections + read token gets 403 on write endpoints', async () => {
 			const { app, readOnlyToken } = createService()
 
 			const res = await supertest(app)
@@ -201,7 +204,7 @@ describe('REST API v1 — Connections', () => {
 			expect(res.body.error.code).toBe('FORBIDDEN')
 		})
 
-		test('read-only token gets 403 on execute endpoints', async () => {
+		test('connections + read token gets 403 on restart', async () => {
 			const { app, readOnlyToken } = createService()
 
 			const res = await supertest(app)
@@ -211,33 +214,45 @@ describe('REST API v1 — Connections', () => {
 			expect(res.status).toBe(403)
 		})
 
-		test('write token gets 403 when patching secrets', async () => {
-			const { app, instanceController, writeToken } = createService()
-
-			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())
+		test('generic read token gets 403 without connections scope', async () => {
+			const { app, genericReadToken } = createService()
 
 			const res = await supertest(app)
-				.patch('/api/connections/v1/conn-1')
-				.set('Authorization', `Bearer ${writeToken}`)
-				.send({ secrets: { password: 'new' } })
+				.get('/api/connections/v1')
+				.set('Authorization', `Bearer ${genericReadToken}`)
+				.send()
 			expect(res.status).toBe(403)
 			expect(res.body.error.code).toBe('FORBIDDEN')
 		})
 
-		test('write token gets 403 when requesting include_secrets', async () => {
-			const { app, instanceController, writeToken } = createService()
+		test('generic write token gets 403 without connections scope', async () => {
+			const { app, genericWriteToken } = createService()
+
+			const res = await supertest(app)
+				.post('/api/connections/v1')
+				.set('Authorization', `Bearer ${genericWriteToken}`)
+				.send({ moduleId: 'obs', label: 'test' })
+			expect(res.status).toBe(403)
+			expect(res.body.error.code).toBe('FORBIDDEN')
+		})
+
+		test('connections + read token can request secrets', async () => {
+			const { app, instanceController, readOnlyToken } = createService()
 
 			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+			instanceController.getInstanceConfigOfType.mockReturnValue(createInstanceConfigs()['conn-1'])
 
 			const res = await supertest(app)
 				.get('/api/connections/v1?include_config=true&include_secrets=true')
-				.set('Authorization', `Bearer ${writeToken}`)
+				.set('Authorization', `Bearer ${readOnlyToken}`)
 				.send()
-			expect(res.status).toBe(403)
+			expect(res.status).toBe(200)
+			expect(res.body.data[0].secrets).toEqual({ password: 'secret123' })
 		})
 
-		test('secrets token can patch secrets', async () => {
-			const { app, instanceController, secretsToken } = createService()
+		test('connections + write token can patch secrets', async () => {
+			const { app, instanceController, writeToken } = createService()
 
 			instanceController.getConnectionClientJson.mockReturnValueOnce(createConnectionConfigs())
 
@@ -254,7 +269,7 @@ describe('REST API v1 — Connections', () => {
 
 			const res = await supertest(app)
 				.patch('/api/connections/v1/conn-1')
-				.set('Authorization', `Bearer ${secretsToken}`)
+				.set('Authorization', `Bearer ${writeToken}`)
 				.send({ secrets: { password: 'new' } })
 			expect(res.status).toBe(200)
 		})

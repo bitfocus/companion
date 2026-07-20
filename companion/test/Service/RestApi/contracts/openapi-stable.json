@@ -476,7 +476,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "read"]
 					}
 				],
 				"summary": "List all connections",
@@ -725,7 +725,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "write"]
 					}
 				],
 				"summary": "Create a connection",
@@ -911,7 +911,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "write"]
 					}
 				],
 				"summary": "Delete a connection",
@@ -1225,7 +1225,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "read"]
 					}
 				],
 				"summary": "Get a connection",
@@ -1593,7 +1593,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "write"]
 					}
 				],
 				"summary": "Update a connection",
@@ -2368,7 +2368,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "read"]
 					}
 				],
 				"summary": "Get connection config field definitions",
@@ -2625,7 +2625,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "write"]
 					}
 				],
 				"summary": "Restart a connection",
@@ -2852,7 +2852,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "write"]
 					}
 				],
 				"summary": "Move connections",
@@ -3207,7 +3207,7 @@
 				},
 				"security": [
 					{
-						"bearerAuth": []
+						"bearerAuth": ["connections", "read"]
 					}
 				],
 				"summary": "Get the connection arrangement",
