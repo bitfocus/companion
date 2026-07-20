@@ -61,7 +61,7 @@ export interface ReorderConnectionInput {
 
 export interface MoveConnectionInput {
 	connectionId: string
-	collectionId: string | null
+	collectionId?: string | null
 	position: number
 }
 
@@ -127,6 +127,7 @@ export class ConnectionOperations {
 		if (!this.#configStore) throw new Error('Connection move requires configStore')
 
 		const seenConnectionIds = new Set<string>()
+		const resolvedOperations: Array<MoveConnectionInput & { collectionId: string | null }> = []
 		for (const [operationIndex, operation] of operations.entries()) {
 			if (seenConnectionIds.has(operation.connectionId)) {
 				throw new ConnectionOperationError('invalid_input', 'A connection can only be moved once per request', {
@@ -136,22 +137,27 @@ export class ConnectionOperations {
 			}
 			seenConnectionIds.add(operation.connectionId)
 
-			if (!this.#instanceController.getConnectionClientJson(true)[operation.connectionId]) {
+			const connection = this.#instanceController.getConnectionClientJson(true)[operation.connectionId]
+			if (!connection) {
 				throw new ConnectionOperationError('not_found', 'Connection not found', {
 					operationIndex,
 					connectionId: operation.connectionId,
 				})
 			}
+			const collectionId =
+				operation.collectionId === undefined ? (connection.collectionId ?? null) : operation.collectionId
 
-			if (!this.#instanceController.connectionCollections.doesCollectionIdExist(operation.collectionId)) {
+			if (!this.#instanceController.connectionCollections.doesCollectionIdExist(collectionId)) {
 				throw new ConnectionOperationError('not_found', 'Connection collection not found', {
 					operationIndex,
-					collectionId: operation.collectionId,
+					collectionId,
 				})
 			}
+
+			resolvedOperations.push({ ...operation, collectionId })
 		}
 
-		const result = this.#configStore.moveInstances(ModuleInstanceType.Connection, operations)
+		const result = this.#configStore.moveInstances(ModuleInstanceType.Connection, resolvedOperations)
 		if (!result.ok) {
 			throw new ConnectionOperationError(
 				result.reason === 'not_found' ? 'not_found' : 'invalid_input',

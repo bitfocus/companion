@@ -185,7 +185,11 @@ export const ConnectionTreeResponseSchema = z.object({
 const ConnectionMoveOperationSchema = z
 	.object({
 		connectionId: z.string().describe('Connection instance id to move.'),
-		collectionId: z.string().nullable().describe('Destination collection id, or null for the ungrouped root.'),
+		collectionId: z
+			.string()
+			.nullable()
+			.optional()
+			.describe('Destination collection id, null for the ungrouped root, or omit to keep the current collection.'),
 		position: z
 			.number()
 			.int()

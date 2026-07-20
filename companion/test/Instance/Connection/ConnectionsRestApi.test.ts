@@ -527,6 +527,24 @@ describe('REST API v1 — Connections', () => {
 			expect(configStore.moveInstances).toHaveBeenCalledWith(ModuleInstanceType.Connection, moves)
 		})
 
+		test('keeps the current collection when collectionId is omitted', async () => {
+			const { app, instanceController, configStore, writeToken } = createService()
+			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())
+			instanceController.connectionCollections.doesCollectionIdExist.mockReturnValue(true)
+			configStore.moveInstances.mockReturnValue({ ok: true })
+
+			const res = await supertest(app)
+				.patch('/api/v2/connections/v1/move')
+				.set('Authorization', `Bearer ${writeToken}`)
+				.send({ moves: [{ connectionId: 'conn-2', position: 0 }] })
+
+			expect(res.status).toBe(204)
+			expect(instanceController.connectionCollections.doesCollectionIdExist).toHaveBeenCalledWith('group-a')
+			expect(configStore.moveInstances).toHaveBeenCalledWith(ModuleInstanceType.Connection, [
+				{ connectionId: 'conn-2', collectionId: 'group-a', position: 0 },
+			])
+		})
+
 		test('rejects moving the same connection twice', async () => {
 			const { app, instanceController, configStore, writeToken } = createService()
 			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())

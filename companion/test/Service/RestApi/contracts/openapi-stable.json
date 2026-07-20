@@ -2661,7 +2661,7 @@
 											"additionalProperties": false,
 											"properties": {
 												"collectionId": {
-													"description": "Destination collection id, or null for the ungrouped root.",
+													"description": "Destination collection id, null for the ungrouped root, or omit to keep the current collection.",
 													"nullable": true,
 													"type": "string"
 												},
@@ -2675,7 +2675,7 @@
 													"type": "integer"
 												}
 											},
-											"required": ["connectionId", "collectionId", "position"],
+											"required": ["connectionId", "position"],
 											"type": "object"
 										},
 										"minItems": 1,
