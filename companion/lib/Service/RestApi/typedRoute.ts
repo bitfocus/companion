@@ -81,6 +81,48 @@ export interface RestEndpointDefinition<
 	) => RestRouteResult<InferSchema<ResponseSchema>> | Promise<RestRouteResult<InferSchema<ResponseSchema>>>
 }
 
+export type AnyRestEndpointContract = RestEndpointContract<
+	z.ZodType | undefined,
+	z.ZodType | undefined,
+	z.ZodType | undefined,
+	z.ZodType | undefined
+>
+
+export type AnyRestEndpointDefinition = RestEndpointDefinition<
+	z.ZodType | undefined,
+	z.ZodType | undefined,
+	z.ZodType | undefined,
+	z.ZodType | undefined
+>
+
+export interface RestEndpointSpec<Context> {
+	contract: AnyRestEndpointContract
+	createEndpoint: (context: Context) => AnyRestEndpointDefinition
+}
+
+export function createRestEndpointSpecFactory<Context>() {
+	return function defineRestEndpointSpec<
+		ParamsSchema extends z.ZodType | undefined = undefined,
+		QuerySchema extends z.ZodType | undefined = undefined,
+		BodySchema extends z.ZodType | undefined = undefined,
+		ResponseSchema extends z.ZodType | undefined = undefined,
+	>(
+		contract: RestEndpointContract<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
+		createHandler: (
+			context: Context
+		) => RestEndpointDefinition<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>['handler']
+	): RestEndpointSpec<Context> {
+		return {
+			contract,
+			createEndpoint: (context) =>
+				defineRestEndpoint({
+					...contract,
+					handler: createHandler(context),
+				}),
+		}
+	}
+}
+
 export function defineRestEndpointContract<
 	ParamsSchema extends z.ZodType | undefined = undefined,
 	QuerySchema extends z.ZodType | undefined = undefined,

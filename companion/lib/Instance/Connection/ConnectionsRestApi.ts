@@ -19,12 +19,11 @@ import {
 	successResponse,
 } from '../../Service/RestApi/schemas/common.js'
 import {
-	defineRestEndpoint,
+	createRestEndpointSpecFactory,
 	defineRestEndpointContract,
 	mountRestEndpoint,
 	registerRestEndpoint,
-	type RestEndpointContract,
-	type RestEndpointDefinition,
+	type RestEndpointSpec,
 } from '../../Service/RestApi/typedRoute.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController } from '../Controller.js'
@@ -334,45 +333,7 @@ type ConnectionsRestContext = {
 	connectionOperations: ConnectionOperations
 }
 
-type AnyRestEndpointContract = RestEndpointContract<
-	z.ZodType | undefined,
-	z.ZodType | undefined,
-	z.ZodType | undefined,
-	z.ZodType | undefined
->
-
-type AnyRestEndpointDefinition = RestEndpointDefinition<
-	z.ZodType | undefined,
-	z.ZodType | undefined,
-	z.ZodType | undefined,
-	z.ZodType | undefined
->
-
-type ConnectionEndpointSpec = {
-	contract: AnyRestEndpointContract
-	createEndpoint: (context: ConnectionsRestContext) => AnyRestEndpointDefinition
-}
-
-function defineConnectionEndpointSpec<
-	ParamsSchema extends z.ZodType | undefined = undefined,
-	QuerySchema extends z.ZodType | undefined = undefined,
-	BodySchema extends z.ZodType | undefined = undefined,
-	ResponseSchema extends z.ZodType | undefined = undefined,
->(
-	contract: RestEndpointContract<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>,
-	createHandler: (
-		context: ConnectionsRestContext
-	) => RestEndpointDefinition<ParamsSchema, QuerySchema, BodySchema, ResponseSchema>['handler']
-): ConnectionEndpointSpec {
-	return {
-		contract,
-		createEndpoint: (context) =>
-			defineRestEndpoint({
-				...contract,
-				handler: createHandler(context),
-			}),
-	}
-}
+const defineConnectionEndpointSpec = createRestEndpointSpecFactory<ConnectionsRestContext>()
 
 /**
  * Create the connections router for /api/v2/connections/v1
@@ -646,7 +607,7 @@ const restartConnectionEndpoint = defineRestEndpointContract({
 	errorResponses,
 })
 
-const connectionEndpointSpecs = [
+const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
 	defineConnectionEndpointSpec(listConnectionsEndpoint, ({ instanceController }) => {
 		return ({ query }) => {
 			const includeConfig = query.include_config === 'true'
