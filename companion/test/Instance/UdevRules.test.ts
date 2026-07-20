@@ -10,7 +10,7 @@ import {
 	type InstanceUdevRulesControllerOptions,
 } from '../../lib/Instance/UdevRules.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
-import { createMockTrpcContext, SuppressLogging } from '../Util.js'
+import { createMockTrpcContext } from '../Util.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 const HEADLESS_FILENAME = '50-companion-headless.rules'
@@ -22,7 +22,7 @@ const t = initTRPC.context<TrpcContext>().create()
 const tempDirs: string[] = []
 afterEach(async () => {
 	vi.restoreAllMocks()
-	await Promise.all(tempDirs.splice(0).map((dir) => fs.remove(dir).catch(() => null)))
+	await Promise.all(tempDirs.splice(0).map(async (dir) => fs.remove(dir).catch(() => null)))
 })
 
 async function setup(options: Partial<InstanceUdevRulesControllerOptions> & { usbIds?: UdevRuleDefinition[] } = {}) {
@@ -40,6 +40,7 @@ async function setup(options: Partial<InstanceUdevRulesControllerOptions> & { us
 		{
 			platform: 'linux',
 			isDesktopBuild: false,
+			isContainer: false,
 			systemRulesDir: systemDir,
 			execAsync,
 			...controllerOptions,
@@ -61,8 +62,6 @@ async function readStatus(controller: InstanceUdevRulesController, ctx: TrpcCont
 }
 
 describe('InstanceUdevRulesController', () => {
-	SuppressLogging()
-
 	describe('status', () => {
 		it('reports needsApply when the installed rules are missing', async () => {
 			const { controller, generatedDir } = await setup()
@@ -125,6 +124,17 @@ describe('InstanceUdevRulesController', () => {
 
 		it('is not supported on a non-linux platform', async () => {
 			const { controller, generatedDir } = await setup({ platform: 'darwin' })
+			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
+
+			const status = await readStatus(controller)
+			expect(status.supported).toBe(false)
+			expect(status.needsApply).toBe(false)
+		})
+
+		// Inside a container we can only see the image's own rules dir, so the rules would always look out of
+		// date. They can only be applied on the host, and our images don't support USB passthrough anyway.
+		it('is not supported inside a container', async () => {
+			const { controller, generatedDir } = await setup({ isContainer: true })
 			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
 
 			const status = await readStatus(controller)
@@ -228,6 +238,20 @@ describe('InstanceUdevRulesController', () => {
 		it('does nothing on a non-linux platform', async () => {
 			const { controller, generatedDir, execAsync } = await setup({
 				platform: 'darwin',
+				syncCommand: 'my-sync-command',
+			})
+
+			controller.triggerRegenerate()
+			// Give any (incorrectly scheduled) async work a chance to run
+			await new Promise((resolve) => setTimeout(resolve, 80))
+
+			expect(await fs.pathExists(path.join(generatedDir, HEADLESS_FILENAME))).toBe(false)
+			expect(execAsync).not.toHaveBeenCalled()
+		})
+
+		it('does nothing inside a container', async () => {
+			const { controller, generatedDir, execAsync } = await setup({
+				isContainer: true,
 				syncCommand: 'my-sync-command',
 			})
 

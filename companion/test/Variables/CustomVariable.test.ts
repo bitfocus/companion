@@ -6,6 +6,7 @@ import { VariablesCustomVariable } from '../../lib/Variables/CustomVariable.js'
 import { VariablesValues } from '../../lib/Variables/Values.js'
 import { createMockTrpcContext } from '../Util.js'
 import { FakeDataDatabase } from '../utils/FakeTableView.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 const t = initTRPC.context<TrpcContext>().create()
@@ -26,7 +27,7 @@ function createCustomVariables(initial?: Record<string, CustomVariableDefinition
 	const table = db.getTableView('custom_variables')
 	if (initial) table.data = structuredClone(initial)
 
-	const values = new VariablesValues()
+	const values = new VariablesValues(mockUserConfig({ timezone: '' }))
 	const custom = new VariablesCustomVariable(db.asDataDatabase(), values)
 
 	const definitionChanged = vi.fn()

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { OSCMetaArgument } from '@companion-module/host'
+import type { OSCMetaArgument } from '@companion-module/host'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { rgb } from '../../lib/Resources/Util.js'
 import { ServiceOscApi } from '../../lib/Service/OscApi.js'
@@ -36,7 +36,7 @@ describe('OscApi', () => {
 				serviceApi.triggerRescanForSurfaces.mockResolvedValue(undefined)
 
 				// Perform the request
-				router.processMessage('/surfaces/rescan')
+				await router.processMessage('/surfaces/rescan')
 
 				expect(serviceApi.triggerRescanForSurfaces).toHaveBeenCalledTimes(1)
 			})
@@ -46,7 +46,7 @@ describe('OscApi', () => {
 				serviceApi.triggerRescanForSurfaces.mockRejectedValue('internal error')
 
 				// Perform the request
-				router.processMessage('/surfaces/rescan')
+				await router.processMessage('/surfaces/rescan')
 
 				expect(serviceApi.triggerRescanForSurfaces).toHaveBeenCalledTimes(1)
 			})
@@ -59,7 +59,7 @@ describe('OscApi', () => {
 				const { router } = createService()
 
 				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', { args: [] })
+				await router.processMessage('/custom-variable/my-var-name/value', { args: [] })
 			})
 
 			test('ok from query', async () => {
@@ -69,7 +69,7 @@ describe('OscApi', () => {
 				mockFn.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', {
+				await router.processMessage('/custom-variable/my-var-name/value', {
 					args: [
 						{
 							value: '123',
@@ -88,7 +88,7 @@ describe('OscApi', () => {
 				mockFn.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', {
+				await router.processMessage('/custom-variable/my-var-name/value', {
 					args: [
 						{
 							value: 'def',
@@ -107,7 +107,7 @@ describe('OscApi', () => {
 				mockFn.mockReturnValue('Unknown name')
 
 				// Perform the request
-				router.processMessage('/custom-variable/my-var-name/value', {
+				await router.processMessage('/custom-variable/my-var-name/value', {
 					args: [
 						{
 							value: 'def',
@@ -131,7 +131,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/down')
+				await router.processMessage('/location/1/2/3/down')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -148,7 +148,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/down')
+				await router.processMessage('/location/1/2/3/down')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -166,7 +166,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/down')
+				await router.processMessage('/location/1a/2/3/down')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -183,7 +183,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/down')
+				await router.processMessage('/location/1/2a/3/down')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -200,7 +200,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/down')
+				await router.processMessage('/location/1/2/3a/down')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -221,7 +221,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/up')
+				await router.processMessage('/location/1/2/3/up')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -238,7 +238,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/up')
+				await router.processMessage('/location/1/2/3/up')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -256,7 +256,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/up')
+				await router.processMessage('/location/1a/2/3/up')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -273,7 +273,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/up')
+				await router.processMessage('/location/1/2a/3/up')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -290,7 +290,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/up')
+				await router.processMessage('/location/1/2/3a/up')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -312,7 +312,7 @@ describe('OscApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/press')
+				await router.processMessage('/location/1/2/3/press')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -329,7 +329,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/press')
+				await router.processMessage('/location/1/2/3/press')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -352,7 +352,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/press')
+				await router.processMessage('/location/1a/2/3/press')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -369,7 +369,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/press')
+				await router.processMessage('/location/1/2a/3/press')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -386,7 +386,7 @@ describe('OscApi', () => {
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/press')
+				await router.processMessage('/location/1/2/3a/press')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -404,7 +404,7 @@ describe('OscApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-left')
+				await router.processMessage('/location/1/2/3/rotate-left')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -421,7 +421,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-left')
+				await router.processMessage('/location/1/2/3/rotate-left')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -439,7 +439,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/rotate-left')
+				await router.processMessage('/location/1a/2/3/rotate-left')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -456,7 +456,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/rotate-left')
+				await router.processMessage('/location/1/2a/3/rotate-left')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -473,7 +473,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/rotate-left')
+				await router.processMessage('/location/1/2/3a/rotate-left')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -491,7 +491,7 @@ describe('OscApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-right')
+				await router.processMessage('/location/1/2/3/rotate-right')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -508,7 +508,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/rotate-right')
+				await router.processMessage('/location/1/2/3/rotate-right')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -526,7 +526,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/rotate-right')
+				await router.processMessage('/location/1a/2/3/rotate-right')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -543,7 +543,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/rotate-right')
+				await router.processMessage('/location/1/2a/3/rotate-right')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -560,7 +560,7 @@ describe('OscApi', () => {
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/rotate-right')
+				await router.processMessage('/location/1/2/3a/rotate-right')
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -581,7 +581,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
+				await router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -600,7 +600,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [] })
+				await router.processMessage('/location/1/2/3/step', { args: [] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(0)
@@ -615,7 +615,7 @@ describe('OscApi', () => {
 				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
+				await router.processMessage('/location/1/2/3/step', { args: [{ value: 2 }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -636,7 +636,7 @@ describe('OscApi', () => {
 				mockControl.setCurrentStep = vi.fn<(step: number) => boolean>().mockReturnValue(true)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })
+				await router.processMessage('/location/1/2/3/step', { args: [{ value: '4' }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -656,7 +656,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1a/2/3/step', { args: [{ value: 2 }] })
+				await router.processMessage('/location/1a/2/3/step', { args: [{ value: 2 }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -674,7 +674,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2a/3/step', { args: [{ value: 2 }] })
+				await router.processMessage('/location/1/2a/3/step', { args: [{ value: 2 }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -692,7 +692,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3a/step', { args: [{ value: 2 }] })
+				await router.processMessage('/location/1/2/3a/step', { args: [{ value: 2 }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -709,7 +709,7 @@ describe('OscApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/text', { args: [{ value: 'abc' }] })
+				await router.processMessage('/location/1/2/3/style/text', { args: [{ value: 'abc' }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -732,7 +732,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/text', { args: [{ value: 'def' }] })
+				await router.processMessage('/location/1/2/3/style/text', { args: [{ value: 'def' }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -755,7 +755,7 @@ describe('OscApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/color', { args: [{ value: 'abc' }] })
+				await router.processMessage('/location/1/2/3/style/color', { args: [{ value: 'abc' }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -780,7 +780,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/color', { args })
+				await router.processMessage('/location/1/2/3/style/color', { args })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -822,7 +822,7 @@ describe('OscApi', () => {
 				serviceApi.getControlIdAt.mockReturnValue(null)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/bgcolor', { args: [{ value: 'abc' }] })
+				await router.processMessage('/location/1/2/3/style/bgcolor', { args: [{ value: 'abc' }] })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
@@ -847,7 +847,7 @@ describe('OscApi', () => {
 				serviceApi.getControl.mockReturnValue(mockControl)
 
 				// Perform the request
-				router.processMessage('/location/1/2/3/style/bgcolor', { args })
+				await router.processMessage('/location/1/2/3/style/bgcolor', { args })
 
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
 				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({

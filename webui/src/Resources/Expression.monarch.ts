@@ -128,6 +128,12 @@ export const builtinFunctionCompletions: Array<{
 		documentation: 'Replaces all occurrences of find with replace',
 	},
 	{
+		name: 'stringCompare',
+		detail: 'stringCompare(a, b)',
+		documentation:
+			'Compares two strings for sorting. Returns a negative number if a sorts before b, 0 if they are equal, or a positive number if a sorts after b. Useful as a comparator for arraySort',
+	},
+	{
 		name: 'decode',
 		detail: 'decode(string, encoding)',
 		documentation: 'Decodes a string from specified encoding',
@@ -206,6 +212,74 @@ export const builtinFunctionCompletions: Array<{
 		name: 'arrayLastIndexOf',
 		detail: 'arrayLastIndexOf(array, value, offset)',
 		documentation: 'Returns the last index of value in array',
+	},
+	{
+		name: 'arraySlice',
+		detail: 'arraySlice(array, start, end)',
+		documentation:
+			'Returns a shallow copy of a portion of an array between the start and end indices, without changing the original',
+	},
+	{
+		name: 'arrayConcat',
+		detail: 'arrayConcat(...arrays)',
+		documentation: 'Combines multiple arrays into one, wrapping any non-array values as single elements',
+	},
+	{
+		name: 'arrayFlat',
+		detail: 'arrayFlat(array)',
+		documentation: 'Flattens a nested array by one level',
+	},
+	{
+		name: 'arrayMap',
+		detail: 'arrayMap(array, fn)',
+		documentation: 'Returns a new array with fn applied to each element',
+	},
+	{
+		name: 'arrayFilter',
+		detail: 'arrayFilter(array, fn)',
+		documentation: 'Returns the elements for which fn returns true',
+	},
+	{
+		name: 'arrayReduce',
+		detail: 'arrayReduce(array, fn, initial)',
+		documentation: 'Reduces the array to a single value using fn(acc, value)',
+	},
+	{
+		name: 'arrayForEach',
+		detail: 'arrayForEach(array, fn)',
+		documentation: 'Runs fn for each element (no return value)',
+	},
+	{
+		name: 'arrayFind',
+		detail: 'arrayFind(array, fn)',
+		documentation: 'Returns the first element for which fn returns true',
+	},
+	{
+		name: 'arrayFindIndex',
+		detail: 'arrayFindIndex(array, fn)',
+		documentation: 'Returns the index of the first element for which fn returns true',
+	},
+	{
+		name: 'arraySome',
+		detail: 'arraySome(array, fn)',
+		documentation: 'Returns true if fn returns true for any element',
+	},
+	{
+		name: 'arrayEvery',
+		detail: 'arrayEvery(array, fn)',
+		documentation: 'Returns true if fn returns true for all elements',
+	},
+	{
+		name: 'arraySort',
+		detail: 'arraySort(array, fn)',
+		documentation: 'Returns a sorted copy of the array (optional comparator fn(a, b))',
+	},
+	{ name: 'arrayReverse', detail: 'arrayReverse(array)', documentation: 'Returns a reversed copy of the array' },
+	{ name: 'objectKeys', detail: 'objectKeys(object)', documentation: 'Returns the keys of an object as an array' },
+	{
+		name: 'objectValues',
+		detail: 'objectValues(object)',
+		documentation: 'Returns the values of an object as an array',
 	},
 
 	// Time operations
@@ -294,7 +368,7 @@ export const builtinFunctionCompletions: Array<{
 	},
 ]
 
-const keywords = ['return', 'undefined']
+const keywords = ['return', 'undefined', 'if', 'else', 'for', 'while', 'of', 'let', 'const', 'break', 'continue']
 const typeKeywords = ['true', 'false', 'null', 'PI']
 
 const companionExpressionLanguageConfiguration: languages.LanguageConfiguration = {

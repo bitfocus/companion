@@ -9,11 +9,12 @@
  * this program.
  */
 
+import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from '@companion-module/host'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type { ControlWithEntities } from '../Controls/IControlFragments.js'
+import type { EditableEntityListPool, SomeEntityPool } from '../Controls/Entities/EntityListPoolEditingMixin.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import { ParseLocationString } from '../Internal/Util.js'
@@ -38,7 +39,7 @@ export class LocalVariablesController {
 	#getControlAndVariable({
 		controlId,
 		name,
-	}: LocalVariable): { control: ControlWithEntities; variableEntity: ControlEntityInstance } | null {
+	}: LocalVariable): { entities: SomeEntityPool; variableEntity: ControlEntityInstance } | null {
 		const control = this.#controlsStore.getControl(controlId)
 		if (!control || !control.supportsEntities) return null
 
@@ -52,7 +53,21 @@ export class LocalVariablesController {
 
 		if (!isInternalUserValueFeedback(variableEntity)) return null
 
-		return { control, variableEntity }
+		return { entities: control.entities, variableEntity }
+	}
+
+	/**
+	 * As {@link #getControlAndVariable}, but only for controls whose entity pool is editable (narrowing on the
+	 * pool's `isEditable` discriminant). Returns `null` for read-only controls (e.g. a preset reference), so the
+	 * mutating callers below don't each repeat the editability check.
+	 */
+	#getEditableControlAndVariable(
+		localVariable: LocalVariable
+	): { entities: EditableEntityListPool; variableEntity: ControlEntityInstance } | null {
+		const found = this.#getControlAndVariable(localVariable)
+		if (!found || !found.entities.isEditable) return null
+
+		return { entities: found.entities, variableEntity: found.variableEntity }
 	}
 
 	/**
@@ -89,6 +104,30 @@ export class LocalVariablesController {
 	}
 
 	/**
+	 * Get a descriptor for the page variable identified by the provided page/name.
+	 * The page value comes from an `internal:page` picker, where `0` means "this page".
+	 * `thisPageNumber` is the page that `0` resolves to (the page of the control in context,
+	 * or `null` if it has none).
+	 */
+	pageVariableFor(
+		page: JsonValue | undefined,
+		name: JsonValue | undefined,
+		thisPageNumber: number | null
+	): LocalVariable | null {
+		if (!name) return null
+
+		let pageNumber = Number(page)
+		if (pageNumber === 0) pageNumber = thisPageNumber ?? NaN
+		if (!pageNumber || isNaN(pageNumber)) return null
+
+		const pageId = this.#pageStore.getPageId(pageNumber)
+		if (!pageId) return null
+
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
+		return { controlId: CreatePageControlId(pageId), name: String(name) }
+	}
+
+	/**
 	 * Build a variable override context for the given local variable.
 	 * Returns `this:current` (current value) and `target:<name>` for every local variable
 	 * on the same control, suitable for passing to `VariablesAndExpressionParser.createChildParser`.
@@ -97,10 +136,10 @@ export class LocalVariablesController {
 		const controlAndVariable = this.#getControlAndVariable(localVariable)
 		if (!controlAndVariable) return null
 
-		const { control, variableEntity } = controlAndVariable
+		const { entities, variableEntity } = controlAndVariable
 		const result: VariableValues = { 'this:current': variableEntity.feedbackValue }
 
-		for (const entity of control.entities.getAllEntitiesInList('local-variables')) {
+		for (const entity of entities.getAllEntitiesInList('local-variables')) {
 			const rawName = entity.rawLocalVariableName
 			if (!rawName) continue
 			result[`target:${rawName}`] = entity.feedbackValue
@@ -114,11 +153,11 @@ export class LocalVariablesController {
 	 * value.
 	 */
 	setLocalVariable(localVariable: LocalVariable, value: JsonValue | undefined): void {
-		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
 		if (!controlAndVariable) return
 
-		const { control, variableEntity } = controlAndVariable
-		control.entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, value)
+		const { entities, variableEntity } = controlAndVariable
+		entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, value)
 	}
 
 	/**
@@ -126,14 +165,14 @@ export class LocalVariablesController {
 	 * value.
 	 */
 	resetLocalVariable(localVariable: LocalVariable): void {
-		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
 		if (!controlAndVariable) return
 
-		const { control, variableEntity } = controlAndVariable
+		const { entities, variableEntity } = controlAndVariable
 
 		// This isn't allowed to be an expression
 		const startupValue = variableEntity.rawOptions.startup_value?.value
-		control.entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, startupValue)
+		entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, startupValue)
 	}
 
 	/**
@@ -141,16 +180,14 @@ export class LocalVariablesController {
 	 * from its current value.
 	 */
 	writeLocalVariableStartupValue(localVariable: LocalVariable): void {
-		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
 		if (!controlAndVariable) return
 
-		const { control, variableEntity } = controlAndVariable
+		const { entities, variableEntity } = controlAndVariable
 
-		control.entities.entitySetOption(
-			LocalVariablesList,
-			variableEntity.id,
-			'startup_value',
-			variableEntity.feedbackValue
-		)
+		entities.entitySetOption(LocalVariablesList, variableEntity.id, 'startup_value', {
+			isExpression: false,
+			value: variableEntity.feedbackValue,
+		})
 	}
 }

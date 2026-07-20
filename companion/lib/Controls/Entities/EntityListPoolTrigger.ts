@@ -6,13 +6,21 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
+import { WithEntityEditing } from './EntityListPoolEditingMixin.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type { NewFeedbackValue } from './Types.js'
 
-export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
+/**
+ * The trigger entity pool. Triggers are always editable, so this single exported class IS the editable pool
+ * (the structural entity-edit mutators are mixed in via {@link WithEntityEditing}); there is no separate
+ * read-only variant. The shared read-only machinery lives on the internal {@link ControlEntityListPoolBase}.
+ */
+export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntityListPoolBase) {
 	#feedbacks: ControlEntityList
 
 	#actions: ControlEntityList
@@ -55,6 +63,15 @@ export class ControlEntityListPoolTrigger extends ControlEntityListPoolBase {
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return this.#localVariables.getDirectEntities()
+	}
+
+	/** A trigger has no location, so its parser gets no `this:*` context. */
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		return this.variableValues.createVariablesAndExpressionParser(
+			null,
+			this.getLocalVariableEntities(),
+			overrideVariableValues
+		)
 	}
 
 	/**

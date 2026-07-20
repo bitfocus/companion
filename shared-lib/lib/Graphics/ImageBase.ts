@@ -46,6 +46,31 @@ export interface LineStyle {
 	 * Line width in pixels
 	 */
 	width: number
+	/**
+	 * Line cap style (defaults to 'butt')
+	 */
+	cap?: CanvasLineCap
+}
+
+export interface DrawAlignedTextOptions {
+	/** whether to allow the font size to shrink to fit the box (default true) */
+	allowShrink?: boolean
+	/** horizontal alignment left, center, right (default center) */
+	halign?: HorizontalAlignment
+	/** vertical alignment top, center, bottom (default center) */
+	valign?: VerticalAlignment
+	/** optional outline style, if not provided there will be no outline */
+	outlineStyle?: LineStyle
+	/** optional font family, if not provided the default font will be used */
+	font?: ButtonGraphicsTextDrawElement['font']
+	/** font weight (default 'normal') */
+	weight?: ButtonGraphicsTextDrawElement['weight']
+	/** render italic (default false) */
+	italic?: boolean
+	/** render an underline (default false) */
+	underline?: boolean
+	/** render a strikethrough (default false) */
+	strikethrough?: boolean
 }
 
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
@@ -151,7 +176,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 */
 	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
 		const oldAlpha = this.context2d.globalAlpha
-		this.context2d.globalAlpha = alpha
+		this.context2d.globalAlpha *= alpha
 
 		try {
 			await fcn()
@@ -184,8 +209,18 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * Clear the image, resetting to a fully transparent and empty state
 	 */
 	clear(): void {
-		this.context2d.clearRect(0, 0, this.width, this.height)
+		// Fully reset the context/canvas
+		this.context2d.reset()
+
+		// reset() also discards the transform (eg oversampling scale) and any other initial
+		// context state, so re-apply it
+		this.initialiseContext()
 	}
+
+	/**
+	 * Apply the initial context state (eg the oversampling transform) that must survive a `reset()`.
+	 */
+	protected abstract initialiseContext(): void
 
 	/**
 	 * Draw an image loaded with one of the load abstract load functions
@@ -227,13 +262,19 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * draws a line between two given points
 	 */
 	line(x1: number, y1: number, x2: number, y2: number, style: LineStyle): void {
+		const oldLineCap = this.context2d.lineCap
 		this.context2d.lineWidth = style.width ?? 1
 		this.context2d.strokeStyle = style.color
-		this.context2d.beginPath()
-		this.context2d.moveTo(x1, y1)
-		this.context2d.lineTo(x2, y2)
-		this.context2d.closePath()
-		this.context2d.stroke()
+		this.context2d.lineCap = style.cap ?? 'butt'
+		try {
+			this.context2d.beginPath()
+			this.context2d.moveTo(x1, y1)
+			this.context2d.lineTo(x2, y2)
+			this.context2d.closePath()
+			this.context2d.stroke()
+		} finally {
+			this.context2d.lineCap = oldLineCap
+		}
 	}
 
 	/**
@@ -377,6 +418,39 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		}
 
 		return didDraw
+	}
+
+	/**
+	 * Draws a stroked arc (no fill). Used by the ring gauge renderer.
+	 * @param x center x
+	 * @param y center y
+	 * @param radius arc radius in pixels
+	 * @param startAngle in radians
+	 * @param endAngle in radians
+	 * @param anticlockwise whether to draw counter-clockwise
+	 * @param lineStyle stroke style and width
+	 */
+	arcStroke(
+		x: number,
+		y: number,
+		radius: number,
+		startAngle: number,
+		endAngle: number,
+		anticlockwise: boolean,
+		lineStyle: LineStyle
+	): void {
+		if (radius <= 0 || lineStyle.width <= 0) return
+		const oldLineCap = this.context2d.lineCap
+		this.context2d.beginPath()
+		this.context2d.arc(x, y, radius, startAngle, endAngle, anticlockwise)
+		this.context2d.strokeStyle = lineStyle.color
+		this.context2d.lineWidth = lineStyle.width
+		this.context2d.lineCap = lineStyle.cap ?? 'butt'
+		try {
+			this.context2d.stroke()
+		} finally {
+			this.context2d.lineCap = oldLineCap
+		}
 	}
 
 	/**
@@ -675,11 +749,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param text the text to draw
 	 * @param color CSS color string
 	 * @param fontsize height of font, either pixels or 'auto'
-	 * @param allowShrink whether to allow the font size to shrink to fit the box
-	 * @param halign horizontal alignment left, center, right
-	 * @param valign vertical alignment top, center, bottom
-	 * @param outlineStyle optional outline style, if not provided there will be no outline
-	 * @param font optional font family, if not provided the default font will be used
+	 * @param options optional styling: allowShrink, alignment, outline, font, weight and character styles
 	 */
 	drawAlignedText(
 		x: number,
@@ -689,12 +759,20 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		text: string,
 		color: string,
 		fontsize: number,
-		allowShrink = true,
-		halign: HorizontalAlignment = 'center',
-		valign: VerticalAlignment = 'center',
-		outlineStyle?: LineStyle,
-		font?: ButtonGraphicsTextDrawElement['font']
+		options: DrawAlignedTextOptions = {}
 	): void {
+		const {
+			allowShrink = true,
+			halign = 'center',
+			valign = 'center',
+			outlineStyle,
+			font,
+			weight = 'normal',
+			italic = false,
+			underline = false,
+			strikethrough = false,
+		} = options
+
 		if (w <= 0 || h <= 0) return
 
 		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
@@ -726,6 +804,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		const upScale = h / NORM_H
 		const fontNameStr = resolveFontName(font)
 
+		// CSS font shorthand prefix: `font-style font-weight` (skia/browsers synthesize faux italic/bold).
+		// Must be part of the measured spec too, as it affects glyph widths (and the layout cache key).
+		const fontStylePrefix = `${italic ? 'italic ' : ''}${weight === 'bold' ? 'bold ' : ''}`
+
 		// If we hit the character limit, only the smallest font size could possibly fit
 		const normCheckSizes =
 			allowShrink && wasTruncated
@@ -737,7 +819,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let usedNormSize = normCheckSizes[0]
 		for (const normSize of normCheckSizes) {
 			usedNormSize = normSize
-			const normFontSpec = `${normSize}px/${normSize * 1.1}px ${fontNameStr}`
+			const normFontSpec = `${fontStylePrefix}${normSize}px/${normSize * 1.1}px ${fontNameStr}`
 
 			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
 			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
@@ -757,7 +839,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Scale the normalized layout up to the actual canvas dimensions for rendering
 		const actualSize = usedNormSize * upScale
 		const textLayout: TextLayoutResult = {
-			fontDefinition: `${actualSize}px/${actualSize * 1.1}px ${fontNameStr}`,
+			fontDefinition: `${fontStylePrefix}${actualSize}px/${actualSize * 1.1}px ${fontNameStr}`,
 			lines: normLayout.lines,
 			measuredLineHeight: normLayout.measuredLineHeight * upScale,
 			measuredAscent: normLayout.measuredAscent * upScale,
@@ -765,7 +847,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		}
 
 		// Perform the draw
-		this.#drawTextLayout(x, y, w, h, textLayout, color, halign, valign, outlineStyle)
+		this.#drawTextLayout(x, y, w, h, textLayout, color, halign, valign, outlineStyle, underline, strikethrough)
 	}
 
 	/**
@@ -780,7 +862,9 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		color: string,
 		halign: HorizontalAlignment,
 		valign: VerticalAlignment,
-		outlineStyle: LineStyle | undefined
+		outlineStyle: LineStyle | undefined,
+		underline: boolean,
+		strikethrough: boolean
 	): void {
 		if (layout.lines.length < 1) return
 
@@ -830,6 +914,26 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			}
 
 			this.context2d.fillText(line.text, xAnchor, yAnchor)
+
+			// Underline/strikethrough have no native canvas support, so draw them manually.
+			// fillStyle is still `color` here, so the decorations match the text colour.
+			if (underline || strikethrough) {
+				const metrics = this.context2d.measureText(line.text)
+				const width = metrics.width
+				if (width > 0) {
+					const ascent = metrics.fontBoundingBoxAscent
+					const descent = metrics.fontBoundingBoxDescent
+					const thickness = Math.max(1, (ascent + descent) / 14)
+					// textAlign is set above, so derive the line's left edge from the anchor.
+					const left = halign === 'center' ? xAnchor - width / 2 : halign === 'right' ? xAnchor - width : xAnchor
+					if (underline) {
+						this.context2d.fillRect(left, yAnchor + descent * 0.5, width, thickness)
+					}
+					if (strikethrough) {
+						this.context2d.fillRect(left, yAnchor - ascent * 0.3, width, thickness)
+					}
+				}
+			}
 
 			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
 			// this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')

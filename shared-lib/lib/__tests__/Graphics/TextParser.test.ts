@@ -486,6 +486,21 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 
+		test('single line taller than the box is still drawn (draw & clip, not vanish)', () => {
+			// Regression for #4305: a fixed-size glyph taller than the draw area must produce one line
+			// (drawn and allowed to overflow/clip) rather than an empty layout that renders nothing.
+			const context = createMockContext(10, 80) // line height 80 > box height 54
+			const result = computeTextLayout(context, 54, 54, [...'⏵'], fontDef)
+
+			expect(result).toEqual({
+				fontDefinition: fontDef,
+				lines: [{ text: '⏵', ascent: expect.closeTo(80 * 0.8, 5), descent: expect.closeTo(80 * 0.2, 5) }],
+				measuredLineHeight: expect.closeTo(80, 5),
+				measuredAscent: expect.closeTo(80 * 0.8, 5),
+				fits: false,
+			} satisfies TextLayoutResult)
+		})
+
 		test('leading space is stripped', () => {
 			const context = createMockContext(10, 14)
 			const result = computeTextLayout(context, w, h, [...' Hello'], fontDef)
@@ -852,14 +867,15 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 
-		test('very short height', () => {
+		test('very short height still draws one line (draw & clip)', () => {
+			// #4305: a line taller than the box must still be drawn (and clip), not vanish.
 			const context = createMockContext(10, 14)
 			const fontDef = '14px TestFont'
 			const result = computeTextLayout(context, 72, 10, [...'Hello'], fontDef)
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [],
+				lines: [{ text: 'Hello', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
 				measuredLineHeight: expect.closeTo(14, 5),
 				measuredAscent: expect.closeTo(14 * 0.8, 5),
 				fits: false,
@@ -882,18 +898,50 @@ describe('computeTextLayout', () => {
 			} satisfies TextLayoutResult)
 		})
 
-		test('height too short for one line', () => {
+		test('height too short for one line still draws it (draw & clip)', () => {
+			// #4305: even when a single line does not fit vertically, draw it rather than nothing.
 			const context = createMockContext(10, 14)
 			const fontDef = '14px TestFont'
 			const result = computeTextLayout(context, 72, 13, [...'Hi'], fontDef)
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [],
+				lines: [{ text: 'Hi', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
 				measuredLineHeight: expect.closeTo(14, 5),
 				measuredAscent: expect.closeTo(14 * 0.8, 5),
 				fits: false,
 			} satisfies TextLayoutResult)
+		})
+	})
+
+	// A width-based break landing immediately before a hard newline used to leave that newline as
+	// the first character of the next chunk, which the newline handling then turned into a blank
+	// line. This only surfaced in the browser preview: its measureText measures *past* a '\n' (so a
+	// value like "Sonos:\n-17.46" is judged too wide and hits the width-wrap path), whereas
+	// @napi-rs/canvas stops measuring at the '\n' and never reached the buggy branch. The
+	// createMockContext here measures past the '\n' (width = length * charWidth), matching browsers.
+	describe('hard newline adjacent to a width break', () => {
+		const fontDef = '14px TestFont'
+
+		test('width break exactly before a newline does not insert a blank line', () => {
+			const context = createMockContext(10, 14)
+			// 'ABCDEF' is exactly 60px wide (fills w=60) and is immediately followed by '\n'.
+			const result = computeTextLayout(context, 60, 72, [...'ABCDEF\nGHIJKL'], fontDef)
+			expect(result.lines.map((l) => l.text)).toEqual(['ABCDEF', 'GHIJKL'])
+		})
+
+		test('real-world "Sonos:\\n-17.46" renders as two lines, not three', () => {
+			const context = createMockContext(10, 14)
+			const result = computeTextLayout(context, 60, 72, [...'Sonos:\n-17.46'], fontDef)
+			expect(result.lines.map((l) => l.text)).toEqual(['Sonos:', '-17.46'])
+		})
+
+		test('a deliberate blank line is still preserved through the width-wrap path', () => {
+			const context = createMockContext(10, 14)
+			// Two newlines: the width break consumes the first (its break already happened), the
+			// second remains as the user's intended blank line.
+			const result = computeTextLayout(context, 60, 72, [...'ABCDEF\n\nGHIJKL'], fontDef)
+			expect(result.lines.map((l) => l.text)).toEqual(['ABCDEF', '', 'GHIJKL'])
 		})
 	})
 })

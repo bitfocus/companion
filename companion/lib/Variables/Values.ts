@@ -12,8 +12,8 @@
 import EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ThisLocationVariable } from '@companion-app/shared/ControlLocation.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import type { ThisLocationVariable, ThisPageVariable } from '@companion-app/shared/ControlLocation.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	stringifyVariableValue,
@@ -22,6 +22,7 @@ import {
 } from '@companion-app/shared/Model/Variables.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesCache, VariableValueData } from './Util.js'
@@ -29,9 +30,20 @@ import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
-	variables_changed: [changed: ReadonlySet<string>, connection_labels: ReadonlySet<string>]
-	local_variables_changed: [changed: ReadonlySet<string>, fromControlId: string]
+	/**
+	 * A set of variables changed.
+	 * `targetControlId` is null for a normal (global) change, or the id of the control whose local
+	 * variables changed - in which case only that control need react.
+	 */
+	variablesChanged: [
+		changed: ReadonlySet<string>,
+		connectionLabels: ReadonlySet<string>,
+		targetControlId: string | null,
+	]
 }
+
+/** Shared empty set of connection labels, for local variable changes which have no connection */
+export const NO_CONNECTION_LABELS: ReadonlySet<string> = new Set()
 
 const ThisLocationVariables: Record<
 	ThisLocationVariable,
@@ -79,18 +91,50 @@ export function InjectedVariablesForLocation(controlLocation: ControlLocation | 
 	)
 }
 
+/**
+ * The `this:*` variables for a page control (a page has no row/column). Keyed by {@link ThisPageVariable}
+ * so it stays in lockstep with the shared type - and thus with the UI dropdown that is checked against it.
+ */
+const ThisPageVariables: Record<ThisPageVariable, (pageNumber: number) => VariableValue> = {
+	'this:page': (pageNumber) => pageNumber,
+	'this:page_name': (pageNumber) => `$(internal:page_number_${pageNumber}_name)`,
+}
+
+export const ThisPageVariablesSet: ReadonlySet<string> = new Set(Object.keys(ThisPageVariables))
+
+export function InjectedVariablesForPage(pageNumber: number | null | undefined): VariablesCache {
+	const values: VariablesCache = new Map()
+	if (pageNumber != null) {
+		for (const [variableId, computeVariable] of Object.entries(ThisPageVariables)) {
+			values.set(variableId, computeVariable(pageNumber))
+		}
+	}
+	return values
+}
+
 export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #logger = LogController.createLogger('Variables/Values')
 
 	readonly #blinker: VariablesBlinker
 	#variableValues: VariableValueData = Object.create(null)
 
-	constructor() {
+	readonly #userconfig: DataUserConfig
+
+	constructor(userconfig: DataUserConfig) {
 		super()
+
+		this.#userconfig = userconfig
 
 		this.#blinker = new VariablesBlinker((values) => {
 			this.setVariableValues('internal', values)
 		})
+	}
+
+	/**
+	 * Count how many variables a connection (identified by its label) currently exposes values for.
+	 */
+	getVariableCountForLabel(label: string): number {
+		return Object.keys(this.#variableValues[label] ?? {}).length
 	}
 
 	getVariableValue(label: string, name: string): VariableValue | undefined {
@@ -109,16 +153,36 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	createVariablesAndExpressionParser(
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		pageValues: ControlEntityInstance[] | null = null
 	): VariablesAndExpressionParser {
-		const thisValues = InjectedVariablesForLocation(controlLocation)
-
 		return new VariablesAndExpressionParser(
+			this.#userconfig,
 			this.#blinker,
 			this.#variableValues,
-			thisValues,
+			InjectedVariablesForLocation(controlLocation),
 			localValues,
-			overrideVariableValues
+			overrideVariableValues,
+			pageValues
+		)
+	}
+
+	/** Build a parser for a page control's variables - no grid location, so only `this:page`/`this:page_name` are injected. */
+	createVariablesAndExpressionParserForPage(
+		pageNumber: number | null | undefined,
+		localValues: ControlEntityInstance[] | null,
+		overrideVariableValues: VariableValues | null
+	): VariablesAndExpressionParser {
+		return new VariablesAndExpressionParser(
+			this.#userconfig,
+			this.#blinker,
+			this.#variableValues,
+			InjectedVariablesForPage(pageNumber),
+			localValues,
+			overrideVariableValues,
+			// A page control owns these variables, so within its own expressions they resolve both as
+			// `$(local:x)` and `$(page:x)`.
+			localValues
 		)
 	}
 
@@ -214,7 +278,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	#emitVariablesChanged(all_changed_variables_set: ReadonlySet<string>, connection_labels: ReadonlySet<string>) {
 		try {
 			if (all_changed_variables_set.size > 0) {
-				this.emit('variables_changed', all_changed_variables_set, connection_labels)
+				this.emit('variablesChanged', all_changed_variables_set, connection_labels, null)
 			}
 		} catch (e) {
 			this.#logger.error(`Failed to process variables update: ${e}`)
@@ -222,7 +286,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	}
 
 	triggerLocationVariablesChange(controlId: string): void {
-		this.emit('local_variables_changed', ThisLocationVariablesSet, controlId)
+		this.emit('variablesChanged', ThisLocationVariablesSet, NO_CONNECTION_LABELS, controlId)
 	}
 }
 

@@ -2,7 +2,7 @@ import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	RecordActionEntityModel,
@@ -487,20 +487,15 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		const control = this.#controlStore.getControl(controlId)
 		if (!control) throw new Error(`Unknown control: ${controlId}`)
 
+		const editableEntities = control.supportsEntities && control.entities.isEditable ? control.entities : null
+		if (!editableEntities) throw new Error('Not supported by control')
+
 		if (mode === 'append') {
-			if (control.supportsEntities) {
-				if (!control.entities.entityAdd({ stepId, setId }, null, ...this.#currentSession.actions))
-					throw new Error('Unknown set')
-			} else {
-				throw new Error('Not supported by control')
-			}
+			if (!editableEntities.entityAdd({ stepId, setId }, null, ...this.#currentSession.actions))
+				throw new Error('Unknown set')
 		} else {
-			if (control.supportsEntities) {
-				const listId: SomeSocketEntityLocation = { stepId, setId }
-				if (!control.entities.entityReplaceAll(listId, this.#currentSession.actions)) throw new Error('Unknown set')
-			} else {
-				throw new Error('Not supported by control')
-			}
+			const listId: SomeSocketEntityLocation = { stepId, setId }
+			if (!editableEntities.entityReplaceAll(listId, this.#currentSession.actions)) throw new Error('Unknown set')
 		}
 
 		this.destroySession(true)

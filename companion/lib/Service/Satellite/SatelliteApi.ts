@@ -1,11 +1,8 @@
 import { nanoid } from 'nanoid'
+import { z } from 'zod'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-// eslint-disable-next-line n/no-missing-import
-import { validate as validateConfigFields } from '../../../generated/SatelliteConfigFieldsSchemaValidator.js'
-// eslint-disable-next-line n/no-missing-import
-import { validate as validateSurfaceManifest } from '../../../generated/SatelliteSurfaceSchemaValidator.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { type Logger } from '../../Log/Controller.js'
@@ -23,9 +20,18 @@ import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surfa
 import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import type { ServiceApi } from '../ServiceApi.js'
 import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
-import type { SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
-import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
-import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './SatelliteSurfaceManifestSchema.js'
+import { SatelliteConfigFieldsSchema, type SatelliteConfigFields } from './SatelliteConfigFieldsSchema.js'
+import {
+	buildSatelliteStyleArgs,
+	parseSatelliteBitmapFormat,
+	SATELLITE_BITMAP_FORMATS,
+	type SatelliteBitmapFormat,
+} from './SatelliteRenderUtil.js'
+import {
+	SatelliteSurfaceLayoutSchema,
+	type SatelliteControlStylePreset,
+	type SatelliteSurfaceLayout,
+} from './SatelliteSurfaceManifestSchema.js'
 
 /**
  * Version of this API. This follows semver, to allow for clients to check their compatibility
@@ -54,8 +60,25 @@ import type { SatelliteControlStylePreset, SatelliteSurfaceLayout } from './Sate
  *        - Add CHANGE-PAGE message for surfaces to navigate pages
  * 1.10.1 - LOCKED-STATE now includes ROTATION
  * 1.11.0 - Add NONSQUARE to CAPS to indicate support for non-square buttons
+ * 1.12.0 - Add BITMAP_FORMATS to CAPS and BITMAP_FORMAT to ADD-DEVICE and ADD-SUB to negotiate bitmap encoding (rgb/png/webp)
+ * 1.13.0 - Add `leds` capability to advanced-mode style presets (addressable LED strips/rings)
  */
-export const API_VERSION = '1.11.0'
+export const API_VERSION = '1.13.0'
+
+/**
+ * Maximum length of a single line (command) the receive buffer will accumulate before the
+ * connection is dropped. This bounds the per-connection memory and closes off a "buffer bomb"
+ * where a client streams data forever without ever sending a newline. 2MB is comfortably more
+ * than any legitimate line needs (e.g. a base64 bitmap, layout manifest or variable value).
+ */
+const MAX_LINE_LENGTH = 2 * 1024 * 1024
+
+/**
+ * Upper bounds for the legacy grid description, to prevent a client requesting an absurd grid
+ * that would allocate huge amounts of memory (one control object is created per key).
+ */
+const MAX_KEYS_TOTAL = 2000
+const MAX_KEYS_PER_ROW = 1000
 
 export type SatelliteMessageArgs = Record<string, string | number | boolean>
 
@@ -177,14 +200,12 @@ export class ServiceSatelliteApi {
 		if (params.LAYOUT_MANIFEST) {
 			surfaceManifestFromClient = true
 			try {
-				surfaceManifest = JSON.parse(Buffer.from(String(params.LAYOUT_MANIFEST), 'base64').toString())
+				const parsed = SatelliteSurfaceLayoutSchema.safeParse(
+					JSON.parse(Buffer.from(String(params.LAYOUT_MANIFEST), 'base64').toString())
+				)
+				if (!parsed.success) throw new Error(`Failed with errors: ${z.prettifyError(parsed.error)}`)
 
-				if (!validateSurfaceManifest(surfaceManifest)) {
-					const errors = validateSurfaceManifest.errors
-					if (!errors) throw new Error(`Failed with unknown reason`)
-
-					throw new Error(`Failed with errors: ${JSON.stringify(errors)}`)
-				}
+				surfaceManifest = parsed.data
 			} catch (e) {
 				socketLogger.error(`Manifest validation failed: ${stringifyError(e)}`)
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid LAYOUT_MANIFEST')
@@ -209,12 +230,12 @@ export class ServiceSatelliteApi {
 			}
 
 			const keysTotal = params.KEYS_TOTAL ? Number(params.KEYS_TOTAL) : LEGACY_MAX_BUTTONS
-			if (isNaN(keysTotal) || keysTotal <= 0) {
+			if (isNaN(keysTotal) || keysTotal <= 0 || keysTotal > MAX_KEYS_TOTAL) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_TOTAL')
 			}
 
 			const keysPerRow = params.KEYS_PER_ROW ? Number(params.KEYS_PER_ROW) : LEGACY_BUTTONS_PER_ROW
-			if (isNaN(keysPerRow) || keysPerRow <= 0) {
+			if (isNaN(keysPerRow) || keysPerRow <= 0 || keysPerRow > MAX_KEYS_PER_ROW) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEYS_PER_ROW')
 			}
 
@@ -252,6 +273,10 @@ export class ServiceSatelliteApi {
 
 		socketLogger.debug(`add surface "${id}"`)
 
+		// Negotiate the bitmap encoding. Defaults to rgb when absent or unknown, so older satellites
+		// (and any reporting a format we didn't advertise in CAPS) keep receiving raw rgb pixels.
+		const bitmapFormat = parseSatelliteBitmapFormat(params.BITMAP_FORMAT)
+
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
@@ -270,13 +295,16 @@ export class ServiceSatelliteApi {
 			let decoded: unknown
 			try {
 				decoded = JSON.parse(Buffer.from(String(params.CONFIG_FIELDS), 'base64').toString())
+
+				const parsed = SatelliteConfigFieldsSchema.safeParse(decoded)
+				if (!parsed.success) {
+					socketLogger.error(`Config fields validation failed: ${z.prettifyError(parsed.error)}`)
+					return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
+				}
+				configFields = parsed.data
 			} catch (_e) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
 			}
-			if (!validateConfigFields(decoded)) {
-				return this.#formatAndSendError(socket, messageName, id, 'Invalid CONFIG_FIELDS')
-			}
-			configFields = decoded
 		}
 
 		const processedConfigFields = configFields
@@ -298,6 +326,7 @@ export class ServiceSatelliteApi {
 			surfaceManifest,
 			configFields: processedConfigFields,
 			canChangePage,
+			bitmapFormat,
 		})
 
 		this.#devices.set(id, {
@@ -406,14 +435,12 @@ export class ServiceSatelliteApi {
 				const sub = socketState.subscriptions.get(subId)
 				if (!sub) return
 				try {
-					await this.#sendSubState(socket, subId, sub.style, image)
+					await this.#sendSubState(socket, subId, sub.style, sub.bitmapFormat, image)
 				} catch (e) {
 					socketLogger.debug(`sendSubState failed: ${stringifyError(e)}`)
 				}
 			}),
 		}
-		this.#socketStates.set(socket, socketState)
-
 		socket.sendMessage('BEGIN', null, null, {
 			CompanionVersion: this.#serviceApi.appInfo.appBuild,
 			ApiVersion: API_VERSION,
@@ -422,7 +449,13 @@ export class ServiceSatelliteApi {
 		socket.sendMessage('CAPS', null, null, {
 			SUBSCRIPTIONS: !!this.#userconfig.getKey('satellite_subscriptions_enabled'),
 			NONSQUARE: true,
+			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
 		})
+
+		// Register the per-socket state only once the handshake has been sent, so a failure while
+		// sending it doesn't leave an orphaned entry in the map (the caller wires up cleanup around
+		// the value returned below).
+		this.#socketStates.set(socket, socketState)
 
 		let receivebuffer = ''
 		return {
@@ -442,6 +475,15 @@ export class ServiceSatelliteApi {
 					}
 				}
 				receivebuffer = receivebuffer.substr(offset)
+
+				// Guard against a client streaming data forever without ever sending a newline,
+				// which would otherwise grow the receive buffer unbounded ("buffer bomb").
+				if (receivebuffer.length > MAX_LINE_LENGTH) {
+					socketLogger.warn(`Closing connection: line exceeded ${MAX_LINE_LENGTH} bytes`)
+					this.#formatAndSendError(socket, 'ERROR', undefined, 'Line too long')
+					receivebuffer = ''
+					socket.destroy()
+				}
 			},
 			cleanupDevices: () => {
 				let count = 0
@@ -742,10 +784,15 @@ export class ServiceSatelliteApi {
 			style.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
+		// The bitmap encoding is negotiated per subscription (a subscription has no device to inherit from),
+		// validated against what CAPS advertised, defaulting to rgb for clients that don't opt in.
+		const bitmapFormat = parseSatelliteBitmapFormat(params.BITMAP_FORMAT)
+
 		const sub: SatelliteSubscription = {
 			subId: subIdStr,
 			location,
 			style,
+			bitmapFormat,
 		}
 		socketState.subscriptions.set(subIdStr, sub)
 
@@ -848,9 +895,10 @@ export class ServiceSatelliteApi {
 		socket: SatelliteSocketWrapper,
 		subId: string,
 		style: SatelliteControlStylePreset,
+		bitmapFormat: SatelliteBitmapFormat,
 		image: ImageResult
 	): Promise<void> {
-		const styleArgs = await buildSatelliteStyleArgs(image, style, null)
+		const styleArgs = await buildSatelliteStyleArgs(image, style, null, bitmapFormat)
 
 		socket.sendMessage('SUB-STATE', null, null, {
 			SUBID: subId,
@@ -899,6 +947,7 @@ interface SatelliteSubscription {
 	subId: string
 	location: ControlLocation
 	style: SatelliteControlStylePreset
+	bitmapFormat: SatelliteBitmapFormat
 }
 
 interface SatelliteSocketState {

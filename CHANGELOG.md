@@ -1,5 +1,98 @@
 # Bitfocus Companion
 
+## Companion v5.0.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- macos mdns collision messages
+- ensure control elements are cloned when imported/loaded #4306
+- launch gui button broken if all interfaces ipv4+ipv6 selected #4308
+- preserve first line of text when font is too tall to fit the bounding box
+- allow negative rotation values for graphics elements #4313
+- topbar border not very visible
+- surface config not allowing static-text fields
+- ensure connection thread is ready before init is executed
+- suppress udev rules sync messages when running in docker #4318
+- reduce default intensity of gauge tracks
+
+## Companion v5.0.0 - Release Notes
+
+### IMPORTANT CHANGES
+
+- This version of Companion requires macOS 13.5 or later
+- Shell command execution and installing modules over the network from another machine are now disabled by default, and must be explicitly enabled. Installing modules from the store, or from the local machine, is unaffected. (#4252)
+- The dedicated Elgato plugin server has been removed (#4123)
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Graphics overhaul (#4098)
+  - Button drawing is built up of a fully customisable stack of elements
+  - Support non-square drawing on various streamdeck models
+  - Split text element fontsize into two properties
+  - Image library for easier image reuse (#4111)
+  - Font selection #1533 (#4152)
+  - Lazy render buttons to reduce cpu cost of inactive pages (#4191)
+  - Remove remaining legacy button rotation support
+- Advanced expressions (#4274)
+  - more expression math utils (#4260)
+  - loops, ifs and control statements
+  - more array methods
+- Variables
+  - Access local variable from another button #3723 (#4234)
+  - Support feedback based local variables from presets #3893
+  - Allow actions that return a result, to permit storing that result in a local or custom variable #4065
+  - Fuzzy search in variables table
+- Surfaces
+  - Action to adjust surface brightness (#4273)
+  - Variable for surface brightness (#4266)
+  - Add action and feedback to enable/monitor active remote surfaces #4194 (#4206)
+  - Page number button takes surfaces to their startup page
+  - mdns announce satellite ports (#4288)
+  - add support for sending compressed images over satellite
+  - rework confusing 'never lock' property (#4290)
+- Editor and UI improvements
+  - Better indicator of regex invalid/valid (#4271)
+  - Add notes to control editors #760 (#4202)
+  - Context menu for grid buttons (#4203)
+  - One click convert page buttons to be editable (#4208)
+  - Indicate disabled actions/feedbacks/events/triggers etc better #4030
+  - Option to hide the status icons #3805 (#4143)
+  - Improved drag and drop support for touchscreen
+- Platform and system
+  - Configurable timezone (#4285)
+  - Show path to configuration folder on log screen #4236
+  - Include date and source in connection debug log csv
+  - Windows arm64 build #2933 (#4270)
+  - Package linux install script
+  - Linux desktop udev sync (#4248)
+  - Companion PI config tool (#4256)
+  - Support headless config file format in docker images
+
+### 🐞 BUG FIXES
+
+- add receive buffer cap for satellite and tcp listener
+- add gunzip limits
+- protect against dns-rebind
+- stricter origin validation
+- sanitise rosstalk messages
+- auto-add windows firewall rules
+- add resume/online watchdog to recover dead ws connections
+- don't permanently close ws client when entering Safari bfcache
+- add connect timeout to webui WebSocket to unwedge Safari reconnects
+- make local variables editor handle non-string values #3166
+- avoid duplicate value preview in expression variable editor
+- rate limit triggers when responding to rapid variable changes #3312
+- remember active button edit tab
+- tab scrollbar not always showing in safari #4103
+- allow data images in markdown #3408
+- add deprecation marker to old 'Button: set X' actions
+- clarify deprecation of 'use another buttons style'
+- show better failure when encountering invalid image
+- implement custom monaco drag handle for safari #4265
+- rate limit variables updates from modules to be at most 50hz #3859
+- running packaged module from dev modules folder #3930
+- page numbers not invalidating on page move
+
 ## Companion v4.3.4 - Release Notes
 
 ### 🐞 BUG FIXES

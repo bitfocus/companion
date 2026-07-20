@@ -10,7 +10,7 @@ import type {
 	ExportTriggersListv6,
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { Complete } from '@companion-module/base'
 import type { Logger } from '../../Log/Controller.js'
@@ -42,7 +42,9 @@ interface NormalButtonOptions {
 function convertDatabaseToV13(db: DataStoreBase<any>, _logger: Logger): void {
 	if (!db.store) return
 
-	const userconfig = db.defaultTableView.getOrDefault('userconfig', {}) as Partial<UserConfigModel>
+	// At this migration step the raw db still holds the legacy boolean `remove_topbar`
+	// (the rename to `buttons_decoration` happens in a later upgrade).
+	const userconfig = db.defaultTableView.getOrDefault('userconfig', {}) as Record<string, any>
 	const defaultNoTopBar = !!userconfig.remove_topbar
 
 	const controls = db.getTableView('controls')
@@ -74,7 +76,9 @@ function convertControlToLayered(control: NormalButtonModel, defaultNoTopBar: bo
 }
 
 function convertImportToV13(obj: SomeExportv6, _logger: Logger, userConfig: UserConfigModel): SomeExportv6 {
-	const defaultNoTopBar = !!userConfig.remove_topbar
+	// `userConfig` is the live/current config, which now uses `buttons_decoration` instead of the
+	// legacy `remove_topbar` boolean. Anything other than an explicit topbar means "no topbar".
+	const defaultNoTopBar = userConfig.buttons_decoration !== ButtonGraphicsDecorationType.TopBar
 
 	if (obj.type == 'full') {
 		const newObj: ExportFullv6 = {

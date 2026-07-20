@@ -1,10 +1,12 @@
+import type { ResolvedButtonGraphicsDecoration } from './StyleModel.js'
+
 export type UserConfigModel = {
 	setup_wizard: number
 	detailed_data_collection: boolean
 
 	page_direction_flipped: boolean
 	page_plusminus: boolean
-	remove_topbar: boolean
+	buttons_decoration: ResolvedButtonGraphicsDecoration
 	buttons_status_icons: 'show' | 'none'
 
 	usb_hotplug: boolean
@@ -21,6 +23,8 @@ export type UserConfigModel = {
 	http_legacy_api_enabled: boolean
 
 	rest_api_enabled: boolean
+	prometheus_enabled: boolean
+	prometheus_token: string
 
 	tcp_enabled: boolean
 	tcp_listen_port: number
@@ -65,7 +69,11 @@ export type UserConfigModel = {
 	gridSizePromptGrow: boolean
 
 	installName: string
+	mdns_announcements_enabled: boolean
 	default_export_filename: string
+
+	/** IANA timezone name (e.g. 'America/New_York') used for internal time variables and time-based triggers. Empty = system timezone. */
+	timezone: string
 
 	backups: BackupRulesConfig[]
 }

@@ -1,10 +1,10 @@
 import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
-import { capitalize } from 'lodash-es'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { capitalize } from '@companion-app/shared/Util.js'
 import {
 	CollapsibleTree,
 	type CollapsibleTreeHeaderProps,

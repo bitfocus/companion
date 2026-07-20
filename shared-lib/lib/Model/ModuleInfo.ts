@@ -36,10 +36,7 @@ export interface ClientModuleInfo {
 
 export type ModuleInfoUpdateId = `${ModuleInstanceType}:${string}`
 export type ModuleInfoUpdate =
-	| ModuleInfoUpdateInitOp
-	| ModuleInfoUpdateAddOp
-	| ModuleInfoUpdateUpdateOp
-	| ModuleInfoUpdateRemoveOp
+	ModuleInfoUpdateInitOp | ModuleInfoUpdateAddOp | ModuleInfoUpdateUpdateOp | ModuleInfoUpdateRemoveOp
 export interface ModuleInfoUpdateInitOp {
 	type: 'init'
 	info: Record<ModuleInfoUpdateId, ClientModuleInfo>

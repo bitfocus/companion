@@ -19,7 +19,7 @@
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator"],
+		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator", "ESNext.TypedArrays"],
 		"types": ["node"],
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,

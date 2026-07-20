@@ -46,13 +46,22 @@ export class ServiceRosstalk extends ServiceTcpBase {
 	 * @access protected
 	 */
 	processIncoming(_client: TcpClientInfo, data: string | Buffer): void {
-		// A chunk may contain multiple newline separated commands
-		for (const line of data.toString().split(/\r?\n/)) {
-			this.#processCommand(line.trim())
+		// A chunk may contain multiple commands. They are usually newline separated, but some senders
+		// terminate (or separate) commands with a null byte instead of, or as well as, a newline.
+		for (const line of data.toString().split(/[\r\n\0]+/)) {
+			this.#processCommand(line)
 		}
 	}
 
-	#processCommand(line: string): void {
+	#processCommand(rawLine: string): void {
+		// Strip surrounding whitespace and control characters. Some senders frame commands with
+		// control bytes that String.trim() leaves in place, which would break the anchored matches below.
+		// eslint-disable-next-line no-control-regex -- deliberately stripping control-byte framing
+		const line = rawLine.replace(/^[\s\x00-\x1f\x7f]+|[\s\x00-\x1f\x7f]+$/g, '').trim()
+
+		// Ignore empty lines, e.g. the trailing part left by a command terminator
+		if (!line) return
+
 		// Use anchored matches, so that a command surrounded by garbage is not executed
 		const matchCC = line.match(/^CC ([0-9]+):([0-9]+)$/)
 		if (matchCC) {
@@ -79,6 +88,8 @@ export class ServiceRosstalk extends ServiceTcpBase {
 			})
 			return
 		}
+
+		this.logger.warn(`Received unhandled RossTalk command: ${line}`)
 	}
 
 	#fireButtonPressAndRelease(location: ControlLocation): void {

@@ -10,6 +10,8 @@ import { zodLocation } from '../Preview/Graphics.js'
 import { publicProcedure } from '../UI/TRPC.js'
 import type { ControlCommonEvents } from './ControlDependencies.js'
 import type { ControlsController } from './Controller.js'
+import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
+import type { ControlsFactory } from './Factory.js'
 import type { SomeControl } from './IControlFragments.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
@@ -19,7 +21,8 @@ export function createControlsTrpcRouter(
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
-	controlsController: ControlsController
+	controlsController: ControlsController,
+	factory: ControlsFactory
 ) {
 	return {
 		importPreset: publicProcedure
@@ -29,17 +32,61 @@ export function createControlsTrpcRouter(
 					presetId: z.string(),
 					location: zodLocation,
 					variableValues: z.record(z.string(), JsonValueSchema.optional()).nullable(),
+					/** Whether to place a live reference to the preset, or a one-off copy of its data */
+					mode: z.enum(['copy', 'reference']).default('reference'),
 				})
 			)
 			.mutation(async ({ input }) => {
-				const model = instanceDefinitions.convertPresetToControlModel(
-					input.connectionId,
-					input.presetId,
-					input.variableValues
-				)
+				// Preset references (linked presets) are only supported by 2.0+ modules. Guard here so that an old
+				// module can never be placed as a reference, even if the request asks for it - it falls back to a copy.
+				const useReference =
+					input.mode === 'reference' && instanceDefinitions.doesConnectionSupportPresetReferences(input.connectionId)
+
+				const model = useReference
+					? instanceDefinitions.convertPresetToReferenceControlModel(
+							input.connectionId,
+							input.presetId,
+							input.variableValues
+						)
+					: instanceDefinitions.convertPresetToControlModel(input.connectionId, input.presetId, input.variableValues)
 				if (!model) return null
 
 				return controlsController.importControl(input.location, model)
+			}),
+
+		setPresetReferenceVariable: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+					variableName: z.string(),
+					value: JsonValueSchema.optional(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const controlId = pageStore.getControlIdAt(input.location)
+				if (!controlId) return false
+
+				const control = controlsMap.get(controlId)
+				if (!(control instanceof ControlButtonPresetReference)) return false
+
+				return control.setTemplateVariableValue(input.variableName, input.value)
+			}),
+
+		setPresetReferenceConnection: publicProcedure
+			.input(
+				z.object({
+					location: zodLocation,
+					connectionId: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const controlId = pageStore.getControlIdAt(input.location)
+				if (!controlId) return false
+
+				const control = controlsMap.get(controlId)
+				if (!(control instanceof ControlButtonPresetReference)) return false
+
+				return control.setReferencedConnection(input.connectionId)
 			}),
 
 		convertControl: publicProcedure
@@ -119,6 +166,9 @@ export function createControlsTrpcRouter(
 				const control = controlsMap.get(fromControlId)
 				if (control) control.triggerLocationHasChanged()
 
+				// If it changed page, re-evaluate its feedbacks that reference page variables
+				controlsController.notifyControlMovedPage(fromControlId, fromLocation.pageNumber, toLocation.pageNumber)
+
 				// Force a redraw
 				controlEvents.emit('invalidateLocationRender', fromLocation)
 				controlEvents.emit('invalidateLocationRender', toLocation)
@@ -162,13 +212,14 @@ export function createControlsTrpcRouter(
 				}
 
 				const newControlId = CreateBankControlId(nanoid())
-				const newControl = controlsController.createClassForControl(newControlId, 'button', controlJson, true)
+				const newControl = factory.createClassForControl(newControlId, 'button', controlJson, true)
 				if (newControl) {
 					controlsMap.set(newControlId, newControl)
 
 					controlEvents.emit('controlPlacedAt', toLocation, newControlId)
 
-					newControl.triggerRedraw()
+					// Ensure it is redrawn
+					newControl.commitChange(true)
 
 					return true
 				}
@@ -218,6 +269,12 @@ export function createControlsTrpcRouter(
 				if (controlA) controlA.triggerLocationHasChanged()
 				const controlB = toControlId && controlsMap.get(toControlId)
 				if (controlB) controlB.triggerLocationHasChanged()
+
+				// If either changed page, re-evaluate its feedbacks that reference page variables
+				if (fromControlId)
+					controlsController.notifyControlMovedPage(fromControlId, fromLocation.pageNumber, toLocation.pageNumber)
+				if (toControlId)
+					controlsController.notifyControlMovedPage(toControlId, toLocation.pageNumber, fromLocation.pageNumber)
 
 				// Force a redraw
 				controlEvents.emit('invalidateLocationRender', fromLocation)

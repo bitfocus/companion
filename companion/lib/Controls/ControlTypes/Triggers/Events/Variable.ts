@@ -142,9 +142,12 @@ export class TriggersEventVariables {
 	 * Handler for the variable_changed event
 	 * @param allChangedVariables Set of all the variables that have changed
 	 */
-	#onVariablesChanged = (allChangedVariables: ReadonlySet<string>, fromControlId: string | null): void => {
-		// If the event is from a control, but not the same control, ignore it
-		if (fromControlId && fromControlId !== this.#controlId) return
+	#onVariablesChanged = (
+		allChangedVariables: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<string> | null
+	): void => {
+		// If the change is scoped to specific control(s) and this trigger isn't one of them, ignore it
+		if (controlIdFilter && !controlIdFilter.has(this.#controlId)) return
 
 		if (this.#enabled) {
 			let execute = false

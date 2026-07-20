@@ -46,7 +46,7 @@ export interface IpcCancelMessagePacket {
 	callbackId: number
 }
 
-type IpcMessagePacket = IpcCallMessagePacket | IpcResponseMessagePacket | IpcCancelMessagePacket
+export type IpcMessagePacket = IpcCallMessagePacket | IpcResponseMessagePacket | IpcCancelMessagePacket
 
 interface PendingCallback {
 	timeout: NodeJS.Timeout | undefined

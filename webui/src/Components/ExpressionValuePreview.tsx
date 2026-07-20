@@ -3,8 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import type { ExpressionStreamResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
+import { ParseExpression } from '@companion-app/shared/Expressions.js'
 import type {
 	ContextVariableResolution,
 	ExpressionableOptionsObject,
@@ -21,6 +21,11 @@ type ContextResolutionForPreview =
 	| {
 			type: 'localVariable'
 			locationValue: ExpressionOrValue<JsonValue | undefined> | undefined
+			nameValue: ExpressionOrValue<JsonValue | undefined> | undefined
+	  }
+	| {
+			type: 'pageVariable'
+			pageValue: ExpressionOrValue<JsonValue | undefined> | undefined
 			nameValue: ExpressionOrValue<JsonValue | undefined> | undefined
 	  }
 	| { type: 'customVariable'; nameValue: ExpressionOrValue<JsonValue | undefined> | undefined }
@@ -53,6 +58,13 @@ export function buildContextResolutionForPreview(
 		return {
 			type: 'localVariable',
 			locationValue: allRawOptions[res.locationFieldId],
+			nameValue: allRawOptions[res.nameFieldId],
+		}
+	}
+	if (res.type === 'pageVariable') {
+		return {
+			type: 'pageVariable',
+			pageValue: allRawOptions[res.pageFieldId],
 			nameValue: allRawOptions[res.nameFieldId],
 		}
 	}
@@ -221,12 +233,21 @@ function resolveServerContextResolution(ctx: ContextResolutionForPreview | undef
 			locationValue: ExpressionOrValue<JsonValue | undefined>
 			nameValue: ExpressionOrValue<JsonValue | undefined>
 	  }
+	| {
+			type: 'pageVariable'
+			pageValue: ExpressionOrValue<JsonValue | undefined>
+			nameValue: ExpressionOrValue<JsonValue | undefined>
+	  }
 	| { type: 'customVariable'; nameValue: ExpressionOrValue<JsonValue | undefined> }
 	| undefined {
 	if (!ctx) return undefined
 	if (ctx.type === 'localVariable') {
 		if (!ctx.locationValue || !ctx.nameValue) return undefined
 		return { type: 'localVariable', locationValue: ctx.locationValue, nameValue: ctx.nameValue }
+	}
+	if (ctx.type === 'pageVariable') {
+		if (!ctx.pageValue || !ctx.nameValue) return undefined
+		return { type: 'pageVariable', pageValue: ctx.pageValue, nameValue: ctx.nameValue }
 	}
 	if (!ctx.nameValue) return undefined
 	return { type: 'customVariable', nameValue: ctx.nameValue }

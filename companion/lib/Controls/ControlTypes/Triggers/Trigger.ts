@@ -2,10 +2,9 @@ import debounceFn from 'debounce-fn'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { clamp } from '../../../Resources/Util.js'
@@ -133,6 +132,10 @@ export class ControlTrigger
 
 	readonly entities: ControlEntityListPoolTrigger
 
+	get drawing(): null {
+		return null // Triggers don't draw
+	}
+
 	/**
 	 * Whether this trigger and its parent collection is enabled or not
 	 */
@@ -145,22 +148,17 @@ export class ControlTrigger
 	#isRateLimited: boolean = false
 
 	/**
-	 * @param registry - the application core
-	 * @param eventBus - the main trigger event bus
+	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(
-		deps: ControlDependencies,
-		eventBus: TriggerEvents,
-		controlId: string,
-		storage: TriggerModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: string, storage: TriggerModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
-		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerRedraw.bind(this))
+		const eventBus = deps.triggerEvents
+
+		this.#actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerInvalidation.bind(this))
 
 		this.entities = new ControlEntityListPoolTrigger({
 			controlId,
@@ -170,10 +168,11 @@ export class ControlTrigger
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
 		this.#eventBus = eventBus
-		this.#timerEvents = new TriggersEventTimer(eventBus, controlId, this.executeActions.bind(this))
+		this.#timerEvents = new TriggersEventTimer(deps.userconfig, eventBus, controlId, this.executeActions.bind(this))
 		this.#miscEvents = new TriggersEventMisc(eventBus, controlId, this.executeActions.bind(this))
 		this.#variablesEvents = new TriggersEventVariables(eventBus, controlId, this.executeActions.bind(this), (limited) =>
 			this.#setVariableRateLimited(limited)
@@ -214,7 +213,7 @@ export class ControlTrigger
 		// Elements are not relevant for triggers
 
 		if (options.redraw) {
-			this.triggerRedraw()
+			this.triggerInvalidation()
 		}
 	}
 
@@ -474,12 +473,12 @@ export class ControlTrigger
 				case 'condition_true':
 					this.#conditionCheckLastValue = this.entities.checkConditionValue()
 					this.#conditionCheckEvents.add(event.id)
-					this.triggerRedraw() // Recheck the condition
+					this.triggerInvalidation() // Recheck the condition
 					break
 				case 'condition_false':
 					this.#conditionCheckLastValue = this.entities.checkConditionValue()
 					this.#conditionCheckEvents.add(event.id)
-					this.triggerRedraw() // Recheck the condition
+					this.triggerInvalidation() // Recheck the condition
 					break
 				case 'variable_changed':
 					this.#variablesEvents.setVariableChanged(event.id, stringifyVariableValue(event.options.variableId) ?? '')
@@ -610,7 +609,7 @@ export class ControlTrigger
 		if (this.#enabled !== newEnabled) {
 			this.#enabled = newEnabled
 			if (newEnabled && this.#conditionCheckEvents.size > 0) {
-				// Refresh the last-known condition value so the first triggerRedraw
+				// Refresh the last-known condition value so the first triggerInvalidation
 				// after re-enabling does not mistake a stale transition for a new edge.
 				this.#conditionCheckLastValue = this.entities.checkConditionValue()
 			}
@@ -648,10 +647,9 @@ export class ControlTrigger
 	}
 
 	/**
-	 * Trigger a recheck of the condition, as something has changed and it might be the 'condition'
-	 * @access protected
+	 * Trigger a recheck of the condition, as something has changed and it might be the 'condition'.
 	 */
-	triggerRedraw = debounceFn(
+	triggerInvalidation = debounceFn(
 		() => {
 			if (!this.#enabled || this.#conditionCheckEvents.size === 0) {
 				// the condition, above, implies !(this.options.enabled && this.#collectionEnabled)
@@ -819,17 +817,10 @@ export class ControlTrigger
 		return false
 	}
 
-	getLastDrawStyle(): DrawStyleModel | null {
-		return null
-	}
-
 	/**
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
-		// Nothing to do
-	}
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
 		// Nothing to do
 	}
 }

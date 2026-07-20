@@ -42,6 +42,34 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 	// Also guards against pointercancel (button=0) firing spuriously after right-click.
 	const isPressedRef = useRef(false)
 
+	// Merge our own ref onto the root element (alongside any dnd dropRef) so we can attach a native,
+	// non-passive touchstart listener below.
+	const rootElementRef = useRef<HTMLDivElement | null>(null)
+	const dropRef = props.dropRef
+	const setRootRef = useCallback(
+		(el: HTMLDivElement | null) => {
+			rootElementRef.current = el
+			dropRef?.(el)
+		},
+		[dropRef]
+	)
+
+	// On plain hold buttons (no context menu, e.g. the Surface Emulator and the Tablet/Web buttons
+	// page) suppress the browser's long-press gesture entirely: on a stationary touch Android Chrome
+	// otherwise fires a haptic buzz and a context-menu/pointercancel that releases the button early.
+	// This requires a native non-passive listener - React's synthetic onTouchStart is passive and its
+	// preventDefault() is a no-op. Grid buttons (with a context menu) intentionally keep the long-press.
+	useEffect(() => {
+		const el = rootElementRef.current
+		if (!el || rawOnContextMenu) return
+
+		const handleTouchStart = (e: TouchEvent) => {
+			e.preventDefault()
+		}
+		el.addEventListener('touchstart', handleTouchStart, { passive: false })
+		return () => el.removeEventListener('touchstart', handleTouchStart)
+	}, [rawOnContextMenu])
+
 	const doPress = useCallback(
 		(e: React.UIEvent) => {
 			if (e.type !== 'pointerdown' && e.type !== 'mousedown') e.preventDefault()
@@ -75,25 +103,34 @@ export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewPro
 			if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return
 			e.preventDefault()
 			e.stopPropagation()
-			// If a press was started (mobile long-press), release it before opening the menu
+
+			// Without a context menu (e.g. the Surface Emulator or the Tablet/Web buttons page) a
+			// long-press must not release the button - the press has to continue until the finger is
+			// lifted. Otherwise the browser's long-press gesture cancels a stationary hold (issue #4322).
+			if (!rawOnContextMenu) return
+
+			// A press was started (mobile long-press), release it before opening the menu
 			if (isPressedRef.current) {
 				isPressedRef.current = false
 				rawOnClick?.(rawLocation, false)
 			}
-			rawOnContextMenu?.(rawLocation, e.clientX, e.clientY)
+			rawOnContextMenu(rawLocation, e.clientX, e.clientY)
 		},
 		[rawOnContextMenu, rawOnClick, rawLocation]
 	)
 
 	return (
 		<div
-			ref={props.dropRef}
+			ref={setRootRef}
 			className={classnames(classes)}
 			style={props.style}
 			// Prefer the newer pointer events
 			onPointerDown={hasPointerEvents ? doPress : undefined}
 			onPointerUp={hasPointerEvents ? doRelease : undefined}
-			onPointerCancel={hasPointerEvents ? doRelease : undefined}
+			// Only release on pointercancel when a context menu is present. For plain hold buttons
+			// (emulator/tablet), a stationary touch triggers a spurious pointercancel on Android Chrome
+			// that would release the button early; there we keep it held until pointerup (issue #4322).
+			onPointerCancel={hasPointerEvents && rawOnContextMenu ? doRelease : undefined}
 			// Setup the older mouse and touch events for compatibility
 			onMouseDown={!hasPointerEvents ? doPress : undefined}
 			onMouseUp={!hasPointerEvents ? doRelease : undefined}

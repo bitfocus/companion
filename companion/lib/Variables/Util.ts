@@ -10,10 +10,13 @@
  */
 
 import type { ReadonlyDeep } from 'type-fest'
-import { ExpressionFunctions } from '@companion-app/shared/Expression/ExpressionFunctions.js'
-import { ParseExpression } from '@companion-app/shared/Expression/ExpressionParse.js'
-import { ResolveExpression, type GetVariableValueProps } from '@companion-app/shared/Expression/ExpressionResolve.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
+import {
+	ParseExpression,
+	ResolveExpression,
+	type GetVariableValueProps,
+	type ResolveExpressionLimits,
+} from '@companion-app/shared/Expressions.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -263,7 +266,9 @@ export function executeExpression(
 	str: string,
 	rawVariableValues: ReadonlyDeep<VariableValueData>,
 	requiredType: string | undefined,
-	cachedVariableValues: VariableValueCache
+	cachedVariableValues: VariableValueCache,
+	defaultTimezone: string | undefined,
+	limits?: ResolveExpressionLimits
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
 
@@ -330,8 +335,17 @@ export function executeExpression(
 			return value
 		}
 
-		const functions = {
-			...ExpressionFunctions,
+		let value = ResolveExpression(ParseExpression(str), {
+			...limits,
+			defaultTimezone: () => {
+				// Reading the default timezone registers a dependency on the active timezone variable, so
+				// the expression re-evaluates when the user changes it. Only date/time functions that fall
+				// back to the default (i.e. no explicit `tz` argument) reach this.
+				referencedVariableIds.add('internal:timezone')
+				return defaultTimezone || undefined
+			},
+
+			getVariableValue,
 			blink(interval: any, dutyCycle: any): 0 | 1 {
 				// Validate the interval
 				const int = Number(interval)
@@ -361,9 +375,7 @@ export function executeExpression(
 
 				return result.text
 			},
-		}
-
-		let value = ResolveExpression(ParseExpression(str), getVariableValue, functions)
+		})
 
 		// Fix up the result for some types
 		switch (requiredType) {

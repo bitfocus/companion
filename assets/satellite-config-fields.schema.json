@@ -1,171 +1,164 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "array",
+	"items": { "$ref": "#/$defs/ConfigField" },
 	"title": "Satellite Config Fields",
 	"description": "Schema describing an array of custom config field definitions for a satellite device. These fields are rendered in the Companion UI surface settings panel and the stored values are pushed back to the device via DEVICE-CONFIG.",
-	"type": "array",
-	"items": {
-		"$ref": "#/$defs/configField"
-	},
 	"$defs": {
-		"commonFields": {
+		"ConfigField": {
+			"oneOf": [
+				{ "$ref": "#/$defs/StaticTextField" },
+				{ "$ref": "#/$defs/TextInputField" },
+				{ "$ref": "#/$defs/DropdownField" },
+				{ "$ref": "#/$defs/NumberField" },
+				{ "$ref": "#/$defs/CheckboxField" }
+			],
+			"title": "ConfigField"
+		},
+		"StaticTextField": {
 			"type": "object",
 			"properties": {
 				"id": {
-					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object.",
-					"type": "string"
+					"type": "string",
+					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object."
 				},
-				"label": {
-					"description": "Human-readable label shown in the UI.",
-					"type": "string"
-				},
+				"label": { "type": "string", "description": "Human-readable label shown in the UI." },
 				"description": {
 					"description": "Optional longer description shown in the UI to explain the field.",
 					"type": "string"
 				},
-				"tooltip": {
-					"description": "Optional tooltip text shown on hover.",
-					"type": "string"
-				},
+				"tooltip": { "description": "Optional tooltip text shown on hover.", "type": "string" },
 				"isVisibleExpression": {
 					"description": "Optional expression that controls field visibility. When provided, the field is only shown when the expression evaluates to true.",
 					"type": "string"
-				}
+				},
+				"type": { "type": "string", "const": "static-text" },
+				"value": { "type": "string", "description": "Static text content to display." }
 			},
-			"required": ["id", "label"]
+			"required": ["id", "label", "type", "value"],
+			"title": "StaticTextField"
 		},
-		"staticTextField": {
-			"allOf": [
-				{ "$ref": "#/$defs/commonFields" },
-				{
-					"type": "object",
-					"properties": {
-						"type": { "const": "static-text" },
-						"value": {
-							"description": "Static text content to display.",
-							"type": "string"
-						}
-					},
-					"required": ["type", "value"]
-				}
-			]
-		},
-		"textInputField": {
-			"allOf": [
-				{ "$ref": "#/$defs/commonFields" },
-				{
-					"type": "object",
-					"properties": {
-						"type": { "const": "textinput" },
-						"default": {
-							"description": "Default value.",
-							"type": "string"
-						},
-						"regex": {
-							"description": "Optional regex pattern the value must match.",
-							"type": "string"
-						},
-						"multiline": {
-							"description": "Whether the input is a multiline text area.",
-							"type": "boolean"
-						}
-					},
-					"required": ["type"]
-				}
-			]
-		},
-		"dropdownChoice": {
+		"TextInputField": {
 			"type": "object",
 			"properties": {
 				"id": {
-					"description": "The value stored when this choice is selected.",
-					"type": ["string", "number"]
+					"type": "string",
+					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object."
 				},
-				"label": {
-					"description": "Human-readable label for the choice.",
+				"label": { "type": "string", "description": "Human-readable label shown in the UI." },
+				"description": {
+					"description": "Optional longer description shown in the UI to explain the field.",
 					"type": "string"
+				},
+				"tooltip": { "description": "Optional tooltip text shown on hover.", "type": "string" },
+				"isVisibleExpression": {
+					"description": "Optional expression that controls field visibility. When provided, the field is only shown when the expression evaluates to true.",
+					"type": "string"
+				},
+				"type": { "type": "string", "const": "textinput" },
+				"default": { "description": "Default value.", "type": "string" },
+				"regex": { "description": "Optional regex pattern the value must match.", "type": "string" },
+				"multiline": { "description": "Whether the input is a multiline text area.", "type": "boolean" }
+			},
+			"required": ["id", "label", "type"],
+			"title": "TextInputField"
+		},
+		"DropdownField": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object."
+				},
+				"label": { "type": "string", "description": "Human-readable label shown in the UI." },
+				"description": {
+					"description": "Optional longer description shown in the UI to explain the field.",
+					"type": "string"
+				},
+				"tooltip": { "description": "Optional tooltip text shown on hover.", "type": "string" },
+				"isVisibleExpression": {
+					"description": "Optional expression that controls field visibility. When provided, the field is only shown when the expression evaluates to true.",
+					"type": "string"
+				},
+				"type": { "type": "string", "const": "dropdown" },
+				"choices": {
+					"minItems": 1,
+					"type": "array",
+					"items": { "$ref": "#/$defs/DropdownChoice" },
+					"description": "List of selectable choices."
+				},
+				"default": {
+					"description": "Default selected choice id.",
+					"anyOf": [{ "type": "string" }, { "type": "number" }]
+				},
+				"allowCustom": {
+					"description": "Whether the user can type a custom value not in the choices list.",
+					"type": "boolean"
 				}
 			},
+			"required": ["id", "label", "type", "choices"],
+			"title": "DropdownField"
+		},
+		"DropdownChoice": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"anyOf": [{ "type": "string" }, { "type": "number" }],
+					"description": "The value stored when this choice is selected."
+				},
+				"label": { "type": "string", "description": "Human-readable label for the choice." }
+			},
 			"required": ["id", "label"],
-			"additionalProperties": false
+			"title": "DropdownChoice"
 		},
-		"dropdownField": {
-			"allOf": [
-				{ "$ref": "#/$defs/commonFields" },
-				{
-					"type": "object",
-					"properties": {
-						"type": { "const": "dropdown" },
-						"choices": {
-							"description": "List of selectable choices.",
-							"type": "array",
-							"items": { "$ref": "#/$defs/dropdownChoice" },
-							"minItems": 1
-						},
-						"default": {
-							"description": "Default selected choice id.",
-							"type": ["string", "number"]
-						},
-						"allowCustom": {
-							"description": "Whether the user can type a custom value not in the choices list.",
-							"type": "boolean"
-						}
-					},
-					"required": ["type", "choices"]
-				}
-			]
+		"NumberField": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object."
+				},
+				"label": { "type": "string", "description": "Human-readable label shown in the UI." },
+				"description": {
+					"description": "Optional longer description shown in the UI to explain the field.",
+					"type": "string"
+				},
+				"tooltip": { "description": "Optional tooltip text shown on hover.", "type": "string" },
+				"isVisibleExpression": {
+					"description": "Optional expression that controls field visibility. When provided, the field is only shown when the expression evaluates to true.",
+					"type": "string"
+				},
+				"type": { "type": "string", "const": "number" },
+				"min": { "type": "number", "description": "Minimum allowed value." },
+				"max": { "type": "number", "description": "Maximum allowed value." },
+				"default": { "description": "Default value.", "type": "number" },
+				"step": { "description": "Step increment for the input.", "type": "number" }
+			},
+			"required": ["id", "label", "type", "min", "max"],
+			"title": "NumberField"
 		},
-		"numberField": {
-			"allOf": [
-				{ "$ref": "#/$defs/commonFields" },
-				{
-					"type": "object",
-					"properties": {
-						"type": { "const": "number" },
-						"min": {
-							"description": "Minimum allowed value.",
-							"type": "number"
-						},
-						"max": {
-							"description": "Maximum allowed value.",
-							"type": "number"
-						},
-						"default": {
-							"description": "Default value.",
-							"type": "number"
-						},
-						"step": {
-							"description": "Step increment for the input.",
-							"type": "number"
-						}
-					},
-					"required": ["type", "min", "max"]
-				}
-			]
-		},
-		"checkboxField": {
-			"allOf": [
-				{ "$ref": "#/$defs/commonFields" },
-				{
-					"type": "object",
-					"properties": {
-						"type": { "const": "checkbox" },
-						"default": {
-							"description": "Default checked state.",
-							"type": "boolean"
-						}
-					},
-					"required": ["type"]
-				}
-			]
-		},
-		"configField": {
-			"oneOf": [
-				{ "$ref": "#/$defs/staticTextField" },
-				{ "$ref": "#/$defs/textInputField" },
-				{ "$ref": "#/$defs/dropdownField" },
-				{ "$ref": "#/$defs/numberField" },
-				{ "$ref": "#/$defs/checkboxField" }
-			]
+		"CheckboxField": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "string",
+					"description": "Unique identifier for the field. Used as the key in the DEVICE-CONFIG JSON object."
+				},
+				"label": { "type": "string", "description": "Human-readable label shown in the UI." },
+				"description": {
+					"description": "Optional longer description shown in the UI to explain the field.",
+					"type": "string"
+				},
+				"tooltip": { "description": "Optional tooltip text shown on hover.", "type": "string" },
+				"isVisibleExpression": {
+					"description": "Optional expression that controls field visibility. When provided, the field is only shown when the expression evaluates to true.",
+					"type": "string"
+				},
+				"type": { "type": "string", "const": "checkbox" },
+				"default": { "description": "Default checked state.", "type": "boolean" }
+			},
+			"required": ["id", "label", "type"],
+			"title": "CheckboxField"
 		}
 	}
 }

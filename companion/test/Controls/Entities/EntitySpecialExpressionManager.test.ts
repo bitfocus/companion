@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { EntityModelType, RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import {
@@ -8,10 +8,9 @@ import {
 } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type {
 	NewSpecialExpressionValue,
-	SpecialExpression,
 	UpdateSpecialExpressionValuesFn,
 } from '../../../lib/Controls/Entities/SpecialExpressions.js'
-import { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
+import type { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
 
 describe('EntityPoolSpecialExpressionManager', () => {
 	// Create mock functions
@@ -483,8 +482,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 				// Unexpected state.
 				expect('unexpected state').toBe(`
-isInvertedW=${isInvertedW}, isInvertedW.referencedVariableIds=${isInvertedW?.referencedVariableIds?.values().toArray()}
-storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?.referencedVariableIds?.values().toArray()}
+isInvertedW=${JSON.stringify(isInvertedW)}, isInvertedW.referencedVariableIds=${isInvertedW?.referencedVariableIds?.values().toArray()}
+storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds=${storeResultW?.referencedVariableIds?.values().toArray()}
 `)
 			}
 
@@ -658,6 +657,54 @@ storeResultW=${storeResultW}, storeResultW.referencedVariableIds=${storeResultW?
 							value: {
 								type: 'local-variable',
 								location: '1/2/4',
+								variableName: 'parsed-variable-name',
+							},
+						},
+					],
+				])
+			)
+		})
+
+		it('should parse storeResult special expression, page variable', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: '2',
+				variableIds: new Set(['custom:varname']),
+			}
+			mockParseVariablesResult = {
+				text: 'parsed-variable-name',
+				variableIds: new Set<string>(['page:foo']),
+			}
+
+			const mockEntity = createMockActionEntity('entity-18', {
+				type: 'page-variable',
+				page: {
+					isExpression: true,
+					value: `'expression'`,
+				},
+				variableName: {
+					isExpression: false,
+					value: '$(custom:variableName)t',
+				},
+			})
+
+			manager.trackEntity(mockEntity, 'storeResult')
+
+			vi.runAllTimers()
+
+			expect(mockVariablesParser.executeExpression).toHaveBeenCalledWith(`'expression'`, 'string')
+			expect(mockVariablesParser.parseVariables).toHaveBeenCalledWith('$(custom:variableName)t')
+			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
+			expect(mockUpdateStoreResultFn).toHaveBeenCalledWith(
+				new Map<string, NewSpecialExpressionValue<'storeResult'>>([
+					[
+						'entity-18',
+						{
+							entityId: 'entity-18',
+							controlId: 'control-1',
+							value: {
+								type: 'page-variable',
+								page: '2',
 								variableName: 'parsed-variable-name',
 							},
 						},

@@ -15,11 +15,15 @@ function renderCache() {
 
 describe('EntityListHeightCache', () => {
 	it('throws when used outside a provider', () => {
-		// React logs the render error to console.error; silence it for clean test output
+		// A throwing render is logged twice for clean test output: React writes to console.error, and it also
+		// re-dispatches the error to the window, which jsdom then reports. Silence both.
 		const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+		const suppressWindowError = (event: ErrorEvent) => event.preventDefault()
+		window.addEventListener('error', suppressWindowError)
 		try {
 			expect(() => renderHook(() => useEntityListHeightCache())).toThrow(/EntityListHeightCacheProvider/)
 		} finally {
+			window.removeEventListener('error', suppressWindowError)
 			spy.mockRestore()
 		}
 	})

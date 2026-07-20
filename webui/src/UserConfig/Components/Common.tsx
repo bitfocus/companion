@@ -8,6 +8,9 @@ export interface UserConfigProps {
 
 	setValue: (key: keyof UserConfigModel, value: any) => void
 	resetValue: (key: keyof UserConfigModel) => void
+
+	/** Keys that are locked by a launch-time override and cannot be edited in the UI */
+	readonlyKeys: ReadonlySet<keyof UserConfigModel>
 }
 
 interface ResetButtonProps {

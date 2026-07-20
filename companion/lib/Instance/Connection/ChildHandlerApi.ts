@@ -38,6 +38,13 @@ export interface ConnectionChildHandlerDependencies {
 		level: string,
 		message: string
 	) => void
+
+	/** Record feedback values received from the module child (for metrics) */
+	readonly trackFeedbackValuesReceived: (connectionId: string, count: number) => void
+	/** Record variable values received from the module child (for metrics) */
+	readonly trackVariableValuesReceived: (connectionId: string, count: number) => void
+	/** Record an IPC message (and its serialized payload byte size) exchanged with the module child (for metrics) */
+	readonly trackIpcMessage: (instanceId: string, direction: 'sent' | 'received', bytes: number) => void
 }
 
 export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
@@ -70,7 +77,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		changedVariableIds: string[],
-		fromControlId: string | null
+		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void>
 
 	entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void>

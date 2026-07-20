@@ -123,7 +123,7 @@ export class InternalController {
 			this.#buildingBlocksFragment,
 			new InternalActionRecorder(instanceController.actionRecorder, this.#pageStore),
 			new InternalInstance(instanceController),
-			new InternalTime(),
+			new InternalTime(userConfigController),
 			new InternalControls(graphicsController, this.#controlsStore, this.#pageStore, controlEvents),
 			new InternalCustomVariables(this.#variablesController),
 			new InternalPage(this.#pageStore),
@@ -666,7 +666,7 @@ export class InternalController {
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
 	}
 
-	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, fromControlId: string | null): void {
+	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const newValues: NewFeedbackValue[] = []
@@ -675,8 +675,8 @@ export class InternalController {
 		for (const [id, feedback] of this.#feedbacks) {
 			if (!feedback.referencedVariables || !feedback.referencedVariables.size) continue
 
-			// If a specific control is specified, only update feedbacks for that control
-			if (fromControlId && feedback.controlId !== fromControlId) continue
+			// If the change is scoped to specific control(s), only update feedbacks for those
+			if (controlIdFilter && !controlIdFilter.has(feedback.controlId)) continue
 
 			// Check a referenced variable was changed
 			if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue

@@ -124,6 +124,15 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData[1]).toContain('SUBSCRIPTIONS=1')
 		})
 
+		test('CAPS advertises the supported BITMAP_FORMATS', () => {
+			const { api, logger } = createService()
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('BITMAP_FORMATS="rgb,png,webp"')
+		})
+
 		test('returns processMessage and cleanupDevices', () => {
 			const { api, logger } = createService()
 			const socket = new TestSocketWrapper()
@@ -302,15 +311,42 @@ describe('ServiceSatelliteApi', () => {
 			expect(callArgs.transferVariables).toEqual([]) // default when VARIABLES not specified
 			expect(callArgs.gridSize).toEqual({ columns: 8, rows: 4 }) // LEGACY_MAX_BUTTONS=32 / LEGACY_BUTTONS_PER_ROW=8
 			expect(callArgs.surfaceManifestFromClient).toBe(false)
+			expect(callArgs.bitmapFormat).toBe('rgb') // default when BITMAP_FORMAT not specified
 
 			expect(socket.lastMessage).toContain('ADD-DEVICE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
 		})
 
+		test.each(['png', 'webp'])('negotiates BITMAP_FORMAT=%s', (format) => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" BITMAP_FORMAT=${format}\n`)
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.bitmapFormat).toBe(format)
+		})
+
+		test('falls back to rgb for an unadvertised BITMAP_FORMAT', () => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" BITMAP_FORMAT=jpeg\n')
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.bitmapFormat).toBe('rgb')
+		})
+
 		test('adds device with custom KEYS_TOTAL and KEYS_PER_ROW', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -373,7 +409,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with BITMAPS enabled and custom size', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -386,7 +422,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('BITMAPS defaults to 72 when truthy but not a valid number', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -400,7 +436,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('BITMAPS=false produces no bitmap in manifest', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -413,7 +449,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('BITMAPS=0 produces no bitmap in manifest', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -426,7 +462,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with COLORS=hex', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -439,7 +475,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with COLORS=rgb', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -452,7 +488,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with BRIGHTNESS=false', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -465,7 +501,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with PINCODE_LOCK=FULL', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -478,7 +514,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with PINCODE_LOCK=PARTIAL', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -491,7 +527,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with TEXT and TEXT_STYLE enabled', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -544,7 +580,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with valid VARIABLES', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -576,7 +612,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes SERIAL to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -591,7 +627,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes SERIAL_IS_UNIQUE=false to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -606,7 +642,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes SERIAL_IS_UNIQUE=true to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -623,7 +659,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('serial defaults to deviceId and serialIsUnique defaults to true when not provided', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -685,7 +721,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('configFields is undefined when CONFIG_FIELDS not provided', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -698,7 +734,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes CAN_CHANGE_PAGE to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -712,7 +748,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('canChangePage defaults to undefined when CAN_CHANGE_PAGE not provided', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -736,6 +772,41 @@ describe('ServiceSatelliteApi', () => {
 
 			expect(socket.lastMessage).toContain('ERROR')
 			expect(socket.lastMessage).toContain('Invalid LAYOUT_MANIFEST')
+		})
+
+		test('accepts LAYOUT_MANIFEST with unknown properties, stripping them', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			// Properties from a hypothetical newer protocol version must be ignored, not rejected
+			const manifest = {
+				controls: {
+					btn1: { row: 0, column: 0, futureControlProp: 'ignore me' },
+				},
+				stylePresets: {
+					default: { text: true, futurePresetProp: 123 },
+				},
+				futureRootProp: { anything: true },
+			}
+			const encoded = Buffer.from(JSON.stringify(manifest)).toString('base64')
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" LAYOUT_MANIFEST="${encoded}"\n`)
+
+			expect(socket.lastMessage).toContain('ADD-DEVICE')
+			expect(socket.lastMessage).toContain('OK')
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.surfaceManifest).toEqual({
+				controls: {
+					btn1: { row: 0, column: 0 },
+				},
+				stylePresets: {
+					default: { text: true },
+				},
+			})
 		})
 	})
 
@@ -1432,6 +1503,23 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('ADD-SUB')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
+		})
+
+		test('negotiates BITMAP_FORMAT and sends the encoded data url in SUB-STATE', async () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockRender = mock<ImageResult>()
+			mockRender.drawNativeEncoded.mockResolvedValue('data:image/webp;base64,AQIDBA==')
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
+
+			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3" BITMAP=72 BITMAP_FORMAT=webp\n')
+
+			await expect.poll(() => socket.writtenData.some((m) => m.includes('SUB-STATE'))).toBe(true)
+
+			expect(mockRender.drawNativeEncoded).toHaveBeenCalledWith(72, 72, null, 'webp')
+			const subState = socket.writtenData.find((m) => m.includes('SUB-STATE'))
+			expect(subState).toContain('BITMAP="data:image/webp;base64,AQIDBA=="')
 		})
 
 		test('successfully adds subscription with base64 STYLE', () => {

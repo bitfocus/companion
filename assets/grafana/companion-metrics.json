@@ -1,0 +1,2052 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"type": "dashboard"
+			}
+		]
+	},
+	"description": "Application-level metrics published by Bitfocus Companion at /api/metrics (companion_* series). Generic Node.js/process metrics are intentionally excluded - use a standard Node.js dashboard for those.",
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 1,
+	"links": [],
+	"refresh": "30s",
+	"schemaVersion": 39,
+	"tags": ["companion", "bitfocus"],
+	"templating": {
+		"list": [
+			{
+				"current": {},
+				"hide": 0,
+				"includeAll": false,
+				"label": "Data source",
+				"multi": false,
+				"name": "datasource",
+				"options": [],
+				"query": "prometheus",
+				"refresh": 1,
+				"regex": "",
+				"type": "datasource"
+			},
+			{
+				"allValue": ".*",
+				"current": {
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "prometheus",
+					"uid": "${datasource}"
+				},
+				"definition": "label_values(companion_instance_info, label)",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Connection",
+				"multi": true,
+				"name": "connection",
+				"options": [],
+				"query": {
+					"query": "label_values(companion_instance_info, label)",
+					"refId": "StandardVariableQuery"
+				},
+				"refresh": 2,
+				"regex": "",
+				"sort": 1,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "Companion — Application Metrics",
+	"uid": "companion-app-metrics",
+	"version": 1,
+	"weekStart": "",
+	"panels": [
+		{
+			"type": "row",
+			"id": 100,
+			"title": "Overview",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			}
+		},
+		{
+			"id": 1,
+			"type": "stat",
+			"title": "Version",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 0,
+				"y": 1
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "name",
+				"colorMode": "none",
+				"graphMode": "none",
+				"justifyMode": "auto"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "companion_build_info",
+					"legendFormat": "{{version}}",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 2,
+			"type": "stat",
+			"title": "Connections enabled",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 4,
+				"y": 1
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "green"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "value",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_connections{enabled=\"true\"})",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 3,
+			"type": "stat",
+			"title": "Connections disabled",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 8,
+				"y": 1
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "text"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "value",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_connections{enabled=\"false\"})",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 4,
+			"type": "stat",
+			"title": "Instances ready",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 12,
+				"y": 1
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "green"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "value",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_instance_ready)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 5,
+			"type": "stat",
+			"title": "Instances not ready",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 16,
+				"y": 1
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 1
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "background",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "count(companion_instance_ready == 0) OR on() vector(0)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 6,
+			"type": "stat",
+			"title": "Surfaces connected",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 20,
+				"y": 1
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "value",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_surfaces_connected)",
+					"legendFormat": "total",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 7,
+			"type": "stat",
+			"title": "Pages",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 0,
+				"y": 5
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "none",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_pages)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 8,
+			"type": "stat",
+			"title": "Buttons",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 4,
+				"y": 5
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "none",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_buttons)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 9,
+			"type": "stat",
+			"title": "Triggers",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 8,
+				"y": 5
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "none",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_triggers)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 10,
+			"type": "stat",
+			"title": "Custom variables",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 12,
+				"y": 5
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "none",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_custom_variables)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 11,
+			"type": "stat",
+			"title": "Expression variables",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 16,
+				"y": 5
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "none",
+				"graphMode": "none"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_expression_variables)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 12,
+			"type": "stat",
+			"title": "Satellites connected",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 4,
+				"x": 20,
+				"y": 5
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"textMode": "auto",
+				"colorMode": "value",
+				"graphMode": "area"
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_satellites_connected)",
+					"instant": true
+				}
+			]
+		},
+		{
+			"type": "row",
+			"id": 200,
+			"title": "Rendering",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 9
+			}
+		},
+		{
+			"id": 20,
+			"type": "timeseries",
+			"title": "Native render duration (drawNative cache misses)",
+			"description": "Percentiles of companion_draw_native_render_duration_seconds. Spikes here mean slow button renders.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 10
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["mean", "max"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "histogram_quantile(0.50, sum(rate(companion_draw_native_render_duration_seconds_bucket[$__rate_interval])) by (le))",
+					"legendFormat": "p50"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "histogram_quantile(0.90, sum(rate(companion_draw_native_render_duration_seconds_bucket[$__rate_interval])) by (le))",
+					"legendFormat": "p90"
+				},
+				{
+					"refId": "C",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "histogram_quantile(0.99, sum(rate(companion_draw_native_render_duration_seconds_bucket[$__rate_interval])) by (le))",
+					"legendFormat": "p99"
+				},
+				{
+					"refId": "D",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "rate(companion_draw_native_render_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(companion_draw_native_render_duration_seconds_count[$__rate_interval]), 1)",
+					"legendFormat": "avg"
+				}
+			]
+		},
+		{
+			"id": 21,
+			"type": "timeseries",
+			"title": "Draw request rate by result",
+			"description": "companion_draw_requests_total (native) and companion_draw_datauri_requests_total (data-url), split by cache hit vs fresh render/encode.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 10
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "reqps",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 20,
+						"stacking": {
+							"mode": "normal",
+							"group": "A"
+						},
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["mean", "sum"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (result) (rate(companion_draw_requests_total[$__rate_interval]))",
+					"legendFormat": "native {{result}}"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (result) (rate(companion_draw_datauri_requests_total[$__rate_interval]))",
+					"legendFormat": "datauri {{result}}"
+				}
+			]
+		},
+		{
+			"id": 22,
+			"type": "gauge",
+			"title": "Render cache hit ratio",
+			"description": "Fraction of draw requests served from the render LRU cache.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 0,
+				"y": 18
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"min": 0,
+					"max": 1,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							},
+							{
+								"color": "orange",
+								"value": 0.5
+							},
+							{
+								"color": "green",
+								"value": 0.8
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showThresholdLabels": false,
+				"showThresholdMarkers": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_draw_requests_total{result=\"cache_hit\"}[$__rate_interval])) / clamp_min(sum(rate(companion_draw_requests_total[$__rate_interval])), 1)"
+				}
+			]
+		},
+		{
+			"id": 23,
+			"type": "timeseries",
+			"title": "Render queue tasks",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 9,
+				"x": 6,
+				"y": 18
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 20,
+						"showPoints": "never",
+						"stacking": {
+							"mode": "normal",
+							"group": "A"
+						}
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (state) (companion_render_queue_tasks)",
+					"legendFormat": "{{state}}"
+				}
+			]
+		},
+		{
+			"id": 24,
+			"type": "timeseries",
+			"title": "Render cache occupancy",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 9,
+				"x": 15,
+				"y": 18
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Limit"
+						},
+						"properties": [
+							{
+								"id": "custom.drawStyle",
+								"value": "line"
+							},
+							{
+								"id": "custom.lineStyle",
+								"value": {
+									"fill": "dash",
+									"dash": [8, 8]
+								}
+							},
+							{
+								"id": "color",
+								"value": {
+									"mode": "fixed",
+									"fixedColor": "red"
+								}
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_render_cache_entries)",
+					"legendFormat": "Entries"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_render_cache_limit_entries)",
+					"legendFormat": "Limit"
+				}
+			]
+		},
+		{
+			"id": 25,
+			"type": "timeseries",
+			"title": "ImageResults retained in memory",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 0,
+				"y": 25
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "single"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_image_results_live)",
+					"legendFormat": "live"
+				}
+			]
+		},
+		{
+			"id": 26,
+			"type": "timeseries",
+			"title": "ImageResults created rate",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 8,
+				"y": 25
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 20,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "single"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_image_results_created_total[$__rate_interval]))",
+					"legendFormat": "created/s"
+				}
+			]
+		},
+		{
+			"id": 27,
+			"type": "timeseries",
+			"title": "Render worker terminations",
+			"description": "companion_render_worker_terminations_total. Sustained non-zero rate indicates the render worker pool is crashing.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 16,
+				"y": 25
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "bars",
+						"fillOpacity": 60,
+						"showPoints": "never"
+					},
+					"color": {
+						"mode": "fixed",
+						"fixedColor": "red"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "single"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(increase(companion_render_worker_terminations_total[$__rate_interval]))",
+					"legendFormat": "terminations"
+				}
+			]
+		},
+		{
+			"id": 28,
+			"type": "timeseries",
+			"title": "Render worker pool tasks",
+			"description": "companion_render_pool_tasks — the workerpool's own queue behind the ImageWriteQueue. pending = tasks waiting for a free render thread, active = executing. The dashed peak lines are companion_render_pool_tasks_max, the per-scrape high-water mark that catches bursts a scrape-time snapshot misses.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 12,
+				"x": 0,
+				"y": 32
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byRegexp",
+							"options": "/^peak/"
+						},
+						"properties": [
+							{
+								"id": "custom.lineStyle",
+								"value": {
+									"fill": "dash",
+									"dash": [8, 8]
+								}
+							},
+							{
+								"id": "custom.fillOpacity",
+								"value": 0
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (state) (companion_render_pool_tasks)",
+					"legendFormat": "{{state}}"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (state) (companion_render_pool_tasks_max)",
+					"legendFormat": "peak {{state}}"
+				}
+			]
+		},
+		{
+			"id": 29,
+			"type": "timeseries",
+			"title": "Render worker pool threads",
+			"description": "companion_render_pool_workers — busy vs idle render threads against the pool total. busy sitting at total means the render pool is saturated and work is queuing (see pending above).",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 12,
+				"x": 12,
+				"y": 32
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "total"
+						},
+						"properties": [
+							{
+								"id": "custom.lineStyle",
+								"value": {
+									"fill": "dash",
+									"dash": [8, 8]
+								}
+							},
+							{
+								"id": "color",
+								"value": {
+									"mode": "fixed",
+									"fixedColor": "text"
+								}
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (state) (companion_render_pool_workers{state=~\"busy|idle\"})",
+					"legendFormat": "{{state}}"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_render_pool_workers{state=\"total\"})",
+					"legendFormat": "total"
+				}
+			]
+		},
+		{
+			"type": "row",
+			"id": 300,
+			"title": "Connections — health",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 39
+			}
+		},
+		{
+			"id": 30,
+			"type": "table",
+			"title": "Instance overview",
+			"description": "One row per configured instance. Ready state, uptime, restarts and current variable/feedback counts, joined to the human-readable label from companion_instance_info.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 24,
+				"x": 0,
+				"y": 40
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"filterable": true
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Ready"
+						},
+						"properties": [
+							{
+								"id": "mappings",
+								"value": [
+									{
+										"type": "value",
+										"options": {
+											"0": {
+												"text": "Down",
+												"color": "red",
+												"index": 1
+											},
+											"1": {
+												"text": "Ready",
+												"color": "green",
+												"index": 0
+											}
+										}
+									}
+								]
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Uptime"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "s"
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"showHeader": true,
+				"cellHeight": "sm",
+				"footer": {
+					"show": false
+				},
+				"sortBy": [
+					{
+						"displayName": "Ready",
+						"desc": false
+					}
+				]
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (instance_id, label, module_id, module_version, type) (companion_instance_info{label=~\"$connection\"})",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (instance_id) (companion_instance_ready)",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "C",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (instance_id) (time() - companion_instance_ready_timestamp_seconds)",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "D",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (instance_id) (companion_instance_restarts_total)",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "E",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (instance_id) (companion_connection_variables)",
+					"format": "table",
+					"instant": true
+				},
+				{
+					"refId": "F",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (instance_id) (companion_connection_active_feedbacks)",
+					"format": "table",
+					"instant": true
+				}
+			],
+			"transformations": [
+				{
+					"id": "joinByField",
+					"options": {
+						"byField": "instance_id",
+						"mode": "outer"
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"Time": true,
+							"Value #A": true
+						},
+						"indexByName": {
+							"label": 0,
+							"type": 1,
+							"module_id": 2,
+							"module_version": 3,
+							"instance_id": 4,
+							"Value #B": 5,
+							"Value #C": 6,
+							"Value #D": 7,
+							"Value #E": 8,
+							"Value #F": 9
+						},
+						"renameByName": {
+							"label": "Connection",
+							"type": "Type",
+							"module_id": "Module",
+							"module_version": "Module version",
+							"instance_id": "Instance ID",
+							"Value #B": "Ready",
+							"Value #C": "Uptime",
+							"Value #D": "Restarts",
+							"Value #E": "Variables",
+							"Value #F": "Active feedbacks"
+						}
+					}
+				}
+			]
+		},
+		{
+			"id": 31,
+			"type": "timeseries",
+			"title": "Instance restart rate (top 20)",
+			"description": "rate(companion_instance_restarts_total). Any sustained value means an instance is restart-looping.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 51
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"calcs": ["sum"]
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(20, sum by (instance_id) (rate(companion_instance_restarts_total[$__rate_interval])) * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}"
+				}
+			]
+		},
+		{
+			"id": 32,
+			"type": "bargauge",
+			"title": "Instance uptime",
+			"description": "time() - companion_instance_ready_timestamp_seconds.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 51
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s",
+					"color": {
+						"mode": "continuous-GrYlRd"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"orientation": "horizontal",
+				"displayMode": "gradient",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showUnfilled": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "(time() - companion_instance_ready_timestamp_seconds) * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"}",
+					"legendFormat": "{{label}}",
+					"instant": true
+				}
+			]
+		},
+		{
+			"type": "row",
+			"id": 400,
+			"title": "Connections — data flow",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 59
+			}
+		},
+		{
+			"id": 40,
+			"type": "timeseries",
+			"title": "Variable values received rate (top 20)",
+			"description": "rate(companion_connection_variable_values_received_total) - how chatty each connection is with variable updates.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 60
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"calcs": ["mean", "max"]
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(20, sum by (instance_id) (rate(companion_connection_variable_values_received_total[$__rate_interval])) * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}"
+				}
+			]
+		},
+		{
+			"id": 41,
+			"type": "timeseries",
+			"title": "Feedback values received rate (top 20)",
+			"description": "rate(companion_connection_feedback_values_received_total).",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 60
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"calcs": ["mean", "max"]
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(20, sum by (instance_id) (rate(companion_connection_feedback_values_received_total[$__rate_interval])) * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}"
+				}
+			]
+		},
+		{
+			"id": 42,
+			"type": "timeseries",
+			"title": "IPC message rate by direction",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 8,
+				"x": 0,
+				"y": 68
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 20,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (direction) (rate(companion_instance_ipc_messages_total[$__rate_interval]))",
+					"legendFormat": "{{direction}}"
+				}
+			]
+		},
+		{
+			"id": 43,
+			"type": "timeseries",
+			"title": "IPC throughput by direction",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 8,
+				"x": 8,
+				"y": 68
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "Bps",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 20,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (direction) (rate(companion_instance_ipc_bytes_total[$__rate_interval]))",
+					"legendFormat": "{{direction}}"
+				}
+			]
+		},
+		{
+			"id": 44,
+			"type": "timeseries",
+			"title": "Top connections by IPC throughput",
+			"description": "rate(companion_instance_ipc_bytes_total) summed over both directions.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 8,
+				"x": 16,
+				"y": 68
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "Bps",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"calcs": ["mean", "max"]
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "desc"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(15, sum by (instance_id) (rate(companion_instance_ipc_bytes_total[$__rate_interval])) * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}"
+				}
+			]
+		},
+		{
+			"id": 45,
+			"type": "bargauge",
+			"title": "Variables exposed per connection (top 20)",
+			"description": "companion_connection_variables - current number of variables each connection publishes.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 76
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"color": {
+						"mode": "continuous-BlPu"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"orientation": "horizontal",
+				"displayMode": "gradient",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showUnfilled": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(20, companion_connection_variables * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 46,
+			"type": "bargauge",
+			"title": "Active feedbacks per connection (top 20)",
+			"description": "companion_connection_active_feedbacks - enabled feedback entities referencing each connection.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 76
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"color": {
+						"mode": "continuous-GrYlRd"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"orientation": "horizontal",
+				"displayMode": "gradient",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showUnfilled": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(20, companion_connection_active_feedbacks * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 47,
+			"type": "timeseries",
+			"title": "Entity definitions by type",
+			"description": "companion_connection_definitions summed across connections, by entity type (action / feedback / preset).",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 84
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 20,
+						"showPoints": "never",
+						"stacking": {
+							"mode": "normal",
+							"group": "A"
+						}
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (entity_type) (companion_connection_definitions)",
+					"legendFormat": "{{entity_type}}"
+				}
+			]
+		},
+		{
+			"id": 48,
+			"type": "bargauge",
+			"title": "Entity definitions per connection (top 15)",
+			"description": "companion_connection_definitions summed over entity types.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 84
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"color": {
+						"mode": "continuous-BlPu"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"orientation": "horizontal",
+				"displayMode": "gradient",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showUnfilled": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(15, sum by (instance_id) (companion_connection_definitions) * on(instance_id) group_left(label) companion_instance_info{label=~\"$connection\"})",
+					"legendFormat": "{{label}}",
+					"instant": true
+				}
+			]
+		},
+		{
+			"type": "row",
+			"id": 500,
+			"title": "Storage",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 92
+			}
+		},
+		{
+			"id": 51,
+			"type": "bargauge",
+			"title": "Database size (current)",
+			"description": "Current companion_database_size_bytes per database.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 93
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "bytes",
+					"color": {
+						"mode": "continuous-BlPu"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"orientation": "horizontal",
+				"displayMode": "gradient",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showUnfilled": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (database) (companion_database_size_bytes)",
+					"legendFormat": "{{database}}",
+					"instant": true
+				}
+			]
+		},
+		{
+			"id": 50,
+			"type": "timeseries",
+			"title": "Database size",
+			"description": "companion_database_size_bytes (total, from SQLite page_count * page_size) and companion_database_free_bytes (reusable freelist space) per database. The gap between total and free is live data; a growing free portion is bloat a VACUUM would reclaim. Excludes the transient WAL file.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 93
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "bytes",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byRegexp",
+							"options": "/free$/"
+						},
+						"properties": [
+							{
+								"id": "custom.lineStyle",
+								"value": {
+									"fill": "dash",
+									"dash": [8, 8]
+								}
+							}
+						]
+					}
+				]
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (database) (companion_database_size_bytes)",
+					"legendFormat": "{{database}} total"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (database) (companion_database_free_bytes)",
+					"legendFormat": "{{database}} free"
+				}
+			]
+		}
+	]
+}

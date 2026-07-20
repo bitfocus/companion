@@ -64,8 +64,6 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	)
 
 	const rootStore = useMemo(() => {
-		const showWizardEvent = new EventTarget()
-
 		const expressionVariablesList = new ExpressionVariablesListStore()
 
 		const connections = new ConnectionsStore()
@@ -100,8 +98,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			moduleStoreRefreshProgress: observable.map(),
 
-			showWizardEvent,
-			showWizard: () => showWizardEvent.dispatchEvent(new Event('show')),
+			wizardOpen: observable.box(false),
 
 			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore

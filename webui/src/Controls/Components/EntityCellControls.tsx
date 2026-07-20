@@ -43,7 +43,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	let headline = entity.headline || definitionName
 	if (isPanelCollapsed && localVariablePrefix && entity.type === EntityModelType.Feedback && !ownerId) {
 		if (entity.variableName) {
-			headline = `$(local:${entity.variableName}) ${entity.headline || ''}`
+			headline = `$(${localVariablePrefix}:${entity.variableName}) ${entity.headline || ''}`
 		} else {
 			headline = `Unnamed: ${entity.headline || ''}`
 		}

@@ -1,18 +1,20 @@
 import { vi } from 'vitest'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type {
 	ControlEntityListChangeProps,
 	ControlEntityListPoolProps,
 } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
-import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
+import { EditableControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
 import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities/EntityListPoolExpressionVariable.js'
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
+import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
 
 /**
  * Shared harness for exercising `ControlEntityListPoolButton` (and the `ControlEntityListPoolBase`
@@ -67,24 +69,28 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	const processManager = {
 		connectionEntityUpdate: vi.fn(async () => false),
 		connectionEntityDelete: vi.fn(async () => false),
-		connectionEntityLearnOptions: vi.fn(async () => null),
+		connectionEntityLearnOptions: vi.fn<(...args: any[]) => Promise<ExpressionableOptionsObject | undefined | void>>(
+			async () => undefined
+		),
 	}
+	const executeExpression = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 	const variableValues = {
 		emit: vi.fn(),
-		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		createVariablesAndExpressionParser: vi.fn(() => ({ executeExpression }) as any),
 	}
 	const pageStore = {
 		getLocationOfControlId: vi.fn(() => null),
 	}
 
 	const deps: ControlEntityListPoolProps = {
-		instanceDefinitions: { getEntityDefinition } as any,
+		instanceDefinitions: { getEntityDefinition },
 		internalModule: internalModule as any,
 		processManager: processManager as any,
 		variableValues: variableValues as any,
 		pageStore: pageStore as any,
 		controlId,
 		reportChange,
+		getPageVariableEntities: () => null,
 	}
 
 	return {
@@ -95,6 +101,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		internalModule,
 		processManager,
 		variableValues,
+		executeExpression,
 		pageStore,
 	}
 }
@@ -103,17 +110,17 @@ export function createPool(options: CreatePoolOptions = {}) {
 	const isLayered = options.isLayered ?? false
 
 	const sendRuntimeProps = vi.fn()
-	const executeExpressionInControl = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 
 	const base = createPoolDeps(options)
 
-	const pool = new ControlEntityListPoolButton(base.deps, sendRuntimeProps, executeExpressionInControl, isLayered)
+	// The functional helper builds the editable pool so tests can exercise the entity/step mutators. The
+	// read-only `ControlEntityListPoolButton` is constructed directly by the read-only-by-construction tests.
+	const pool = new EditableControlEntityListPoolButton(base.deps, sendRuntimeProps, isLayered)
 
 	return {
 		...base,
 		pool,
 		sendRuntimeProps,
-		executeExpressionInControl,
 	}
 }
 
@@ -162,4 +169,16 @@ export function feedbackModel(overrides: Partial<FeedbackEntityModel> = {}): Fee
 /** A step/set location for the default 'down' action set of a given step. */
 export function downSet(stepId = '0') {
 	return { stepId, setId: 'down' as const }
+}
+
+/**
+ * Build the feedback-value map shape the pools consume (`updateFeedbackValues`) for a set of
+ * entityId -> value pairs.
+ */
+export function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
+	const map = new Map<string, NewFeedbackValue>()
+	for (const [entityId, value] of Object.entries(values)) {
+		map.set(entityId, { entityId, controlId: '', value })
+	}
+	return map
 }

@@ -1,15 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 
 describe('VariablesValues', () => {
 	let values: VariablesValues
 
 	beforeEach(() => {
 		vi.useFakeTimers()
-		values = new VariablesValues()
+		values = new VariablesValues(mockUserConfig({ timezone: '' }))
 	})
 
 	afterEach(() => {
@@ -92,7 +95,7 @@ describe('VariablesValues', () => {
 
 		test('emits variables_changed with the correct changed ID and label', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [entry('v', 'hello')])
 
@@ -105,7 +108,7 @@ describe('VariablesValues', () => {
 		test('does not emit variables_changed when the value has not changed', () => {
 			values.setVariableValues('conn', [entry('v', 'same')])
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [entry('v', 'same')])
 
@@ -114,7 +117,7 @@ describe('VariablesValues', () => {
 
 		test('does not emit variables_changed for an empty variables array', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [])
 
@@ -124,7 +127,7 @@ describe('VariablesValues', () => {
 		test('only includes changed variables in the emitted set', () => {
 			values.setVariableValues('conn', [entry('a', 1), entry('b', 2)])
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [entry('a', 1), entry('b', 99)]) // only b changes
 
@@ -134,9 +137,9 @@ describe('VariablesValues', () => {
 		})
 
 		test('silently skips BANNED_PROPS and does not store them', () => {
-			const banned = [...BANNED_PROPS][0]!
+			const banned = [...BANNED_PROPS][0]
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [entry(banned, 'evil')])
 
@@ -146,7 +149,7 @@ describe('VariablesValues', () => {
 
 		test('silently skips all BANNED_PROPS entries without emitting', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			for (const banned of BANNED_PROPS) {
 				values.setVariableValues('conn', [entry(banned, 'evil')])
@@ -157,7 +160,7 @@ describe('VariablesValues', () => {
 
 		test('for the "custom" label, also emits internal:custom_<id> in the changed set', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('custom', [entry('myvar', 'val')])
 
@@ -168,7 +171,7 @@ describe('VariablesValues', () => {
 
 		test('for non-"custom" labels, does not emit internal:custom_<id>', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [entry('myvar', 'val')])
 
@@ -186,7 +189,7 @@ describe('VariablesValues', () => {
 			// v was never set, so its stored value is already undefined — no change
 			values.setVariableValues('conn', [entry('v', undefined)])
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.setVariableValues('conn', [entry('v', undefined)])
 
@@ -212,7 +215,7 @@ describe('VariablesValues', () => {
 		test('emits variables_changed with all removed variable IDs', () => {
 			values.setVariableValues('conn', [entry('a', 1), entry('b', 2)])
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.forgetConnection('id', 'conn')
 
@@ -225,7 +228,7 @@ describe('VariablesValues', () => {
 
 		test('does not emit variables_changed for a non-existent label', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.forgetConnection('id', 'nonexistent')
 
@@ -236,7 +239,7 @@ describe('VariablesValues', () => {
 			values.setVariableValues('conn', [entry('a', 1)])
 			values.forgetConnection('id', 'conn')
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.forgetConnection('id', 'conn')
 
@@ -271,7 +274,7 @@ describe('VariablesValues', () => {
 		test('emits variables_changed with both old and new variable IDs and labels', () => {
 			values.setVariableValues('old', [entry('a', 1)])
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.connectionLabelRename('old', 'new')
 
@@ -285,7 +288,7 @@ describe('VariablesValues', () => {
 
 		test('non-existent labelFrom: no event emitted', () => {
 			const listener = vi.fn()
-			values.on('variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.connectionLabelRename('nonexistent', 'dest')
 
@@ -382,10 +385,30 @@ describe('VariablesValues', () => {
 		)
 	})
 
+	describe('createVariablesAndExpressionParserForPage', () => {
+		// A page control owns its variables, so within its own expressions a sibling resolves both as
+		// `$(local:x)` (its own name) and `$(page:x)` (how the rest of the page sees it).
+		const pageEntity = {
+			localVariableName: 'local:brightness',
+			rawLocalVariableName: 'brightness',
+			feedbackValue: 75,
+			type: EntityModelType.Feedback,
+			connectionId: 'non-internal',
+			definitionId: 'some-def',
+		} as unknown as ControlEntityInstance
+
+		test('resolves its own variables as both $(local:x) and $(page:x)', () => {
+			const parser = values.createVariablesAndExpressionParserForPage(1, [pageEntity], null)
+
+			expect(parser.parseVariables('$(local:brightness)').text).toBe('75')
+			expect(parser.parseVariables('$(page:brightness)').text).toBe('75')
+		})
+	})
+
 	describe('triggerLocationVariablesChange', () => {
-		test('emits the local_variables_changed event', () => {
+		test('emits the variablesChanged event', () => {
 			const listener = vi.fn()
-			values.on('local_variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.triggerLocationVariablesChange('ctrl-1')
 
@@ -394,16 +417,16 @@ describe('VariablesValues', () => {
 
 		test('passes the controlId as the second argument', () => {
 			const listener = vi.fn()
-			values.on('local_variables_changed', listener)
+			values.on('variablesChanged', listener)
 
 			values.triggerLocationVariablesChange('my-control-id')
 
-			expect(listener.mock.calls[0][1]).toBe('my-control-id')
+			expect(listener.mock.calls[0][2]).toBe('my-control-id')
 		})
 
 		test('emitted variable IDs have the $(...) wrapper stripped', () => {
 			const listener = vi.fn()
-			values.on('local_variables_changed', listener)
+			values.on('variablesChanged', listener)
 			values.triggerLocationVariablesChange('ctrl-1')
 
 			const [changedSet] = listener.mock.calls[0] as [ReadonlySet<string>]
@@ -415,7 +438,7 @@ describe('VariablesValues', () => {
 
 		test('emitted set contains all expected this:* variable names', () => {
 			const listener = vi.fn()
-			values.on('local_variables_changed', listener)
+			values.on('variablesChanged', listener)
 			values.triggerLocationVariablesChange('ctrl-1')
 
 			const [changedSet] = listener.mock.calls[0] as [ReadonlySet<string>]

@@ -249,7 +249,7 @@ function SidebarMenuItemGroup({ children, groupVisible, groupSetVisible, ...item
 }
 
 export const MySidebar = memo(function MySidebar() {
-	const { whatsNewModal, showWizard } = useContext(RootAppStoreContext)
+	const { whatsNewModal, wizardOpen } = useContext(RootAppStoreContext)
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar_foldable', false)
 	const [narrowMode, setNarrowMode] = useLocalStorage('sidebar_narrow_mode', false)
@@ -442,7 +442,7 @@ export const MySidebar = memo(function MySidebar() {
 						groupVisible={settingsGroupVis}
 						groupSetVisible={(expand) => smartExpand(setSettingsGroupVis, expand)}
 					>
-						<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={showWizard} />
+						<SidebarMenuItem name="Configuration Wizard" icon={faHatWizard} onClick={() => wizardOpen.set(true)} />
 						<SidebarMenuItem name="General" icon={faScrewdriver} path="/settings/general" />
 						<SidebarMenuItem name="Buttons" icon={faTableCells} path="/settings/buttons" />
 						<SidebarMenuItem

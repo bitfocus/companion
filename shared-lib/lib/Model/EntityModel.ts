@@ -13,7 +13,7 @@ export type SomeEntityModel = ActionEntityModel | FeedbackEntityModel
 export type SomeReplaceableEntityModel = ReplaceableActionEntityModel | ReplaceableFeedbackEntityModel
 export type ReplaceableActionEntityModel = Pick<
 	ActionEntityModel,
-	'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex'
+	'id' | 'type' | 'definitionId' | 'options' | 'upgradeIndex' | 'storeResult'
 >
 export type ReplaceableFeedbackEntityModel = Pick<
 	FeedbackEntityModel,
@@ -53,13 +53,19 @@ export type RawStoreResultLocalVariable = {
 	readonly variableName: Readonly<ExpressionOrValue<string>>
 }
 
+export type RawStoreResultPageVariable = {
+	readonly type: 'page-variable'
+	readonly page: Readonly<ExpressionOrValue<string>>
+	readonly variableName: Readonly<ExpressionOrValue<string>>
+}
+
 export type RawStoreResultCustomVariable = {
 	readonly type: 'custom-variable'
 	readonly variableName: Readonly<ExpressionOrValue<string>>
 	readonly createIfNotExists: boolean
 }
 
-export type RawStoreResult = RawStoreResultLocalVariable | RawStoreResultCustomVariable
+export type RawStoreResult = RawStoreResultLocalVariable | RawStoreResultPageVariable | RawStoreResultCustomVariable
 
 const zodExpressionableString = createExpressionOrValueSchema(z.string())
 
@@ -67,6 +73,11 @@ export const zodRawStoreResult: z.ZodSchema<RawStoreResult> = z.discriminatedUni
 	z.object({
 		type: z.literal('local-variable'),
 		location: zodExpressionableString,
+		variableName: zodExpressionableString,
+	}),
+	z.object({
+		type: z.literal('page-variable'),
+		page: zodExpressionableString,
 		variableName: zodExpressionableString,
 	}),
 	z.object({

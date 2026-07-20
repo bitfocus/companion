@@ -1,8 +1,8 @@
 import { useDragOperation } from '@dnd-kit/react'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { capitalize } from 'lodash-es'
 import { observer } from 'mobx-react-lite'
+import { capitalize } from '@companion-app/shared/Util.js'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import {
 	CollectionsNestingTableContextProvider,

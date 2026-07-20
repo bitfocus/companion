@@ -210,7 +210,10 @@ export function computeTextLayout(
 
 	let lastDrawnCharCount = 0
 	while (lastDrawnCharCount < displayTextChars.length) {
-		if ((lines.length + 1) * measuredLineHeight > h) {
+		// Always lay out the first line, even if the font is taller than the available height, so that
+		// oversized fixed-size text is drawn (and allowed to overflow/clip) rather than vanishing.
+		// Only stop chunking once at least one line exists and the height has been filled.
+		if (lines.length >= 1 && (lines.length + 1) * measuredLineHeight > h) {
 			// Stop chunking once we have filled the full button height
 			break
 		}
@@ -275,6 +278,13 @@ export function computeTextLayout(
 			lines.push({ text: lineText.join(''), ascent, descent })
 
 			lastDrawnCharCount += breakPos + 1
+
+			// If a hard newline immediately follows a width-based break, consume it. The line break
+			// it would have caused has already happened here, so leaving it in place would start the
+			// next chunk on a newline and insert a spurious blank line.
+			if (displayTextChars[lastDrawnCharCount]?.codePointAt(0) === 10) {
+				lastDrawnCharCount += 1
+			}
 		}
 	}
 	//console.log('we got the break', text, lines.map(line => byteToString(line.text)))
@@ -284,8 +294,9 @@ export function computeTextLayout(
 	const fitsVertically = lines.length >= 1 && lines.length * measuredLineHeight <= h
 	const fits = allTextConsumed && fitsVertically
 
-	// If the text is too tall, we need to drop the last line
-	if (lines.length * measuredLineHeight > h) {
+	// If the text is too tall, drop the last line so the remainder fits vertically. Never drop the sole
+	// line: fixed-size text that is simply too tall must still be drawn (and clip) rather than disappear.
+	if (lines.length > 1 && lines.length * measuredLineHeight > h) {
 		lines.splice(lines.length - 1, 1)
 	}
 

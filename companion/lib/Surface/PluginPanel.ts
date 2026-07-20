@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { sampleLedsToBuffer } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -21,12 +22,7 @@ import type {
 import LogController, { type Logger } from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { parseColorToNumber } from '../Resources/Util.js'
-import {
-	BrightnessConfigField,
-	LockConfigFields,
-	OffsetConfigFields,
-	RotationConfigField,
-} from './CommonConfigFields.js'
+import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from './CommonConfigFields.js'
 import type {
 	DrawButtonItem,
 	SurfaceExecuteExpressionFn,
@@ -59,7 +55,7 @@ function generateConfigFields(
 
 	// If there are any controls, add rotation and lock config
 	if (gridSize.columns > 0 && gridSize.rows > 0) {
-		fields.push(RotationConfigField, ...LockConfigFields)
+		fields.push(RotationConfigField)
 	}
 
 	if (surfaceInfo.canChangePage) {
@@ -218,7 +214,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					if (buffer === undefined || buffer.length == 0) {
 						this.#logger.warn('buffer has invalid size')
 					} else {
-						drawProps.image = Buffer.from(buffer).toString('base64') // TODO - avoid buffer wrap
+						drawProps.image = buffer.toBase64()
 					}
 				}
 
@@ -238,11 +234,21 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				if (controlDefinition.style.text) {
 					drawProps.text = style?.text?.text || ''
 				}
+
+				if (controlDefinition.style.leds && style?.leds) {
+					const buffer = sampleLedsToBuffer(
+						style.leds,
+						controlDefinition.style.leds.segments,
+						controlDefinition.style.leds.mode
+					)
+					drawProps.leds = buffer.toBase64() // base64 for the JSON IPC transport, like `image`
+				}
 				// if (controlDefinition.style.textStyle) {
 				// 	params['FONT_SIZE'] = typeof style !== 'string' && style ? style.size : 'auto'
 				// }
 
-				this.#ipcWrapper
+				// Await the send so the write queue paces itself to the child process.
+				await this.#ipcWrapper
 					.sendWithCb('drawControls', {
 						surfaceId: this.#surfaceInfo.surfaceId,
 						drawProps: [drawProps],

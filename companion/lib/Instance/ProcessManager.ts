@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events'
 import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
@@ -17,6 +18,7 @@ import type { SurfaceModuleManifest } from '@companion-surface/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { isPackaged } from '../Resources/Util.js'
+import { DataChannelServer } from './Common/DataChannelServer.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
 import type { ConnectionChildHandlerApi, ConnectionChildHandlerDependencies } from './Connection/ChildHandlerApi.js'
@@ -49,10 +51,18 @@ interface ModuleChild {
 	logger: Logger
 	restartCount: number
 	isReady: boolean
+	/** Wall-clock ms when the child last became ready. Used to derive connection uptime. undefined while not ready. */
+	readyAt: number | undefined
 	targetState: ModuleChildTargetState | null // Null if disabled
 	lastLabel: string
+	/**
+	 * Set when the instance is being permanently deleted (not just disabled), to perform some extra cleanup once stopped.
+	 */
+	forget?: boolean
 
 	monitor?: RespawnMonitor
+	/** Listening socket carrying the framed message transport. Not used by legacy children. */
+	dataChannel?: DataChannelServer
 	handler?: ChildProcessHandlerBase
 	lifeCycleQueue: PQueue
 	authToken?: string
@@ -65,6 +75,17 @@ interface ModuleChildTargetState {
 	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleVersionId: string | null
+}
+
+/**
+ * Snapshot of a single instance's runtime state, pulled by the metrics registration at scrape time.
+ */
+export interface InstanceRuntimeMetrics {
+	instanceId: string
+	moduleType: ModuleInstanceType
+	isReady: boolean
+	restartsTotal: number
+	readyAt: number | undefined
 }
 
 export interface ChildProcessHandlerBase {
@@ -88,7 +109,15 @@ export interface ChildProcessHandlerBase {
 	cleanup(): void
 }
 
-export class InstanceProcessManager {
+export interface InstanceProcessManagerEvents {
+	/**
+	 * Emitted whenever a child's readiness changes in a way that affects what can be requested from it
+	 * (became ready, stopped or crashed). Used to drive UI subscriptions such as the config-fields editor.
+	 */
+	childStateChange: [instanceId: string]
+}
+
+export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerEvents> {
 	readonly #logger = LogController.createLogger('Instance/ProcessManager')
 
 	readonly #connectionDeps: ConnectionChildHandlerDependencies
@@ -103,12 +132,20 @@ export class InstanceProcessManager {
 
 	#children: Map<string, ModuleChild>
 
+	/**
+	 * Cumulative restart count per instance.
+	 * Kept outside the disposable ModuleChild entry so it survives a disable/re-enable.
+	 */
+	readonly #restartsTotalByInstance = new Map<string, number>()
+
 	constructor(
 		connectionDeps: ConnectionChildHandlerDependencies,
 		surfaceDeps: SurfaceChildHandlerDependencies,
 		modules: InstanceModules,
 		instanceConfigStore: InstanceConfigStore
 	) {
+		super()
+
 		this.#connectionDeps = connectionDeps
 		this.#surfaceDeps = surfaceDeps
 		this.#modules = modules
@@ -151,6 +188,43 @@ export class InstanceProcessManager {
 	}
 
 	/**
+	 * Snapshot of per-instance runtime state for metrics. Keeps #children encapsulated - the instance
+	 * controller registers the actual metrics and pulls this at scrape time.
+	 */
+	getRuntimeMetrics(): InstanceRuntimeMetrics[] {
+		const out: InstanceRuntimeMetrics[] = []
+		for (const child of this.#children.values()) {
+			out.push({
+				instanceId: child.instanceId,
+				moduleType: child.moduleType,
+				isReady: child.isReady,
+				restartsTotal: this.#restartsTotalByInstance.get(child.instanceId) ?? 0,
+				readyAt: child.isReady ? child.readyAt : undefined,
+			})
+		}
+		return out
+	}
+
+	/**
+	 * Permanently forget an instance's persisted metrics state.
+	 * If the child is still around (its stop is usually only queued at this point) the cleanup
+	 * is deferred until the child is removed from #children. If the child is already gone, drop
+	 * the state immediately.
+	 */
+	forgetInstance(instanceId: string): void {
+		const child = this.#children.get(instanceId)
+		if (child) {
+			child.forget = true
+		} else {
+			this.#forgetInstanceNow(instanceId)
+		}
+	}
+
+	#forgetInstanceNow(instanceId: string) {
+		this.#restartsTotalByInstance.delete(instanceId)
+	}
+
+	/**
 	 * Resend feedbacks to all active instances.
 	 * This will trigger a subscribe call for each feedback
 	 */
@@ -168,14 +242,19 @@ export class InstanceProcessManager {
 	 * Send a list of changed variables to all active instances.
 	 * This will trigger feedbacks using variables to be rechecked
 	 */
-	onVariablesChanged(all_changed_variables_set: ReadonlySet<string>, fromControlId: string | null): void {
+	onVariablesChanged(
+		all_changed_variables_set: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<string> | null
+	): void {
 		const changedVariableIds = Array.from(all_changed_variables_set)
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
-				child.handler.sendVariablesChanged(all_changed_variables_set, changedVariableIds, fromControlId).catch((e) => {
-					this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
-				})
+				child.handler
+					.sendVariablesChanged(all_changed_variables_set, changedVariableIds, controlIdFilter)
+					.catch((e) => {
+						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
+					})
 			}
 		}
 	}
@@ -239,9 +318,20 @@ export class InstanceProcessManager {
 				delete child.monitor
 			}
 
+			if (child.dataChannel) {
+				// Stop listening once the child that would connect to it is gone
+				child.dataChannel.close()
+				delete child.dataChannel
+			}
+
 			if (allowDeleteIfEmpty && child.lifeCycleQueue.size === 0) {
 				// Delete the queue now that it is empty
 				this.#children.delete(instanceId)
+
+				// If a permanent removal was requested, do that now
+				if (child.forget) {
+					this.#forgetInstanceNow(instanceId)
+				}
 			}
 
 			// mark instance as disabled
@@ -283,6 +373,7 @@ export class InstanceProcessManager {
 				logger: LogController.createLogger(`Instance/Child/${targetState.label}`),
 				restartCount: 0,
 				isReady: false,
+				readyAt: undefined,
 				targetState: targetState,
 				lastLabel: targetState.label,
 			}
@@ -307,6 +398,7 @@ export class InstanceProcessManager {
 
 		baseChild.targetState = targetState
 		if (targetState) baseChild.lastLabel = targetState.label
+		if (targetState) delete baseChild.forget
 
 		if (baseChild.lifeCycleQueue.size > 0) {
 			// Already a change waiting to be processed, so don't do anything
@@ -360,17 +452,26 @@ export class InstanceProcessManager {
 				} else {
 					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unknown module')
 				}
+				this.emit('childStateChange', instanceId)
 				return
 			}
 
 			const runtimeInfo = await this.#findAndValidateModuleInfo(moduleInfo, instanceId, baseChild.lastLabel)
-			if (!runtimeInfo) return
+			if ('error' in runtimeInfo) {
+				// The module cannot be started (e.g. incompatible api version). Report it as the status so the
+				// instance does not appear stuck at whatever status the previous stop left behind.
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', runtimeInfo.error)
+				this.emit('childStateChange', instanceId)
+				return
+			}
 
 			const nodePath = await getNodeJsPath(moduleInfo.manifest.runtime.type)
 			if (!nodePath) {
 				this.#logger.error(
 					`Runtime "${moduleInfo.manifest.runtime.type}" is not supported in this version of Companion: "${baseChild.lastLabel}"`
 				)
+				this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Unsupported runtime')
+				this.emit('childStateChange', instanceId)
 				return
 			}
 
@@ -441,11 +542,28 @@ export class InstanceProcessManager {
 				`** API version: ${runtimeInfo.apiVersion} **`
 			)
 
+			// New connections + surfaces carry their messages over a data channel socket (see DataChannelServer);
+			// legacy children only have the 'ipc' channel. The socket must be listening before the child is
+			// spawned, and its path baked into the env the child is spawned with.
+			let dataChannel: DataChannelServer | undefined
+			if (runtimeInfo.usesDataChannel) {
+				try {
+					dataChannel = await DataChannelServer.create(instanceId)
+				} catch (e) {
+					this.#logger.error(`Failed to open data channel for instance "${baseChild.lastLabel}": ${e}`)
+					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Failed to start')
+					this.emit('childStateChange', instanceId)
+					return
+				}
+				child.dataChannel = dataChannel
+			}
+
 			const monitor = new RespawnMonitor(cmd, {
 				env: {
 					...PreserveEnvVars(),
 					VERIFICATION_TOKEN: child.authToken,
 					MODULE_MANIFEST: 'companion/manifest.json',
+					...(dataChannel ? { MODULE_DATA_CHANNEL: dataChannel.socketPath } : {}),
 					...runtimeInfo.env,
 				},
 				maxRestarts: -1,
@@ -455,12 +573,17 @@ export class InstanceProcessManager {
 				stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
 			})
 
+			// Arm the data channel for each incarnation of the child, so that the one connection it makes is
+			// accepted and anything else is rejected.
+			monitor.on('spawn', () => dataChannel?.expectConnection())
+
 			monitor.on('start', () => {
 				child.isReady = false
 				child.handler?.cleanup()
 
 				child.logger.info(`Process started process ${monitor.child?.pid}`)
 				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process started **')
+				this.emit('childStateChange', instanceId)
 			})
 			monitor.on('stop', () => {
 				child.isReady = false
@@ -473,6 +596,7 @@ export class InstanceProcessManager {
 				)
 				child.logger.debug(`Process stopped`)
 				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process stopped **')
+				this.emit('childStateChange', instanceId)
 			})
 			monitor.on('crash', () => {
 				child.isReady = false
@@ -481,6 +605,7 @@ export class InstanceProcessManager {
 				this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, null, 'Crashed')
 				child.logger.debug(`Process crashed`)
 				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'System', 'system', '** Process crashed **')
+				this.emit('childStateChange', instanceId)
 			})
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
@@ -500,7 +625,7 @@ export class InstanceProcessManager {
 
 			// Create handler and wait for registration + initialization
 			try {
-				await this.#createHandlerAndWaitForInit(child, monitor, runtimeInfo, moduleInfo)
+				await this.#createHandlerAndWaitForInit(child, monitor, dataChannel, runtimeInfo, moduleInfo)
 			} catch (error) {
 				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${error}`)
 				throw error
@@ -514,6 +639,7 @@ export class InstanceProcessManager {
 	async #createHandlerAndWaitForInit(
 		child: ModuleChild,
 		monitor: RespawnMonitor,
+		dataChannel: DataChannelServer | undefined,
 		runtimeInfo: RuntimeInfo,
 		moduleInfo: SomeModuleVersionInfo
 	): Promise<void> {
@@ -527,6 +653,10 @@ export class InstanceProcessManager {
 		const forceRestart = () => {
 			// Force restart the instance, as it failed to initialise and will be broken
 			child.restartCount++
+			this.#restartsTotalByInstance.set(
+				child.instanceId,
+				(this.#restartsTotalByInstance.get(child.instanceId) ?? 0) + 1
+			)
 
 			monitor.off('exit', forceRestart)
 
@@ -613,6 +743,8 @@ export class InstanceProcessManager {
 
 						// mark child as ready to receive
 						child.isReady = true
+						child.readyAt = Date.now()
+						this.emit('childStateChange', child.instanceId)
 
 						// Call ready hook
 						await child.handler?.ready?.()
@@ -638,9 +770,11 @@ export class InstanceProcessManager {
 		switch (child.targetState.moduleType) {
 			case ModuleInstanceType.Connection:
 				if (doesModuleUseNewChildHandler(runtimeInfo.apiVersion)) {
+					if (!dataChannel) throw new Error('Missing data channel for connection')
+
 					child.handler = new ConnectionChildHandlerNew(
 						this.#connectionDeps,
-						monitor,
+						dataChannel,
 						child.instanceId,
 						runtimeInfo.apiVersion,
 						onRegisterReceived
@@ -656,9 +790,11 @@ export class InstanceProcessManager {
 				}
 				break
 			case ModuleInstanceType.Surface:
+				if (!dataChannel) throw new Error('Missing data channel for surface')
+
 				child.handler = new SurfaceChildHandler(
 					this.#surfaceDeps,
-					monitor,
+					dataChannel,
 					child.targetState.moduleId,
 					child.instanceId,
 					moduleInfo.manifest as SurfaceModuleManifest,
@@ -685,24 +821,28 @@ export class InstanceProcessManager {
 		moduleInfo: SomeModuleVersionInfo,
 		instanceId: string,
 		lastLabel: string
-	): Promise<{
-		entrypoint: string
-		arguments: string[]
-		moduleEntrypoint: string
-		apiVersion: string
-		env: Record<string, string>
-	} | null> {
+	): Promise<
+		| {
+				entrypoint: string
+				arguments: string[]
+				moduleEntrypoint: string
+				apiVersion: string
+				env: Record<string, string>
+				usesDataChannel: boolean
+		  }
+		| { error: string }
+	> {
 		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
 		const jsFullPath = path.resolve(path.join(moduleInfo.basePath, jsPath))
 		const relativeToBase = path.relative(moduleInfo.basePath, jsFullPath)
 		if (relativeToBase.startsWith('..') || path.isAbsolute(relativeToBase)) {
 			this.#logger.error(`Module entrypoint "${jsFullPath}" is outside module directory`)
-			return null
+			return { error: 'Invalid module' }
 		}
 
 		if (!(await fs.pathExists(jsFullPath))) {
 			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
-			return null
+			return { error: 'Module files missing' }
 		}
 
 		const moduleType = moduleInfo.type
@@ -710,7 +850,7 @@ export class InstanceProcessManager {
 			case ModuleInstanceType.Connection: {
 				if (moduleInfo.manifest.runtime.api !== 'nodejs-ipc') {
 					this.#logger.error(`Only nodejs-ipc api is supported currently: "${lastLabel}"`)
-					return null
+					return { error: 'Unsupported module runtime' }
 				}
 
 				// Determine the module api version
@@ -727,13 +867,13 @@ export class InstanceProcessManager {
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
 						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
-						return null
+						return { error: 'Invalid module' }
 					}
 				}
 
 				if (!isModuleApiVersionCompatible(moduleApiVersion)) {
 					this.#logger.error(`Module Api version is too new/old: "${lastLabel}" ${moduleApiVersion}`)
-					return null
+					return { error: 'Incompatible module version' }
 				}
 
 				if (doesModuleUseNewChildHandler(moduleApiVersion)) {
@@ -748,6 +888,7 @@ export class InstanceProcessManager {
 						env: {
 							MODULE_ENTRYPOINT: jsFullPath,
 						},
+						usesDataChannel: true,
 					}
 				} else {
 					return {
@@ -758,6 +899,8 @@ export class InstanceProcessManager {
 						env: {
 							CONNECTION_ID: instanceId,
 						},
+						// Legacy modules talk over the 'ipc' channel instead
+						usesDataChannel: false,
 					}
 				}
 			}
@@ -776,13 +919,13 @@ export class InstanceProcessManager {
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
 						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
-						return null
+						return { error: 'Invalid module' }
 					}
 				}
 
 				if (!isSurfaceApiVersionCompatible(moduleApiVersion)) {
 					this.#logger.error(`Module Api version is too new/old: "${lastLabel}" ${moduleApiVersion}`)
-					return null
+					return { error: 'Incompatible module version' }
 				}
 
 				return {
@@ -796,12 +939,13 @@ export class InstanceProcessManager {
 					env: {
 						MODULE_ENTRYPOINT: jsFullPath,
 					},
+					usesDataChannel: true,
 				}
 			}
 			default:
 				assertNever(moduleInfo)
 				this.#logger.error(`Unknown module type "${moduleType}" for api version check: "${lastLabel}"`)
-				return null
+				return { error: 'Unknown module type' }
 		}
 	}
 
@@ -836,6 +980,8 @@ interface RuntimeInfo {
 	entrypoint: string
 	apiVersion: string
 	env: Record<string, string>
+	/** Whether the child talks over a data channel socket, rather than the legacy 'ipc' channel */
+	usesDataChannel: boolean
 }
 
 function isConnectionChild(handler: ChildProcessHandlerBase): handler is ConnectionChildHandlerApi {

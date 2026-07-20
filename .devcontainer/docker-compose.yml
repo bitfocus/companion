@@ -7,5 +7,10 @@ services:
     # `workspaceFolder` in devcontainer.json.
     volumes:
       - ..:/workspaces/companion:cached
+    environment:
+      # Suppress the prompt to apply udev rules for USB surfaces. The rules directory in here belongs to
+      # the container, not the host, so the rules would always look out of date and applying them would
+      # achieve nothing. If you enable USB passthrough, unset this - see docker-compose.override.yml.
+      COMPANION_IN_CONTAINER: "1"
     # Keep the container alive; the actual dev process is started by VS Code.
     command: sleep infinity

@@ -7,16 +7,14 @@ import v2tov3 from '../../lib/Data/Upgrades/v2tov3.js'
 import v3tov4 from '../../lib/Data/Upgrades/v3tov4.js'
 import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
 import LogController from '../../lib/Log/Controller.js'
-import { SuppressLogging } from '../Util.js'
 import { importTable } from './util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
 
-	let data = fs.readFileSync('./companion/test/Upgrade/v1tov5/db.v1.json', 'utf8')
-	data = JSON.parse(data)
+	const data = fs.readFileSync('./companion/test/Upgrade/v1tov5/db.v1.json', 'utf8')
 
-	importTable(db.defaultTableView, data)
+	importTable(db.defaultTableView, JSON.parse(data))
 
 	return db
 }
@@ -34,8 +32,6 @@ class DataDatabase extends DataStoreBase<any> {
 }
 
 describe('upgrade', () => {
-	SuppressLogging()
-
 	const db = CreateDataDatabase()
 	v1tov2.upgradeStartup(db, LogController.createLogger('test-logger'))
 	v2tov3.upgradeStartup(db, LogController.createLogger('test-logger'))

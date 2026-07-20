@@ -4,10 +4,9 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
-import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import type { ControlBase } from './ControlBase.js'
-import type { ControlActionSetAndStepsManager } from './Entities/ControlActionSetAndStepsManager.js'
-import type { ControlEntityListPoolBase } from './Entities/EntityListPoolBase.js'
+import type { SomeStepManager } from './Entities/ControlActionSetAndStepsManager.js'
+import type { SomeEntityPool } from './Entities/EntityListPoolEditingMixin.js'
 
 export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
@@ -90,12 +89,6 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean
 
 	/**
-	 * Propagate composite element changes
-	 * @param allChangedElementIds - composite element ids with changes
-	 */
-	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void
-
-	/**
 	 * Get an element from the layered style by ID
 	 * @param id Element ID to find
 	 * @returns The element if found, undefined otherwise
@@ -111,7 +104,13 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 export interface ControlWithEntities extends ControlBase<any> {
 	readonly supportsEntities: true
 
-	readonly entities: ControlEntityListPoolBase
+	/**
+	 * The entity pool, as a read-only-or-editable discriminated union. The structural edit mutators live only
+	 * on the editable side; editing code narrows on `entities.isEditable` to reach them. A read-only control
+	 * (e.g. a preset reference) constructs a read-only pool, so the mutators are genuinely absent - read-only
+	 * by construction, with the discriminant living on the pool rather than a per-control capability flag.
+	 */
+	readonly entities: SomeEntityPool
 }
 
 export interface ControlWithoutEntities extends ControlBase<any> {
@@ -189,7 +188,13 @@ export interface ControlWithoutEvents extends ControlBase<any> {
 export interface ControlWithActionSets extends ControlBase<any> {
 	readonly supportsActionSets: true
 
-	readonly actionSets: ControlActionSetAndStepsManager
+	/**
+	 * The step/action-set surface, as a runtime-only-or-editable discriminated union. The structural edit
+	 * mutators live only on the editable side; editing code narrows on `actionSets.isEditable` to reach them,
+	 * while runtime navigation is always available. (Same discriminant as {@link ControlWithEntities.entities};
+	 * for a button they are the same pool object.)
+	 */
+	readonly actionSets: SomeStepManager
 
 	/**
 	 * Execute a rotate of this control

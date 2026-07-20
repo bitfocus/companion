@@ -4,6 +4,7 @@ import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
+import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
@@ -12,6 +13,7 @@ import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
+import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
@@ -136,6 +138,7 @@ export class Registry {
 	readonly importExport: ImportExportController
 
 	readonly usageStatistics: DataUsageStatistics
+	readonly metrics: DataMetrics
 
 	/**
 	 * The 'data' controller
@@ -189,7 +192,6 @@ export class Registry {
 
 		this.#logger.debug('constructing core modules')
 
-		this.ui = new UIController(this.#appInfo, this.#internalApiRouter)
 		LogController.init(this.#appInfo)
 
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
@@ -199,10 +201,16 @@ export class Registry {
 		this.#data = new DataController(this.#appInfo, this.db)
 		this.userconfig = this.#data.userconfig
 
+		// Constructed before the UI so its router can be handed to UIExpress at construction, and before
+		// graphics/surfaces/instance so those subsystems can register their own metrics inline as they build.
+		this.metrics = new DataMetrics(this.#appInfo, this.userconfig)
+
+		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
+
 		const activeLearningStore = new ActiveLearningStore()
 		const pageStore = new PageStore(this.db.getTableView('pages'))
 
-		this.variables = new VariablesController(this.db)
+		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
 		this.graphics = new GraphicsController(
@@ -211,7 +219,8 @@ export class Registry {
 			this.userconfig,
 			this.variables,
 			this.db,
-			this.#internalApiRouter
+			this.#internalApiRouter,
+			this.metrics
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -232,7 +241,8 @@ export class Registry {
 			controlStore,
 			this.variables,
 			this.surfaces,
-			oscSender
+			oscSender,
+			this.metrics
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
@@ -303,6 +313,7 @@ export class Registry {
 		)
 
 		this.services = new ServiceController(
+			this.#appInfo,
 			serviceApi,
 			this.userconfig,
 			oscSender,
@@ -320,11 +331,24 @@ export class Registry {
 			this.instance,
 			this.page,
 			this.controls,
+			this.graphics,
 			this.variables,
 			this.cloud,
 			this.services,
 			this.userconfig
 		)
+		registerCoreMetrics(this.metrics, {
+			instance: this.instance,
+			surfaces: this.surfaces,
+			page: this.page,
+			controls: this.controls,
+			variables: this.variables,
+			services: this.services,
+			databases: [
+				{ name: 'main', store: this.db },
+				{ name: 'cache', store: this.#data.cache },
+			],
+		})
 
 		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 		controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
@@ -354,18 +378,18 @@ export class Registry {
 			}
 		})
 
-		this.variables.values.on('variables_changed', (all_changed_variables_set) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, null)
-			this.controls.onVariablesChanged(all_changed_variables_set, null)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, null)
-			this.preview.onVariablesChanged(all_changed_variables_set, null)
-			this.surfaces.onVariablesChanged(all_changed_variables_set)
-		})
-		this.variables.values.on('local_variables_changed', (all_changed_variables_set, fromControlId) => {
-			this.internalModule.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.controls.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.instance.processManager.onVariablesChanged(all_changed_variables_set, fromControlId)
-			this.preview.onVariablesChanged(all_changed_variables_set, fromControlId)
+		this.variables.values.on('variablesChanged', (all_changed_variables_set, _connectionLabels, targetControlId) => {
+			const targetControlIdSet = targetControlId == null ? null : new Set([targetControlId])
+			this.#dispatchVariablesChanged(all_changed_variables_set, targetControlIdSet)
+
+			if (targetControlId) {
+				// A page control's variables are also exposed to the whole page as `$(page:x)`, so
+				// propagate its changes to every control on the page.
+				const parsed = ParseControlId(targetControlId)
+				if (parsed?.type === 'page') {
+					this.#propagatePageVariablesChanged(parsed.pageId, all_changed_variables_set)
+				}
+			}
 		})
 
 		this.instance.definitions.on('updateCompositeElements', (elementIds) => {
@@ -383,6 +407,44 @@ export class Registry {
 	}
 
 	/**
+	 * Propagate a page control's `local:x` variable changes to every control on the page, remapped to
+	 * the `$(page:x)` names they are exposed under.
+	 */
+	#propagatePageVariablesChanged(pageId: string, changedLocalVariables: ReadonlySet<string>): void {
+		const pageNumber = this.page.store.getPageNumber(pageId)
+		if (pageNumber == null) return
+
+		const pageChangedSet = new Set<string>()
+		for (const name of changedLocalVariables) {
+			if (name.startsWith('local:')) pageChangedSet.add(`page:${name.slice('local:'.length)}`)
+		}
+		if (pageChangedSet.size === 0) return
+
+		// Include the page control itself, so a page variable referencing a sibling as `$(page:x)` in its
+		// own expression re-evaluates
+		const targetControlIds = new Set(this.page.store.getAllControlIdsOnPage(pageNumber))
+		targetControlIds.add(CreatePageControlId(pageId))
+
+		this.#dispatchVariablesChanged(pageChangedSet, targetControlIds)
+	}
+
+	/**
+	 * Fan a variable change out to every consumer that scopes by control. `controlIdFilter` is null for a
+	 * global change, or the set of controls it applies to.
+	 */
+	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
+		this.controls.onVariablesChanged(changedSet, controlIdFilter)
+		this.instance.processManager.onVariablesChanged(changedSet, controlIdFilter)
+		this.preview.onVariablesChanged(changedSet, controlIdFilter)
+
+		// Surfaces only care about global changes, not control-scoped (local/page) variables
+		if (controlIdFilter === null) {
+			this.surfaces.onVariablesChanged(changedSet)
+		}
+	}
+
+	/**
 	 * Startup the application
 	 * @param extraModulePath - extra directory to search for modules
 	 * @param bindIp
@@ -397,6 +459,10 @@ export class Registry {
 			this.ui.update.startCycle()
 
 			this.controls.init()
+
+			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs)
+			this.page.ensurePageControlsExist()
+
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
 			knownConnectionIds.add('internal')
 			this.controls.verifyConnectionIds(knownConnectionIds)
@@ -569,4 +635,10 @@ export interface AppOptions {
 	enableRestrictedModules: boolean
 	/** Express "trust proxy" value, so the real client ip can be determined behind a reverse proxy */
 	trustedProxies: string | undefined
+	/**
+	 * A fixed installation name chosen at launch. When set it overrides and locks the `installName`
+	 * user-config value (the UI field becomes readonly and it survives db resets). Undefined = the
+	 * name is managed normally via the user config.
+	 */
+	installNameOverride: string | undefined
 }

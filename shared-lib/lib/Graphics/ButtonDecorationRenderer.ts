@@ -13,17 +13,31 @@ export class ButtonDecorationRenderer {
 
 	static drawStatusBar(
 		img: ImageBase<any>,
-		drawStyle: Omit<RendererButtonStyle, 'style' | 'drawType' | 'show_topbar' | 'show_status_icons' | 'elements'>,
+		drawStyle: Omit<RendererButtonStyle, 'style' | 'drawType' | 'decoration' | 'show_status_icons' | 'elements'>,
 		topBarBounds: DrawBounds,
 		emptyButton: boolean
 	): void {
 		const drawColor = emptyButton ? colorEmptyGrey : colorButtonYellow
 
 		let step = ''
-		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY - 0.5, colorBlack)
-		img.line(topBarBounds.x, topBarBounds.maxY - 0.5, topBarBounds.maxX, topBarBounds.maxY - 0.5, {
+
+		// The separator line is drawn in logical pixels. On small hardware buttons the high
+		// oversampling factor makes a 1px line render as several physical pixels, but on large
+		// previews (which use little/no oversampling) a 1px line renders as a single physical
+		// pixel and visually disappears. Scale the width up with the bar height, but sub-linearly
+		// (sqrt) and capped so it stays crisp on previews without becoming a heavy line on big bitmaps.
+		const lineWidth = Math.min(
+			4,
+			Math.max(1, Math.round(Math.sqrt(topBarBounds.height / ButtonDecorationRenderer.DEFAULT_HEIGHT)))
+		)
+		// Sit the line flush against the bottom edge of the bar; for lineWidth 1 this reduces to the
+		// original `maxY - 0.5` half-pixel placement.
+		const lineY = topBarBounds.maxY - lineWidth / 2
+
+		img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, lineY, colorBlack)
+		img.line(topBarBounds.x, lineY, topBarBounds.maxX, lineY, {
 			color: drawColor,
-			width: 1,
+			width: lineWidth,
 		})
 
 		if (!emptyButton && drawStyle.stepCount > 1) {
@@ -34,26 +48,15 @@ export class ButtonDecorationRenderer {
 		const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
 		const locationDrawSize = Math.round(topBarBounds.height * 0.65)
 
-		if (drawStyle.location === undefined) {
-			// Preview (no location)
-			img.drawTextLine(locationDrawX, locationDrawY, `x/x/x${step}`, drawColor, locationDrawSize)
-		} else if (drawStyle.pushed) {
+		// Without a location (e.g. a preview render) show a placeholder instead of a real page/row/column.
+		const label = drawStyle.location === undefined ? `x/x/x${step}` : `${formatLocation(drawStyle.location)}${step}`
+
+		if (drawStyle.pushed) {
+			// Pushed: invert the bar (solid fill, dark text).
 			img.box(topBarBounds.x, topBarBounds.y, topBarBounds.maxX, topBarBounds.maxY, drawColor)
-			img.drawTextLine(
-				locationDrawX,
-				locationDrawY,
-				`${formatLocation(drawStyle.location)}${step}`,
-				colorBlack,
-				locationDrawSize
-			)
+			img.drawTextLine(locationDrawX, locationDrawY, label, colorBlack, locationDrawSize)
 		} else {
-			img.drawTextLine(
-				locationDrawX,
-				locationDrawY,
-				`${formatLocation(drawStyle.location)}${step}`,
-				drawColor,
-				locationDrawSize
-			)
+			img.drawTextLine(locationDrawX, locationDrawY, label, drawColor, locationDrawSize)
 		}
 	}
 

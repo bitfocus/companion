@@ -22,7 +22,9 @@
 		"types": ["node"],
 		"esModuleInterop": true,
 		"noEmit": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"target": "es2024",
+		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator", "ESNext.TypedArrays"]
 	},
 	"references": [{ "path": "./companion" }, { "path": "./config-tool" }, { "path": "./shared-lib" }]
 }

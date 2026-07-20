@@ -1,19 +1,17 @@
 import fs from 'fs-extra'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import v1tov2 from '../../lib/Data/Upgrades/v1tov2.js'
 import LogController from '../../lib/Log/Controller.js'
-import { SuppressLogging } from '../Util.js'
 import { importTable } from './util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
 
-	let data = fs.readFileSync('./companion/test/Upgrade/v1tov2/db.v1.json', 'utf8')
-	data = JSON.parse(data)
+	const data = fs.readFileSync('./companion/test/Upgrade/v1tov2/db.v1.json', 'utf8')
 
-	importTable(db.defaultTableView, data)
+	importTable(db.defaultTableView, JSON.parse(data))
 
 	return db
 }
@@ -31,8 +29,6 @@ class DataDatabase extends DataStoreBase<any> {
 }
 
 describe('upgrade', () => {
-	SuppressLogging()
-
 	it('empty', () => {
 		const db = CreateDataDatabase()
 		v1tov2.upgradeStartup(db, LogController.createLogger('test-logger'))

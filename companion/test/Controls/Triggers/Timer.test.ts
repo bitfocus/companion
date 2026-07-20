@@ -3,13 +3,15 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import { TriggersEventTimer } from '../../../lib/Controls/ControlTypes/Triggers/Events/Timer.js'
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
+import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
+import { mockUserConfig } from '../../utils/MockUserConfig.js'
 import { MockTriggerEventBus } from './Helpers.js'
 
-function createTimer(lastTick = 100) {
+function createTimer(lastTick = 100, userconfig: DataUserConfig = mockUserConfig({ timezone: '' })) {
 	const bus = new MockTriggerEventBus()
 	bus.setLastTickTime(lastTick)
 	const executeActions = vi.fn()
-	const timer = new TriggersEventTimer(bus.asTriggerEvents(), 'trigger:test', executeActions)
+	const timer = new TriggersEventTimer(userconfig, bus.asTriggerEvents(), 'trigger:test', executeActions)
 	return { bus, timer, executeActions }
 }
 
@@ -304,6 +306,50 @@ describe('TriggersEventTimer', () => {
 			tickAt(bus, new Date(2026, 5, 8, 11, 0, 0, 500))
 			expect(executeActions).not.toHaveBeenCalled()
 		})
+
+		test('the configured timezone determines the firing instant (independent of host timezone)', () => {
+			// The same wall-clock time (11:00 Monday) fires at two different UTC instants depending on the
+			// configured zone. A system-timezone implementation can only ever fire at one instant, so it
+			// must fail one of these assertions on ANY host (including a New York CI runner).
+			vi.setSystemTime(new Date('2026-06-08T00:00:00Z'))
+			const tokyo = createTimer(100, mockUserConfig({ timezone: 'Asia/Tokyo' })) // UTC+9 -> 11:00 == 02:00Z
+			const ny = createTimer(100, mockUserConfig({ timezone: 'America/New_York' })) // UTC-4 -> 11:00 == 15:00Z
+			tokyo.timer.setEnabled(true)
+			ny.timer.setEnabled(true)
+			tokyo.timer.setTimeOfDay('a', { time: '11:00:00', days: [1] })
+			ny.timer.setTimeOfDay('a', { time: '11:00:00', days: [1] })
+
+			// At 02:00Z only the Tokyo-configured timer is due
+			tickAt(tokyo.bus, new Date('2026-06-08T02:00:00Z'))
+			tickAt(ny.bus, new Date('2026-06-08T02:00:00Z'))
+			expect(tokyo.executeActions).toHaveBeenCalledTimes(1)
+			expect(ny.executeActions).not.toHaveBeenCalled()
+
+			// At 15:00Z the New York-configured timer becomes due
+			tickAt(ny.bus, new Date('2026-06-08T15:00:00Z'))
+			expect(ny.executeActions).toHaveBeenCalledTimes(1)
+		})
+
+		test('recomputes the next execute time when the timezone changes', () => {
+			// Configured for Tokyo, the event is due at 02:00Z. Switching to New York must move it to 15:00Z.
+			// Comparing two explicit zones (not the host) means this catches a missing recompute on any host.
+			const config = { timezone: 'Asia/Tokyo' }
+			vi.setSystemTime(new Date('2026-06-08T00:00:00Z'))
+			const { bus, timer, executeActions } = createTimer(100, mockUserConfig(config))
+			timer.setEnabled(true)
+			timer.setTimeOfDay('a', { time: '11:00:00', days: [1] }) // 11:00 Tokyo == 02:00Z initially
+
+			// Switch to New York before the Tokyo instant arrives
+			config.timezone = 'America/New_York'
+
+			// The tick recomputes for New York, so the Tokyo instant (02:00Z) no longer fires
+			tickAt(bus, new Date('2026-06-08T02:00:00Z'))
+			expect(executeActions).not.toHaveBeenCalled()
+
+			// 11:00 New York == 15:00Z
+			tickAt(bus, new Date('2026-06-08T15:00:00Z'))
+			expect(executeActions).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('specific date events', () => {
@@ -352,6 +398,21 @@ describe('TriggersEventTimer', () => {
 			expect(executeActions).not.toHaveBeenCalled()
 		})
 
+		test('an out-of-range time never fires (and is not normalized into a valid instant)', () => {
+			// '25:70' must be rejected outright. A lenient parser would let zonedTimeToUtc normalize it
+			// (25:70 -> next day 02:10) and schedule at an unexpected instant, so assert it never fires
+			// across the whole window where a normalized value could have landed.
+			vi.setSystemTime(new Date(2026, 5, 8, 10, 0, 0, 500))
+			const { bus, timer, executeActions } = createTimer()
+			timer.setEnabled(true)
+			timer.setSpecificDate('a', { date: '2026-06-09', time: '25:70' })
+
+			tickAt(bus, new Date(2026, 5, 9, 12, 0, 0, 500))
+			tickAt(bus, new Date(2026, 5, 10, 2, 10, 0, 500)) // where 25:70 would normalize to
+			tickAt(bus, new Date(2026, 5, 11, 2, 10, 0, 500))
+			expect(executeActions).not.toHaveBeenCalled()
+		})
+
 		test('clearSpecificDate stops the event', () => {
 			vi.setSystemTime(new Date(2026, 5, 8, 10, 0, 0, 500))
 			const { bus, timer, executeActions } = createTimer()
@@ -362,16 +423,50 @@ describe('TriggersEventTimer', () => {
 			tickAt(bus, new Date(2026, 5, 9, 12, 0, 0, 500))
 			expect(executeActions).not.toHaveBeenCalled()
 		})
+
+		test('interprets the configured date and time in the configured timezone (independent of host)', () => {
+			// 12:00 on 2026-06-09 fires at two different UTC instants depending on the configured zone, so a
+			// system-timezone implementation must fail one of these assertions on any host.
+			vi.setSystemTime(new Date('2026-06-08T00:00:00Z'))
+			const tokyo = createTimer(100, mockUserConfig({ timezone: 'Asia/Tokyo' })) // UTC+9 -> 12:00 == 03:00Z
+			const ny = createTimer(100, mockUserConfig({ timezone: 'America/New_York' })) // UTC-4 -> 12:00 == 16:00Z
+			tokyo.timer.setEnabled(true)
+			ny.timer.setEnabled(true)
+			tokyo.timer.setSpecificDate('a', { date: '2026-06-09', time: '12:00:00' })
+			ny.timer.setSpecificDate('a', { date: '2026-06-09', time: '12:00:00' })
+
+			// At 03:00Z only the Tokyo-configured timer is due
+			tickAt(tokyo.bus, new Date('2026-06-09T03:00:00Z'))
+			tickAt(ny.bus, new Date('2026-06-09T03:00:00Z'))
+			expect(tokyo.executeActions).toHaveBeenCalledTimes(1)
+			expect(ny.executeActions).not.toHaveBeenCalled()
+
+			// At 16:00Z the New York-configured timer becomes due
+			tickAt(ny.bus, new Date('2026-06-09T16:00:00Z'))
+			expect(ny.executeActions).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('sun events', () => {
 		const LONDON = { latitude: 51.5, longitude: -0.1 }
+		const BERLIN = { latitude: 52.52, longitude: 13.405 }
+		const NEW_YORK = { latitude: 40.71, longitude: -74.01 }
+		const SYDNEY = { latitude: -33.87, longitude: 151.21 }
 
-		/** Probe whether a fresh sun event would fire for a tick at the given wall time */
-		function wouldFireAt(params: CompanionOptionValues, nowTime: number): boolean {
+		/**
+		 * Probe whether a fresh sun event would fire for a tick at the given wall time.
+		 * A configured timezone can be supplied so the computed instant is deterministic and
+		 * independent of the host timezone.
+		 */
+		function wouldFireAt(params: CompanionOptionValues, nowTime: number, timezone = ''): boolean {
 			const bus = new MockTriggerEventBus()
 			const executeActions = vi.fn()
-			const timer = new TriggersEventTimer(bus.asTriggerEvents(), 'trigger:probe', executeActions)
+			const timer = new TriggersEventTimer(
+				mockUserConfig({ timezone }),
+				bus.asTriggerEvents(),
+				'trigger:probe',
+				executeActions
+			)
 			timer.setEnabled(true)
 			timer.setSun('a', params)
 			bus.emitTick(1, nowTime)
@@ -381,20 +476,30 @@ describe('TriggersEventTimer', () => {
 		}
 
 		/** Binary search for the exact ms timestamp at which the sun event starts firing */
-		function findExecuteTime(params: CompanionOptionValues): number {
+		function findExecuteTime(params: CompanionOptionValues, timezone = ''): number {
 			let lo = Date.now()
 			let hi = lo + 50 * 3600 * 1000
-			expect(wouldFireAt(params, lo)).toBe(false)
-			expect(wouldFireAt(params, hi)).toBe(true)
+			expect(wouldFireAt(params, lo, timezone)).toBe(false)
+			expect(wouldFireAt(params, hi, timezone)).toBe(true)
 			while (lo + 1 < hi) {
 				const mid = Math.floor((lo + hi) / 2)
-				if (wouldFireAt(params, mid)) {
+				if (wouldFireAt(params, mid, timezone)) {
 					hi = mid
 				} else {
 					lo = mid
 				}
 			}
 			return hi
+		}
+
+		/** Next sunset instant for a location, with the clock pinned to `pinnedNow` and a configured zone */
+		function sunsetInstantAfter(
+			pinnedNow: string,
+			coords: { latitude: number; longitude: number },
+			timezone: string
+		): number {
+			vi.setSystemTime(new Date(pinnedNow))
+			return findExecuteTime({ type: 'sunset', ...coords, offset: 0 }, timezone)
 		}
 
 		test('schedules sunset within the next day, and not immediately', () => {
@@ -406,8 +511,6 @@ describe('TriggersEventTimer', () => {
 		})
 
 		test('sunrise and sunset are distinct times', () => {
-			// Note: the absolute times produced depend on the host timezone, so only
-			// relative properties can be asserted here
 			vi.setSystemTime(new Date(2026, 5, 8, 0, 30, 0, 0))
 			const sunrise = findExecuteTime({ type: 'sunrise', ...LONDON, offset: 0 })
 			const sunset = findExecuteTime({ type: 'sunset', ...LONDON, offset: 0 })
@@ -425,14 +528,125 @@ describe('TriggersEventTimer', () => {
 			expect(shifted - base).toBe(30 * 60 * 1000)
 		})
 
-		test('invalid coordinates do not throw, and still schedule a (meaningless) time', () => {
-			// The NaN propagates into an Invalid Date, but Date.setFullYear() resets the time to +0,
-			// so a valid-but-meaningless execute time is produced. The UI validates the inputs,
-			// so this only documents that bad data is tolerated without crashing.
+		// The computed instant is an absolute UTC time, so with the timezone pinned in config these
+		// assertions are independent of the host timezone. Expected values are NOAA sunrise/sunset times
+		// (from sunrise-sunset.org); the approximation used here is accurate to a few minutes, while a
+		// swapped latitude/longitude would be wrong by hours - so a tight tolerance guards the wiring.
+		test('computes sunset close to the true (NOAA) time for a known location and date', () => {
+			// London 2026-06-08 sunset: 20:16:42 UTC (21:16 BST)
+			vi.setSystemTime(new Date('2026-06-08T10:00:00Z'))
+			const sunset = findExecuteTime({ type: 'sunset', ...LONDON, offset: 0 }, 'Europe/London')
+			expect(Math.abs(sunset - Date.parse('2026-06-08T20:16:42Z'))).toBeLessThan(10 * 60 * 1000)
+		})
+
+		test('computes sunrise close to the true (NOAA) time for a known location and date', () => {
+			// London 2026-06-08 sunrise: 03:42:15 UTC (04:42 BST)
+			vi.setSystemTime(new Date('2026-06-08T00:30:00Z'))
+			const sunrise = findExecuteTime({ type: 'sunrise', ...LONDON, offset: 0 }, 'Europe/London')
+			expect(Math.abs(sunrise - Date.parse('2026-06-08T03:42:15Z'))).toBeLessThan(10 * 60 * 1000)
+		})
+
+		test('post-spring-forward sunset is at the expected wall-clock time (Berlin, CEST)', () => {
+			// Berlin 2026-03-29 (first CEST day) sunset: 17:36:37 UTC == 19:36 CEST
+			const sunset = sunsetInstantAfter('2026-03-29T06:00:00Z', BERLIN, 'Europe/Berlin')
+			expect(Math.abs(sunset - Date.parse('2026-03-29T17:36:37Z'))).toBeLessThan(10 * 60 * 1000)
+		})
+
+		// Regression for #3737: across a DST transition the absolute sunset instant must move only by the
+		// natural day-to-day drift (a couple of minutes), NOT by the ~1h clock change - so consecutive-day
+		// instants stay ~24h apart. Covers both hemispheres and both transition directions.
+		const DST_CASES = [
+			{
+				name: 'Europe/Berlin spring-forward',
+				coords: BERLIN,
+				tz: 'Europe/Berlin',
+				before: '2026-03-28T06:00:00Z',
+				after: '2026-03-29T06:00:00Z',
+			},
+			{
+				name: 'Europe/Berlin fall-back',
+				coords: BERLIN,
+				tz: 'Europe/Berlin',
+				before: '2026-10-24T06:00:00Z',
+				after: '2026-10-25T06:00:00Z',
+			},
+			{
+				name: 'America/New_York spring-forward',
+				coords: NEW_YORK,
+				tz: 'America/New_York',
+				before: '2026-03-07T14:00:00Z',
+				after: '2026-03-08T14:00:00Z',
+			},
+			{
+				name: 'Australia/Sydney fall-back',
+				coords: SYDNEY,
+				tz: 'Australia/Sydney',
+				before: '2026-04-04T02:00:00Z',
+				after: '2026-04-05T02:00:00Z',
+			},
+		]
+		test.each(DST_CASES)('sunset does not jump an hour across DST ($name)', ({ coords, tz, before, after }) => {
+			const instantBefore = sunsetInstantAfter(before, coords, tz)
+			const instantAfter = sunsetInstantAfter(after, coords, tz)
+			expect(Math.abs(instantAfter - instantBefore - 24 * 3600 * 1000)).toBeLessThan(15 * 60 * 1000)
+		})
+
+		test('a non-DST timezone is unaffected across the equivalent date range (Arizona)', () => {
+			// Phoenix does not observe DST, so consecutive-day sunsets are simply ~24h apart
+			const PHOENIX = { latitude: 33.45, longitude: -112.07 }
+			const before = sunsetInstantAfter('2026-03-07T18:00:00Z', PHOENIX, 'America/Phoenix')
+			const after = sunsetInstantAfter('2026-03-08T18:00:00Z', PHOENIX, 'America/Phoenix')
+			expect(Math.abs(after - before - 24 * 3600 * 1000)).toBeLessThan(15 * 60 * 1000)
+		})
+
+		test('leap-year Feb 29 schedules a sane sunset (day-of-year handling)', () => {
+			// 2028 is a leap year; the UTC day-of-year arithmetic must not misfire on Feb 29
+			const sunset = sunsetInstantAfter('2028-02-29T06:00:00Z', BERLIN, 'Europe/Berlin')
+			expect(sunset).toBeGreaterThan(Date.parse('2028-02-29T06:00:00Z'))
+			expect(sunset).toBeLessThan(Date.parse('2028-03-01T06:00:00Z'))
+		})
+
+		test('rolls into the next year when the last sunset of the year has passed', () => {
+			// After the Dec 31 sunset, the next event must advance across the year boundary to Jan 1
+			const sunset = sunsetInstantAfter('2026-12-31T20:00:00Z', LONDON, 'Europe/London')
+			expect(sunset).toBeGreaterThan(Date.parse('2027-01-01T00:00:00Z'))
+			expect(sunset).toBeLessThan(Date.parse('2027-01-01T20:00:00Z'))
+		})
+
+		test('a large offset shifts the instant linearly, even across a day boundary', () => {
+			// -720min (-12h) pushes a sunset back past midnight; the shift must stay exactly linear
+			vi.setSystemTime(new Date('2026-06-08T00:30:00Z'))
+			const base = findExecuteTime({ type: 'sunset', ...LONDON, offset: 0 }, 'Europe/London')
+			const shifted = findExecuteTime({ type: 'sunset', ...LONDON, offset: -720 }, 'Europe/London')
+			expect(shifted - base).toBe(-720 * 60 * 1000)
+		})
+
+		test('polar day/night never fires (no sunrise/sunset to compute)', () => {
+			// At high latitudes the sun may not cross the horizon; the calculation yields no valid time
+			const SVALBARD = { latitude: 78.0, longitude: 15.0 }
+			vi.setSystemTime(new Date('2026-06-21T00:00:00Z')) // polar day - never sets
+			expect(wouldFireAt({ type: 'sunset', ...SVALBARD, offset: 0 }, Date.now() + 50 * 3600 * 1000)).toBe(false)
+			vi.setSystemTime(new Date('2026-12-21T00:00:00Z')) // polar night - never rises
+			expect(wouldFireAt({ type: 'sunrise', ...SVALBARD, offset: 0 }, Date.now() + 50 * 3600 * 1000)).toBe(false)
+		})
+
+		test('two events with identical params compute the same instant regardless of id', () => {
+			// Guards against any accidental per-id state leaking into the calculation
+			vi.setSystemTime(new Date('2026-06-08T10:00:00Z'))
+			const a = findExecuteTime({ type: 'sunset', ...LONDON, offset: 0 }, 'Europe/London')
+			const b = findExecuteTime({ type: 'sunset', ...LONDON, offset: 0 }, 'Europe/London')
+			expect(a).toBe(b)
+		})
+
+		test('invalid coordinates do not throw, and never fire', () => {
+			// NaN coordinates propagate to an Invalid Date (NaN timestamp); a NaN nextExecute is treated as
+			// "no schedule" and never fires. The UI validates inputs, so this only documents graceful handling.
 			vi.setSystemTime(new Date(2026, 5, 8, 0, 30, 0, 0))
 			const params = { type: 'sunset', latitude: 'abc', longitude: -0.1, offset: 0 }
 
-			expect(wouldFireAt(params, Date.now() + 50 * 3600 * 1000)).toBe(true)
+			const probeAt = Date.now() + 50 * 3600 * 1000
+			expect(() => wouldFireAt(params, probeAt)).not.toThrow()
+			expect(wouldFireAt(params, probeAt)).toBe(false)
 		})
 
 		test('clearSun stops the event', () => {

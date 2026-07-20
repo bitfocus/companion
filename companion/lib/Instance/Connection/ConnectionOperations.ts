@@ -1,8 +1,6 @@
-import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
@@ -65,21 +63,6 @@ export interface MoveConnectionInput {
 	connectionId: string
 	collectionId: string | null
 	position: number
-}
-
-/**
- * Ensure every field has a unique id.
- *
- * Some modules incorrectly reuse the same id for multiple `static-text` fields. This breaks React (duplicate keys),
- * but since these fields are purely visual and have no value, we can safely give each one a unique but stable id by
- * suffixing it with its index in the array.
- */
-function ensureUniqueFieldIds(fields: SomeCompanionInputField[]): SomeCompanionInputField[] {
-	return fields.map((field, index) => {
-		if (field.type !== 'static-text') return field
-
-		return { ...field, id: `${field.id}_${index}` }
-	})
 }
 
 export class ConnectionOperations {
@@ -175,32 +158,6 @@ export class ConnectionOperations {
 				result.message,
 				{ operationIndex: result.operationIndex }
 			)
-		}
-	}
-
-	async getConnectionEditConfig(connectionId: string): Promise<ClientEditInstanceConfig | null> {
-		if (!this.#configStore) throw new Error('Connection edit config requires configStore')
-
-		const instanceConf = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
-		if (!instanceConf) return null
-
-		if (!this.#instanceController.connectionCollections.isCollectionEnabled(instanceConf.collectionId)) return null
-
-		const instance = this.#instanceController.processManager.getConnectionChild(connectionId)
-		if (!instance) return null
-
-		try {
-			const fields = await instance.requestConfigFields()
-
-			return {
-				fields: ensureUniqueFieldIds(fields),
-				useNewLayout: instance.usesNewConfigLayout,
-				config: instanceConf.config,
-				secrets: instanceConf.secrets || {},
-			}
-		} catch (e) {
-			this.#logger.silly(`Failed to load instance config_fields: ${stringifyError(e)}`)
-			return null
 		}
 	}
 

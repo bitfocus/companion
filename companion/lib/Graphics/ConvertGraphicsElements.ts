@@ -1,7 +1,10 @@
 import { createHash } from 'node:crypto'
 import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getElementSchemaProperty,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -17,6 +20,8 @@ import type {
 	ButtonGraphicsDrawBorder,
 	ButtonGraphicsDrawBounds,
 	ButtonGraphicsElementBase,
+	ButtonGraphicsGaugeDrawElement,
+	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageDrawElement,
@@ -60,6 +65,29 @@ import {
 import { collectContentHashes, computeElementContentHash } from './ConvertGraphicsElements/Util.js'
 import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
 import type { ImageResult } from './ImageResult.js'
+
+/** Extract the valid choice IDs for a dropdown field directly from the element schema. */
+function dropdownChoices<T extends string>(
+	elementType: Parameters<typeof getElementSchemaProperty>[0],
+	fieldId: string
+): T[] {
+	const field = getElementSchemaProperty(elementType, fieldId)
+	if (field?.type !== 'dropdown') return []
+	return field.choices.map((c) => String(c.id)) as T[]
+}
+
+// All derived once at module load to avoid repeated schema lookups on every render.
+const CANVAS_DECORATION_CHOICES = dropdownChoices<ButtonGraphicsDecorationType>('canvas', 'decoration')
+const CANVAS_SHOW_STATUS_ICONS_CHOICES = dropdownChoices<ButtonGraphicsShowStatusIcons>('canvas', 'showStatusIcons')
+const IMAGE_FILL_MODE_CHOICES = dropdownChoices<ButtonGraphicsImageDrawElement['fillMode']>('image', 'fillMode')
+const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>('text', 'font')
+const TEXT_WEIGHT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['weight']>('text', 'weight')
+// The `styles` field is an internal:text-styles multi-toggle with a fixed set of values (no schema choices).
+const TEXT_STYLE_VALUES = ['italic', 'underline', 'strikethrough'] as const
+// borderPosition is shared across box/line/circle — all use the same choices from borderFields.
+const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
+const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
+const GAUGE_TRACK_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['trackStyle']>('gauge', 'trackStyle')
 
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,
@@ -164,6 +192,10 @@ async function convertElements(
 						cacheEntry = convertCircleElementForDrawing(context, element, idPrefix)
 						break
 					}
+					case 'gauge': {
+						cacheEntry = convertGaugeElementForDrawing(context, element, idPrefix)
+						break
+					}
 					case 'composite': {
 						cacheEntry = await convertCompositeElementForDrawing(context, element, idPrefix)
 						break
@@ -239,14 +271,10 @@ function convertCanvasElementForDrawing(
 		type: 'canvas',
 		usage: element.usage,
 		// color,
-		decoration: helper.getEnum(
-			'decoration',
-			Object.values(ButtonGraphicsDecorationType),
-			ButtonGraphicsDecorationType.FollowDefault
-		),
+		decoration: helper.getEnum('decoration', CANVAS_DECORATION_CHOICES, ButtonGraphicsDecorationType.FollowDefault),
 		showStatusIcons: helper.getEnum(
 			'showStatusIcons',
-			Object.values(ButtonGraphicsShowStatusIcons),
+			CANVAS_SHOW_STATUS_ICONS_CHOICES,
 			ButtonGraphicsShowStatusIcons.FollowDefault
 		),
 		contentHash: '', // Will be computed below
@@ -417,6 +445,8 @@ function makeReferencePlaceholder(
 		fontsize: FONTSIZE_SHRINK_DEFAULT,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff,
 		outlineColor: 0,
 		halign: 'center',
@@ -505,6 +535,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:surface_serial':
 			case 'internal:outbound_surface_id':
 			case 'internal:vertical-alignment':
+			case 'internal:text-styles':
 			case 'internal:trigger':
 			case 'internal:trigger_collection':
 			case 'internal:variable':
@@ -640,7 +671,7 @@ async function convertImageElementForDrawing(
 		base64Image: base64Image,
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		fillMode: helper.getEnum('fillMode', ['crop', 'fill', 'fit'], 'fit'),
+		fillMode: helper.getEnum('fillMode', IMAGE_FILL_MODE_CHOICES, 'fit'),
 		contentHash: '', // Will be computed below
 	}
 
@@ -670,7 +701,9 @@ function convertTextElementForDrawing(
 		text: helper.getParsedString('text', 'ERR') + '',
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
-		font: helper.getEnum('font', ['companion-sans', 'companion-mono'], 'companion-sans'),
+		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
+		weight: helper.getEnum('weight', TEXT_WEIGHT_CHOICES, 'normal'),
+		styles: helper.getEnumArray('styles', TEXT_STYLE_VALUES, []),
 		color: helper.getNumber('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
@@ -783,13 +816,73 @@ function convertCircleElementForDrawing(
 	return { drawElement, usedVariables, compositeElement: null }
 }
 
+function convertGaugeElementForDrawing(
+	context: ParseElementsContext,
+	element: ButtonGraphicsGaugeElement,
+	idPrefix: string
+): ElementConversionCacheEntry {
+	const { helper, usedVariables } = context.createHelper(element)
+
+	const enabled = helper.getBoolean('enabled', true)
+	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
+
+	// Colour stops carry values in the authored Min..Max domain; the renderer normalises them to
+	// track positions. Values are intentionally not clamped here so the renderer can map them.
+	const stopsRaw = (element.stops as ExpressionOrValue<JsonValue[]>).value
+	const stops: ButtonGraphicsGaugeDrawElement['stops'] = Array.isArray(stopsRaw)
+		? stopsRaw.map((row) => {
+				const rowHelper = helper.forRow(row)
+				return {
+					value: rowHelper.getNumber('value', 0),
+					color: rowHelper.getNumber('color', 0),
+					gradient: rowHelper.getBoolean('gradient', false),
+				}
+			})
+		: []
+
+	const drawElement: ButtonGraphicsGaugeDrawElement = {
+		id: idPrefix + element.id,
+		type: 'gauge',
+		usage: element.usage,
+		enabled,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
+		rotation: helper.getNumber('rotation', 0),
+		// Value-mapping fields are kept in the authored domain; the renderer normalises to 0–100.
+		value: helper.getNumber('value', 0),
+		min: helper.getNumber('min', 0),
+		max: helper.getNumber('max', 100),
+		origin: helper.getNumber('origin', 0),
+		symmetric: helper.getBoolean('symmetric', false),
+		orientation: helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal'),
+		reverse: helper.getBoolean('reverse', false),
+		trackWidth: Math.max(0, Math.min(100, helper.getNumber('trackWidth', 100))),
+		startAngle: helper.getNumber('startAngle', 0),
+		endAngle: helper.getNumber('endAngle', 360),
+		ringWidth: Math.max(1, Math.min(50, helper.getNumber('ringWidth', 20))),
+		roundedEnds: helper.getBoolean('roundedEnds', true),
+		fillEnabled: helper.getBoolean('fillEnabled', true),
+		multiColour: helper.getBoolean('multiColour', true),
+		stops: stops,
+		markerEnabled: helper.getBoolean('markerEnabled', false),
+		markerColor: helper.getNumber('markerColor', 0xffffff),
+		markerWidth: Math.max(1, Math.min(100, helper.getNumber('markerWidth', 15))),
+		trackStyle: helper.getTolerantEnum('trackStyle', GAUGE_TRACK_STYLE_CHOICES, 'transparent'),
+		trackAmount: Math.max(0, Math.min(100, helper.getNumber('trackAmount', 70))),
+		contentHash: '',
+	}
+
+	drawElement.contentHash = computeElementContentHash(drawElement)
+	return { drawElement, usedVariables, compositeElement: null }
+}
+
 function convertBorderProperties(
 	helper: ElementExpressionHelper<ButtonGraphicsBorder & ButtonGraphicsElementBase>
 ): ButtonGraphicsDrawBorder {
 	return {
 		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
 		borderColor: helper.getNumber('borderColor', 0),
-		borderPosition: helper.getEnum('borderPosition', ['inside', 'center', 'outside'], 'inside'),
+		borderPosition: helper.getEnum('borderPosition', BORDER_POSITION_CHOICES, 'inside'),
 	}
 }
 

@@ -59,6 +59,15 @@ export enum ButtonGraphicsDecorationType {
 	None = 'none',
 }
 
+/**
+ * A button decoration that has been fully resolved (global default + per-button override), so it is
+ * always a concrete value and never `FollowDefault`.
+ */
+export type ResolvedButtonGraphicsDecoration = Exclude<
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsDecorationType.FollowDefault
+>
+
 export enum ButtonGraphicsShowStatusIcons {
 	FollowDefault = 'default',
 	ShowAll = 'all',
@@ -70,9 +79,13 @@ export enum ButtonGraphicsElementUsage {
 	Text = 'text',
 	Color = 'color',
 	Image = 'image',
+	/** Drives a surface's addressable LED strip/ring. Internally `leds`; shown in the UI as "Gauge". */
+	Leds = 'leds',
 }
 
 export type HorizontalAlignment = 'left' | 'center' | 'right'
 export type VerticalAlignment = 'top' | 'center' | 'bottom'
+
+export type TextStyle = 'italic' | 'underline' | 'strikethrough'
 
 export type CompositeElementOptionKey = `opt:${string}`

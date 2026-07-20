@@ -17,7 +17,7 @@ import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever, useComputed } from '~/Resources/util'
-import type { PresetDragItem } from './PresetDragItem'
+import type { PresetDragItem, PresetPlacementMode } from './PresetDragItem'
 
 // Presets drag a clone (the original stays put in the pool) with no drop animation so a
 // released preset doesn't fly back. Configured per-draggable so it doesn't affect the default
@@ -28,11 +28,15 @@ interface PresetSectionCollapseProps {
 	section: UIPresetSection
 
 	connectionId: string
+
+	/** The mode (copy/reference) newly placed presets from this connection should use */
+	placementMode: PresetPlacementMode
 }
 
 export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 	section,
 	connectionId,
+	placementMode,
 }: PresetSectionCollapseProps) {
 	const { isCollapsed, toggleCollapsed } = usePanelCollapseHelperContextForPanel(null, section.id)
 
@@ -41,9 +45,25 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 	const groupComponents = groups.map((grp, i) => {
 		switch (grp.type) {
 			case 'simple':
-				return <PresetGroupSimple key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+				return (
+					<PresetGroupSimple
+						key={grp.id}
+						connectionId={connectionId}
+						grp={grp}
+						isFirst={i === 0}
+						placementMode={placementMode}
+					/>
+				)
 			case 'template':
-				return <PresetGroupTemplate key={grp.id} connectionId={connectionId} grp={grp} isFirst={i === 0} />
+				return (
+					<PresetGroupTemplate
+						key={grp.id}
+						connectionId={connectionId}
+						grp={grp}
+						isFirst={i === 0}
+						placementMode={placementMode}
+					/>
+				)
 			default:
 				assertNever(grp)
 				return null
@@ -78,9 +98,15 @@ interface PresetGroupCustomProps {
 	connectionId: string
 	grp: UIPresetGroupSimple
 	isFirst: boolean
+	placementMode: PresetPlacementMode
 }
 
-const PresetGroupSimple = observer(function PresetGroupSimple({ connectionId, grp, isFirst }: PresetGroupCustomProps) {
+const PresetGroupSimple = observer(function PresetGroupSimple({
+	connectionId,
+	grp,
+	isFirst,
+	placementMode,
+}: PresetGroupCustomProps) {
 	const presets = Object.values(grp.presets).sort((a, b) => a.order - b.order)
 
 	return (
@@ -95,6 +121,7 @@ const PresetGroupSimple = observer(function PresetGroupSimple({ connectionId, gr
 						presetId={p.id}
 						title={p.label}
 						variableValues={null}
+						placementMode={placementMode}
 					/>
 				))}
 			</div>
@@ -106,6 +133,7 @@ interface PresetGroupTemplateProps {
 	connectionId: string
 	grp: UIPresetGroupTemplate
 	isFirst: boolean
+	placementMode: PresetPlacementMode
 }
 
 interface TemplateCombination {
@@ -114,7 +142,12 @@ interface TemplateCombination {
 	values: VariableValues
 }
 
-const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, isFirst }: PresetGroupTemplateProps) {
+const PresetGroupTemplate = observer(function PresetGroup({
+	connectionId,
+	grp,
+	isFirst,
+	placementMode,
+}: PresetGroupTemplateProps) {
 	const variableCombinations = useComputed((): TemplateCombination[] => {
 		if (grp.templateValues.length === 0) return []
 
@@ -143,6 +176,7 @@ const PresetGroupTemplate = observer(function PresetGroup({ connectionId, grp, i
 						presetId={grp.definition.id}
 						title={p.label || grp.definition.label}
 						variableValues={p.values}
+						placementMode={placementMode}
 					/>
 				))}
 			</div>
@@ -166,12 +200,20 @@ interface PresetIconPreviewProps {
 	presetId: string
 	title: string
 	variableValues: VariableValues | null
+	placementMode: PresetPlacementMode
 }
-function PresetIconPreview({ connectionId, presetId, title, variableValues }: Readonly<PresetIconPreviewProps>) {
+function PresetIconPreview({
+	connectionId,
+	presetId,
+	title,
+	variableValues,
+	placementMode,
+}: Readonly<PresetIconPreviewProps>) {
 	const dragData: PresetDragItem = {
 		connectionId,
 		presetId,
 		variableValues: variableValues,
+		mode: placementMode,
 	}
 	const dragId = `preset:${connectionId}:${presetId}:${variableValues ? createStableObjectHash(variableValues) : 'base'}`
 	const { ref: drag, isDragSource } = useDraggable<PresetDragItem>({

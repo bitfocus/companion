@@ -16,9 +16,7 @@ export interface SurfaceInstanceCollectionData {
 export type SurfaceInstanceCollection = CollectionBase<SurfaceInstanceCollectionData>
 
 export type ClientSurfaceInstancesUpdate =
-	| ClientSurfaceInstancesUpdateInitOp
-	| ClientSurfaceInstancesUpdateUpdateOp
-	| ClientSurfaceInstancesUpdateRemoveOp
+	ClientSurfaceInstancesUpdateInitOp | ClientSurfaceInstancesUpdateUpdateOp | ClientSurfaceInstancesUpdateRemoveOp
 
 export interface ClientSurfaceInstancesUpdateInitOp {
 	type: 'init'

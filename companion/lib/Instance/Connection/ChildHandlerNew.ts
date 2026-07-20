@@ -16,7 +16,6 @@ import {
 	type ExpressionableOptionsObject,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type CompanionHTTPRequest, type LogLevel, type OSCMetaArgument } from '@companion-module/base'
 import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@companion-module/base/host-api'
@@ -24,7 +23,9 @@ import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import type { DataChannelServer } from '../Common/DataChannelServer.js'
+import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
+import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type {
 	ConnectionChildHandlerApi,
@@ -88,7 +89,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 	constructor(
 		deps: ConnectionChildHandlerDependencies,
-		monitor: RespawnMonitor,
+		dataChannel: DataChannelServer,
 		connectionId: string,
 		apiVersion0: string,
 		onRegister: (verificationToken: string) => Promise<void>
@@ -131,14 +132,20 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			sharedUdpSocketSend: this.#handleSharedUdpSocketSend.bind(this),
 		}
 
+		// Framed message transport over the child's data channel socket. Owning the serialization means one
+		// JSON.stringify per message and an exact wire byte count for metrics - no object-mode double-encode.
+		// Created before the IpcWrapper: its onMessage uses #ipcWrapper lazily (no message arrives until the
+		// child connects, after this constructor), so it only arms its listeners now.
+		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
+			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
+			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+		})
+
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
 			(msg) => {
-				if (monitor.child) {
-					monitor.child.send(msg)
-				} else {
-					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
-				}
+				const bytes = transport.send(msg)
+				if (bytes > 0) this.#deps.trackIpcMessage(this.connectionId, 'sent', bytes)
 			},
 			5000
 		)
@@ -149,14 +156,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.connectionId
 		)
 
-		const messageHandler = (msg: any) => {
-			this.#ipcWrapper.receivedMessage(msg)
-		}
-		monitor.on('message', messageHandler)
-
-		this.#unsubListeners = () => {
-			monitor.off('message', messageHandler)
-		}
+		this.#unsubListeners = () => transport.destroy()
 	}
 
 	/**
@@ -253,9 +253,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		_changedVariableIds: string[],
-		fromControlId: string | null
+		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void> {
-		this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
+		this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
 	}
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
@@ -568,6 +568,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
+		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
+
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
 			msg.values.map((val) => ({
@@ -584,6 +586,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
 
+		this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
+
 		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 	}
 
@@ -597,6 +601,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, msg.variables)
 
+		this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 	}
 
@@ -609,7 +614,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			const presetsMap = new Map(Object.entries(msg.presets))
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets)
+			// This handler only serves 2.0+ modules, which all support presets being placed as references
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets, true)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -709,7 +715,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.#ipcWrapper.sendWithNoCb('sharedUdpSocketMessage', {
 					handleId,
 					portNumber: msg.portNumber,
-					message: message.toString('base64'),
+					message: message.toBase64(),
 					source: rInfo,
 				})
 			},
@@ -815,6 +821,13 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 							type: EntityModelType.Action,
 							definitionId: action.actionId,
 							options: action.options,
+							storeResult: action.storeResult
+								? {
+										type: 'custom-variable',
+										variableName: action.storeResult.variableName,
+										createIfNotExists: false,
+									}
+								: undefined,
 							upgradeIndex: currentUpgradeIndex,
 						}) satisfies ReplaceableActionEntityModel
 				)

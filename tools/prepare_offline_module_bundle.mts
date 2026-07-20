@@ -14,7 +14,7 @@ import {
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type { components, paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
-import { MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
+import { MAX_DECOMPRESSED_MODULE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
 import { generateVersionString } from './lib.mjs'
 
 const gunzipP = promisify(gunzip)
@@ -148,7 +148,7 @@ const processModule = async (
 					throw new Error('Download did not match checksum')
 				}
 
-				const decompressedData = await gunzipP(fullTarBuffer)
+				const decompressedData = await gunzipP(fullTarBuffer, { maxOutputLength: MAX_DECOMPRESSED_MODULE_TAR_SIZE })
 				if (!decompressedData) {
 					throw new Error('Failed to decompress data')
 				}

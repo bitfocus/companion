@@ -1,0 +1,105 @@
+@use 'variables' as *;
+
+// ─── Setup wizard ───────────────────────
+//
+// The wizard is wider than a default modal, and keeps a stable body height so the footer (Next button)
+// doesn't jump around as content varies between short and long steps. Tall steps scroll within the body.
+
+.modal-wizard {
+	// Constant body height so the modal doesn't resize between short and long steps (the Next button stays put).
+	// Bounded by clamp so it isn't excessively empty on short steps nor too tall on small screens; taller steps
+	// scroll within the body. .flex-form isn't a flex container, so set an explicit height rather than flex: 1.
+	// overflow: hidden auto (not just overflow-y) avoids an unwanted horizontal scrollbar from grid negative margins.
+	.modal2-body {
+		height: clamp(300px, 42vh, 440px);
+		overflow: hidden auto;
+	}
+
+	// Sparse framing steps (Begin/Finish) center their content so the constant-height box looks intentional
+	// rather than leaving the content stranded at the top with empty space below.
+	.wizard-centered-step {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 100%;
+		text-align: center;
+	}
+
+	// Review step: pending changes grouped into cards by category, each with a tonal icon badge
+	.wizard-review {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.wizard-review-group-title {
+		margin-bottom: 0.35rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--cui-secondary-color, #768192);
+	}
+
+	.wizard-review-list {
+		list-style: none;
+		padding-left: 0;
+		margin-bottom: 0;
+		border: 1px solid var(--cui-border-color, #c4c9d0);
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
+
+	.wizard-review-item {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem 0.75rem;
+
+		& + .wizard-review-item {
+			border-top: 1px solid var(--cui-border-color-translucent, rgb(0 0 21 / 10%));
+		}
+	}
+
+	.wizard-review-badge {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		border-radius: 50%;
+		font-size: 0.75rem;
+
+		&.wizard-review-badge-add {
+			background-color: var(--cui-success-bg-subtle, #d1e7dd);
+			color: var(--cui-success, #2eb85c);
+		}
+
+		&.wizard-review-badge-remove {
+			background-color: var(--cui-danger-bg-subtle, #f8d7da);
+			color: var(--cui-danger, #e55353);
+		}
+
+		&.wizard-review-badge-info {
+			background-color: var(--cui-tertiary-bg, #ebedef);
+			color: var(--cui-secondary-color, #768192);
+		}
+	}
+}
+
+// Dev-only control for previewing the wizard's upgrade experience from a chosen version.
+// Rendered outside the modal and above its backdrop.
+.wizard-dev-controls {
+	position: fixed;
+	top: 0.5rem;
+	left: 0.5rem;
+	z-index: 2000;
+	padding: 0.4rem 0.6rem;
+	border-radius: 0.4rem;
+	background-color: rgb(0 0 0 / 80%);
+	color: #fff;
+	font-size: 0.8rem;
+	box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+}

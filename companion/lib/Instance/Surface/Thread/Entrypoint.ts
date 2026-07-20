@@ -6,6 +6,8 @@ import {
 	registerLoggingSink,
 	type SurfaceModuleManifest,
 } from '@companion-surface/host'
+import { connectDataChannel } from '../../Common/DataChannelClient.js'
+import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
@@ -25,15 +27,29 @@ const manifestJson: Partial<SurfaceModuleManifest> = JSON.parse(manifestBlob)
 
 if (!manifestJson.runtime?.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
 
-if (!process.send) throw new Error('Module is not being run with ipc')
-
 console.log(`Starting up surface module: ${manifestJson.id}`)
 
 const verificationToken = process.env.VERIFICATION_TOKEN
 if (typeof verificationToken !== 'string' || !verificationToken)
 	throw new Error('Module initialise is missing VERIFICATION_TOKEN')
 
+const dataChannelPath = process.env.MODULE_DATA_CHANNEL
+if (!dataChannelPath) throw new Error('Module initialise is missing MODULE_DATA_CHANNEL')
+
+// Everything the host passed us has now been captured, so take it back out of the environment. Module code
+// runs in this process and has no business reading these.
+delete process.env.MODULE_ENTRYPOINT
+delete process.env.MODULE_MANIFEST
+delete process.env.VERIFICATION_TOKEN
+delete process.env.MODULE_DATA_CHANNEL
+
 const logger = createModuleLogger('Entrypoint')
+
+// The host is listening before it spawns us, so this connects immediately. It is the only socket this
+// process will ever have: if it is lost the host will not accept a replacement, so we exit and let the
+// host respawn us.
+const dataSocket = await connectDataChannel(dataChannelPath)
+dataSocket.on('close', () => process.exit())
 
 let plugin: PluginWrapper | null = null
 let pluginInitialized = false
@@ -143,6 +159,7 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 					// Convert base64 back into a buffer. TODO: could this be done lazily/by the plugin on demand?
 					...d,
 					image: d.image ? Buffer.from(d.image, 'base64') : undefined,
+					leds: d.leds ? Buffer.from(d.leds, 'base64') : undefined,
 				}))
 			)
 		},
@@ -174,24 +191,23 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 		},
 	},
 	(msg) => {
-		process.send!(msg)
+		channel.send(msg)
 	},
 	5000
 )
-process.on('message', (msg) => ipcWrapper.receivedMessage(msg as any))
+// Framed message transport over the data channel socket, paired with the host side.
+// The 'ipc' channel is retained only for the disconnect signal below.
+const channel = new FramedChannel(dataSocket, (msg) => ipcWrapper.receivedMessage(msg as any))
+
 process.on('disconnect', () => process.exit())
 
 registerLoggingSink((source, level, message) => {
-	if (!process.send) {
-		console.log(`[${level.toUpperCase()}]${source ? ` [${source}]` : ''} ${message}`)
-	} else {
-		ipcWrapper.sendWithNoCb('log-message', {
-			time: Date.now(),
-			source,
-			level,
-			message,
-		})
-	}
+	ipcWrapper.sendWithNoCb('log-message', {
+		time: Date.now(),
+		source,
+		level,
+		message,
+	})
 })
 
 const moduleImport = await importModuleFromPath(moduleEntrypoint)

@@ -12,6 +12,8 @@ import {
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupPageVariables,
+	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
 } from '../../lib/ImportExport/ImportFixup.js'
@@ -407,6 +409,57 @@ describe('fixupExpressionVariableControl', () => {
 	})
 })
 
+// ── fixupPageVariables ──────────────────────────────────────────────────────────
+
+describe('fixupPageVariables', () => {
+	let internalModule: InternalController
+	beforeEach(() => {
+		internalModule = mockInternalModule()
+	})
+
+	test('defaults to an empty list', () => {
+		expect(fixupPageVariables(internalModule, undefined, standardMap(), {})).toEqual([])
+		expect(fixupPageVariables(internalModule, [], standardMap(), {})).toEqual([])
+	})
+
+	test('remaps connectionId on page variables', () => {
+		const result = fixupPageVariables(internalModule, [makeFeedback({ connectionId: 'conn-old' })], standardMap(), {})
+
+		expect(result[0].connectionId).toBe('conn-new')
+	})
+
+	test('drops a page variable whose connection is unknown', () => {
+		const result = fixupPageVariables(
+			internalModule,
+			[makeFeedback({ connectionId: 'unknown-connection' })],
+			standardMap(),
+			{}
+		)
+
+		expect(result).toEqual([])
+	})
+
+	test('rewrites label references inside page variable options', () => {
+		const result = fixupPageVariables(
+			internalModule,
+			[makeFeedback({ connectionId: 'conn-old', options: { src: exprVal('$(OldLabel:x)') } })],
+			standardMap(),
+			{}
+		)
+
+		expect((result[0].options.src as any).value).toBe('$(NewLabel:x)')
+	})
+
+	test('does not mutate the input', () => {
+		const input = [makeFeedback({ connectionId: 'conn-old' })]
+
+		fixupPageVariables(internalModule, input, standardMap(), {})
+
+		// original untouched (structuredClone inside)
+		expect(input[0].connectionId).toBe('conn-old')
+	})
+})
+
 // ── fixupLayeredButtonControl ───────────────────────────────────────────────────
 
 describe('fixupLayeredButtonControl', () => {
@@ -574,5 +627,58 @@ describe('fixupLayeredButtonControl', () => {
 		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
 
 		expect((result.style.layers[0] as any).children[0].text.value).toBe('$(NewLabel:x)')
+	})
+})
+
+describe('fixupPresetReferenceControl', () => {
+	const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
+
+	function makeReferenceExport(overrides: Record<string, any> = {}): ExportControlv6 {
+		return {
+			type: 'preset-reference',
+			options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+			style: { layers: [] },
+			feedbacks: [],
+			steps: {},
+			localVariables: [],
+			presetRef: {
+				connectionId: 'old-conn',
+				moduleId: 'mod1',
+				presetId: 'p1',
+				variableValues: { channel: 3 },
+			},
+			...overrides,
+		}
+	}
+
+	function makeUpdater(connectionIdRemap: Record<string, string>) {
+		const internalModule = { visitReferences: vi.fn() } as any
+		return new VisitorReferencesUpdater(internalModule, {}, connectionIdRemap, undefined)
+	}
+
+	test('remaps the referenced connection id and keeps it a reference', () => {
+		const control = makeReferenceExport()
+		const instanceIdMap: InstanceAppliedRemappings = { 'old-conn': { id: 'new-conn', label: 'New' } }
+
+		const result = fixupPresetReferenceControl(logger, control, makeUpdater({ 'old-conn': 'new-conn' }), instanceIdMap)
+
+		expect(result.type).toBe('preset-reference')
+		expect(result.presetRef).toEqual({
+			connectionId: 'new-conn',
+			moduleId: 'mod1',
+			presetId: 'p1',
+			variableValues: { channel: 3 },
+		})
+	})
+
+	test('keeps the original connection id when there is no remap', () => {
+		const control = makeReferenceExport()
+		const instanceIdMap: InstanceAppliedRemappings = {}
+
+		const result = fixupPresetReferenceControl(logger, control, makeUpdater({}), instanceIdMap)
+
+		expect(result.presetRef.connectionId).toBe('old-conn')
+		expect(result.presetRef.moduleId).toBe('mod1')
+		expect(result.presetRef.variableValues).toEqual({ channel: 3 })
 	})
 })

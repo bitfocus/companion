@@ -15,6 +15,7 @@ import type { UdevRuleDefinition } from 'udev-generator'
 import z from 'zod'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
 	InstanceVersionUpdatePolicy,
@@ -32,6 +33,7 @@ import type { Complete } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataCache } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { LabeledValue, MetricsRegistry } from '../Data/Metrics.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import type { ServiceOscSender } from '../Service/OscSender.js'
@@ -89,6 +91,39 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 	#lastClientJson: Record<string, ClientConnectionConfig> | null = null
 
+	/**
+	 * Cumulative per-instance counters that must survive child restarts. The child handlers (and the
+	 * counters on them) are recreated on restart, so these live here, keyed by instanceId, and the handlers
+	 * increment into them. Exposed as metrics counters.
+	 */
+	readonly #instanceCounters = new Map<
+		string,
+		{
+			feedbackValuesReceived: number
+			variableValuesReceived: number
+			ipcMessagesSent: number
+			ipcMessagesReceived: number
+			ipcBytesSent: number
+			ipcBytesReceived: number
+		}
+	>()
+
+	#instanceCounter(instanceId: string) {
+		let counter = this.#instanceCounters.get(instanceId)
+		if (!counter) {
+			counter = {
+				feedbackValuesReceived: 0,
+				variableValuesReceived: 0,
+				ipcMessagesSent: 0,
+				ipcMessagesReceived: 0,
+				ipcBytesSent: 0,
+				ipcBytesReceived: 0,
+			}
+			this.#instanceCounters.set(instanceId, counter)
+		}
+		return counter
+	}
+
 	readonly definitions: InstanceDefinitions
 	readonly status: InstanceStatus
 	readonly processManager: InstanceProcessManager
@@ -107,6 +142,28 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return this.#surfaceInstanceCollectionsController
 	}
 
+	/**
+	 * Whether the collection containing an instance of the given type is enabled.
+	 * Dispatches to the correct collections controller so callers don't have to.
+	 */
+	isCollectionEnabled(moduleType: ModuleInstanceType, collectionId: string | null | undefined): boolean {
+		switch (moduleType) {
+			case ModuleInstanceType.Connection:
+				return this.#connectionCollectionsController.isCollectionEnabled(collectionId)
+			case ModuleInstanceType.Surface:
+				return this.#surfaceInstanceCollectionsController.isCollectionEnabled(collectionId)
+			default:
+				return false
+		}
+	}
+
+	/**
+	 * Whether an instance should be running: it is enabled directly AND its collection is enabled.
+	 */
+	isInstanceEnabled(config: InstanceConfig): boolean {
+		return config.enabled !== false && this.isCollectionEnabled(config.moduleInstanceType, config.collectionId)
+	}
+
 	createRestApiRouter(logger: Logger): express.Router {
 		return createInstanceRestApiRouter(logger, this, this.#configStore)
 	}
@@ -119,7 +176,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		controlsStore: IControlStore,
 		variables: VariablesController,
 		surfaces: SurfaceController,
-		oscSender: ServiceOscSender
+		oscSender: ServiceOscSender,
+		metrics: MetricsRegistry
 	) {
 		super()
 		this.setMaxListeners(0)
@@ -189,6 +247,22 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				debugLogLine: (connectionId: string, time: number | null, source: string, level: string, message: string) => {
 					this.emit(`debugLog:${connectionId}`, time, source, level, message)
 				},
+				trackFeedbackValuesReceived: (connectionId, count) => {
+					this.#instanceCounter(connectionId).feedbackValuesReceived += count
+				},
+				trackVariableValuesReceived: (connectionId, count) => {
+					this.#instanceCounter(connectionId).variableValuesReceived += count
+				},
+				trackIpcMessage: (instanceId, direction, bytes) => {
+					const counter = this.#instanceCounter(instanceId)
+					if (direction === 'sent') {
+						counter.ipcMessagesSent++
+						counter.ipcBytesSent += bytes
+					} else {
+						counter.ipcMessagesReceived++
+						counter.ipcBytesReceived += bytes
+					}
+				},
 			},
 			{
 				surfaceController: surfaces,
@@ -198,6 +272,16 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				},
 				invalidateClientJson: (instanceId: string) => {
 					this.#broadcastSurfaceInstanceChanges([instanceId])
+				},
+				trackIpcMessage: (instanceId, direction, bytes) => {
+					const counter = this.#instanceCounter(instanceId)
+					if (direction === 'sent') {
+						counter.ipcMessagesSent++
+						counter.ipcBytesSent += bytes
+					} else {
+						counter.ipcMessagesReceived++
+						counter.ipcBytesReceived += bytes
+					}
 				},
 			},
 			this.modules,
@@ -228,6 +312,230 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#broadcastSurfaceInstanceChanges(this.#configStore.getAllInstanceIdsOfType(ModuleInstanceType.Surface))
 
 		this.#udevRules.triggerRegenerate()
+
+		this.#registerMetrics(metrics)
+	}
+
+	/**
+	 * Register per-instance metrics, owned by this controller and read live from its sub-components at
+	 * scrape time. The id label is always `instance_id` (covers connections and surface integrations - a
+	 * connection's id is an instance id); the `type` label on the info metric distinguishes them. Cross-cutting
+	 * lifecycle metrics are `companion_instance_*`; connection-specific ones are `companion_connection_*`.
+	 * Join the info metric onto the others by instance_id for the descriptive fields (label/module) - this
+	 * keeps churn-prone labels off every series.
+	 */
+	#registerMetrics(metrics: MetricsRegistry): void {
+		const configStore = this.#configStore
+		const definitions = this.definitions
+		const variableValues = this.#variablesController.values
+		const processManager = this.processManager
+
+		// Info metric: one series per instance, value 1, descriptive fields carried as labels
+		metrics.labeledGauge(
+			'companion_instance_info',
+			'Information about a configured instance (constant 1, see labels)',
+			['instance_id', 'label', 'module_id', 'module_version', 'type'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const [id, config] of configStore.getAllInstanceConfigs()) {
+					out.push({
+						labels: {
+							instance_id: id,
+							label: config.label,
+							module_id: config.moduleId,
+							module_version: config.moduleVersionId ?? '',
+							type: config.moduleInstanceType,
+						},
+						value: 1,
+					})
+				}
+				return out
+			}
+		)
+
+		// Connections by enabled state (total = sum without(enabled))
+		metrics.labeledGauge(
+			'companion_connections',
+			'Number of configured connections by enabled state',
+			['enabled'],
+			() => {
+				let enabled = 0
+				let disabled = 0
+				for (const id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					const config = configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)
+					if (config?.enabled) enabled++
+					else disabled++
+				}
+				return [
+					{ labels: { enabled: 'true' }, value: enabled },
+					{ labels: { enabled: 'false' }, value: disabled },
+				]
+			}
+		)
+
+		// Per-connection definition counts, one series per (connection, entity_type)
+		metrics.labeledGauge(
+			'companion_connection_definitions',
+			'Number of entity definitions a connection exposes',
+			['instance_id', 'entity_type'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					const counts = definitions.getDefinitionCounts(id)
+					out.push(
+						{ labels: { instance_id: id, entity_type: 'action' }, value: counts.actions },
+						{ labels: { instance_id: id, entity_type: 'feedback' }, value: counts.feedbacks },
+						{ labels: { instance_id: id, entity_type: 'preset' }, value: counts.presets }
+					)
+				}
+				return out
+			}
+		)
+
+		// Per-connection variable count
+		metrics.labeledGauge(
+			'companion_connection_variables',
+			'Number of variables a connection currently exposes values for',
+			['instance_id'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					const label = this.getLabelForConnection(id)
+					if (!label) continue
+					out.push({ labels: { instance_id: id }, value: variableValues.getVariableCountForLabel(label) })
+				}
+				return out
+			}
+		)
+
+		// Runtime: ready state (1/0)
+		metrics.labeledGauge(
+			'companion_instance_ready',
+			'Whether an instance is currently ready/connected (1) or not (0)',
+			['instance_id'],
+			() =>
+				processManager
+					.getRuntimeMetrics()
+					.map((m) => ({ labels: { instance_id: m.instanceId }, value: m.isReady ? 1 : 0 }))
+		)
+
+		// Runtime: when the instance last became ready - derive uptime as `time() - this`. Absent while not ready.
+		metrics.labeledGauge(
+			'companion_instance_ready_timestamp_seconds',
+			'Unix time when an instance last became ready (derive uptime as time() - this)',
+			['instance_id'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const m of processManager.getRuntimeMetrics()) {
+					if (m.readyAt === undefined) continue
+					out.push({ labels: { instance_id: m.instanceId }, value: m.readyAt / 1000 })
+				}
+				return out
+			}
+		)
+
+		// Runtime: cumulative restarts since startup
+		metrics.labeledCounter(
+			'companion_instance_restarts_total',
+			'Cumulative instance restarts since startup',
+			['instance_id'],
+			() =>
+				processManager
+					.getRuntimeMetrics()
+					.map((m) => ({ labels: { instance_id: m.instanceId }, value: m.restartsTotal }))
+		)
+
+		// Active (enabled) feedback entities referencing each connection. Counted by walking every control's
+		// entities at scrape time - O(controls x entities), acceptable for an infrequent scrape.
+		metrics.labeledGauge(
+			'companion_connection_active_feedbacks',
+			'Number of active (enabled) feedback entities referencing a connection',
+			['instance_id'],
+			() => {
+				const counts = new Map<string, number>()
+				for (const id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) counts.set(id, 0)
+				for (const control of this.#controlsStore.getAllControls().values()) {
+					if (!control.supportsEntities) continue
+					for (const entity of control.entities.getAllEntities()) {
+						if (entity.type !== EntityModelType.Feedback || entity.disabled) continue
+						const current = counts.get(entity.connectionId)
+						if (current !== undefined) counts.set(entity.connectionId, current + 1)
+					}
+				}
+				return Array.from(counts, ([instance_id, value]) => ({ labels: { instance_id }, value }))
+			}
+		)
+
+		// Cumulative feedback values received from each connection's module child (see #instanceCounters).
+		metrics.labeledCounter(
+			'companion_connection_feedback_values_received_total',
+			'Cumulative feedback values received from a connection since startup',
+			['instance_id'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const instance_id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					out.push({
+						labels: { instance_id },
+						value: this.#instanceCounters.get(instance_id)?.feedbackValuesReceived ?? 0,
+					})
+				}
+				return out
+			}
+		)
+
+		// Cumulative variable values received from each connection's module child (see #instanceCounters).
+		// Filtered to connection ids for the same reason as the feedback counter above.
+		metrics.labeledCounter(
+			'companion_connection_variable_values_received_total',
+			'Cumulative variable values received from a connection since startup',
+			['instance_id'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const instance_id of configStore.getAllInstanceIdsOfType(ModuleInstanceType.Connection)) {
+					out.push({
+						labels: { instance_id },
+						value: this.#instanceCounters.get(instance_id)?.variableValuesReceived ?? 0,
+					})
+				}
+				return out
+			}
+		)
+
+		// Cumulative IPC messages exchanged with each instance's module child, by direction
+		metrics.labeledCounter(
+			'companion_instance_ipc_messages_total',
+			'Cumulative IPC messages exchanged with an instance module child, by direction',
+			['instance_id', 'direction'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const [instance_id, c] of this.#instanceCounters) {
+					out.push(
+						{ labels: { instance_id, direction: 'sent' }, value: c.ipcMessagesSent },
+						{ labels: { instance_id, direction: 'received' }, value: c.ipcMessagesReceived }
+					)
+				}
+				return out
+			}
+		)
+
+		// Cumulative IPC payload bytes exchanged with each instance's module child, by direction. Measured from
+		// the already-serialized payload string at the IPC boundary - a slight under-count (excludes the small
+		// fixed envelope), no extra serialization on the hot path.
+		metrics.labeledCounter(
+			'companion_instance_ipc_bytes_total',
+			'Cumulative IPC bytes exchanged with an instance module child, by direction',
+			['instance_id', 'direction'],
+			() => {
+				const out: LabeledValue[] = []
+				for (const [instance_id, c] of this.#instanceCounters) {
+					out.push(
+						{ labels: { instance_id, direction: 'sent' }, value: c.ipcBytesSent },
+						{ labels: { instance_id, direction: 'received' }, value: c.ipcBytesReceived }
+					)
+				}
+				return out
+			}
+		)
 	}
 
 	getAllConnectionIds(): string[] {
@@ -610,6 +918,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#logger.debug(`Error while deleting instance "${label ?? connectionId}": `, e)
 		}
 
+		// Drop the per-instance metrics state so it doesn't linger for the lifetime of the process
+		this.processManager.forgetInstance(connectionId)
+		this.#instanceCounters.delete(connectionId)
+
 		this.status.forgetInstanceStatus(connectionId)
 		this.#configStore.forgetInstance(connectionId)
 
@@ -775,6 +1087,10 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#logger.debug(`Error while deleting surface integration "${label ?? instanceId}": `, e)
 		}
 
+		// Drop the per-instance metrics state so it doesn't linger for the lifetime of the process
+		this.processManager.forgetInstance(instanceId)
+		this.#instanceCounters.delete(instanceId)
+
 		this.status.forgetInstanceStatus(instanceId)
 		this.#configStore.forgetInstance(instanceId)
 		this.#udevRules.triggerRegenerate()
@@ -831,6 +1147,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			surfaceConfig.enabled = false
 			enabledChanged = true
 		}
+
+		this.emit('surface_instance_updated', instanceId)
 
 		this.#configStore.commitChanges([instanceId], false)
 
@@ -1105,17 +1423,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			this.#configStore.commitChanges([id], false)
 		}
 
-		let enableInstance = config.enabled !== false
-		if (
-			config.moduleInstanceType === ModuleInstanceType.Connection &&
-			!this.#connectionCollectionsController.isCollectionEnabled(config.collectionId)
-		)
-			enableInstance = false
-		else if (
-			config.moduleInstanceType === ModuleInstanceType.Surface &&
-			!this.#surfaceInstanceCollectionsController.isCollectionEnabled(config.collectionId)
-		)
-			enableInstance = false
+		const enableInstance = this.isInstanceEnabled(config)
 
 		this.processManager.queueUpdateInstanceState(
 			id,

@@ -15,10 +15,10 @@ import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
 import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
-import type { ImageResult } from '../../Graphics/ImageResult.js'
+import { PREVIEW_RENDER_SIZE, type ImageResult } from '../../Graphics/ImageResult.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import { LockConfigFields, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
+import { OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {
@@ -66,7 +66,6 @@ const configFields: CompanionSurfaceConfigField[] = [
 		label: 'Prompt to enter fullscreen',
 		default: DefaultConfig.emulator_prompt_fullscreen,
 	},
-	...LockConfigFields,
 ]
 
 export type EmulatorUpdateEvents = {
@@ -140,7 +139,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		this.#drawQueue = new ImageWriteQueue(this.#logger, async (key: string, item: DrawButtonItem) => {
 			if (this.#events.listenerCount('emulatorImages') === 0) return
 
-			const dataUrl = await item.defaultRender.drawDataUrl()
+			const dataUrl = await item.defaultRender.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 			if (this.#imageCache.get(key) !== item.defaultRender) return // Discard render if the cache has already moved on
 			if (!dataUrl) {
 				this.#logger.verbose('draw call had no data-url')
@@ -172,7 +171,9 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 				images.push({
 					x,
 					y,
-					buffer: render ? await render.drawDataUrl() : false,
+					buffer: render
+						? await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+						: false,
 				})
 			}
 		}

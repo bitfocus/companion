@@ -19,7 +19,7 @@ import pDebounce from 'p-debounce'
 import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
 import z from 'zod'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -232,7 +232,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Trigger a rescan of connected devices.
 	 */
 	triggerRefreshDevices = pDebounce(
-		pDebounce.promise(async () => this.#refreshDevices()),
+		pDebounce.promise(async () => this.#refreshDevices(), { after: true }),
 		50,
 		{ before: false }
 	)
@@ -857,13 +857,6 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 								...surface.getPanelConfig(),
 								[input.key]: input.value,
 							})
-
-							// Ensure the surface has the correct locked state
-							const groupId = surface.getGroupId()
-							const group = groupId ? this.#surfaceGroups.get(groupId) : null
-							if (group) {
-								group.syncLocked()
-							}
 
 							this.triggerUpdateDevicesList()
 						}
@@ -1939,6 +1932,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
 		if (device) {
 			device.setBrightness(brightness)
+		}
+	}
+
+	/**
+	 * Adjust the brightness of a surface by a relative amount
+	 * @param surfaceId
+	 * @param adjustment -100 to 100
+	 * @param looseIdMatching
+	 */
+	adjustDeviceBrightness(surfaceId: string, adjustment: number, looseIdMatching = false): void {
+		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
+		if (device) {
+			device.adjustBrightness(adjustment)
 		}
 	}
 

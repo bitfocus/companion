@@ -175,6 +175,8 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			property={field.id}
 			label={field.label}
 			tooltip={field.tooltip}
+			description={field.description}
+			expressionDescription={field.expressionDescription}
 			features={features}
 			disableAutoExpression={field.disableAutoExpression}
 		>
@@ -212,8 +214,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	const updateOptionMutation = useMutationExt(trpc.controls.styles.updateOption.mutationOptions())
 
 	const rawValue = (elementProps as unknown as Record<string, unknown>)[field.id] as
-		| ExpressionOrValue<JsonValue | undefined>
-		| undefined
+		ExpressionOrValue<JsonValue | undefined> | undefined
 
 	const setListValue = useCallback(
 		(newRows: Record<string, ExpressionOrValue<JsonValue>>[]) => {

@@ -38,6 +38,8 @@ function makeTextEl(overrides: Partial<ButtonGraphicsTextDrawElement> = {}): But
 		fontsize: 7,
 		fontsizeAllowShrink: false,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff,
 		outlineColor: 0,
 		halign: 'center',

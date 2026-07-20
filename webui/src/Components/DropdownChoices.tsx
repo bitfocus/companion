@@ -38,9 +38,10 @@ export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 					// Grouped choices
 					const group: GroupBase<DropdownChoiceInt> = {
 						label: String(item.label),
-						options: item.options.map(
-							(choice): DropdownChoiceInt => ({ value: choice.id, label: String(choice.label) })
-						),
+						options: item.options.map((choice): DropdownChoiceInt => ({
+							value: choice.id,
+							label: String(choice.label),
+						})),
 					}
 					options.push(group)
 					flatOptions.push(...group.options)
@@ -56,9 +57,10 @@ export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 				flatOptions,
 			}
 		} else if (typeof choices === 'object') {
-			const options = Object.values(choices).map(
-				(choice): DropdownChoiceInt => ({ value: choice.id, label: String(choice.label) })
-			)
+			const options = Object.values(choices).map((choice): DropdownChoiceInt => ({
+				value: choice.id,
+				label: String(choice.label),
+			}))
 			return {
 				options,
 				flatOptions: options,

@@ -16,12 +16,23 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
+import type { EditableEntityListPool } from './Entities/EntityListPoolEditingMixin.js'
 import type { SomeControl } from './IControlFragments.js'
 
 const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
 	parentId: z.string(),
 	childGroup: z.string(),
 })
+
+/**
+ * Resolve a control to its editable entity pool, or throw if the control has no entities or is read-only.
+ * Narrows the pool union on its `isEditable` discriminant - on a read-only control (e.g. a preset reference)
+ * the pool is the read-only type and genuinely lacks the mutators, so this is where the edits are gated.
+ */
+function getEditableEntities(control: SomeControl<any>): EditableEntityListPool {
+	if (control.supportsEntities && control.entities.isEditable) return control.entities
+	throw new Error(`Control "${control.controlId}" does not support editing entities`)
+}
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createEntitiesTrpcRouter(
@@ -49,8 +60,6 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return null
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
 				const newEntity = instanceDefinitions.createEntityItem(
 					connectionId,
 					entityType,
@@ -61,7 +70,7 @@ export function createEntitiesTrpcRouter(
 				)
 				if (!newEntity) return null
 
-				const added = control.entities.entityAdd(entityLocation, ownerId, newEntity)
+				const added = getEditableEntities(control).entityAdd(entityLocation, ownerId, newEntity)
 				if (!added) return null
 
 				return newEntity.id
@@ -81,10 +90,9 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
+				const editable = getEditableEntities(control)
 				await activeLearningStore.runLearnRequest(entityId, async () => {
-					await control.entities.entityLearn(entityLocation, entityId).catch((e) => {
+					await editable.entityLearn(entityLocation, entityId).catch((e) => {
 						logger.error(`Learn failed: ${e}`)
 						throw e
 					})
@@ -107,9 +115,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entityEnabled(entityLocation, entityId, enabled)
+				return getEditableEntities(control).entityEnabled(entityLocation, entityId, enabled)
 			}),
 
 		setRawStoreResult: publicProcedure
@@ -130,9 +136,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entitySetRawStoreResult(entityLocation, entityId, target)
+				return getEditableEntities(control).entitySetRawStoreResult(entityLocation, entityId, target)
 			}),
 
 		setHeadline: publicProcedure
@@ -150,9 +154,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entityHeadline(entityLocation, entityId, headline)
+				return getEditableEntities(control).entityHeadline(entityLocation, entityId, headline)
 			}),
 
 		remove: publicProcedure
@@ -169,9 +171,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entityRemove(entityLocation, entityId)
+				return getEditableEntities(control).entityRemove(entityLocation, entityId)
 			}),
 
 		duplicate: publicProcedure
@@ -188,9 +188,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entityDuplicate(entityLocation, entityId)
+				return getEditableEntities(control).entityDuplicate(entityLocation, entityId)
 			}),
 
 		setOption: publicProcedure
@@ -209,9 +207,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entitySetOption(entityLocation, entityId, key, value)
+				return getEditableEntities(control).entitySetOption(entityLocation, entityId, key, value)
 			}),
 
 		setConnection: publicProcedure
@@ -229,9 +225,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entitySetConnection(entityLocation, entityId, connectionId)
+				return getEditableEntities(control).entitySetConnection(entityLocation, entityId, connectionId)
 			}),
 
 		setInverted: publicProcedure
@@ -249,9 +243,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entitySetInverted(entityLocation, entityId, isInverted)
+				return getEditableEntities(control).entitySetInverted(entityLocation, entityId, isInverted)
 			}),
 
 		move: publicProcedure
@@ -271,9 +263,13 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entityMoveTo(moveEntityLocation, moveEntityId, newOwnerId, newEntityLocation, newIndex)
+				return getEditableEntities(control).entityMoveTo(
+					moveEntityLocation,
+					moveEntityId,
+					newOwnerId,
+					newEntityLocation,
+					newIndex
+				)
 			}),
 
 		replaceStyleOverride: publicProcedure
@@ -291,10 +287,9 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities || !control.supportsLayeredStyle)
-					throw new Error(`Control "${controlId}" does not support entities or layered styles`)
+				if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layered styles`)
 
-				return control.entities.entityReplaceStyleOverride(entityLocation, entityId, override)
+				return getEditableEntities(control).entityReplaceStyleOverride(entityLocation, entityId, override)
 			}),
 
 		removeStyleOverride: publicProcedure
@@ -312,10 +307,9 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities || !control.supportsLayeredStyle)
-					throw new Error(`Control "${controlId}" does not support entities or layered styles`)
+				if (!control.supportsLayeredStyle) throw new Error(`Control "${controlId}" does not support layered styles`)
 
-				return control.entities.entityRemoveStyleOverride(entityLocation, entityId, overrideId)
+				return getEditableEntities(control).entityRemoveStyleOverride(entityLocation, entityId, overrideId)
 			}),
 
 		setVariableName: publicProcedure
@@ -333,9 +327,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entitySetVariableName(entityLocation, entityId, name)
+				return getEditableEntities(control).entitySetVariableName(entityLocation, entityId, name)
 			}),
 
 		setVariableValue: publicProcedure
@@ -353,9 +345,7 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(controlId)
 				if (!control) return false
 
-				if (!control.supportsEntities) throw new Error(`Control "${controlId}" does not support entities`)
-
-				return control.entities.entitySetVariableValue(entityLocation, entityId, value)
+				return getEditableEntities(control).entitySetVariableValue(entityLocation, entityId, value)
 			}),
 
 		localVariableValues: publicProcedure

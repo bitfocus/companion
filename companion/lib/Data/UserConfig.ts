@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events'
+import { nanoid } from 'nanoid'
 import selfsigned from 'selfsigned'
 import z from 'zod'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
+import type { AppInfo } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
@@ -35,6 +38,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	readonly #dbTable: DataStoreTableView<DataDatabaseDefaultTable>
 
 	/**
+	 * Launch-time overrides (e.g. from an environment variable). Keys present here are locked: their
+	 * value is layered over the persisted config at read time and cannot be edited in the UI. The
+	 * override is never written to the db, so removing it restores the stored value.
+	 */
+	readonly #lockedOverrides = new Map<keyof UserConfigModel, any>()
+
+	/**
 	 * The defaults for the user config fields
 	 */
 	static Defaults: UserConfigModel = {
@@ -43,7 +53,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 		page_direction_flipped: false,
 		page_plusminus: false,
-		remove_topbar: false,
+		buttons_decoration: ButtonGraphicsDecorationType.TopBar,
 		buttons_status_icons: 'show',
 
 		usb_hotplug: true,
@@ -60,6 +70,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		http_legacy_api_enabled: false,
 
 		rest_api_enabled: !isPackaged(),
+		prometheus_enabled: false,
+		prometheus_token: '',
 
 		tcp_enabled: false,
 		tcp_listen_port: 16759,
@@ -109,7 +121,10 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		gridSizePromptGrow: true,
 
 		installName: '',
+		mdns_announcements_enabled: true,
 		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
+
+		timezone: '',
 
 		backups: [
 			// Create a disabled backup rule by default
@@ -132,12 +147,16 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 */
 	#data: UserConfigModel
 
-	constructor(db: DataDatabase) {
+	constructor(appInfo: AppInfo, db: DataDatabase) {
 		super()
 		this.setMaxListeners(0)
 
 		this.#db = db
 		this.#dbTable = db.defaultTableView
+
+		if (appInfo.options.installNameOverride !== undefined) {
+			this.#lockedOverrides.set('installName', appInfo.options.installNameOverride)
+		}
 
 		this.#data = this.#dbTable.getOrDefault('userconfig', structuredClone(DataUserConfig.Defaults))
 
@@ -160,6 +179,21 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		}
 	}
 
+	/**
+	 * Layer any launch-time overrides over a snapshot of the persisted config. Returns the input
+	 * unchanged (by reference) when there are no overrides.
+	 */
+	#applyOverrides(data: UserConfigModel): UserConfigModel {
+		if (this.#lockedOverrides.size === 0) return data
+
+		const out = { ...data }
+		for (const [key, value] of this.#lockedOverrides) {
+			// @ts-expect-error mismatch in key type
+			out[key] = value
+		}
+		return out
+	}
+
 	createTrpcRouter() {
 		const self = this
 		const selfEvents: EventEmitter<DataUserConfigEvents> = self
@@ -175,14 +209,22 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				return this.renewSslCertificate()
 			}),
 
+			prometheusTokenRegenerate: publicProcedure.mutation(() => {
+				return this.regeneratePrometheusToken()
+			}),
+
 			getConfig: publicProcedure.query(() => {
-				return this.#data
+				return this.#applyOverrides(this.#data)
+			}),
+
+			getLockedKeys: publicProcedure.query(() => {
+				return [...this.#lockedOverrides.keys()]
 			}),
 
 			watchConfig: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(selfEvents, 'keyChanged', signal)
 
-				yield { type: 'init', config: self.#data } satisfies UserConfigUpdate
+				yield { type: 'init', config: self.#applyOverrides(self.#data) } satisfies UserConfigUpdate
 
 				for await (const [key, value] of changes) {
 					yield { type: 'key', key, value } satisfies UserConfigUpdate
@@ -343,7 +385,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * Get a copy of the entire user config object
 	 */
 	getAll(): UserConfigModel {
-		return structuredClone(this.#data)
+		return this.#applyOverrides(structuredClone(this.#data))
 	}
 
 	/**
@@ -353,7 +395,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * @returns the config value
 	 */
 	getKey(key: keyof UserConfigModel, clone = false): any {
-		let out = this.#data[key]
+		let out = this.#lockedOverrides.has(key) ? this.#lockedOverrides.get(key) : this.#data[key]
 
 		if (clone === true) {
 			out = structuredClone(out)
@@ -430,9 +472,29 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			return
 		}
 
+		// Block updates to any key that is locked by a launch-time override (e.g. an environment variable)
+		if (this.#lockedOverrides.has(key)) {
+			this.#logger.warn(`Ignoring update to '${String(key)}': it is locked by a launch-time override`)
+			return
+		}
+
 		if (BANNED_PROPS.has(String(key))) throw new Error(`Setting config key "${String(key)}" is not allowed`)
 
+		// Ensure a token exists whenever the metrics endpoint is enabled, so it can never be exposed without auth
+		if (key === 'prometheus_enabled' && value && !this.#data.prometheus_token) {
+			this.setKeyUnchecked('prometheus_token', nanoid(32), false)
+		}
+
 		this.setKeyUnchecked(key, value, save)
+	}
+
+	/**
+	 * Generate a fresh prometheus bearer token, invalidating the previous one
+	 */
+	regeneratePrometheusToken(): string {
+		const token = nanoid(32)
+		this.setKey('prometheus_token', token)
+		return token
 	}
 
 	/**
@@ -460,7 +522,12 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			this.#dbTable.set('userconfig', this.#data)
 		}
 
-		this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+		// Never log the value of secret keys - the prometheus token is a live scrape credential
+		if (key === 'prometheus_token') {
+			this.#logger.info(`set '${key}' to: <redacted>`)
+		} else {
+			this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+		}
 
 		this.emit('keyChanged', key, value, checkControlsInBounds)
 	}

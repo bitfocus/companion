@@ -328,6 +328,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 	const currentPageFieldId = useId()
 	const restrictPagesFieldId = useId()
 	const allowedPagesFieldId = useId()
+	const neverLockFieldId = useId()
 
 	// Show loading or error state
 	const dataReady = (!surfaceId || !!surfaceConfig.config) && (!groupId || groupConfig.config !== null)
@@ -479,6 +480,19 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								</Grid.Col>
 							</>
 						)}
+
+						<FormLabel htmlFor={neverLockFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+							Never pin code lock
+						</FormLabel>
+						<Grid.Col sm={8}>
+							<div className="mx-2">
+								<SwitchInputField
+									id={neverLockFieldId}
+									value={!!groupConfig.config.never_lock}
+									setValue={(value) => setGroupConfigValue('never_lock', !!value)}
+								/>
+							</div>
+						</Grid.Col>
 					</>
 				)}
 

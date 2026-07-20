@@ -35,6 +35,7 @@ import { upgradeImport } from '../Data/Upgrade.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
+import { PREVIEW_RENDER_SIZE } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
@@ -47,13 +48,11 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { BackupController } from './Backups.js'
-import { FILE_VERSION } from './Constants.js'
+import { FILE_VERSION, MAX_IMPORT_FILE_SIZE } from './Constants.js'
 import { ExportController } from './Export.js'
 import { ImportController } from './Import.js'
 import type { ImportExportThreadMethods, ParseImportDataResult } from './ThreadMethods.js'
 import { find_smallest_grid_for_page } from './Util.js'
-
-const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 500 // 500MB. This is small enough that it can be kept in memory
 
 export class ImportExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Controller')
@@ -366,6 +365,7 @@ export class ImportExportController {
 					let rawElements: SomeButtonGraphicsElement[]
 					switch (controlObjLayered.type) {
 						case 'button-layered':
+						case 'preset-reference':
 							drawType = 'button'
 							rawElements = controlObjLayered.style.layers
 							break
@@ -401,9 +401,9 @@ export class ImportExportController {
 						null
 					)
 
-					const res = await this.#graphicsController.drawPreview(drawType, elements)
+					const res = this.#graphicsController.generatePreviewImage(drawType, elements)
 					if (!res?.style) return null
-					return await res.drawDataUrl()
+					return await res.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 				}),
 
 			importSinglePage: publicProcedure
@@ -524,14 +524,8 @@ export class ImportExportController {
 		const shouldReset = (value: ImportOrResetType): boolean => value !== 'unchanged'
 		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
-		const controls = this.#controlsController.getAllControls()
-
 		if (shouldReset(config.buttons)) {
-			for (const [controlId, control] of controls.entries()) {
-				if (control.type !== 'trigger') {
-					this.#controlsController.deleteControl(controlId)
-				}
-			}
+			this.#controlsController.deleteAllControlsOfType('bank')
 
 			// Reset page 1
 			this.#pagesController.resetPage(1) // Note: controls were already deleted above
@@ -572,11 +566,7 @@ export class ImportExportController {
 		}
 
 		if (shouldReset(config.triggers)) {
-			for (const [controlId, control] of controls.entries()) {
-				if (control.type === 'trigger') {
-					this.#controlsController.deleteControl(controlId)
-				}
-			}
+			this.#controlsController.deleteAllControlsOfType('trigger')
 			this.#controlsController.replaceTriggerCollections([])
 		}
 
@@ -586,12 +576,7 @@ export class ImportExportController {
 
 		if (shouldReset(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections([])
-
-			// Delete existing expression variables
-			const existingExpressionVariables = this.#controlsController.getAllExpressionVariables()
-			for (const control of existingExpressionVariables) {
-				this.#controlsController.deleteControl(control.controlId)
-			}
+			this.#controlsController.deleteAllControlsOfType('expression-variable')
 		}
 
 		if (shouldReset(config.userconfig)) {

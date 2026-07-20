@@ -1,7 +1,7 @@
 import debounceFn from 'debounce-fn'
 import jsonPatch from 'fast-json-patch'
 import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
@@ -9,7 +9,6 @@ import type {
 	ExpressionVariableModel,
 	ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import type { DrawStyleModel } from '@companion-app/shared/Model/StyleModel.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../ControlBase.js'
@@ -86,22 +85,20 @@ export class ControlExpressionVariable
 	readonly entities: EntityListPoolExpressionVariable
 
 	/**
-	 * @param registry - the application core
-	 * @param eventBus - the main trigger event bus
+	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
 	constructor(
 		deps: ControlDependencies,
-		expressionVariableNameMap: ExpressionVariableNameMap,
 		controlId: string,
 		storage: ExpressionVariableModel | null,
 		isImport: boolean
 	) {
 		super(deps, controlId, `Controls/ControlTypes/ExpressionVariable/${controlId}`)
 
-		this.#expressionVariableNameMap = expressionVariableNameMap
+		this.#expressionVariableNameMap = deps.expressionVariableNamesMap
 
 		this.entities = new EntityListPoolExpressionVariable({
 			controlId,
@@ -111,6 +108,7 @@ export class ControlExpressionVariable
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
 		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)
@@ -142,7 +140,7 @@ export class ControlExpressionVariable
 		// Elements are not relevant for expression variables
 
 		if (options.redraw) {
-			this.triggerRedraw()
+			this.triggerInvalidation()
 		}
 	}
 
@@ -329,9 +327,8 @@ export class ControlExpressionVariable
 
 	/**
 	 * Trigger a recheck of the condition, as something has changed and it might be the 'condition'
-	 * @access protected
 	 */
-	triggerRedraw = debounceFn(
+	triggerInvalidation = debounceFn(
 		() => {
 			const name = this.options.variableName
 			if (!name) return
@@ -351,17 +348,14 @@ export class ControlExpressionVariable
 		}
 	)
 
-	getLastDrawStyle(): DrawStyleModel | null {
-		return null
+	get drawing(): null {
+		return null // Expression variables don't draw
 	}
 
 	/**
 	 * Execute a press of this control
 	 */
 	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
-		// Nothing to do
-	}
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
 		// Nothing to do
 	}
 }

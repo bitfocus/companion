@@ -1,14 +1,14 @@
 import type EventEmitter from 'node:events'
 import z from 'zod'
-import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
+import type { ClientEditInstanceConfigState } from '@companion-app/shared/Model/Common.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import type { ClientSurfaceInstancesUpdate } from '@companion-app/shared/Model/SurfaceInstance.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Logger } from '../../Log/Controller.js'
-import { publicProcedure, router, toIterable } from '../../UI/TRPC.js'
+import { mergeEventTriggers, publicProcedure, router, toIterable } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
+import { computeInstanceConfigState } from '../EditConfigState.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createSurfacesTrpcRouter(
@@ -102,34 +102,31 @@ export function createSurfacesTrpcRouter(
 				instanceController.enableDisableSurfaceInstance(input.instanceId, input.enabled)
 			}),
 
-		edit: publicProcedure
+		watchEdit: publicProcedure
 			.input(
 				z.object({
 					instanceId: z.string(),
 				})
 			)
-			.query(async ({ input }) => {
-				// Check if the surface instance exists
-				const instanceConf = configStore.getConfigOfTypeForId(input.instanceId, ModuleInstanceType.Surface)
-				if (!instanceConf) return null
+			.subscription(async function* ({ input, signal }) {
+				const { instanceId } = input
 
-				const instance = instanceController.processManager.getSurfaceChild(input.instanceId)
-				if (!instance) return null
+				if (!signal) throw new Error('No signal in watchEdit subscription')
 
-				try {
-					const fields: never[] = [] // TODO
-					// const fields = await instance.requestConfigFields()
+				const triggers = mergeEventTriggers(signal, [
+					// config saved / module changed / enable-disable
+					{ ee: instanceEvents, key: 'surface_instance_updated', filter: (id) => id === instanceId },
+					// a collection was enabled/disabled (no id payload, so always re-evaluate)
+					{ ee: instanceEvents, key: 'surface_collections_enabled' },
+					// the child process became ready / stopped / crashed
+					{ ee: instanceController.processManager, key: 'childStateChange', filter: (id) => id === instanceId },
+				])
 
-					const result: ClientEditInstanceConfig = {
-						fields: fields,
-						useNewLayout: true,
-						config: instanceConf.config,
-						secrets: instanceConf.secrets || {},
-					}
-					return result
-				} catch (e) {
-					logger.silly(`Failed to load surface config_fields: ${stringifyError(e)}`)
-					return null
+				// Emit the initial state, then recompute and emit whenever something relevant changes.
+				yield await loadSurfaceConfigState(instanceController, configStore, instanceId)
+
+				for await (const _trigger of triggers) {
+					yield await loadSurfaceConfigState(instanceController, configStore, instanceId)
 				}
 			}),
 
@@ -178,4 +175,31 @@ export function createSurfacesTrpcRouter(
 				return null
 			}),
 	})
+}
+
+/**
+ * Compute the current state of the config-fields editor for a surface instance. The shared helper owns
+ * the lifecycle reasoning; surfaces do not expose config fields yet, so a running child reports an
+ * empty field set.
+ */
+async function loadSurfaceConfigState(
+	instanceController: InstanceController,
+	configStore: InstanceConfigStore,
+	instanceId: string
+): Promise<ClientEditInstanceConfigState> {
+	return computeInstanceConfigState(
+		instanceController,
+		configStore,
+		ModuleInstanceType.Surface,
+		instanceId,
+		() => instanceController.processManager.getSurfaceChild(instanceId),
+		(_instance, instanceConf) => ({
+			// TODO: surface modules do not expose config fields yet
+			type: 'config',
+			fields: [],
+			useNewLayout: true,
+			config: instanceConf.config,
+			secrets: instanceConf.secrets || {},
+		})
+	)
 }

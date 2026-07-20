@@ -4,16 +4,14 @@ import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import v4tov5 from '../../lib/Data/Upgrades/v4tov5.js'
 import LogController from '../../lib/Log/Controller.js'
-import { SuppressLogging } from '../Util.js'
 import { importTable } from './util.js'
 
 function CreateDataDatabase() {
 	const db = new DataDatabase()
 
-	let data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v4.json', 'utf8')
-	data = JSON.parse(data)
+	const data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v4.json', 'utf8')
 
-	importTable(db.defaultTableView, data)
+	importTable(db.defaultTableView, JSON.parse(data))
 
 	return db
 }
@@ -31,8 +29,6 @@ class DataDatabase extends DataStoreBase<any> {
 }
 
 describe('upgrade', () => {
-	SuppressLogging()
-
 	const db = CreateDataDatabase()
 	const data = JSON.parse(fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v5.json', 'utf8'))
 	v4tov5.upgradeStartup(db, LogController.createLogger('test-logger'))

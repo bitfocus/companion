@@ -1,7 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
-import type { ClientEditInstanceConfig } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -9,8 +8,7 @@ import { Grid } from '~/Components/Grid'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
-import { trpc, trpcClient, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
-import { isCollectionEnabled } from '~/Resources/util.js'
+import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 
@@ -60,8 +58,6 @@ function useInstanceEditPanelService(
 	confirmModalRef: React.RefObject<GenericConfirmModalRef>,
 	instanceId: string
 ): InstanceEditPanelService<ClientConnectionConfig> {
-	const { connections } = useContext(RootAppStoreContext)
-
 	const navigate = useNavigate({ from: `/connections/$connectionId` })
 	const closePanel = useCallback(() => {
 		void navigate({ to: `/connections` })
@@ -91,10 +87,7 @@ function useInstanceEditPanelService(
 	)
 
 	const saveConfig = useCallback(
-		async (
-			instanceShouldBeRunning: boolean,
-			panelStore: InstanceEditPanelStore<ClientConnectionConfig>
-		): Promise<string | null> => {
+		async (panelStore: InstanceEditPanelStore<ClientConnectionConfig>): Promise<string | null> => {
 			const saveLabel = panelStore.labelValue
 
 			const saveConfigProps: RouterInput['instances']['connections']['setConfig'] = {
@@ -104,14 +97,13 @@ function useInstanceEditPanelService(
 				updatePolicy: panelStore.updatePolicy,
 			}
 
-			if (instanceShouldBeRunning) {
-				if (panelStore.isLoading) throw new Error('Connection is still loading, cannot save changes')
+			if (panelStore.isLoading) throw new Error('Connection is still loading, cannot save changes')
 
-				const configAndSecrets = panelStore.configAndSecrets
-				if (configAndSecrets) {
-					saveConfigProps.config = configAndSecrets.config
-					saveConfigProps.secrets = configAndSecrets.secrets
-				}
+			// Only present when a running child reported its config fields
+			const configAndSecrets = panelStore.configAndSecrets
+			if (configAndSecrets) {
+				saveConfigProps.config = configAndSecrets.config
+				saveConfigProps.secrets = configAndSecrets.secrets
 			}
 
 			const err: string | null = await setConfigMutation.mutateAsync(saveConfigProps)
@@ -123,10 +115,8 @@ function useInstanceEditPanelService(
 			} else if (err) {
 				return `Unable to save connection config: "${err}"`
 			} else {
-				if (instanceShouldBeRunning) {
-					// Perform a reload of the connection config and secrets
-					panelStore.triggerReload()
-				}
+				// The subscription will deliver the freshly saved config; just clear the dirty tracking
+				panelStore.markSaved()
 
 				return null
 			}
@@ -141,12 +131,8 @@ function useInstanceEditPanelService(
 
 			moduleTypeDisplayName: 'connection',
 
-			fetchConfig: async () =>
-				trpcClient.instances.connections.edit.query({
-					connectionId: instanceId,
-				}) as Promise<ClientEditInstanceConfig | null>,
-
-			isCollectionEnabled: (collectionId) => isCollectionEnabled(connections.rootCollections(), collectionId),
+			watchConfig: (handlers) =>
+				trpc.instances.connections.watchEdit.subscriptionOptions({ connectionId: instanceId }, handlers),
 
 			deleteInstance,
 
@@ -154,6 +140,6 @@ function useInstanceEditPanelService(
 
 			closePanel,
 		}),
-		[instanceId, connections, deleteInstance, saveConfig, closePanel]
+		[instanceId, deleteInstance, saveConfig, closePanel]
 	)
 }

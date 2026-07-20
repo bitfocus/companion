@@ -53,7 +53,22 @@ export function ConvertPresetDefinitions(
 	try {
 		// Translate all the preset definitions
 		for (const [id, preset] of Object.entries(rawPresets ?? {})) {
-			if (preset) converter.convertPreset(id, preset)
+			if (!preset) continue
+
+			if (preset.type === 'alternatives') {
+				// Try each variant until one is accepted
+				let matched = false
+				for (const variant of preset.variants) {
+					matched = converter.convertPreset(id, variant)
+					if (matched) break
+				}
+
+				if (!matched) {
+					logger.warn(`Found no compatible/valid variant for "${id}"`)
+				}
+			} else {
+				converter.convertPreset(id, preset)
+			}
 		}
 
 		rawSections?.forEach?.((rawSection, i) => {

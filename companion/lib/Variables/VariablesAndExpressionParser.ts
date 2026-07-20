@@ -1,5 +1,5 @@
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import type { ExecuteExpressionResult } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import {
@@ -11,6 +11,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import {
 	executeExpression,
 	parseVariablesInString,
@@ -35,15 +36,26 @@ export class VariablesAndExpressionParser {
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
+	/** The `page:x` variables of the control's page (see {@link #bindPageVariables}). */
+	readonly #pageValues: VariablesCache = new Map()
 	readonly #overrideVariableValues: VariableValues
+
+	/** User configuration, used to read the configured timezone for date/time expression functions */
+	readonly #userconfig: DataUserConfig
 
 	readonly #valueCacheAccessor: VariableValueCache = {
 		has: (id: string): boolean => {
-			return this.#thisValues.has(id) || this.#localValues.has(id) || this.#overrideVariableValues[id] !== undefined
+			return (
+				this.#thisValues.has(id) ||
+				this.#localValues.has(id) ||
+				this.#pageValues.has(id) ||
+				this.#overrideVariableValues[id] !== undefined
+			)
 		},
 		get: (id: string): VariableValue | undefined => {
 			if (this.#thisValues.has(id)) return this.#thisValues.get(id)
 			if (this.#localValues.has(id)) return this.#localValues.get(id)
+			if (this.#pageValues.has(id)) return this.#pageValues.get(id)
 			return this.#overrideVariableValues[id]
 		},
 		set: (id: string, value: VariableValue | undefined): void => {
@@ -52,22 +64,27 @@ export class VariablesAndExpressionParser {
 	}
 
 	constructor(
+		userconfig: DataUserConfig,
 		blinker: VariablesBlinker,
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		pageValues: ControlEntityInstance[] | null = null
 	) {
+		this.#userconfig = userconfig
 		this.#blinker = blinker
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
 		this.#overrideVariableValues = overrideVariableValues || {}
 
 		if (localValues) this.#bindLocalVariables(localValues)
+		if (pageValues) this.#bindPageVariables(pageValues)
 	}
 
 	createChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
 		const childParser = new VariablesAndExpressionParser(
+			this.#userconfig,
 			this.#blinker,
 			this.#rawVariableValues,
 			this.#thisValues,
@@ -83,7 +100,34 @@ export class VariablesAndExpressionParser {
 			if (key.startsWith('local:')) childParser.#localValues.set(key, value)
 		}
 
+		// Manual clone the pageValues
+		for (const [key, value] of this.#pageValues) {
+			childParser.#pageValues.set(key, value)
+		}
+
 		return childParser
+	}
+
+	/**
+	 * Create an isolated child parser that can ONLY resolve the provided override variables.
+	 * Unlike `createChildParser`, this does not inherit the global variable values, `this:` values,
+	 * inherited overrides, or `local:` values - any reference outside the given overrides resolves
+	 * to "unknown".
+	 *
+	 * Used for composite element children: a composite is authored by a module and must behave as a
+	 * self-contained component whose children can only reference its `options:*` variables, not any
+	 * global state. The values wired into the composite's options are resolved by the caller (with
+	 * full access) before being passed in here.
+	 */
+	createIsolatedChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
+		return new VariablesAndExpressionParser(
+			this.#userconfig,
+			this.#blinker,
+			{},
+			new Map(),
+			null,
+			overrideVariableValues
+		)
 	}
 
 	#bindLocalVariables(entities: ControlEntityInstance[]) {
@@ -100,13 +144,36 @@ export class VariablesAndExpressionParser {
 	}
 
 	/**
+	 * Bind a page's local-variable entities so they resolve as `$(page:x)` for controls on that page.
+	 * Like {@link #bindLocalVariables}, but under the `page:` namespace.
+	 */
+	#bindPageVariables(entities: ControlEntityInstance[]) {
+		for (const entity of entities) {
+			const rawName = entity.rawLocalVariableName
+			if (!rawName) continue
+
+			this.#pageValues.set(
+				`page:${rawName}`,
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+			)
+		}
+	}
+
+	/**
 	 * Parse and execute an expression in a string
 	 * @param str - String containing the expression to parse
 	 * @param requiredType - Fail if the result is not of specified type
 	 * @returns result of the expression
 	 */
 	executeExpression(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		return executeExpression(this.#blinker, str, this.#rawVariableValues, requiredType, this.#valueCacheAccessor)
+		return executeExpression(
+			this.#blinker,
+			str,
+			this.#rawVariableValues,
+			requiredType,
+			this.#valueCacheAccessor,
+			this.#userconfig.getKey('timezone') || undefined
+		)
 	}
 
 	/**

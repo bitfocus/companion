@@ -1,15 +1,13 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { SomeButtonModel } from './ButtonModel.js'
 import type { ExpressionVariableModel } from './ExpressionVariableModel.js'
+import type { PageControlModel } from './PageControlModel.js'
 import type { TriggerModel } from './TriggerModel.js'
 
-export type SomeControlModel = SomeButtonModel | TriggerModel | ExpressionVariableModel
+export type SomeControlModel = SomeButtonModel | TriggerModel | ExpressionVariableModel | PageControlModel
 
 export type UIControlUpdate =
-	| UIControlUpdateInit
-	| UIControlUpdateConfig
-	| UIControlUpdateRuntime
-	| UIControlUpdateDestroy
+	UIControlUpdateInit | UIControlUpdateConfig | UIControlUpdateRuntime | UIControlUpdateDestroy
 
 export interface UIControlUpdateInit {
 	type: 'init'

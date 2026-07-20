@@ -14,9 +14,7 @@ export type CustomVariableCollection = CollectionBase<null>
 export type CustomVariablesModel = Record<string, CustomVariableDefinition>
 
 export type CustomVariableUpdate =
-	| CustomVariableUpdateInitOp
-	| CustomVariableUpdateRemoveOp
-	| CustomVariableUpdateUpdateOp
+	CustomVariableUpdateInitOp | CustomVariableUpdateRemoveOp | CustomVariableUpdateUpdateOp
 
 export interface CustomVariableUpdateInitOp {
 	type: 'init'

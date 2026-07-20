@@ -10,6 +10,7 @@ import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ImageInputField } from '~/Components/ImageInputField.js'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
+import { TextStylesInputField } from '~/Components/TextStylesInputField.js'
 import { TimeInputField } from '~/Components/TimeInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { VariablePickerField } from '~/Components/VariablePickerField.js'
@@ -114,6 +115,8 @@ export function InternalModuleField(
 			return <HorizontalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:vertical-alignment':
 			return <VerticalAlignmentInputField id={id} value={value} setValue={setValue} disabled={readonly} />
+		case 'internal:text-styles':
+			return <TextStylesInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:image-file': {
 			return (
 				<ImageInputField
@@ -546,13 +549,11 @@ const InternalTriggerDropdown = observer(function InternalTriggerDropdown({
 		}
 
 		// Convert triggers Map to array of objects with id field
-		const allTriggers = Array.from(triggersList.triggers.entries()).map(
-			([id, trigger]): MinimalTrigger => ({
-				id,
-				name: trigger.name,
-				collectionId: trigger.collectionId || null,
-			})
-		)
+		const allTriggers = Array.from(triggersList.triggers.entries()).map(([id, trigger]): MinimalTrigger => ({
+			id,
+			name: trigger.name,
+			collectionId: trigger.collectionId || null,
+		}))
 
 		const getItemChoice = (trigger: MinimalTrigger): DropdownChoice => ({
 			id: trigger.id,

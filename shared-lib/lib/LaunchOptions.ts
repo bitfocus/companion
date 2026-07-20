@@ -166,6 +166,13 @@ export const LAUNCH_OPTIONS: readonly LaunchOption[] = [
 		short: 'Disable IPv6 support, binding the admin ui to IPv4 (0.0.0.0) by default',
 		envVar: 'DISABLE_IPV6',
 	},
+	{
+		key: 'installName',
+		type: 'string',
+		short: 'Set a fixed installation name, overriding and locking the value in the UI',
+		cliFlag: '--install-name <string>',
+		envVar: 'COMPANION_INSTALL_NAME',
+	},
 ]
 
 /** The bare long flag name for an option (e.g. '--admin-port <number>' -> '--admin-port'). */

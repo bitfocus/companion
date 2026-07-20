@@ -1,6 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
-import { BANNED_PROPS } from '@companion-app/shared/Expression/ExpressionResolve.js'
+import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -86,6 +86,7 @@ import {
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
+import { VariableValueBatcher } from './VariableValueBatcher.js'
 
 const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT } // Backwards compatibility for modules that expect feedback size
 
@@ -95,6 +96,15 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
 
 	readonly #deps: ConnectionChildHandlerDependencies
+
+	/**
+	 * Coalesce variable value updates from the module, to avoid flooding the render pipeline when a module
+	 * pushes values very frequently (e.g. a stopwatch). Legacy modules run in a child process using an
+	 * external base library, so unlike the new module system this throttles after the IPC hop rather than before.
+	 */
+	readonly #variableValuesBatcher = new VariableValueBatcher<SetVariableValuesMessage['newValues'][number]>((values) =>
+		this.#deps.variables.values.setVariableValues(this.#label, values)
+	)
 
 	readonly connectionId: string
 
@@ -166,6 +176,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			(msg) => {
 				if (monitor.child) {
 					monitor.child.send(msg)
+					// payload is already an EJSON string (base-old IpcWrapper serializes it); measure for free
+					const bytes = 'payload' in msg && typeof msg.payload === 'string' ? Buffer.byteLength(msg.payload, 'utf8') : 0
+					this.#deps.trackIpcMessage(this.connectionId, 'sent', bytes)
 				} else {
 					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
 				}
@@ -184,6 +197,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			: null
 
 		const messageHandler = (msg: any) => {
+			// payload is an EJSON string here (parsed inside receivedMessage); count it before that
+			const bytes = typeof msg?.payload === 'string' ? Buffer.byteLength(msg.payload, 'utf8') : 0
+			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
 			this.#ipcWrapper.receivedMessage(msg)
 		}
 		monitor.on('message', messageHandler)
@@ -342,14 +358,15 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		changedVariableIds: string[],
-		fromControlId: string | null
+		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void> {
 		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet, fromControlId)
+			this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
 			return
 		}
 
 		// Old flow means informing the module about any variable changes so that it can check for anything to invalidate
+		if (controlIdFilter) return
 		this.#ipcWrapper.sendWithNoCb('variablesChanged', {
 			variablesIds: changedVariableIds,
 		})
@@ -647,6 +664,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
+		this.#variableValuesBatcher.destroy()
+
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
@@ -837,6 +856,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle updating feedback values from the child process
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
+		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
+
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
 			msg.values.map((val) => ({
@@ -853,7 +874,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async #handleSetVariableValues(msg: SetVariableValuesMessage): Promise<void> {
 		if (!this.#label) throw new Error(`Got call to handleSetVariableValues before init was called`)
 
-		this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
+		this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
+
+		this.#variableValuesBatcher.add(msg.newValues)
 	}
 
 	/**
@@ -886,6 +909,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#deps.variables.definitions.setVariableDefinitions(this.#label, newVariables)
 
 		if (msg.newValues) {
+			this.#deps.trackVariableValuesReceived(this.connectionId, msg.newValues.length)
 			this.#deps.variables.values.setVariableValues(this.#label, msg.newValues)
 		}
 
@@ -909,7 +933,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				msg.presets
 			)
 
-			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets)
+			// This legacy handler only serves pre-2.0 modules, which should not be used as references due to ids not being very stable
+			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets, false)
 		} catch (e) {
 			this.logger.error(`setPresetDefinitions: ${e}`)
 
@@ -1004,7 +1029,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					const control = this.#deps.controls.getControl(feedback.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.entities.entityReplace(
+						control.entities.entityReplaceForUpgrade(
 							{
 								type: EntityModelType.Feedback,
 								id: feedback.id,
@@ -1027,7 +1052,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					const control = this.#deps.controls.getControl(action.controlId)
 					const found =
 						control?.supportsEntities &&
-						control.entities.entityReplace(
+						control.entities.entityReplaceForUpgrade(
 							{
 								type: EntityModelType.Action,
 								id: action.id,

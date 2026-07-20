@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import z from 'zod'
+import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,
@@ -209,7 +210,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 					this.#store._movePageInOrder(currentPageIndex, input.pageNumber - 1)
 
 					// Update cache for controls on later pages
-					const { changedPageIds } = this.#updateAndRedrawAllPagesAfter(
+					const { changedPageIds } = this.#updateAndRedrawAllPagesInRange(
 						Math.min(currentPageIndex + 1, input.pageNumber),
 						Math.max(currentPageIndex + 1, input.pageNumber)
 					)
@@ -262,11 +263,15 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
+		// Delete the control that owns this page's local variables. It is not on the grid, so it is not
+		// part of `removedControls` and must be deleted explicitly.
+		this.#controlsController.deleteControl(CreatePageControlId(pageInfo.id))
+
 		// Delete the info for the page
 		this.#store._removePage(pageInfo.id)
 
 		// Update cache for controls on later pages
-		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesAfter(pageNumber, null)
+		const { changedPageNumbers, changedPageIds } = this.#updateAndRedrawAllPagesInRange(pageNumber, null)
 
 		// the list is a page shorter, ensure the 'old last' page is reported as undefined
 		const missingPageNumber = this.#store.getPageIds().length + 1
@@ -303,8 +308,13 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			return []
 		}
 
+		// Create the control that owns each new page's local variables
+		for (const page of insertedPages) {
+			this.#controlsController.createPageControl(page.id)
+		}
+
 		// Update cache for controls on later pages
-		const { changedPageIds } = this.#updateAndRedrawAllPagesAfter(asPageNumber, null)
+		const { changedPageIds } = this.#updateAndRedrawAllPagesInRange(asPageNumber, null)
 
 		// inform clients
 		this.emit('clientUpdate', {
@@ -326,7 +336,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * @param firstPageNumber
 	 * @param lastPageNumber If null, run to the end
 	 */
-	#updateAndRedrawAllPagesAfter(
+	#updateAndRedrawAllPagesInRange(
 		firstPageNumber: number,
 		lastPageNumber: number | null
 	): { changedPageNumbers: number[]; changedPageIds: Set<string> } {
@@ -408,6 +418,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
+		// Wiping the page also clears its local variables (the page control is kept, just emptied)
+		this.#controlsController.clearPageVariables(pageInfo.id)
+
 		const controlChanges: PageModelChangesItem['controls'] = []
 
 		// Report each populated location as cleared
@@ -444,6 +457,17 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.emit('controlIdsMoved', removedControls)
 
 		return removedControls
+	}
+
+	/**
+	 * Ensure every page has its `page:<pageId>` control (the control that owns the page's local
+	 * variables). Called once at startup so that configs created before page variables existed get
+	 * their controls created and persisted on first boot. Idempotent - existing controls are left as-is.
+	 */
+	ensurePageControlsExist(): void {
+		for (const pageId of this.#store.getPageIds()) {
+			this.#controlsController.createPageControl(pageId)
+		}
 	}
 
 	/**
@@ -533,6 +557,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 			for (const [column, controlId] of Object.entries(rowObj)) {
 				const control = this.#controlsController.getControl(controlId)
 				if (control) {
+					// The page number changed, so the control's location-dependent state (this:page and
+					// related variables/feedbacks) must be recomputed, not just redrawn from cache.
+					control.triggerLocationHasChanged()
+
 					this.#graphicsController.invalidateButton({
 						pageNumber: pageNumber,
 						column: Number(column),

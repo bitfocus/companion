@@ -2,15 +2,14 @@ import EventEmitter from 'node:events'
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
-import type {
-	ExecuteExpressionResult,
-	ExpressionStreamResult,
-} from '@companion-app/shared/Expression/ExpressionResult.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import type { ExecuteExpressionResult, ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import { ExpressionOrJsonValueSchema, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
@@ -20,6 +19,11 @@ const contextResolutionSchema = z
 		z.object({
 			type: z.literal('localVariable'),
 			locationValue: ExpressionOrJsonValueSchema,
+			nameValue: ExpressionOrJsonValueSchema,
+		}),
+		z.object({
+			type: z.literal('pageVariable'),
+			pageValue: ExpressionOrJsonValueSchema,
 			nameValue: ExpressionOrJsonValueSchema,
 		}),
 		z.object({ type: z.literal('customVariable'), nameValue: ExpressionOrJsonValueSchema }),
@@ -32,12 +36,14 @@ export class PreviewExpressionStream {
 	readonly #logger = LogController.createLogger('Variables/ExpressionStream')
 
 	readonly #controlsController: ControlsController
+	readonly #pageStore: IPageStore
 	readonly #localVariables: LocalVariablesController
 
 	readonly #sessions = new Map<string, ExpressionStreamSession>()
 
-	constructor(controlsController: ControlsController, localVariables: LocalVariablesController) {
+	constructor(controlsController: ControlsController, pageStore: IPageStore, localVariables: LocalVariablesController) {
 		this.#controlsController = controlsController
+		this.#pageStore = pageStore
 		this.#localVariables = localVariables
 	}
 
@@ -105,16 +111,17 @@ export class PreviewExpressionStream {
 		})
 	}
 
-	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
-			// Always re-evaluate when the resolved target control's local variables change
+			// Always re-evaluate when the scoped change hits the resolved target control's local variables
 			const isTargetControlChange =
-				!!fromControlId &&
-				session.contextResolution?.type === 'localVariable' &&
-				session.resolvedTargetControlId === fromControlId
+				controlIdFilter !== null &&
+				(session.contextResolution?.type === 'localVariable' || session.contextResolution?.type === 'pageVariable') &&
+				session.resolvedTargetControlId != null &&
+				controlIdFilter.has(session.resolvedTargetControlId)
 
 			if (!isTargetControlChange) {
-				if (fromControlId && session.controlId !== fromControlId) continue
+				if (controlIdFilter && (session.controlId == null || !controlIdFilter.has(session.controlId))) continue
 				if (session.latestResult.variableIds.isDisjointFrom(changed)) continue
 			}
 
@@ -137,9 +144,9 @@ export class PreviewExpressionStream {
 			// The session's own control moving changes what this:* variables resolve to
 			const ownControlMoved = !!session.controlId && changedControlIds.has(session.controlId)
 
-			// A localVariable context must re-resolve unless it is pinned to an unaffected control.
+			// A localVariable/pageVariable context must re-resolve unless it is pinned to an unaffected control.
 			const targetMayHaveChanged =
-				session.contextResolution?.type === 'localVariable' &&
+				(session.contextResolution?.type === 'localVariable' || session.contextResolution?.type === 'pageVariable') &&
 				(session.resolvedTargetControlId === undefined || changedControlIds.has(session.resolvedTargetControlId))
 
 			if (!ownControlMoved && !targetMayHaveChanged) continue
@@ -161,6 +168,17 @@ export class PreviewExpressionStream {
 		if (isResultEqual(previousResult, newValue)) return
 
 		session.changes.emit('change', convertExpressionResult(newValue))
+	}
+
+	/**
+	 * The page number of the previewed control, used to resolve the "This page" (0) choice of a
+	 * pageVariable context.
+	 */
+	#thisPageNumberFor(controlId: string | null): number | null {
+		if (!controlId) return null
+		const parsed = ParseControlId(controlId)
+		if (parsed?.type === 'page') return this.#pageStore.getPageNumber(parsed.pageId)
+		return this.#pageStore.getLocationOfControlId(controlId)?.pageNumber ?? null
 	}
 
 	#resolveFieldToString(
@@ -211,6 +229,34 @@ export class PreviewExpressionStream {
 			session.resolvedTargetControlId = localVariable.controlId
 
 			return { overrides: this.#localVariables.getLocalVariableContextFor(localVariable), extraVariableIds }
+		} else if (contextResolution.type === 'pageVariable') {
+			const pageRes = this.#resolveFieldToString(contextResolution.pageValue, parser)
+			const nameRes = this.#resolveFieldToString(contextResolution.nameValue, parser)
+			const extraVariableIds = pageRes.variableIds.union(nameRes.variableIds)
+
+			if (!pageRes.value || !nameRes.value) {
+				// Field resolution failed: the field inputs are tracked in extraVariableIds, so any
+				// change to them retriggers through the normal variableIds overlap check
+				session.resolvedTargetControlId = undefined
+				return { overrides: null, extraVariableIds }
+			}
+
+			// The picker's "This page" choice (0) resolves against the page of the control being previewed.
+			const pageVariable = this.#localVariables.pageVariableFor(
+				pageRes.value,
+				nameRes.value,
+				this.#thisPageNumberFor(session.controlId)
+			)
+			if (!pageVariable) {
+				// No page for the resolved page number
+				session.resolvedTargetControlId = undefined
+				return { overrides: null, extraVariableIds }
+			}
+
+			// Store the target controlId so onVariablesChanged can trigger re-evaluation
+			session.resolvedTargetControlId = pageVariable.controlId
+
+			return { overrides: this.#localVariables.getLocalVariableContextFor(pageVariable), extraVariableIds }
 		} else if (contextResolution.type === 'customVariable') {
 			const nameRes = this.#resolveFieldToString(contextResolution.nameValue, parser)
 

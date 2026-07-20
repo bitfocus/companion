@@ -36,9 +36,7 @@ declare module 'osc' {
 	}
 	export type Argument = number | string | Uint8Array
 	export type MetaArgument =
-		| { type: 'i' | 'f'; value: number }
-		| { type: 's'; value: string }
-		| { type: 'b'; value: Uint8Array }
+		{ type: 'i' | 'f'; value: number } | { type: 's'; value: string } | { type: 'b'; value: Uint8Array }
 
 	export abstract class SLIPPort {}
 

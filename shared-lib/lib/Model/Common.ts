@@ -22,7 +22,7 @@ export interface AppUpdateInfo {
  * On non-Linux platforms `supported` is false and nothing else is meaningful.
  */
 export interface UdevRulesStatus {
-	/** Whether udev rules are relevant on this platform (linux only) */
+	/** Whether udev rules are relevant here (linux, and not inside a container) */
 	supported: boolean
 	/** Which build/file is in use */
 	mode: 'desktop' | 'headless'
@@ -95,12 +95,23 @@ export interface WrappedImage {
 	isUsed: boolean
 }
 
-export interface ClientEditInstanceConfig {
-	fields: Array<SomeCompanionInputField>
-	useNewLayout: boolean
-	config: unknown
-	secrets: unknown
-}
+/**
+ * The state of the config-fields editor for a connection/surface, as streamed to the UI.
+ * A single subscription emits one of these whenever anything relevant changes (config saved,
+ * module changed, enable/disable, child process ready/stopped/crashed), so the UI does not have
+ * to reconcile a query, the instance-status subscription and derived running-state separately.
+ */
+export type ClientEditInstanceConfigState =
+	| { type: 'loading' } // child exists but the config fields are not available yet
+	| {
+			type: 'config' // running: config fields are loaded
+			fields: Array<SomeCompanionInputField>
+			useNewLayout: boolean
+			config?: unknown
+			secrets?: unknown
+	  }
+	| { type: 'notRunning'; reason: 'disabled' | 'missing' | 'starting' | 'crashed' }
+	| { type: 'error'; message: string } // failed to load the config fields (threw/timed out)
 
 export type DropdownChoiceId = string | number
 /**

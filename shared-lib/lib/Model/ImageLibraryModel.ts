@@ -11,6 +11,8 @@ export interface ImageLibraryInfo {
 	mimeType: string
 	collectionId?: string
 	sortOrder: number
+	/** CSS colour string used as the preview background. Undefined is treated as white. */
+	backgroundColor?: string
 }
 
 export interface ImageLibraryExportData {

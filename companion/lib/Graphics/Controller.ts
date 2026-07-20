@@ -28,11 +28,13 @@ import {
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -43,9 +45,9 @@ import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageLibrary } from './ImageLibrary.js'
-import { ImageResult } from './ImageResult.js'
+import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
-import { GraphicsRenderer } from './Renderer.js'
+import { computeOversampling, GraphicsRenderer } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -120,8 +122,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		},
 	})
 
-	// Track recent worker terminations (timestamps in ms)
+	// Track recent worker terminations (timestamps in ms), used for crash-loop detection
 	#workerTerminationTimestamps: number[] = []
+
+	// Cumulative count of worker terminations since startup, exposed as a metrics counter
+	#workerTerminationsTotal = 0
+
+	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
+	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
+	// almost always catch it at ~0; a fast sampler (#poolStatsSampler) tracks the peak between scrapes.
+	#poolPendingMax = 0
+	#poolActiveMax = 0
+	#poolStatsSampler: NodeJS.Timeout | undefined
 
 	#poolExec = async <TKey extends keyof typeof GraphicsThreadMethods>(
 		key: TKey,
@@ -133,8 +145,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 
 		return this.#pool.exec(key, args).catch(async (e) => {
+			const isTermination = e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated')
+			if (!isTermination) throw e
+
+			// Count every worker termination, including the one on the final attempt where we give up and
+			// rethrow below - otherwise the metric undercounts crashes on the last retry.
+			this.#workerTerminationsTotal++
+
 			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (attempts > 1 && (e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated'))) {
+			if (attempts > 1) {
 				// Track termination timestamps in a sliding window
 
 				const now = Date.now()
@@ -208,7 +227,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		userConfigController: DataUserConfig,
 		variablesController: VariablesController,
 		db: DataDatabase,
-		internalApiRouter: Express.Router
+		internalApiRouter: Express.Router,
+		metrics: MetricsRegistry
 	) {
 		super()
 
@@ -222,10 +242,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#renderLRUCache = new QuickLRU({ maxSize: initialCacheSize })
 		this.#logger.debug(`Render LRU cache initialized with size ${initialCacheSize}`)
 
+		this.#registerMetrics(metrics)
+
 		this.setMaxListeners(0)
 
 		this.#drawOptions = {
-			remove_topbar: this.#userConfigController.getKey('remove_topbar'),
+			buttons_decoration: this.#userConfigController.getKey('buttons_decoration'),
 			buttons_status_icons: this.#userConfigController.getKey('buttons_status_icons'),
 		}
 
@@ -235,7 +257,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				try {
 					if (args.type === 'preset') {
 						const control = this.controlsStore.getControl(args.controlId)
-						const buttonStyle = (await control?.getDrawStyle()) ?? undefined
+						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
 
 						let render: ImageResult | undefined
 						if (buttonStyle && buttonStyle.style === 'button-layered') {
@@ -256,14 +278,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
-								render = await this.#drawImageResult(renderStyle)
+								render = this.#generateImageResult(cacheKey, renderStyle)
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, null)
+							render = GraphicsRenderer.generateBlankImage(
+								this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+								null
+							)
 						}
 
-						this.emit('presetDrawn', args.controlId, render)
+						// `lastRender` still holds the previous render here: the control's own `presetDrawn`
+						// listener updates it synchronously *after* this emit. Swallow the emit if unchanged.
+						const presetControl = control as ControlButtonPreset | undefined
+						const unchanged = !!render.cacheKey && presetControl?.lastRender?.cacheKey === render.cacheKey
+						if (!unchanged) {
+							this.emit('presetDrawn', args.controlId, render)
+						}
 						return
 					}
 
@@ -280,7 +311,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
-					const buttonStyle = (await control?.getDrawStyle()) ?? undefined
+					const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
@@ -290,7 +321,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							...buttonStyle,
 
 							...showButtonConfig,
-							location: showButtonConfig.show_topbar ? location : undefined, // Only needed if the topbar is shown
+							// Only needed if the topbar is shown
+							location: showButtonConfig.decoration === ButtonGraphicsDecorationType.TopBar ? location : undefined,
 						}
 
 						const cacheKeyObj: Record<string, any> = {
@@ -304,11 +336,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
-							render = await this.#drawImageResult(renderStyle, buttonStyle.elements, buttonStyle.referencedLocations)
+							render = this.#generateImageResult(
+								cacheKey,
+								renderStyle,
+								buttonStyle.elements,
+								buttonStyle.referencedLocations
+							)
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
+						render = GraphicsRenderer.generateBlankImage(
+							this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+							location
+						)
 					}
 
 					if (location && locationIsInBounds) {
@@ -350,7 +390,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					// Only cache the render, if it is within the valid bounds
 					if (locationIsInBounds && location) {
-						this.#updateCacheWithRender(location, render)
+						const changed = this.#updateCacheWithRender(location, render)
+						// If the render is identical to the previous one for this location, we can skip emitting the event
+						skipInvalidation = skipInvalidation || !changed
 					}
 
 					if (!skipInvalidation) {
@@ -417,18 +459,24 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
+				const blankRender = GraphicsRenderer.generateBlankImage(
+					this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+					location
+				)
 
-				this.#updateCacheWithRender(location, blankRender)
-				this.emit('button_drawn', location, blankRender)
+				const changed = this.#updateCacheWithRender(location, blankRender)
+				if (changed) {
+					this.emit('button_drawn', location, blankRender)
+				}
 			}
 		}
 	}
 
 	/**
-	 * Store a new render
+	 * Store a new render for a location.
+	 * @returns whether it differs from the previous render there (an undefined cacheKey always counts as changed).
 	 */
-	#updateCacheWithRender(location: ControlLocation, render: ImageResult): void {
+	#updateCacheWithRender(location: ControlLocation, render: ImageResult): boolean {
 		let pageCache = this.#renderCache.get(location.pageNumber)
 		if (!pageCache) {
 			pageCache = new Map()
@@ -441,16 +489,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			pageCache.set(location.row, rowCache)
 		}
 
+		const previous = rowCache.get(location.column)
 		rowCache.set(location.column, render)
+
+		return !render.cacheKey || previous?.cacheKey !== render.cacheKey
 	}
 
 	/**
 	 * Draw a preview of a button
 	 */
-	async drawPreview(
+	generatePreviewImage(
 		drawType: RendererButtonStyle['drawType'],
 		elements: SomeButtonGraphicsDrawElement[]
-	): Promise<ImageResult> {
+	): ImageResult {
 		const drawStyle: RendererButtonStyle = {
 			style: 'button-layered',
 			drawType,
@@ -469,7 +520,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			location: undefined,
 		}
 
-		return this.#drawImageResult(drawStyle)
+		// One-off preview: never cached or emitted, so it has no content key (never deduped).
+		return this.#generateImageResult(undefined, drawStyle)
 	}
 
 	/**
@@ -478,9 +530,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @param value - the saved value
 	 */
 	updateUserConfig(key: string, value: boolean | number | string): void {
-		if (key == 'remove_topbar') {
-			this.#drawOptions.remove_topbar = !!value
-			this.#logger.silly('Topbar removed')
+		if (key == 'buttons_decoration') {
+			this.#drawOptions.buttons_decoration = value as any
+			this.#logger.silly('Button decoration changed')
 			// Delay redrawing to give connections a chance to adjust
 			setTimeout(() => {
 				this.emit('resubscribeFeedbacks')
@@ -586,7 +638,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(!this.#drawOptions.remove_topbar, location)
+		return GraphicsRenderer.generateBlankImage(
+			this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
+			location
+		)
 	}
 
 	/**
@@ -606,46 +661,159 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.#debounceResizeRenderCache()
 	}
 
-	async #drawImageResult(
+	/**
+	 * Register the drawing-pipeline metrics, inline with the state they measure.
+	 */
+	#registerMetrics(metrics: MetricsRegistry): void {
+		// Native render duration, observed only for drawNative cache misses (actual renders). Expected values
+		// are ~0.1-2ms, so buckets are dense in the sub-millisecond range with headroom for a slow tail.
+		// Values are in seconds (Prometheus base unit); gives avg (sum/count) and percentiles (histogram_quantile).
+		setDrawNativeRenderObserver(
+			metrics.histogram(
+				'companion_draw_native_render_duration_seconds',
+				'Duration of native button renders (drawNative cache misses), in seconds',
+				[0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25]
+			)
+		)
+
+		// Current state - render LRU cache. Kept as two metrics (not labels) so utilization is a simple
+		// `entries / limit_entries` query. Names spell out the unit (entries) to avoid a bytes assumption.
+		metrics.gauge('companion_render_cache_entries', 'Current entries in the button render LRU cache', () => {
+			return this.#renderLRUCache.size
+		})
+		metrics.gauge(
+			'companion_render_cache_limit_entries',
+			'Maximum entries the button render LRU cache will hold',
+			() => {
+				return this.#renderLRUCache.maxSize
+			}
+		)
+
+		// Render queue depth, one series per state. This is the app-level ImageWriteQueue that sits in front of
+		// the worker pool, distinct from the pool's own internal queue below.
+		metrics.labeledGauge('companion_render_queue_tasks', 'Button render tasks by state', ['state'], () => [
+			{ labels: { state: 'pending' }, value: this.#renderQueue.pending },
+			{ labels: { state: 'in_progress' }, value: this.#renderQueue.inProgress },
+		])
+
+		// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
+		// tasks currently executing on a thread (active). This is the true render-thread backlog.
+		metrics.labeledGauge('companion_render_pool_tasks', 'Render worker-pool tasks by state', ['state'], () => {
+			const stats = this.#pool.stats()
+			return [
+				{ labels: { state: 'pending' }, value: stats.pendingTasks },
+				{ labels: { state: 'active' }, value: stats.activeTasks },
+			]
+		})
+
+		// Peak pool tasks since the previous scrape - catches bursts that a scrape-time snapshot would miss.
+		// Read-and-reset per scrape, seeding the new window with the current reading so an in-flight burst
+		// isn't lost between reset and the next sampler tick.
+		metrics.labeledGauge(
+			'companion_render_pool_tasks_max',
+			'Peak render worker-pool tasks by state since the previous scrape',
+			['state'],
+			() => {
+				const stats = this.#pool.stats()
+				const pending = Math.max(this.#poolPendingMax, stats.pendingTasks)
+				const active = Math.max(this.#poolActiveMax, stats.activeTasks)
+				this.#poolPendingMax = stats.pendingTasks
+				this.#poolActiveMax = stats.activeTasks
+				return [
+					{ labels: { state: 'pending' }, value: pending },
+					{ labels: { state: 'active' }, value: active },
+				]
+			}
+		)
+
+		// Worker pool threads by state, for saturation context (busy vs idle against the max worker count).
+		metrics.labeledGauge('companion_render_pool_workers', 'Render worker-pool threads by state', ['state'], () => {
+			const stats = this.#pool.stats()
+			return [
+				{ labels: { state: 'busy' }, value: stats.busyWorkers },
+				{ labels: { state: 'idle' }, value: stats.idleWorkers },
+				{ labels: { state: 'total' }, value: stats.totalWorkers },
+			]
+		})
+
+		// Sample the pool backlog on a fast interval to maintain the high-water marks above. unref so it never
+		// keeps the process alive.
+		this.#poolStatsSampler = setInterval(() => {
+			const stats = this.#pool.stats()
+			if (stats.pendingTasks > this.#poolPendingMax) this.#poolPendingMax = stats.pendingTasks
+			if (stats.activeTasks > this.#poolActiveMax) this.#poolActiveMax = stats.activeTasks
+		}, 1000)
+		this.#poolStatsSampler.unref()
+
+		// Current ImageResults retained in memory
+		metrics.gauge('companion_image_results_live', 'ImageResult objects currently retained in memory', () => {
+			return getImageResultStats().live
+		})
+
+		// Cumulative ImageResults created (distinct from the live gauge: history vs current state)
+		metrics.counter('companion_image_results_created_total', 'ImageResult objects created since startup', () => {
+			return getImageResultStats().total
+		})
+
+		// drawNative requests by result. cache_hit = total calls - fresh renders; both are monotonic.
+		metrics.labeledCounter(
+			'companion_draw_requests_total',
+			'draw requests by result, since startup',
+			['result'],
+			() => {
+				const stats = getImageResultStats()
+				return [
+					{ labels: { result: 'cache_hit' }, value: stats.drawNativeCalls - stats.drawNativeRenders },
+					{ labels: { result: 'render' }, value: stats.drawNativeRenders },
+				]
+			}
+		)
+
+		// drawNativeEncoded (data-url) requests by result. cache_hit = total calls - fresh encodes.
+		metrics.labeledCounter(
+			'companion_draw_datauri_requests_total',
+			'draw data-url requests by result, since startup',
+			['result'],
+			() => {
+				const stats = getImageResultStats()
+				return [
+					{
+						labels: { result: 'cache_hit' },
+						value: stats.drawNativeEncodedCalls - stats.drawNativeEncodedRenders,
+					},
+					{ labels: { result: 'encode' }, value: stats.drawNativeEncodedRenders },
+				]
+			}
+		)
+
+		// Render worker terminations since startup
+		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
+			return this.#workerTerminationsTotal
+		})
+	}
+
+	#generateImageResult(
+		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
-	): Promise<ImageResult> {
+	): ImageResult {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 		return new ImageResult(
+			cacheKey,
 			processedStyle,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
-					{ width, height, oversampling: 4 }, // TODO - dynamic oversampling?
+					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
-					CRASHED_WORKER_RETRY_COUNT
-				),
-			async (width, height, rotation) =>
-				this.#executePoolDrawButtonImageDataUrl(
-					drawStyle,
-					{ width, height, oversampling: 4 }, // Default values
-					rotation,
 					CRASHED_WORKER_RETRY_COUNT
 				),
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-	}
-
-	/**
-	 * Draw a button image in the worker pool
-	 * @returns Image render object
-	 */
-	async #executePoolDrawButtonImageDataUrl(
-		drawStyle: RendererDrawStyle,
-		resolution: { width: number; height: number; oversampling: number },
-		rotation: SurfaceRotation | null,
-		remainingAttempts: number
-	): Promise<string> {
-		return this.#poolExec('drawButtonImageDataUrl', [drawStyle, resolution, rotation], remainingAttempts)
 	}
 
 	/**

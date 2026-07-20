@@ -1,7 +1,8 @@
 import debounceFn from 'debounce-fn'
-import type { ExecuteExpressionResultError } from '@companion-app/shared/Expression/ExpressionResult.js'
+import type { ExecuteExpressionResultError } from '@companion-app/shared/ExpressionResult.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { ExpressionOrValue, JsonValue } from '@companion-module/host'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
@@ -50,8 +51,7 @@ type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
 ) => SpecialExpressionComputation<Expression>
 
 type EvaluationResult<T> = { variableIds: ReadonlySet<string> } & (
-	| { ok: true; value: T }
-	| { ok: false; error: ExecuteExpressionResultError['error'] }
+	{ ok: true; value: T } | { ok: false; error: ExecuteExpressionResultError['error'] }
 )
 
 const NoVariables = new Set<string>()
@@ -160,14 +160,40 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 		}
 	}
 
-	return {
-		referencedVariableIds: variableNameResult.variableIds,
-		computedValue: {
-			type: 'custom-variable',
-			variableName,
-			createIfNotExists: rawStoreResult.createIfNotExists,
-		},
+	if (rawStoreResult.type === 'page-variable') {
+		const pageResult = evaluateString(rawStoreResult.page, parser)
+
+		let page: string
+		if (pageResult.ok) {
+			page = pageResult.value
+		} else {
+			logger.warn(`Failed to parse string expression: ${pageResult.error}`)
+			page = ''
+		}
+
+		return {
+			referencedVariableIds: pageResult.variableIds.union(variableNameResult.variableIds),
+			computedValue: {
+				type: 'page-variable',
+				page,
+				variableName,
+			},
+		}
 	}
+
+	if (rawStoreResult.type === 'custom-variable') {
+		return {
+			referencedVariableIds: variableNameResult.variableIds,
+			computedValue: {
+				type: 'custom-variable',
+				variableName,
+				createIfNotExists: rawStoreResult.createIfNotExists,
+			},
+		}
+	}
+
+	assertNever(rawStoreResult)
+	return { referencedVariableIds: null, computedValue: undefined }
 }
 
 /**

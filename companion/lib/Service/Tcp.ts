@@ -100,5 +100,7 @@ export class ServiceTcp extends ServiceTcpBase {
 		}
 
 		client.receiveBuffer = client.receiveBuffer.substr(offset)
+
+		this.enforceReceiveBufferLimit(client)
 	}
 }

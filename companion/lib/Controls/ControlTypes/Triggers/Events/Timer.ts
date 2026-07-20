@@ -2,8 +2,10 @@ import dayjs from 'dayjs'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { getZonedDateParts, zonedTimeToUtc } from '@companion-app/shared/Timezone.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
+import type { DataUserConfig } from '../../../../Data/UserConfig.js'
 import LogController, { type Logger } from '../../../../Log/Controller.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
 
@@ -102,18 +104,36 @@ export class TriggersEventTimer {
 	 */
 	#sunEvents: SunEvent[] = []
 
+	/**
+	 * User configuration, used to read the configured timezone
+	 */
+	readonly #userconfig: DataUserConfig
+
+	/**
+	 * The timezone last used to compute the execute times, so we can detect changes
+	 */
+	#lastTimezone: string | undefined
+
 	constructor(
+		userconfig: DataUserConfig,
 		eventBus: TriggerEvents,
 		controlId: string,
 		executeActions: (nowTime: number, source: TriggerExecutionSource) => void
 	) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Timer/${controlId}`)
 
+		this.#userconfig = userconfig
 		this.#eventBus = eventBus
 		this.#executeActions = executeActions
+		this.#lastTimezone = this.#getTimezone()
 
 		this.#lastTick = eventBus.getLastTickTime()
 		this.#eventBus.on('tick', this.#onTick)
+	}
+
+	/** The configured timezone, or undefined to use the process-local timezone */
+	#getTimezone(): string | undefined {
+		return this.#userconfig.getKey('timezone') || undefined
 	}
 
 	/**
@@ -189,43 +209,59 @@ export class TriggersEventTimer {
 		if (!timeMatch) return null
 		const parsedDays = time.days.map(Number)
 
-		const res = new Date()
-		const now = res.getTime()
+		const hour = Number(timeMatch[1])
+		const minute = Number(timeMatch[2])
+		const second = Number(timeMatch[3])
 
-		// set the time to that specified
-		res.setHours(Number(timeMatch[1]), Number(timeMatch[2]), Number(timeMatch[3]), 0)
+		const tz = this.#getTimezone()
 
-		// if time is in the past, shift it forwards to the next possible day
-		if (res.getTime() < now) {
-			res.setDate(res.getDate() + 1)
+		const now = Date.now()
+		// Start from the current calendar date as observed in the configured timezone
+		const parts = getZonedDateParts(new Date(now), tz)
+		if (!parts) return null
+
+		// Build the candidate instant for the requested time on the current day (in the configured timezone)
+		let candidate = zonedTimeToUtc({ year: parts.year, month: parts.month, day: parts.day, hour, minute, second }, tz)
+
+		// if time is in the past, shift it forwards to the next day
+		if (candidate < now) {
+			candidate = this.#advanceZonedDay(candidate, tz, hour, minute, second)
 		}
 
-		// ensure the time is for the correct day
-		const currentDay = res.getDay()
-		if (!parsedDays.includes(currentDay)) {
-			let nextDay = null
+		// ensure the time is for an allowed day of week, advancing a day at a time until it matches
+		// (bounded to 8 iterations to cover a full week plus the initial day)
+		for (let i = 0; i < 8; i++) {
+			const candidateParts = getZonedDateParts(new Date(candidate), tz)
+			if (!candidateParts) return null
+			if (parsedDays.includes(candidateParts.weekday)) return candidate
 
-			const futureDays = time.days.filter((d): d is number => {
-				const n = Number(d)
-				return !isNaN(n) && n > currentDay
-			})
-
-			if (futureDays.length > 0) {
-				// find the first day in the remainder of the week
-				nextDay = futureDays.reduce((first, cand) => Math.min(first, cand), futureDays[0])
-			} else {
-				// find the first day next week
-				const firstDay = parsedDays.reduce((first, cand) => Math.min(first, cand), 7)
-				nextDay = 7 + firstDay
-			}
-
-			if (nextDay === null) return null // No day was found somehow...
-
-			// Adjust the date, this will wrap the month by itself
-			res.setDate(res.getDate() + nextDay - currentDay)
+			candidate = this.#advanceZonedDay(candidate, tz, hour, minute, second)
 		}
 
-		return res.getTime()
+		return null // No matching day was found somehow...
+	}
+
+	/**
+	 * Advance a candidate instant by one calendar day in the given timezone, keeping the requested
+	 * wall-clock time. Recomputing from calendar fields (rather than adding 24h) keeps the wall-clock
+	 * time stable across DST transitions.
+	 */
+	#advanceZonedDay(candidate: number, tz: string | undefined, hour: number, minute: number, second: number): number {
+		const parts = getZonedDateParts(new Date(candidate), tz)
+		if (!parts) return candidate + 24 * 60 * 60 * 1000
+		// Add a day at the calendar level; Date.UTC normalises month/year wrapping for us
+		const next = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1))
+		return zonedTimeToUtc(
+			{
+				year: next.getUTCFullYear(),
+				month: next.getUTCMonth() + 1,
+				day: next.getUTCDate(),
+				hour,
+				minute,
+				second,
+			},
+			tz
+		)
 	}
 
 	/**
@@ -275,14 +311,29 @@ export class TriggersEventTimer {
 	#getSpecificDateExecuteTime(date: CompanionOptionValues): number | null {
 		if (typeof date !== 'object' || !date.date || !date.time) return null
 
-		const res = new Date(
-			dayjs(date.date as string | number).format('YYYY-MM-DD') + 'T' + (date.time as string | number)
+		const timeValue: string | number = date.time as string | number
+		const dateStr = dayjs(date.date as string | number).format('YYYY-MM-DD')
+		const dateMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+		const timeMatch = String(timeValue).match(/^([01][0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]))?$/)
+		if (!dateMatch || !timeMatch) return null
+
+		// Interpret the wall-clock date/time in the configured timezone
+		const tz = this.#getTimezone()
+		const res = zonedTimeToUtc(
+			{
+				year: Number(dateMatch[1]),
+				month: Number(dateMatch[2]),
+				day: Number(dateMatch[3]),
+				hour: Number(timeMatch[1]),
+				minute: Number(timeMatch[2]),
+				second: Number(timeMatch[3] ?? 0),
+			},
+			tz
 		)
 
 		// if specific date is in the past, ignore
-		const now = new Date()
-		if (res < now) return null
-		return res.getTime()
+		if (res < Date.now()) return null
+		return res
 	}
 
 	/**
@@ -297,30 +348,48 @@ export class TriggersEventTimer {
 		// convert 0 or 1 to sunrise or sunset
 		const sunset = input.type == 'sunset'
 
-		// get sunrise/set time for today (nextDay is set to 0)
-		let time = getSunEvent(sunset, latitude, longitude, offset, 0)
+		const tz = this.#getTimezone()
+		const now = Date.now()
 
-		// if time is in the past, get the sun event for the next day
-		const now = new Date()
+		// Determine the current calendar date as observed in the configured timezone
+		const parts = getZonedDateParts(new Date(now), tz)
+		if (!parts) return NaN
+
+		// get sunrise/set time for today
+		let time = getSunEvent(sunset, latitude, longitude, offset, parts.year, parts.month, parts.day)
+
+		// if time is in the past, get the sun event for the next calendar day
 		if (time < now) {
-			// call the function for tomorrow (nextDay is set to 1)
-			time = getSunEvent(sunset, latitude, longitude, offset, 1)
+			const next = new Date(Date.UTC(parts.year, parts.month - 1, parts.day + 1))
+			time = getSunEvent(
+				sunset,
+				latitude,
+				longitude,
+				offset,
+				next.getUTCFullYear(),
+				next.getUTCMonth() + 1,
+				next.getUTCDate()
+			)
 		}
 
-		return time.getTime()
+		return time
 
 		// Modified function to calculate the sunrise/set time by adam-carter-fms
 		// https://gist.github.com/adam-carter-fms/a44a14c0a8cdacbbc38276f6d553e024#file-sunriseset-js-L12
-		function getSunEvent(sunset: boolean, latitude: number, longitude: number, offset: number, nextDay: number): Date {
-			const res = new Date()
-			res.setDate(res.getDate() + nextDay)
-			const now = res
-
-			const start = new Date(now.getFullYear(), 0, 0)
-			// @ts-expect-error TS claims dates can't be subtracted, this should be revisited but I don't want to touch what works
-			const diff = now - start + (start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000
-			const oneDay = 1000 * 60 * 60 * 24
-			const day = Math.floor(diff / oneDay)
+		//
+		// Works entirely in UTC so DST transitions never shift the result (issue #3737): both the
+		// day-of-year and the final instant are derived with UTC calendar arithmetic.
+		function getSunEvent(
+			sunset: boolean,
+			latitude: number,
+			longitude: number,
+			offset: number,
+			year: number,
+			month: number,
+			dayOfMonth: number
+		): number {
+			// Day of year (Jan 1 = 1), using UTC arithmetic so DST never affects it
+			const day = Math.floor((Date.UTC(year, month - 1, dayOfMonth) - Date.UTC(year, 0, 0)) / 86400000)
 
 			const zenith = 90.83333333333333
 			const D2R = Math.PI / 180
@@ -386,18 +455,11 @@ export class TriggersEventTimer {
 				UT = UT + 24
 			}
 
-			const ms = UT * 60 * 60 * 1000
-
-			const sunEventTime = new Date(ms)
-			sunEventTime.setFullYear(now.getFullYear())
-			sunEventTime.setMonth(now.getMonth())
-			sunEventTime.setDate(now.getDate())
-
-			const temp_minutes = sunEventTime.getMinutes()
-
-			// add offset to time
-			sunEventTime.setMinutes(temp_minutes + 60 + offset)
-			return sunEventTime
+			// UT is the event's UTC time-of-day (decimal hours). Stamp it onto the same calendar date
+			// (interpreted as a UTC date) and apply the user offset in real minutes.
+			// Note: for extreme longitudes near the date line the UTC date can differ from the local date
+			// by a day; accepted here as the caller only needs the next event within ~24-48h.
+			return Date.UTC(year, month - 1, dayOfMonth) + Math.round(UT * 3600 * 1000) + offset * 60 * 1000
 		}
 	}
 
@@ -443,6 +505,19 @@ export class TriggersEventTimer {
 	 */
 	#onTick = (tickSeconds: number, nowTime: number): void => {
 		let execute = false
+
+		// If the configured timezone has changed, recompute the next execute times for the
+		// timezone-sensitive events so the change takes effect immediately (not just after the next fire)
+		const currentTimezone = this.#getTimezone()
+		if (currentTimezone !== this.#lastTimezone) {
+			this.#lastTimezone = currentTimezone
+			for (const tod of this.#timeOfDayEvents) {
+				tod.nextExecute = this.#getNextTODExecuteTime(tod.time)
+			}
+			for (const date of this.#specificDateEvents) {
+				date.nextExecute = this.#getSpecificDateExecuteTime(date.date)
+			}
+		}
 
 		for (const interval of this.#intervalEvents) {
 			// Check if this interval should cause an execution

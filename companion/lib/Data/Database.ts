@@ -5,7 +5,7 @@ import { DataLegacyDatabase } from './Legacy/Database.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
 import { DataStoreBase } from './StoreBase.js'
-import { upgradeStartup } from './Upgrade.js'
+import { targetVersion, upgradeStartup } from './Upgrade.js'
 
 export interface DataDatabaseDefaultTable {
 	page_config_version: number
@@ -50,7 +50,7 @@ export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		this.defaultTableView.set('page_config_version', 6)
+		this.defaultTableView.set('page_config_version', targetVersion)
 
 		this.isFirstRun = true
 	}

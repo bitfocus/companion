@@ -2,6 +2,8 @@
 import fs from 'node:fs/promises'
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
+import { connectDataChannel } from '../../Common/DataChannelClient.js'
+import { FramedChannel } from '../../Common/FramedMessageChannel.js'
 import { IpcWrapper } from '../../Common/IpcWrapper.js'
 import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type {
@@ -33,23 +35,45 @@ const manifestJson: Partial<ModuleManifest> = JSON.parse(manifestBlob)
 
 if (!manifestJson.runtime?.apiVersion) throw new Error(`Module manifest 'apiVersion' missing`)
 
-if (!process.send) throw new Error('Module is not being run with ipc')
-
 console.log(`Starting up connection module: ${manifestJson.id}`)
 
 const verificationToken = process.env.VERIFICATION_TOKEN
 if (typeof verificationToken !== 'string' || !verificationToken)
 	throw new Error('Module initialise is missing VERIFICATION_TOKEN')
 
+const dataChannelPath = process.env.MODULE_DATA_CHANNEL
+if (!dataChannelPath) throw new Error('Module initialise is missing MODULE_DATA_CHANNEL')
+
+// Everything the host passed us has now been captured, so take it back out of the environment. Module code
+// runs in this process and has no business reading these.
+delete process.env.MODULE_ENTRYPOINT
+delete process.env.MODULE_MANIFEST
+delete process.env.VERIFICATION_TOKEN
+delete process.env.MODULE_DATA_CHANNEL
+
 const logger = createModuleLogger('Entrypoint')
 
+// The host is listening before it spawns us, so this connects immediately. It is the only socket this
+// process will ever have: if it is lost the host will not accept a replacement, so we exit and let the
+// host respawn us.
+const dataSocket = await connectDataChannel(dataChannelPath)
+dataSocket.on('close', () => process.exit())
+
 let instance: InstanceWrapper<any> | null = null
+let hostContext: HostContext<any, any> | null = null
 let instanceInitialized = false
+
+// The connection id needed to build the instance only arrives in the response to 'register', so the module
+// cannot be imported until after we have registered. The host sends 'init' as soon as it has answered that
+// registration, which can easily beat the import - so 'init' waits for the instance rather than rejecting.
+const { promise: instanceReady, resolve: resolveInstanceReady } = Promise.withResolvers<void>()
 
 // Setup the ipc wrapper, the plugin may not yet exist, but this is better so that we can send log lines out
 const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 	{
 		init: async (msg): Promise<InitResponseMessage> => {
+			// May arrive before the module import has finished; the host allows time for this
+			await instanceReady
 			if (!instance) throw new Error('Not ready for init')
 
 			const res = await instance.init(msg)
@@ -64,6 +88,9 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
 			await instance.destroy()
+
+			// Release any pending timers (e.g. the batched variable value flush)
+			hostContext?.destroy()
 		},
 
 		updateConfig: async (msg): Promise<void> => {
@@ -167,24 +194,23 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 		},
 	},
 	(msg) => {
-		process.send!(msg)
+		channel.send(msg)
 	},
 	5000
 )
-process.on('message', (msg) => ipcWrapper.receivedMessage(msg as any))
+// Framed message transport over the data channel socket, paired with the host side.
+// The 'ipc' channel is retained only for the disconnect signal below.
+const channel = new FramedChannel(dataSocket, (msg) => ipcWrapper.receivedMessage(msg as any))
+
 process.on('disconnect', () => process.exit())
 
 registerLoggingSink((source, level, message) => {
-	if (!process.send) {
-		console.log(`[${level.toUpperCase()}]${source ? ` [${source}]` : ''} ${message}`)
-	} else {
-		ipcWrapper.sendWithNoCb('log-message', {
-			time: Date.now(),
-			source,
-			level,
-			message,
-		})
-	}
+	ipcWrapper.sendWithNoCb('log-message', {
+		time: Date.now(),
+		source,
+		level,
+		message,
+	})
 })
 
 ipcWrapper
@@ -205,13 +231,17 @@ ipcWrapper
 		logger.info(`Found module entrypoint, with ${moduleUpgradeScripts.length} upgrade scripts`)
 
 		// Now load the plugin
+		hostContext = new HostContext(ipcWrapper, msg.connectionId, moduleUpgradeScripts.length - 1)
 		instance = new InstanceWrapper(
 			msg.connectionId,
-			new HostContext(ipcWrapper, msg.connectionId, moduleUpgradeScripts.length - 1),
+			hostContext,
 			moduleConstructor,
 			moduleUpgradeScripts,
 			msg.moduleApiVersion
 		)
+
+		// Release any 'init' that beat the import here
+		resolveInstanceReady()
 	})
 	.catch((err) => {
 		logger.error(`Module registration failed: ${err}`)

@@ -1,5 +1,12 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
-import { faCalculator, faGift, faLayerGroup, faThLarge, faVideoCamera } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCalculator,
+	faDollarSign,
+	faGift,
+	faLayerGroup,
+	faThLarge,
+	faVideoCamera,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -22,6 +29,7 @@ import { EditButton } from './EditButton/EditButton.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
+import { PageVariablesPanel } from './PageVariablesPanel.js'
 import type { PresetDragItem } from './Presets/PresetDragItem.js'
 import { ConnectionPresets } from './Presets/Presets.js'
 import { useButtonContextMenu } from './useButtonContextMenu.js'
@@ -137,6 +145,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					presetId: dropData.presetId,
 					location,
 					variableValues: dropData.variableValues,
+					mode: dropData.mode,
 				})
 				.catch(() => {
 					console.error('Preset import failed')
@@ -408,6 +417,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							<TabArea.Tab value="pages">
 								<FontAwesomeIcon icon={faLayerGroup} /> Pages
 							</TabArea.Tab>
+							<TabArea.Tab value="page-variables">
+								<FontAwesomeIcon icon={faDollarSign} /> Page Variables
+							</TabArea.Tab>
 							<TabArea.Tab value="presets">
 								<FontAwesomeIcon icon={faGift} /> Presets
 							</TabArea.Tab>
@@ -432,6 +444,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						<TabArea.Panel value="pages">
 							<MyErrorBoundary>
 								<PagesList setPageNumber={setPageNumber} />
+							</MyErrorBoundary>
+						</TabArea.Panel>
+						<TabArea.Panel value="page-variables">
+							<MyErrorBoundary>
+								<PageVariablesPanel pageNumber={pageNumber} />
 							</MyErrorBoundary>
 						</TabArea.Panel>
 						<TabArea.Panel value="presets">

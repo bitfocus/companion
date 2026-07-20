@@ -12,6 +12,7 @@
 import { promisify } from 'node:util'
 import zlib from 'node:zlib'
 import yaml from 'yaml'
+import { MAX_DECOMPRESSED_FILE_SIZE } from './Constants.js'
 
 const gunzipAsync = promisify(zlib.gunzip)
 
@@ -54,10 +55,22 @@ async function parseImportData(rawData: ArrayBuffer): Promise<ParseImportDataRes
 	// Try to gunzip the data
 	timing.gunzipStartTime = performance.now()
 	try {
-		const unzipped = await gunzipAsync(rawData)
+		const unzipped = await gunzipAsync(rawData, { maxOutputLength: MAX_DECOMPRESSED_FILE_SIZE })
 		dataStr = unzipped.toString('utf-8')
-	} catch (_e) {
-		// Not compressed, use raw data
+	} catch (e) {
+		// If the decompressed output exceeded the size limit, fail loudly rather than treating
+		// the (still compressed) bytes as raw data and surfacing a misleading "corrupted" error.
+		if (e && typeof e === 'object' && 'code' in e && e.code === 'ERR_BUFFER_TOO_LARGE') {
+			timing.gunzipEndTime = performance.now()
+			timing.workerEndTime = performance.now()
+			return {
+				error: 'File is too large',
+				data: null,
+				timing,
+			}
+		}
+
+		// Otherwise assume it was not gzip compressed and use the raw data
 		dataStr = Buffer.from(rawData).toString('utf-8')
 	}
 	timing.gunzipEndTime = performance.now()

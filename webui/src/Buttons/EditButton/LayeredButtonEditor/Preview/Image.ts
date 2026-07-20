@@ -54,6 +54,15 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 
 		this.#canvas = canvas
 		this.#context2d = context2d
+
+		this.initialiseContext()
+	}
+
+	/**
+	 * Re-apply any initial context state that must survive a `reset()`.
+	 */
+	protected override initialiseContext(): void {
+		// Nothing currently
 	}
 
 	static create(canvas: HTMLCanvasElement, textLayoutCache: TextLayoutCache | null): GraphicsImage | null {

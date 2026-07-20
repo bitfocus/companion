@@ -94,7 +94,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									<CopyButton
 										size="sm"
 										title="Copy variable name"
-										className="ps-0"
+										className="ps-0 py-0 align-middle"
 										color="primary"
 										variant="ghost"
 										text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`}
@@ -152,7 +152,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							icon={faQuestionCircle}
 							text={
 								!isConnectionEnabled
-									? `This ${entityTypeLabel} is not editable while the connection is disabled`
+									? `This ${entityTypeLabel} is not editable while the connection is not running`
 									: `This is not a known ${entityTypeLabel}`
 							}
 						/>

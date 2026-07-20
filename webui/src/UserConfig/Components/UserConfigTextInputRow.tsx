@@ -15,6 +15,7 @@ export const UserConfigTextInputRow = observer(function UserConfigTextInputRow({
 	field,
 	useVariables,
 }: UserConfigTextInputRowProps) {
+	const isReadonly = userConfig.readonlyKeys.has(field)
 	return (
 		<tr>
 			<td>{label}</td>
@@ -24,11 +25,11 @@ export const UserConfigTextInputRow = observer(function UserConfigTextInputRow({
 					value={String(userConfig.config[field] as any)}
 					setValue={(value) => userConfig.setValue(field, value)}
 					useVariables={useVariables}
+					disabled={isReadonly}
+					tooltip={isReadonly ? 'This value is locked by an environment variable' : undefined}
 				/>
 			</td>
-			<td>
-				<ResetButton userConfig={userConfig} field={field} />
-			</td>
+			<td>{!isReadonly && <ResetButton userConfig={userConfig} field={field} />}</td>
 		</tr>
 	)
 })

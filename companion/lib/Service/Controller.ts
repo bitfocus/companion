@@ -3,7 +3,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { Registry } from '../Registry.js'
+import type { AppInfo, Registry } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { UIExpress } from '../UI/Express.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -12,6 +12,7 @@ import { ServiceBonjourDiscovery } from './BonjourDiscovery.js'
 import { ServiceEmberPlus } from './EmberPlus.js'
 import { ServiceHttpApi } from './HttpApi.js'
 import { ServiceHttps } from './Https.js'
+import { ServiceMdnsAdvertise } from './MdnsAdvertise.js'
 import { ServiceOscListener } from './OscListener.js'
 import type { ServiceOscSender } from './OscSender.js'
 import { RestApiService } from './RestApi/RestApiService.js'
@@ -53,8 +54,10 @@ export class ServiceController {
 	readonly satelliteTcp: ServiceSatelliteTcp
 	readonly satelliteWebsocket: ServiceSatelliteWebsocket
 	readonly bonjourDiscovery: ServiceBonjourDiscovery
+	readonly mdnsAdvertise: ServiceMdnsAdvertise
 
 	constructor(
+		appInfo: AppInfo,
 		serviceApi: ServiceApi,
 		userconfig: DataUserConfig,
 		oscSender: ServiceOscSender,
@@ -79,6 +82,7 @@ export class ServiceController {
 		this.satelliteTcp = new ServiceSatelliteTcp(this.satelliteApi, userconfig)
 		this.satelliteWebsocket = new ServiceSatelliteWebsocket(this.satelliteApi, userconfig)
 		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
+		this.mdnsAdvertise = new ServiceMdnsAdvertise(userconfig, appInfo)
 	}
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
@@ -97,6 +101,7 @@ export class ServiceController {
 		this.bonjourDiscovery.updateUserConfig(key, value)
 		this.emberplus.updateUserConfig(key, value)
 		this.https.updateUserConfig(key, value)
+		this.mdnsAdvertise.updateUserConfig(key, value)
 		this.oscListener.updateUserConfig(key, value)
 		this.oscSender.updateUserConfig(key, value)
 		this.rosstalk.updateUserConfig(key, value)

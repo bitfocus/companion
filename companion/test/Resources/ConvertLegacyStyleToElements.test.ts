@@ -33,6 +33,7 @@ const defaultSelectedIds: { [usage in ButtonGraphicsElementUsage]: string | unde
 	[ButtonGraphicsElementUsage.Text]: 'text0',
 	[ButtonGraphicsElementUsage.Image]: 'image0',
 	[ButtonGraphicsElementUsage.Color]: 'box0',
+	[ButtonGraphicsElementUsage.Leds]: undefined,
 }
 
 const minimalStyle = {
@@ -356,7 +357,7 @@ describe('ConvertLegacyStyleToElements', () => {
 			options: {},
 			upgradeIndex: undefined,
 			children: { feedbacks: [childFeedback] },
-		} as unknown as SomeEntityModel
+		}
 
 		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null)
 		const updatedCond = feedbacks[0] as FeedbackEntityModel

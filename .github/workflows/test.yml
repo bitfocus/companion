@@ -6,20 +6,24 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version-file: ".node-version"
       - name: yarn install
         run: |
-          corepack enable
+          npm install -g corepack --force
 
           # try and avoid timeout errors
           yarn config set httpTimeout 100000
@@ -30,3 +34,12 @@ jobs:
       - name: run tests
         run: |
           yarn test
+
+      - name: upload image snapshot failures
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: image-snapshot-failures-${{ matrix.os }}
+          path: companion/test/Graphics/__failures__/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -86,6 +86,11 @@ export const PRESENTATION: Record<string, OptionPresentation> = {
 		label: 'Show version notifications',
 		help: 'Show version-related notifications in the admin UI header. Enabled by default.',
 	},
+	installName: {
+		page: 'Advanced',
+		label: 'Installation name',
+		help: 'A fixed name for this Companion installation. When set it overrides and locks the value in the admin UI, so it cannot be changed there and survives database resets. Leave unset to manage the name from the UI.',
+	},
 }
 
 /**

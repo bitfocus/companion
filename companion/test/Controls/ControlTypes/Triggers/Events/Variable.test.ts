@@ -36,7 +36,7 @@ describe('TriggersEventVariables', () => {
 	})
 
 	function emit(variables: string[] = [WATCHED], fromControlId: string | null = null): void {
-		bus.emit('variables_changed', new Set(variables), fromControlId)
+		bus.emit('variables_changed', new Set(variables), fromControlId == null ? null : new Set([fromControlId]))
 	}
 
 	test('a single isolated change fires exactly once, immediately', () => {

@@ -280,6 +280,98 @@ describe('Image drawing', () => {
 	// circle
 	// -------------------------------------------------------------------------
 
+	describe('arcStroke', () => {
+		function pixelAt(buf: Buffer, width: number, x: number, y: number) {
+			const idx = (y * width + x) * 4
+			return { r: buf[idx], g: buf[idx + 1], b: buf[idx + 2], a: buf[idx + 3] }
+		}
+
+		test('full circle - arc pixels are colored, center is transparent', () => {
+			const img = Image.create(60, 60, 1, null)
+			// radius=20, center=(30,30), lineWidth=4 → arc spans r=18..22 from center
+			img.arcStroke(30, 30, 20, 0, Math.PI * 2, false, { color: '#ff0000', width: 4 })
+			const buf = img.buffer()
+
+			// Center pixel (well inside ring) should be transparent
+			expect(pixelAt(buf, 60, 30, 30).a).toBe(0)
+
+			// Top of circle: (30, 10) = cy - r → should be red
+			const top = pixelAt(buf, 60, 30, 10)
+			expect(top.r).toBeGreaterThan(100)
+			expect(top.a).toBeGreaterThan(0)
+
+			// Right of circle: (50, 30) = cx + r → should be red
+			const right = pixelAt(buf, 60, 50, 30)
+			expect(right.r).toBeGreaterThan(100)
+			expect(right.a).toBeGreaterThan(0)
+		})
+
+		test('lineWidth=0 - draws nothing', () => {
+			const img = Image.create(60, 60, 1, null)
+			img.arcStroke(30, 30, 20, 0, Math.PI * 2, false, { color: '#ff0000', width: 0 })
+			const buf = img.buffer()
+			for (let i = 3; i < buf.length; i += 4) {
+				expect(buf[i]).toBe(0)
+			}
+		})
+
+		test('radius=0 - draws nothing', () => {
+			const img = Image.create(60, 60, 1, null)
+			img.arcStroke(30, 30, 0, 0, Math.PI * 2, false, { color: '#ff0000', width: 4 })
+			const buf = img.buffer()
+			for (let i = 3; i < buf.length; i += 4) {
+				expect(buf[i]).toBe(0)
+			}
+		})
+
+		test('clockwise semicircle - colors lower half, not upper', () => {
+			const img = Image.create(60, 60, 1, null)
+			// CW from 0 (3 o'clock) to π (9 o'clock) = lower half (right→bottom→left)
+			img.arcStroke(30, 30, 20, 0, Math.PI, false, { color: '#00ff00', width: 4 })
+			const buf = img.buffer()
+
+			// Bottom of circle (cy+r = 50) should have color
+			expect(pixelAt(buf, 60, 30, 50).a).toBeGreaterThan(0)
+
+			// Top of circle (cy-r = 10) should be transparent
+			expect(pixelAt(buf, 60, 30, 10).a).toBe(0)
+		})
+
+		test('anticlockwise semicircle - colors upper half, not lower', () => {
+			const img = Image.create(60, 60, 1, null)
+			// CCW from 0 to π = upper half (right→top→left)
+			img.arcStroke(30, 30, 20, 0, Math.PI, true, { color: '#0000ff', width: 4 })
+			const buf = img.buffer()
+
+			// Top of circle (cy-r = 10) should have color
+			expect(pixelAt(buf, 60, 30, 10).a).toBeGreaterThan(0)
+
+			// Bottom of circle (cy+r = 50) should be transparent
+			expect(pixelAt(buf, 60, 30, 50).a).toBe(0)
+		})
+
+		test('snapshot - full circle and quarter arcs', async () => {
+			const img = Image.create(144, 72, 1, null)
+			img.fillColor('#111111')
+			// Full circle on left
+			img.arcStroke(36, 36, 28, 0, Math.PI * 2, false, { color: '#ff0000', width: 5 })
+			// CW bottom-half in middle (green)
+			img.arcStroke(72, 36, 28, 0, Math.PI, false, { color: '#00ff00', width: 5 })
+			// CCW top-half on right (blue)
+			img.arcStroke(108, 36, 28, 0, Math.PI, true, { color: '#0088ff', width: 5 })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('snapshot - thick vs thin arc', async () => {
+			const img = Image.create(144, 72, 1, null)
+			img.fillColor('#111111')
+			// 270° arc (0 → 3π/2) – avoids angles that normalise to the same point
+			img.arcStroke(36, 36, 28, 0, Math.PI * 1.5, false, { color: '#ff8800', width: 2 })
+			img.arcStroke(108, 36, 28, 0, Math.PI * 1.5, false, { color: '#ff8800', width: 14 })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+	})
+
 	describe('circle', () => {
 		test('filled full circle', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -751,84 +843,139 @@ describe('Image drawing', () => {
 		test('centered', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Hello', '#ffffff', 14, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Hello', '#ffffff', 14, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('auto font size', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Auto', '#88ff88', 58, true, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Auto', '#88ff88', 58, { allowShrink: true })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('left-top aligned', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#111111')
-			img.drawAlignedText(0, 0, 72, 58, 'TL', '#ffffff', 14, false, 'left', 'top')
+			img.drawAlignedText(0, 0, 72, 58, 'TL', '#ffffff', 14, { allowShrink: false, halign: 'left', valign: 'top' })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('right-bottom aligned', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#111111')
-			img.drawAlignedText(0, 0, 72, 58, 'BR', '#ffffff', 14, false, 'right', 'bottom')
+			img.drawAlignedText(0, 0, 72, 58, 'BR', '#ffffff', 14, { allowShrink: false, halign: 'right', valign: 'bottom' })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('with text outline', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Hi', '#ffff00', 20, false, 'center', 'center', { color: '#ff0000', width: 2 })
+			img.drawAlignedText(0, 0, 72, 58, 'Hi', '#ffff00', 20, {
+				allowShrink: false,
+				outlineStyle: { color: '#ff0000', width: 2 },
+			})
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('multiline', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Line 1\nLine 2', '#ffffff', 12, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Line 1\nLine 2', '#ffffff', 12, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('mono font', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Mono', '#aaffaa', 14, false, 'center', 'center', undefined, 'companion-mono')
+			img.drawAlignedText(0, 0, 72, 58, 'Mono', '#aaffaa', 14, { allowShrink: false, font: 'companion-mono' })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('bold weight', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Bold', '#ffffff', 20, { allowShrink: false, weight: 'bold' })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('italic', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Italic', '#ffffff', 20, { allowShrink: false, italic: true })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('underline', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Under', '#ffffff', 20, { allowShrink: false, underline: true })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('strikethrough', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Strike', '#ffffff', 20, { allowShrink: false, strikethrough: true })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('all styles combined', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'All', '#ffffff', 20, {
+				allowShrink: false,
+				weight: 'bold',
+				italic: true,
+				underline: true,
+				strikethrough: true,
+			})
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('underline left-aligned multiline', async () => {
+			const img = Image.create(72, 58, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 58, 'Line 1\nLonger 2', '#ffffff', 12, {
+				allowShrink: false,
+				halign: 'left',
+				underline: true,
+			})
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('at 144x58 (wide)', async () => {
 			const img = Image.create(144, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 144, 58, 'Wide canvas text', '#ffffff', 14, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 144, 58, 'Wide canvas text', '#ffffff', 14, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('at 72x116 (tall)', async () => {
 			const img = Image.create(72, 116, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 116, 'Tall\nCanvas\nText', '#ffffff', 14, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 116, 'Tall\nCanvas\nText', '#ffffff', 14, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('at 60x60 (square)', async () => {
 			const img = Image.create(60, 60, 1, null)
 			img.fillColor('#111111')
-			img.drawAlignedText(0, 0, 60, 60, 'Square', '#ff8800', 60, true, 'center', 'center')
+			img.drawAlignedText(0, 0, 60, 60, 'Square', '#ff8800', 60, { allowShrink: true })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('auto-wrapping long text (no explicit newlines)', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'This text wraps around', '#ffffff', 14, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'This text wraps around', '#ffffff', 14, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('auto size with many characters', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Hello World Button', '#ffffff', 58, true, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Hello World Button', '#ffffff', 58, { allowShrink: true })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
@@ -836,21 +983,21 @@ describe('Image drawing', () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
 			// The string contains literal backslash-n which drawAlignedText converts to a real newline
-			img.drawAlignedText(0, 0, 72, 58, 'Line A\\nLine B', '#ffffff', 12, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Line A\\nLine B', '#ffffff', 12, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('tab character replacement', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'A\\tB', '#ffffff', 14, false, 'left', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'A\\tB', '#ffffff', 14, { allowShrink: false, halign: 'left' })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
 		test('extremely long text truncated to minimum font size', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'x'.repeat(500), '#ffffff', 58, true, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'x'.repeat(500), '#ffffff', 58, { allowShrink: true })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
@@ -859,7 +1006,7 @@ describe('Image drawing', () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
 			// Only 'Hello' should appear - everything after \0 is dropped
-			img.drawAlignedText(0, 0, 72, 58, 'Hello\0World', '#ffffff', 14, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Hello\0World', '#ffffff', 14, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
@@ -892,21 +1039,21 @@ describe('Image drawing', () => {
 					test('at 72x72', async () => {
 						const img = Image.create(72, 72, 1, null)
 						img.fillColor('#000000')
-						img.drawAlignedText(0, 0, 72, Math.round(72 * heightFrac), text, '#ffffff', 72, true, 'center', 'center')
+						img.drawAlignedText(0, 0, 72, Math.round(72 * heightFrac), text, '#ffffff', 72, { allowShrink: true })
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 
 					test('at 144x144', async () => {
 						const img = Image.create(144, 144, 1, null)
 						img.fillColor('#000000')
-						img.drawAlignedText(0, 0, 144, Math.round(144 * heightFrac), text, '#ffffff', 144, true, 'center', 'center')
+						img.drawAlignedText(0, 0, 144, Math.round(144 * heightFrac), text, '#ffffff', 144, { allowShrink: true })
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 
 					test('at 200x200', async () => {
 						const img = Image.create(200, 200, 1, null)
 						img.fillColor('#000000')
-						img.drawAlignedText(0, 0, 200, Math.round(200 * heightFrac), text, '#ffffff', 200, true, 'center', 'center')
+						img.drawAlignedText(0, 0, 200, Math.round(200 * heightFrac), text, '#ffffff', 200, { allowShrink: true })
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 				})
@@ -927,21 +1074,21 @@ describe('Image drawing', () => {
 					test('at 72x72', async () => {
 						const img = Image.create(72, 72, 1, null)
 						img.fillColor('#000000')
-						img.drawAlignedText(0, 0, 72, 72, text, '#ffffff', Math.round(72 * fontFrac), false, 'center', 'center')
+						img.drawAlignedText(0, 0, 72, 72, text, '#ffffff', Math.round(72 * fontFrac), { allowShrink: false })
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 
 					test('at 144x144', async () => {
 						const img = Image.create(144, 144, 1, null)
 						img.fillColor('#000000')
-						img.drawAlignedText(0, 0, 144, 144, text, '#ffffff', Math.round(144 * fontFrac), false, 'center', 'center')
+						img.drawAlignedText(0, 0, 144, 144, text, '#ffffff', Math.round(144 * fontFrac), { allowShrink: false })
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 
 					test('at 200x200', async () => {
 						const img = Image.create(200, 200, 1, null)
 						img.fillColor('#000000')
-						img.drawAlignedText(0, 0, 200, 200, text, '#ffffff', Math.round(200 * fontFrac), false, 'center', 'center')
+						img.drawAlignedText(0, 0, 200, 200, text, '#ffffff', Math.round(200 * fontFrac), { allowShrink: false })
 						await expect(img.canvasImage).toMatchImageSnapshot()
 					})
 				})
@@ -968,7 +1115,7 @@ describe('Image drawing', () => {
 			img.fillColor('#000000')
 			img.box(0, 0, 144, 58, '#004400')
 			await img.usingAlpha(0.75, async () => {
-				img.drawAlignedText(0, 0, 144, 58, 'Alpha', '#ffffff', 18, false, 'center', 'center')
+				img.drawAlignedText(0, 0, 144, 58, 'Alpha', '#ffffff', 18, { allowShrink: false })
 			})
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
@@ -992,7 +1139,7 @@ describe('Image drawing', () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')
 			await img.usingRotation(new DrawBounds(0, 0, 72, 58), 90, async () => {
-				img.drawAlignedText(0, 0, 72, 58, 'Rotated', '#00ff00', 12, false, 'center', 'center')
+				img.drawAlignedText(0, 0, 72, 58, 'Rotated', '#00ff00', 12, { allowShrink: false })
 			})
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
@@ -1001,7 +1148,7 @@ describe('Image drawing', () => {
 			const img = Image.create(60, 60, 1, null)
 			img.fillColor('#000000')
 			await img.usingRotation(new DrawBounds(0, 0, 60, 60), 180, async () => {
-				img.drawAlignedText(0, 0, 60, 60, 'Flip', '#ff8800', 14, false, 'center', 'center')
+				img.drawAlignedText(0, 0, 60, 60, 'Flip', '#ff8800', 14, { allowShrink: false })
 			})
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
@@ -1036,7 +1183,7 @@ describe('Image drawing', () => {
 			img.fillColor('#110011')
 			img.box(0, 0, 72, 58, '#220022')
 			await img.usingTemporaryLayer(0.6, async (layer) => {
-				layer.drawAlignedText(0, 0, 144, 58, 'Layer', '#ffff00', 18, false, 'center', 'center')
+				layer.drawAlignedText(0, 0, 144, 58, 'Layer', '#ffff00', 18, { allowShrink: false })
 			})
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
@@ -1063,7 +1210,7 @@ describe('Image drawing', () => {
 		test('drawAlignedText at 2x', async () => {
 			const img = Image.create(72, 58, 2, null)
 			img.fillColor('#000000')
-			img.drawAlignedText(0, 0, 72, 58, 'Hi', '#ffffff', 14, false, 'center', 'center')
+			img.drawAlignedText(0, 0, 72, 58, 'Hi', '#ffffff', 14, { allowShrink: false })
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 

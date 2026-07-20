@@ -22,40 +22,45 @@ function val<T>(value: T): ExpressionOrValue<T> {
 }
 
 function expr<T>(value: string): ExpressionOrValue<T> {
-	return { isExpression: true, value } as ExpressionOrValue<T>
+	return { isExpression: true, value }
 }
 
 function createMockParser(
 	variableValues: Record<string, Record<string, string | number | boolean>> = {}
 ): VariablesAndExpressionParser {
 	const rawVariableValues: VariableValueData = variableValues
-	const createCache = (): VariableValueCache => new Map() as unknown as VariableValueCache
+	const createCache = (): VariableValueCache => new Map()
 	const blinker = null as any
 
-	const createParserWithOverrides = (overrides: VariableValues): VariablesAndExpressionParser => {
+	const buildParser = (raw: VariableValueData, overrides: VariableValues): VariablesAndExpressionParser => {
 		const parser = {
 			executeExpression: (str: string, requiredType: string | undefined) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
-					cache.set(key, value as any)
+					cache.set(key, value)
 				}
-				return executeExpression(blinker, str, rawVariableValues, requiredType, cache)
+				return executeExpression(blinker, str, raw, requiredType, cache, undefined)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
-					cache.set(key, value as any)
+					cache.set(key, value)
 				}
-				return parseVariablesInString(str, rawVariableValues, cache, VARIABLE_UNKNOWN_VALUE)
+				return parseVariablesInString(str, raw, cache, VARIABLE_UNKNOWN_VALUE)
 			},
 			createChildParser: (childOverrides: VariableValues) => {
-				return createParserWithOverrides({ ...overrides, ...childOverrides })
+				return buildParser(raw, { ...overrides, ...childOverrides })
+			},
+			// Mirrors VariablesAndExpressionParser.createIsolatedChildParser: no global variable
+			// values and only the provided overrides are resolvable.
+			createIsolatedChildParser: (childOverrides: VariableValues) => {
+				return buildParser({}, { ...childOverrides })
 			},
 		}
 		return parser as unknown as VariablesAndExpressionParser
 	}
 
-	return createParserWithOverrides({})
+	return buildParser(rawVariableValues, {})
 }
 
 type TestEl = {
@@ -64,6 +69,7 @@ type TestEl = {
 	numProp: ExpressionOrValue<number>
 	boolProp: ExpressionOrValue<boolean>
 	enumProp: ExpressionOrValue<string>
+	arrProp: ExpressionOrValue<string[]>
 	anyProp: ExpressionOrValue<JsonValue | undefined>
 }
 
@@ -74,7 +80,8 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 		numProp: val(42),
 		boolProp: val(true),
 		enumProp: val('left'),
-		anyProp: val(99 as JsonValue),
+		arrProp: val([]),
+		anyProp: val(99),
 		...overrides,
 	}
 }
@@ -224,7 +231,7 @@ describe('ElementExpressionHelper', () => {
 
 	describe('getUnknown', () => {
 		test('returns plain value directly without calling parser', () => {
-			const { helper, usedVariables } = makeHelper(makeEl({ anyProp: val(42 as JsonValue) }))
+			const { helper, usedVariables } = makeHelper(makeEl({ anyProp: val(42) }))
 			expect(helper.getUnknown('anyProp', 0)).toBe(42)
 			expect(usedVariables.size).toBe(0)
 		})
@@ -437,6 +444,45 @@ describe('ElementExpressionHelper', () => {
 		})
 	})
 
+	describe('getEnumArray', () => {
+		const STYLES = ['italic', 'underline', 'strikethrough'] as const
+
+		test('returns the plain array when all values are in the allowed list', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['italic', 'underline']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'underline'])
+		})
+
+		test('filters out values that are not in the allowed list', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['italic', 'bogus', 'strikethrough']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'strikethrough'])
+		})
+
+		test('returns empty array when no values match', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['bogus', 'nope']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual([])
+		})
+
+		test('returns defaultValue when the plain value is not an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val('italic' as unknown as string[]) }))
+			expect(helper.getEnumArray('arrProp', STYLES, ['underline'])).toEqual(['underline'])
+		})
+
+		test('evaluates an expression that produces an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr('["italic", "strikethrough"]') }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'strikethrough'])
+		})
+
+		test('returns defaultValue when the expression result is not an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr('"italic"') }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual([])
+		})
+
+		test('returns defaultValue when the expression fails', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr(')') }))
+			expect(helper.getEnumArray('arrProp', STYLES, ['italic'])).toEqual(['italic'])
+		})
+	})
+
 	describe('getTolerantEnum', () => {
 		test('matches first character case-insensitively', () => {
 			const { helper } = makeHelper(makeEl({ enumProp: val('Horizontal') }))
@@ -531,6 +577,14 @@ describe('ElementExpressionHelper', () => {
 		test('null is falsy', () => {
 			const { helper } = makeHelper(makeEl({ boolProp: val(null as any) }))
 			expect(helper.getBoolean('boolProp', true)).toBe(false)
+		})
+
+		test('undefined (missing property) falls back to defaultValue', () => {
+			// A boolean field added to the schema after an element was saved is absent (undefined)
+			// and must use its default rather than coercing to false.
+			const { helper } = makeHelper(makeEl({ boolProp: val(undefined as any) }))
+			expect(helper.getBoolean('boolProp', true)).toBe(true)
+			expect(helper.getBoolean('boolProp', false)).toBe(false)
 		})
 
 		test('empty string is falsy', () => {
@@ -776,18 +830,14 @@ describe('ElementExpressionHelper', () => {
 	describe('elementOverrides', () => {
 		test('override takes precedence over element property value', () => {
 			const element = makeEl({ strProp: val('original') })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', val('overridden' as JsonValue)],
-			])
+			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getString('strProp', '')).toBe('overridden')
 		})
 
 		test('non-overridden properties use the element value', () => {
 			const element = makeEl({ strProp: val('original'), numProp: val(42) })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', val('overridden' as JsonValue)],
-			])
+			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getNumber('numProp', 0)).toBe(42)
 		})
@@ -824,7 +874,7 @@ describe('createParseElementsContext', () => {
 
 		test('applies feedback overrides to the matching element ID only', () => {
 			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['el1', new Map([['strProp', val('overridden' as JsonValue)]])],
+				['el1', new Map([['strProp', val('overridden')]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 
@@ -837,7 +887,7 @@ describe('createParseElementsContext', () => {
 
 		test('element without matching feedback override uses its own property', () => {
 			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['other-id', new Map([['strProp', val('overridden' as JsonValue)]])],
+				['other-id', new Map([['strProp', val('overridden')]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 			const { helper } = ctx.createHelper({ id: 'el1', strProp: val('original') })
@@ -861,11 +911,15 @@ describe('createParseElementsContext', () => {
 			expect(helper.getString('strProp', 'default')).toBe('default')
 		})
 
-		test('child propOverrides are merged with parent variable values', () => {
+		test('child context is isolated from parent global variable values', () => {
 			const ctx = makeCtx({ variableValues: { ns: { existing: 'base' } } })
 			const child = ctx.withPropOverrides({ 'ns:injected': 'extra' })
+			// The child can only see its own propOverrides, not the parent's global variables
 			const { helper } = child.createHelper({ id: 'el1', strProp: expr<string>('$(ns:existing)') })
-			expect(helper.getString('strProp', '')).toBe('base')
+			expect(helper.getString('strProp', 'default')).toBe('default')
+			// ...but the injected override is resolvable
+			const { helper: helper2 } = child.createHelper({ id: 'el2', strProp: expr<string>('$(ns:injected)') })
+			expect(helper2.getString('strProp', '')).toBe('extra')
 		})
 	})
 

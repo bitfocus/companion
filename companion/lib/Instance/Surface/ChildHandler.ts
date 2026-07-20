@@ -1,12 +1,13 @@
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
 import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
-import { IpcWrapper, type IpcEventHandlers } from '../Common/IpcWrapper.js'
+import type { DataChannelServer } from '../Common/DataChannelServer.js'
+import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
+import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import type { InstanceStatus } from '../Status.js'
 import type { DiscoveredSurfaceInfo } from './DiscoveredSurfaceRegistry.js'
@@ -44,6 +45,9 @@ export interface SurfaceChildHandlerDependencies {
 	) => void
 
 	readonly invalidateClientJson: (instanceId: string) => void
+
+	/** Record an IPC message (and its serialized payload byte size) exchanged with the module child (for metrics) */
+	readonly trackIpcMessage: (instanceId: string, direction: 'sent' | 'received', bytes: number) => void
 }
 
 export interface SurfaceChildFeatures {
@@ -86,7 +90,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 	constructor(
 		deps: SurfaceChildHandlerDependencies,
-		monitor: RespawnMonitor,
+		dataChannel: DataChannelServer,
 		moduleId: string,
 		instanceId: string,
 		manifest: SurfaceModuleManifest,
@@ -139,24 +143,24 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			'firmware-update-info': this.#handleFirmwareUpdateInfo.bind(this),
 		}
 
+		// Framed message transport over the child's data channel socket - one JSON.stringify per message and an
+		// exact wire byte count for metrics, no object-mode double-encode. Created before the IpcWrapper (its
+		// onMessage uses #ipcWrapper lazily; no message arrives until the child connects, after this constructor).
+		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
+			this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
+			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+		})
+
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
 			(msg) => {
-				if (monitor.child) {
-					monitor.child.send(msg)
-				} else {
-					this.logger.debug(`Child is not running, unable to send message: ${JSON.stringify(msg)}`)
-				}
+				const bytes = transport.send(msg)
+				if (bytes > 0) this.#deps.trackIpcMessage(this.instanceId, 'sent', bytes)
 			},
 			5000
 		)
 
-		// Attach message handler to receive messages from child process
-		const messageHandler = (msg: any) => {
-			this.#ipcWrapper.receivedMessage(msg)
-		}
-		monitor.on('message', messageHandler)
-		this.#unsubListeners = () => monitor.off('message', messageHandler)
+		this.#unsubListeners = () => transport.destroy()
 
 		// Build relevant HID devices map for quick lookup
 		for (const usbIds of manifest.usbIds || []) {
@@ -179,11 +183,6 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			supportsRemote: registerProps.supportsOutbound ?? null,
 		}
 		this.logger.debug(`Received features: ${JSON.stringify(this.features)}`)
-
-		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
-			// Register with the controller for scan events
-			this.#deps.surfaceController.registerSurfaceScanHandler(this.instanceId, this)
-		}
 
 		if (this.features.supportsRemote) {
 			this.#deps.surfaceController.outbound.events.on(`startStop:${this.instanceId}`, this.#startStopConnections)
@@ -225,6 +224,11 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 	async init(): Promise<void> {
 		// Initialize the plugin
 		await this.#ipcWrapper.sendWithCb('init', {})
+
+		if (this.features.supportsScan || this.features.supportsDetection || this.features.supportsHid) {
+			// Register with the controller for scan events
+			this.#deps.surfaceController.registerSurfaceScanHandler(this.instanceId, this)
+		}
 
 		this.#deps.instanceStatus.updateInstanceStatus(this.instanceId, 'ok', null)
 	}

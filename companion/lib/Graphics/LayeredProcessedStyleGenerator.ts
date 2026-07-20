@@ -1,6 +1,8 @@
+import { bakeGaugeToLeds } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsDrawBase,
+	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
@@ -35,6 +37,11 @@ export class GraphicsLayeredProcessedStyleGenerator {
 			drawStyle.elements,
 			ButtonGraphicsElementUsage.Image,
 			'image'
+		)
+		const ledsLayer = GraphicsLayeredProcessedStyleGenerator.SelectLayerForUsage<ButtonGraphicsGaugeDrawElement>(
+			drawStyle.elements,
+			ButtonGraphicsElementUsage.Leds,
+			'gauge'
 		)
 
 		let showTopBar: boolean | 'default' = 'default'
@@ -75,6 +82,7 @@ export class GraphicsLayeredProcessedStyleGenerator {
 				pushed: drawStyle.pushed,
 				showTopBar: showTopBar,
 			},
+			leds: ledsLayer ? bakeGaugeToLeds(ledsLayer) : undefined,
 		}
 
 		return processedStyle

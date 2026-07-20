@@ -10,6 +10,7 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { Grid } from '~/Components/Grid'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ImageBackgroundColorEditor } from './imageBackgroundColorEditor.js'
 import { ImageDescriptionEditor } from './imageDescriptionEditor.js'
 import { ImageLibraryImagePreview } from './ImageLibraryImagePreview.js'
 import { ImageNameEditModal } from './ImageNameEditModal.js'
@@ -127,6 +128,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	}
 
 	const descriptionFieldId = useId()
+	const backgroundColorFieldId = useId()
 
 	if (!selectedImageName) {
 		return (
@@ -200,8 +202,24 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					/>
 				</Grid.Col>
 			</Form>
+			<Form className="row mb-3">
+				<FormLabel htmlFor={backgroundColorFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+					Preview background
+				</FormLabel>
+				<Grid.Col sm={8} className="d-flex align-items-center">
+					<ImageBackgroundColorEditor
+						id={backgroundColorFieldId}
+						imageName={selectedImageName}
+						currentColor={imageInfo.backgroundColor}
+					/>
+				</Grid.Col>
+			</Form>
 
-			<ImagePreviewBox onFileDrop={uploadFile} dragOverMessage="Drop image to replace">
+			<ImagePreviewBox
+				onFileDrop={uploadFile}
+				dragOverMessage="Drop image to replace"
+				backgroundColor={imageInfo.backgroundColor}
+			>
 				<ImageLibraryImagePreview
 					imageName={selectedImageName}
 					type="original"

@@ -1,0 +1,89 @@
+// Full-screen status overlay for the standalone dark pages (emulator, tablet).
+// Used by StandalonePageError: a loading spinner, plus a friendly message and Refresh
+// button when the page can't reach Companion (load error or lost connection).
+
+.standalone-overlay {
+	width: 100%;
+	height: 100%;
+	min-height: 50vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #181818;
+	padding: 2vh 2vw;
+	overflow: hidden;
+
+	// When placed directly inside a CSS-grid page (e.g. .page-emulator), span every
+	// row so the overlay fills the viewport rather than a single auto-sized track.
+	// Ignored in block/flex parents.
+	grid-row: 1 / -1;
+	grid-column: 1 / -1;
+
+	-webkit-touch-callout: none !important;
+	-webkit-user-select: none !important;
+	user-select: none !important;
+
+	.standalone-overlay-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		gap: clamp(0.75rem, 2.5vh, 1.75rem);
+		max-width: 480px;
+		width: 100%;
+		max-height: 100%;
+
+		// On short screens, reduce spacing further
+		@media (max-height: 500px) {
+			gap: clamp(0.25rem, 1vh, 1rem);
+		}
+	}
+
+	.standalone-overlay-icon {
+		color: #f7f7f7;
+		opacity: 0.9;
+		font-size: clamp(2rem, 7vh, 3.5rem);
+	}
+
+	h2 {
+		margin: 0;
+		font-size: clamp(1.15rem, 3vh, 2rem);
+		font-weight: 600;
+		color: #f7f7f7;
+	}
+
+	p {
+		margin: 0;
+		font-size: clamp(0.9rem, 2vh, 1.1rem);
+		color: rgba(255, 255, 255, 0.6);
+		max-width: 100%;
+		overflow-wrap: anywhere;
+	}
+
+	// Deterministic button styling: these pages set a gold `color` on their root
+	// (.page-emulator-base / .page-tablet) which otherwise bleeds into the button via
+	// coreui's `.btn` base. Scope + specificity here keeps it a clean neutral button.
+	.button {
+		margin-top: clamp(0.25rem, 1vh, 0.75rem);
+		min-width: 140px;
+		color: #f7f7f7;
+		background-color: rgba(255, 255, 255, 0.08);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 0.5rem;
+
+		&:hover,
+		&:focus-visible {
+			color: #fff;
+			background-color: rgba(255, 255, 255, 0.16);
+			border-color: rgba(255, 255, 255, 0.4);
+		}
+
+		&:active,
+		&:not([disabled]):active {
+			color: #fff;
+			background-color: rgba(255, 255, 255, 0.22);
+			border-color: rgba(255, 255, 255, 0.5);
+		}
+	}
+}

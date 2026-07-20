@@ -1,5 +1,6 @@
 import type { ConnectionCollection } from './Connections.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
+import type { SomeEntityModel } from './EntityModel.js'
 import type { ExpressionVariableCollection, ExpressionVariableModel } from './ExpressionVariableModel.js'
 import type { ImageLibraryCollection, ImageLibraryExportData } from './ImageLibraryModel.js'
 import type { InstanceConfig, InstanceVersionUpdatePolicy } from './Instance.js'
@@ -11,7 +12,7 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
+	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
 }
@@ -60,14 +61,16 @@ export interface ExportPageContentv6 {
 	name: string
 	controls: Record<number, Record<number, ExportControlv6>>
 
+	/** This page's local variables (the `page:<id>` control's entities). Added in v5.x. Optional for backwards compatibility. */
+	pageVariables?: SomeEntityModel[]
+
 	gridSize: UserConfigGridSize
 }
 
 export type ExportControlv6 = Record<string, any> // TODO
 
 export type ExportInstancesv6 =
-	| Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6>
-	| Record<string, InstanceConfig | undefined> // TODO - tidy
+	Record<string, ExportInstanceFullv6 | ExportInstanceMinimalv6> | Record<string, InstanceConfig | undefined> // TODO - tidy
 
 export type ExportInstanceFullv6 = {
 	label: string

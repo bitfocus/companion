@@ -74,6 +74,7 @@ export interface CompanionInputFieldBaseExtended {
 		| 'internal:page'
 		| 'internal:horizontal-alignment'
 		| 'internal:vertical-alignment'
+		| 'internal:text-styles'
 		| 'internal:image-file'
 		| 'internal:table'
 		| 'internal:list'
@@ -119,6 +120,7 @@ export interface CompanionInputFieldBaseExtended {
 
 export type ContextVariableResolution =
 	| { type: 'localVariable'; locationFieldId: string; nameFieldId: string }
+	| { type: 'pageVariable'; pageFieldId: string; nameFieldId: string }
 	| { type: 'customVariable'; nameFieldId: string }
 
 export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
@@ -185,6 +187,11 @@ export interface InternalInputFieldVerticalAlignment extends CompanionInputField
 	/** The default value */
 	default: 'top' | 'center' | 'bottom'
 }
+export interface InternalInputFieldTextStyles extends CompanionInputFieldBaseExtended {
+	type: 'internal:text-styles'
+	/** The default value */
+	default: ('italic' | 'underline' | 'strikethrough')[]
+}
 export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExtended {
 	type: 'internal:image-file'
 	/** The default value */
@@ -224,6 +231,7 @@ export type InternalInputField =
 	| InternalInputFieldPage
 	| InternalInputFieldHorizontalAlignment
 	| InternalInputFieldVerticalAlignment
+	| InternalInputFieldTextStyles
 	| InternalInputFieldPngImage
 	| InternalInputFieldTable
 	| InternalInputFieldList
