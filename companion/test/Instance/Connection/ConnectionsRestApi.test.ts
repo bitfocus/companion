@@ -8,6 +8,7 @@ import {
 	ModuleInstanceType,
 	type InstanceConfig,
 } from '../../../../shared-lib/lib/Model/Instance.js'
+import type { InstanceConfigStore } from '../../../lib/Instance/ConfigStore.js'
 import { ConnectionCreateBodySchema } from '../../../lib/Instance/Connection/ConnectionsRestApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { createInstanceRestApiRouter } from '../../../lib/Instance/RestApi.js'
@@ -35,6 +36,7 @@ const tokens = {
 type TestService = {
 	app: express.Express
 	instanceController: DeepMockProxy<InstanceController>
+	configStore: DeepMockProxy<InstanceConfigStore>
 	tokenStore: RestApiTokenStoreMemory
 	validToken: string
 	readOnlyToken: string
@@ -42,18 +44,23 @@ type TestService = {
 	secretsToken: string
 }
 
-function createTestRegistry(instanceController: InstanceController): Registry {
+function createTestRegistry(instanceController: InstanceController, configStore: InstanceConfigStore): Registry {
 	return {
 		instance: {
-			createRestApiRouter: (logger) => createInstanceRestApiRouter(logger, instanceController),
+			createRestApiRouter: (logger) => createInstanceRestApiRouter(logger, instanceController, configStore),
 		},
 	} as Registry
 }
 
 function createService(): TestService {
 	const instanceController = mockDeep<InstanceController>(mockOptions)
+	const configStore = mockDeep<InstanceConfigStore>(mockOptions)
 	const tokenStore = new RestApiTokenStoreMemory()
-	const restApiRouter = createRestApiRouter(createTestRegistry(instanceController), tokenStore, mockAppInfo)
+	const restApiRouter = createRestApiRouter(
+		createTestRegistry(instanceController, configStore),
+		tokenStore,
+		mockAppInfo
+	)
 
 	const app = express()
 	app.use(express.json())
@@ -62,6 +69,7 @@ function createService(): TestService {
 	return {
 		app,
 		instanceController,
+		configStore,
 		tokenStore,
 		validToken: tokens.admin,
 		readOnlyToken: tokens.readOnly,
@@ -275,8 +283,6 @@ describe('REST API v1 — Connections', () => {
 				moduleVersionId: null,
 				updatePolicy: 'stable',
 				enabled: true,
-				sortOrder: 0,
-				collectionId: null,
 				status: mockStatus,
 			})
 
@@ -333,6 +339,21 @@ describe('REST API v1 — Connections', () => {
 			expect(res.body.meta).toEqual({ total: 0, limit: 0, offset: 0 })
 		})
 
+		test('sorts the flat list by connection id', async () => {
+			const { app, instanceController, validToken } = createService()
+			const configs = createConnectionConfigs()
+			instanceController.getConnectionClientJson.mockReturnValue({
+				'conn-2': configs['conn-2'],
+				'conn-1': configs['conn-1'],
+			})
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+
+			const res = await supertest(app).get('/api/connections/v1').set('Authorization', `Bearer ${validToken}`).send()
+
+			expect(res.status).toBe(200)
+			expect(res.body.data.map((connection: { id: string }) => connection.id)).toEqual(['conn-1', 'conn-2'])
+		})
+
 		test('strips extra fields from response via Zod (e.g. hasRecordActionsHandler)', async () => {
 			const { app, instanceController, validToken } = createService()
 
@@ -372,8 +393,6 @@ describe('REST API v1 — Connections', () => {
 				moduleVersionId: null,
 				updatePolicy: 'stable',
 				enabled: true,
-				sortOrder: 0,
-				collectionId: null,
 				status: mockStatus,
 				config: { host: 'localhost', port: 4455 },
 			})
@@ -393,6 +412,128 @@ describe('REST API v1 — Connections', () => {
 
 			expect(res.status).toBe(404)
 			expect(res.body.error.code).toBe('NOT_FOUND')
+		})
+	})
+
+	describe('GET /connections/tree', () => {
+		test('returns the complete ordered collection hierarchy', async () => {
+			const { app, instanceController, validToken } = createService()
+			const configs = createConnectionConfigs()
+			configs['conn-1'].sortOrder = 3
+			configs['conn-2'].sortOrder = 0
+
+			instanceController.getConnectionClientJson.mockReturnValue(configs)
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+			instanceController.connectionCollections.collectAllCollectionIds.mockReturnValue(new Set(['group-a', 'group-b']))
+			Object.defineProperty(instanceController.connectionCollections, 'collectionData', {
+				configurable: true,
+				value: [
+					{
+						id: 'group-a',
+						label: 'Main',
+						sortOrder: 0,
+						metaData: { enabled: true },
+						children: [
+							{
+								id: 'group-b',
+								label: 'Nested',
+								sortOrder: 0,
+								metaData: { enabled: false },
+								children: [],
+							},
+						],
+					},
+				],
+			})
+
+			const res = await supertest(app)
+				.get('/api/connections/v1/tree')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send()
+
+			expect(res.status).toBe(200)
+			expect(res.body.data.connections.map((connection: { id: string }) => connection.id)).toEqual(['conn-1'])
+			expect(res.body.data.collections).toHaveLength(1)
+			expect(res.body.data.collections[0]).toMatchObject({
+				id: 'group-a',
+				label: 'Main',
+				enabled: true,
+			})
+			expect(res.body.data.collections[0].connections.map((connection: { id: string }) => connection.id)).toEqual([
+				'conn-2',
+			])
+			expect(res.body.data.collections[0].children[0]).toEqual({
+				id: 'group-b',
+				label: 'Nested',
+				enabled: false,
+				connections: [],
+				children: [],
+			})
+			expect(res.body.data.connections[0]).not.toHaveProperty('sortOrder')
+			expect(res.body.data.collections[0].connections[0]).not.toHaveProperty('collectionId')
+		})
+	})
+
+	describe('PATCH /connections/move', () => {
+		test('applies a bulk move and returns no content', async () => {
+			const { app, instanceController, configStore, writeToken } = createService()
+			const moves = [
+				{ connectionId: 'conn-1', collectionId: 'group-a', position: 0 },
+				{ connectionId: 'conn-2', collectionId: null, position: 0 },
+			]
+
+			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())
+			instanceController.connectionCollections.doesCollectionIdExist.mockReturnValue(true)
+			configStore.moveInstances.mockReturnValue({ ok: true })
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/move')
+				.set('Authorization', `Bearer ${writeToken}`)
+				.send({ moves })
+
+			expect(res.status).toBe(204)
+			expect(res.body).toEqual({})
+			expect(configStore.moveInstances).toHaveBeenCalledWith(ModuleInstanceType.Connection, moves)
+		})
+
+		test('rejects moving the same connection twice', async () => {
+			const { app, instanceController, configStore, writeToken } = createService()
+			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())
+			instanceController.connectionCollections.doesCollectionIdExist.mockReturnValue(true)
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/move')
+				.set('Authorization', `Bearer ${writeToken}`)
+				.send({
+					moves: [
+						{ connectionId: 'conn-1', collectionId: null, position: 0 },
+						{ connectionId: 'conn-1', collectionId: 'group-a', position: 0 },
+					],
+				})
+
+			expect(res.status).toBe(400)
+			expect(res.body.error.details).toMatchObject({ operationIndex: 1, connectionId: 'conn-1' })
+			expect(configStore.moveInstances).not.toHaveBeenCalled()
+		})
+
+		test('returns an indexed error when a position is out of range', async () => {
+			const { app, instanceController, configStore, writeToken } = createService()
+			instanceController.getConnectionClientJson.mockReturnValue(createConnectionConfigs())
+			instanceController.connectionCollections.doesCollectionIdExist.mockReturnValue(true)
+			configStore.moveInstances.mockReturnValue({
+				ok: false,
+				operationIndex: 0,
+				reason: 'invalid_position',
+				message: 'Position 4 is outside destination collection bounds (0 to 1)',
+			})
+
+			const res = await supertest(app)
+				.patch('/api/connections/v1/move')
+				.set('Authorization', `Bearer ${writeToken}`)
+				.send({ moves: [{ connectionId: 'conn-1', collectionId: null, position: 4 }] })
+
+			expect(res.status).toBe(400)
+			expect(res.body.error.details).toEqual({ operationIndex: 0 })
 		})
 	})
 

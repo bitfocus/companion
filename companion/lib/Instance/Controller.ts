@@ -108,7 +108,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 	}
 
 	createRestApiRouter(logger: Logger): express.Router {
-		return createInstanceRestApiRouter(logger, this)
+		return createInstanceRestApiRouter(logger, this, this.#configStore)
 	}
 
 	constructor(

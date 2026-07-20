@@ -18,6 +18,16 @@ export interface AddInstanceProps {
 	sortOrder?: number
 }
 
+export interface MoveInstanceOperation {
+	connectionId: string
+	collectionId: string | null
+	position: number
+}
+
+export type MoveInstancesResult =
+	| { ok: true }
+	| { ok: false; operationIndex: number; reason: 'not_found' | 'invalid_position'; message: string }
+
 export class InstanceConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
 
@@ -342,6 +352,103 @@ export class InstanceConfigStore {
 		}
 
 		return true
+	}
+
+	/**
+	 * Atomically move multiple instances. Each operation is evaluated against the
+	 * arrangement produced by the preceding operations, but no changes are applied
+	 * until the complete batch has been validated.
+	 */
+	moveInstances(moduleType: ModuleInstanceType, operations: MoveInstanceOperation[]): MoveInstancesResult {
+		const arrangements = new Map<string | null, string[]>()
+		const collectionByInstanceId = new Map<string, string | null>()
+
+		for (const [id, config] of this.#store) {
+			if (config.moduleInstanceType !== moduleType) continue
+
+			const collectionId = config.collectionId ?? null
+			let arrangement = arrangements.get(collectionId)
+			if (!arrangement) {
+				arrangement = []
+				arrangements.set(collectionId, arrangement)
+			}
+			arrangement.push(id)
+			collectionByInstanceId.set(id, collectionId)
+		}
+
+		for (const arrangement of arrangements.values()) {
+			arrangement.sort((aId, bId) => {
+				const a = this.#store.get(aId)
+				const b = this.#store.get(bId)
+				return (a?.sortOrder ?? 0) - (b?.sortOrder ?? 0) || aId.localeCompare(bId)
+			})
+		}
+
+		for (const [operationIndex, operation] of operations.entries()) {
+			const sourceCollectionId = collectionByInstanceId.get(operation.connectionId)
+			if (sourceCollectionId === undefined) {
+				return {
+					ok: false,
+					operationIndex,
+					reason: 'not_found',
+					message: `Connection ${operation.connectionId} not found`,
+				}
+			}
+
+			const sourceArrangement = arrangements.get(sourceCollectionId)
+			const sourceIndex = sourceArrangement?.indexOf(operation.connectionId) ?? -1
+			if (!sourceArrangement || sourceIndex === -1) {
+				return {
+					ok: false,
+					operationIndex,
+					reason: 'not_found',
+					message: `Connection ${operation.connectionId} not found in its source collection`,
+				}
+			}
+
+			sourceArrangement.splice(sourceIndex, 1)
+
+			let destinationArrangement = arrangements.get(operation.collectionId)
+			if (!destinationArrangement) {
+				destinationArrangement = []
+				arrangements.set(operation.collectionId, destinationArrangement)
+			}
+
+			if (
+				!Number.isInteger(operation.position) ||
+				operation.position < 0 ||
+				operation.position > destinationArrangement.length
+			) {
+				return {
+					ok: false,
+					operationIndex,
+					reason: 'invalid_position',
+					message: `Position ${operation.position} is outside destination collection bounds (0 to ${destinationArrangement.length})`,
+				}
+			}
+
+			destinationArrangement.splice(operation.position, 0, operation.connectionId)
+			collectionByInstanceId.set(operation.connectionId, operation.collectionId)
+		}
+
+		const changedIds: string[] = []
+		for (const [collectionId, arrangement] of arrangements) {
+			for (const [sortOrder, id] of arrangement.entries()) {
+				const config = this.#store.get(id)
+				if (!config) continue
+
+				const currentCollectionId = config.collectionId ?? null
+				if (currentCollectionId !== collectionId || config.sortOrder !== sortOrder) {
+					config.collectionId = collectionId ?? undefined
+					config.sortOrder = sortOrder
+					changedIds.push(id)
+				}
+			}
+		}
+
+		if (changedIds.length > 0) this.commitChanges(changedIds, true)
+
+		return { ok: true }
 	}
 
 	cleanUnknownCollectionIds(moduleType: ModuleInstanceType, validCollectionIds: Set<string>): void {

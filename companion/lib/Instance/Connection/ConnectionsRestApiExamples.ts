@@ -17,8 +17,6 @@ export const ConnectionResponseExample = {
 	moduleVersionId: '1.2.0',
 	updatePolicy: InstanceVersionUpdatePolicy.Stable,
 	enabled: true,
-	sortOrder: 1,
-	collectionId: null,
 	status: { category: 'ok', level: 'info', message: 'Connected' },
 	config: AtemConfigExample,
 	secrets: {},
@@ -43,13 +41,32 @@ export const ConnectionPatchBodyExample = {
 	secrets: {},
 	updatePolicy: InstanceVersionUpdatePolicy.Manual,
 	versionId: '1.2.0',
-	collectionId: null,
 }
 
 export const ConnectionPatchResponseExample = {
 	...ConnectionResponseExample,
 	label: 'ATEM Program',
 	updatePolicy: InstanceVersionUpdatePolicy.Manual,
+}
+
+export const ConnectionTreeResponseExample = {
+	connections: [],
+	collections: [
+		{
+			id: 'production',
+			label: 'Production',
+			enabled: true,
+			connections: [ConnectionResponseExample],
+			children: [],
+		},
+	],
+}
+
+export const ConnectionMoveBodyExample = {
+	moves: [
+		{ connectionId: 'KJA1isEECHRDBTFjx-7tf', collectionId: 'production', position: 0 },
+		{ connectionId: 'XhA2fsEECHRDQPKjx-8ug', collectionId: null, position: 1 },
+	],
 }
 
 export const ConfigFieldsResponseExample = [

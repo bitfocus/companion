@@ -1,6 +1,6 @@
 import Express from 'express'
 import z from 'zod'
-import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import {
 	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
@@ -26,15 +26,18 @@ import {
 	type RestEndpointContract,
 	type RestEndpointDefinition,
 } from '../../Service/RestApi/typedRoute.js'
+import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController } from '../Controller.js'
 import { ConnectionOperationError, ConnectionOperations } from './ConnectionOperations.js'
 import {
 	ConfigFieldsResponseExample,
 	ConnectionCreateBodyExample,
 	ConnectionCreateResponseExample,
+	ConnectionMoveBodyExample,
 	ConnectionPatchBodyExample,
 	ConnectionPatchResponseExample,
 	ConnectionResponseExample,
+	ConnectionTreeResponseExample,
 	RestartConnectionResponseExample,
 } from './ConnectionsRestApiExamples.js'
 
@@ -77,8 +80,6 @@ export const ConnectionResponseSchema = z.object({
 		.describe('Module version update policy for this connection.')
 		.meta({ example: InstanceVersionUpdatePolicy.Stable }),
 	enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.').meta({ example: true }),
-	sortOrder: z.number().describe('Sort position of the connection in the Companion UI.').meta({ example: 1 }),
-	collectionId: z.string().nullable().describe('Connection collection id, or null when not in a collection.'),
 	status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
 	config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
 	secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
@@ -150,12 +151,56 @@ export const ConnectionPatchBodySchema = z
 				'Specific module version to use, such as "1.2.0". Omit to leave the current version unchanged. Use null to switch to the newest compatible stable version.'
 			)
 			.meta({ example: '1.2.0' }),
-		collectionId: z
-			.string()
-			.nullable()
-			.optional()
-			.describe('Collection id to move the connection into, or null to remove it.')
-			.meta({ example: null }),
+	})
+	.strict()
+
+export interface ConnectionTreeCollection {
+	id: string
+	label: string
+	enabled: boolean
+	connections: ConnectionResponse[]
+	children: ConnectionTreeCollection[]
+}
+
+export const ConnectionTreeCollectionSchema: z.ZodType<ConnectionTreeCollection> = z
+	.object({
+		id: z.string().describe('Unique connection collection id.'),
+		label: z.string().describe('Display name of the collection.'),
+		enabled: z.boolean().describe('Whether connections in this collection are enabled.'),
+		connections: z
+			.array(ConnectionResponseSchema)
+			.describe('Connections in this collection, in their current display order.'),
+		children: z
+			.array(z.lazy(() => ConnectionTreeCollectionSchema))
+			.describe('Nested collections, in their current display order.'),
+	})
+	.meta({ id: 'ConnectionTreeCollection' })
+
+export const ConnectionTreeResponseSchema = z.object({
+	connections: z
+		.array(ConnectionResponseSchema)
+		.describe('Ungrouped connections at the root, in their current display order.'),
+	collections: z.array(ConnectionTreeCollectionSchema).describe('Root collections, in their current display order.'),
+})
+
+const ConnectionMoveOperationSchema = z
+	.object({
+		connectionId: z.string().describe('Connection instance id to move.'),
+		collectionId: z.string().nullable().describe('Destination collection id, or null for the ungrouped root.'),
+		position: z
+			.number()
+			.int()
+			.nonnegative()
+			.describe('Zero-based insertion index in the destination after removing the moved connection.'),
+	})
+	.strict()
+
+export const ConnectionMoveBodySchema = z
+	.object({
+		moves: z
+			.array(ConnectionMoveOperationSchema)
+			.min(1)
+			.describe('Moves to evaluate sequentially and persist atomically.'),
 	})
 	.strict()
 
@@ -267,8 +312,6 @@ export function buildConnectionResponse(
 		moduleVersionId: clientConfig.moduleVersionId,
 		updatePolicy: clientConfig.updatePolicy,
 		enabled: clientConfig.enabled,
-		sortOrder: clientConfig.sortOrder,
-		collectionId: clientConfig.collectionId,
 		status: status ?? null,
 	}
 
@@ -334,9 +377,13 @@ function defineConnectionEndpointSpec<
 /**
  * Create the connections router for /api/connections/v1
  */
-export function createConnectionsRouter(logger: Logger, instanceController: InstanceController): Express.Router {
+export function createConnectionsRouter(
+	logger: Logger,
+	instanceController: InstanceController,
+	configStore: InstanceConfigStore
+): Express.Router {
 	const router = Express.Router()
-	const connectionOperations = new ConnectionOperations({ logger, instanceController })
+	const connectionOperations = new ConnectionOperations({ logger, instanceController, configStore })
 
 	for (const endpointSpec of connectionEndpointSpecs) {
 		mountRestEndpoint(
@@ -412,6 +459,49 @@ const listConnectionsEndpoint = defineRestEndpointContract({
 	},
 	examples: {
 		response: collectionResponse([ConnectionResponseExample], { total: 1, limit: 1, offset: 0 }),
+	},
+	errorResponses,
+})
+
+const getConnectionsTreeEndpoint = defineRestEndpointContract({
+	method: 'get',
+	path: '/tree',
+	scope: 'read',
+	tags: CONNECTIONS_API_TAGS,
+	summary: 'Get the connection arrangement',
+	description:
+		'Returns all connections grouped into the complete collection hierarchy. Array order represents the current display order.',
+	request: {
+		query: connectionListQuery,
+	},
+	response: {
+		status: 200,
+		description: 'Connection arrangement',
+		schema: createSuccessSchema(ConnectionTreeResponseSchema),
+	},
+	examples: {
+		response: successResponse(ConnectionTreeResponseExample),
+	},
+	errorResponses,
+})
+
+const moveConnectionsEndpoint = defineRestEndpointContract({
+	method: 'patch',
+	path: '/move',
+	scope: 'write',
+	tags: CONNECTIONS_API_TAGS,
+	summary: 'Move connections',
+	description:
+		'Moves connections atomically. Operations are evaluated in request order against the result of preceding operations.',
+	request: {
+		body: ConnectionMoveBodySchema,
+	},
+	response: {
+		status: 204,
+		description: 'Connections moved',
+	},
+	examples: {
+		body: ConnectionMoveBodyExample,
 	},
 	errorResponses,
 })
@@ -578,9 +668,85 @@ const connectionEndpointSpecs = [
 					: undefined
 				return buildConnectionResponse(id, config, status, instanceConfig, includeSecrets)
 			})
+			connections.sort((a, b) => a.id.localeCompare(b.id))
 
 			return {
 				body: collectionResponse(connections, { total: connections.length, limit: connections.length, offset: 0 }),
+			}
+		}
+	}),
+
+	defineConnectionEndpointSpec(getConnectionsTreeEndpoint, ({ instanceController }) => {
+		return ({ query, token }) => {
+			const includeConfig = query.include_config === 'true'
+			const includeSecrets = query.include_secrets === 'true'
+
+			if (includeSecrets && !includeConfig) {
+				throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
+			}
+			if (includeSecrets && !hasScope(token.scopes, 'secrets')) {
+				throw RestApiError.forbidden("Insufficient scope: requires 'secrets'")
+			}
+
+			const clientConnections = instanceController.getConnectionClientJson(true)
+			const responses = new Map<string, ConnectionResponse>()
+			for (const [id, config] of Object.entries(clientConnections)) {
+				const status = instanceController.getInstanceStatus(id)
+				const instanceConfig = includeConfig
+					? instanceController.getInstanceConfigOfType(id, ModuleInstanceType.Connection)
+					: undefined
+				responses.set(id, buildConnectionResponse(id, config, status, instanceConfig, includeSecrets))
+			}
+
+			const connectionsByCollection = new Map<
+				string | null,
+				Array<{ response: ConnectionResponse; sortOrder: number }>
+			>()
+			const knownCollectionIds = instanceController.connectionCollections.collectAllCollectionIds()
+			for (const [id, config] of Object.entries(clientConnections)) {
+				const collectionId =
+					config.collectionId && knownCollectionIds.has(config.collectionId) ? config.collectionId : null
+				let entries = connectionsByCollection.get(collectionId)
+				if (!entries) {
+					entries = []
+					connectionsByCollection.set(collectionId, entries)
+				}
+				entries.push({ response: responses.get(id)!, sortOrder: config.sortOrder })
+			}
+
+			const takeConnections = (collectionId: string | null): ConnectionResponse[] =>
+				(connectionsByCollection.get(collectionId) ?? [])
+					.sort((a, b) => a.sortOrder - b.sortOrder || a.response.id.localeCompare(b.response.id))
+					.map((entry) => entry.response)
+
+			const buildCollection = (collection: ConnectionCollection): ConnectionTreeCollection => ({
+				id: collection.id,
+				label: collection.label,
+				enabled: collection.metaData.enabled,
+				connections: takeConnections(collection.id),
+				children: [...collection.children]
+					.sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
+					.map(buildCollection),
+			})
+
+			const tree = {
+				connections: takeConnections(null),
+				collections: instanceController.connectionCollections.collectionData
+					.sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
+					.map(buildCollection),
+			}
+
+			return { body: successResponse(ConnectionTreeResponseSchema.parse(tree)) }
+		}
+	}),
+
+	defineConnectionEndpointSpec(moveConnectionsEndpoint, ({ connectionOperations }) => {
+		return ({ body }) => {
+			try {
+				connectionOperations.moveConnections(body.moves)
+				return { status: 204 }
+			} catch (e) {
+				throw mapConnectionOperationError(e)
 			}
 		}
 	}),

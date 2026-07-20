@@ -196,12 +196,19 @@ function compareSchema(
 	stableDocument: JsonObject,
 	currentDocument: JsonObject,
 	path: string[],
-	errors: string[]
+	errors: string[],
+	seenReferencePairs = new Set<string>()
 ): void {
 	if (!stableSchemaInput) return
 	if (!currentSchemaInput) {
 		errors.push(`Removed schema reference: ${jsonPointer(path)}`)
 		return
+	}
+
+	if (stableSchemaInput.$ref && currentSchemaInput.$ref) {
+		const referencePair = `${stableSchemaInput.$ref}\n${currentSchemaInput.$ref}`
+		if (seenReferencePairs.has(referencePair)) return
+		seenReferencePairs.add(referencePair)
 	}
 
 	const stableSchema = resolveSchema(stableSchemaInput, stableDocument)
@@ -234,7 +241,8 @@ function compareSchema(
 				stableDocument,
 				currentDocument,
 				[...path, 'properties', propertyName],
-				errors
+				errors,
+				seenReferencePairs
 			)
 		}
 	}
@@ -247,7 +255,15 @@ function compareSchema(
 	}
 
 	if (stableSchema.items) {
-		compareSchema(stableSchema.items, currentSchema.items, stableDocument, currentDocument, [...path, 'items'], errors)
+		compareSchema(
+			stableSchema.items,
+			currentSchema.items,
+			stableDocument,
+			currentDocument,
+			[...path, 'items'],
+			errors,
+			seenReferencePairs
+		)
 	}
 }
 

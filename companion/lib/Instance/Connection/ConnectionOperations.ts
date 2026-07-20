@@ -61,6 +61,12 @@ export interface ReorderConnectionInput {
 	dropIndex: number
 }
 
+export interface MoveConnectionInput {
+	connectionId: string
+	collectionId: string | null
+	position: number
+}
+
 /**
  * Ensure every field has a unique id.
  *
@@ -132,6 +138,44 @@ export class ConnectionOperations {
 			input.connectionId,
 			input.dropIndex
 		)
+	}
+
+	moveConnections(operations: MoveConnectionInput[]): void {
+		if (!this.#configStore) throw new Error('Connection move requires configStore')
+
+		const seenConnectionIds = new Set<string>()
+		for (const [operationIndex, operation] of operations.entries()) {
+			if (seenConnectionIds.has(operation.connectionId)) {
+				throw new ConnectionOperationError('invalid_input', 'A connection can only be moved once per request', {
+					operationIndex,
+					connectionId: operation.connectionId,
+				})
+			}
+			seenConnectionIds.add(operation.connectionId)
+
+			if (!this.#instanceController.getConnectionClientJson(true)[operation.connectionId]) {
+				throw new ConnectionOperationError('not_found', 'Connection not found', {
+					operationIndex,
+					connectionId: operation.connectionId,
+				})
+			}
+
+			if (!this.#instanceController.connectionCollections.doesCollectionIdExist(operation.collectionId)) {
+				throw new ConnectionOperationError('not_found', 'Connection collection not found', {
+					operationIndex,
+					collectionId: operation.collectionId,
+				})
+			}
+		}
+
+		const result = this.#configStore.moveInstances(ModuleInstanceType.Connection, operations)
+		if (!result.ok) {
+			throw new ConnectionOperationError(
+				result.reason === 'not_found' ? 'not_found' : 'invalid_input',
+				result.message,
+				{ operationIndex: result.operationIndex }
+			)
+		}
 	}
 
 	async getConnectionEditConfig(connectionId: string): Promise<ClientEditInstanceConfig | null> {

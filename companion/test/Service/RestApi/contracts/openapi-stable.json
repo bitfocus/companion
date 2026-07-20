@@ -1,7 +1,120 @@
 {
 	"components": {
 		"parameters": {},
-		"schemas": {},
+		"schemas": {
+			"ConnectionTreeCollection": {
+				"properties": {
+					"children": {
+						"description": "Nested collections, in their current display order.",
+						"items": {
+							"$ref": "#/components/schemas/ConnectionTreeCollection"
+						},
+						"type": "array"
+					},
+					"connections": {
+						"description": "Connections in this collection, in their current display order.",
+						"items": {
+							"properties": {
+								"config": {
+									"additionalProperties": {
+										"nullable": true
+									},
+									"description": "Non-secret connection configuration values.",
+									"type": "object"
+								},
+								"enabled": {
+									"description": "Whether the connection is enabled and allowed to run.",
+									"example": true,
+									"type": "boolean"
+								},
+								"id": {
+									"description": "Unique connection instance id.",
+									"example": "KJA1isEECHRDBTFjx-7tf",
+									"type": "string"
+								},
+								"label": {
+									"description": "Display name shown for the connection in Companion.",
+									"example": "ATEM",
+									"type": "string"
+								},
+								"moduleId": {
+									"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+									"example": "bmd-atem",
+									"type": "string"
+								},
+								"moduleVersionId": {
+									"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+									"example": "1.2.0",
+									"nullable": true,
+									"type": "string"
+								},
+								"secrets": {
+									"additionalProperties": {
+										"nullable": true
+									},
+									"description": "Secret connection configuration values.",
+									"type": "object"
+								},
+								"status": {
+									"description": "Latest runtime status reported by the connection.",
+									"example": {
+										"category": "ok",
+										"level": "info",
+										"message": "Connected"
+									},
+									"nullable": true,
+									"properties": {
+										"category": {
+											"description": "Status category reported by the connection module.",
+											"example": "ok",
+											"nullable": true,
+											"type": "string"
+										},
+										"level": {
+											"description": "Severity level of the current connection status.",
+											"example": "info",
+											"nullable": true,
+											"type": "string"
+										},
+										"message": {
+											"description": "Human-readable status message from the connection module.",
+											"example": "Connected",
+											"nullable": true,
+											"type": "string"
+										}
+									},
+									"required": ["category", "level", "message"],
+									"type": "object"
+								},
+								"updatePolicy": {
+									"description": "Module version update policy for this connection.",
+									"enum": ["manual", "stable", "beta"],
+									"example": "stable",
+									"type": "string"
+								}
+							},
+							"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"enabled": {
+						"description": "Whether connections in this collection are enabled.",
+						"type": "boolean"
+					},
+					"id": {
+						"description": "Unique connection collection id.",
+						"type": "string"
+					},
+					"label": {
+						"description": "Display name of the collection.",
+						"type": "string"
+					}
+				},
+				"required": ["id", "label", "enabled", "connections", "children"],
+				"type": "object"
+			}
+		},
 		"securitySchemes": {
 			"bearerAuth": {
 				"description": "API token.",
@@ -53,7 +166,6 @@
 								"example": {
 									"data": [
 										{
-											"collectionId": null,
 											"config": {
 												"bonjourHost": null,
 												"enableCameraControl": true,
@@ -69,7 +181,6 @@
 											"moduleId": "bmd-atem",
 											"moduleVersionId": "1.2.0",
 											"secrets": {},
-											"sortOrder": 1,
 											"status": {
 												"category": "ok",
 												"level": "info",
@@ -89,11 +200,6 @@
 										"data": {
 											"items": {
 												"properties": {
-													"collectionId": {
-														"description": "Connection collection id, or null when not in a collection.",
-														"nullable": true,
-														"type": "string"
-													},
 													"config": {
 														"additionalProperties": {
 															"nullable": true
@@ -134,11 +240,6 @@
 														"description": "Secret connection configuration values.",
 														"type": "object"
 													},
-													"sortOrder": {
-														"description": "Sort position of the connection in the Companion UI.",
-														"example": 1,
-														"type": "number"
-													},
 													"status": {
 														"description": "Latest runtime status reported by the connection.",
 														"example": {
@@ -177,17 +278,7 @@
 														"type": "string"
 													}
 												},
-												"required": [
-													"id",
-													"label",
-													"moduleId",
-													"moduleVersionId",
-													"updatePolicy",
-													"enabled",
-													"sortOrder",
-													"collectionId",
-													"status"
-												],
+												"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
 												"type": "object"
 											},
 											"type": "array"
@@ -859,7 +950,6 @@
 							"application/json": {
 								"example": {
 									"data": {
-										"collectionId": null,
 										"config": {
 											"bonjourHost": null,
 											"enableCameraControl": true,
@@ -875,7 +965,6 @@
 										"moduleId": "bmd-atem",
 										"moduleVersionId": "1.2.0",
 										"secrets": {},
-										"sortOrder": 1,
 										"status": {
 											"category": "ok",
 											"level": "info",
@@ -888,11 +977,6 @@
 									"properties": {
 										"data": {
 											"properties": {
-												"collectionId": {
-													"description": "Connection collection id, or null when not in a collection.",
-													"nullable": true,
-													"type": "string"
-												},
 												"config": {
 													"additionalProperties": {
 														"nullable": true
@@ -933,11 +1017,6 @@
 													"description": "Secret connection configuration values.",
 													"type": "object"
 												},
-												"sortOrder": {
-													"description": "Sort position of the connection in the Companion UI.",
-													"example": 1,
-													"type": "number"
-												},
 												"status": {
 													"description": "Latest runtime status reported by the connection.",
 													"example": {
@@ -976,17 +1055,7 @@
 													"type": "string"
 												}
 											},
-											"required": [
-												"id",
-												"label",
-												"moduleId",
-												"moduleVersionId",
-												"updatePolicy",
-												"enabled",
-												"sortOrder",
-												"collectionId",
-												"status"
-											],
+											"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
 											"type": "object"
 										}
 									},
@@ -1181,7 +1250,6 @@
 					"content": {
 						"application/json": {
 							"example": {
-								"collectionId": null,
 								"config": {
 									"fadeFps": 10,
 									"host": "10.50.0.20"
@@ -1195,12 +1263,6 @@
 							"schema": {
 								"additionalProperties": false,
 								"properties": {
-									"collectionId": {
-										"description": "Collection id to move the connection into, or null to remove it.",
-										"example": null,
-										"nullable": true,
-										"type": "string"
-									},
 									"config": {
 										"additionalProperties": {
 											"nullable": true
@@ -1256,7 +1318,6 @@
 							"application/json": {
 								"example": {
 									"data": {
-										"collectionId": null,
 										"config": {
 											"bonjourHost": null,
 											"enableCameraControl": true,
@@ -1272,7 +1333,6 @@
 										"moduleId": "bmd-atem",
 										"moduleVersionId": "1.2.0",
 										"secrets": {},
-										"sortOrder": 1,
 										"status": {
 											"category": "ok",
 											"level": "info",
@@ -1285,11 +1345,6 @@
 									"properties": {
 										"data": {
 											"properties": {
-												"collectionId": {
-													"description": "Connection collection id, or null when not in a collection.",
-													"nullable": true,
-													"type": "string"
-												},
 												"config": {
 													"additionalProperties": {
 														"nullable": true
@@ -1330,11 +1385,6 @@
 													"description": "Secret connection configuration values.",
 													"type": "object"
 												},
-												"sortOrder": {
-													"description": "Sort position of the connection in the Companion UI.",
-													"example": 1,
-													"type": "number"
-												},
 												"status": {
 													"description": "Latest runtime status reported by the connection.",
 													"example": {
@@ -1373,17 +1423,7 @@
 													"type": "string"
 												}
 											},
-											"required": [
-												"id",
-												"label",
-												"moduleId",
-												"moduleVersionId",
-												"updatePolicy",
-												"enabled",
-												"sortOrder",
-												"collectionId",
-												"status"
-											],
+											"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
 											"type": "object"
 										}
 									},
@@ -1632,19 +1672,441 @@
 									"properties": {
 										"data": {
 											"items": {
-												"additionalProperties": {
-													"nullable": true
-												},
-												"properties": {
-													"allowCustom": {
-														"description": "Whether custom values outside the choices list are allowed.",
-														"type": "boolean"
+												"oneOf": [
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Bonjour device selector field.",
+																"enum": ["bonjour-device"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
 													},
-													"choices": {
-														"description": "Allowed choices for dropdown-style fields.",
-														"items": {
-															"properties": {
-																"id": {
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default secret text value.",
+																"type": "string"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"minLength": {
+																"description": "Minimum string length allowed.",
+																"type": "number"
+															},
+															"regex": {
+																"description": "Regular expression that string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Secret text field. Values for this field belong in secrets.",
+																"enum": ["secret-text"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Read-only text shown alongside other config fields.",
+																"enum": ["static-text"],
+																"type": "string"
+															},
+															"value": {
+																"description": "Static text content to display.",
+																"example": "Network settings",
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type", "value"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default text value.",
+																"example": "",
+																"type": "string"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"minLength": {
+																"description": "Minimum string length allowed.",
+																"type": "number"
+															},
+															"multiline": {
+																"description": "Whether the text field supports multiple lines.",
+																"type": "boolean"
+															},
+															"placeholder": {
+																"description": "Placeholder text shown for empty text fields.",
+																"type": "string"
+															},
+															"regex": {
+																"description": "Regular expression that string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Plain text input field.",
+																"enum": ["textinput"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default checked state.",
+																"example": false,
+																"type": "boolean"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Boolean checkbox field.",
+																"enum": ["checkbox"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"anyOf": [
+																	{
+																		"type": "string"
+																	},
+																	{
+																		"type": "number"
+																	}
+																],
+																"description": "Default color value."
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"enableAlpha": {
+																"description": "Whether color values include an alpha channel.",
+																"type": "boolean"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"returnType": {
+																"description": "Value type returned by the field.",
+																"enum": ["string", "number"],
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Color picker field.",
+																"enum": ["colorpicker"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default numeric value.",
+																"example": 10,
+																"type": "number"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"max": {
+																"description": "Maximum numeric value allowed.",
+																"type": "number"
+															},
+															"min": {
+																"description": "Minimum numeric value allowed.",
+																"type": "number"
+															},
+															"range": {
+																"description": "Whether the field is shown as a range slider.",
+																"type": "boolean"
+															},
+															"step": {
+																"description": "Numeric step size.",
+																"type": "number"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Numeric input field.",
+																"enum": ["number"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"allowCustom": {
+																"description": "Whether custom values outside the choices list are allowed.",
+																"type": "boolean"
+															},
+															"choices": {
+																"description": "Allowed choices for the dropdown.",
+																"items": {
+																	"properties": {
+																		"id": {
+																			"anyOf": [
+																				{
+																					"type": "string"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			],
+																			"description": "Choice value sent in connection config.",
+																			"example": "auto"
+																		},
+																		"label": {
+																			"description": "Display label for the choice.",
+																			"example": "Auto",
+																			"type": "string"
+																		}
+																	},
+																	"required": ["id", "label"],
+																	"type": "object"
+																},
+																"type": "array"
+															},
+															"default": {
+																"anyOf": [
+																	{
+																		"type": "string"
+																	},
+																	{
+																		"type": "number"
+																	}
+																],
+																"description": "Default selected choice id.",
+																"example": "auto"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"regex": {
+																"description": "Regular expression that custom string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Single-select dropdown field.",
+																"enum": ["dropdown"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type", "choices"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"allowCustom": {
+																"description": "Whether custom values outside the choices list are allowed.",
+																"type": "boolean"
+															},
+															"choices": {
+																"description": "Allowed choices for the dropdown.",
+																"items": {
+																	"properties": {
+																		"id": {
+																			"anyOf": [
+																				{
+																					"type": "string"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			],
+																			"description": "Choice value sent in connection config.",
+																			"example": "auto"
+																		},
+																		"label": {
+																			"description": "Display label for the choice.",
+																			"example": "Auto",
+																			"type": "string"
+																		}
+																	},
+																	"required": ["id", "label"],
+																	"type": "object"
+																},
+																"type": "array"
+															},
+															"default": {
+																"description": "Default selected choice ids.",
+																"items": {
 																	"anyOf": [
 																		{
 																			"type": "string"
@@ -1652,100 +2114,51 @@
 																		{
 																			"type": "number"
 																		}
-																	],
-																	"description": "Choice value sent in connection config.",
-																	"example": "auto"
+																	]
 																},
-																"label": {
-																	"description": "Display label for the choice.",
-																	"example": "Auto",
-																	"type": "string"
-																}
+																"type": "array"
 															},
-															"required": ["id", "label"],
-															"type": "object"
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"maxSelection": {
+																"description": "Maximum number of choices that can be selected.",
+																"type": "number"
+															},
+															"minSelection": {
+																"description": "Minimum number of choices that must be selected.",
+																"type": "number"
+															},
+															"regex": {
+																"description": "Regular expression that custom string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Multi-select dropdown field.",
+																"enum": ["multidropdown"],
+																"type": "string"
+															}
 														},
-														"type": "array"
-													},
-													"default": {
-														"description": "Default value for the config field.",
-														"nullable": true
-													},
-													"description": {
-														"description": "Longer help text for the config field.",
-														"type": "string"
-													},
-													"enableAlpha": {
-														"description": "Whether color values include an alpha channel.",
-														"type": "boolean"
-													},
-													"id": {
-														"description": "Config field id used as the key in config or secrets objects.",
-														"example": "host",
-														"type": "string"
-													},
-													"label": {
-														"description": "Display label for the config field.",
-														"example": "Host",
-														"type": "string"
-													},
-													"max": {
-														"description": "Maximum numeric value allowed.",
-														"type": "number"
-													},
-													"maxSelection": {
-														"description": "Maximum number of choices that can be selected.",
-														"type": "number"
-													},
-													"min": {
-														"description": "Minimum numeric value allowed.",
-														"type": "number"
-													},
-													"minLength": {
-														"description": "Minimum string length allowed.",
-														"type": "number"
-													},
-													"minSelection": {
-														"description": "Minimum number of choices that must be selected.",
-														"type": "number"
-													},
-													"multiline": {
-														"description": "Whether the text field supports multiple lines.",
-														"type": "boolean"
-													},
-													"placeholder": {
-														"description": "Placeholder text shown for empty text fields.",
-														"type": "string"
-													},
-													"range": {
-														"description": "Whether the field accepts a numeric range.",
-														"type": "boolean"
-													},
-													"regex": {
-														"description": "Regular expression that string values must match.",
-														"type": "string"
-													},
-													"returnType": {
-														"description": "Value type returned by the field.",
-														"type": "string"
-													},
-													"step": {
-														"description": "Numeric step size.",
-														"type": "number"
-													},
-													"tooltip": {
-														"description": "Short help text shown for the config field.",
-														"example": "Target switcher IP",
-														"type": "string"
-													},
-													"type": {
-														"description": "Companion config field type.",
-														"example": "textinput",
-														"type": "string"
+														"required": ["id", "label", "type", "choices"],
+														"type": "object"
 													}
-												},
-												"required": ["id", "type", "label"],
-												"type": "object"
+												]
 											},
 											"type": "array"
 										}
@@ -2216,6 +2629,588 @@
 					}
 				],
 				"summary": "Restart a connection",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/move": {
+			"patch": {
+				"description": "Moves connections atomically. Operations are evaluated in request order against the result of preceding operations.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"moves": [
+									{
+										"collectionId": "production",
+										"connectionId": "KJA1isEECHRDBTFjx-7tf",
+										"position": 0
+									},
+									{
+										"collectionId": null,
+										"connectionId": "XhA2fsEECHRDQPKjx-8ug",
+										"position": 1
+									}
+								]
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"moves": {
+										"description": "Moves to evaluate sequentially and persist atomically.",
+										"items": {
+											"additionalProperties": false,
+											"properties": {
+												"collectionId": {
+													"description": "Destination collection id, or null for the ungrouped root.",
+													"nullable": true,
+													"type": "string"
+												},
+												"connectionId": {
+													"description": "Connection instance id to move.",
+													"type": "string"
+												},
+												"position": {
+													"description": "Zero-based insertion index in the destination after removing the moved connection.",
+													"minimum": 0,
+													"type": "integer"
+												}
+											},
+											"required": ["connectionId", "collectionId", "position"],
+											"type": "object"
+										},
+										"minItems": 1,
+										"type": "array"
+									}
+								},
+								"required": ["moves"],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"204": {
+						"description": "Connections moved"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"summary": "Move connections",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/tree": {
+			"get": {
+				"description": "Returns all connections grouped into the complete collection hierarchy. Array order represents the current display order.",
+				"parameters": [
+					{
+						"description": "Include connection config in response",
+						"in": "query",
+						"name": "include_config",
+						"required": false,
+						"schema": {
+							"description": "Include connection config in response",
+							"enum": ["true", "false"],
+							"example": "true",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Include connection secrets in response (requires include_config=true)",
+						"in": "query",
+						"name": "include_secrets",
+						"required": false,
+						"schema": {
+							"description": "Include connection secrets in response (requires include_config=true)",
+							"enum": ["true", "false"],
+							"example": "false",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"collections": [
+											{
+												"children": [],
+												"connections": [
+													{
+														"config": {
+															"bonjourHost": null,
+															"enableCameraControl": true,
+															"fadeFps": 10,
+															"host": "10.50.0.20",
+															"modelID": 0,
+															"pollTimecode": false,
+															"presets": 0
+														},
+														"enabled": true,
+														"id": "KJA1isEECHRDBTFjx-7tf",
+														"label": "ATEM",
+														"moduleId": "bmd-atem",
+														"moduleVersionId": "1.2.0",
+														"secrets": {},
+														"status": {
+															"category": "ok",
+															"level": "info",
+															"message": "Connected"
+														},
+														"updatePolicy": "stable"
+													}
+												],
+												"enabled": true,
+												"id": "production",
+												"label": "Production"
+											}
+										],
+										"connections": []
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"properties": {
+												"collections": {
+													"description": "Root collections, in their current display order.",
+													"items": {
+														"$ref": "#/components/schemas/ConnectionTreeCollection"
+													},
+													"type": "array"
+												},
+												"connections": {
+													"description": "Ungrouped connections at the root, in their current display order.",
+													"items": {
+														"properties": {
+															"config": {
+																"additionalProperties": {
+																	"nullable": true
+																},
+																"description": "Non-secret connection configuration values.",
+																"type": "object"
+															},
+															"enabled": {
+																"description": "Whether the connection is enabled and allowed to run.",
+																"example": true,
+																"type": "boolean"
+															},
+															"id": {
+																"description": "Unique connection instance id.",
+																"example": "KJA1isEECHRDBTFjx-7tf",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display name shown for the connection in Companion.",
+																"example": "ATEM",
+																"type": "string"
+															},
+															"moduleId": {
+																"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+																"example": "bmd-atem",
+																"type": "string"
+															},
+															"moduleVersionId": {
+																"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+																"example": "1.2.0",
+																"nullable": true,
+																"type": "string"
+															},
+															"secrets": {
+																"additionalProperties": {
+																	"nullable": true
+																},
+																"description": "Secret connection configuration values.",
+																"type": "object"
+															},
+															"status": {
+																"description": "Latest runtime status reported by the connection.",
+																"example": {
+																	"category": "ok",
+																	"level": "info",
+																	"message": "Connected"
+																},
+																"nullable": true,
+																"properties": {
+																	"category": {
+																		"description": "Status category reported by the connection module.",
+																		"example": "ok",
+																		"nullable": true,
+																		"type": "string"
+																	},
+																	"level": {
+																		"description": "Severity level of the current connection status.",
+																		"example": "info",
+																		"nullable": true,
+																		"type": "string"
+																	},
+																	"message": {
+																		"description": "Human-readable status message from the connection module.",
+																		"example": "Connected",
+																		"nullable": true,
+																		"type": "string"
+																	}
+																},
+																"required": ["category", "level", "message"],
+																"type": "object"
+															},
+															"updatePolicy": {
+																"description": "Module version update policy for this connection.",
+																"enum": ["manual", "stable", "beta"],
+																"example": "stable",
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"label",
+															"moduleId",
+															"moduleVersionId",
+															"updatePolicy",
+															"enabled",
+															"status"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												}
+											},
+											"required": ["connections", "collections"],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Connection arrangement"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"summary": "Get the connection arrangement",
 				"tags": ["Connections"]
 			}
 		}
