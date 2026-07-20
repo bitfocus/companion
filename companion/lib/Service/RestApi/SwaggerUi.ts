@@ -1,15 +1,20 @@
 import { createRequire } from 'node:module'
 import path from 'node:path'
 import Express from 'express'
+import { isPackaged } from '../../Resources/Util.js'
 
 const require = createRequire(import.meta.url)
 
 export function getSwaggerUiHtmlPath(): string {
+	if (!isPackaged()) {
+		return path.join(import.meta.dirname, '../../../../assets/swagger-ui')
+	}
+
 	return path.join(import.meta.dirname, 'assets', 'swagger-ui')
 }
 
 export function getSwaggerUiAssetPath(): string {
-	if (process.env.COMPANION_BUNDLED === '1') {
+	if (isPackaged()) {
 		return path.join(import.meta.dirname, 'assets', 'swagger-ui')
 	}
 
