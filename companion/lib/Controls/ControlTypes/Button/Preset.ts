@@ -305,6 +305,13 @@ export class ControlButtonPreset
 	}
 
 	/**
+	 * Update several options on an element from the layered style
+	 */
+	layeredStyleUpdateOptions(_id: string, _values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
 	 * Update the style from legacy properties
 	 */
 	layeredStyleUpdateFromLegacyProperties(_diff: Partial<ButtonStyleProperties>): boolean {

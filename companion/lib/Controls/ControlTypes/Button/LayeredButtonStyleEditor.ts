@@ -199,9 +199,10 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		return true
 	}
 
-	updateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
-		// Ignore fixed/structural properties, to avoid corrupting the layer model
-		if (
+	// Fixed/structural properties, which must never be reassigned via the generic option setters as it
+	// would corrupt the layer model
+	static #isStructuralKey(key: string): boolean {
+		return (
 			key === 'id' ||
 			key === 'type' ||
 			key === 'name' ||
@@ -210,14 +211,29 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 			key === 'connectionId' ||
 			key === 'elementId'
 		)
-			return false
+	}
+
+	updateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
+		return this.updateOptions(id, { [key]: newVal })
+	}
+
+	/**
+	 * Apply several option changes to an element as a single commit. Callers changing more than one key at
+	 * once (eg a drag that moves and resizes) should use this rather than repeated {@link updateOption}, so
+	 * the element is never persisted or redrawn in a partially-updated state.
+	 */
+	updateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
+		const entries = Object.entries(values).filter(([key]) => !LayeredButtonStyleEditor.#isStructuralKey(key))
+		if (entries.length === 0) return false
 
 		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
 		if (!currentElementLocation) return false
 
 		const entry = currentElementLocation.element as any
 
-		entry[key] = newVal
+		for (const [key, newVal] of entries) {
+			entry[key] = newVal
+		}
 
 		this.elementConversionCache.queueInvalidate(id)
 		this.#host.commitChange(true)

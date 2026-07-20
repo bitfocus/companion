@@ -125,5 +125,22 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 
 				return control.layeredStyleUpdateOption(input.elementId, input.key, input.value)
 			}),
+
+		updateOptions: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					elementId: z.string(),
+					values: z.record(z.string(), ExpressionOrJsonValueSchema),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
+
+				return control.layeredStyleUpdateOptions(input.elementId, input.values)
+			}),
 	})
 }

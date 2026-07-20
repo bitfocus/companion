@@ -26,30 +26,51 @@ import { DrawBounds, parseColor, rgbRev } from './Util.js'
 const TEXT_OUTLINE_FACTOR = 1 / 16
 
 export class GraphicsLayeredButtonRenderer {
+	static #computeTopBarBounds(imgWidth: number, imgHeight: number, paddingPx: { x: number; y: number }): DrawBounds {
+		const drawHeight = imgHeight - paddingPx.y * 2
+
+		return new DrawBounds(
+			paddingPx.x,
+			paddingPx.y,
+			imgWidth - paddingPx.x * 2,
+			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * drawHeight))
+		)
+	}
+
+	/**
+	 * Compute the bounds of the top-level content area (ie the space that root elements' x/y/width/height
+	 * fractions are relative to). Exposed so callers (eg the editor's selection overlay) can map between
+	 * pixel coordinates and the fractional coordinate space without duplicating this layout math.
+	 */
+	static computeContentBounds(
+		imgWidth: number,
+		imgHeight: number,
+		paddingPx: { x: number; y: number },
+		decoration: ButtonGraphicsDecorationType
+	): DrawBounds {
+		const drawWidth = imgWidth - paddingPx.x * 2
+		const drawHeight = imgHeight - paddingPx.y * 2
+
+		const topBarBounds = this.#computeTopBarBounds(imgWidth, imgHeight, paddingPx)
+		const topBarHeight = decoration === ButtonGraphicsDecorationType.TopBar ? topBarBounds.height : 0
+
+		return new DrawBounds(paddingPx.x, paddingPx.y + topBarHeight, drawWidth, drawHeight - topBarHeight)
+	}
+
 	static async draw(
 		img: ImageBase<any>,
 		drawStyle: RendererButtonStyle,
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
 		paddingPx: { x: number; y: number }
-	): Promise<void> {
+	): Promise<DrawBounds | null> {
 		const backgroundElement = drawStyle.elements[0]?.type === 'canvas' ? drawStyle.elements[0] : undefined
-
-		const drawWidth = img.width - paddingPx.x * 2
-		const drawHeight = img.height - paddingPx.y * 2
 
 		// Read the resolved `decoration`, not the raw one off the canvas
 		const decoration = drawStyle.decoration
-		const showTopBar = decoration === ButtonGraphicsDecorationType.TopBar
 
-		const topBarBounds = new DrawBounds(
-			paddingPx.x,
-			paddingPx.y,
-			drawWidth,
-			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * drawHeight))
-		)
-		const topBarHeight = showTopBar ? topBarBounds.height : 0
-		const drawBounds = new DrawBounds(paddingPx.x, paddingPx.y + topBarHeight, drawWidth, drawHeight - topBarHeight)
+		const topBarBounds = this.#computeTopBarBounds(img.width, img.height, paddingPx)
+		const drawBounds = this.computeContentBounds(img.width, img.height, paddingPx, decoration)
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
@@ -84,6 +105,8 @@ export class GraphicsLayeredButtonRenderer {
 
 		// Draw a border around the selected element, do this last so it's on top
 		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
+
+		return selectedElementBounds
 	}
 
 	/**

@@ -235,6 +235,10 @@ export class ControlButtonLayered
 		return this.drawing.updateOption(id, key, newVal)
 	}
 
+	layeredStyleUpdateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
+		return this.drawing.updateOptions(id, values)
+	}
+
 	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean {
 		return this.drawing.updateFromLegacyProperties(diff, this.options.canModifyStyleInApis)
 	}
