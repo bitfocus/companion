@@ -68,6 +68,19 @@ export function createConnectionsTrpcRouter(
 				return connectionInfo[0]
 			}),
 
+		duplicate: publicProcedure
+			.input(
+				z.object({
+					connectionId: z.string(),
+				})
+			)
+			.mutation(({ input }) => {
+				const connectionId = instanceController.duplicateConnection(input.connectionId)
+				if (!connectionId) throw new Error('Connection not found')
+
+				return connectionId
+			}),
+
 		delete: publicProcedure
 			.input(
 				z.object({
