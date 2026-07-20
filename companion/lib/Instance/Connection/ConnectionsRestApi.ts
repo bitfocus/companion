@@ -403,49 +403,6 @@ const restartConnectionResponseSchema = createSuccessSchema(
 	})
 )
 
-const listConnectionsEndpoint = defineRestEndpointContract({
-	method: 'get',
-	path: '/',
-	scopes: ['connections', 'read'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'List all connections',
-	description: 'Returns all connections with their current status. Use query parameters to include config and secrets.',
-	request: {
-		query: connectionListQuery,
-	},
-	response: {
-		status: 200,
-		description: 'List of connections',
-		schema: createCollectionSchema(ConnectionResponseSchema),
-	},
-	examples: {
-		response: collectionResponse([ConnectionResponseExample], { total: 1, limit: 1, offset: 0 }),
-	},
-	errorResponses,
-})
-
-const getConnectionsTreeEndpoint = defineRestEndpointContract({
-	method: 'get',
-	path: '/tree',
-	scopes: ['connections', 'read'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Get the connection arrangement',
-	description:
-		'Returns all connections grouped into the complete collection hierarchy. Array order represents the current display order.',
-	request: {
-		query: connectionListQuery,
-	},
-	response: {
-		status: 200,
-		description: 'Connection arrangement',
-		schema: createSuccessSchema(ConnectionTreeResponseSchema),
-	},
-	examples: {
-		response: successResponse(ConnectionTreeResponseExample),
-	},
-	errorResponses,
-})
-
 const moveConnectionsEndpoint = defineRestEndpointContract({
 	method: 'patch',
 	path: '/move',
@@ -467,232 +424,138 @@ const moveConnectionsEndpoint = defineRestEndpointContract({
 	errorResponses,
 })
 
-const createConnectionEndpoint = defineRestEndpointContract({
-	method: 'post',
-	path: '/',
-	scopes: ['connections', 'write'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Create a connection',
-	description:
-		'Create a new connection instance for a given connection module id. If the module is not installed, Companion queues installation of the latest compatible stable version by default.',
-	request: {
-		body: ConnectionCreateBodySchema,
-	},
-	response: {
-		status: 201,
-		description: 'Connection created',
-		schema: createSuccessSchema(ConnectionCreateResponseSchema),
-	},
-	examples: {
-		body: ConnectionCreateBodyExample,
-		response: successResponse(ConnectionCreateResponseExample),
-	},
-	errorResponses,
-})
-
-const getConnectionEndpoint = defineRestEndpointContract({
-	method: 'get',
-	path: '/:connectionId',
-	scopes: ['connections', 'read'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Get a connection',
-	description: 'Returns a single connection by ID with its configuration and current status.',
-	request: {
-		params: connectionIdParam,
-		query: connectionGetQuery,
-	},
-	response: {
-		status: 200,
-		description: 'Connection details',
-		schema: createSuccessSchema(ConnectionResponseSchema),
-	},
-	examples: {
-		response: successResponse(ConnectionResponseExample),
-	},
-	errorResponses,
-})
-
-const getConnectionConfigFieldsEndpoint = defineRestEndpointContract({
-	method: 'get',
-	path: '/:connectionId/config-fields',
-	scopes: ['connections', 'read'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Get connection config field definitions',
-	description:
-		'Returns the config field definitions for a connection module, including field types, constraints, and available options. The connection must be running.',
-	request: {
-		params: connectionIdParam,
-	},
-	response: {
-		status: 200,
-		description: 'Config field definitions',
-		schema: connectionConfigFieldsResponseSchema,
-	},
-	examples: {
-		response: successResponse(ConfigFieldsResponseExample as z.infer<typeof ConfigFieldResponseSchema>[]),
-	},
-	extraResponses: {
-		409: {
-			description: 'Connection is not running',
-			content: { 'application/json': { schema: ErrorResponseSchema } },
-		},
-	},
-	errorResponses,
-})
-
-const patchConnectionEndpoint = defineRestEndpointContract({
-	method: 'patch',
-	path: '/:connectionId',
-	scopes: ['connections', 'write'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Update a connection',
-	description: 'Partially update a connection. Only send the fields you want to change.',
-	request: {
-		params: connectionIdParam,
-		body: ConnectionPatchBodySchema,
-	},
-	response: {
-		status: 200,
-		description: 'Updated connection',
-		schema: createSuccessSchema(ConnectionResponseSchema),
-	},
-	examples: {
-		body: ConnectionPatchBodyExample,
-		response: successResponse(ConnectionPatchResponseExample),
-	},
-	errorResponses,
-})
-
-const deleteConnectionEndpoint = defineRestEndpointContract({
-	method: 'delete',
-	path: '/:connectionId',
-	scopes: ['connections', 'write'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Delete a connection',
-	description: 'Delete a connection and all its associated configuration.',
-	request: {
-		params: connectionIdParam,
-	},
-	response: {
-		status: 204,
-		description: 'Connection deleted',
-	},
-	errorResponses,
-})
-
-const restartConnectionEndpoint = defineRestEndpointContract({
-	method: 'post',
-	path: '/:connectionId/restart',
-	scopes: ['connections', 'write'],
-	tags: CONNECTIONS_API_TAGS,
-	summary: 'Restart a connection',
-	description: 'Force-restart the connection process. Fails if the connection is disabled.',
-	request: {
-		params: connectionIdParam,
-	},
-	response: {
-		status: 200,
-		description: 'Restart triggered',
-		schema: restartConnectionResponseSchema,
-	},
-	examples: {
-		response: successResponse(RestartConnectionResponseExample),
-	},
-	extraResponses: {
-		409: {
-			description: 'Connection is inactive',
-			content: { 'application/json': { schema: ErrorResponseSchema } },
-		},
-	},
-	errorResponses,
-})
-
 const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
-	defineConnectionEndpointSpec(listConnectionsEndpoint, ({ instanceController }) => {
-		return ({ query }) => {
-			const includeConfig = query.include_config === 'true'
-			const includeSecrets = query.include_secrets === 'true'
+	defineConnectionEndpointSpec(
+		{
+			method: 'get',
+			path: '/',
+			scopes: ['connections', 'read'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'List all connections',
+			description:
+				'Returns all connections with their current status. Use query parameters to include config and secrets.',
+			request: {
+				query: connectionListQuery,
+			},
+			response: {
+				status: 200,
+				description: 'List of connections',
+				schema: createCollectionSchema(ConnectionResponseSchema),
+			},
+			examples: {
+				response: collectionResponse([ConnectionResponseExample], { total: 1, limit: 1, offset: 0 }),
+			},
+			errorResponses,
+		},
+		({ instanceController }) => {
+			return ({ query }) => {
+				const includeConfig = query.include_config === 'true'
+				const includeSecrets = query.include_secrets === 'true'
 
-			if (includeSecrets && !includeConfig) {
-				throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
-			}
-
-			const clientConnections = instanceController.getConnectionClientJson(true)
-
-			const connections = Object.entries(clientConnections).map(([id, config]) => {
-				const status = instanceController.getInstanceStatus(id)
-				const instanceConfig = includeConfig
-					? instanceController.getInstanceConfigOfType(id, ModuleInstanceType.Connection)
-					: undefined
-				return buildConnectionResponse(id, config, status, instanceConfig, includeSecrets)
-			})
-			connections.sort((a, b) => a.id.localeCompare(b.id))
-
-			return {
-				body: collectionResponse(connections, { total: connections.length, limit: connections.length, offset: 0 }),
-			}
-		}
-	}),
-
-	defineConnectionEndpointSpec(getConnectionsTreeEndpoint, ({ instanceController }) => {
-		return ({ query }) => {
-			const includeConfig = query.include_config === 'true'
-			const includeSecrets = query.include_secrets === 'true'
-
-			if (includeSecrets && !includeConfig) {
-				throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
-			}
-			const clientConnections = instanceController.getConnectionClientJson(true)
-			const responses = new Map<string, ConnectionResponse>()
-			for (const [id, config] of Object.entries(clientConnections)) {
-				const status = instanceController.getInstanceStatus(id)
-				const instanceConfig = includeConfig
-					? instanceController.getInstanceConfigOfType(id, ModuleInstanceType.Connection)
-					: undefined
-				responses.set(id, buildConnectionResponse(id, config, status, instanceConfig, includeSecrets))
-			}
-
-			const connectionsByCollection = new Map<
-				string | null,
-				Array<{ response: ConnectionResponse; sortOrder: number }>
-			>()
-			const knownCollectionIds = instanceController.connectionCollections.collectAllCollectionIds()
-			for (const [id, config] of Object.entries(clientConnections)) {
-				const collectionId =
-					config.collectionId && knownCollectionIds.has(config.collectionId) ? config.collectionId : null
-				let entries = connectionsByCollection.get(collectionId)
-				if (!entries) {
-					entries = []
-					connectionsByCollection.set(collectionId, entries)
+				if (includeSecrets && !includeConfig) {
+					throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
 				}
-				entries.push({ response: responses.get(id)!, sortOrder: config.sortOrder })
+
+				const clientConnections = instanceController.getConnectionClientJson(true)
+
+				const connections = Object.entries(clientConnections).map(([id, config]) => {
+					const status = instanceController.getInstanceStatus(id)
+					const instanceConfig = includeConfig
+						? instanceController.getInstanceConfigOfType(id, ModuleInstanceType.Connection)
+						: undefined
+					return buildConnectionResponse(id, config, status, instanceConfig, includeSecrets)
+				})
+				connections.sort((a, b) => a.id.localeCompare(b.id))
+
+				return {
+					body: collectionResponse(connections, { total: connections.length, limit: connections.length, offset: 0 }),
+				}
 			}
-
-			const takeConnections = (collectionId: string | null): ConnectionResponse[] =>
-				(connectionsByCollection.get(collectionId) ?? [])
-					.sort((a, b) => a.sortOrder - b.sortOrder || a.response.id.localeCompare(b.response.id))
-					.map((entry) => entry.response)
-
-			const buildCollection = (collection: ConnectionCollection): ConnectionTreeCollection => ({
-				id: collection.id,
-				label: collection.label,
-				enabled: collection.metaData.enabled,
-				connections: takeConnections(collection.id),
-				children: [...collection.children]
-					.sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
-					.map(buildCollection),
-			})
-
-			const tree = {
-				connections: takeConnections(null),
-				collections: instanceController.connectionCollections.collectionData
-					.sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
-					.map(buildCollection),
-			}
-
-			return { body: successResponse(ConnectionTreeResponseSchema.parse(tree)) }
 		}
-	}),
+	),
+
+	defineConnectionEndpointSpec(
+		{
+			method: 'get',
+			path: '/tree',
+			scopes: ['connections', 'read'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Get the connection arrangement',
+			description:
+				'Returns all connections grouped into the complete collection hierarchy. Array order represents the current display order.',
+			request: {
+				query: connectionListQuery,
+			},
+			response: {
+				status: 200,
+				description: 'Connection arrangement',
+				schema: createSuccessSchema(ConnectionTreeResponseSchema),
+			},
+			examples: {
+				response: successResponse(ConnectionTreeResponseExample),
+			},
+			errorResponses,
+		},
+		({ instanceController }) => {
+			return ({ query }) => {
+				const includeConfig = query.include_config === 'true'
+				const includeSecrets = query.include_secrets === 'true'
+
+				if (includeSecrets && !includeConfig) {
+					throw RestApiError.badRequest("Query parameter 'include_secrets' requires 'include_config=true'")
+				}
+				const clientConnections = instanceController.getConnectionClientJson(true)
+				const responses = new Map<string, ConnectionResponse>()
+				for (const [id, config] of Object.entries(clientConnections)) {
+					const status = instanceController.getInstanceStatus(id)
+					const instanceConfig = includeConfig
+						? instanceController.getInstanceConfigOfType(id, ModuleInstanceType.Connection)
+						: undefined
+					responses.set(id, buildConnectionResponse(id, config, status, instanceConfig, includeSecrets))
+				}
+
+				const connectionsByCollection = new Map<
+					string | null,
+					Array<{ response: ConnectionResponse; sortOrder: number }>
+				>()
+				const knownCollectionIds = instanceController.connectionCollections.collectAllCollectionIds()
+				for (const [id, config] of Object.entries(clientConnections)) {
+					const collectionId =
+						config.collectionId && knownCollectionIds.has(config.collectionId) ? config.collectionId : null
+					let entries = connectionsByCollection.get(collectionId)
+					if (!entries) {
+						entries = []
+						connectionsByCollection.set(collectionId, entries)
+					}
+					entries.push({ response: responses.get(id)!, sortOrder: config.sortOrder })
+				}
+
+				const takeConnections = (collectionId: string | null): ConnectionResponse[] =>
+					(connectionsByCollection.get(collectionId) ?? [])
+						.sort((a, b) => a.sortOrder - b.sortOrder || a.response.id.localeCompare(b.response.id))
+						.map((entry) => entry.response)
+
+				const buildCollection = (collection: ConnectionCollection): ConnectionTreeCollection => ({
+					id: collection.id,
+					label: collection.label,
+					enabled: collection.metaData.enabled,
+					connections: takeConnections(collection.id),
+					children: [...collection.children]
+						.sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
+						.map(buildCollection),
+				})
+
+				const tree = {
+					connections: takeConnections(null),
+					collections: instanceController.connectionCollections.collectionData
+						.sort((a, b) => a.sortOrder - b.sortOrder || a.id.localeCompare(b.id))
+						.map(buildCollection),
+				}
+
+				return { body: successResponse(ConnectionTreeResponseSchema.parse(tree)) }
+			}
+		}
+	),
 
 	defineConnectionEndpointSpec(moveConnectionsEndpoint, ({ connectionOperations }) => {
 		return ({ body }) => {
@@ -705,125 +568,271 @@ const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
 		}
 	}),
 
-	defineConnectionEndpointSpec(createConnectionEndpoint, ({ connectionOperations }) => {
-		return async ({ body }) => {
-			const { moduleId, label, versionId, updatePolicy, disabled } = body
+	defineConnectionEndpointSpec(
+		{
+			method: 'post',
+			path: '/',
+			scopes: ['connections', 'write'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Create a connection',
+			description:
+				'Create a new connection instance for a given connection module id. If the module is not installed, Companion queues installation of the latest compatible stable version by default.',
+			request: {
+				body: ConnectionCreateBodySchema,
+			},
+			response: {
+				status: 201,
+				description: 'Connection created',
+				schema: createSuccessSchema(ConnectionCreateResponseSchema),
+			},
+			examples: {
+				body: ConnectionCreateBodyExample,
+				response: successResponse(ConnectionCreateResponseExample),
+			},
+			errorResponses,
+		},
+		({ connectionOperations }) => {
+			return async ({ body }) => {
+				const { moduleId, label, versionId, updatePolicy, disabled } = body
 
-			try {
-				const id = await connectionOperations.createConnection({
-					moduleId,
-					label,
-					versionId,
-					updatePolicy,
-					disabled,
-				})
+				try {
+					const id = await connectionOperations.createConnection({
+						moduleId,
+						label,
+						versionId,
+						updatePolicy,
+						disabled,
+					})
 
-				return {
-					status: 201,
-					location: `${REST_API_BASE_PATH}${CONNECTIONS_API_BASE_PATH}/${id}`,
-					body: successResponse({ id }),
+					return {
+						status: 201,
+						location: `${REST_API_BASE_PATH}${CONNECTIONS_API_BASE_PATH}/${id}`,
+						body: successResponse({ id }),
+					}
+				} catch (e) {
+					throw mapConnectionOperationError(e)
 				}
-			} catch (e) {
-				throw mapConnectionOperationError(e)
 			}
 		}
-	}),
+	),
 
-	defineConnectionEndpointSpec(getConnectionEndpoint, ({ instanceController }) => {
-		return ({ params, query }) => {
-			const { connectionId } = params
-			const includeSecrets = query.include_secrets === 'true'
+	defineConnectionEndpointSpec(
+		{
+			method: 'get',
+			path: '/:connectionId',
+			scopes: ['connections', 'read'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Get a connection',
+			description: 'Returns a single connection by ID with its configuration and current status.',
+			request: {
+				params: connectionIdParam,
+				query: connectionGetQuery,
+			},
+			response: {
+				status: 200,
+				description: 'Connection details',
+				schema: createSuccessSchema(ConnectionResponseSchema),
+			},
+			examples: {
+				response: successResponse(ConnectionResponseExample),
+			},
+			errorResponses,
+		},
+		({ instanceController }) => {
+			return ({ params, query }) => {
+				const { connectionId } = params
+				const includeSecrets = query.include_secrets === 'true'
 
-			const clientConnections = instanceController.getConnectionClientJson(true)
-			const config = clientConnections[connectionId]
+				const clientConnections = instanceController.getConnectionClientJson(true)
+				const config = clientConnections[connectionId]
 
-			if (!config) {
-				throw RestApiError.notFound('Connection not found')
-			}
+				if (!config) {
+					throw RestApiError.notFound('Connection not found')
+				}
 
-			const status = instanceController.getInstanceStatus(connectionId)
-			const instanceConfig = instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
-			return {
-				body: successResponse(buildConnectionResponse(connectionId, config, status, instanceConfig, includeSecrets)),
-			}
-		}
-	}),
-
-	defineConnectionEndpointSpec(patchConnectionEndpoint, ({ logger, instanceController, connectionOperations }) => {
-		return async ({ params, body }) => {
-			const { connectionId } = params
-
-			const { label, disabled, config, secrets, updatePolicy, versionId } = body
-
-			try {
-				await connectionOperations.patchConnection({
-					connectionId,
-					label,
-					enabled: disabled === undefined ? null : !disabled,
-					config,
-					secrets,
-					updatePolicy,
-					versionId,
-					patchConfig: true,
-					patchSecrets: true,
-					validateConfigValues: true,
-				})
-			} catch (e) {
-				throw mapConnectionOperationError(e)
-			}
-
-			// Re-fetch updated data — only echo back secrets if they were part of the update
-			const updatedConnections = instanceController.getConnectionClientJson(false)
-			const updatedConfig = updatedConnections[connectionId]
-			const status = instanceController.getInstanceStatus(connectionId)
-			const instanceConfig = instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
-			const response = buildConnectionResponse(connectionId, updatedConfig, status, instanceConfig, !!secrets)
-
-			logger.info(`Updated connection "${response.label}" (${connectionId})`)
-			return { body: successResponse(response) }
-		}
-	}),
-
-	defineConnectionEndpointSpec(getConnectionConfigFieldsEndpoint, ({ connectionOperations }) => {
-		return async ({ params }) => {
-			const { connectionId } = params
-
-			try {
-				const fields = await connectionOperations.getConnectionConfigFields(connectionId)
-				const response = connectionConfigFieldsResponseSchema.parse(successResponse(fields))
-
-				return { body: response }
-			} catch (e) {
-				throw mapConnectionOperationError(e)
+				const status = instanceController.getInstanceStatus(connectionId)
+				const instanceConfig = instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
+				return {
+					body: successResponse(buildConnectionResponse(connectionId, config, status, instanceConfig, includeSecrets)),
+				}
 			}
 		}
-	}),
+	),
 
-	defineConnectionEndpointSpec(deleteConnectionEndpoint, ({ connectionOperations }) => {
-		return async ({ params }) => {
-			const { connectionId } = params
+	defineConnectionEndpointSpec(
+		{
+			method: 'patch',
+			path: '/:connectionId',
+			scopes: ['connections', 'write'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Update a connection',
+			description: 'Partially update a connection. Only send the fields you want to change.',
+			request: {
+				params: connectionIdParam,
+				body: ConnectionPatchBodySchema,
+			},
+			response: {
+				status: 200,
+				description: 'Updated connection',
+				schema: createSuccessSchema(ConnectionResponseSchema),
+			},
+			examples: {
+				body: ConnectionPatchBodyExample,
+				response: successResponse(ConnectionPatchResponseExample),
+			},
+			errorResponses,
+		},
+		({ logger, instanceController, connectionOperations }) => {
+			return async ({ params, body }) => {
+				const { connectionId } = params
 
-			try {
-				await connectionOperations.deleteConnection(connectionId)
-				return { status: 204 }
-			} catch (e) {
-				throw mapConnectionOperationError(e)
+				const { label, disabled, config, secrets, updatePolicy, versionId } = body
+
+				try {
+					await connectionOperations.patchConnection({
+						connectionId,
+						label,
+						enabled: disabled === undefined ? null : !disabled,
+						config,
+						secrets,
+						updatePolicy,
+						versionId,
+						patchConfig: true,
+						patchSecrets: true,
+						validateConfigValues: true,
+					})
+				} catch (e) {
+					throw mapConnectionOperationError(e)
+				}
+
+				// Re-fetch updated data — only echo back secrets if they were part of the update
+				const updatedConnections = instanceController.getConnectionClientJson(false)
+				const updatedConfig = updatedConnections[connectionId]
+				const status = instanceController.getInstanceStatus(connectionId)
+				const instanceConfig = instanceController.getInstanceConfigOfType(connectionId, ModuleInstanceType.Connection)
+				const response = buildConnectionResponse(connectionId, updatedConfig, status, instanceConfig, !!secrets)
+
+				logger.info(`Updated connection "${response.label}" (${connectionId})`)
+				return { body: successResponse(response) }
 			}
 		}
-	}),
+	),
 
-	defineConnectionEndpointSpec(restartConnectionEndpoint, ({ connectionOperations }) => {
-		return ({ params }) => {
-			const { connectionId } = params
+	defineConnectionEndpointSpec(
+		{
+			method: 'get',
+			path: '/:connectionId/config-fields',
+			scopes: ['connections', 'read'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Get connection config field definitions',
+			description:
+				'Returns the config field definitions for a connection module, including field types, constraints, and available options. The connection must be running.',
+			request: {
+				params: connectionIdParam,
+			},
+			response: {
+				status: 200,
+				description: 'Config field definitions',
+				schema: connectionConfigFieldsResponseSchema,
+			},
+			examples: {
+				response: successResponse(ConfigFieldsResponseExample as z.infer<typeof ConfigFieldResponseSchema>[]),
+			},
+			extraResponses: {
+				409: {
+					description: 'Connection is not running',
+					content: { 'application/json': { schema: ErrorResponseSchema } },
+				},
+			},
+			errorResponses,
+		},
+		({ connectionOperations }) => {
+			return async ({ params }) => {
+				const { connectionId } = params
 
-			try {
-				connectionOperations.restartConnection(connectionId)
-				return { body: successResponse({ id: connectionId, message: 'Restart triggered' }) }
-			} catch (e) {
-				throw mapConnectionOperationError(e)
+				try {
+					const fields = await connectionOperations.getConnectionConfigFields(connectionId)
+					const response = connectionConfigFieldsResponseSchema.parse(successResponse(fields))
+
+					return { body: response }
+				} catch (e) {
+					throw mapConnectionOperationError(e)
+				}
 			}
 		}
-	}),
+	),
+
+	defineConnectionEndpointSpec(
+		{
+			method: 'delete',
+			path: '/:connectionId',
+			scopes: ['connections', 'write'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Delete a connection',
+			description: 'Delete a connection and all its associated configuration.',
+			request: {
+				params: connectionIdParam,
+			},
+			response: {
+				status: 204,
+				description: 'Connection deleted',
+			},
+			errorResponses,
+		},
+		({ connectionOperations }) => {
+			return async ({ params }) => {
+				const { connectionId } = params
+
+				try {
+					await connectionOperations.deleteConnection(connectionId)
+					return { status: 204 }
+				} catch (e) {
+					throw mapConnectionOperationError(e)
+				}
+			}
+		}
+	),
+
+	defineConnectionEndpointSpec(
+		{
+			method: 'post',
+			path: '/:connectionId/restart',
+			scopes: ['connections', 'write'],
+			tags: CONNECTIONS_API_TAGS,
+			summary: 'Restart a connection',
+			description: 'Force-restart the connection process. Fails if the connection is disabled.',
+			request: {
+				params: connectionIdParam,
+			},
+			response: {
+				status: 200,
+				description: 'Restart triggered',
+				schema: restartConnectionResponseSchema,
+			},
+			examples: {
+				response: successResponse(RestartConnectionResponseExample),
+			},
+			extraResponses: {
+				409: {
+					description: 'Connection is inactive',
+					content: { 'application/json': { schema: ErrorResponseSchema } },
+				},
+			},
+			errorResponses,
+		},
+		({ connectionOperations }) => {
+			return ({ params }) => {
+				const { connectionId } = params
+
+				try {
+					connectionOperations.restartConnection(connectionId)
+					return { body: successResponse({ id: connectionId, message: 'Restart triggered' }) }
+				} catch (e) {
+					throw mapConnectionOperationError(e)
+				}
+			}
+		}
+	),
 ]
 
 function mapConnectionOperationError(e: unknown): RestApiError {
