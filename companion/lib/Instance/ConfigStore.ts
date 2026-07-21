@@ -25,8 +25,7 @@ export interface MoveInstanceOperation {
 }
 
 export type MoveInstancesResult =
-	| { ok: true }
-	| { ok: false; operationIndex: number; reason: 'not_found' | 'invalid_position'; message: string }
+	{ ok: true } | { ok: false; operationIndex: number; reason: 'not_found' | 'invalid_position'; message: string }
 
 export class InstanceConfigStore {
 	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
