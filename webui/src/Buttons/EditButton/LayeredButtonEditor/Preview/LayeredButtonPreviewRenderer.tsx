@@ -81,29 +81,31 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 
 	return (
 		<>
-			<div className="button-layer-canvas-container" ref={containerRef}>
-				<LayeredButtonCanvas
-					className="button-layer-canvas"
-					width={width}
-					height={height}
-					location={location}
-					drawStyle={drawStyle}
-					hiddenElements={styleStore.hiddenElements}
-					selectedElementId={styleStore.selectedElementId}
+			<div className="button-layer-preview-main">
+				<ElementQuickActions
 					controlId={controlId}
 					styleStore={styleStore}
-					linkedRef={linkedRef}
-					snapEnabledRef={snapEnabledRef}
+					linked={linked}
+					onToggleLinked={toggleLinked}
+					snapEnabled={snapEnabled}
+					onToggleSnapEnabled={toggleSnapEnabled}
 				/>
+				<div className="button-layer-canvas-container" ref={containerRef}>
+					<LayeredButtonCanvas
+						className="button-layer-canvas"
+						width={width}
+						height={height}
+						location={location}
+						drawStyle={drawStyle}
+						hiddenElements={styleStore.hiddenElements}
+						selectedElementId={styleStore.selectedElementId}
+						controlId={controlId}
+						styleStore={styleStore}
+						linkedRef={linkedRef}
+						snapEnabledRef={snapEnabledRef}
+					/>
+				</div>
 			</div>
-			<ElementQuickActions
-				controlId={controlId}
-				styleStore={styleStore}
-				linked={linked}
-				onToggleLinked={toggleLinked}
-				snapEnabled={snapEnabled}
-				onToggleSnapEnabled={toggleSnapEnabled}
-			/>
 			<div>
 				<FormLabel htmlFor={aspectRatioFieldId}>Preview Aspect Ratio</FormLabel>
 				<DropdownInputField
