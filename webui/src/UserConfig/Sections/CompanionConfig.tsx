@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite'
+import { formatOptions } from '~/ImportExport/ExportFormat.js'
 import { TIMEZONE_CHOICES } from '~/Resources/timezones.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigDropdownRow } from '../Components/UserConfigDropdownRow.js'
@@ -21,6 +22,12 @@ export const CompanionConfig = observer(function CompanionConfig(props: UserConf
 				useVariables={true}
 				label="Default Export File Name"
 				field="default_export_filename"
+			/>
+			<UserConfigDropdownRow
+				userConfig={props}
+				label="Default Export Format"
+				field="default_export_format"
+				choices={formatOptions}
 			/>
 			<UserConfigDropdownRow
 				userConfig={props}
