@@ -407,6 +407,11 @@
 				margin: 3px 0;
 			}
 
+			// Wraps a disabled button so its tooltip can still fire on hover
+			.button-layer-quick-action-tooltip {
+				display: flex;
+			}
+
 			.button-layer-quick-action {
 				display: flex;
 				align-items: center;
@@ -439,6 +444,8 @@
 				&:disabled {
 					opacity: 0.3;
 					cursor: default;
+					// Let the wrapping tooltip trigger receive the hover instead
+					pointer-events: none;
 				}
 			}
 		}

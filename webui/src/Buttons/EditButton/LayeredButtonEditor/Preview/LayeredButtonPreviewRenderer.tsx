@@ -151,6 +151,16 @@ const ElementQuickActions = observer(function ElementQuickActions({
 	const isTopLevel = indexInParent >= 0
 	const disabled = !elementId || !boundsFields || !isTopLevel
 
+	const disabledReason = !elementId
+		? 'Select an element to edit it on the canvas'
+		: selectedElement?.type === 'canvas'
+			? 'The Canvas layer has no position or scale to edit'
+			: !isTopLevel
+				? 'Elements inside a group are not yet editable in the preview'
+				: !boundsFields
+					? 'Preview editing is disabled because this element uses an expression to control its position or scale.'
+					: null
+
 	const commit = useCallback(
 		(fields: BoundsFractions, changedKeys: readonly BoundsKey[]) => {
 			if (!elementId) return
@@ -203,6 +213,7 @@ const ElementQuickActions = observer(function ElementQuickActions({
 			canBringToFront={isTopLevel && indexInParent < siblingCount - 1}
 			canSendToBack={isTopLevel && indexInParent > 1}
 			disabled={disabled}
+			disabledReason={disabledReason}
 		/>
 	)
 })
