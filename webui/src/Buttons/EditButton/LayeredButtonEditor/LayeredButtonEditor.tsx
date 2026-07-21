@@ -1,12 +1,12 @@
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import { useLocalStorage } from 'usehooks-ts'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
@@ -181,18 +181,31 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				<div className="button-layer-elementlist">
 					<ElementsList styleStore={styleStore} controlId={controlId} />
 				</div>
-				<div className="button-layer-simple">
-					<SwitchInputFieldWithLabel
-						className="text-muted"
-						label="Simple"
-						value={simpleMode}
-						setValue={setSimpleMode}
-						tooltip={simpleMode ? 'Showing a reduced set of properties' : 'Showing the full set of properties'}
-						small
-					/>
-				</div>
 			</Panel>
-			<Separator className="button-layer-resize-handle" />
+			<Separator className="button-layer-resize-handle">
+				<SeparatorInteractive>
+					<ButtonGroup aria-label="Property detail level" className="button-layer-mode-toggle">
+						<Button
+							size="sm"
+							color={simpleMode ? 'primary' : 'secondary'}
+							onClick={() => setSimpleMode(true)}
+							// pointerdown: claim the gesture before the separator starts a resize (click may be suppressed)
+							onPointerDown={() => setSimpleMode(true)}
+						>
+							Basic
+						</Button>
+						<Button
+							size="sm"
+							color={!simpleMode ? 'primary' : 'secondary'}
+							onClick={() => setSimpleMode(false)}
+							onPointerDown={() => setSimpleMode(false)}
+							title="Show every property for the selected element, including the less commonly used ones"
+						>
+							Advanced
+						</Button>
+					</ButtonGroup>
+				</SeparatorInteractive>
+			</Separator>
 			<Panel id="bottom" className="button-layer-options" minSize="250px">
 				{elementProps ? (
 					<ElementPropertiesEditor
@@ -211,3 +224,27 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 		</Group>
 	)
 })
+
+function SeparatorInteractive({ children }: PropsWithChildren): JSX.Element {
+	const ref = useRef<HTMLDivElement>(null)
+
+	useEffect(() => {
+		const root = ref.current
+		if (!root) return
+
+		const onPointerDown = (event: PointerEvent) => {
+			if (event.target instanceof Node && root.contains(event.target)) {
+				event.preventDefault()
+			}
+		}
+
+		window.addEventListener('pointerdown', onPointerDown, true)
+		return () => window.removeEventListener('pointerdown', onPointerDown, true)
+	}, [])
+
+	return (
+		<div ref={ref} className="button-layer-separator-interactive" data-separator-button>
+			{children}
+		</div>
+	)
+}

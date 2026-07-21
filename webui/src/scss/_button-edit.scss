@@ -314,13 +314,40 @@
 }
 
 .button-layer-resize-handle {
-	height: 5px;
-	background-color: #ddd;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	background-color: #e8e8e8;
 	cursor: row-resize;
 	flex-shrink: 0;
+	border-block: 1px solid #ddd;
 
 	&:hover {
-		background-color: #aaa;
+		background-color: #dedede;
+	}
+
+	// Keep pointer cursor on the toggle while the separator forces ns-resize on hover/drag
+	&[data-separator='hover'],
+	&[data-separator='inactive'] {
+		[data-separator-button],
+		[data-separator-button] * {
+			cursor: pointer !important;
+		}
+	}
+
+	.button-layer-separator-interactive {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.button-layer-mode-toggle {
+		> .button {
+			min-width: 5.5rem;
+			padding-block: 0.15rem;
+			font-size: 0.8rem;
+		}
 	}
 }
 
@@ -337,14 +364,6 @@
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-rows: minmax(0, 1fr) auto;
 		column-gap: 1rem;
-	}
-
-	.button-layer-simple {
-		grid-column: 2;
-		grid-row: 2;
-		align-self: end;
-		justify-self: end;
-		padding-right: 2em;
 	}
 
 	.button-layer-preview {
