@@ -99,6 +99,7 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 	// Discard any in-flight drag/pending-commit state when the selection changes to a different element -
 	// otherwise the overlay could keep showing the previous element's held position over the new one.
 	useEffect(() => {
+		if (dragState.current) return
 		dragState.current = null
 		pendingCommitRef.current = null
 		liveFieldsRef.current = null
