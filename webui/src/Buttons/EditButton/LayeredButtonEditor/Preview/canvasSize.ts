@@ -5,7 +5,7 @@ export const PAD_Y = 10
 /** Used until the container has been measured, and as a floor so the canvas never collapses */
 const MIN_CANVAS_SIZE = 80
 /** Keeps the button a sensible size on a very large panel */
-const MAX_CANVAS_SIZE = 600
+const MAX_CANVAS_SIZE = 360
 
 /** Parse "w:h" into a width/height ratio, falling back to square for anything malformed */
 export function parseAspectRatio(aspectRatio: string): number {

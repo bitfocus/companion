@@ -30,10 +30,10 @@ describe('fitCanvasSize', () => {
 	})
 
 	test('honours a non-square ratio', () => {
-		const { width, height } = fitCanvasSize('2:1', 400 + PAD, 500)
+		const { width, height } = fitCanvasSize('2:1', 300 + PAD, 500)
 
 		expect(width / height).toBeCloseTo(2)
-		expect(width).toBe(400)
+		expect(width).toBe(300)
 	})
 
 	test('never exceeds either container axis', () => {
@@ -55,7 +55,7 @@ describe('fitCanvasSize', () => {
 	test('does not grow without bound on a very large container', () => {
 		const { width, height } = fitCanvasSize('1:1', 5000, 5000)
 
-		expect(Math.max(width, height)).toBeLessThanOrEqual(600)
+		expect(Math.max(width, height)).toBeLessThanOrEqual(360)
 	})
 
 	test('keeps the aspect ratio when capped by the maximum size', () => {
