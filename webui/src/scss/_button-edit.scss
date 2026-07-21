@@ -333,7 +333,8 @@
 		background-color: #fff;
 
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		// minmax(0, …) so the canvas column can't grow past its half and squeeze the element list
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-rows: minmax(0, 1fr) auto;
 	}
 
@@ -359,6 +360,22 @@
 			min-height: 0;
 		}
 
+		// The canvas and the aspect-ratio control share one bordered box, so the ratio control reads as part
+		// of the preview area rather than a loose block below it. A darker workspace fill sets it off from the
+		// white element list and the lighter toolbar.
+		.button-layer-canvas-section {
+			display: flex;
+			flex-direction: column;
+			flex: 1 1 0;
+			min-width: 0;
+			min-height: 0;
+			overflow: hidden;
+
+			background-color: rgb(228, 228, 228);
+			border: 1px solid rgb(221, 221, 221);
+			border-radius: 4px;
+		}
+
 		.button-layer-canvas-container {
 			display: flex;
 			align-items: center;
@@ -371,6 +388,61 @@
 			min-height: 0;
 			// Safety net for the frame between a container resize and the canvas being re-sized to match
 			overflow: hidden;
+		}
+
+		// A compact control strip at the bottom of the canvas box
+		.button-layer-canvas-footer {
+			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 2px 6px;
+			border-top: 1px solid rgb(221, 221, 221);
+			background-color: rgb(245, 245, 245);
+
+			.button-layer-footer-label {
+				white-space: nowrap;
+				font-size: 0.85em;
+				color: #4a4a4a;
+			}
+
+			.button-layer-aspect-options {
+				display: flex;
+				gap: 2px;
+				margin-left: auto;
+			}
+
+			.button-layer-aspect-option {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 24px;
+				height: 24px;
+				padding: 0;
+				border: 1px solid transparent;
+				border-radius: 3px;
+				background: transparent;
+				color: #4a4a4a;
+				cursor: pointer;
+
+				&:hover:not(.active) {
+					background: rgb(238, 238, 238);
+					border-color: rgb(221, 221, 221);
+				}
+
+				&.active {
+					background: #2276d2;
+					border-color: #2276d2;
+					color: #fff;
+				}
+			}
+
+			// Outlined rectangle drawn to the option's ratio; currentColor flips to white when active
+			.button-layer-aspect-glyph {
+				display: block;
+				border: 1.5px solid currentColor;
+				border-radius: 1px;
+			}
 		}
 
 		// Must shrink-wrap the canvas exactly: the selection overlay positions its handles and snap guides as

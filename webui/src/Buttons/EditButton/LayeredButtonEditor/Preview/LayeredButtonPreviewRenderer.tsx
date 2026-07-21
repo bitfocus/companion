@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
-import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocalStorage, useResizeObserver } from 'usehooks-ts'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -10,14 +10,12 @@ import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
-import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { FormLabel } from '~/Components/Form'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
 import { buildBoundsValues, getDraggableBoundsFields, type BoundsFractions, type BoundsKey } from './boundsFields.js'
-import { fitCanvasSize, PAD_X, PAD_Y } from './canvasSize.js'
+import { fitCanvasSize, PAD_X, PAD_Y, parseAspectRatio } from './canvasSize.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import { buildElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
 import FontLoader from './FontLoader.js'
@@ -61,8 +59,6 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		[aspectRatio, containerWidth, containerHeight]
 	)
 
-	const aspectRatioFieldId = useId()
-
 	// Owned here rather than in the overlay: the toolbar toggles them and the overlay's drag math reads
 	// them. Refs are what the drag listeners read, since they're registered once per drag.
 	const [linked, setLinked] = useState(false)
@@ -80,16 +76,16 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 	}, [])
 
 	return (
-		<>
-			<div className="button-layer-preview-main">
-				<ElementQuickActions
-					controlId={controlId}
-					styleStore={styleStore}
-					linked={linked}
-					onToggleLinked={toggleLinked}
-					snapEnabled={snapEnabled}
-					onToggleSnapEnabled={toggleSnapEnabled}
-				/>
+		<div className="button-layer-preview-main">
+			<ElementQuickActions
+				controlId={controlId}
+				styleStore={styleStore}
+				linked={linked}
+				onToggleLinked={toggleLinked}
+				snapEnabled={snapEnabled}
+				onToggleSnapEnabled={toggleSnapEnabled}
+			/>
+			<div className="button-layer-canvas-section">
 				<div className="button-layer-canvas-container" ref={containerRef}>
 					<LayeredButtonCanvas
 						className="button-layer-canvas"
@@ -105,18 +101,27 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 						snapEnabledRef={snapEnabledRef}
 					/>
 				</div>
+				<div className="button-layer-canvas-footer">
+					<span className="button-layer-footer-label">Aspect Ratio</span>
+					<div className="button-layer-aspect-options">
+						{ASPECT_RATIO_OPTIONS.map((option) => {
+							const id = String(option.id)
+							return (
+								<button
+									key={id}
+									type="button"
+									title={option.label}
+									className={`button-layer-aspect-option${aspectRatio === id ? ' active' : ''}`}
+									onClick={() => setAspectRatio(id)}
+								>
+									<AspectRatioGlyph ratio={parseAspectRatio(id)} />
+								</button>
+							)
+						})}
+					</div>
+				</div>
 			</div>
-			<div>
-				<FormLabel htmlFor={aspectRatioFieldId}>Preview Aspect Ratio</FormLabel>
-				<DropdownInputField
-					htmlName={aspectRatioFieldId}
-					allowCustom
-					choices={ASPECT_RATIO_OPTIONS}
-					value={aspectRatio}
-					setValue={setAspectRatio as any}
-				/>
-			</div>
-		</>
+		</div>
 	)
 })
 
@@ -223,6 +228,14 @@ const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
 	{ id: '9:7', label: 'Stream Deck Studio (9:7)' },
 	{ id: '2:1', label: 'Stream Deck Plus & Plus XL (2:1)' },
 ]
+
+// A little outlined rectangle drawn to the ratio, so the option reads at a glance
+function AspectRatioGlyph({ ratio }: { ratio: number }) {
+	const max = 15
+	const glyphWidth = ratio >= 1 ? max : max * ratio
+	const glyphHeight = ratio >= 1 ? max / ratio : max
+	return <span className="button-layer-aspect-glyph" style={{ width: glyphWidth, height: glyphHeight }} />
+}
 
 interface LayeredButtonCanvasProps {
 	width: number
