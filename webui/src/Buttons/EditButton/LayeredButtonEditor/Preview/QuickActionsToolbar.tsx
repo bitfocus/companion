@@ -66,6 +66,7 @@ export function QuickActionsToolbar({
 				icon={faMagnet}
 				active={snapEnabled}
 				onClick={onToggleSnapEnabled}
+				disabled={disabled}
 			/>
 			<div className="button-layer-quick-actions-separator" />
 			<ToolbarButton
