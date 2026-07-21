@@ -336,6 +336,7 @@
 		// minmax(0, …) so the canvas column can't grow past its half and squeeze the element list
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		grid-template-rows: minmax(0, 1fr) auto;
+		column-gap: 1rem;
 	}
 
 	.button-layer-simple {
