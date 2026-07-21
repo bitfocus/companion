@@ -352,13 +352,83 @@
 		margin-bottom: 0.75rem;
 		min-height: 0;
 
-		> :first-child {
-			min-height: 0; // allows the canvas container (flex-grow: 1) to shrink below 200px
+		.button-layer-canvas-container {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			// Basis 0, not auto: the canvas is sized from this container's measured size, so letting the
+			// container size itself from its content instead would feed back into that measurement.
+			flex: 1 1 0;
+			min-height: 0;
+			// Safety net for the frame between a container resize and the canvas being re-sized to match
+			overflow: hidden;
+		}
+
+		// Must shrink-wrap the canvas exactly: the selection overlay positions its handles and snap guides as
+		// percentages of this box, so any difference between it and the canvas's displayed box offsets them.
+		.button-layer-canvas-wrapper {
+			position: relative;
+			display: inline-block;
 		}
 
 		.button-layer-canvas {
-			max-width: 100%;
-			max-height: 100%;
+			display: block;
+		}
+
+		.button-layer-quick-actions {
+			display: flex;
+			justify-content: center;
+			gap: 2px;
+			padding: 0.25rem 0;
+
+			// Never let the row be compressed by the canvas above it, and keep it painted opaquely on top -
+			// a canvas taller than its container still overflows rather than scaling further down
+			flex: 0 0 auto;
+			position: relative;
+			z-index: 1;
+			background-color: #fff;
+
+			.button-layer-quick-actions-separator {
+				width: 1px;
+				background: rgb(221, 221, 221);
+				margin: 4px 3px;
+			}
+
+			.button-layer-quick-action {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 24px;
+				height: 24px;
+				padding: 0;
+				border: 1px solid transparent;
+				border-radius: 3px;
+				background: transparent;
+				color: #4a4a4a;
+				cursor: pointer;
+
+				&:hover:not(:disabled):not(.active) {
+					background: rgb(238, 238, 238);
+					border-color: rgb(221, 221, 221);
+				}
+
+				&.active {
+					background: #2276d2;
+					border-color: #2276d2;
+					color: #fff;
+
+					&:hover:not(:disabled) {
+						background: #1a5ea3;
+						border-color: #1a5ea3;
+					}
+				}
+
+				&:disabled {
+					opacity: 0.3;
+					cursor: default;
+				}
+			}
 		}
 	}
 

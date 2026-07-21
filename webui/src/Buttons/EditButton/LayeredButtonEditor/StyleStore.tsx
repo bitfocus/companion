@@ -48,11 +48,31 @@ export class LayeredStyleStore {
 		return toJS(this.#hiddenElements)
 	}
 
+	/**
+	 * Ids of every element the user can select, including those nested in groups. Used to tell real elements
+	 * apart from the internal children a composite contributes to the rendered output, which carry generated
+	 * ids that aren't part of this model.
+	 */
+	get selectableElementIds(): Set<string> {
+		const ids = new Set<string>()
+
+		const collect = (elements: readonly SomeButtonGraphicsElement[]) => {
+			for (const element of elements) {
+				ids.add(element.id)
+				if (element.type === 'group') collect(element.children)
+			}
+		}
+		collect(this.elements)
+
+		return ids
+	}
+
 	constructor() {
 		makeObservable(this, {
 			setSelectedElementId: action,
 			setElementVisibility: action,
 			hiddenElements: computed, // This caches the JS set, allowing for efficient change detection
+			selectableElementIds: computed,
 		})
 	}
 
