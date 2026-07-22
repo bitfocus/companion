@@ -126,8 +126,11 @@ export class ElementExpressionHelper<T> {
 	 * Resolve a colour property, preserving css colour strings. A numeric (or numeric-string) value becomes a number;
 	 * a valid css colour string is kept as-is; anything else falls back to the default. Mirrors the number/string
 	 * semantics of parseColor so the value renders correctly downstream.
+	 *
+	 * When allowAlpha is false (the field disables alpha) any transparency is discarded, so a translucent value is
+	 * forced fully opaque.
 	 */
-	getColor(propertyName: keyof T, defaultValue: number | string): number | string {
+	getColor(propertyName: keyof T, defaultValue: number | string, allowAlpha = true): number | string {
 		const value = this.#getValue(propertyName)
 
 		let raw: unknown
@@ -136,17 +139,26 @@ export class ElementExpressionHelper<T> {
 		} else {
 			// Do not force a 'number' result type, otherwise a css colour string would be rejected
 			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
-			if (!result.ok) return defaultValue
-			raw = result.value
+			raw = result.ok ? result.value : undefined
 		}
 
-		if (typeof raw === 'number') return isNaN(raw) ? defaultValue : raw
-		if (typeof raw === 'string') {
-			const trimmed = raw.trim()
-			if (trimmed !== '' && !isNaN(Number(trimmed))) return Number(trimmed)
-			if (colord(raw).isValid()) return raw
+		let color: number | string
+		if (typeof raw === 'number' && !isNaN(raw)) {
+			color = raw
+		} else if (typeof raw === 'string' && raw.trim() !== '' && !isNaN(Number(raw))) {
+			color = Number(raw)
+		} else if (typeof raw === 'string' && colord(raw).isValid()) {
+			color = raw
+		} else {
+			color = defaultValue
 		}
-		return defaultValue
+
+		if (!allowAlpha) {
+			// Discard any transparency: clear the alpha byte on a number, or force a css string fully opaque
+			if (typeof color === 'number') return color & 0xffffff
+			if (colord(color).alpha() < 1) return colord(color).alpha(1).toRgbString()
+		}
+		return color
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {

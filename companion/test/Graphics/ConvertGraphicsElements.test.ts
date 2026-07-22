@@ -499,6 +499,22 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
+		test('forces the text colour opaque (the field disables alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeTextEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'text', color: 'rgb(255, 0, 0)' })
+		})
+
 		test('filters disabled text element when onlyEnabled is true', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello'), enabled: val(false) })]
 
@@ -706,6 +722,22 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a translucent colour (the box colour field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: 'rgba(255, 0, 0, 0.5)' })
 		})
 	})
 
