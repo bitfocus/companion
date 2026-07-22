@@ -20,6 +20,7 @@ import {
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
+	type ColorValue,
 	type DrawImageBuffer,
 	type HorizontalAlignment,
 	type VerticalAlignment,
@@ -30,7 +31,7 @@ interface ParsedLegacyStyle {
 		text: ExpressionOrValue<string> | undefined
 		size: number | undefined
 		sizeAllowShrink: boolean | undefined
-		color: number | undefined
+		color: ColorValue | undefined
 		halign: HorizontalAlignment | undefined
 		valign: VerticalAlignment | undefined
 	}
@@ -41,7 +42,7 @@ interface ParsedLegacyStyle {
 	}
 	imageBuffers: DrawImageBuffer[] | undefined
 	background: {
-		color: number | undefined
+		color: ColorValue | undefined
 	}
 	canvas: {
 		decoration: ButtonGraphicsDecorationType | undefined

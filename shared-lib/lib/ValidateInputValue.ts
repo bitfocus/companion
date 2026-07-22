@@ -1,6 +1,8 @@
+import { colord } from 'colord'
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import { ParseExpression } from './Expressions.js'
+import { colorToNumber, parseColor } from './Graphics/Util.js'
 import { isExpressionOrValue, type SomeCompanionInputField } from './Model/Options.js'
 import { stringifyVariableValue } from './Model/Variables.js'
 import { assertNever } from './Util.js'
@@ -156,20 +158,21 @@ export function validateInputValue(
 			return makeResult(!!value, undefined, false)
 
 		case 'colorpicker': {
-			const sanitisedValue = value
-
-			// Validate based on returnType
-			if (definition.returnType === 'number') {
-				const numValue = typeof value === 'number' ? value : Number(value)
-				if (isNaN(numValue)) {
-					return makeResult(sanitisedValue, 'Value must be a number')
-				}
-			} else {
-				if (typeof value !== 'string' && typeof value !== 'number') {
-					return makeResult(sanitisedValue, 'Value must be a string or number')
-				}
+			// A colour field accepts any colour representation - a number, a numeric string, or a css colour string -
+			// and normalises it to the type the field declares (so the value handed onward always matches returnType
+			// and is consumable by a module's splitRgb()).
+			const isColour =
+				typeof value === 'number' ||
+				(typeof value === 'string' && ((value.trim() !== '' && !isNaN(Number(value))) || colord(value).isValid()))
+			if (!isColour) {
+				return makeResult(value, 'Value must be a colour number or a css colour string')
 			}
-			return makeResult(sanitisedValue, undefined)
+
+			// isColour guarantees value is a number or string here
+			const colourValue = value as number | string
+			return definition.returnType === 'string'
+				? makeResult(parseColor(colourValue), undefined)
+				: makeResult(colorToNumber(colourValue), undefined)
 		}
 
 		case 'bonjour-device':

@@ -2000,13 +2000,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:~2.1.1":
-  version: 2.1.1
-  resolution: "@companion-module/base@npm:2.1.1"
+"@companion-module/base@npm:2.1.2-nightly-main-20260722-105828-99d8e81":
+  version: 2.1.2-nightly-main-20260722-105828-99d8e81
+  resolution: "@companion-module/base@npm:2.1.2-nightly-main-20260722-105828-99d8e81"
   dependencies:
     colord: "npm:^2.9.3"
-    tslib: "npm:^2.8.1"
-  checksum: 10c0/fc74d8fd5c91521c9560e50e831b57439135d9bf877f6c119981f7082c3cff4e83199425cf0d0274315172d6d85d99900bafb6c6b8fad22a08c39c778b13e816
+  checksum: 10c0/2ad3e328a24926285db527cf0ca3eaf01bb641dfea13179ebed88d93d20804ecea0610d0c5644356c6e97019271d24926952a7c68a82590a5dc16eb0e0313731
   languageName: node
   linkType: hard
 

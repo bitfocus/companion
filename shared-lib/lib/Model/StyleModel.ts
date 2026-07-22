@@ -44,8 +44,8 @@ export interface ButtonStyleProperties {
 	alignment: CompanionAlignment
 	pngalignment: CompanionAlignment
 
-	color: number
-	bgcolor: number
+	color: ColorValue
+	bgcolor: ColorValue
 	show_topbar: boolean | 'default' | undefined
 
 	png64: string | null
@@ -89,3 +89,10 @@ export type VerticalAlignment = 'top' | 'center' | 'bottom'
 export type TextStyle = 'italic' | 'underline' | 'strikethrough'
 
 export type CompositeElementOptionKey = `opt:${string}`
+
+/**
+ * A color value for a button graphics element property.
+ *
+ * Modules may provide either a number (e.g. `0xFF0000` for red) or a css string (e.g. `'#FF0000'` or `rgb(255, 0, 0)` for red).
+ */
+export type ColorValue = number | string

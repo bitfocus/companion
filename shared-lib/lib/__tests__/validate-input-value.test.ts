@@ -850,7 +850,11 @@ describe('validateInputValue', () => {
 	})
 
 	describe('colorpicker', () => {
-		describe('returnType: number', () => {
+		// Both modes accept the same colour inputs (a number, a numeric string, or a css colour string) and normalise
+		// to the field's returnType. Anything that is not a colour is rejected.
+		const INVALID_ERROR = 'Value must be a colour number or a css colour string'
+
+		describe('returnType: number (normalises to a colour number)', () => {
 			const numberDefinition: CompanionInputFieldColorExtended = {
 				id: 'test',
 				type: 'colorpicker',
@@ -860,34 +864,40 @@ describe('validateInputValue', () => {
 				enableAlpha: false,
 			}
 
-			it('should return undefined for number values', () => {
-				expect(validateInputValue(numberDefinition, 16777215)).toEqual({
+			it('should accept colour numbers unchanged', () => {
+				expect(validateInputValue(numberDefinition, 16777215)).toMatchObject({
 					sanitisedValue: 16777215,
-					validationError: undefined,
 					validity: true,
-					validationWarnings: [],
 				})
-				expect(validateInputValue(numberDefinition, 0)).toEqual({
-					sanitisedValue: 0,
-					validationError: undefined,
+				expect(validateInputValue(numberDefinition, 0)).toMatchObject({ sanitisedValue: 0, validity: true })
+			})
+
+			it('should sanitise numeric strings to a number', () => {
+				expect(validateInputValue(numberDefinition, '16777215')).toMatchObject({
+					sanitisedValue: 16777215,
 					validity: true,
-					validationWarnings: [],
 				})
 			})
 
-			it('should return undefined for numeric strings', () => {
-				expect(validateInputValue(numberDefinition, '16777215')).toEqual({
-					sanitisedValue: '16777215',
-					validationError: undefined,
+			it('should sanitise a css colour string to a colour number', () => {
+				expect(validateInputValue(numberDefinition, '#ff0000')).toMatchObject({
+					sanitisedValue: 0xff0000,
 					validity: true,
-					validationWarnings: [],
 				})
 			})
 
-			it('should return error for non-numeric strings', () => {
-				expect(validateInputValue(numberDefinition, '#ffffff')).toEqual({
-					sanitisedValue: '#ffffff',
-					validationError: 'Value must be a number',
+			it('should pack alpha when sanitising a translucent css string', () => {
+				// rgba(255,0,0,0.5) -> alpha byte 128 (0x80) in the top bits
+				expect(validateInputValue(numberDefinition, 'rgba(255, 0, 0, 0.5)')).toMatchObject({
+					sanitisedValue: 0xff0000 + 0x80 * 0x1000000,
+					validity: true,
+				})
+			})
+
+			it('should return error for a string that is not a colour', () => {
+				expect(validateInputValue(numberDefinition, 'this is not a colour')).toEqual({
+					sanitisedValue: 'this is not a colour',
+					validationError: INVALID_ERROR,
 					validity: false,
 					validationWarnings: [],
 				})
@@ -896,14 +906,14 @@ describe('validateInputValue', () => {
 			it('should return error when value is undefined', () => {
 				expect(validateInputValue(numberDefinition, undefined)).toEqual({
 					sanitisedValue: undefined,
-					validationError: 'Value must be a number',
+					validationError: INVALID_ERROR,
 					validity: false,
 					validationWarnings: [],
 				})
 			})
 		})
 
-		describe('returnType: string', () => {
+		describe('returnType: string (normalises to a css string)', () => {
 			const stringDefinition: CompanionInputFieldColorExtended = {
 				id: 'test',
 				type: 'colorpicker',
@@ -913,57 +923,57 @@ describe('validateInputValue', () => {
 				returnType: 'string',
 			}
 
-			it('should return undefined for string values', () => {
-				expect(validateInputValue(stringDefinition, '#ffffff')).toEqual({
+			it('should keep valid css colour strings', () => {
+				expect(validateInputValue(stringDefinition, '#ffffff')).toMatchObject({
 					sanitisedValue: '#ffffff',
-					validationError: undefined,
 					validity: true,
-					validationWarnings: [],
 				})
-				expect(validateInputValue(stringDefinition, 'rgb(255,255,255)')).toEqual({
+				expect(validateInputValue(stringDefinition, 'rgb(255,255,255)')).toMatchObject({
 					sanitisedValue: 'rgb(255,255,255)',
-					validationError: undefined,
 					validity: true,
-					validationWarnings: [],
 				})
 			})
 
-			it('should return undefined for number values', () => {
-				expect(validateInputValue(stringDefinition, 16777215)).toEqual({
-					sanitisedValue: 16777215,
-					validationError: undefined,
+			it('should coerce a colour number to a css string', () => {
+				expect(validateInputValue(stringDefinition, 16777215)).toMatchObject({
+					sanitisedValue: 'rgba(255, 255, 255, 1)',
 					validity: true,
-					validationWarnings: [],
+				})
+			})
+
+			it('should coerce a numeric string to a css string (colord does not accept it as a colour)', () => {
+				expect(validateInputValue(stringDefinition, '123')).toMatchObject({
+					sanitisedValue: 'rgba(0, 0, 123, 1)',
+					validity: true,
 				})
 			})
 
 			it('should return error for invalid types', () => {
-				expect(validateInputValue(stringDefinition, true)).toEqual({
-					sanitisedValue: true,
-					validationError: 'Value must be a string or number',
+				expect(validateInputValue(stringDefinition, true)).toMatchObject({
+					validationError: INVALID_ERROR,
 					validity: false,
-					validationWarnings: [],
 				})
-				expect(validateInputValue(stringDefinition, ['#fff'])).toEqual({
-					sanitisedValue: ['#fff'],
-					validationError: 'Value must be a string or number',
+				expect(validateInputValue(stringDefinition, ['#fff'])).toMatchObject({
+					validationError: INVALID_ERROR,
 					validity: false,
-					validationWarnings: [],
 				})
-				expect(validateInputValue(stringDefinition, { color: '#fff' })).toEqual({
-					sanitisedValue: { color: '#fff' },
-					validationError: 'Value must be a string or number',
+				expect(validateInputValue(stringDefinition, { color: '#fff' })).toMatchObject({
+					validationError: INVALID_ERROR,
 					validity: false,
-					validationWarnings: [],
 				})
 			})
 
 			it('should return error when value is undefined', () => {
-				expect(validateInputValue(stringDefinition, undefined)).toEqual({
-					sanitisedValue: undefined,
-					validationError: 'Value must be a string or number',
+				expect(validateInputValue(stringDefinition, undefined)).toMatchObject({
+					validationError: INVALID_ERROR,
 					validity: false,
-					validationWarnings: [],
+				})
+			})
+
+			it('should return error when value is not a colour', () => {
+				expect(validateInputValue(stringDefinition, 'this is not a colour')).toMatchObject({
+					validationError: INVALID_ERROR,
+					validity: false,
 				})
 			})
 		})
