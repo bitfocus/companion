@@ -256,7 +256,7 @@ export function ConvertLegacyStyleToElements(
 		base64Image: { value: null, isExpression: false },
 		halign: { value: 'center', isExpression: false },
 		valign: { value: 'center', isExpression: false },
-		fillMode: { value: 'fit', isExpression: false },
+		fillMode: { value: 'fit_or_shrink', isExpression: false },
 	}
 	const textElement: ButtonGraphicsTextElement = {
 		id: 'text0',

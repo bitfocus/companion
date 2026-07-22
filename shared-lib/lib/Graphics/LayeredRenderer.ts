@@ -51,6 +51,9 @@ export class GraphicsLayeredButtonRenderer {
 		const topBarHeight = showTopBar ? topBarBounds.height : 0
 		const drawBounds = new DrawBounds(paddingPx.x, paddingPx.y + topBarHeight, drawWidth, drawHeight - topBarHeight)
 
+		// Expose the button content area as a stable reference for element size calculations
+		img.setContentSize(drawBounds.width, drawBounds.height)
+
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
 		const selectedElementBounds = await this.#drawElements(

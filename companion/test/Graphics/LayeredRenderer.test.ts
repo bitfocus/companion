@@ -986,6 +986,68 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('image fillMode=fit_or_shrink - small image kept at designed size, centered (not enlarged)', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [makeImageElement(makeDataUrl(30, 30, '#ff6600'), { fillMode: 'fit_or_shrink' })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('image fillMode=fit_or_shrink - with topbar, small image stays native and centered below the bar', async () => {
+			const img = Image.create(72, 72, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					show_status_icons: false,
+					elements: [makeImageElement(makeDataUrl(30, 30, '#ff6600'), { fillMode: 'fit_or_shrink' })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('image fillMode=fit_or_shrink - with topbar, image taller than the content area shrinks to fit', async () => {
+			const img = Image.create(72, 72, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					show_status_icons: false,
+					elements: [makeImageElement(makeDataUrl(60, 60, '#ff6600'), { fillMode: 'fit_or_shrink' })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('image fillMode=fit_or_shrink - oversized image shrinks to fit', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [makeImageElement(makeDataUrl(200, 100, '#ff6600'), { fillMode: 'fit_or_shrink' })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('image with rotation', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(

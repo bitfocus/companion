@@ -269,6 +269,12 @@ describe('ConvertLegacyStyleToElements', () => {
 		expect(layers.map((l) => l.id)).toEqual(['canvas', 'box0', 'image0', 'text0'])
 	})
 
+	test('image element defaults to fit_or_shrink so small icons are not enlarged', () => {
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null)
+		const imageLayer = layers.find((l) => l.id === 'image0') as any
+		expect(imageLayer.fillMode).toEqual({ value: 'fit_or_shrink', isExpression: false })
+	})
+
 	test('advanced feedback adds a 5th bufferElement layer', () => {
 		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null)
 		expect(layers).toHaveLength(5)

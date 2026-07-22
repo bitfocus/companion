@@ -171,11 +171,6 @@ export class LayeredButtonDrawer {
 				if (!element.showStatusIcons)
 					element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
 				break
-			case 'image':
-				if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
-					element.fillMode.value = 'fit'
-				}
-				break
 			case 'group':
 				for (const child of element.children) {
 					this.#normalizeLoadedElement(child)
