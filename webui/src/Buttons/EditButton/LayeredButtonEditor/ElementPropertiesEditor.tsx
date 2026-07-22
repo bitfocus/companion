@@ -5,10 +5,11 @@ import { Fragment, useCallback, useContext } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ExpressionOrValue,
-	InternalInputFieldList,
-	SomeCompanionInputField,
+import {
+	colorFieldExpressionHint,
+	type ExpressionOrValue,
+	type InternalInputFieldList,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion.js'
@@ -175,6 +176,8 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			property={field.id}
 			label={field.label}
 			tooltip={field.tooltip}
+			description={field.description}
+			expressionDescription={field.expressionDescription ?? colorFieldExpressionHint(field)}
 			features={features}
 			disableAutoExpression={field.disableAutoExpression}
 		>

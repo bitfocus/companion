@@ -1965,12 +1965,11 @@ __metadata:
   linkType: hard
 
 "@companion-module/base@npm:~2.1.1":
-  version: 2.1.1
-  resolution: "@companion-module/base@npm:2.1.1"
+  version: 2.1.2
+  resolution: "@companion-module/base@npm:2.1.2"
   dependencies:
     colord: "npm:^2.9.3"
-    tslib: "npm:^2.8.1"
-  checksum: 10c0/fc74d8fd5c91521c9560e50e831b57439135d9bf877f6c119981f7082c3cff4e83199425cf0d0274315172d6d85d99900bafb6c6b8fad22a08c39c778b13e816
+  checksum: 10c0/3c77e872026d0191f741ba7c95fdf58c749ffcfb0c1d4cc65f0eca95f3375453e24da78dca5a78bc9b6c6e0924e6b549d2f30b350679c496666d43b7232885a2
   languageName: node
   linkType: hard
 

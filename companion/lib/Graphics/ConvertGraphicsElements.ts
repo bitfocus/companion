@@ -696,10 +696,10 @@ function convertTextElementForDrawing(
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		outlineColor: helper.getNumber('outlineColor', 0),
+		outlineColor: helper.getColor('outlineColor', 0),
 		contentHash: '', // Will be computed below
 	}
 
@@ -726,7 +726,7 @@ function convertBoxElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
 
 		...convertBorderProperties(helper),
 		contentHash: '', // Will be computed below
@@ -795,7 +795,7 @@ function convertCircleElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
 		startAngle: helper.getNumber('startAngle', 0),
 		endAngle: helper.getNumber('endAngle', 360),
 		drawSlice: helper.getBoolean('drawSlice', false),
@@ -826,7 +826,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getNumber('color', 0),
+					color: rowHelper.getColor('color', 0),
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
@@ -857,7 +857,7 @@ function convertGaugeElementForDrawing(
 		multiColour: helper.getBoolean('multiColour', true),
 		stops: stops,
 		markerEnabled: helper.getBoolean('markerEnabled', false),
-		markerColor: helper.getNumber('markerColor', 0xffffff),
+		markerColor: helper.getColor('markerColor', 0xffffff),
 		markerWidth: Math.max(1, Math.min(100, helper.getNumber('markerWidth', 15))),
 		trackStyle: helper.getTolerantEnum('trackStyle', GAUGE_TRACK_STYLE_CHOICES, 'transparent'),
 		trackAmount: Math.max(0, Math.min(100, helper.getNumber('trackAmount', 70))),
@@ -873,7 +873,7 @@ function convertBorderProperties(
 ): ButtonGraphicsDrawBorder {
 	return {
 		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
-		borderColor: helper.getNumber('borderColor', 0),
+		borderColor: helper.getColor('borderColor', 0),
 		borderPosition: helper.getEnum('borderPosition', BORDER_POSITION_CHOICES, 'inside'),
 	}
 }

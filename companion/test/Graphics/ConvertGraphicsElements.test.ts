@@ -618,6 +618,38 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				borderColor: 0x00ff00,
 			})
 		})
+
+		test('keeps a css colour string (plain value)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('#ff8800') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a css colour string returned by an expression', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: expr('"#ff8800"') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
 	})
 
 	describe('image element conversion', () => {

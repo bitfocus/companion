@@ -17,6 +17,10 @@ type SetInnerValueFn = (value: JsonValue | undefined) => void
 export interface PropertyFieldRowProps {
 	label: string
 	tooltip?: string
+	/** Hint shown below the field. Replaced by expressionDescription when in expression mode. */
+	description?: string
+	/** Hint shown below the field when in expression mode, in place of description. */
+	expressionDescription?: string
 	features?: InputFeatureIconsProps
 	isOverridden?: boolean
 	value: ExpressionOrValue<JsonValue | undefined>
@@ -38,6 +42,8 @@ export interface PropertyFieldRowProps {
 export function PropertyFieldRow({
 	label,
 	tooltip,
+	description,
+	expressionDescription,
 	features,
 	isOverridden,
 	value,
@@ -59,6 +65,8 @@ export function PropertyFieldRow({
 	)
 
 	const activeFeatures = value.isExpression ? ExpressionModeFeatures : features
+	const activeDescription =
+		value.isExpression && expressionDescription !== undefined ? expressionDescription : description
 
 	return (
 		<>
@@ -91,6 +99,7 @@ export function PropertyFieldRow({
 						{children({ value: value.value }, setInnerValue, inputId)}
 					</FieldOrExpression>
 				)}
+				{activeDescription && <div className="form-text">{activeDescription}</div>}
 			</Grid.Col>
 		</>
 	)

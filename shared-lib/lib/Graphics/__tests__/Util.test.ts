@@ -5,7 +5,7 @@ import {
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
 } from '../../Model/StyleModel.js'
-import { resolveButtonStyleProperties } from '../Util.js'
+import { colorToNumber, parseColorAlpha, resolveButtonStyleProperties } from '../Util.js'
 
 function canvasElement(
 	decoration: ButtonGraphicsDecorationType,
@@ -23,6 +23,50 @@ function canvasElement(
 
 const globalTopbar = { buttons_decoration: ButtonGraphicsDecorationType.TopBar, buttons_status_icons: 'show' } as const
 const globalNone = { buttons_decoration: ButtonGraphicsDecorationType.None, buttons_status_icons: 'none' } as const
+
+describe('parseColorAlpha', () => {
+	test('opaque colour number has alpha 1', () => {
+		expect(parseColorAlpha(0xff0000)).toBe(1)
+	})
+
+	test('colour number with a transparent alpha byte has alpha 0', () => {
+		expect(parseColorAlpha(0xff000000)).toBe(0) // top byte 0xff = fully transparent
+	})
+
+	test('fully transparent css string has alpha 0', () => {
+		expect(parseColorAlpha('rgba(0, 0, 0, 0)')).toBe(0)
+	})
+
+	test('half-transparent css string has alpha ~0.5', () => {
+		expect(parseColorAlpha('#ff000080')).toBeCloseTo(0.5, 1)
+	})
+
+	test('invalid colour has alpha 0', () => {
+		expect(parseColorAlpha('not-a-colour')).toBe(0)
+	})
+})
+
+describe('colorToNumber', () => {
+	test('returns a colour number unchanged', () => {
+		expect(colorToNumber(0xff0000)).toBe(0xff0000)
+	})
+
+	test('coerces a numeric string to a number', () => {
+		expect(colorToNumber('16777215')).toBe(16777215)
+	})
+
+	test('parses a css colour string to a colour number', () => {
+		expect(colorToNumber('#ff0000')).toBe(0xff0000)
+	})
+
+	test('packs alpha into the top byte for a translucent css string', () => {
+		expect(colorToNumber('rgba(255, 0, 0, 0.5)')).toBe(0xff0000 + 0x80 * 0x1000000)
+	})
+
+	test('returns 0 for an invalid colour', () => {
+		expect(colorToNumber('not-a-colour')).toBe(0)
+	})
+})
 
 describe('resolveButtonStyleProperties', () => {
 	describe('decoration', () => {

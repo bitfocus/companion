@@ -1,3 +1,4 @@
+import { colord } from 'colord'
 import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
@@ -119,6 +120,33 @@ export class ElementExpressionHelper<T> {
 		// (e.g. when a referenced variable doesn't exist). Treat NaN as a missing value.
 		const num = Number(result.value)
 		return isNaN(num) ? defaultValue : num * scale
+	}
+
+	/**
+	 * Resolve a colour property, preserving css colour strings. A numeric (or numeric-string) value becomes a number;
+	 * a valid css colour string is kept as-is; anything else falls back to the default. Mirrors the number/string
+	 * semantics of parseColor so the value renders correctly downstream.
+	 */
+	getColor(propertyName: keyof T, defaultValue: number | string): number | string {
+		const value = this.#getValue(propertyName)
+
+		let raw: unknown
+		if (!value.isExpression) {
+			raw = value.value
+		} else {
+			// Do not force a 'number' result type, otherwise a css colour string would be rejected
+			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+			if (!result.ok) return defaultValue
+			raw = result.value
+		}
+
+		if (typeof raw === 'number') return isNaN(raw) ? defaultValue : raw
+		if (typeof raw === 'string') {
+			const trimmed = raw.trim()
+			if (trimmed !== '' && !isNaN(Number(trimmed))) return Number(trimmed)
+			if (colord(raw).isValid()) return raw
+		}
+		return defaultValue
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {

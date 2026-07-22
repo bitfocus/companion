@@ -70,6 +70,7 @@ type TestEl = {
 	boolProp: ExpressionOrValue<boolean>
 	enumProp: ExpressionOrValue<string>
 	anyProp: ExpressionOrValue<JsonValue | undefined>
+	colorProp: ExpressionOrValue<number | string>
 }
 
 function makeEl(overrides: Partial<TestEl> = {}): TestEl {
@@ -79,7 +80,8 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 		numProp: val(42),
 		boolProp: val(true),
 		enumProp: val('left'),
-		anyProp: val(99 as JsonValue),
+		anyProp: val(99),
+		colorProp: val(0xff0000),
 		...overrides,
 	}
 }
@@ -344,6 +346,48 @@ describe('ElementExpressionHelper', () => {
 		test('expression resolving to undefined (missing variable) returns defaultValue', () => {
 			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:missing)') }))
 			expect(helper.getNumber('numProp', 99)).toBe(99)
+		})
+	})
+
+	describe('getColor', () => {
+		test('plain number is returned as a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000) }))
+			expect(helper.getColor('colorProp', 0)).toBe(0xff0000)
+		})
+
+		test('numeric string coerces to a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('255') }))
+			expect(helper.getColor('colorProp', 0)).toBe(255)
+		})
+
+		// Named colours (e.g. 'red') need colord's names plugin, which is not registered - matches parseColor
+		test.each(['#ff0000', '#f00', 'rgb(255, 0, 0)', 'rgb(255 0 0)', 'hsl(0, 100%, 50%)', 'rgba(255, 0, 0, 0.5)'])(
+			'valid css colour string %s is kept as-is',
+			(css) => {
+				const { helper } = makeHelper(makeEl({ colorProp: val(css) }))
+				expect(helper.getColor('colorProp', 0)).toBe(css)
+			}
+		)
+
+		test('invalid string falls back to defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('not-a-colour') }))
+			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
+		})
+
+		test('expression resolving to a number returns a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: expr('$(ns:x) * 2') }), { ns: { x: 5 } })
+			expect(helper.getColor('colorProp', 0)).toBe(10)
+		})
+
+		test('expression resolving to a css colour string is kept as a string', () => {
+			// This is the regression getNumber fails: a css string expression result must survive
+			const { helper } = makeHelper(makeEl({ colorProp: expr('"#00ff00"') }))
+			expect(helper.getColor('colorProp', 0)).toBe('#00ff00')
+		})
+
+		test('expression with syntax error returns defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: expr(')') }))
+			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
 		})
 	})
 

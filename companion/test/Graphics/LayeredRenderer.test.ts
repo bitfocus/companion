@@ -1398,4 +1398,50 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			).toMatchImageSnapshot()
 		})
 	})
+
+	describe('css colour formats', () => {
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
+
+		async function renderCanvas(elements: SomeButtonGraphicsDrawElement[]) {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			return img.canvasImage
+		}
+
+		const renderPng = async (elements: SomeButtonGraphicsDrawElement[]): Promise<Buffer> =>
+			(await renderCanvas(elements)).toBuffer('image/png')
+
+		// Every css form of red must render identically to the packed-number form (0xff0000)
+		test.each([
+			['hex', '#ff0000'],
+			['hex short', '#f00'],
+			['rgb', 'rgb(255, 0, 0)'],
+			['rgb spaces', 'rgb(255 0 0)'],
+			['hsl', 'hsl(0, 100%, 50%)'],
+		])('text colour as %s renders identical to the numeric form', async (_name, css) => {
+			const fromString = await renderPng([makeTextElement({ color: css })])
+			const fromNumber = await renderPng([makeTextElement({ color: 0xff0000 })])
+			expect(fromString.equals(fromNumber)).toBe(true)
+		})
+
+		test('box element with a css colour string', async () => {
+			await expect(await renderCanvas([makeBoxElement({ color: '#00c800' })])).toMatchImageSnapshot()
+		})
+
+		test('text outline as a css colour string draws an outline', async () => {
+			await expect(await renderCanvas([makeTextElement({ outlineColor: 'rgb(255, 0, 0)' })])).toMatchImageSnapshot()
+		})
+
+		test('a fully transparent css outline draws no outline', async () => {
+			const cssTransparent = await renderPng([makeTextElement({ outlineColor: 'rgba(0, 0, 0, 0)' })])
+			const numericTransparent = await renderPng([makeTextElement({ outlineColor: 0xff000000 })]) // alpha byte 0xff = transparent
+			expect(cssTransparent.equals(numericTransparent)).toBe(true)
+		})
+	})
 })

@@ -15,7 +15,7 @@ import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
-import { DrawBounds, parseColor, rgbRev } from './Util.js'
+import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
 
 /**
  * Text outline width as a fraction of the font size. Proportional (rather than a fixed pixel value) so
@@ -337,7 +337,7 @@ export class GraphicsLayeredButtonRenderer {
 					element.fontsizeAllowShrink,
 					element.halign,
 					element.valign,
-					rgbRev(element.outlineColor, true).a > 0
+					parseColorAlpha(element.outlineColor) > 0
 						? {
 								width: fontSize * TEXT_OUTLINE_FACTOR,
 								color: parseColor(element.outlineColor),
