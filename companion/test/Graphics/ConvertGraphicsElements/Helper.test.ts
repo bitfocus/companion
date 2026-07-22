@@ -389,6 +389,32 @@ describe('ElementExpressionHelper', () => {
 			const { helper } = makeHelper(makeEl({ colorProp: expr(')') }))
 			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
 		})
+
+		test('preserves alpha by default', () => {
+			const withAlpha = makeHelper(makeEl({ colorProp: val(0xff0000 + 0x80 * 0x1000000) }))
+			expect(withAlpha.helper.getColor('colorProp', 0)).toBe(0xff0000 + 0x80 * 0x1000000)
+
+			const cssAlpha = makeHelper(makeEl({ colorProp: val('rgba(255, 0, 0, 0.5)') }))
+			expect(cssAlpha.helper.getColor('colorProp', 0)).toBe('rgba(255, 0, 0, 0.5)')
+		})
+
+		test('discards alpha from a number when allowAlpha is false', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000 + 0x80 * 0x1000000) }))
+			expect(helper.getColor('colorProp', 0, false)).toBe(0xff0000)
+		})
+
+		test('forces a translucent css string opaque when allowAlpha is false', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('rgba(255, 0, 0, 0.5)') }))
+			expect(helper.getColor('colorProp', 0, false)).toBe('rgb(255, 0, 0)')
+		})
+
+		test('leaves an already-opaque value untouched when allowAlpha is false', () => {
+			const num = makeHelper(makeEl({ colorProp: val(0xff0000) }))
+			expect(num.helper.getColor('colorProp', 0, false)).toBe(0xff0000)
+
+			const css = makeHelper(makeEl({ colorProp: val('#ff0000') }))
+			expect(css.helper.getColor('colorProp', 0, false)).toBe('#ff0000')
+		})
 	})
 
 	describe('getString', () => {

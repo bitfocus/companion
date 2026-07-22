@@ -696,7 +696,7 @@ function convertTextElementForDrawing(
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
-		color: helper.getColor('color', 0),
+		color: helper.getColor('color', 0, false), // text colour field disables alpha
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		outlineColor: helper.getColor('outlineColor', 0),
@@ -826,7 +826,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getColor('color', 0),
+					color: rowHelper.getColor('color', 0, false), // gauge stop colour field disables alpha
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
