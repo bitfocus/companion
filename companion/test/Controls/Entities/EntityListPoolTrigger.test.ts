@@ -154,6 +154,6 @@ describe('ControlEntityListPoolTrigger', () => {
 	test('getFeedbackStyleOverrides returns an empty map', () => {
 		const { pool } = createTriggerPool()
 
-		expect(pool.getFeedbackStyleOverrides().size).toBe(0)
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(0)
 	})
 })

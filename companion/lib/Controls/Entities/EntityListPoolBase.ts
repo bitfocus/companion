@@ -216,10 +216,9 @@ export abstract class ControlEntityListPoolBase {
 	 * Get all the style overrides for the layered drawing elements
 	 * @returns A map of elementId -> elementProperty -> override value
 	 */
-	abstract getFeedbackStyleOverrides(): ReadonlyMap<
-		string,
-		ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
-	>
+	abstract getFeedbackStyleOverrides(
+		defaultNoTopBar: boolean | undefined
+	): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>
 
 	getLocalVariableValues(): VariableValues {
 		const entities = this.getLocalVariableEntities()
@@ -315,7 +314,7 @@ export abstract class ControlEntityListPoolBase {
 			) {
 				const newOverrides: FeedbackEntityStyleOverride[] = []
 
-				const parsedStyle = ParseLegacyStyle(newProps.style)
+				const parsedStyle = ParseLegacyStyle(newProps.style, undefined)
 
 				// Translate the old advanced feedback property lookup into the newly produced value
 				for (const override of existingStyleOverrides) {

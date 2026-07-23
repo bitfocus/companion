@@ -88,7 +88,7 @@ function makeAction(): SomeEntityModel {
 
 describe('ParseLegacyStyle', () => {
 	test('empty style returns all undefined fields', () => {
-		const result = ParseLegacyStyle({})
+		const result = ParseLegacyStyle({}, undefined)
 		expect(result.text.text).toBeUndefined()
 		expect(result.text.size).toBeUndefined()
 		expect(result.text.sizeAllowShrink).toBeUndefined()
@@ -104,7 +104,7 @@ describe('ParseLegacyStyle', () => {
 	})
 
 	test('size: "auto" sets size to FONTSIZE_SHRINK_DEFAULT and sizeAllowShrink to true', () => {
-		const result = ParseLegacyStyle({ size: 'auto' })
+		const result = ParseLegacyStyle({ size: 'auto' }, undefined)
 		expect(result.text.size).toBe(FONTSIZE_SHRINK_DEFAULT)
 		expect(result.text.sizeAllowShrink).toBe(true)
 	})
@@ -132,57 +132,67 @@ describe('ParseLegacyStyle', () => {
 		expect(r2.text.sizeAllowShrink).toBe(false)
 	})
 
+	test('explicit show_topbar wins even when defaultNoTopBar is omitted', () => {
+		// Regression: an omitted defaultNoTopBar used to force the topbar scale, discarding show_topbar:false
+		expect(ParseLegacyStyle({ size: 14, show_topbar: false }, undefined).text.size).toBe(23.3) // 14 * (1/0.6)
+		expect(ParseLegacyStyle({ size: 14, show_topbar: true }, undefined).text.size).toBe(29.4) // 14 * 2.1
+	})
+
 	test('alignment string is parsed into halign and valign', () => {
-		const result = ParseLegacyStyle({ alignment: 'left:top' })
+		const result = ParseLegacyStyle({ alignment: 'left:top' }, undefined)
 		expect(result.text.halign).toBe('left')
 		expect(result.text.valign).toBe('top')
 	})
 
 	test('pngalignment string is parsed into image halign and valign', () => {
-		const result = ParseLegacyStyle({ pngalignment: 'right:bottom' })
+		const result = ParseLegacyStyle({ pngalignment: 'right:bottom' }, undefined)
 		expect(result.image.halign).toBe('right')
 		expect(result.image.valign).toBe('bottom')
 	})
 
 	test('show_topbar:true → decoration TopBar', () => {
-		expect(ParseLegacyStyle({ show_topbar: true }).canvas.decoration).toBe(ButtonGraphicsDecorationType.TopBar)
+		expect(ParseLegacyStyle({ show_topbar: true }, undefined).canvas.decoration).toBe(
+			ButtonGraphicsDecorationType.TopBar
+		)
 	})
 
 	test('show_topbar:false → decoration Border', () => {
-		expect(ParseLegacyStyle({ show_topbar: false }).canvas.decoration).toBe(ButtonGraphicsDecorationType.Border)
+		expect(ParseLegacyStyle({ show_topbar: false }, undefined).canvas.decoration).toBe(
+			ButtonGraphicsDecorationType.Border
+		)
 	})
 
 	test('show_topbar:"default" → decoration FollowDefault', () => {
-		expect(ParseLegacyStyle({ show_topbar: 'default' }).canvas.decoration).toBe(
+		expect(ParseLegacyStyle({ show_topbar: 'default' }, undefined).canvas.decoration).toBe(
 			ButtonGraphicsDecorationType.FollowDefault
 		)
 	})
 
 	test('png64 without data: prefix gets the prefix added', () => {
-		expect(ParseLegacyStyle({ png64: 'abc123' }).image.image).toBe('data:image/png;base64,abc123')
+		expect(ParseLegacyStyle({ png64: 'abc123' }, undefined).image.image).toBe('data:image/png;base64,abc123')
 	})
 
 	test('png64 with data: prefix is left unchanged', () => {
 		const url = 'data:image/png;base64,xyz'
-		expect(ParseLegacyStyle({ png64: url }).image.image).toBe(url)
+		expect(ParseLegacyStyle({ png64: url }, undefined).image.image).toBe(url)
 	})
 
 	test('png64: null returns image.image = null', () => {
-		expect(ParseLegacyStyle({ png64: null }).image.image).toBeNull()
+		expect(ParseLegacyStyle({ png64: null }, undefined).image.image).toBeNull()
 	})
 
 	test('text with textExpression:false', () => {
-		const result = ParseLegacyStyle({ text: 'hello', textExpression: false })
+		const result = ParseLegacyStyle({ text: 'hello', textExpression: false }, undefined)
 		expect(result.text.text).toEqual({ isExpression: false, value: 'hello' })
 	})
 
 	test('text with textExpression:true', () => {
-		const result = ParseLegacyStyle({ text: '$(var:x)', textExpression: true })
+		const result = ParseLegacyStyle({ text: '$(var:x)', textExpression: true }, undefined)
 		expect(result.text.text).toEqual({ isExpression: true, value: '$(var:x)' })
 	})
 
 	test('color and bgcolor are passed through directly', () => {
-		const result = ParseLegacyStyle({ color: 0xffffff, bgcolor: 0x112233 })
+		const result = ParseLegacyStyle({ color: 0xffffff, bgcolor: 0x112233 }, undefined)
 		expect(result.text.color).toBe(0xffffff)
 		expect(result.background.color).toBe(0x112233)
 	})
@@ -192,7 +202,7 @@ describe('ParseLegacyStyle', () => {
 
 describe('GetLegacyStyleProperty', () => {
 	test('text property returns the text value', () => {
-		const parsed = ParseLegacyStyle({ text: 'hello' })
+		const parsed = ParseLegacyStyle({ text: 'hello' }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'text', '')).toEqual({ isExpression: false, value: 'hello' })
 	})
 
@@ -209,39 +219,39 @@ describe('GetLegacyStyleProperty', () => {
 	})
 
 	test('size="auto" (elementProperty=fontsize) returns FONTSIZE_SHRINK_DEFAULT', () => {
-		const parsed = ParseLegacyStyle({ size: 'auto' })
+		const parsed = ParseLegacyStyle({ size: 'auto' }, undefined)
 		const result = GetLegacyStyleProperty(parsed, {}, 'size', 'fontsize')
 		expect(result).toEqual({ isExpression: false, value: 100 })
 	})
 
 	test('size="auto" (elementProperty=fontsizeAllowShrink) returns true', () => {
-		const parsed = ParseLegacyStyle({ size: 'auto' })
+		const parsed = ParseLegacyStyle({ size: 'auto' }, undefined)
 		const result = GetLegacyStyleProperty(parsed, {}, 'size', 'fontsizeAllowShrink')
 		expect(result).toEqual({ isExpression: false, value: true })
 	})
 
 	test('color property', () => {
-		const parsed = ParseLegacyStyle({ color: 0x123456 })
+		const parsed = ParseLegacyStyle({ color: 0x123456 }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'color', '')).toEqual({ isExpression: false, value: 0x123456 })
 	})
 
 	test('bgcolor property', () => {
-		const parsed = ParseLegacyStyle({ bgcolor: 0xabcdef })
+		const parsed = ParseLegacyStyle({ bgcolor: 0xabcdef }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'bgcolor', '')).toEqual({ isExpression: false, value: 0xabcdef })
 	})
 
 	test('alignment → halign with elementProperty=halign', () => {
-		const parsed = ParseLegacyStyle({ alignment: 'left:top' })
+		const parsed = ParseLegacyStyle({ alignment: 'left:top' }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'alignment', 'halign')).toEqual({ isExpression: false, value: 'left' })
 	})
 
 	test('alignment → valign with elementProperty=valign', () => {
-		const parsed = ParseLegacyStyle({ alignment: 'left:top' })
+		const parsed = ParseLegacyStyle({ alignment: 'left:top' }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'alignment', 'valign')).toEqual({ isExpression: false, value: 'top' })
 	})
 
 	test('png64 property returns image.image value', () => {
-		const parsed = ParseLegacyStyle({ png64: 'data:image/png;base64,abc' })
+		const parsed = ParseLegacyStyle({ png64: 'data:image/png;base64,abc' }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'png64', '')).toEqual({
 			isExpression: false,
 			value: 'data:image/png;base64,abc',
@@ -249,13 +259,13 @@ describe('GetLegacyStyleProperty', () => {
 	})
 
 	test('returns undefined when property value is absent', () => {
-		const parsed = ParseLegacyStyle({})
+		const parsed = ParseLegacyStyle({}, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'text', '')).toBeUndefined()
 		expect(GetLegacyStyleProperty(parsed, {}, 'size', '')).toBeUndefined()
 	})
 
 	test('returns undefined for an unknown property', () => {
-		const parsed = ParseLegacyStyle({ text: 'x' })
+		const parsed = ParseLegacyStyle({ text: 'x' }, undefined)
 		expect(GetLegacyStyleProperty(parsed, {}, 'unknown_prop', '')).toBeUndefined()
 	})
 })
@@ -264,34 +274,53 @@ describe('GetLegacyStyleProperty', () => {
 
 describe('ConvertLegacyStyleToElements', () => {
 	test('always produces 4 base layers', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null)
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null, undefined)
 		expect(layers).toHaveLength(4)
 		expect(layers.map((l) => l.id)).toEqual(['canvas', 'box0', 'image0', 'text0'])
 	})
 
 	test('image element defaults to fit_or_shrink so small icons are not enlarged', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null)
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null, undefined)
 		const imageLayer = layers.find((l) => l.id === 'image0') as any
 		expect(imageLayer.fillMode).toEqual({ value: 'fit_or_shrink', isExpression: false })
 	})
 
 	test('advanced feedback adds a 5th bufferElement layer', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null)
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, undefined)
 		expect(layers).toHaveLength(5)
 		expect(layers[4].id).toBe('imageBuffers')
 	})
 
 	test('boolean feedback with style sets styleOverrides and removes style', () => {
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback()], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback()], null, undefined)
 		expect(feedbacks[0]).toHaveProperty('styleOverrides')
 		expect((feedbacks[0] as any).style).toBeUndefined()
 	})
 
 	test('boolean feedback styleOverrides include a color override', () => {
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback({ bgcolor: 0xff0000 })], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeBooleanFeedback({ bgcolor: 0xff0000 })],
+			null,
+			undefined
+		)
 		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
 		const colorOverride = overrides.find((o) => o.elementProperty === 'color' && o.elementId === 'box0')
 		expect(colorOverride?.override).toEqual({ isExpression: false, value: 0xff0000 })
+	})
+
+	test("feedback font size inherits the button's own show_topbar, not just the global default", () => {
+		// Global default says top bar shown (defaultNoTopBar=false), but the button hides it → feedback size
+		// must scale by the no-top-bar factor, matching the button it draws on.
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			{ ...minimalStyle, show_topbar: false },
+			[makeBooleanFeedback({ size: 14 })],
+			null,
+			false
+		)
+		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
+		const fontsize = overrides.find((o) => o.elementProperty === 'fontsize')
+		expect(fontsize?.override).toEqual({ isExpression: false, value: 23.3 }) // 14 * (1/0.6), not 14 * 2.1
 	})
 
 	test('feedback that already has styleOverrides is passed through unchanged', () => {
@@ -306,24 +335,24 @@ describe('ConvertLegacyStyleToElements', () => {
 				{ overrideId: 'existing', elementId: 'x', elementProperty: 'y', override: { isExpression: false, value: 'z' } },
 			],
 		}
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [feedback], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [feedback], null, undefined)
 		expect((feedbacks[0] as FeedbackEntityModel).styleOverrides).toHaveLength(1)
 		expect((feedbacks[0] as FeedbackEntityModel).styleOverrides![0].overrideId).toBe('existing')
 	})
 
 	test('non-feedback entity is passed through unchanged', () => {
 		const action = makeAction()
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [action], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [action], null, undefined)
 		expect(feedbacks[0]).toEqual(action)
 	})
 
 	test('previewStyle null results in empty previewStyleFeedbacks', () => {
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], null)
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], null, undefined)
 		expect(previewStyleFeedbacks).toEqual([])
 	})
 
 	test('previewStyle with a property creates a previewStyleFeedback entry', () => {
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], { bgcolor: 0x0000ff })
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], { bgcolor: 0x0000ff }, undefined)
 		expect(previewStyleFeedbacks).toHaveLength(1)
 		expect(previewStyleFeedbacks[0].type).toBe(EntityModelType.Feedback)
 		expect((previewStyleFeedbacks[0] as FeedbackEntityModel).styleOverrides).toBeDefined()
@@ -331,24 +360,29 @@ describe('ConvertLegacyStyleToElements', () => {
 
 	test('previewStyle with no overridable properties gives empty previewStyleFeedbacks', () => {
 		// Empty partial style → parsedStyle has nothing set → overrides.length === 0
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {})
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {}, undefined)
 		expect(previewStyleFeedbacks).toHaveLength(0)
 	})
 
 	test('style properties are applied to the canvas decoration layer', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, show_topbar: true }, [], null)
+		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, show_topbar: true }, [], null, undefined)
 		const canvas = layers[0] as any
 		expect(canvas.decoration.value).toBe(ButtonGraphicsDecorationType.TopBar)
 	})
 
 	test('style text is applied to the text element', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, text: 'hi', textExpression: false }, [], null)
+		const { layers } = ConvertLegacyStyleToElements(
+			{ ...minimalStyle, text: 'hi', textExpression: false },
+			[],
+			null,
+			undefined
+		)
 		const textEl = layers.find((l) => l.id === 'text0') as any
 		expect(textEl.text).toEqual({ isExpression: false, value: 'hi' })
 	})
 
 	test('style bgcolor is applied to the background element', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, bgcolor: 0xaabbcc }, [], null)
+		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, bgcolor: 0xaabbcc }, [], null, undefined)
 		const boxEl = layers.find((l) => l.id === 'box0') as any
 		expect(boxEl.color.value).toBe(0xaabbcc)
 	})
@@ -365,7 +399,7 @@ describe('ConvertLegacyStyleToElements', () => {
 			children: { feedbacks: [childFeedback] },
 		}
 
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null, undefined)
 		const updatedCond = feedbacks[0] as FeedbackEntityModel
 		const children = updatedCond.children!['feedbacks']!
 		expect((children[0] as FeedbackEntityModel).styleOverrides).toBeDefined()
@@ -376,12 +410,12 @@ describe('ConvertLegacyStyleToElements', () => {
 
 describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 	test('returns empty array when no properties are set', () => {
-		const parsed = ParseLegacyStyle({})
+		const parsed = ParseLegacyStyle({}, undefined)
 		expect(ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)).toHaveLength(0)
 	})
 
 	test('text property creates a text override on the text element', () => {
-		const parsed = ParseLegacyStyle({ text: 'hello', textExpression: false })
+		const parsed = ParseLegacyStyle({ text: 'hello', textExpression: false }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const textOverride = overrides.find((o) => o.elementProperty === 'text')
 		expect(textOverride?.elementId).toBe('text0')
@@ -389,7 +423,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 	})
 
 	test('text color creates a color override', () => {
-		const parsed = ParseLegacyStyle({ color: 0xaabbcc })
+		const parsed = ParseLegacyStyle({ color: 0xaabbcc }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const colorOverride = overrides.find((o) => o.elementProperty === 'color')
 		expect(colorOverride?.elementId).toBe('text0')
@@ -397,7 +431,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 	})
 
 	test('text alignment creates halign and valign overrides', () => {
-		const parsed = ParseLegacyStyle({ alignment: 'left:top' })
+		const parsed = ParseLegacyStyle({ alignment: 'left:top' }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const halign = overrides.find((o) => o.elementProperty === 'halign' && o.elementId === 'text0')
 		const valign = overrides.find((o) => o.elementProperty === 'valign' && o.elementId === 'text0')
@@ -406,21 +440,21 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 	})
 
 	test('bgcolor creates a background color override', () => {
-		const parsed = ParseLegacyStyle({ bgcolor: 0x112233 })
+		const parsed = ParseLegacyStyle({ bgcolor: 0x112233 }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const colorOverride = overrides.find((o) => o.elementId === 'box0')
 		expect(colorOverride?.override.value).toBe(0x112233)
 	})
 
 	test('png64 creates a base64Image override on the image element', () => {
-		const parsed = ParseLegacyStyle({ png64: 'data:image/png;base64,abc' })
+		const parsed = ParseLegacyStyle({ png64: 'data:image/png;base64,abc' }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const imgOverride = overrides.find((o) => o.elementProperty === 'base64Image')
 		expect(imgOverride?.elementId).toBe('image0')
 	})
 
 	test('each override has a unique overrideId', () => {
-		const parsed = ParseLegacyStyle({ text: 'x', color: 0xffffff, bgcolor: 0, alignment: 'left:top' })
+		const parsed = ParseLegacyStyle({ text: 'x', color: 0xffffff, bgcolor: 0, alignment: 'left:top' }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const ids = overrides.map((o) => o.overrideId)
 		expect(new Set(ids).size).toBe(ids.length)
@@ -436,7 +470,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 	})
 
 	test('auto size creates fontsize=FONTSIZE_SHRINK_DEFAULT and fontsizeAllowShrink=true overrides', () => {
-		const parsed = ParseLegacyStyle({ size: 'auto' })
+		const parsed = ParseLegacyStyle({ size: 'auto' }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
 		const fontsizeOverride = overrides.find((o) => o.elementProperty === 'fontsize')
 		const allowShrinkOverride = overrides.find((o) => o.elementProperty === 'fontsizeAllowShrink')
@@ -449,7 +483,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 			...defaultSelectedIds,
 			[ButtonGraphicsElementUsage.Text]: undefined,
 		}
-		const parsed = ParseLegacyStyle({ text: 'hi', color: 0xffffff })
+		const parsed = ParseLegacyStyle({ text: 'hi', color: 0xffffff }, undefined)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, ids)
 		expect(overrides.find((o) => o.elementProperty === 'text')).toBeUndefined()
 	})
