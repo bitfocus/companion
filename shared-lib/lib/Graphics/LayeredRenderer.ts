@@ -4,10 +4,8 @@ import type {
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
 	ButtonGraphicsGaugeDrawElement,
-	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
-	ButtonGraphicsReferenceDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '../Model/StyleLayersModel.js'
@@ -109,10 +107,22 @@ export class GraphicsLayeredButtonRenderer {
 			try {
 				switch (element.type) {
 					case 'group': {
-						await img.usingTemporaryLayer(element.opacity, async (img) => {
-							await img.usingRotation(drawBounds, element.rotation, async () => {
-								elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
+						// Compute the group's own bounds first so rotation pivots about its centre, not the container's
+						let groupBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
+						elementBounds = groupBounds // Capture the pre-square bounds
 
+						if (element.squareCoords) {
+							const squareSize = Math.min(groupBounds.width, groupBounds.height)
+							groupBounds = new DrawBounds(
+								groupBounds.x + (groupBounds.width - squareSize) / 2,
+								groupBounds.y + (groupBounds.height - squareSize) / 2,
+								squareSize,
+								squareSize
+							)
+						}
+
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
+							await img.usingRotation(groupBounds, element.rotation, async () => {
 								// Propagate the selected child, prefixing this group's rotation so the marker
 								// is drawn in the same rotated frame the child was drawn in
 								const childMarker = await this.#drawElements(
@@ -120,13 +130,13 @@ export class GraphicsLayeredButtonRenderer {
 									element.children,
 									elementsToHide,
 									selectedElementId,
-									elementBounds,
+									groupBounds,
 									skipDraw
 								)
 								if (childMarker) {
 									selectedMarker = buildSelectionMarker(
 										childMarker.bounds,
-										elementBounds,
+										groupBounds,
 										element.rotation,
 										childMarker.rotations
 									)
@@ -136,10 +146,12 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					}
 					case 'reference': {
-						await img.usingTemporaryLayer(element.opacity, async (img) => {
-							await img.usingRotation(drawBounds, element.rotation, async () => {
-								elementBounds = await this.#drawReferenceElement(img, drawBounds, element, skipDraw)
+						// Compute the reference's own bounds first so rotation pivots about its centre, not the container's
+						const referenceBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
 
+						elementBounds = referenceBounds
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
+							await img.usingRotation(referenceBounds, element.rotation, async () => {
 								// Note: children of a reference element cannot be individually selected,
 								// so the return value (selected child bounds) is intentionally discarded.
 								await this.#drawElements(
@@ -147,7 +159,7 @@ export class GraphicsLayeredButtonRenderer {
 									element.children,
 									elementsToHide,
 									selectedElementId,
-									elementBounds,
+									referenceBounds,
 									skipDraw
 								)
 							})
@@ -198,37 +210,6 @@ export class GraphicsLayeredButtonRenderer {
 		if (!backgroundElement) return
 
 		// img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
-	}
-
-	static async #drawGroupElement(
-		_img: ImageBase<any>,
-		parentBounds: DrawBounds,
-		element: ButtonGraphicsGroupDrawElement,
-		skipDraw: boolean
-	): Promise<DrawBounds> {
-		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
-		if (skipDraw) return drawBounds
-
-		if (element.squareCoords) {
-			const squareSize = Math.min(drawBounds.width, drawBounds.height)
-			return new DrawBounds(
-				drawBounds.x + (drawBounds.width - squareSize) / 2,
-				drawBounds.y + (drawBounds.height - squareSize) / 2,
-				squareSize,
-				squareSize
-			)
-		}
-
-		return drawBounds
-	}
-
-	static async #drawReferenceElement(
-		_img: ImageBase<any>,
-		parentBounds: DrawBounds,
-		element: ButtonGraphicsReferenceDrawElement,
-		_skipDraw: boolean
-	): Promise<DrawBounds> {
-		return parentBounds.compose(element.x, element.y, element.width, element.height)
 	}
 
 	static async #drawImageElement(
