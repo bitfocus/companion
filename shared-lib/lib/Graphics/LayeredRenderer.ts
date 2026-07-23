@@ -506,8 +506,8 @@ export class GraphicsLayeredButtonRenderer {
 		const trackWidth = Math.max(0, Math.min(100, finite(element.trackWidth, 100))) / 100
 		const trackAmount = Math.max(0, Math.min(100, finite(element.trackAmount, 0))) / 100
 
-		// --- Colour stops → runs between consecutive stops, with the first anchored to position 0
-		//     and the last extended to 100 so the track never has an uncoloured gap. ---
+		// --- Color stops → runs between consecutive stops, with the first anchored to position 0
+		//     and the last extended to 100 so the track never has an uncolored gap. ---
 		const stops = [...element.stops]
 			.map((s) => ({ pos: norm(finite(s.value, 0)), color: finite(s.color, 0), gradient: !!s.gradient }))
 			.sort((a, b) => a.pos - b.pos)
@@ -536,7 +536,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 		if (runs.length === 0) return drawBounds
 
-		// Single-colour fill: colour of the highest stop whose position <= value.
+		// Single-color fill: color of the highest stop whose position <= value.
 		let singleColor = stops[0].color
 		for (const s of stops) if (s.pos <= valuePos) singleColor = s.color
 
@@ -551,8 +551,8 @@ export class GraphicsLayeredButtonRenderer {
 			return { r: lerp(c0.r, c1.r, t), g: lerp(c0.g, c1.g, t), b: lerp(c0.b, c1.b, t), a: lerp(c0.a, c1.a, t) }
 		}
 		const cssOf = (c: RGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
-		// Track (unfilled) colour. 'transparent' base colours are emitted at full alpha and composited
-		// through a temporary layer at trackAmount; 'dimmed' darkens the colour in place.
+		// Track (unfilled) color. 'transparent' base colors are emitted at full alpha and composited
+		// through a temporary layer at trackAmount; 'dimmed' darkens the color in place.
 		const trackTransform = (c: RGBA): RGBA => {
 			if (trackStyle === 'transparent') return c
 			return { r: c.r * trackAmount, g: c.g * trackAmount, b: c.b * trackAmount, a: c.a }
@@ -590,7 +590,7 @@ export class GraphicsLayeredButtonRenderer {
 		// p=0 at startAngle, p=100 at endAngle (clockwise). reverse flips which end is p=0.
 		const posToAngle = (p: number): number => degToRad(startAngleDeg + (reverse ? 1 - p / 100 : p / 100) * sweepDeg)
 
-		// Paint a single position-space interval [a, b] with one solid colour onto `target`.
+		// Paint a single position-space interval [a, b] with one solid color onto `target`.
 		// `wide` selects the fill width (full) vs the narrowed track width.
 		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, wide: boolean): void => {
 			if (b - a <= 1e-6) return
@@ -623,7 +623,7 @@ export class GraphicsLayeredButtonRenderer {
 			return isHorizontal ? Math.abs(posToX(b) - posToX(a)) : Math.abs(posToY(b) - posToY(a))
 		}
 
-		// Paint an interval [a, b] of a run onto `target`, applying a colour transform.
+		// Paint an interval [a, b] of a run onto `target`, applying a color transform.
 		const paintRunInterval = (
 			target: ImageBase<any>,
 			a: number,
@@ -710,7 +710,7 @@ export class GraphicsLayeredButtonRenderer {
 							const run = runs.find((r) => p >= r.start && p <= r.end) ?? runs[runs.length - 1]
 							if (!run.gradient) return run.colorStart
 							const span = run.end - run.start
-							// Use whichever stop colour the position is closer to.
+							// Use whichever stop color the position is closer to.
 							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
 						}
 						for (const p of [fillLo, fillHi]) {
@@ -729,7 +729,7 @@ export class GraphicsLayeredButtonRenderer {
 					}
 				}
 
-				// --- Marker pass: a single-colour line at the value, spanning the full fill width. ---
+				// --- Marker pass: a single-color line at the value, spanning the full fill width. ---
 				if (element.markerEnabled) {
 					const markerColor = parseColor(element.markerColor)
 					const markerW = Math.max(1, Math.min(100, finite(element.markerWidth, 15))) / 100
@@ -777,7 +777,7 @@ export class GraphicsLayeredButtonRenderer {
 	 * Note: this intentionally overshoots everything to make it very visible
 	 */
 	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {
-		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what colour is best?
+		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what color is best?
 
 		img.horizontalLine(bounds.y, lineStyle)
 		img.horizontalLine(bounds.maxY, lineStyle)

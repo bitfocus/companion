@@ -37,7 +37,7 @@ export interface SatelliteControlStylePreset {
 	 */
 	textStyle?: boolean
 	/**
-	 * If set, the control requests colours to be reported.
+	 * If set, the control requests colors to be reported.
 	 */
 	colors?: 'hex' | 'rgb'
 }

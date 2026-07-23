@@ -850,11 +850,11 @@ describe('validateInputValue', () => {
 	})
 
 	describe('colorpicker', () => {
-		// Both modes accept the same colour inputs (a number, a numeric string, or a css colour string) and normalise
-		// to the field's returnType. Anything that is not a colour is rejected.
-		const INVALID_ERROR = 'Value must be a colour number or a css colour string'
+		// Both modes accept the same color inputs (a number, a numeric string, or a css color string) and normalise
+		// to the field's returnType. Anything that is not a color is rejected.
+		const INVALID_ERROR = 'Value must be a color number or a css color string'
 
-		describe('returnType: number (normalises to a colour number)', () => {
+		describe('returnType: number (normalises to a color number)', () => {
 			const numberDefinition: CompanionInputFieldColorExtended = {
 				id: 'test',
 				type: 'colorpicker',
@@ -864,7 +864,7 @@ describe('validateInputValue', () => {
 				enableAlpha: false,
 			}
 
-			it('should accept colour numbers unchanged', () => {
+			it('should accept color numbers unchanged', () => {
 				expect(validateInputValue(numberDefinition, 16777215)).toMatchObject({
 					sanitisedValue: 16777215,
 					validity: true,
@@ -879,7 +879,7 @@ describe('validateInputValue', () => {
 				})
 			})
 
-			it('should sanitise a css colour string to a colour number', () => {
+			it('should sanitise a css color string to a color number', () => {
 				expect(validateInputValue(numberDefinition, '#ff0000')).toMatchObject({
 					sanitisedValue: 0xff0000,
 					validity: true,
@@ -894,9 +894,9 @@ describe('validateInputValue', () => {
 				})
 			})
 
-			it('should return error for a string that is not a colour', () => {
-				expect(validateInputValue(numberDefinition, 'this is not a colour')).toEqual({
-					sanitisedValue: 'this is not a colour',
+			it('should return error for a string that is not a color', () => {
+				expect(validateInputValue(numberDefinition, 'this is not a color')).toEqual({
+					sanitisedValue: 'this is not a color',
 					validationError: INVALID_ERROR,
 					validity: false,
 					validationWarnings: [],
@@ -923,7 +923,7 @@ describe('validateInputValue', () => {
 				returnType: 'string',
 			}
 
-			it('should keep valid css colour strings', () => {
+			it('should keep valid css color strings', () => {
 				expect(validateInputValue(stringDefinition, '#ffffff')).toMatchObject({
 					sanitisedValue: '#ffffff',
 					validity: true,
@@ -934,14 +934,14 @@ describe('validateInputValue', () => {
 				})
 			})
 
-			it('should coerce a colour number to a css string', () => {
+			it('should coerce a color number to a css string', () => {
 				expect(validateInputValue(stringDefinition, 16777215)).toMatchObject({
 					sanitisedValue: 'rgba(255, 255, 255, 1)',
 					validity: true,
 				})
 			})
 
-			it('should coerce a numeric string to a css string (colord does not accept it as a colour)', () => {
+			it('should coerce a numeric string to a css string (colord does not accept it as a color)', () => {
 				expect(validateInputValue(stringDefinition, '123')).toMatchObject({
 					sanitisedValue: 'rgba(0, 0, 123, 1)',
 					validity: true,
@@ -970,8 +970,8 @@ describe('validateInputValue', () => {
 				})
 			})
 
-			it('should return error when value is not a colour', () => {
-				expect(validateInputValue(stringDefinition, 'this is not a colour')).toMatchObject({
+			it('should return error when value is not a color', () => {
+				expect(validateInputValue(stringDefinition, 'this is not a color')).toMatchObject({
 					validationError: INVALID_ERROR,
 					validity: false,
 				})
@@ -1467,7 +1467,7 @@ describe('validateInputValue', () => {
 				{
 					id: 'color',
 					type: 'colorpicker',
-					label: 'Colour',
+					label: 'Color',
 					default: 0x00ff00,
 					enableAlpha: false,
 					returnType: 'number',
@@ -1589,7 +1589,7 @@ describe('validateInputValue', () => {
 					{
 						id: 'color',
 						type: 'colorpicker',
-						label: 'Colour',
+						label: 'Color',
 						default: 0x00ff00,
 						enableAlpha: false,
 						returnType: 'number',
@@ -1651,7 +1651,7 @@ describe('validateInputValue', () => {
 				{
 					id: 'color',
 					type: 'colorpicker',
-					label: 'Colour',
+					label: 'Color',
 					default: 0x00ff00,
 					enableAlpha: false,
 					returnType: 'number',
@@ -1809,7 +1809,7 @@ describe('validateInputValue', () => {
 					{
 						id: 'color',
 						type: 'colorpicker',
-						label: 'Colour',
+						label: 'Color',
 						default: 0x00ff00,
 						enableAlpha: false,
 						returnType: 'number',

@@ -24,7 +24,7 @@ const definition: InternalInputFieldTable = {
 	label: 'Test Table',
 	columns: [
 		{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
-		{ id: 'color', type: 'colorpicker', label: 'Colour', default: 0x00ff00, enableAlpha: false, returnType: 'number' },
+		{ id: 'color', type: 'colorpicker', label: 'Color', default: 0x00ff00, enableAlpha: false, returnType: 'number' },
 	],
 	default: [],
 }
@@ -86,7 +86,7 @@ describe('TableInputField', () => {
 		it('renders column headers when rows are present', () => {
 			render(<Controlled definition={definition} initialValue={[{ value: 50, color: 0x00ff00 }]} />)
 			expect(screen.getByText('Value')).toBeInTheDocument()
-			expect(screen.getByText('Colour')).toBeInTheDocument()
+			expect(screen.getByText('Color')).toBeInTheDocument()
 		})
 
 		it('renders the add button', () => {

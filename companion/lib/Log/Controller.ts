@@ -92,7 +92,7 @@ class LogController {
 		this.#events.setMaxListeners(0)
 
 		/**
-		 * Select a colour for a log namespace
+		 * Select a color for a log namespace
 		 */
 		function selectColor(namespace: string): number {
 			let hash = 0

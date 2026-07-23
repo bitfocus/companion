@@ -295,7 +295,7 @@
 
 // The natively-dragged feedback ([data-dnd-dragging]) and the DragOverlay preview clone
 // (.dnd-drag-preview) share the same lifted look via the dragging-style mixin; only the background
-// colour differs per element type.
+// color differs per element type.
 .collections-nesting-table-row-item {
 	&[data-dnd-dragging],
 	&.dnd-drag-preview {

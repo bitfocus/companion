@@ -41,7 +41,7 @@
 					"type": "boolean"
 				},
 				"colors": {
-					"description": "If set, the control requests colours to be reported.",
+					"description": "If set, the control requests colors to be reported.",
 					"type": "string",
 					"enum": ["hex", "rgb"]
 				}

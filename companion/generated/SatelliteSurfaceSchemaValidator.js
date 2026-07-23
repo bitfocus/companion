@@ -32,7 +32,7 @@ const schema31 = {
 					type: 'boolean',
 				},
 				colors: {
-					description: 'If set, the control requests colours to be reported.',
+					description: 'If set, the control requests colors to be reported.',
 					type: 'string',
 					enum: ['hex', 'rgb'],
 				},
@@ -90,7 +90,7 @@ const schema32 = {
 		text: { description: 'If true, the control requests text to be reported.', type: 'boolean' },
 		textStyle: { description: 'If true, the control requests text style properties to be reported', type: 'boolean' },
 		colors: {
-			description: 'If set, the control requests colours to be reported.',
+			description: 'If set, the control requests colors to be reported.',
 			type: 'string',
 			enum: ['hex', 'rgb'],
 		},

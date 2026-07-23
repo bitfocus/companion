@@ -696,7 +696,7 @@ function convertTextElementForDrawing(
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
-		color: helper.getColor('color', 0, false), // text colour field disables alpha
+		color: helper.getColor('color', 0, false), // text color field disables alpha
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		outlineColor: helper.getColor('outlineColor', 0),
@@ -818,7 +818,7 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	// Colour stops carry values in the authored Min..Max domain; the renderer normalises them to
+	// Color stops carry values in the authored Min..Max domain; the renderer normalises them to
 	// track positions. Values are intentionally not clamped here so the renderer can map them.
 	const stopsRaw = (element.stops as ExpressionOrValue<JsonValue[]>).value
 	const stops: ButtonGraphicsGaugeDrawElement['stops'] = Array.isArray(stopsRaw)
@@ -826,7 +826,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getColor('color', 0, false), // gauge stop colour field disables alpha
+					color: rowHelper.getColor('color', 0, false), // gauge stop color field disables alpha
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})

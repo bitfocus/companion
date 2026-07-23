@@ -151,7 +151,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 	/**
 	 * Perform some drawing with a given alpha.
-	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colours
+	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colors
 	 */
 	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
 		const oldAlpha = this.context2d.globalAlpha

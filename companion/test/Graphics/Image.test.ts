@@ -717,7 +717,7 @@ describe('Image drawing', () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#333333')
 			await img.drawBase64Image(makeDataUrl(20, 20, '#ff0000'), 0, 0, 72, 58, 'center', 'center', 0)
-			// canvas should remain unchanged (background colour only)
+			// canvas should remain unchanged (background color only)
 			const buf = img.buffer()
 			for (let i = 0; i < buf.length; i += 4) {
 				expect(buf[i]).toBe(0x33)

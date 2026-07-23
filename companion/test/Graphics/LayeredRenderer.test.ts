@@ -1139,7 +1139,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, reverse: true }))).toMatchImageSnapshot()
 		})
 
-		test('multiColour=false - single colour for entire active region', async () => {
+		test('multiColour=false - single color for entire active region', async () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 75, multiColour: false }))).toMatchImageSnapshot()
 		})
 
@@ -1153,7 +1153,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 0 }))).toMatchImageSnapshot()
 		})
 
-		test('trackAmount=100 - inactive same as active colour', async () => {
+		test('trackAmount=100 - inactive same as active color', async () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 100 }))).toMatchImageSnapshot()
 		})
 
@@ -1171,7 +1171,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ stops: [] }))).toMatchImageSnapshot()
 		})
 
-		test('single segment - full bar one colour', async () => {
+		test('single segment - full bar one color', async () => {
 			await expect(
 				await drawGauge(makeGaugeElement({ value: 50, stops: [{ value: 0, color: 0x0088ff }] }))
 			).toMatchImageSnapshot()
@@ -1195,7 +1195,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			return img.canvasImage
 		}
 
-		test('ring value=33 - one colour, within first segment', async () => {
+		test('ring value=33 - one color, within first segment', async () => {
 			await expect(await drawRing({ value: 33 })).toMatchImageSnapshot()
 		})
 
@@ -1239,7 +1239,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawRing({ value: 75, ringWidth: 40 })).toMatchImageSnapshot()
 		})
 
-		test('ring multiColour=false value=75 - single colour active', async () => {
+		test('ring multiColour=false value=75 - single color active', async () => {
 			await expect(await drawRing({ value: 75, multiColour: false })).toMatchImageSnapshot()
 		})
 
@@ -1317,7 +1317,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 		// --- Gradient stops ---
 
-		test('gradient stop - blends toward the next stop colour', async () => {
+		test('gradient stop - blends toward the next stop color', async () => {
 			await expect(
 				await drawGauge(
 					makeGaugeElement({
@@ -1399,7 +1399,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 		})
 	})
 
-	describe('css colour formats', () => {
+	describe('css color formats', () => {
 		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
 
 		async function renderCanvas(elements: SomeButtonGraphicsDrawElement[]) {
@@ -1424,17 +1424,17 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			['rgb', 'rgb(255, 0, 0)'],
 			['rgb spaces', 'rgb(255 0 0)'],
 			['hsl', 'hsl(0, 100%, 50%)'],
-		])('text colour as %s renders identical to the numeric form', async (_name, css) => {
+		])('text color as %s renders identical to the numeric form', async (_name, css) => {
 			const fromString = await renderPng([makeTextElement({ color: css })])
 			const fromNumber = await renderPng([makeTextElement({ color: 0xff0000 })])
 			expect(fromString.equals(fromNumber)).toBe(true)
 		})
 
-		test('box element with a css colour string', async () => {
+		test('box element with a css color string', async () => {
 			await expect(await renderCanvas([makeBoxElement({ color: '#00c800' })])).toMatchImageSnapshot()
 		})
 
-		test('text outline as a css colour string draws an outline', async () => {
+		test('text outline as a css color string draws an outline', async () => {
 			await expect(await renderCanvas([makeTextElement({ outlineColor: 'rgb(255, 0, 0)' })])).toMatchImageSnapshot()
 		})
 
