@@ -108,6 +108,15 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		},
 		[hotPressMutation, viewControl]
 	)
+	const navigateToControl = useCallback(
+		(location: ControlLocation) => {
+			setPageNumber(location.pageNumber)
+			setActiveTab('edit')
+			setSelectedButton(location)
+			setTabResetToken(nanoid())
+		},
+		[setPageNumber]
+	)
 	const clearSelectedButton = useCallback(() => {
 		doChangeTab('pages')
 	}, [doChangeTab])
@@ -437,6 +446,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 										key={`${formatLocation(selectedButton)}-${tabResetToken}`}
 										location={selectedButton}
 										onKeyUp={handleKeyDownInButtons}
+										navigateToControl={navigateToControl}
 									/>
 								)}
 							</MyErrorBoundary>

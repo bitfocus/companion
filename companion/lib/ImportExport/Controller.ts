@@ -24,9 +24,13 @@ import {
 	type ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	ButtonGraphicsReferenceElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { CreateElementOfType } from '../Controls/ControlTypes/Button/LayerDefaults.js'
 import { pageDownElements } from '../Controls/ControlTypes/PageDown.js'
 import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
 import { pageUpElements } from '../Controls/ControlTypes/PageUp.js'
@@ -369,6 +373,15 @@ export class ImportExportController {
 							drawType = 'button'
 							rawElements = controlObjLayered.style.layers
 							break
+						case 'button-reference': {
+							// The mirror is drawn as a single reference element. Cross-page references can't be resolved
+							// in the import preview (no render cache), so this renders the "unresolved" placeholder.
+							drawType = 'button'
+							const referenceElement = CreateElementOfType('reference') as ButtonGraphicsReferenceElement
+							referenceElement.location = controlObjLayered.options.location
+							rawElements = [referenceElement]
+							break
+						}
 						case 'pagenum':
 							drawType = 'pagenum'
 							rawElements = structuredClone(pageNumberElements)

@@ -7,6 +7,7 @@ import type { ControlDependencies } from './ControlDependencies.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
+import { ControlButtonReference } from './ControlTypes/Button/Reference.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
@@ -51,6 +52,8 @@ export class ControlsFactory {
 				return new ControlButtonLayered(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'preset-reference') {
 				return new ControlButtonPresetReference(this.#controlDeps, controlId, controlObj2, isImport)
+			} else if (controlObj2?.type === 'button-reference' || (controlType === 'button-reference' && !controlObj2)) {
+				return new ControlButtonReference(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {

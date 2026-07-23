@@ -78,6 +78,11 @@ describe('ControlButtonPresetReference', () => {
 			dbTable: { set: vi.fn(), delete: vi.fn() } as any,
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
+			controlsAccessor: {
+				getControl: vi.fn(() => undefined),
+				pressControl: vi.fn(() => false),
+				rotateControl: vi.fn(() => false),
+			},
 		}
 	})
 

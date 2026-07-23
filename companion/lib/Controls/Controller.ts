@@ -135,6 +135,7 @@ export class ControlsController {
 			getPageVariableEntities: this.#getPageVariableEntities,
 			triggerEvents: this.#store.triggerEvents,
 			expressionVariableNamesMap: this.#expressionVariableNamesMap,
+			controlsAccessor: this.#store,
 		})
 
 		this.#triggerCollections = new TriggerCollections(
