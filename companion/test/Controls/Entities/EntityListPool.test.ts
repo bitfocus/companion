@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
 import {
 	ControlEntityListPoolButton,
@@ -355,7 +356,7 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
 
-		const overrides = pool.getFeedbackStyleOverrides()
+		const overrides = pool.getFeedbackStyleOverrides(undefined)
 
 		expect(overrides.get('el1')?.get('color')).toEqual({ isExpression: false, value: 0xff0000 })
 	})
@@ -366,7 +367,40 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: false }))
 
-		expect(pool.getFeedbackStyleOverrides().size).toBe(0)
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(0)
+	})
+
+	test('legacy advanced-feedback font size scales by the resolved top-bar state', () => {
+		const { pool } = createPool({
+			isLayered: true,
+			getEntityDefinition: (entityType) =>
+				entityType === EntityModelType.Feedback
+					? ({ entityType, feedbackType: FeedbackEntitySubType.Advanced } as any)
+					: ({ entityType } as any),
+		})
+		const feedback = feedbackModel({
+			styleOverrides: [
+				{
+					overrideId: 'ov1',
+					elementId: 'text0',
+					elementProperty: 'fontsize',
+					override: { isExpression: false, value: 'size' },
+				},
+			],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: { size: 14 } }))
+
+		// No top bar → full draw height → smaller percentage (the bug: this used to always be 29.4)
+		expect(pool.getFeedbackStyleOverrides(true).get('text0')?.get('fontsize')).toEqual({
+			isExpression: false,
+			value: 23.3,
+		})
+		// Top bar → reduced draw height → larger percentage
+		expect(pool.getFeedbackStyleOverrides(false).get('text0')?.get('fontsize')).toEqual({
+			isExpression: false,
+			value: 29.4,
+		})
 	})
 })
 

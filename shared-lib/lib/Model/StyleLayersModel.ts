@@ -115,7 +115,7 @@ export interface ButtonGraphicsImageDrawElement
 	base64Image: string | null
 	halign: HorizontalAlignment
 	valign: VerticalAlignment
-	fillMode: 'fit' | 'fill' | 'crop'
+	fillMode: 'fit' | 'fill' | 'crop' | 'fit_or_shrink'
 }
 
 export interface ButtonGraphicsImageElement
@@ -124,7 +124,7 @@ export interface ButtonGraphicsImageElement
 	base64Image: ExpressionOrValue<string | null>
 	halign: ExpressionOrValue<HorizontalAlignment>
 	valign: ExpressionOrValue<VerticalAlignment>
-	fillMode: ExpressionOrValue<'fit' | 'fill' | 'crop'>
+	fillMode: ExpressionOrValue<'fit' | 'fill' | 'crop' | 'fit_or_shrink'>
 }
 
 export interface ButtonGraphicsBoxDrawElement

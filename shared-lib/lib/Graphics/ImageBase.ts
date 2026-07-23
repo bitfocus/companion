@@ -114,6 +114,14 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	readonly width: number
 	readonly height: number
 
+	/**
+	 * The button content area (excludes UI padding and the topbar), in logical units. A stable reference for
+	 * size calculations that must not depend on element bounds (resizable) or canvas padding (differs between
+	 * the surface render and the editor preview). Defaults to the full canvas; the button renderer sets it per-draw.
+	 */
+	protected contentWidth: number
+	protected contentHeight: number
+
 	readonly #textLayoutCache: TextLayoutCache | null
 
 	/**
@@ -140,7 +148,17 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		this.context2d = context2d
 		this.width = width
 		this.height = height
+		this.contentWidth = width
+		this.contentHeight = height
 		this.#textLayoutCache = textLayoutCache
+	}
+
+	/**
+	 * Set the button content area (topbar/padding excluded) used as the reference for size calculations
+	 */
+	setContentSize(width: number, height: number): void {
+		this.contentWidth = width
+		this.contentHeight = height
 	}
 
 	/**
@@ -152,6 +170,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		fcn: (img: ImageBase<TDrawImageType>) => Promise<void>
 	): Promise<void> {
 		return this.#imagePool.usingImage(this.#textLayoutCache, async (img) => {
+			// Propagate the button content area so nested elements (eg inside a group) share the same reference
+			img.contentWidth = this.contentWidth
+			img.contentHeight = this.contentHeight
+
 			await fcn(img)
 
 			await this.usingAlpha(compositeAlpha, async () => {
@@ -542,11 +564,13 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let scaledImageHeight = imageHeight
 
 		if (scale === 'fit_or_shrink') {
-			if (imageWidth <= width && imageHeight <= height) {
-				// If image is smaller than the button, don't scale it
-				scale = 1
+			// Reproduce the legacy behaviour: size relative to a 72px button and keep the image at that size unless
+			// it is larger than the button content area, in which case shrink to fit. Reference the button content
+			// area (topbar/padding excluded) rather than the element bounds so a resized element cannot distort it.
+			const referenceScale = this.contentWidth / 72
+			if (imageWidth * referenceScale <= this.contentWidth && imageHeight * referenceScale <= this.contentHeight) {
+				scale = referenceScale
 			} else {
-				// Otherwise shrink to fit
 				scale = 'fit'
 			}
 		}

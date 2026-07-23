@@ -240,7 +240,7 @@ export class PreviewElementStream {
 			}
 		}
 
-		const feedbackOverrides = control.entities.getFeedbackStyleOverrides()
+		const feedbackOverrides = control.entities.getFeedbackStyleOverrides(control.drawing?.resolveDefaultNoTopBar())
 
 		if (!elementDef) {
 			return {

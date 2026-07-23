@@ -244,7 +244,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 				if (layeredStyleSelectedElementIds) {
 					if (definition.feedbackType === FeedbackEntitySubType.Boolean && definition.feedbackStyle) {
-						const parsedStyle = ParseLegacyStyle(definition.feedbackStyle)
+						const parsedStyle = ParseLegacyStyle(definition.feedbackStyle, undefined)
 						feedback.styleOverrides = ConvertBooleanFeedbackStyleToOverrides(
 							parsedStyle,
 							layeredStyleSelectedElementIds

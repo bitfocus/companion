@@ -5,6 +5,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
+	ButtonGraphicsDecorationType,
 	ButtonGraphicsShowStatusIcons,
 	type DrawStyleButtonStateProps,
 	type DrawStyleLayeredButtonModel,
@@ -30,7 +31,12 @@ export interface DrawElementsVisitor {
  */
 export interface LayeredButtonDrawerEntitySource {
 	getLocalVariableEntities(): ControlEntityInstance[]
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>
+	/**
+	 * @param defaultNoTopBar the button's resolved top-bar state, so legacy feedback sizes scale correctly
+	 */
+	getFeedbackStyleOverrides(
+		defaultNoTopBar: boolean | undefined
+	): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>
 }
 
 /**
@@ -171,17 +177,31 @@ export class LayeredButtonDrawer {
 				if (!element.showStatusIcons)
 					element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
 				break
-			case 'image':
-				if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
-					element.fillMode.value = 'fit'
-				}
-				break
 			case 'group':
 				for (const child of element.children) {
 					this.#normalizeLoadedElement(child)
 				}
 				break
 		}
+	}
+
+	/**
+	 * Resolve whether this button draws without a top bar, combining the global `buttons_decoration` default
+	 * with the button's own canvas decoration. Used to scale legacy (pre-5.0) feedback font sizes, which are
+	 * converted relative to the available draw height. Resolves from the button's base decoration - a feedback
+	 * that itself overrides the decoration is deliberately not accounted for (that would be a resolution cycle).
+	 */
+	resolveDefaultNoTopBar(): boolean {
+		const canvasElement = this.drawElementsList.find((el) => el.type === 'canvas')
+		const rawDecoration =
+			canvasElement?.type === 'canvas' && !canvasElement.decoration.isExpression
+				? canvasElement.decoration.value
+				: ButtonGraphicsDecorationType.FollowDefault
+		const resolvedDecoration =
+			rawDecoration === ButtonGraphicsDecorationType.FollowDefault
+				? this.deps.userconfig.getKey('buttons_decoration')
+				: rawDecoration
+		return resolvedDecoration !== ButtonGraphicsDecorationType.TopBar
 	}
 
 	/** Compute the draw style of the button. */
@@ -198,7 +218,8 @@ export class LayeredButtonDrawer {
 
 		const locationStr = location ? formatLocation(location) : null
 
-		const feedbackOverrides = this.#host.entities?.getFeedbackStyleOverrides() ?? emptyFeedbackOverrides
+		const feedbackOverrides =
+			this.#host.entities?.getFeedbackStyleOverrides(this.resolveDefaultNoTopBar()) ?? emptyFeedbackOverrides
 
 		const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations } =
 			await ConvertSomeButtonGraphicsElementForDrawing(

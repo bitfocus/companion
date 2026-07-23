@@ -248,7 +248,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		})
 		const canvasElement = this.drawElementsList.find((e) => e.type === 'canvas')
 
-		const parsedStyle = ParseLegacyStyle(diff)
+		const parsedStyle = ParseLegacyStyle(diff, this.resolveDefaultNoTopBar())
 
 		if (parsedStyle.text.text !== undefined) {
 			const textElement = lazyTextElement()

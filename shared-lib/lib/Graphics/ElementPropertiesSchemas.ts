@@ -254,6 +254,7 @@ export const imageElementSchema: ElementSchemaSection[] = [
 					{ id: 'fit', label: 'Fit' },
 					{ id: 'fill', label: 'Fill' },
 					{ id: 'crop', label: 'Crop' },
+					{ id: 'fit_or_shrink', label: 'Legacy (sized as on a 72px button)' },
 				],
 				default: 'fit',
 			},

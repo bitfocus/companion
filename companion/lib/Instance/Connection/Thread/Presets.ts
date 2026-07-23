@@ -316,7 +316,8 @@ function ConvertPresetDefinition(
 				const parsedStyle = ConvertLegacyStyleToElements(
 					ConvertPresetStyleToDrawStyle(rawPreset.style),
 					convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
-					rawPreset.previewStyle
+					rawPreset.previewStyle,
+					undefined
 				)
 
 				const { steps, hasRotaryActions } = ConvertStepsForPreset(entryCtx, rawPreset.steps)

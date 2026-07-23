@@ -94,10 +94,9 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
-	public getFeedbackStyleOverrides(): ReadonlyMap<
-		string,
-		ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
-	> {
+	public getFeedbackStyleOverrides(
+		_defaultNoTopBar: boolean | undefined
+	): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>> {
 		return new Map()
 	}
 
