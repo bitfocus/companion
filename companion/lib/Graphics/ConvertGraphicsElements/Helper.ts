@@ -123,8 +123,8 @@ export class ElementExpressionHelper<T> {
 	}
 
 	/**
-	 * Resolve a colour property, preserving css colour strings. A numeric (or numeric-string) value becomes a number;
-	 * a valid css colour string is kept as-is; anything else falls back to the default. Mirrors the number/string
+	 * Resolve a color property, preserving css color strings. A numeric (or numeric-string) value becomes a number;
+	 * a valid css color string is kept as-is; anything else falls back to the default. Mirrors the number/string
 	 * semantics of parseColor so the value renders correctly downstream.
 	 *
 	 * When allowAlpha is false (the field disables alpha) any transparency is discarded, so a translucent value is
@@ -137,7 +137,7 @@ export class ElementExpressionHelper<T> {
 		if (!value.isExpression) {
 			raw = value.value
 		} else {
-			// Do not force a 'number' result type, otherwise a css colour string would be rejected
+			// Do not force a 'number' result type, otherwise a css color string would be rejected
 			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
 			raw = result.ok ? result.value : undefined
 		}

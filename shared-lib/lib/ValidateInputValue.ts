@@ -158,21 +158,21 @@ export function validateInputValue(
 			return makeResult(!!value, undefined, false)
 
 		case 'colorpicker': {
-			// A colour field accepts any colour representation - a number, a numeric string, or a css colour string -
+			// A color field accepts any color representation - a number, a numeric string, or a css color string -
 			// and normalises it to the type the field declares (so the value handed onward always matches returnType
 			// and is consumable by a module's splitRgb()).
-			const isColour =
+			const isColor =
 				typeof value === 'number' ||
 				(typeof value === 'string' && ((value.trim() !== '' && !isNaN(Number(value))) || colord(value).isValid()))
-			if (!isColour) {
-				return makeResult(value, 'Value must be a colour number or a css colour string')
+			if (!isColor) {
+				return makeResult(value, 'Value must be a color number or a css color string')
 			}
 
-			// isColour guarantees value is a number or string here
-			const colourValue = value as number | string
+			// isColor guarantees value is a number or string here
+			const colorValue = value as number | string
 			return definition.returnType === 'string'
-				? makeResult(parseColor(colourValue), undefined)
-				: makeResult(colorToNumber(colourValue), undefined)
+				? makeResult(parseColor(colorValue), undefined)
+				: makeResult(colorToNumber(colorValue), undefined)
 		}
 
 		case 'bonjour-device':

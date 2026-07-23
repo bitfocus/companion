@@ -25,11 +25,11 @@ const globalTopbar = { buttons_decoration: ButtonGraphicsDecorationType.TopBar, 
 const globalNone = { buttons_decoration: ButtonGraphicsDecorationType.None, buttons_status_icons: 'none' } as const
 
 describe('parseColorAlpha', () => {
-	test('opaque colour number has alpha 1', () => {
+	test('opaque color number has alpha 1', () => {
 		expect(parseColorAlpha(0xff0000)).toBe(1)
 	})
 
-	test('colour number with a transparent alpha byte has alpha 0', () => {
+	test('color number with a transparent alpha byte has alpha 0', () => {
 		expect(parseColorAlpha(0xff000000)).toBe(0) // top byte 0xff = fully transparent
 	})
 
@@ -41,13 +41,13 @@ describe('parseColorAlpha', () => {
 		expect(parseColorAlpha('#ff000080')).toBeCloseTo(0.5, 1)
 	})
 
-	test('invalid colour has alpha 0', () => {
-		expect(parseColorAlpha('not-a-colour')).toBe(0)
+	test('invalid color has alpha 0', () => {
+		expect(parseColorAlpha('not-a-color')).toBe(0)
 	})
 })
 
 describe('colorToNumber', () => {
-	test('returns a colour number unchanged', () => {
+	test('returns a color number unchanged', () => {
 		expect(colorToNumber(0xff0000)).toBe(0xff0000)
 	})
 
@@ -55,7 +55,7 @@ describe('colorToNumber', () => {
 		expect(colorToNumber('16777215')).toBe(16777215)
 	})
 
-	test('parses a css colour string to a colour number', () => {
+	test('parses a css color string to a color number', () => {
 		expect(colorToNumber('#ff0000')).toBe(0xff0000)
 	})
 
@@ -63,8 +63,8 @@ describe('colorToNumber', () => {
 		expect(colorToNumber('rgba(255, 0, 0, 0.5)')).toBe(0xff0000 + 0x80 * 0x1000000)
 	})
 
-	test('returns 0 for an invalid colour', () => {
-		expect(colorToNumber('not-a-colour')).toBe(0)
+	test('returns 0 for an invalid color', () => {
+		expect(colorToNumber('not-a-color')).toBe(0)
 	})
 })
 

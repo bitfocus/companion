@@ -499,7 +499,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
-		test('forces the text colour opaque (the field disables alpha)', async () => {
+		test('forces the text color opaque (the field disables alpha)', async () => {
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
@@ -692,7 +692,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
-		test('keeps a css colour string (plain value)', async () => {
+		test('keeps a css color string (plain value)', async () => {
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
@@ -708,7 +708,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
 		})
 
-		test('keeps a css colour string returned by an expression', async () => {
+		test('keeps a css color string returned by an expression', async () => {
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
@@ -724,7 +724,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
 		})
 
-		test('keeps a translucent colour (the box colour field allows alpha)', async () => {
+		test('keeps a translucent color (the box color field allows alpha)', async () => {
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),

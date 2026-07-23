@@ -172,7 +172,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 	/**
 	 * Perform some drawing with a given alpha.
-	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colours
+	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colors
 	 */
 	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
 		const oldAlpha = this.context2d.globalAlpha
@@ -916,7 +916,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			this.context2d.fillText(line.text, xAnchor, yAnchor)
 
 			// Underline/strikethrough have no native canvas support, so draw them manually.
-			// fillStyle is still `color` here, so the decorations match the text colour.
+			// fillStyle is still `color` here, so the decorations match the text color.
 			if (underline || strikethrough) {
 				const metrics = this.context2d.measureText(line.text)
 				const width = metrics.width

@@ -52,12 +52,12 @@ async function decodePng(buffer: Buffer): Promise<PixelData> {
 }
 
 /**
- * Largest single-channel difference at pixel offset `i`, measured with the colour channels
+ * Largest single-channel difference at pixel offset `i`, measured with the color channels
  * premultiplied by alpha.
  *
- * Skia composites premultiplied and getImageData un-premultiplies, which divides the colour
+ * Skia composites premultiplied and getImageData un-premultiplies, which divides the color
  * channels by alpha. On a nearly-transparent pixel that turns a 1-unit rasterisation difference
- * into an enormous apparent colour difference — rgba(0,191,255,4) and rgba(0,128,255,4) differ by
+ * into an enormous apparent color difference — rgba(0,191,255,4) and rgba(0,128,255,4) differ by
  * 63 per the raw bytes, but composite identically. Comparing premultiplied keeps the metric
  * proportional to what actually lands on screen.
  */

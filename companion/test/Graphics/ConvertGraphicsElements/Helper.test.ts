@@ -362,9 +362,9 @@ describe('ElementExpressionHelper', () => {
 			expect(helper.getColor('colorProp', 0)).toBe(255)
 		})
 
-		// Named colours (e.g. 'red') need colord's names plugin, which is not registered - matches parseColor
+		// Named colors (e.g. 'red') need colord's names plugin, which is not registered - matches parseColor
 		test.each(['#ff0000', '#f00', 'rgb(255, 0, 0)', 'rgb(255 0 0)', 'hsl(0, 100%, 50%)', 'rgba(255, 0, 0, 0.5)'])(
-			'valid css colour string %s is kept as-is',
+			'valid css color string %s is kept as-is',
 			(css) => {
 				const { helper } = makeHelper(makeEl({ colorProp: val(css) }))
 				expect(helper.getColor('colorProp', 0)).toBe(css)
@@ -372,7 +372,7 @@ describe('ElementExpressionHelper', () => {
 		)
 
 		test('invalid string falls back to defaultValue', () => {
-			const { helper } = makeHelper(makeEl({ colorProp: val('not-a-colour') }))
+			const { helper } = makeHelper(makeEl({ colorProp: val('not-a-color') }))
 			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
 		})
 
@@ -381,7 +381,7 @@ describe('ElementExpressionHelper', () => {
 			expect(helper.getColor('colorProp', 0)).toBe(10)
 		})
 
-		test('expression resolving to a css colour string is kept as a string', () => {
+		test('expression resolving to a css color string is kept as a string', () => {
 			// This is the regression getNumber fails: a css string expression result must survive
 			const { helper } = makeHelper(makeEl({ colorProp: expr('"#00ff00"') }))
 			expect(helper.getColor('colorProp', 0)).toBe('#00ff00')

@@ -475,8 +475,8 @@ export class GraphicsLayeredButtonRenderer {
 			return Number.isFinite(n) ? n : fallback
 		}
 
-		// Shared value/colour model (0–100 track-position space): the fill interval, colour runs and
-		// fill colour. This also drives the LED baker (`bakeGaugeToLeds`), so LEDs match the pixels.
+		// Shared value/color model (0–100 track-position space): the fill interval, color runs and
+		// fill color. This also drives the LED baker (`bakeGaugeToLeds`), so LEDs match the pixels.
 		// The trivial per-element flags/geometry (above + below) stay local to the renderer.
 		const model = buildGaugeColorModel(element)
 		if (!model) return drawBounds
@@ -485,8 +485,8 @@ export class GraphicsLayeredButtonRenderer {
 		const trackWidth = Math.max(0, Math.min(100, finite(element.trackWidth, 100))) / 100
 
 		const cssOf = (c: GaugeRGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
-		// Track (unfilled) colour. 'transparent' base colours are emitted at full alpha and composited
-		// through a temporary layer at trackAmount; 'dimmed' darkens the colour in place.
+		// Track (unfilled) color. 'transparent' base colors are emitted at full alpha and composited
+		// through a temporary layer at trackAmount; 'dimmed' darkens the color in place.
 		const trackTransform = (c: GaugeRGBA): GaugeRGBA => {
 			if (trackStyle === 'transparent') return c
 			return { r: c.r * trackAmount, g: c.g * trackAmount, b: c.b * trackAmount, a: c.a }
@@ -524,7 +524,7 @@ export class GraphicsLayeredButtonRenderer {
 		// p=0 at startAngle, p=100 at endAngle (clockwise). reverse flips which end is p=0.
 		const posToAngle = (p: number): number => degToRad(startAngleDeg + (reverse ? 1 - p / 100 : p / 100) * sweepDeg)
 
-		// Paint a single position-space interval [a, b] with one solid colour onto `target`.
+		// Paint a single position-space interval [a, b] with one solid color onto `target`.
 		// `wide` selects the fill width (full) vs the narrowed track width.
 		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, wide: boolean): void => {
 			if (b - a <= 1e-6) return
@@ -557,7 +557,7 @@ export class GraphicsLayeredButtonRenderer {
 			return isHorizontal ? Math.abs(posToX(b) - posToX(a)) : Math.abs(posToY(b) - posToY(a))
 		}
 
-		// Paint an interval [a, b] of a run onto `target`, applying a colour transform.
+		// Paint an interval [a, b] of a run onto `target`, applying a color transform.
 		const paintRunInterval = (
 			target: ImageBase<any>,
 			a: number,
@@ -644,7 +644,7 @@ export class GraphicsLayeredButtonRenderer {
 							const run = runs.find((r) => p >= r.start && p <= r.end) ?? runs[runs.length - 1]
 							if (!run.gradient) return run.colorStart
 							const span = run.end - run.start
-							// Use whichever stop colour the position is closer to.
+							// Use whichever stop color the position is closer to.
 							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
 						}
 						for (const p of [fillStart, fillEnd]) {
@@ -663,7 +663,7 @@ export class GraphicsLayeredButtonRenderer {
 					}
 				}
 
-				// --- Marker pass: a single-colour line at the value, spanning the full fill width. ---
+				// --- Marker pass: a single-color line at the value, spanning the full fill width. ---
 				if (element.markerEnabled) {
 					const markerColor = parseColor(element.markerColor)
 					const markerW = Math.max(1, Math.min(100, finite(element.markerWidth, 15))) / 100
@@ -711,7 +711,7 @@ export class GraphicsLayeredButtonRenderer {
 	 * Note: this intentionally overshoots everything to make it very visible
 	 */
 	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {
-		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what colour is best?
+		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what color is best?
 
 		img.horizontalLine(bounds.y, lineStyle)
 		img.horizontalLine(bounds.maxY, lineStyle)

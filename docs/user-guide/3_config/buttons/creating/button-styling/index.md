@@ -7,18 +7,18 @@ description: Style your buttons by stacking layered graphics elements.
 # Button styling
 
 In Companion 5.0 the way buttons are drawn has been completely reworked. Instead of a single fixed
-style (one block of text, one background image, one set of colours), a button is now built up from a
+style (one block of text, one background image, one set of colors), a button is now built up from a
 stack of **graphics elements** — small building blocks like text, images and shapes that you layer on
 top of each other to create exactly the look you want.
 
 :::tip[Coming from an older version of Companion?]
 If you've used Companion for years, the short version is: everything you used to set in the button
-style (text, font size, background image, colours) is still here — it's just been split into separate
+style (text, font size, background image, colors) is still here — it's just been split into separate
 **elements** that you can add, remove, reposition and restyle individually. A plain button with some
 text and a background image is now two elements: an Image element and a Text element. Nothing you
 could do before has gone away; but you can now do a lot more.
 
-The old **background colour** is now the element named **Background** near the bottom of the stack.
+The old **background color** is now the element named **Background** near the bottom of the stack.
 There's no dedicated "background" element type — it's simply a **Box** element that's been sized to
 fill the whole button (X 0, Y 0, Width 100, Height 100) with no border. You can restyle it, rename
 it, or delete it like any other element. If you remove it and later want it back, add a **Box**
@@ -81,7 +81,7 @@ Select an element to edit its properties.
 
 By default the panel is in **Simple** mode (the toggle sits in the bottom-left of the editor, and your
 choice is remembered between sessions). Simple mode shows just the handful of properties you change
-most often — for a Text element, for example, that's the text itself, its size, colour and alignment —
+most often — for a Text element, for example, that's the text itself, its size, color and alignment —
 with a note at the bottom reminding you that _some fields are hidden in simple mode_. Turn **Simple**
 off to reveal the full set of properties.
 
@@ -119,10 +119,10 @@ For example, an element at `X 0`, `Y 0`, `Width 100`, `Height 100` fills the who
 **Box**, **Line** and **Circle** are straightforward and are useful for backgrounds, dividers,
 borders and indicator dots.
 
-- **Box** — a filled rectangle. It has a **Fill** section (colour) and a **Border** section (width,
-  colour, and whether the border is drawn inside, centred on, or outside the edge).
+- **Box** — a filled rectangle. It has a **Fill** section (color) and a **Border** section (width,
+  color, and whether the border is drawn inside, centred on, or outside the edge).
 - **Line** — a straight line. You set the **From** and **To** points (each as X %/Y %) and the line's
-  width, colour and position.
+  width, color and position.
 - **Circle** — a circle or arc. As well as a fill and border, you can set a **Start Angle** and **End
   Angle** to draw just part of the circle, and tick **Draw Slice** to fill it as a pie-slice instead
   of a thin arc.

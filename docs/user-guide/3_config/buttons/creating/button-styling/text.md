@@ -57,9 +57,9 @@ element in one corner and the text will scale to that element. Resize the elemen
 Size** and the text follows.
 :::
 
-## Colour and alignment
+## Color and alignment
 
-- **Color** — the colour of the text.
+- **Color** — the color of the text.
 - **Outline Color** — an optional outline drawn around each character. A contrasting outline (for
   example black text outline) keeps text readable when it sits on top of a busy image.
 - **Horizontal Alignment** — left, centre or right.
