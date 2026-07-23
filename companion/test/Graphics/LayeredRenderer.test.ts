@@ -1125,6 +1125,29 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		test('off-centre group with rotation - pivots about the group centre, not the canvas centre', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeGroupElement([makeBoxElement({ color: 0xff8800 })], {
+							rotation: 30,
+							x: 0,
+							y: 0,
+							width: 0.4,
+							height: 0.4,
+						}),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
 	})
 
 	describe('gauge element', () => {
