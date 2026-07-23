@@ -124,7 +124,7 @@ export const borderFields: SomeCompanionInputField[] = [
 ]
 
 export const textElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'content',
@@ -219,7 +219,7 @@ export const textElementSchema: ElementSchemaSection[] = [
 
 // Image element schema (from ImageElementPropertiesEditor)
 export const imageElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'content',
@@ -262,7 +262,7 @@ export const imageElementSchema: ElementSchemaSection[] = [
 ]
 
 export const boxElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'fill',
@@ -282,7 +282,7 @@ export const boxElementSchema: ElementSchemaSection[] = [
 ]
 
 export const lineElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{
 		id: 'position',
 		label: 'Position',
@@ -358,7 +358,7 @@ export const lineElementSchema: ElementSchemaSection[] = [
 ]
 
 export const circleElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields] },
 	{
 		id: 'arc-fill',
@@ -456,7 +456,7 @@ export const canvasElementSchema: ElementSchemaSection[] = [
 ]
 
 export const groupElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'options',
@@ -475,12 +475,12 @@ export const groupElementSchema: ElementSchemaSection[] = [
 ]
 
 export const compositeElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields] },
 ]
 
 export const referenceElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'source',
@@ -500,7 +500,7 @@ export const referenceElementSchema: ElementSchemaSection[] = [
 ]
 
 export const gaugeElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'value',
