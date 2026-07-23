@@ -15,6 +15,7 @@ import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './GaugeColorModel.js'
+import { buildSelectionMarker, computeSelectionMarkerLines, type SelectedElementMarker } from './Geometry.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
 
@@ -53,7 +54,7 @@ export class GraphicsLayeredButtonRenderer {
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
-		const selectedElementBounds = await this.#drawElements(
+		const selectedMarker = await this.#drawElements(
 			img,
 			drawStyle.elements,
 			elementsToHide,
@@ -83,7 +84,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		// Draw a border around the selected element, do this last so it's on top
-		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
+		if (selectedMarker) this.#drawBoundsLines(img, selectedMarker)
 	}
 
 	/**
@@ -97,8 +98,8 @@ export class GraphicsLayeredButtonRenderer {
 		selectedElementId: string | null,
 		drawBounds: DrawBounds,
 		skipDrawParent: boolean
-	): Promise<DrawBounds | null> {
-		let selectedElementBounds: DrawBounds | null = null
+	): Promise<SelectedElementMarker | null> {
+		let selectedMarker: SelectedElementMarker | null = null
 		for (const element of elements) {
 			// Skip the background element, it's handled separately
 			if (element.type === 'canvas') continue
@@ -113,8 +114,9 @@ export class GraphicsLayeredButtonRenderer {
 							await img.usingRotation(drawBounds, element.rotation, async () => {
 								elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
 
-								// Propagate the selected
-								const childElementBounds = await this.#drawElements(
+								// Propagate the selected child, prefixing this group's rotation so the marker
+								// is drawn in the same rotated frame the child was drawn in
+								const childMarker = await this.#drawElements(
 									img,
 									element.children,
 									elementsToHide,
@@ -122,7 +124,14 @@ export class GraphicsLayeredButtonRenderer {
 									elementBounds,
 									skipDraw
 								)
-								if (childElementBounds) selectedElementBounds = childElementBounds
+								if (childMarker) {
+									selectedMarker = buildSelectionMarker(
+										childMarker.bounds,
+										elementBounds,
+										element.rotation,
+										childMarker.rotations
+									)
+								}
 							})
 						})
 						break
@@ -172,11 +181,14 @@ export class GraphicsLayeredButtonRenderer {
 				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
 			}
 
-			// Find the bounds of the selected element
-			if (element.id === selectedElementId) selectedElementBounds = elementBounds
+			// Capture the selected element's bounds and rotation, to draw the marker later
+			if (element.id === selectedElementId && elementBounds) {
+				const rotation = 'rotation' in element ? element.rotation : 0
+				selectedMarker = buildSelectionMarker(elementBounds, elementBounds, rotation)
+			}
 		}
 
-		return selectedElementBounds
+		return selectedMarker
 	}
 
 	static #drawBackgroundElement(
@@ -707,17 +719,15 @@ export class GraphicsLayeredButtonRenderer {
 	}
 
 	/**
-	 * Draw some bounds lines over the whole image, to give a visual indicator of the selected element
-	 * Note: this intentionally overshoots everything to make it very visible
+	 * Draw the selection marker for the selected element: its four bounds edges as lines that follow the
+	 * element's rotation and extend across the whole image (intentionally overshooting to be very visible).
 	 */
-	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {
+	static #drawBoundsLines(img: ImageBase<any>, marker: SelectedElementMarker) {
 		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what color is best?
 
-		img.horizontalLine(bounds.y, lineStyle)
-		img.horizontalLine(bounds.maxY, lineStyle)
-
-		img.verticalLine(bounds.x, lineStyle)
-		img.verticalLine(bounds.maxX, lineStyle)
+		for (const [x1, y1, x2, y2] of computeSelectionMarkerLines(marker, img.width, img.height)) {
+			img.line(x1, y1, x2, y2, lineStyle)
+		}
 	}
 
 	static #angleToRadians(angle: number): number {
