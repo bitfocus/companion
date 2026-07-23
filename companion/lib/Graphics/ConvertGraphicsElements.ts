@@ -704,7 +704,7 @@ function convertTextElementForDrawing(
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
 		weight: helper.getEnum('weight', TEXT_WEIGHT_CHOICES, 'normal'),
 		styles: helper.getEnumArray('styles', TEXT_STYLE_VALUES, []),
-		color: helper.getColor('color', 0, false), // text color field disables alpha
+		color: helper.getColor('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		outlineColor: helper.getColor('outlineColor', 0),
