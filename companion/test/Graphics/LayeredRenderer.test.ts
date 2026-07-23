@@ -454,6 +454,33 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		test('rotated element - marker follows the element rotation', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					elements: [makeBoxElement({ id: 'sel-box', x: 0.25, y: 0.25, width: 0.5, height: 0.5, rotation: 30 })],
+				}),
+				new Set(),
+				'sel-box',
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('selected child inside a rotated group - marker follows the group rotation', async () => {
+			const img = Image.create(72, 58, 1, null)
+			const child = makeBoxElement({ id: 'sel-child', x: 0.25, y: 0.25, width: 0.5, height: 0.5 })
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ elements: [makeGroupElement([child], { rotation: 25 })] }),
+				new Set(),
+				'sel-child',
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
 	})
 
 	describe('padding', () => {
