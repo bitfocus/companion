@@ -117,6 +117,6 @@ describe('EntityListPoolExpressionVariable', () => {
 	test('getFeedbackStyleOverrides returns an empty map', () => {
 		const { pool } = createExpressionVariablePool()
 
-		expect(pool.getFeedbackStyleOverrides().size).toBe(0)
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(0)
 	})
 })

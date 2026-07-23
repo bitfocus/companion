@@ -164,7 +164,8 @@ function ConvertPresetDefinition(
 			rawPreset.previewStyle,
 			// Legacy (pre-2.0) modules do not declare per-feedback affectedProperties
 			null,
-			generateId
+			generateId,
+			undefined
 		)
 
 		const presetDefinition: PresetDefinition = {

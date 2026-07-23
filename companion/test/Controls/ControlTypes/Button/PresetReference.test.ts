@@ -356,7 +356,7 @@ describe('ControlButtonPresetReference', () => {
 
 			reportImageBuffer(control)
 
-			const overrides = control.entities.getFeedbackStyleOverrides()
+			const overrides = control.entities.getFeedbackStyleOverrides(undefined)
 			expect(overrides.get('imageBuffers')?.get('base64Image')).toBeDefined()
 		})
 
@@ -366,12 +366,16 @@ describe('ControlButtonPresetReference', () => {
 			const control = createControl(makeAdvancedModel('stable-checksum'))
 
 			reportImageBuffer(control)
-			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')?.get('base64Image')).toBeDefined()
+			expect(
+				control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')?.get('base64Image')
+			).toBeDefined()
 
 			definitions.emit('updatePresets', 'conn1')
 
 			// The reference was not rebuilt, so the imageBuffer is retained
-			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')?.get('base64Image')).toBeDefined()
+			expect(
+				control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')?.get('base64Image')
+			).toBeDefined()
 		})
 
 		it('rebuilds and re-subscribes when the preset actually changed', () => {
@@ -380,7 +384,9 @@ describe('ControlButtonPresetReference', () => {
 			const control = createControl(makeAdvancedModel('v1'))
 
 			reportImageBuffer(control)
-			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')?.get('base64Image')).toBeDefined()
+			expect(
+				control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')?.get('base64Image')
+			).toBeDefined()
 
 			const processManager = deps.instance.processManager as any
 			processManager.connectionEntityUpdate.mockClear()
@@ -388,7 +394,7 @@ describe('ControlButtonPresetReference', () => {
 			definitions.emit('updatePresets', 'conn1')
 
 			// The preset changed, so the reference rebuilt: the imageBuffer is cleared until refetched...
-			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')).toBeUndefined()
+			expect(control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')).toBeUndefined()
 			// ...and the refreshed feedback was re-subscribed so the module provides it again
 			expect(processManager.connectionEntityUpdate).toHaveBeenCalled()
 		})

@@ -116,6 +116,11 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		return this.#lastDrawStyle
 	}
 
+	// A mirror owns no elements and converts no legacy feedback styles, so its own top-bar state is irrelevant.
+	resolveDefaultNoTopBar(): boolean {
+		return false
+	}
+
 	// A mirror owns no elements, but its `location` field can reference variables (e.g. `$(page:x)`): when one
 	// of those changes the mirrored target may change, so redraw. The target's own variables are handled by
 	// redrawing off its render (see onButtonDrawn), not here.

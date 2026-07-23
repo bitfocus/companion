@@ -19,4 +19,6 @@ export interface IButtonDrawer {
 	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void
 	/** Another located control finished rendering: invalidate and redraw if this button mirrors or references it. */
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void
+	/** Whether this button draws without a top bar, used to scale legacy (pre-5.0) feedback font sizes. */
+	resolveDefaultNoTopBar(): boolean
 }

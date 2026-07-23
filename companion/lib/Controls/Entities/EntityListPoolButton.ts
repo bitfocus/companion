@@ -203,7 +203,9 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		return entityLists
 	}
 
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>> {
+	getFeedbackStyleOverrides(
+		defaultNoTopBar: boolean | undefined
+	): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>> {
 		const result = new Map<string, Map<string, ResolvedFeedbackStyleOverride>>()
 
 		const pushOverride = (elementId: string, elementProperty: string, override: ResolvedFeedbackStyleOverride) => {
@@ -278,7 +280,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					const style = feedback.feedbackValue
 					if (!style || typeof style !== 'object') break
 
-					const parsedStyle = ParseLegacyStyle(style)
+					const parsedStyle = ParseLegacyStyle(style, defaultNoTopBar)
 					for (const override of overrides) {
 						const newValue = GetLegacyStyleProperty(
 							parsedStyle,
