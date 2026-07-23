@@ -815,7 +815,19 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				img,
 				makeStyle({
 					...drawOpts,
-					elements: [makeBoxElement({ borderWidth: 0.05, borderColor: 0xffff00, borderPosition: 'outside' })],
+					// Inset so the outward border stays within the button rect (a full-bleed box's outside
+					// border falls entirely in the padding and would be clipped, drawing nothing to test).
+					elements: [
+						makeBoxElement({
+							x: 0.15,
+							y: 0.15,
+							width: 0.7,
+							height: 0.7,
+							borderWidth: 0.05,
+							borderColor: 0xffff00,
+							borderPosition: 'outside',
+						}),
+					],
 				}),
 				new Set(),
 				null,

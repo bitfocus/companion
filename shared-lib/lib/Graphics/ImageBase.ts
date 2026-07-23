@@ -214,6 +214,26 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
+	 * Perform some drawing optionally clipped to a rectangular region (pass null to not clip). The clip is
+	 * baked into device space here, so it keeps masking every subsequent draw on this context.
+	 */
+	async usingClip<T>(clipBounds: DrawBounds | null, fcn: () => Promise<T>): Promise<T> {
+		this.context2d.save()
+
+		if (clipBounds) {
+			this.context2d.beginPath()
+			this.context2d.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height)
+			this.context2d.clip()
+		}
+
+		try {
+			return await fcn()
+		} finally {
+			this.context2d.restore()
+		}
+	}
+
+	/**
 	 * Clear the image, resetting to a fully transparent and empty state
 	 */
 	clear(): void {

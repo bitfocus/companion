@@ -52,13 +52,11 @@ export class GraphicsLayeredButtonRenderer {
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
-		const selectedMarker = await this.#drawElements(
-			img,
-			drawStyle.elements,
-			elementsToHide,
-			selectedElementId,
-			drawBounds,
-			false
+		// Clip element drawing to the button rectangle, so that only the markers draw outside the bounds
+		const clipBounds =
+			paddingPx.x > 0 || paddingPx.y > 0 ? new DrawBounds(paddingPx.x, paddingPx.y, drawWidth, drawHeight) : null
+		const selectedMarker = await img.usingClip(clipBounds, async () =>
+			this.#drawElements(img, drawStyle.elements, elementsToHide, selectedElementId, drawBounds, false)
 		)
 
 		switch (decoration) {
