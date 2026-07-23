@@ -495,7 +495,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
-		test('forces the text color opaque (the field disables alpha)', async () => {
+		test('keeps a translucent color (the text color field allows alpha)', async () => {
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
 				createMockInstanceDefinitions(),
 				createMockParser(),
@@ -508,7 +508,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.elements[0]).toMatchObject({ type: 'text', color: 'rgb(255, 0, 0)' })
+			expect(result.elements[0]).toMatchObject({ type: 'text', color: 'rgba(255, 0, 0, 0.5)' })
 		})
 
 		test('filters disabled text element when onlyEnabled is true', async () => {

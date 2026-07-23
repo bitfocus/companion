@@ -287,6 +287,18 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('text element with translucent color', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements: [makeTextElement({ color: 'rgba(255, 255, 255, 0.5)' })] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		// The text outline width is proportional to the font size, so it should keep a consistent visual
 		// weight relative to the text across canvas sizes, oversampling factors and font sizes (rather than
 		// being a fixed pixel width). These snapshots let us eyeball the thickness across that matrix.

@@ -696,7 +696,7 @@ function convertTextElementForDrawing(
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
-		color: helper.getColor('color', 0, false), // text color field disables alpha
+		color: helper.getColor('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
 		outlineColor: helper.getColor('outlineColor', 0),

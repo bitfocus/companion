@@ -172,7 +172,7 @@ export const textElementSchema: ElementSchemaSection[] = [
 				label: 'Color',
 				default: 0xffffff,
 				returnType: 'number',
-				enableAlpha: false,
+				enableAlpha: true,
 			},
 			{
 				type: 'colorpicker',
