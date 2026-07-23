@@ -131,12 +131,15 @@ export interface ButtonGraphicsBoxDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder, ButtonGraphicsDrawRotation {
 	type: 'box'
 	color: ColorValue
+	/** Corner radius as a fraction (0-1) of half the box's shorter side (1 = fully rounded) */
+	cornerRadius: number
 }
 
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder, ButtonGraphicsRotation {
 	type: 'box'
 	color: ExpressionOrValue<ColorValue>
+	cornerRadius: ExpressionOrValue<number>
 }
 
 export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase {

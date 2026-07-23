@@ -355,6 +355,10 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
+		// Corner radius is a fraction of half the shorter side, so 100% gives fully-rounded corners
+		const cornerRadius =
+			Math.max(0, Math.min(element.cornerRadius, 1)) * (Math.min(drawBounds.width, drawBounds.height) / 2)
+
 		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.box(
@@ -367,7 +371,8 @@ export class GraphicsLayeredButtonRenderer {
 						color: parseColor(element.borderColor),
 						width: borderWidth,
 					},
-					element.borderPosition
+					element.borderPosition,
+					cornerRadius
 				)
 			})
 		})

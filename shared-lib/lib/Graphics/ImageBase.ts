@@ -319,17 +319,24 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		y2: number,
 		fillColor?: string,
 		lineStyle?: LineStyle,
-		lineOrientation: LineOrientation = 'inside'
+		lineOrientation: LineOrientation = 'inside',
+		cornerRadius = 0
 	): boolean {
 		if (x2 == x1 || y2 == y1) return false
 		let didDraw = false
 		if (fillColor) {
 			this.context2d.fillStyle = fillColor
-			this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
+			if (cornerRadius > 0) {
+				this.context2d.beginPath()
+				this.context2d.roundRect(x1, y1, x2 - x1, y2 - y1, cornerRadius)
+				this.context2d.fill()
+			} else {
+				this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
+			}
 			didDraw = true
 		}
 		if (lineStyle) {
-			didDraw = this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation) || didDraw
+			didDraw = this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation, cornerRadius) || didDraw
 		}
 
 		return didDraw
@@ -478,30 +485,42 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		x2: number,
 		y2: number,
 		lineStyle: LineStyle,
-		lineOrientation: LineOrientation = 'inside'
+		lineOrientation: LineOrientation = 'inside',
+		cornerRadius = 0
 	): boolean {
 		const lineWidth = lineStyle.width ?? 1
 		if (lineWidth <= 0) return false
 
 		const halfline = lineWidth / 2
+		// Keep the stroked corners concentric with the fill by shifting the radius with the edge (only
+		// when there is a radius — a square box must stay square regardless of border orientation)
+		let radius = cornerRadius
 		switch (lineOrientation) {
 			case 'inside':
 				x1 += halfline
 				y1 += halfline
 				x2 -= halfline
 				y2 -= halfline
+				if (cornerRadius > 0) radius = Math.max(0, cornerRadius - halfline)
 				break
 			case 'outside':
 				x1 -= halfline
 				y1 -= halfline
 				x2 += halfline
 				y2 += halfline
+				if (cornerRadius > 0) radius = cornerRadius + halfline
 				break
 		}
 
 		this.context2d.lineWidth = lineWidth
 		this.context2d.strokeStyle = lineStyle.color
-		this.context2d.strokeRect(x1, y1, x2 - x1, y2 - y1)
+		if (radius > 0) {
+			this.context2d.beginPath()
+			this.context2d.roundRect(x1, y1, x2 - x1, y2 - y1, radius)
+			this.context2d.stroke()
+		} else {
+			this.context2d.strokeRect(x1, y1, x2 - x1, y2 - y1)
+		}
 
 		return true
 	}

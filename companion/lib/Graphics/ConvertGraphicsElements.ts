@@ -423,6 +423,7 @@ function makeReferencePlaceholder(
 		height: 1,
 		rotation: 0,
 		color: 0xff8c00,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -735,6 +736,7 @@ function convertBoxElementForDrawing(
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
 		color: helper.getColor('color', 0),
+		cornerRadius: helper.getNumber('cornerRadius', 0, 0.01),
 
 		...convertBorderProperties(helper),
 		contentHash: '', // Will be computed below

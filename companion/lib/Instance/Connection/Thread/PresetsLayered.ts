@@ -132,6 +132,7 @@ function convertLayeredPresetElement(
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
+				cornerRadius: { value: 0, isExpression: false }, // not yet exposed to the module API
 
 				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
 				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),

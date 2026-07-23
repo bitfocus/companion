@@ -91,6 +91,7 @@ function makeBoxElement(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): 
 		height: 1,
 		rotation: 0,
 		color: 0xff0000, // red
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -360,6 +361,46 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({ ...drawOpts, elements: [makeBoxElement()] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('box element with corner radius', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [makeBoxElement({ x: 0.1, y: 0.1, width: 0.8, height: 0.8, cornerRadius: 0.4 })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('box element with corner radius and border', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeBoxElement({
+							x: 0.1,
+							y: 0.1,
+							width: 0.8,
+							height: 0.8,
+							cornerRadius: 1, // fully rounded
+							borderWidth: 0.05,
+							borderColor: 0xffffff,
+						}),
+					],
+				}),
 				new Set(),
 				null,
 				DEFAULT_PADDING
