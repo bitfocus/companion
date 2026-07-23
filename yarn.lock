@@ -1889,6 +1889,7 @@ __metadata:
     bowser: "npm:^2.14.1"
     classnames: "npm:^2.5.1"
     copy-to-clipboard: "npm:^4.0.2"
+    core-js: "npm:^3.49.0"
     crypto-js: "npm:^4.2.0"
     csv-stringify: "npm:^6.8.1"
     dayjs: "npm:^1.11.21"
