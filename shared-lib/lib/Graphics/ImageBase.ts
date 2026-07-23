@@ -76,7 +76,7 @@ export interface DrawAlignedTextOptions {
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
 export type CompanionImageContext2D = Omit<
 	CanvasRenderingContext2D,
-	'drawImage' | 'createPattern' | 'getTransform' | 'drawFocusIfNeeded' | 'scrollPathIntoView' | 'canvas'
+	'drawImage' | 'createPattern' | 'drawFocusIfNeeded' | 'scrollPathIntoView' | 'canvas'
 >
 
 /**
@@ -152,9 +152,16 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		fcn: (img: ImageBase<TDrawImageType>) => Promise<void>
 	): Promise<void> {
 		return this.#imagePool.usingImage(this.#textLayoutCache, async (img) => {
+			// Setup the temporary layer to use the same transform
+			img.context2d.setTransform(this.context2d.getTransform())
+
 			await fcn(img)
 
+			// Flatten the layer straight back at the given alpha. The transform is already baked into the
+			// layer's pixels, so bypass our current transform and blit it 1:1 in device space.
 			await this.usingAlpha(compositeAlpha, async () => {
+				this.context2d.save()
+				this.context2d.resetTransform()
 				this.drawImage(
 					img.canvasImage,
 					0,
@@ -163,9 +170,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 					img.canvasImage.height,
 					0,
 					0,
-					this.width,
-					this.height
+					this.canvasImage.width,
+					this.canvasImage.height
 				)
+				this.context2d.restore()
 			})
 		})
 	}

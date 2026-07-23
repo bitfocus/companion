@@ -1148,6 +1148,50 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		// A child in a rotated group must render identically to the same box standalone, even when it
+		// overflows the image (a nested layer must not clip it in the un-rotated frame). Both fully opaque
+		// and translucent children are covered, since the translucent path composites through a layer.
+		test.each([1, 0.5])(
+			'a rotated group whose child overflows the image matches the box standalone (opacity %s)',
+			async (opacity) => {
+				const pos = { x: 0.4, y: 0.2, width: 1.0, height: 0.6 }
+
+				const standalone = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					standalone,
+					makeStyle({ ...drawOpts, elements: [makeBoxElement({ ...pos, rotation: 45, opacity })] }),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+
+				const grouped = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					grouped,
+					makeStyle({
+						...drawOpts,
+						elements: [
+							makeGroupElement([makeBoxElement({ x: 0, y: 0, width: 1, height: 1, opacity })], {
+								...pos,
+								rotation: 45,
+							}),
+						],
+					}),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+
+				const a = standalone.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				const b = grouped.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				let differing = 0
+				for (let i = 0; i < a.length; i += 4) {
+					if (Math.abs(a[i + 3] - b[i + 3]) > 8) differing++ // compare per-pixel coverage (alpha)
+				}
+				expect(differing).toBe(0)
+			}
+		)
 	})
 
 	describe('gauge element', () => {
