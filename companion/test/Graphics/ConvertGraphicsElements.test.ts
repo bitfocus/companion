@@ -726,7 +726,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					toY: val(100),
 					borderWidth: val(3),
 					borderColor: val(0xffff00),
-					borderPosition: val('center'),
+					borderPosition: val('left'),
 				},
 			]
 
@@ -751,6 +751,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				toX: 1, // line coords not scaled
 				toY: 1,
 				borderWidth: 0.03, // 3 * 0.01
+				borderPosition: 'left',
 			})
 		})
 	})

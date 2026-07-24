@@ -202,6 +202,7 @@ function convertLayeredPresetElement(
 
 				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0xffffff, isExpression: false }),
 				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 2, isExpression: false }),
+				// @ts-expect-error module line position is still inside/center/outside; remove once it is left/center/right
 				borderPosition: convertModuleExpressionOrValue(element.borderPosition, {
 					value: 'center',
 					isExpression: false,

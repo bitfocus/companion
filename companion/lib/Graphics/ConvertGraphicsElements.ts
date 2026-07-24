@@ -81,8 +81,9 @@ const CANVAS_DECORATION_CHOICES = dropdownChoices<ButtonGraphicsDecorationType>(
 const CANVAS_SHOW_STATUS_ICONS_CHOICES = dropdownChoices<ButtonGraphicsShowStatusIcons>('canvas', 'showStatusIcons')
 const IMAGE_FILL_MODE_CHOICES = dropdownChoices<ButtonGraphicsImageDrawElement['fillMode']>('image', 'fillMode')
 const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>('text', 'font')
-// borderPosition is shared across box/line/circle — all use the same choices from borderFields.
+// box/circle share inside/center/outside; a line instead sits left/center/right of its path
 const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
+const LINE_POSITION_CHOICES = dropdownChoices<ButtonGraphicsLineDrawElement['borderPosition']>('line', 'borderPosition')
 const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
 const GAUGE_TRACK_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['trackStyle']>('gauge', 'trackStyle')
 
@@ -758,7 +759,9 @@ function convertLineElementForDrawing(
 		toX: helper.getNumber('toX', 1, 0.01),
 		toY: helper.getNumber('toY', 1, 0.01),
 
-		...convertBorderProperties(helper),
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getColor('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', LINE_POSITION_CHOICES, 'center'),
 		contentHash: '', // Will be computed below
 	}
 

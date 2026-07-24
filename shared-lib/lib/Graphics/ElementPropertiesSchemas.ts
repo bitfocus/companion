@@ -20,6 +20,13 @@ const LINE_ORIENTATION_CHOICES = [
 	{ id: 'outside', label: 'Outside' },
 ]
 
+// Which side of the path a line's width sits on, looking along the line from its start to its end
+const LINE_SIDE_CHOICES = [
+	{ id: 'left', label: 'Left' },
+	{ id: 'center', label: 'Center' },
+	{ id: 'right', label: 'Right' },
+]
+
 export interface ElementSchemaSection {
 	id: string
 	label: string
@@ -331,7 +338,8 @@ export const lineElementSchema: ElementSchemaSection[] = [
 				type: 'dropdown',
 				id: 'borderPosition',
 				label: 'Line Position',
-				choices: LINE_ORIENTATION_CHOICES,
+				tooltip: 'Which side of the path the width sits on, looking from the start point towards the end point.',
+				choices: LINE_SIDE_CHOICES,
 				default: 'center',
 			},
 		],

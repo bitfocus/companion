@@ -142,7 +142,7 @@ export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase {
 	toY: number
 	borderWidth: number
 	borderColor: ColorValue
-	borderPosition: 'inside' | 'center' | 'outside'
+	borderPosition: 'left' | 'center' | 'right'
 }
 
 export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
@@ -153,7 +153,7 @@ export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
 	toY: ExpressionOrValue<number>
 	borderWidth: ExpressionOrValue<number>
 	borderColor: ExpressionOrValue<ColorValue>
-	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
+	borderPosition: ExpressionOrValue<'left' | 'center' | 'right'>
 }
 
 export interface ButtonGraphicsGroupDrawElement

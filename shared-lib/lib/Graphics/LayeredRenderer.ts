@@ -398,8 +398,21 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(1, Math.max(parentBounds.width, parentBounds.height) * element.borderWidth)
 
+		// The stroke is centred on the path; shift it perpendicular by half its width to sit left/right of it
+		let ox = 0
+		let oy = 0
+		if (element.borderPosition !== 'center') {
+			const length = Math.hypot(toX - fromX, toY - fromY)
+			if (length > 0) {
+				// Unit vector to the right of travel is (-dy, dx); left is the negation
+				const sign = element.borderPosition === 'right' ? 1 : -1
+				ox = (sign * -(toY - fromY) * borderWidth) / (2 * length)
+				oy = (sign * (toX - fromX) * borderWidth) / (2 * length)
+			}
+		}
+
 		await img.usingAlpha(element.opacity, async () => {
-			img.line(fromX, fromY, toX, toY, {
+			img.line(fromX + ox, fromY + oy, toX + ox, toY + oy, {
 				color: parseColor(element.borderColor),
 				width: borderWidth,
 			})

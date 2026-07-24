@@ -107,7 +107,7 @@ function makeLineElement(overrides: Partial<ButtonGraphicsLineDrawElement> = {})
 		toY: 1,
 		borderWidth: 0.01,
 		borderColor: 0xffffff, // white
-		borderPosition: 'inside',
+		borderPosition: 'center',
 		...overrides,
 	}
 }
@@ -348,6 +348,32 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await GraphicsLayeredButtonRenderer.draw(
 				img,
 				makeStyle({ ...drawOpts, elements: [makeLineElement()] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		// A thick horizontal line offset to one side of its path (looking from start to end)
+		test.each(['left', 'center', 'right'] as const)('line element position %s', async (borderPosition) => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeLineElement({
+							fromX: 0,
+							fromY: 0.5,
+							toX: 1,
+							toY: 0.5,
+							borderWidth: 0.2,
+							borderColor: 0xff0000,
+							borderPosition,
+						}),
+					],
+				}),
 				new Set(),
 				null,
 				DEFAULT_PADDING
