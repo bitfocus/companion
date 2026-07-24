@@ -197,8 +197,8 @@ export class ControlButtonLayered
 		this.drawing.visit(collector)
 	}
 
-	layeredStyleAddElement(type: string, index: number | null): string {
-		return this.drawing.addElement(type, index)
+	layeredStyleAddElement(type: string, afterElementId: string | null): string {
+		return this.drawing.addElement(type, afterElementId)
 	}
 
 	layeredStyleRemoveElement(id: string): boolean {

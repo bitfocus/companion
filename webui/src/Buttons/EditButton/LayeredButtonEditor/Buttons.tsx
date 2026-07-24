@@ -150,7 +150,7 @@ function AddElementDropdownPopoverButton({
 
 	const addCallback = useCallback(() => {
 		addElementMutation
-			.mutateAsync({ controlId, type: elementType, index: null })
+			.mutateAsync({ controlId, type: elementType, afterElementId: styleStore.selectedElementId })
 			.then((resId) => {
 				console.log('Added element', resId)
 				if (resId) styleStore.setSelectedElementId(resId)
