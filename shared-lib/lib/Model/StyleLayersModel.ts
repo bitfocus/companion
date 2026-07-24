@@ -131,7 +131,6 @@ export interface ButtonGraphicsBoxDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder, ButtonGraphicsDrawRotation {
 	type: 'box'
 	color: ColorValue
-	/** Corner radius as a fraction (0-1) of half the box's shorter side (1 = fully rounded) */
 	cornerRadius: number
 }
 
@@ -150,7 +149,7 @@ export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase {
 	toY: number
 	borderWidth: number
 	borderColor: ColorValue
-	borderPosition: 'inside' | 'center' | 'outside'
+	borderPosition: 'left' | 'center' | 'right'
 }
 
 export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
@@ -161,7 +160,7 @@ export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
 	toY: ExpressionOrValue<number>
 	borderWidth: ExpressionOrValue<number>
 	borderColor: ExpressionOrValue<ColorValue>
-	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
+	borderPosition: ExpressionOrValue<'left' | 'center' | 'right'>
 }
 
 export interface ButtonGraphicsGroupDrawElement

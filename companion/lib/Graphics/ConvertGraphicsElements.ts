@@ -84,8 +84,9 @@ const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>
 const TEXT_WEIGHT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['weight']>('text', 'weight')
 // The `styles` field is an internal:text-styles multi-toggle with a fixed set of values (no schema choices).
 const TEXT_STYLE_VALUES = ['italic', 'underline', 'strikethrough'] as const
-// borderPosition is shared across box/line/circle — all use the same choices from borderFields.
+// box/circle share inside/center/outside; a line instead sits left/center/right of its path
 const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
+const LINE_POSITION_CHOICES = dropdownChoices<ButtonGraphicsLineDrawElement['borderPosition']>('line', 'borderPosition')
 const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
 const GAUGE_TRACK_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['trackStyle']>('gauge', 'trackStyle')
 
@@ -768,7 +769,9 @@ function convertLineElementForDrawing(
 		toX: helper.getNumber('toX', 1, 0.01),
 		toY: helper.getNumber('toY', 1, 0.01),
 
-		...convertBorderProperties(helper),
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getColor('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', LINE_POSITION_CHOICES, 'center'),
 		contentHash: '', // Will be computed below
 	}
 
