@@ -30,7 +30,7 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @param type Element type to add
 	 * @param index Index to insert the element at, or null to append
 	 */
-	layeredStyleAddElement(type: string, index: number | null): string
+	layeredStyleAddElement(type: string, afterElementId: string | null): string
 
 	/**
 	 * Remove an element from the layered style

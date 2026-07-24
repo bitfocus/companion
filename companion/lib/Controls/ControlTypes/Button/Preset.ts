@@ -261,7 +261,7 @@ export class ControlButtonPreset
 	/**
 	 * Add an element to the layered style
 	 */
-	layeredStyleAddElement(_type: string, _index: number | null): string {
+	layeredStyleAddElement(_type: string, _afterElementId: string | null): string {
 		throw new Error('ControlButtonPreset does not support mutations')
 	}
 
