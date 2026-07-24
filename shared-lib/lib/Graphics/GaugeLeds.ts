@@ -3,7 +3,7 @@ import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './Gaug
 import { rgbRev } from './Util.js'
 
 /**
- * A single coloured run of a gauge, baked for LED output. `start`/`end` are in 0–100 track-position
+ * A single colored run of a gauge, baked for LED output. `start`/`end` are in 0–100 track-position
  * space (0 = the value's 0% end, 100 = its 100% end), NOT angles — this keeps `simple` mode (which
  * ignores angles and sweeps the value across the strip) trivial and unambiguous. The ring geometry
  * needed to place these on a physical ring lives on {@link LedGaugeDescription}.
@@ -18,7 +18,7 @@ export interface LedGaugeArc {
 /**
  * A gauge baked into a compact, resolution-independent form for driving a surface's LED strip/ring.
  * The surface samples this into its own `segments * 3` RGB buffer via {@link sampleLedsToBuffer}, so
- * nothing large crosses the render/IPC boundaries. Colours come from the same {@link buildGaugeColorModel}
+ * nothing large crosses the render/IPC boundaries. Colors come from the same {@link buildGaugeColorModel}
  * the pixel renderer uses, so LEDs always match the on-screen gauge.
  */
 export interface LedGaugeDescription {
@@ -29,7 +29,7 @@ export interface LedGaugeDescription {
 	endAngle: number
 	/** Whether the fill direction is reversed (matches the gauge's `reverse`). */
 	reverse: boolean
-	/** Coloured runs (fill + dimmed track) covering the whole 0–100 track; gaps only occur if empty. */
+	/** Colored runs (fill + dimmed track) covering the whole 0–100 track; gaps only occur if empty. */
 	arcs: LedGaugeArc[]
 }
 
@@ -49,8 +49,8 @@ function toLed(c: GaugeRGBA, scale = 1): number {
 }
 
 /**
- * Bake a resolved gauge element into an {@link LedGaugeDescription}. Reuses the shared gauge colour
- * model, so the emitted colours are identical to the rendered pixels. The marker overlay is
+ * Bake a resolved gauge element into an {@link LedGaugeDescription}. Reuses the shared gauge color
+ * model, so the emitted colors are identical to the rendered pixels. The marker overlay is
  * intentionally omitted (a thin line does not translate meaningfully to discrete LEDs).
  */
 export function bakeGaugeToLeds(element: ButtonGraphicsGaugeDrawElement): LedGaugeDescription {
@@ -74,7 +74,7 @@ export function bakeGaugeToLeds(element: ButtonGraphicsGaugeDrawElement): LedGau
 	const singleFillColor = toLed(rgbRev(singleColor, true))
 
 	const arcs: LedGaugeArc[] = []
-	// Emit a run interval [a, b] (track-position space), subdividing gradients so the colour ramps.
+	// Emit a run interval [a, b] (track-position space), subdividing gradients so the color ramps.
 	const emit = (a: number, b: number, run: GaugeColorRun, colorFor: (mid: number) => number): void => {
 		if (b - a <= 1e-6) return
 		const steps = run.gradient ? Math.max(1, Math.min(64, Math.ceil(b - a))) : 1

@@ -27,7 +27,7 @@ export const ImageBackgroundColorEditor = observer(function ImageBackgroundColor
 		(value: string) => {
 			setLocalValue(value)
 			setBackgroundColorMutation.mutateAsync({ imageName, backgroundColor: value }).catch((err) => {
-				console.error('Failed to save image background colour:', err)
+				console.error('Failed to save image background color:', err)
 			})
 		},
 		[setBackgroundColorMutation, imageName]

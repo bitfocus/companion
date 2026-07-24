@@ -1,3 +1,4 @@
+import { colord } from 'colord'
 import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
@@ -119,6 +120,45 @@ export class ElementExpressionHelper<T> {
 		// (e.g. when a referenced variable doesn't exist). Treat NaN as a missing value.
 		const num = Number(result.value)
 		return isNaN(num) ? defaultValue : num * scale
+	}
+
+	/**
+	 * Resolve a color property, preserving css color strings. A numeric (or numeric-string) value becomes a number;
+	 * a valid css color string is kept as-is; anything else falls back to the default. Mirrors the number/string
+	 * semantics of parseColor so the value renders correctly downstream.
+	 *
+	 * When allowAlpha is false (the field disables alpha) any transparency is discarded, so a translucent value is
+	 * forced fully opaque.
+	 */
+	getColor(propertyName: keyof T, defaultValue: number | string, allowAlpha = true): number | string {
+		const value = this.#getValue(propertyName)
+
+		let raw: unknown
+		if (!value.isExpression) {
+			raw = value.value
+		} else {
+			// Do not force a 'number' result type, otherwise a css color string would be rejected
+			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+			raw = result.ok ? result.value : undefined
+		}
+
+		let color: number | string
+		if (typeof raw === 'number' && !isNaN(raw)) {
+			color = raw
+		} else if (typeof raw === 'string' && raw.trim() !== '' && !isNaN(Number(raw))) {
+			color = Number(raw)
+		} else if (typeof raw === 'string' && colord(raw).isValid()) {
+			color = raw
+		} else {
+			color = defaultValue
+		}
+
+		if (!allowAlpha) {
+			// Discard any transparency: clear the alpha byte on a number, or force a css string fully opaque
+			if (typeof color === 'number') return color & 0xffffff
+			if (colord(color).alpha() < 1) return colord(color).alpha(1).toRgbString()
+		}
+		return color
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {

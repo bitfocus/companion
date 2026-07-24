@@ -13,7 +13,7 @@ the button: the topbar and the status icons.
 
 :::note
 Don't confuse the Canvas with the **Background** element. The Background is just an ordinary
-[Box](./index.md) that new buttons start with, sitting just above the Canvas — you can recolour, move
+[Box](./index.md) that new buttons start with, sitting just above the Canvas — you can recolor, move
 or delete it like any other element. The Canvas is the fixed layer underneath it.
 :::
 
@@ -26,7 +26,7 @@ the top of the button:
   the default, so you can flip the topbar on or off everywhere from one place.
 - **Top bar** — always show the topbar. The topbar shows the button's location (page/row/column) and,
   for [multi-step buttons](../steps.md), the current step.
-- **Border when pressed** — hide the topbar, but draw a coloured border around the button while it's
+- **Border when pressed** — hide the topbar, but draw a colored border around the button while it's
   pressed, so you still get visual confirmation of a press.
 - **None** — no topbar and no pressed border.
 
@@ -35,8 +35,8 @@ The topbar takes up space at the top of the button. If you're placing an image o
 edges, turning the topbar off (here or globally) gives you the full button area to work with.
 :::
 
-While a button is held down it shows a **pressed appearance** — the topbar fills with colour (in **Top
-bar** mode) or a coloured border is drawn (in **Border when pressed** mode). This is normally brief,
+While a button is held down it shows a **pressed appearance** — the topbar fills with color (in **Top
+bar** mode) or a colored border is drawn (in **Border when pressed** mode). This is normally brief,
 but it stays on if a button is pressed without being released — for example if an action used **Button
 Trigger Press** without a matching **Button Trigger Release**.
 

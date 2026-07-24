@@ -4,10 +4,8 @@ import type {
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsCircleDrawElement,
 	ButtonGraphicsGaugeDrawElement,
-	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
-	ButtonGraphicsReferenceDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '../Model/StyleLayersModel.js'
@@ -15,8 +13,9 @@ import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './GaugeColorModel.js'
+import { buildSelectionMarker, computeSelectionMarkerLines, type SelectedElementMarker } from './Geometry.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
-import { DrawBounds, parseColor, rgbRev } from './Util.js'
+import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
 
 /**
  * Text outline width as a fraction of the font size. Proportional (rather than a fixed pixel value) so
@@ -53,13 +52,11 @@ export class GraphicsLayeredButtonRenderer {
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
-		const selectedElementBounds = await this.#drawElements(
-			img,
-			drawStyle.elements,
-			elementsToHide,
-			selectedElementId,
-			drawBounds,
-			false
+		// Clip element drawing to the button rectangle, so that only the markers draw outside the bounds
+		const clipBounds =
+			paddingPx.x > 0 || paddingPx.y > 0 ? new DrawBounds(paddingPx.x, paddingPx.y, drawWidth, drawHeight) : null
+		const selectedMarker = await img.usingClip(clipBounds, async () =>
+			this.#drawElements(img, drawStyle.elements, elementsToHide, selectedElementId, drawBounds, false)
 		)
 
 		switch (decoration) {
@@ -83,7 +80,7 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		// Draw a border around the selected element, do this last so it's on top
-		if (selectedElementBounds) this.#drawBoundsLines(img, selectedElementBounds)
+		if (selectedMarker) this.#drawBoundsLines(img, selectedMarker)
 	}
 
 	/**
@@ -97,8 +94,8 @@ export class GraphicsLayeredButtonRenderer {
 		selectedElementId: string | null,
 		drawBounds: DrawBounds,
 		skipDrawParent: boolean
-	): Promise<DrawBounds | null> {
-		let selectedElementBounds: DrawBounds | null = null
+	): Promise<SelectedElementMarker | null> {
+		let selectedMarker: SelectedElementMarker | null = null
 		for (const element of elements) {
 			// Skip the background element, it's handled separately
 			if (element.type === 'canvas') continue
@@ -109,29 +106,51 @@ export class GraphicsLayeredButtonRenderer {
 			try {
 				switch (element.type) {
 					case 'group': {
-						await img.usingTemporaryLayer(element.opacity, async (img) => {
-							await img.usingRotation(drawBounds, element.rotation, async () => {
-								elementBounds = await this.#drawGroupElement(img, drawBounds, element, skipDraw)
+						// Compute the group's own bounds first so rotation pivots about its centre, not the container's
+						let groupBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
+						elementBounds = groupBounds // Capture the pre-square bounds
 
-								// Propagate the selected
-								const childElementBounds = await this.#drawElements(
+						if (element.squareCoords) {
+							const squareSize = Math.min(groupBounds.width, groupBounds.height)
+							groupBounds = new DrawBounds(
+								groupBounds.x + (groupBounds.width - squareSize) / 2,
+								groupBounds.y + (groupBounds.height - squareSize) / 2,
+								squareSize,
+								squareSize
+							)
+						}
+
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
+							await img.usingRotation(groupBounds, element.rotation, async () => {
+								// Propagate the selected child, prefixing this group's rotation so the marker
+								// is drawn in the same rotated frame the child was drawn in
+								const childMarker = await this.#drawElements(
 									img,
 									element.children,
 									elementsToHide,
 									selectedElementId,
-									elementBounds,
+									groupBounds,
 									skipDraw
 								)
-								if (childElementBounds) selectedElementBounds = childElementBounds
+								if (childMarker) {
+									selectedMarker = buildSelectionMarker(
+										childMarker.bounds,
+										groupBounds,
+										element.rotation,
+										childMarker.rotations
+									)
+								}
 							})
 						})
 						break
 					}
 					case 'reference': {
-						await img.usingTemporaryLayer(element.opacity, async (img) => {
-							await img.usingRotation(drawBounds, element.rotation, async () => {
-								elementBounds = await this.#drawReferenceElement(img, drawBounds, element, skipDraw)
+						// Compute the reference's own bounds first so rotation pivots about its centre, not the container's
+						const referenceBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
 
+						elementBounds = referenceBounds
+						await img.usingTemporaryLayer(element.opacity, async (img) => {
+							await img.usingRotation(referenceBounds, element.rotation, async () => {
 								// Note: children of a reference element cannot be individually selected,
 								// so the return value (selected child bounds) is intentionally discarded.
 								await this.#drawElements(
@@ -139,7 +158,7 @@ export class GraphicsLayeredButtonRenderer {
 									element.children,
 									elementsToHide,
 									selectedElementId,
-									elementBounds,
+									referenceBounds,
 									skipDraw
 								)
 							})
@@ -172,11 +191,14 @@ export class GraphicsLayeredButtonRenderer {
 				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
 			}
 
-			// Find the bounds of the selected element
-			if (element.id === selectedElementId) selectedElementBounds = elementBounds
+			// Capture the selected element's bounds and rotation, to draw the marker later
+			if (element.id === selectedElementId && elementBounds) {
+				const rotation = 'rotation' in element ? element.rotation : 0
+				selectedMarker = buildSelectionMarker(elementBounds, elementBounds, rotation)
+			}
 		}
 
-		return selectedElementBounds
+		return selectedMarker
 	}
 
 	static #drawBackgroundElement(
@@ -187,37 +209,6 @@ export class GraphicsLayeredButtonRenderer {
 		if (!backgroundElement) return
 
 		// img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
-	}
-
-	static async #drawGroupElement(
-		_img: ImageBase<any>,
-		parentBounds: DrawBounds,
-		element: ButtonGraphicsGroupDrawElement,
-		skipDraw: boolean
-	): Promise<DrawBounds> {
-		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
-		if (skipDraw) return drawBounds
-
-		if (element.squareCoords) {
-			const squareSize = Math.min(drawBounds.width, drawBounds.height)
-			return new DrawBounds(
-				drawBounds.x + (drawBounds.width - squareSize) / 2,
-				drawBounds.y + (drawBounds.height - squareSize) / 2,
-				squareSize,
-				squareSize
-			)
-		}
-
-		return drawBounds
-	}
-
-	static async #drawReferenceElement(
-		_img: ImageBase<any>,
-		parentBounds: DrawBounds,
-		element: ButtonGraphicsReferenceDrawElement,
-		_skipDraw: boolean
-	): Promise<DrawBounds> {
-		return parentBounds.compose(element.x, element.y, element.width, element.height)
 	}
 
 	static async #drawImageElement(
@@ -331,7 +322,7 @@ export class GraphicsLayeredButtonRenderer {
 						halign: element.halign,
 						valign: element.valign,
 						outlineStyle:
-							rgbRev(element.outlineColor, true).a > 0
+							parseColorAlpha(element.outlineColor) > 0
 								? {
 										width: fontSize * TEXT_OUTLINE_FACTOR,
 										color: parseColor(element.outlineColor),
@@ -362,6 +353,10 @@ export class GraphicsLayeredButtonRenderer {
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(0, parentBounds.width, parentBounds.height) * element.borderWidth
 
+		// Corner radius is a fraction of half the shorter side, so 100% gives fully-rounded corners
+		const cornerRadius =
+			Math.max(0, Math.min(element.cornerRadius, 1)) * (Math.min(drawBounds.width, drawBounds.height) / 2)
+
 		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
 				img.box(
@@ -374,7 +369,8 @@ export class GraphicsLayeredButtonRenderer {
 						color: parseColor(element.borderColor),
 						width: borderWidth,
 					},
-					element.borderPosition
+					element.borderPosition,
+					cornerRadius
 				)
 			})
 		})
@@ -475,8 +471,8 @@ export class GraphicsLayeredButtonRenderer {
 			return Number.isFinite(n) ? n : fallback
 		}
 
-		// Shared value/colour model (0–100 track-position space): the fill interval, colour runs and
-		// fill colour. This also drives the LED baker (`bakeGaugeToLeds`), so LEDs match the pixels.
+		// Shared value/color model (0–100 track-position space): the fill interval, color runs and
+		// fill color. This also drives the LED baker (`bakeGaugeToLeds`), so LEDs match the pixels.
 		// The trivial per-element flags/geometry (above + below) stay local to the renderer.
 		const model = buildGaugeColorModel(element)
 		if (!model) return drawBounds
@@ -485,8 +481,8 @@ export class GraphicsLayeredButtonRenderer {
 		const trackWidth = Math.max(0, Math.min(100, finite(element.trackWidth, 100))) / 100
 
 		const cssOf = (c: GaugeRGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
-		// Track (unfilled) colour. 'transparent' base colours are emitted at full alpha and composited
-		// through a temporary layer at trackAmount; 'dimmed' darkens the colour in place.
+		// Track (unfilled) color. 'transparent' base colors are emitted at full alpha and composited
+		// through a temporary layer at trackAmount; 'dimmed' darkens the color in place.
 		const trackTransform = (c: GaugeRGBA): GaugeRGBA => {
 			if (trackStyle === 'transparent') return c
 			return { r: c.r * trackAmount, g: c.g * trackAmount, b: c.b * trackAmount, a: c.a }
@@ -524,7 +520,7 @@ export class GraphicsLayeredButtonRenderer {
 		// p=0 at startAngle, p=100 at endAngle (clockwise). reverse flips which end is p=0.
 		const posToAngle = (p: number): number => degToRad(startAngleDeg + (reverse ? 1 - p / 100 : p / 100) * sweepDeg)
 
-		// Paint a single position-space interval [a, b] with one solid colour onto `target`.
+		// Paint a single position-space interval [a, b] with one solid color onto `target`.
 		// `wide` selects the fill width (full) vs the narrowed track width.
 		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, wide: boolean): void => {
 			if (b - a <= 1e-6) return
@@ -557,7 +553,7 @@ export class GraphicsLayeredButtonRenderer {
 			return isHorizontal ? Math.abs(posToX(b) - posToX(a)) : Math.abs(posToY(b) - posToY(a))
 		}
 
-		// Paint an interval [a, b] of a run onto `target`, applying a colour transform.
+		// Paint an interval [a, b] of a run onto `target`, applying a color transform.
 		const paintRunInterval = (
 			target: ImageBase<any>,
 			a: number,
@@ -644,7 +640,7 @@ export class GraphicsLayeredButtonRenderer {
 							const run = runs.find((r) => p >= r.start && p <= r.end) ?? runs[runs.length - 1]
 							if (!run.gradient) return run.colorStart
 							const span = run.end - run.start
-							// Use whichever stop colour the position is closer to.
+							// Use whichever stop color the position is closer to.
 							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
 						}
 						for (const p of [fillStart, fillEnd]) {
@@ -663,7 +659,7 @@ export class GraphicsLayeredButtonRenderer {
 					}
 				}
 
-				// --- Marker pass: a single-colour line at the value, spanning the full fill width. ---
+				// --- Marker pass: a single-color line at the value, spanning the full fill width. ---
 				if (element.markerEnabled) {
 					const markerColor = parseColor(element.markerColor)
 					const markerW = Math.max(1, Math.min(100, finite(element.markerWidth, 15))) / 100
@@ -707,17 +703,15 @@ export class GraphicsLayeredButtonRenderer {
 	}
 
 	/**
-	 * Draw some bounds lines over the whole image, to give a visual indicator of the selected element
-	 * Note: this intentionally overshoots everything to make it very visible
+	 * Draw the selection marker for the selected element: its four bounds edges as lines that follow the
+	 * element's rotation and extend across the whole image (intentionally overshooting to be very visible).
 	 */
-	static #drawBoundsLines(img: ImageBase<any>, bounds: DrawBounds) {
-		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what colour is best?
+	static #drawBoundsLines(img: ImageBase<any>, marker: SelectedElementMarker) {
+		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what color is best?
 
-		img.horizontalLine(bounds.y, lineStyle)
-		img.horizontalLine(bounds.maxY, lineStyle)
-
-		img.verticalLine(bounds.x, lineStyle)
-		img.verticalLine(bounds.maxX, lineStyle)
+		for (const [x1, y1, x2, y2] of computeSelectionMarkerLines(marker, img.width, img.height)) {
+			img.line(x1, y1, x2, y2, lineStyle)
+		}
 	}
 
 	static #angleToRadians(angle: number): number {

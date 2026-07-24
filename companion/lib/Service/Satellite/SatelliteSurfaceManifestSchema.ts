@@ -18,14 +18,14 @@ export const SatelliteLedsConfigSchema = z
 		mode: z
 			.enum(['full-ring', 'simple'])
 			.describe(
-				"How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colours respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions."
+				"How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colors respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions."
 			),
 	})
 	.meta({
 		id: 'SatelliteLedsConfig',
 		title: 'SatelliteLedsConfig',
 		description:
-			'If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colours to be reported. Colours are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment.',
+			'If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colors to be reported. Colors are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment.',
 	})
 export type SatelliteLedsConfig = z.infer<typeof SatelliteLedsConfigSchema>
 
@@ -34,9 +34,9 @@ export const SatelliteControlStylePresetSchema = z
 		bitmap: SatelliteConfigSizeSchema.optional().describe('If set, bitmaps of the specified size will be reported.'),
 		text: z.boolean().optional().describe('If true, the control requests text to be reported.'),
 		textStyle: z.boolean().optional().describe('If true, the control requests text style properties to be reported'),
-		colors: z.enum(['hex', 'rgb']).optional().describe('If set, the control requests colours to be reported.'),
+		colors: z.enum(['hex', 'rgb']).optional().describe('If set, the control requests colors to be reported.'),
 		leds: SatelliteLedsConfigSchema.optional().describe(
-			'If set, the control has an addressable strip/ring of LEDs and requests LED colours to be reported.'
+			'If set, the control has an addressable strip/ring of LEDs and requests LED colors to be reported.'
 		),
 	})
 	.meta({

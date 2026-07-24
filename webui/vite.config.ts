@@ -114,6 +114,10 @@ export default defineConfig(({ mode }) => {
 			reactPlugin(),
 			legacyPlugin({
 				targets: ['defaults', 'not IE 11', 'safari >= 12.1'],
+				// Safari 12.1 / old Edge support ES modules, so they load the MODERN bundle, not the legacy one.
+				// Without this, the modern bundle ships to them with no polyfills (missing Object.fromEntries,
+				// String.replaceAll, Array.at, etc). true = usage-based detection against the modern targets.
+				modernPolyfills: true,
 			}),
 			env.VITE_SENTRY_DSN
 				? sentryVitePlugin({

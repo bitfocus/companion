@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef, useState } from 'react'
+import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 import { Button } from '~/Components/Button'
@@ -13,7 +14,7 @@ import { TextInputField } from '~/Components/TextInputField.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CONFIG_OPTION_META, ConfigOptionRow, CONTENT_OPTION_KEYS, SURFACE_CHILD_OPTIONS } from './ConfigSelection.js'
-import { ExportFormatDefault, SelectExportFormat } from './ExportFormat.js'
+import { SelectExportFormat } from './ExportFormat.js'
 
 export const ExportWizardModal = observer(function ExportWizardModal() {
 	const { userConfig } = useContext(RootAppStoreContext)
@@ -36,7 +37,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 		includeSecrets: true,
 		imageLibrary: true,
 		// userconfig: true,
-		format: ExportFormatDefault,
+		format: userConfig.properties?.default_export_format ?? ExportFormatDefault,
 		filename: userConfig.properties?.default_export_filename ?? '',
 	}
 

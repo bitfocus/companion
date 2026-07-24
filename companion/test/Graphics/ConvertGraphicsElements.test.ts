@@ -92,6 +92,7 @@ function makeBoxDrawEl(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): B
 		height: 100,
 		rotation: 0,
 		color: 0,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -141,6 +142,7 @@ function makeBoxEl(overrides: Partial<ButtonGraphicsBoxElement> = {}): ButtonGra
 		height: val(100),
 		rotation: val(0),
 		color: val(0),
+		cornerRadius: val(0),
 		borderWidth: val(0),
 		borderColor: val(0),
 		borderPosition: val('inside'),
@@ -499,6 +501,22 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
+		test('keeps a translucent color (the text color field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeTextEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'text', color: 'rgba(255, 0, 0, 0.5)' })
+		})
+
 		test('filters disabled text element when onlyEnabled is true', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello'), enabled: val(false) })]
 
@@ -645,6 +663,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					width: val(50),
 					height: val(60),
 					color: val(0xff0000),
+					cornerRadius: val(40),
 					borderWidth: val(2),
 					borderColor: val(0x00ff00),
 				}),
@@ -671,9 +690,58 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				width: 0.5, // 50 * 0.01
 				height: 0.6, // 60 * 0.01
 				color: 0xff0000,
+				cornerRadius: 0.4, // 40 * 0.01
 				borderWidth: 0.02, // 2 * 0.01
 				borderColor: 0x00ff00,
 			})
+		})
+
+		test('keeps a css color string (plain value)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('#ff8800') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a css color string returned by an expression', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: expr('"#ff8800"') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a translucent color (the box color field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: 'rgba(255, 0, 0, 0.5)' })
 		})
 	})
 

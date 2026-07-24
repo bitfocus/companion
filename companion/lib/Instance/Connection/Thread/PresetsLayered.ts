@@ -132,6 +132,7 @@ function convertLayeredPresetElement(
 				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				color: convertModuleExpressionOrValue(element.color, { value: 0xffffff, isExpression: false }),
+				cornerRadius: { value: 0, isExpression: false }, // not yet exposed to the module API
 
 				borderColor: convertModuleExpressionOrValue(element.borderColor, { value: 0x000000, isExpression: false }),
 				borderWidth: convertModuleExpressionOrValue(element.borderWidth, { value: 0, isExpression: false }),
@@ -255,7 +256,7 @@ function convertLayeredPresetElement(
 				color: convertModuleExpressionOrValue(stop.color, { value: 0x00ff00, isExpression: false }),
 				gradient: convertModuleExpressionOrValue(stop.gradient, { value: false, isExpression: false }),
 			}))
-			// The gauge requires at least one colour stop; fall back to a sensible default when none are provided.
+			// The gauge requires at least one color stop; fall back to a sensible default when none are provided.
 			if (convertedStops.length === 0) {
 				convertedStops.push({
 					_id: { isExpression: false, value: nanoid() } as const,

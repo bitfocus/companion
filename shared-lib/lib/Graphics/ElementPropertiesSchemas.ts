@@ -124,7 +124,7 @@ export const borderFields: SomeCompanionInputField[] = [
 ]
 
 export const textElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'content',
@@ -191,7 +191,7 @@ export const textElementSchema: ElementSchemaSection[] = [
 				label: 'Color',
 				default: 0xffffff,
 				returnType: 'number',
-				enableAlpha: false,
+				enableAlpha: true,
 			},
 			{
 				type: 'colorpicker',
@@ -219,7 +219,7 @@ export const textElementSchema: ElementSchemaSection[] = [
 
 // Image element schema (from ImageElementPropertiesEditor)
 export const imageElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'content',
@@ -262,7 +262,7 @@ export const imageElementSchema: ElementSchemaSection[] = [
 ]
 
 export const boxElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'fill',
@@ -276,13 +276,23 @@ export const boxElementSchema: ElementSchemaSection[] = [
 				returnType: 'number',
 				enableAlpha: true,
 			},
+			{
+				type: 'number',
+				id: 'cornerRadius',
+				label: 'Corner Radius %',
+				tooltip: 'Round the corners, as a percentage of the shorter side (100% is fully rounded).',
+				default: 0,
+				min: 0,
+				max: 100,
+				step: 1,
+			},
 		],
 	},
 	{ id: 'border', label: 'Border', fields: [...borderFields] },
 ]
 
 export const lineElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{
 		id: 'position',
 		label: 'Position',
@@ -358,7 +368,7 @@ export const lineElementSchema: ElementSchemaSection[] = [
 ]
 
 export const circleElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields] },
 	{
 		id: 'arc-fill',
@@ -456,7 +466,7 @@ export const canvasElementSchema: ElementSchemaSection[] = [
 ]
 
 export const groupElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'options',
@@ -475,12 +485,12 @@ export const groupElementSchema: ElementSchemaSection[] = [
 ]
 
 export const compositeElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields] },
 ]
 
 export const referenceElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'source',
@@ -500,7 +510,7 @@ export const referenceElementSchema: ElementSchemaSection[] = [
 ]
 
 export const gaugeElementSchema: ElementSchemaSection[] = [
-	{ id: 'layer', label: 'Layer', fields: [...commonElementFields] },
+	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
 	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 	{
 		id: 'value',
@@ -640,17 +650,17 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 			{
 				type: 'checkbox',
 				id: 'multiColour',
-				label: 'Multi-colour fill',
+				label: 'Multi-color fill',
 				tooltip:
-					'When enabled, each colour stop is visible in the filled portion. When disabled, only the active stop colour is used for the entire filled area.',
+					'When enabled, each color stop is visible in the filled portion. When disabled, only the active stop color is used for the entire filled area.',
 				default: true,
 			},
 			{
 				type: 'internal:list',
 				id: 'stops',
-				label: 'Colour stops',
+				label: 'Color stops',
 				tooltip:
-					'Define colour stops for the gauge fill. Each stop specifies the value at which that colour starts. Enable "Gradient" to blend toward the next stop.',
+					'Define color stops for the gauge fill. Each stop specifies the value at which that color starts. Enable "Gradient" to blend toward the next stop.',
 				addLabel: 'Add stop',
 				minItems: 1,
 				fields: [
@@ -666,7 +676,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 					{
 						id: 'color',
 						type: 'colorpicker',
-						label: 'Colour',
+						label: 'Color',
 						default: 0x00ff00,
 						enableAlpha: false,
 						returnType: 'number',
@@ -700,7 +710,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 			{
 				type: 'colorpicker',
 				id: 'markerColor',
-				label: 'Colour',
+				label: 'Color',
 				default: 0xffffff,
 				enableAlpha: true,
 				returnType: 'number',
@@ -737,7 +747,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				id: 'trackAmount',
 				label: 'Amount (%)',
 				tooltip:
-					'How much of the original colour remains in the unfilled track. 0 = invisible / black, 100 = same as the active colour.',
+					'How much of the original color remains in the unfilled track. 0 = invisible / black, 100 = same as the active color.',
 				default: 70,
 				min: 0,
 				max: 100,

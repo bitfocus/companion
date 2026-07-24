@@ -78,6 +78,7 @@ export class ControlButtonLayered
 			height: { value: 100, isExpression: false },
 			rotation: { value: 0, isExpression: false },
 			color: { value: 0x000000, isExpression: false },
+			cornerRadius: { value: 0, isExpression: false },
 			borderWidth: { value: 0, isExpression: false },
 			borderColor: { value: 0, isExpression: false },
 			borderPosition: { value: 'inside', isExpression: false },

@@ -423,6 +423,7 @@ function makeReferencePlaceholder(
 		height: 1,
 		rotation: 0,
 		color: 0xff8c00,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -704,10 +705,10 @@ function convertTextElementForDrawing(
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
 		weight: helper.getEnum('weight', TEXT_WEIGHT_CHOICES, 'normal'),
 		styles: helper.getEnumArray('styles', TEXT_STYLE_VALUES, []),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		outlineColor: helper.getNumber('outlineColor', 0),
+		outlineColor: helper.getColor('outlineColor', 0),
 		contentHash: '', // Will be computed below
 	}
 
@@ -734,7 +735,8 @@ function convertBoxElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
+		cornerRadius: helper.getNumber('cornerRadius', 0, 0.01),
 
 		...convertBorderProperties(helper),
 		contentHash: '', // Will be computed below
@@ -803,7 +805,7 @@ function convertCircleElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
 		startAngle: helper.getNumber('startAngle', 0),
 		endAngle: helper.getNumber('endAngle', 360),
 		drawSlice: helper.getBoolean('drawSlice', false),
@@ -826,7 +828,7 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, usedVariables, compositeElement: null }
 
-	// Colour stops carry values in the authored Min..Max domain; the renderer normalises them to
+	// Color stops carry values in the authored Min..Max domain; the renderer normalises them to
 	// track positions. Values are intentionally not clamped here so the renderer can map them.
 	const stopsRaw = (element.stops as ExpressionOrValue<JsonValue[]>).value
 	const stops: ButtonGraphicsGaugeDrawElement['stops'] = Array.isArray(stopsRaw)
@@ -834,7 +836,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getNumber('color', 0),
+					color: rowHelper.getColor('color', 0, false), // gauge stop color field disables alpha
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
@@ -865,7 +867,7 @@ function convertGaugeElementForDrawing(
 		multiColour: helper.getBoolean('multiColour', true),
 		stops: stops,
 		markerEnabled: helper.getBoolean('markerEnabled', false),
-		markerColor: helper.getNumber('markerColor', 0xffffff),
+		markerColor: helper.getColor('markerColor', 0xffffff),
 		markerWidth: Math.max(1, Math.min(100, helper.getNumber('markerWidth', 15))),
 		trackStyle: helper.getTolerantEnum('trackStyle', GAUGE_TRACK_STYLE_CHOICES, 'transparent'),
 		trackAmount: Math.max(0, Math.min(100, helper.getNumber('trackAmount', 70))),
@@ -881,7 +883,7 @@ function convertBorderProperties(
 ): ButtonGraphicsDrawBorder {
 	return {
 		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
-		borderColor: helper.getNumber('borderColor', 0),
+		borderColor: helper.getColor('borderColor', 0),
 		borderPosition: helper.getEnum('borderPosition', BORDER_POSITION_CHOICES, 'inside'),
 	}
 }

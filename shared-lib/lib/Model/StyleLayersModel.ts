@@ -7,6 +7,7 @@ import type {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
+	ColorValue,
 	CompositeElementOptionKey,
 	HorizontalAlignment,
 	TextStyle,
@@ -46,13 +47,13 @@ export interface ButtonGraphicsBounds {
 
 export interface ButtonGraphicsDrawBorder {
 	borderWidth: number
-	borderColor: number
+	borderColor: ColorValue
 	borderPosition: 'inside' | 'center' | 'outside'
 }
 
 export interface ButtonGraphicsBorder {
 	borderWidth: ExpressionOrValue<number>
-	borderColor: ExpressionOrValue<number>
+	borderColor: ExpressionOrValue<ColorValue>
 	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
 }
 
@@ -87,8 +88,8 @@ export interface ButtonGraphicsTextDrawElement
 	font: 'companion-sans' | 'companion-mono'
 	weight: 'normal' | 'bold'
 	styles: TextStyle[]
-	color: number
-	outlineColor: number
+	color: ColorValue
+	outlineColor: ColorValue
 	halign: HorizontalAlignment
 	valign: VerticalAlignment
 }
@@ -102,8 +103,8 @@ export interface ButtonGraphicsTextElement
 	font: ExpressionOrValue<'companion-sans' | 'companion-mono'>
 	weight: ExpressionOrValue<'normal' | 'bold'>
 	styles: ExpressionOrValue<TextStyle[]>
-	color: ExpressionOrValue<number>
-	outlineColor: ExpressionOrValue<number>
+	color: ExpressionOrValue<ColorValue>
+	outlineColor: ExpressionOrValue<ColorValue>
 	halign: ExpressionOrValue<HorizontalAlignment>
 	valign: ExpressionOrValue<VerticalAlignment>
 }
@@ -129,13 +130,16 @@ export interface ButtonGraphicsImageElement
 export interface ButtonGraphicsBoxDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder, ButtonGraphicsDrawRotation {
 	type: 'box'
-	color: number
+	color: ColorValue
+	/** Corner radius as a fraction (0-1) of half the box's shorter side (1 = fully rounded) */
+	cornerRadius: number
 }
 
 export interface ButtonGraphicsBoxElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder, ButtonGraphicsRotation {
 	type: 'box'
-	color: ExpressionOrValue<number>
+	color: ExpressionOrValue<ColorValue>
+	cornerRadius: ExpressionOrValue<number>
 }
 
 export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase {
@@ -145,7 +149,7 @@ export interface ButtonGraphicsLineDrawElement extends ButtonGraphicsDrawBase {
 	toX: number
 	toY: number
 	borderWidth: number
-	borderColor: number
+	borderColor: ColorValue
 	borderPosition: 'inside' | 'center' | 'outside'
 }
 
@@ -156,7 +160,7 @@ export interface ButtonGraphicsLineElement extends ButtonGraphicsElementBase {
 	toX: ExpressionOrValue<number>
 	toY: ExpressionOrValue<number>
 	borderWidth: ExpressionOrValue<number>
-	borderColor: ExpressionOrValue<number>
+	borderColor: ExpressionOrValue<ColorValue>
 	borderPosition: ExpressionOrValue<'inside' | 'center' | 'outside'>
 }
 
@@ -177,7 +181,7 @@ export interface ButtonGraphicsGroupElement
 export interface ButtonGraphicsCircleDrawElement
 	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawBorder {
 	type: 'circle'
-	color: number
+	color: ColorValue
 	startAngle: number
 	endAngle: number
 	drawSlice: boolean
@@ -187,7 +191,7 @@ export interface ButtonGraphicsCircleDrawElement
 export interface ButtonGraphicsCircleElement
 	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsBorder {
 	type: 'circle'
-	color: ExpressionOrValue<number>
+	color: ExpressionOrValue<ColorValue>
 	startAngle: ExpressionOrValue<number>
 	endAngle: ExpressionOrValue<number>
 	drawSlice: ExpressionOrValue<boolean>
@@ -235,7 +239,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	multiColour: boolean
 	stops: Record<string, JsonValue>[]
 	markerEnabled: boolean
-	markerColor: number
+	markerColor: ColorValue
 	markerWidth: number
 	trackStyle: 'transparent' | 'dimmed'
 	trackAmount: number
@@ -260,7 +264,7 @@ export interface ButtonGraphicsGaugeElement
 	multiColour: ExpressionOrValue<boolean>
 	stops: ExpressionOrValue<Record<string, JsonValue>[]>
 	markerEnabled: ExpressionOrValue<boolean>
-	markerColor: ExpressionOrValue<number>
+	markerColor: ExpressionOrValue<ColorValue>
 	markerWidth: ExpressionOrValue<number>
 	trackStyle: ExpressionOrValue<'transparent' | 'dimmed'>
 	trackAmount: ExpressionOrValue<number>

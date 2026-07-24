@@ -76,7 +76,7 @@ export interface DrawAlignedTextOptions {
 /** Take a limited view of CompanionImageContext2D, based on what skia canvas supports */
 export type CompanionImageContext2D = Omit<
 	CanvasRenderingContext2D,
-	'drawImage' | 'createPattern' | 'getTransform' | 'drawFocusIfNeeded' | 'scrollPathIntoView' | 'canvas'
+	'drawImage' | 'createPattern' | 'drawFocusIfNeeded' | 'scrollPathIntoView' | 'canvas'
 >
 
 /**
@@ -152,9 +152,16 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		fcn: (img: ImageBase<TDrawImageType>) => Promise<void>
 	): Promise<void> {
 		return this.#imagePool.usingImage(this.#textLayoutCache, async (img) => {
+			// Setup the temporary layer to use the same transform
+			img.context2d.setTransform(this.context2d.getTransform())
+
 			await fcn(img)
 
+			// Flatten the layer straight back at the given alpha. The transform is already baked into the
+			// layer's pixels, so bypass our current transform and blit it 1:1 in device space.
 			await this.usingAlpha(compositeAlpha, async () => {
+				this.context2d.save()
+				this.context2d.resetTransform()
 				this.drawImage(
 					img.canvasImage,
 					0,
@@ -163,16 +170,17 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 					img.canvasImage.height,
 					0,
 					0,
-					this.width,
-					this.height
+					this.canvasImage.width,
+					this.canvasImage.height
 				)
+				this.context2d.restore()
 			})
 		})
 	}
 
 	/**
 	 * Perform some drawing with a given alpha.
-	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colours
+	 * Note: This affects the whole canvas drawing operations, it should contain a single operation otherwise the composition of each draw will not correctly combine colors
 	 */
 	async usingAlpha(alpha: number, fcn: () => Promise<void>): Promise<void> {
 		const oldAlpha = this.context2d.globalAlpha
@@ -200,6 +208,26 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		try {
 			await fcn()
+		} finally {
+			this.context2d.restore()
+		}
+	}
+
+	/**
+	 * Perform some drawing optionally clipped to a rectangular region (pass null to not clip). The clip is
+	 * baked into device space here, so it keeps masking every subsequent draw on this context.
+	 */
+	async usingClip<T>(clipBounds: DrawBounds | null, fcn: () => Promise<T>): Promise<T> {
+		this.context2d.save()
+
+		if (clipBounds) {
+			this.context2d.beginPath()
+			this.context2d.rect(clipBounds.x, clipBounds.y, clipBounds.width, clipBounds.height)
+			this.context2d.clip()
+		}
+
+		try {
+			return await fcn()
 		} finally {
 			this.context2d.restore()
 		}
@@ -311,17 +339,24 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		y2: number,
 		fillColor?: string,
 		lineStyle?: LineStyle,
-		lineOrientation: LineOrientation = 'inside'
+		lineOrientation: LineOrientation = 'inside',
+		cornerRadius = 0
 	): boolean {
 		if (x2 == x1 || y2 == y1) return false
 		let didDraw = false
 		if (fillColor) {
 			this.context2d.fillStyle = fillColor
-			this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
+			if (cornerRadius > 0) {
+				this.context2d.beginPath()
+				this.context2d.roundRect(x1, y1, x2 - x1, y2 - y1, cornerRadius)
+				this.context2d.fill()
+			} else {
+				this.context2d.fillRect(x1, y1, x2 - x1, y2 - y1)
+			}
 			didDraw = true
 		}
 		if (lineStyle) {
-			didDraw = this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation) || didDraw
+			didDraw = this.boxLine(x1, y1, x2, y2, lineStyle, lineOrientation, cornerRadius) || didDraw
 		}
 
 		return didDraw
@@ -470,30 +505,42 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		x2: number,
 		y2: number,
 		lineStyle: LineStyle,
-		lineOrientation: LineOrientation = 'inside'
+		lineOrientation: LineOrientation = 'inside',
+		cornerRadius = 0
 	): boolean {
 		const lineWidth = lineStyle.width ?? 1
 		if (lineWidth <= 0) return false
 
 		const halfline = lineWidth / 2
+		// Keep the stroked corners concentric with the fill by shifting the radius with the edge (only
+		// when there is a radius — a square box must stay square regardless of border orientation)
+		let radius = cornerRadius
 		switch (lineOrientation) {
 			case 'inside':
 				x1 += halfline
 				y1 += halfline
 				x2 -= halfline
 				y2 -= halfline
+				if (cornerRadius > 0) radius = Math.max(0, cornerRadius - halfline)
 				break
 			case 'outside':
 				x1 -= halfline
 				y1 -= halfline
 				x2 += halfline
 				y2 += halfline
+				if (cornerRadius > 0) radius = cornerRadius + halfline
 				break
 		}
 
 		this.context2d.lineWidth = lineWidth
 		this.context2d.strokeStyle = lineStyle.color
-		this.context2d.strokeRect(x1, y1, x2 - x1, y2 - y1)
+		if (radius > 0) {
+			this.context2d.beginPath()
+			this.context2d.roundRect(x1, y1, x2 - x1, y2 - y1, radius)
+			this.context2d.stroke()
+		} else {
+			this.context2d.strokeRect(x1, y1, x2 - x1, y2 - y1)
+		}
 
 		return true
 	}
@@ -916,7 +963,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			this.context2d.fillText(line.text, xAnchor, yAnchor)
 
 			// Underline/strikethrough have no native canvas support, so draw them manually.
-			// fillStyle is still `color` here, so the decorations match the text colour.
+			// fillStyle is still `color` here, so the decorations match the text color.
 			if (underline || strikethrough) {
 				const metrics = this.context2d.measureText(line.text)
 				const width = metrics.width

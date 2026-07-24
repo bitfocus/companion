@@ -1,3 +1,4 @@
+import type { ExportFormat } from './ExportFormat.js'
 import type { ResolvedButtonGraphicsDecoration } from './StyleModel.js'
 
 export type UserConfigModel = {
@@ -71,6 +72,7 @@ export type UserConfigModel = {
 	installName: string
 	mdns_announcements_enabled: boolean
 	default_export_filename: string
+	default_export_format: ExportFormat
 
 	/** IANA timezone name (e.g. 'America/New_York') used for internal time variables and time-based triggers. Empty = system timezone. */
 	timezone: string

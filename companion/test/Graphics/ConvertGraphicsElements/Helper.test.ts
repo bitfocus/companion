@@ -71,6 +71,7 @@ type TestEl = {
 	enumProp: ExpressionOrValue<string>
 	arrProp: ExpressionOrValue<string[]>
 	anyProp: ExpressionOrValue<JsonValue | undefined>
+	colorProp: ExpressionOrValue<number | string>
 }
 
 function makeEl(overrides: Partial<TestEl> = {}): TestEl {
@@ -82,6 +83,7 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 		enumProp: val('left'),
 		arrProp: val([]),
 		anyProp: val(99),
+		colorProp: val(0xff0000),
 		...overrides,
 	}
 }
@@ -346,6 +348,74 @@ describe('ElementExpressionHelper', () => {
 		test('expression resolving to undefined (missing variable) returns defaultValue', () => {
 			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:missing)') }))
 			expect(helper.getNumber('numProp', 99)).toBe(99)
+		})
+	})
+
+	describe('getColor', () => {
+		test('plain number is returned as a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000) }))
+			expect(helper.getColor('colorProp', 0)).toBe(0xff0000)
+		})
+
+		test('numeric string coerces to a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('255') }))
+			expect(helper.getColor('colorProp', 0)).toBe(255)
+		})
+
+		// Named colors (e.g. 'red') need colord's names plugin, which is not registered - matches parseColor
+		test.each(['#ff0000', '#f00', 'rgb(255, 0, 0)', 'rgb(255 0 0)', 'hsl(0, 100%, 50%)', 'rgba(255, 0, 0, 0.5)'])(
+			'valid css color string %s is kept as-is',
+			(css) => {
+				const { helper } = makeHelper(makeEl({ colorProp: val(css) }))
+				expect(helper.getColor('colorProp', 0)).toBe(css)
+			}
+		)
+
+		test('invalid string falls back to defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('not-a-color') }))
+			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
+		})
+
+		test('expression resolving to a number returns a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: expr('$(ns:x) * 2') }), { ns: { x: 5 } })
+			expect(helper.getColor('colorProp', 0)).toBe(10)
+		})
+
+		test('expression resolving to a css color string is kept as a string', () => {
+			// This is the regression getNumber fails: a css string expression result must survive
+			const { helper } = makeHelper(makeEl({ colorProp: expr('"#00ff00"') }))
+			expect(helper.getColor('colorProp', 0)).toBe('#00ff00')
+		})
+
+		test('expression with syntax error returns defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: expr(')') }))
+			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
+		})
+
+		test('preserves alpha by default', () => {
+			const withAlpha = makeHelper(makeEl({ colorProp: val(0xff0000 + 0x80 * 0x1000000) }))
+			expect(withAlpha.helper.getColor('colorProp', 0)).toBe(0xff0000 + 0x80 * 0x1000000)
+
+			const cssAlpha = makeHelper(makeEl({ colorProp: val('rgba(255, 0, 0, 0.5)') }))
+			expect(cssAlpha.helper.getColor('colorProp', 0)).toBe('rgba(255, 0, 0, 0.5)')
+		})
+
+		test('discards alpha from a number when allowAlpha is false', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000 + 0x80 * 0x1000000) }))
+			expect(helper.getColor('colorProp', 0, false)).toBe(0xff0000)
+		})
+
+		test('forces a translucent css string opaque when allowAlpha is false', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('rgba(255, 0, 0, 0.5)') }))
+			expect(helper.getColor('colorProp', 0, false)).toBe('rgb(255, 0, 0)')
+		})
+
+		test('leaves an already-opaque value untouched when allowAlpha is false', () => {
+			const num = makeHelper(makeEl({ colorProp: val(0xff0000) }))
+			expect(num.helper.getColor('colorProp', 0, false)).toBe(0xff0000)
+
+			const css = makeHelper(makeEl({ colorProp: val('#ff0000') }))
+			expect(css.helper.getColor('colorProp', 0, false)).toBe('#ff0000')
 		})
 	})
 

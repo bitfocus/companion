@@ -49,7 +49,7 @@ function seg(buffer: Uint8Array, i: number): [number, number, number] {
 }
 
 describe('bakeGaugeToLeds', () => {
-	test('captures ring geometry and single-colour fill/track', () => {
+	test('captures ring geometry and single-color fill/track', () => {
 		const desc = bakeGaugeToLeds(makeGauge({ value: 50, orientation: 'ring', startAngle: 10, endAngle: 190 }))
 		expect(desc.isRing).toBe(true)
 		expect(desc.startAngle).toBe(10)
@@ -62,7 +62,7 @@ describe('bakeGaugeToLeds', () => {
 		])
 	})
 
-	test('a dimmed track is the fill colour scaled by trackAmount', () => {
+	test('a dimmed track is the fill color scaled by trackAmount', () => {
 		const desc = bakeGaugeToLeds(makeGauge({ value: 50, trackAmount: 40 }))
 		expect(desc.arcs).toEqual([
 			{ start: 0, end: 50, color: GREEN },
