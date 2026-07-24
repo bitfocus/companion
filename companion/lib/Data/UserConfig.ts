@@ -8,6 +8,7 @@ import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleM
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { isPackaged } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
 import type { DataStoreTableView } from './StoreBase.js'
@@ -69,6 +70,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		http_api_enabled: true,
 		http_legacy_api_enabled: false,
 
+		rest_api_enabled: !isPackaged(),
 		prometheus_enabled: false,
 		prometheus_token: '',
 

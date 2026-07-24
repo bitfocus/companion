@@ -1,0 +1,3229 @@
+{
+	"components": {
+		"parameters": {},
+		"schemas": {
+			"ConnectionTreeCollection": {
+				"properties": {
+					"children": {
+						"description": "Nested collections, in their current display order.",
+						"items": {
+							"$ref": "#/components/schemas/ConnectionTreeCollection"
+						},
+						"type": "array"
+					},
+					"connections": {
+						"description": "Connections in this collection, in their current display order.",
+						"items": {
+							"properties": {
+								"config": {
+									"additionalProperties": {
+										"nullable": true
+									},
+									"description": "Non-secret connection configuration values.",
+									"type": "object"
+								},
+								"enabled": {
+									"description": "Whether the connection is enabled and allowed to run.",
+									"example": true,
+									"type": "boolean"
+								},
+								"id": {
+									"description": "Unique connection instance id.",
+									"example": "KJA1isEECHRDBTFjx-7tf",
+									"type": "string"
+								},
+								"label": {
+									"description": "Display name shown for the connection in Companion.",
+									"example": "ATEM",
+									"type": "string"
+								},
+								"moduleId": {
+									"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+									"example": "bmd-atem",
+									"type": "string"
+								},
+								"moduleVersionId": {
+									"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+									"example": "1.2.0",
+									"nullable": true,
+									"type": "string"
+								},
+								"secrets": {
+									"additionalProperties": {
+										"nullable": true
+									},
+									"description": "Secret connection configuration values.",
+									"type": "object"
+								},
+								"status": {
+									"description": "Latest runtime status reported by the connection.",
+									"example": {
+										"category": "ok",
+										"level": "info",
+										"message": "Connected"
+									},
+									"nullable": true,
+									"properties": {
+										"category": {
+											"description": "Status category reported by the connection module.",
+											"example": "ok",
+											"nullable": true,
+											"type": "string"
+										},
+										"level": {
+											"description": "Severity level of the current connection status.",
+											"example": "info",
+											"nullable": true,
+											"type": "string"
+										},
+										"message": {
+											"description": "Human-readable status message from the connection module.",
+											"example": "Connected",
+											"nullable": true,
+											"type": "string"
+										}
+									},
+									"required": ["category", "level", "message"],
+									"type": "object"
+								},
+								"updatePolicy": {
+									"description": "Module version update policy for this connection.",
+									"enum": ["manual", "stable", "beta"],
+									"example": "stable",
+									"type": "string"
+								}
+							},
+							"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
+							"type": "object"
+						},
+						"type": "array"
+					},
+					"enabled": {
+						"description": "Whether connections in this collection are enabled.",
+						"type": "boolean"
+					},
+					"id": {
+						"description": "Unique connection collection id.",
+						"type": "string"
+					},
+					"label": {
+						"description": "Display name of the collection.",
+						"type": "string"
+					}
+				},
+				"required": ["id", "label", "enabled", "connections", "children"],
+				"type": "object"
+			}
+		},
+		"securitySchemes": {
+			"bearerAuth": {
+				"description": "API token.",
+				"scheme": "bearer",
+				"type": "http"
+			}
+		}
+	},
+	"info": {
+		"description": "REST API for programmatic configuration management of Bitfocus Companion.",
+		"title": "Bitfocus Companion REST API",
+		"version": "0.0.0-stable-contract"
+	},
+	"openapi": "3.0.3",
+	"paths": {
+		"/connections/v1": {
+			"get": {
+				"description": "Returns all connections with their current status. Use query parameters to include config and secrets.",
+				"parameters": [
+					{
+						"description": "Include connection config in response",
+						"in": "query",
+						"name": "include_config",
+						"required": false,
+						"schema": {
+							"description": "Include connection config in response",
+							"enum": ["true", "false"],
+							"example": "true",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Include connection secrets in response (requires include_config=true)",
+						"in": "query",
+						"name": "include_secrets",
+						"required": false,
+						"schema": {
+							"description": "Include connection secrets in response (requires include_config=true)",
+							"enum": ["true", "false"],
+							"example": "false",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": [
+										{
+											"config": {
+												"bonjourHost": null,
+												"enableCameraControl": true,
+												"fadeFps": 10,
+												"host": "10.50.0.20",
+												"modelID": 0,
+												"pollTimecode": false,
+												"presets": 0
+											},
+											"enabled": true,
+											"id": "KJA1isEECHRDBTFjx-7tf",
+											"label": "ATEM",
+											"moduleId": "bmd-atem",
+											"moduleVersionId": "1.2.0",
+											"secrets": {},
+											"status": {
+												"category": "ok",
+												"level": "info",
+												"message": "Connected"
+											},
+											"updatePolicy": "stable"
+										}
+									],
+									"meta": {
+										"limit": 1,
+										"offset": 0,
+										"total": 1
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"properties": {
+													"config": {
+														"additionalProperties": {
+															"nullable": true
+														},
+														"description": "Non-secret connection configuration values.",
+														"type": "object"
+													},
+													"enabled": {
+														"description": "Whether the connection is enabled and allowed to run.",
+														"example": true,
+														"type": "boolean"
+													},
+													"id": {
+														"description": "Unique connection instance id.",
+														"example": "KJA1isEECHRDBTFjx-7tf",
+														"type": "string"
+													},
+													"label": {
+														"description": "Display name shown for the connection in Companion.",
+														"example": "ATEM",
+														"type": "string"
+													},
+													"moduleId": {
+														"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+														"example": "bmd-atem",
+														"type": "string"
+													},
+													"moduleVersionId": {
+														"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+														"example": "1.2.0",
+														"nullable": true,
+														"type": "string"
+													},
+													"secrets": {
+														"additionalProperties": {
+															"nullable": true
+														},
+														"description": "Secret connection configuration values.",
+														"type": "object"
+													},
+													"status": {
+														"description": "Latest runtime status reported by the connection.",
+														"example": {
+															"category": "ok",
+															"level": "info",
+															"message": "Connected"
+														},
+														"nullable": true,
+														"properties": {
+															"category": {
+																"description": "Status category reported by the connection module.",
+																"example": "ok",
+																"nullable": true,
+																"type": "string"
+															},
+															"level": {
+																"description": "Severity level of the current connection status.",
+																"example": "info",
+																"nullable": true,
+																"type": "string"
+															},
+															"message": {
+																"description": "Human-readable status message from the connection module.",
+																"example": "Connected",
+																"nullable": true,
+																"type": "string"
+															}
+														},
+														"required": ["category", "level", "message"],
+														"type": "object"
+													},
+													"updatePolicy": {
+														"description": "Module version update policy for this connection.",
+														"enum": ["manual", "stable", "beta"],
+														"example": "stable",
+														"type": "string"
+													}
+												},
+												"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"meta": {
+											"example": {
+												"limit": 100,
+												"offset": 0,
+												"total": 1
+											},
+											"properties": {
+												"limit": {
+													"description": "Maximum number of resources returned by this response.",
+													"example": 100,
+													"type": "number"
+												},
+												"offset": {
+													"description": "Number of resources skipped before this response.",
+													"example": 0,
+													"type": "number"
+												},
+												"total": {
+													"description": "Total number of resources available.",
+													"example": 1,
+													"type": "number"
+												}
+											},
+											"required": ["total", "limit", "offset"],
+											"type": "object"
+										}
+									},
+									"required": ["data", "meta"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "List of connections"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "read"]
+					}
+				],
+				"summary": "List all connections",
+				"tags": ["Connections"]
+			},
+			"post": {
+				"description": "Create a new connection instance for a given connection module id. If the module is not installed, Companion queues installation of the latest compatible stable version by default.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"disabled": false,
+								"label": "ATEM",
+								"moduleId": "bmd-atem",
+								"updatePolicy": "stable",
+								"versionId": null
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"disabled": {
+										"default": false,
+										"description": "Whether the new connection should be created disabled.",
+										"example": false,
+										"type": "boolean"
+									},
+									"label": {
+										"description": "Display name for the new connection.",
+										"example": "ATEM",
+										"type": "string"
+									},
+									"moduleId": {
+										"description": "Connection module id to create, such as \"bmd-atem\" or \"obs-websocket\".",
+										"example": "bmd-atem",
+										"type": "string"
+									},
+									"updatePolicy": {
+										"default": "stable",
+										"description": "Module version update policy for the new connection.",
+										"enum": ["manual", "stable", "beta"],
+										"example": "stable",
+										"type": "string"
+									},
+									"versionId": {
+										"default": null,
+										"description": "Specific module version to use. Omit or use null to use the newest compatible stable version. If the module is not installed, Companion queues installation of that version.",
+										"example": null,
+										"minLength": 1,
+										"nullable": true,
+										"type": "string"
+									}
+								},
+								"required": ["moduleId", "label"],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"id": "KJA1isEECHRDBTFjx-7tf"
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"properties": {
+												"id": {
+													"description": "Unique connection instance id.",
+													"example": "KJA1isEECHRDBTFjx-7tf",
+													"type": "string"
+												}
+											},
+											"required": ["id"],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Connection created"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "write"]
+					}
+				],
+				"summary": "Create a connection",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/{connectionId}": {
+			"delete": {
+				"description": "Delete a connection and all its associated configuration.",
+				"parameters": [
+					{
+						"description": "Connection instance id, as returned by the list or create connection endpoints.",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"description": "Connection instance id, as returned by the list or create connection endpoints.",
+							"example": "KJA1isEECHRDBTFjx-7tf",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Connection deleted"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "write"]
+					}
+				],
+				"summary": "Delete a connection",
+				"tags": ["Connections"]
+			},
+			"get": {
+				"description": "Returns a single connection by ID with its configuration and current status.",
+				"parameters": [
+					{
+						"description": "Connection instance id, as returned by the list or create connection endpoints.",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"description": "Connection instance id, as returned by the list or create connection endpoints.",
+							"example": "KJA1isEECHRDBTFjx-7tf",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Include connection secrets in response",
+						"in": "query",
+						"name": "include_secrets",
+						"required": false,
+						"schema": {
+							"description": "Include connection secrets in response",
+							"enum": ["true", "false"],
+							"example": "false",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"config": {
+											"bonjourHost": null,
+											"enableCameraControl": true,
+											"fadeFps": 10,
+											"host": "10.50.0.20",
+											"modelID": 0,
+											"pollTimecode": false,
+											"presets": 0
+										},
+										"enabled": true,
+										"id": "KJA1isEECHRDBTFjx-7tf",
+										"label": "ATEM",
+										"moduleId": "bmd-atem",
+										"moduleVersionId": "1.2.0",
+										"secrets": {},
+										"status": {
+											"category": "ok",
+											"level": "info",
+											"message": "Connected"
+										},
+										"updatePolicy": "stable"
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"properties": {
+												"config": {
+													"additionalProperties": {
+														"nullable": true
+													},
+													"description": "Non-secret connection configuration values.",
+													"type": "object"
+												},
+												"enabled": {
+													"description": "Whether the connection is enabled and allowed to run.",
+													"example": true,
+													"type": "boolean"
+												},
+												"id": {
+													"description": "Unique connection instance id.",
+													"example": "KJA1isEECHRDBTFjx-7tf",
+													"type": "string"
+												},
+												"label": {
+													"description": "Display name shown for the connection in Companion.",
+													"example": "ATEM",
+													"type": "string"
+												},
+												"moduleId": {
+													"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+													"example": "bmd-atem",
+													"type": "string"
+												},
+												"moduleVersionId": {
+													"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+													"example": "1.2.0",
+													"nullable": true,
+													"type": "string"
+												},
+												"secrets": {
+													"additionalProperties": {
+														"nullable": true
+													},
+													"description": "Secret connection configuration values.",
+													"type": "object"
+												},
+												"status": {
+													"description": "Latest runtime status reported by the connection.",
+													"example": {
+														"category": "ok",
+														"level": "info",
+														"message": "Connected"
+													},
+													"nullable": true,
+													"properties": {
+														"category": {
+															"description": "Status category reported by the connection module.",
+															"example": "ok",
+															"nullable": true,
+															"type": "string"
+														},
+														"level": {
+															"description": "Severity level of the current connection status.",
+															"example": "info",
+															"nullable": true,
+															"type": "string"
+														},
+														"message": {
+															"description": "Human-readable status message from the connection module.",
+															"example": "Connected",
+															"nullable": true,
+															"type": "string"
+														}
+													},
+													"required": ["category", "level", "message"],
+													"type": "object"
+												},
+												"updatePolicy": {
+													"description": "Module version update policy for this connection.",
+													"enum": ["manual", "stable", "beta"],
+													"example": "stable",
+													"type": "string"
+												}
+											},
+											"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Connection details"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "read"]
+					}
+				],
+				"summary": "Get a connection",
+				"tags": ["Connections"]
+			},
+			"patch": {
+				"description": "Partially update a connection. Only send the fields you want to change.",
+				"parameters": [
+					{
+						"description": "Connection instance id, as returned by the list or create connection endpoints.",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"description": "Connection instance id, as returned by the list or create connection endpoints.",
+							"example": "KJA1isEECHRDBTFjx-7tf",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"config": {
+									"fadeFps": 10,
+									"host": "10.50.0.20"
+								},
+								"disabled": false,
+								"label": "ATEM Program",
+								"secrets": {},
+								"updatePolicy": "manual",
+								"versionId": "1.2.0"
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"config": {
+										"additionalProperties": {
+											"nullable": true
+										},
+										"description": "Non-secret config values to merge into the connection config.",
+										"example": {
+											"fadeFps": 10,
+											"host": "10.50.0.20"
+										},
+										"type": "object"
+									},
+									"disabled": {
+										"description": "Set true to disable the connection, or false to enable it.",
+										"example": false,
+										"type": "boolean"
+									},
+									"label": {
+										"description": "New display name for the connection.",
+										"example": "ATEM Program",
+										"type": "string"
+									},
+									"secrets": {
+										"additionalProperties": {
+											"nullable": true
+										},
+										"description": "Secret config values to merge into the connection secrets.",
+										"example": {},
+										"type": "object"
+									},
+									"updatePolicy": {
+										"description": "Module version update policy to apply.",
+										"enum": ["manual", "stable", "beta"],
+										"example": "manual",
+										"type": "string"
+									},
+									"versionId": {
+										"description": "Specific module version to use, such as \"1.2.0\". Omit to leave the current version unchanged. Use null to switch to the newest compatible stable version.",
+										"example": "1.2.0",
+										"minLength": 1,
+										"nullable": true,
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"config": {
+											"bonjourHost": null,
+											"enableCameraControl": true,
+											"fadeFps": 10,
+											"host": "10.50.0.20",
+											"modelID": 0,
+											"pollTimecode": false,
+											"presets": 0
+										},
+										"enabled": true,
+										"id": "KJA1isEECHRDBTFjx-7tf",
+										"label": "ATEM Program",
+										"moduleId": "bmd-atem",
+										"moduleVersionId": "1.2.0",
+										"secrets": {},
+										"status": {
+											"category": "ok",
+											"level": "info",
+											"message": "Connected"
+										},
+										"updatePolicy": "manual"
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"properties": {
+												"config": {
+													"additionalProperties": {
+														"nullable": true
+													},
+													"description": "Non-secret connection configuration values.",
+													"type": "object"
+												},
+												"enabled": {
+													"description": "Whether the connection is enabled and allowed to run.",
+													"example": true,
+													"type": "boolean"
+												},
+												"id": {
+													"description": "Unique connection instance id.",
+													"example": "KJA1isEECHRDBTFjx-7tf",
+													"type": "string"
+												},
+												"label": {
+													"description": "Display name shown for the connection in Companion.",
+													"example": "ATEM",
+													"type": "string"
+												},
+												"moduleId": {
+													"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+													"example": "bmd-atem",
+													"type": "string"
+												},
+												"moduleVersionId": {
+													"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+													"example": "1.2.0",
+													"nullable": true,
+													"type": "string"
+												},
+												"secrets": {
+													"additionalProperties": {
+														"nullable": true
+													},
+													"description": "Secret connection configuration values.",
+													"type": "object"
+												},
+												"status": {
+													"description": "Latest runtime status reported by the connection.",
+													"example": {
+														"category": "ok",
+														"level": "info",
+														"message": "Connected"
+													},
+													"nullable": true,
+													"properties": {
+														"category": {
+															"description": "Status category reported by the connection module.",
+															"example": "ok",
+															"nullable": true,
+															"type": "string"
+														},
+														"level": {
+															"description": "Severity level of the current connection status.",
+															"example": "info",
+															"nullable": true,
+															"type": "string"
+														},
+														"message": {
+															"description": "Human-readable status message from the connection module.",
+															"example": "Connected",
+															"nullable": true,
+															"type": "string"
+														}
+													},
+													"required": ["category", "level", "message"],
+													"type": "object"
+												},
+												"updatePolicy": {
+													"description": "Module version update policy for this connection.",
+													"enum": ["manual", "stable", "beta"],
+													"example": "stable",
+													"type": "string"
+												}
+											},
+											"required": ["id", "label", "moduleId", "moduleVersionId", "updatePolicy", "enabled", "status"],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Updated connection"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "write"]
+					}
+				],
+				"summary": "Update a connection",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/{connectionId}/config-fields": {
+			"get": {
+				"description": "Returns the config field definitions for a connection module, including field types, constraints, and available options. The connection must be running.",
+				"parameters": [
+					{
+						"description": "Connection instance id, as returned by the list or create connection endpoints.",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"description": "Connection instance id, as returned by the list or create connection endpoints.",
+							"example": "KJA1isEECHRDBTFjx-7tf",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": [
+										{
+											"id": "bonjourHost",
+											"label": "Device",
+											"type": "bonjour-device"
+										},
+										{
+											"default": "",
+											"id": "host",
+											"label": "Target IP",
+											"regex": "/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/",
+											"type": "textinput"
+										},
+										{
+											"choices": [
+												{
+													"id": 0,
+													"label": "Auto Detect"
+												},
+												{
+													"id": 33,
+													"label": "Mini Extreme ISO G2"
+												}
+											],
+											"default": 0,
+											"id": "modelID",
+											"label": "Model",
+											"type": "dropdown"
+										},
+										{
+											"default": 10,
+											"id": "fadeFps",
+											"label": "Framerate for fades",
+											"max": 60,
+											"min": 5,
+											"step": 1,
+											"tooltip": "Higher is smoother, but has higher impact on system performance",
+											"type": "number"
+										},
+										{
+											"default": false,
+											"id": "enableCameraControl",
+											"label": "Enable Camera Control",
+											"type": "checkbox"
+										}
+									]
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"items": {
+												"oneOf": [
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Bonjour device selector field.",
+																"enum": ["bonjour-device"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default secret text value.",
+																"type": "string"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"minLength": {
+																"description": "Minimum string length allowed.",
+																"type": "number"
+															},
+															"regex": {
+																"description": "Regular expression that string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Secret text field. Values for this field belong in secrets.",
+																"enum": ["secret-text"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Read-only text shown alongside other config fields.",
+																"enum": ["static-text"],
+																"type": "string"
+															},
+															"value": {
+																"description": "Static text content to display.",
+																"example": "Network settings",
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type", "value"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default text value.",
+																"example": "",
+																"type": "string"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"minLength": {
+																"description": "Minimum string length allowed.",
+																"type": "number"
+															},
+															"multiline": {
+																"description": "Whether the text field supports multiple lines.",
+																"type": "boolean"
+															},
+															"placeholder": {
+																"description": "Placeholder text shown for empty text fields.",
+																"type": "string"
+															},
+															"regex": {
+																"description": "Regular expression that string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Plain text input field.",
+																"enum": ["textinput"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default checked state.",
+																"example": false,
+																"type": "boolean"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Boolean checkbox field.",
+																"enum": ["checkbox"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"anyOf": [
+																	{
+																		"type": "string"
+																	},
+																	{
+																		"type": "number"
+																	}
+																],
+																"description": "Default color value."
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"enableAlpha": {
+																"description": "Whether color values include an alpha channel.",
+																"type": "boolean"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"returnType": {
+																"description": "Value type returned by the field.",
+																"enum": ["string", "number"],
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Color picker field.",
+																"enum": ["colorpicker"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"default": {
+																"description": "Default numeric value.",
+																"example": 10,
+																"type": "number"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"max": {
+																"description": "Maximum numeric value allowed.",
+																"type": "number"
+															},
+															"min": {
+																"description": "Minimum numeric value allowed.",
+																"type": "number"
+															},
+															"range": {
+																"description": "Whether the field is shown as a range slider.",
+																"type": "boolean"
+															},
+															"step": {
+																"description": "Numeric step size.",
+																"type": "number"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Numeric input field.",
+																"enum": ["number"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"allowCustom": {
+																"description": "Whether custom values outside the choices list are allowed.",
+																"type": "boolean"
+															},
+															"choices": {
+																"description": "Allowed choices for the dropdown.",
+																"items": {
+																	"properties": {
+																		"id": {
+																			"anyOf": [
+																				{
+																					"type": "string"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			],
+																			"description": "Choice value sent in connection config.",
+																			"example": "auto"
+																		},
+																		"label": {
+																			"description": "Display label for the choice.",
+																			"example": "Auto",
+																			"type": "string"
+																		}
+																	},
+																	"required": ["id", "label"],
+																	"type": "object"
+																},
+																"type": "array"
+															},
+															"default": {
+																"anyOf": [
+																	{
+																		"type": "string"
+																	},
+																	{
+																		"type": "number"
+																	}
+																],
+																"description": "Default selected choice id.",
+																"example": "auto"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"regex": {
+																"description": "Regular expression that custom string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Single-select dropdown field.",
+																"enum": ["dropdown"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type", "choices"],
+														"type": "object"
+													},
+													{
+														"additionalProperties": {
+															"nullable": true
+														},
+														"properties": {
+															"allowCustom": {
+																"description": "Whether custom values outside the choices list are allowed.",
+																"type": "boolean"
+															},
+															"choices": {
+																"description": "Allowed choices for the dropdown.",
+																"items": {
+																	"properties": {
+																		"id": {
+																			"anyOf": [
+																				{
+																					"type": "string"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			],
+																			"description": "Choice value sent in connection config.",
+																			"example": "auto"
+																		},
+																		"label": {
+																			"description": "Display label for the choice.",
+																			"example": "Auto",
+																			"type": "string"
+																		}
+																	},
+																	"required": ["id", "label"],
+																	"type": "object"
+																},
+																"type": "array"
+															},
+															"default": {
+																"description": "Default selected choice ids.",
+																"items": {
+																	"anyOf": [
+																		{
+																			"type": "string"
+																		},
+																		{
+																			"type": "number"
+																		}
+																	]
+																},
+																"type": "array"
+															},
+															"description": {
+																"description": "Longer help text for the config field.",
+																"type": "string"
+															},
+															"id": {
+																"description": "Config field id used as the key in config or secrets objects.",
+																"example": "host",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display label for the config field.",
+																"example": "Host",
+																"type": "string"
+															},
+															"maxSelection": {
+																"description": "Maximum number of choices that can be selected.",
+																"type": "number"
+															},
+															"minSelection": {
+																"description": "Minimum number of choices that must be selected.",
+																"type": "number"
+															},
+															"regex": {
+																"description": "Regular expression that custom string values must match.",
+																"type": "string"
+															},
+															"tooltip": {
+																"description": "Short help text shown for the config field.",
+																"example": "Target switcher IP",
+																"type": "string"
+															},
+															"type": {
+																"description": "Multi-select dropdown field.",
+																"enum": ["multidropdown"],
+																"type": "string"
+															}
+														},
+														"required": ["id", "label", "type", "choices"],
+														"type": "object"
+													}
+												]
+											},
+											"type": "array"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Config field definitions"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Connection is not running"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "read"]
+					}
+				],
+				"summary": "Get connection config field definitions",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/{connectionId}/restart": {
+			"post": {
+				"description": "Force-restart the connection process. Fails if the connection is disabled.",
+				"parameters": [
+					{
+						"description": "Connection instance id, as returned by the list or create connection endpoints.",
+						"in": "path",
+						"name": "connectionId",
+						"required": true,
+						"schema": {
+							"description": "Connection instance id, as returned by the list or create connection endpoints.",
+							"example": "KJA1isEECHRDBTFjx-7tf",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"id": "KJA1isEECHRDBTFjx-7tf",
+										"message": "Restart triggered"
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"properties": {
+												"id": {
+													"description": "Connection instance id that was restarted.",
+													"example": "KJA1isEECHRDBTFjx-7tf",
+													"type": "string"
+												},
+												"message": {
+													"description": "Confirmation message for the restart request.",
+													"example": "Restart triggered",
+													"type": "string"
+												}
+											},
+											"required": ["id", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Restart triggered"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Connection is inactive"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "write"]
+					}
+				],
+				"summary": "Restart a connection",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/move": {
+			"patch": {
+				"description": "Moves connections atomically. Operations are evaluated in request order against the result of preceding operations.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"moves": [
+									{
+										"collectionId": "production",
+										"connectionId": "KJA1isEECHRDBTFjx-7tf",
+										"position": 0
+									},
+									{
+										"collectionId": null,
+										"connectionId": "XhA2fsEECHRDQPKjx-8ug",
+										"position": 1
+									}
+								]
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"moves": {
+										"description": "Moves to evaluate sequentially and persist atomically.",
+										"items": {
+											"additionalProperties": false,
+											"properties": {
+												"collectionId": {
+													"description": "Destination collection id, null for the ungrouped root, or omit to keep the current collection.",
+													"nullable": true,
+													"type": "string"
+												},
+												"connectionId": {
+													"description": "Connection instance id to move.",
+													"type": "string"
+												},
+												"position": {
+													"description": "Zero-based insertion index in the destination after removing the moved connection.",
+													"minimum": 0,
+													"type": "integer"
+												}
+											},
+											"required": ["connectionId", "position"],
+											"type": "object"
+										},
+										"minItems": 1,
+										"type": "array"
+									}
+								},
+								"required": ["moves"],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"204": {
+						"description": "Connections moved"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "write"]
+					}
+				],
+				"summary": "Move connections",
+				"tags": ["Connections"]
+			}
+		},
+		"/connections/v1/tree": {
+			"get": {
+				"description": "Returns all connections grouped into the complete collection hierarchy. Array order represents the current display order.",
+				"parameters": [
+					{
+						"description": "Include connection config in response",
+						"in": "query",
+						"name": "include_config",
+						"required": false,
+						"schema": {
+							"description": "Include connection config in response",
+							"enum": ["true", "false"],
+							"example": "true",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Include connection secrets in response (requires include_config=true)",
+						"in": "query",
+						"name": "include_secrets",
+						"required": false,
+						"schema": {
+							"description": "Include connection secrets in response (requires include_config=true)",
+							"enum": ["true", "false"],
+							"example": "false",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"collections": [
+											{
+												"children": [],
+												"connections": [
+													{
+														"config": {
+															"bonjourHost": null,
+															"enableCameraControl": true,
+															"fadeFps": 10,
+															"host": "10.50.0.20",
+															"modelID": 0,
+															"pollTimecode": false,
+															"presets": 0
+														},
+														"enabled": true,
+														"id": "KJA1isEECHRDBTFjx-7tf",
+														"label": "ATEM",
+														"moduleId": "bmd-atem",
+														"moduleVersionId": "1.2.0",
+														"secrets": {},
+														"status": {
+															"category": "ok",
+															"level": "info",
+															"message": "Connected"
+														},
+														"updatePolicy": "stable"
+													}
+												],
+												"enabled": true,
+												"id": "production",
+												"label": "Production"
+											}
+										],
+										"connections": []
+									}
+								},
+								"schema": {
+									"properties": {
+										"data": {
+											"properties": {
+												"collections": {
+													"description": "Root collections, in their current display order.",
+													"items": {
+														"$ref": "#/components/schemas/ConnectionTreeCollection"
+													},
+													"type": "array"
+												},
+												"connections": {
+													"description": "Ungrouped connections at the root, in their current display order.",
+													"items": {
+														"properties": {
+															"config": {
+																"additionalProperties": {
+																	"nullable": true
+																},
+																"description": "Non-secret connection configuration values.",
+																"type": "object"
+															},
+															"enabled": {
+																"description": "Whether the connection is enabled and allowed to run.",
+																"example": true,
+																"type": "boolean"
+															},
+															"id": {
+																"description": "Unique connection instance id.",
+																"example": "KJA1isEECHRDBTFjx-7tf",
+																"type": "string"
+															},
+															"label": {
+																"description": "Display name shown for the connection in Companion.",
+																"example": "ATEM",
+																"type": "string"
+															},
+															"moduleId": {
+																"description": "Connection module id, such as \"bmd-atem\" or \"obs-websocket\".",
+																"example": "bmd-atem",
+																"type": "string"
+															},
+															"moduleVersionId": {
+																"description": "Module version id used by this connection, such as \"1.2.0\". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.",
+																"example": "1.2.0",
+																"nullable": true,
+																"type": "string"
+															},
+															"secrets": {
+																"additionalProperties": {
+																	"nullable": true
+																},
+																"description": "Secret connection configuration values.",
+																"type": "object"
+															},
+															"status": {
+																"description": "Latest runtime status reported by the connection.",
+																"example": {
+																	"category": "ok",
+																	"level": "info",
+																	"message": "Connected"
+																},
+																"nullable": true,
+																"properties": {
+																	"category": {
+																		"description": "Status category reported by the connection module.",
+																		"example": "ok",
+																		"nullable": true,
+																		"type": "string"
+																	},
+																	"level": {
+																		"description": "Severity level of the current connection status.",
+																		"example": "info",
+																		"nullable": true,
+																		"type": "string"
+																	},
+																	"message": {
+																		"description": "Human-readable status message from the connection module.",
+																		"example": "Connected",
+																		"nullable": true,
+																		"type": "string"
+																	}
+																},
+																"required": ["category", "level", "message"],
+																"type": "object"
+															},
+															"updatePolicy": {
+																"description": "Module version update policy for this connection.",
+																"enum": ["manual", "stable", "beta"],
+																"example": "stable",
+																"type": "string"
+															}
+														},
+														"required": [
+															"id",
+															"label",
+															"moduleId",
+															"moduleVersionId",
+															"updatePolicy",
+															"enabled",
+															"status"
+														],
+														"type": "object"
+													},
+													"type": "array"
+												}
+											},
+											"required": ["connections", "collections"],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Connection arrangement"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["connections", "read"]
+					}
+				],
+				"summary": "Get the connection arrangement",
+				"tags": ["Connections"]
+			}
+		}
+	},
+	"security": [
+		{
+			"bearerAuth": []
+		}
+	],
+	"servers": [
+		{
+			"description": "REST API (resources versioned independently)",
+			"url": "/api/v2"
+		}
+	]
+}

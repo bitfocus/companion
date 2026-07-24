@@ -3,7 +3,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
-import type { AppInfo } from '../Registry.js'
+import type { AppInfo, Registry } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { UIExpress } from '../UI/Express.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -15,6 +15,7 @@ import { ServiceHttps } from './Https.js'
 import { ServiceMdnsAdvertise } from './MdnsAdvertise.js'
 import { ServiceOscListener } from './OscListener.js'
 import type { ServiceOscSender } from './OscSender.js'
+import { RestApiService } from './RestApi/RestApiService.js'
 import { ServiceRosstalk } from './Rosstalk.js'
 import { ServiceSatelliteApi } from './Satellite/SatelliteApi.js'
 import { ServiceSatelliteTcp } from './SatelliteTcp.js'
@@ -40,6 +41,7 @@ import { ServiceUdp } from './Udp.js'
  */
 export class ServiceController {
 	readonly httpApi: ServiceHttpApi
+	readonly restApi: RestApiService
 	readonly https: ServiceHttps
 	readonly oscSender: ServiceOscSender
 	readonly oscListener: ServiceOscListener
@@ -63,9 +65,11 @@ export class ServiceController {
 		pageStore: IPageStore,
 		instanceController: InstanceController,
 		io: UIHandler,
-		express: UIExpress
+		express: UIExpress,
+		registry: Registry
 	) {
 		this.httpApi = new ServiceHttpApi(serviceApi, userconfig, express)
+		this.restApi = new RestApiService(registry, userconfig, express, serviceApi.appInfo)
 		this.https = new ServiceHttps(userconfig, express, io)
 		this.oscSender = oscSender
 		this.oscListener = new ServiceOscListener(serviceApi, userconfig)
