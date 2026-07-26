@@ -290,6 +290,38 @@ if (!lock) {
 
 	let restartCounter = 0
 
+	const ignoredDirNames = new Set([
+		'node_modules',
+		'.git',
+		'.yarn',
+		'.cache',
+		'.turbo',
+		'.github',
+		'.vscode',
+		'.idea',
+		'coverage',
+		'.nyc_output',
+	])
+	const watchedFileExtensions = ['.mjs', '.js', '.cjs', '.json']
+
+	/**
+	 * @param {string} filePath
+	 * @param {import('fs').Stats | undefined} stats
+	 * @returns {boolean}
+	 */
+	function isIgnoredPath(filePath, stats) {
+		if (filePath.split(/[\\/]/).some((segment) => ignoredDirNames.has(segment))) {
+			return true
+		}
+
+		const looksLikeFile = stats?.isFile() ?? path.extname(filePath) !== ''
+		if (looksLikeFile) {
+			return !watchedFileExtensions.some((ext) => filePath.endsWith(ext))
+		}
+
+		return false
+	}
+
 	/** @type {ReturnType<typeof chokidar.watch> | null} */
 	let watcher = null
 	/** @type {boolean} */
@@ -317,21 +349,7 @@ if (!lock) {
 					watcher = chokidar.watch('.', {
 						ignoreInitial: true,
 						cwd: devModulesPath,
-						ignored: (path, stats) => {
-							if (
-								stats?.isFile() &&
-								!path.endsWith('.mjs') &&
-								!path.endsWith('.js') &&
-								!path.endsWith('.cjs') &&
-								!path.endsWith('.json')
-							) {
-								return true
-							}
-							if (path.includes('node_modules')) {
-								return true
-							}
-							return false
-						},
+						ignored: isIgnoredPath,
 					})
 
 					watcher.on('error', (error) => {
