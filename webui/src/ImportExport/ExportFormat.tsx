@@ -4,8 +4,7 @@ import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const ExportFormatDefault: ExportFormat = 'json-gz'
-const formatOptions: DropdownChoice[] = [
+export const formatOptions: DropdownChoice[] = [
 	{
 		id: 'json-gz',
 		label: 'Compressed (Default)',

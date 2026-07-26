@@ -11,7 +11,6 @@ import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
-import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { usePlainOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -24,7 +23,6 @@ interface SurfaceEditPanelProps {
 
 export const RemoteSurfaceEditPanel = observer<SurfaceEditPanelProps>(function RemoteSurfaceEditPanel({ remoteInfo }) {
 	const navigate = useNavigate()
-	const twoPanelMode = useTwoPanelMode()
 
 	const doCloseSurface = useCallback(() => {
 		void navigate({ to: '/surfaces/remote' })
@@ -34,7 +32,9 @@ export const RemoteSurfaceEditPanel = observer<SurfaceEditPanelProps>(function R
 		<>
 			<div className="secondary-panel-simple-header">
 				<h4 className="panel-title">Settings for {remoteInfo?.displayName}</h4>
-				<div className="header-buttons">{!twoPanelMode && <CloseButton closeFn={doCloseSurface} />}</div>
+				<div className="header-buttons">
+					<CloseButton closeFn={doCloseSurface} />
+				</div>
 			</div>
 
 			<SurfaceEditPanelContent remoteInfo={remoteInfo} doClose={doCloseSurface} />

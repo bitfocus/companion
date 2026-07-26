@@ -179,6 +179,6 @@ export class ControlStore implements IControlStore {
 			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, options)
+		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, null, options)
 	}
 }

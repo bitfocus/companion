@@ -49,7 +49,7 @@ export const WithValidation: Story = {
 
 /** noOptionsMessage — shown when choices list is empty */
 export const NoOptions: Story = {
-	args: { choices: [], value: '' as never, noOptionsMessage: 'No colours available' },
+	args: { choices: [], value: '' as never, noOptionsMessage: 'No colors available' },
 }
 
 /** badOptionPrefix — shown before value when the current value is not in choices */

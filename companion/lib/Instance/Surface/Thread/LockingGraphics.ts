@@ -99,7 +99,10 @@ export class LockingGraphicsGeneratorImpl implements LockingGraphicsGenerator {
 		const imageRsRotation = this.#translateRotation(rotation)
 		if (imageRsRotation !== null) image = image.rotate(imageRsRotation)
 
-		const computedImage = await image.toBuffer(bitmapStyle.format || 'rgb')
+		const targetFormat = bitmapStyle.format || 'rgb'
+		const computedImage = await image.toBuffer(targetFormat, {
+			premultiplyAlpha: targetFormat.length === 3, // eg rgb/bgr
+		})
 		return computedImage.buffer
 	}
 

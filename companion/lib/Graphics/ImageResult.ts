@@ -120,12 +120,20 @@ export class ImageResult {
 	 */
 	readonly referencedLocations: ReadonlySet<string>
 
+	/**
+	 * Content identity of this render: two renders with the same non-undefined cacheKey are
+	 * byte-identical. `undefined` means the render has no comparable identity.
+	 */
+	readonly cacheKey: string | undefined
+
 	constructor(
+		cacheKey: string | undefined,
 		style: ImageResultProcessedStyle | null,
 		drawNative: ImageResultNativeDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> = new Set()
 	) {
+		this.cacheKey = cacheKey
 		this.style = style
 		this.#drawNative = drawNative
 		this.drawElements = drawElements

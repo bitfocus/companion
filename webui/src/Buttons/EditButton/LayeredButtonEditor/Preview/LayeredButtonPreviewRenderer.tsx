@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useContext, useEffect, useId, useRef, useState } from 'react'
-import { useLocalStorage } from 'usehooks-ts'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import type { ResolveButtonStylePropertiesConfig } from '@companion-app/shared/Graphics/Util.js'
@@ -12,6 +11,7 @@ import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { FormLabel } from '~/Components/Form'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
@@ -46,19 +46,32 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 
 	const [aspectRatio, setAspectRatio] = useLocalStorage('layered-button-preview-aspect-ratio', '1:1')
 
-	let width = 200
-	let height = 200
+	const maxSide = 200
+	let width = maxSide
+	let height = maxSide
 
 	try {
-		const parsed = aspectRatio.split(':').map(Number)
-		if (parsed.length === 2 && parsed.every((n) => !isNaN(n) && n > 0)) {
-			if (parsed[0] > parsed[1]) {
-				height = width * (parsed[1] / parsed[0])
-			} else {
-				width = height * (parsed[0] / parsed[1])
+		const parsed = aspectRatio
+			.trim()
+			.split(/:|\/|x|\s]|to|by/i, 3)
+			.map(Number)
+		if (parsed.length >= 2 && !isNaN(parsed[0]) && parsed[0] !== 0 && !isNaN(parsed[1]) && parsed[1] !== 0) {
+			parsed[0] = Math.abs(parsed[0])
+			parsed[1] = Math.abs(parsed[1])
+			if (parsed[0] > parsed[1] && parsed[0] / parsed[1] <= maxSide) {
+				height = Math.round(width * (parsed[1] / parsed[0]))
+			} else if (parsed[0] < parsed[1] && parsed[1] / parsed[0] <= maxSide) {
+				width = Math.round(height * (parsed[0] / parsed[1]))
 			}
-			console.log('calculated size', width, height, aspectRatio, parsed)
+		} else if (parsed.length >= 1 && !isNaN(parsed[0]) && parsed[0] !== 0) {
+			parsed[0] = Math.abs(parsed[0])
+			if (parsed[0] > 1 && parsed[0] <= maxSide) {
+				height = Math.round(width / parsed[0])
+			} else if (parsed[0] < 1 && parsed[0] >= 1 / maxSide) {
+				width = Math.round(height * parsed[0])
+			}
 		}
+		// console.log('calculated button preview size', width, height, aspectRatio, parsed)
 	} catch (e) {
 		console.error('Failed to parse aspect ratio', e)
 		// Fallback to 1:1 if parsing fails
@@ -95,9 +108,9 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 })
 
 const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
-	{ id: '1:1', label: 'Square (1:1)' },
-	{ id: '9:7', label: 'Stream Deck Studio (9:7)' },
-	{ id: '2:1', label: 'Stream Deck Plus & Plus XL (2:1)' },
+	{ id: '1:1', label: '1:1 (Square)' },
+	{ id: '9:7', label: '9:7 (Stream Deck Studio)' },
+	{ id: '2:1', label: '2:1 (Stream Deck Plus & Plus XL)' },
 ]
 
 interface LayeredButtonCanvasProps {

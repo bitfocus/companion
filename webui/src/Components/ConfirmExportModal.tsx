@@ -1,10 +1,11 @@
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useRef, useState } from 'react'
+import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
 import { windowLinkOpen } from '~/Helpers/Window.js'
-import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
+import { SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InlineHelpIcon } from './InlineHelp.js'
 import { SwitchInputField } from './SwitchInputField.js'
@@ -22,9 +23,11 @@ export const ConfirmExportModal = observer(
 	forwardRef<ConfirmExportModalRef, ConfirmExportModalProps>(function ConfirmExportModal(props, ref) {
 		const { userConfig } = useContext(RootAppStoreContext)
 
+		const defaultExportFormat = userConfig.properties?.default_export_format ?? ExportFormatDefault
+
 		const [data, setData] = useState<string | null>(null)
 		const [show, setShow] = useState(false)
-		const [format, setFormat] = useState(ExportFormatDefault)
+		const [format, setFormat] = useState(defaultExportFormat)
 		const [filename, setFilename] = useState<string>('')
 		const [includeSecrets, setIncludeSecrets] = useState<boolean>(true)
 
@@ -52,12 +55,13 @@ export const ConfirmExportModal = observer(
 					setData(url)
 					setShow(true)
 
-					// Reset to default filename each time modal is opened
+					// Reset to defaults each time modal is opened
+					setFormat(defaultExportFormat)
 					setFilename(String(defaultExportFilename))
 					setIncludeSecrets(true)
 				},
 			}),
-			[defaultExportFilename]
+			[defaultExportFilename, defaultExportFormat]
 		)
 
 		const exportFormatId = useId()

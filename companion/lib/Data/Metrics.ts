@@ -20,6 +20,7 @@ import type { AppInfo } from '../Registry.js'
 import type { ServiceController } from '../Service/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type { DataStoreBase } from './StoreBase.js'
 import type { DataUserConfig } from './UserConfig.js'
 
 /**
@@ -253,6 +254,7 @@ export function registerCoreMetrics(
 		controls: ControlsController
 		variables: VariablesController
 		services: ServiceController
+		databases: { name: string; store: DataStoreBase<any> }[]
 	}
 ): void {
 	metrics.labeledGauge(
@@ -293,4 +295,29 @@ export function registerCoreMetrics(
 	metrics.gauge('companion_custom_variables', 'Number of custom variables', () => {
 		return Object.keys(deps.variables.custom.getDefinitions()).length
 	})
+
+	// SQLite database size, one series per database. Sourced from SQLite's page accounting rather than a
+	// filesystem stat, so it is portable and doesn't need file paths; it excludes the transient WAL file.
+	// free_bytes is the reusable freelist portion of total_bytes, so bloat/fragmentation shows as the gap
+	// between them (and what a VACUUM would reclaim).
+	metrics.labeledGauge(
+		'companion_database_size_bytes',
+		'On-disk size of each SQLite database (page_count * page_size; excludes the transient WAL)',
+		['database'],
+		() =>
+			deps.databases.map(({ name, store }) => ({
+				labels: { database: name },
+				value: store.getDiskSizeInfo().totalBytes,
+			}))
+	)
+	metrics.labeledGauge(
+		'companion_database_free_bytes',
+		'Reusable free space within each SQLite database (freelist_count * page_size)',
+		['database'],
+		() =>
+			deps.databases.map(({ name, store }) => ({
+				labels: { database: name },
+				value: store.getDiskSizeInfo().freeBytes,
+			}))
+	)
 }

@@ -13,6 +13,7 @@ import {
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { Complete } from '@companion-module/base'
+import { parseColorToNumber } from '../Resources/Util.js'
 import type { ImageResultProcessedStyle } from './ImageResult.js'
 
 export class GraphicsLayeredProcessedStyleGenerator {
@@ -61,11 +62,11 @@ export class GraphicsLayeredProcessedStyleGenerator {
 
 		const processedStyle: Complete<ImageResultProcessedStyle> = {
 			type: 'button',
-			color: boxLayer ? { color: boxLayer.color } : undefined,
+			color: boxLayer ? { color: parseColorToNumber(boxLayer.color) || 0 } : undefined,
 			text: textLayer
 				? {
 						text: textLayer.text,
-						color: textLayer.color,
+						color: parseColorToNumber(textLayer.color) || 0,
 						size: downConvertFontSize(textLayer.fontsize, textLayer.fontsizeAllowShrink),
 						halign: textLayer.halign,
 						valign: textLayer.valign,

@@ -1,4 +1,4 @@
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -47,7 +47,7 @@ function val<T>(value: T): ExpressionOrValue<T> {
 }
 
 function expr<T>(value: string): ExpressionOrValue<T> {
-	return { isExpression: true, value } as ExpressionOrValue<T>
+	return { isExpression: true, value }
 }
 
 // Element factories — provide sensible defaults so each test only specifies what matters.
@@ -68,6 +68,8 @@ function makeTextDrawEl(overrides: Partial<ButtonGraphicsTextDrawElement> = {}):
 		fontsize: 100,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff,
 		halign: 'center',
 		valign: 'center',
@@ -90,6 +92,7 @@ function makeBoxDrawEl(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): B
 		height: 100,
 		rotation: 0,
 		color: 0,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -115,6 +118,8 @@ function makeTextEl(overrides: Partial<ButtonGraphicsTextElement> = {}): ButtonG
 		fontsize: val(100),
 		fontsizeAllowShrink: val(true),
 		font: val('companion-sans'),
+		weight: val('normal'),
+		styles: val([]),
 		color: val(0xffffff),
 		halign: val('center'),
 		valign: val('center'),
@@ -137,6 +142,7 @@ function makeBoxEl(overrides: Partial<ButtonGraphicsBoxElement> = {}): ButtonGra
 		height: val(100),
 		rotation: val(0),
 		color: val(0),
+		cornerRadius: val(0),
 		borderWidth: val(0),
 		borderColor: val(0),
 		borderPosition: val('inside'),
@@ -253,7 +259,7 @@ function createMockImageResult(
 	drawElements: SomeButtonGraphicsDrawElement[] = [],
 	referencedLocations: ReadonlySet<string> = new Set()
 ): ImageResult {
-	return new ImageResult(null, async () => Buffer.alloc(0), drawElements, referencedLocations)
+	return new ImageResult(undefined, null, async () => Buffer.alloc(0), drawElements, referencedLocations)
 }
 
 /**
@@ -495,6 +501,22 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
+		test('keeps a translucent color (the text color field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeTextEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'text', color: 'rgba(255, 0, 0, 0.5)' })
+		})
+
 		test('filters disabled text element when onlyEnabled is true', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello'), enabled: val(false) })]
 
@@ -577,6 +599,59 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(result.elements[0]).toMatchObject({ type: 'text', font: 'companion-sans' })
 			expect(result.elements[1]).toMatchObject({ type: 'text', font: 'companion-mono' })
 		})
+
+		test('resolves weight and styles properties', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'text-plain', text: val('Plain') }),
+				makeTextEl({
+					id: 'text-styled',
+					text: val('Styled'),
+					weight: val('bold'),
+					styles: val(['italic', 'underline']),
+				}),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements).toHaveLength(2)
+			expect(result.elements[0]).toMatchObject({ type: 'text', weight: 'normal', styles: [] })
+			expect(result.elements[1]).toMatchObject({ type: 'text', weight: 'bold', styles: ['italic', 'underline'] })
+		})
+
+		test('filters invalid style values and defaults unknown weight', async () => {
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({
+					id: 'text-bad',
+					text: val('Bad'),
+					weight: val('heavy' as 'normal'),
+					styles: val(['italic', 'bogus'] as ('italic' | 'underline' | 'strikethrough')[]),
+				}),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'text', weight: 'normal', styles: ['italic'] })
+		})
 	})
 
 	describe('box element conversion', () => {
@@ -588,6 +663,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					width: val(50),
 					height: val(60),
 					color: val(0xff0000),
+					cornerRadius: val(40),
 					borderWidth: val(2),
 					borderColor: val(0x00ff00),
 				}),
@@ -614,9 +690,58 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				width: 0.5, // 50 * 0.01
 				height: 0.6, // 60 * 0.01
 				color: 0xff0000,
+				cornerRadius: 0.4, // 40 * 0.01
 				borderWidth: 0.02, // 2 * 0.01
 				borderColor: 0x00ff00,
 			})
+		})
+
+		test('keeps a css color string (plain value)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('#ff8800') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a css color string returned by an expression', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: expr('"#ff8800"') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a translucent color (the box color field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: 'rgba(255, 0, 0, 0.5)' })
 		})
 	})
 
@@ -662,7 +787,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					toY: val(100),
 					borderWidth: val(3),
 					borderColor: val(0xffff00),
-					borderPosition: val('center'),
+					borderPosition: val('left'),
 				},
 			]
 
@@ -687,6 +812,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				toX: 1, // line coords not scaled
 				toY: 1,
 				borderWidth: 0.03, // 3 * 0.01
+				borderPosition: 'left',
 			})
 		})
 	})
@@ -2815,8 +2941,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					})
 				)
 			)
-			expect(el.stops[0]!.gradient).toBe(true)
-			expect(el.stops[1]!.gradient).toBe(false)
+			expect(el.stops[0].gradient).toBe(true)
+			expect(el.stops[1].gradient).toBe(false)
 		})
 
 		test('stop values are NOT clamped (authored domain, mapped by renderer)', async () => {
@@ -2832,8 +2958,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					})
 				)
 			)
-			expect(el.stops[0]!.value).toBe(-100)
-			expect(el.stops[1]!.value).toBe(100)
+			expect(el.stops[0].value).toBe(-100)
+			expect(el.stops[1].value).toBe(100)
 		})
 
 		test('partial stop rows fall back to defaults without throwing', async () => {

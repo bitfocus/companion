@@ -5,18 +5,20 @@ import {
 	CustomVariableCreateIfNotExistsOption,
 	CustomVariableSelectorOption,
 } from '@companion-app/shared/CustomVariable.js'
-import { LocalVariableNameOption } from '@companion-app/shared/LocalVariable.js'
+import { LocalVariableNameOption, PageVariableNameOption } from '@companion-app/shared/LocalVariable.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
 	type RawStoreResult,
 	type RawStoreResultCustomVariable,
 	type RawStoreResultLocalVariable,
+	type RawStoreResultPageVariable,
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	exprVal,
 	type CompanionInputFieldDropdownExtended,
 	type ExpressionOrValue,
+	type InternalInputFieldPage,
 } from '@companion-app/shared/Model/Options.js'
 import type { JsonValue } from '@companion-module/host'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
@@ -90,6 +92,92 @@ export const LocalVariableControls = observer(function LocalVariableControls({
 				entityType={entityType}
 				controlId={controlId}
 				option={LocalVariableNameOption}
+				value={value.variableName}
+				setValue={setVariableName}
+				readonly={readonly}
+				visibility={true}
+				localVariablesStore={localVariablesStore}
+				fieldSupportsExpression={true}
+			/>
+		</>
+	)
+})
+
+const StoreResultPageOption = {
+	id: 'page',
+	type: 'internal:page',
+	label: 'Page',
+	includeStartup: false,
+	includeDirection: false,
+	default: 0,
+} as const satisfies InternalInputFieldPage
+
+interface PageVariableControlsProps {
+	isLocatedInGrid: boolean
+	controlId: string
+	tmpValue: React.MutableRefObject<RawStoreResultPageVariable>
+	value: RawStoreResultPageVariable
+	setValue: (val: RawStoreResultPageVariable) => void
+	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
+}
+
+const PageVariableControls = observer(function PageVariableControls({
+	isLocatedInGrid,
+	controlId,
+	tmpValue,
+	value,
+	setValue,
+	readonly,
+	localVariablesStore,
+}: PageVariableControlsProps) {
+	const entityType = EntityModelType.Action
+
+	const setPage = useCallback(
+		(_key: string, page: ExpressionOrValue<JsonValue | undefined>) => {
+			tmpValue.current = {
+				...tmpValue.current,
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
+				page: page.isExpression ? page : exprVal(String(page.value)),
+			}
+			setValue(tmpValue.current)
+		},
+		[tmpValue, setValue]
+	)
+
+	const setVariableName = useCallback(
+		(_key: string, variableName: ExpressionOrValue<JsonValue | undefined>) => {
+			tmpValue.current = {
+				...tmpValue.current,
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
+				variableName: variableName.isExpression ? variableName : exprVal(String(variableName.value)),
+			}
+			setValue(tmpValue.current)
+		},
+		[tmpValue, setValue]
+	)
+
+	return (
+		<>
+			<OptionsInputField
+				allowInternalFields={true}
+				isLocatedInGrid={isLocatedInGrid}
+				entityType={entityType}
+				controlId={controlId}
+				option={StoreResultPageOption}
+				value={value.page}
+				setValue={setPage}
+				readonly={readonly}
+				visibility={true}
+				localVariablesStore={localVariablesStore}
+				fieldSupportsExpression={true}
+			/>
+			<OptionsInputField
+				allowInternalFields={true}
+				isLocatedInGrid={isLocatedInGrid}
+				entityType={entityType}
+				controlId={controlId}
+				option={PageVariableNameOption}
 				value={value.variableName}
 				setValue={setVariableName}
 				readonly={readonly}
@@ -182,6 +270,7 @@ const StoreResultTargetOption = {
 	choices: [
 		{ id: 'discard', label: '<discard>' },
 		{ id: 'local-variable', label: 'Local variable' },
+		{ id: 'page-variable', label: 'Page variable' },
 		{ id: 'custom-variable', label: 'Custom variable' },
 	] satisfies (DropdownChoice & { id: StoreType })[],
 	default: 'discard',
@@ -221,6 +310,16 @@ export const StoreResultFields = observer(function StoreResultFields({
 				}
 	)
 
+	const pageVariableTarget = useRef<RawStoreResultPageVariable>(
+		storeResult?.type === 'page-variable'
+			? storeResult
+			: {
+					type: 'page-variable',
+					page: exprVal(String(StoreResultPageOption.default)),
+					variableName: exprVal(PageVariableNameOption.default),
+				}
+	)
+
 	const customVariableTarget = useRef<RawStoreResultCustomVariable>(
 		storeResult?.type === 'custom-variable'
 			? storeResult
@@ -240,6 +339,9 @@ export const StoreResultFields = observer(function StoreResultFields({
 					break
 				case 'local-variable':
 					setStoreResult(localVariableTarget.current)
+					break
+				case 'page-variable':
+					setStoreResult(pageVariableTarget.current)
 					break
 				case 'custom-variable':
 					setStoreResult(customVariableTarget.current)
@@ -270,6 +372,16 @@ export const StoreResultFields = observer(function StoreResultFields({
 					controlId={controlId}
 					tmpValue={localVariableTarget}
 					value={localVariableTarget.current}
+					setValue={setStoreResult}
+					readonly={readonly}
+					localVariablesStore={localVariablesStore}
+				/>
+			) : storeResult?.type === 'page-variable' ? (
+				<PageVariableControls
+					isLocatedInGrid={isLocatedInGrid}
+					controlId={controlId}
+					tmpValue={pageVariableTarget}
+					value={pageVariableTarget.current}
 					setValue={setStoreResult}
 					readonly={readonly}
 					localVariablesStore={localVariablesStore}

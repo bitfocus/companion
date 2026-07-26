@@ -15,7 +15,8 @@ export default [
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: {
-				project: true,
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
 			},
 		},
 	},
@@ -105,10 +106,12 @@ export default [
 		},
 	},
 	{
-		files: ['**/__tests__/**/*', 'test/**/*'],
+		files: ['**/__tests__/**/*', 'companion/test/**/*', 'webui/test/**/*', 'config-tool/test/**/*'],
 		rules: {
 			'@typescript-eslint/ban-ts-ignore': 'off',
 			'@typescript-eslint/ban-ts-comment': 'off',
+			'@typescript-eslint/unbound-method': 'off',
+			'@typescript-eslint/explicit-module-boundary-types': 'off',
 		},
 	},
 	{
@@ -174,12 +177,8 @@ export default [
 			'webui/public/_deps/**/*',
 			'webui/post-install.ts',
 			'.yarnrc.yml',
-			// TMP
-			'companion/lib/Cloud/**/*',
-			'companion/test/**/*',
-			'config-tool/test/**/*',
-			'webui/test/**/*',
 			'.cache/*',
+			'companion/lib/Cloud/**/*', // Code is due to be removed soon, not worth fixing lint issues in it
 		],
 	},
 	{

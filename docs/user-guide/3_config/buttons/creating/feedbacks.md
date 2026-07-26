@@ -77,9 +77,9 @@ Say you want a button's text to turn red when a custom variable `alarm` is true:
 1. Add the built-in feedback that checks an expression, and set the expression to `$(custom:alarm)`.
 2. On that feedback, **Add Element Properties**, choose your **Text** element, and add its **Color**
    property.
-3. Set the colour to red.
+3. Set the color to red.
 
-Now the text is red whenever `alarm` is true, and returns to its normal colour when it isn't.
+Now the text is red whenever `alarm` is true, and returns to its normal color when it isn't.
 
 ![Feedback example result](images/feedback-example-result.png?raw=true)
 
@@ -99,7 +99,7 @@ looking exactly as they did before.
 - **Boolean feedbacks** are on/off: when their condition is true, your configured overrides are
   applied. The expression/variable feedbacks above are a good example.
 - **Module (advanced) feedbacks** are provided by a connection and return a whole style based on the
-  device — for example a meter or a status colour. A module declares which properties its feedback
+  device — for example a meter or a status color. A module declares which properties its feedback
   affects, and you map those onto the elements on your button.
 
 Some modules also provide feedbacks that draw a complete generated image, typically to show a complex

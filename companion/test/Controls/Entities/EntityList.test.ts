@@ -1,18 +1,18 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	EntityOwner,
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
-	SomeEntityModel,
+	type ActionEntityModel,
+	type EntityOwner,
+	type FeedbackEntityModel,
+	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
-import { ControlEntityList, ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
-import { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
+import { ControlEntityList, type ControlEntityListDefinition } from '../../../lib/Controls/Entities/EntityList.js'
+import type { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
-import {
+import type {
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
@@ -367,7 +367,7 @@ describe('subscribe entities', () => {
 })
 
 describe('findById', () => {
-	const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+	const { list, getEntityDefinition } = createList('test01')
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 

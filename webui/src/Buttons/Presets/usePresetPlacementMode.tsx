@@ -1,4 +1,4 @@
-import { useLocalStorage } from 'usehooks-ts'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import type { PresetPlacementMode } from './PresetDragItem.js'
 
 /**

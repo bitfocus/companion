@@ -35,13 +35,13 @@ afterEach(() => {
 
 describe('EntityListPool - construction', () => {
 	test('construction', () => {
-		const { pool, reportChange, sendRuntimeProps, executeExpressionInControl } = createPool()
+		const { pool, reportChange, sendRuntimeProps, variableValues } = createPool()
 
 		expect(pool.getActiveStepIndex()).toBe(0)
 		expect(pool.getStepIds()).toEqual(['0'])
 		expect(pool.getAllEntities()).toHaveLength(0)
 		expect(sendRuntimeProps).toHaveBeenCalledTimes(0)
-		expect(executeExpressionInControl).toHaveBeenCalledTimes(0)
+		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenCalledTimes(0)
 		expect(reportChange).toHaveBeenCalledTimes(0)
 	})
 
@@ -199,12 +199,7 @@ describe('EntityListPool - destroy', () => {
 
 describe('EntityListPool - read-only by construction', () => {
 	test('the isEditable discriminant distinguishes the two pools', () => {
-		const readonly = new ControlEntityListPoolButton(
-			createPoolDeps({ controlId: 'disc0' }).deps,
-			vi.fn(),
-			vi.fn(),
-			true
-		)
+		const readonly = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'disc0' }).deps, vi.fn(), true)
 		const editable = new EditableControlEntityListPoolButton(
 			createPoolDeps({ controlId: 'disc1' }).deps,
 			vi.fn(),
@@ -217,7 +212,7 @@ describe('EntityListPool - read-only by construction', () => {
 	})
 
 	test('the read-only pool structurally lacks the edit mutators', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro00' }).deps, vi.fn(), vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro00' }).deps, vi.fn(), true)
 
 		// Compile-time: these properties do not exist on the read-only pool type.
 		// Runtime: confirm they are genuinely absent (not merely guarded).
@@ -245,7 +240,7 @@ describe('EntityListPool - read-only by construction', () => {
 	})
 
 	test('loading and runtime step navigation work on the read-only pool', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro01' }).deps, vi.fn(), vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro01' }).deps, vi.fn(), true)
 
 		// Loading the cached data must work on a read-only pool
 		expect(() => pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [] }, true, false)).not.toThrow()
@@ -277,9 +272,9 @@ describe('EntityListPool - local variables', () => {
 
 		pool.createVariablesAndExpressionParser(null)
 
-		// controlLocation comes from the (mocked) pageStore which returns null, and there are no
-		// local-variable entities yet
-		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenCalledWith(null, [], null, undefined)
+		// controlLocation comes from the (mocked) pageStore which returns null, so there are no local
+		// or page variables to inject either
+		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenCalledWith(null, [], null, null, undefined)
 	})
 })
 
@@ -382,7 +377,7 @@ describe('EntityListPool - storage round-trip (button)', () => {
 			localVariables: [],
 			steps: {},
 			...overrides,
-		} as ButtonModelBase
+		}
 	}
 
 	test('loadStorage routes feedbacks, local variables and steps into their lists', () => {

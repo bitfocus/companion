@@ -357,7 +357,7 @@ describe('ConvertLegacyStyleToElements', () => {
 			options: {},
 			upgradeIndex: undefined,
 			children: { feedbacks: [childFeedback] },
-		} as unknown as SomeEntityModel
+		}
 
 		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null)
 		const updatedCond = feedbacks[0] as FeedbackEntityModel

@@ -82,8 +82,12 @@ const CANVAS_DECORATION_CHOICES = dropdownChoices<ButtonGraphicsDecorationType>(
 const CANVAS_SHOW_STATUS_ICONS_CHOICES = dropdownChoices<ButtonGraphicsShowStatusIcons>('canvas', 'showStatusIcons')
 const IMAGE_FILL_MODE_CHOICES = dropdownChoices<ButtonGraphicsImageDrawElement['fillMode']>('image', 'fillMode')
 const TEXT_FONT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['font']>('text', 'font')
-// borderPosition is shared across box/line/circle — all use the same choices from borderFields.
+const TEXT_WEIGHT_CHOICES = dropdownChoices<ButtonGraphicsTextDrawElement['weight']>('text', 'weight')
+// The `styles` field is an internal:text-styles multi-toggle with a fixed set of values (no schema choices).
+const TEXT_STYLE_VALUES = ['italic', 'underline', 'strikethrough'] as const
+// box/circle share inside/center/outside; a line instead sits left/center/right of its path
 const BORDER_POSITION_CHOICES = dropdownChoices<ButtonGraphicsDrawBorder['borderPosition']>('box', 'borderPosition')
+const LINE_POSITION_CHOICES = dropdownChoices<ButtonGraphicsLineDrawElement['borderPosition']>('line', 'borderPosition')
 const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
 const GAUGE_TRACK_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['trackStyle']>('gauge', 'trackStyle')
 
@@ -422,6 +426,7 @@ function makeReferencePlaceholder(
 		height: 1,
 		rotation: 0,
 		color: 0xff8c00,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -444,6 +449,8 @@ function makeReferencePlaceholder(
 		fontsize: FONTSIZE_SHRINK_DEFAULT,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff,
 		outlineColor: 0,
 		halign: 'center',
@@ -532,6 +539,7 @@ function parseCompositeElementChildOptions(
 			case 'internal:surface_serial':
 			case 'internal:outbound_surface_id':
 			case 'internal:vertical-alignment':
+			case 'internal:text-styles':
 			case 'internal:trigger':
 			case 'internal:trigger_collection':
 			case 'internal:variable':
@@ -698,10 +706,12 @@ function convertTextElementForDrawing(
 		fontsize: helper.getNumber('fontsize', FONTSIZE_SHRINK_DEFAULT),
 		fontsizeAllowShrink: helper.getBoolean('fontsizeAllowShrink', false),
 		font: helper.getEnum('font', TEXT_FONT_CHOICES, 'companion-sans'),
-		color: helper.getNumber('color', 0),
+		weight: helper.getEnum('weight', TEXT_WEIGHT_CHOICES, 'normal'),
+		styles: helper.getEnumArray('styles', TEXT_STYLE_VALUES, []),
+		color: helper.getColor('color', 0),
 		halign: helper.getHorizontalAlignment('halign'),
 		valign: helper.getVerticalAlignment('valign'),
-		outlineColor: helper.getNumber('outlineColor', 0),
+		outlineColor: helper.getColor('outlineColor', 0),
 		contentHash: '', // Will be computed below
 	}
 
@@ -728,7 +738,8 @@ function convertBoxElementForDrawing(
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
+		cornerRadius: helper.getNumber('cornerRadius', 0, 0.01),
 
 		...convertBorderProperties(helper),
 		contentHash: '', // Will be computed below
@@ -760,7 +771,9 @@ function convertLineElementForDrawing(
 		toX: helper.getNumber('toX', 1, 0.01),
 		toY: helper.getNumber('toY', 1, 0.01),
 
-		...convertBorderProperties(helper),
+		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
+		borderColor: helper.getColor('borderColor', 0),
+		borderPosition: helper.getEnum('borderPosition', LINE_POSITION_CHOICES, 'center'),
 		contentHash: '', // Will be computed below
 	}
 
@@ -797,7 +810,7 @@ function convertCircleElementForDrawing(
 		enabled,
 		opacity: helper.getNumber('opacity', 1, 0.01),
 		...convertDrawBounds(helper),
-		color: helper.getNumber('color', 0),
+		color: helper.getColor('color', 0),
 		startAngle: helper.getNumber('startAngle', 0),
 		endAngle: helper.getNumber('endAngle', 360),
 		drawSlice: helper.getBoolean('drawSlice', false),
@@ -820,7 +833,7 @@ function convertGaugeElementForDrawing(
 	const enabled = helper.getBoolean('enabled', true)
 	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement: null }
 
-	// Colour stops carry values in the authored Min..Max domain; the renderer normalises them to
+	// Color stops carry values in the authored Min..Max domain; the renderer normalises them to
 	// track positions. Values are intentionally not clamped here so the renderer can map them.
 	const stopsRaw = (element.stops as ExpressionOrValue<JsonValue[]>).value
 	const stops: ButtonGraphicsGaugeDrawElement['stops'] = Array.isArray(stopsRaw)
@@ -828,7 +841,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getNumber('color', 0),
+					color: rowHelper.getColor('color', 0, false), // gauge stop color field disables alpha
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
@@ -859,7 +872,7 @@ function convertGaugeElementForDrawing(
 		multiColour: helper.getBoolean('multiColour', true),
 		stops: stops,
 		markerEnabled: helper.getBoolean('markerEnabled', false),
-		markerColor: helper.getNumber('markerColor', 0xffffff),
+		markerColor: helper.getColor('markerColor', 0xffffff),
 		markerWidth: Math.max(1, Math.min(100, helper.getNumber('markerWidth', 15))),
 		trackStyle: helper.getTolerantEnum('trackStyle', GAUGE_TRACK_STYLE_CHOICES, 'transparent'),
 		trackAmount: Math.max(0, Math.min(100, helper.getNumber('trackAmount', 70))),
@@ -875,7 +888,7 @@ function convertBorderProperties(
 ): ButtonGraphicsDrawBorder {
 	return {
 		borderWidth: helper.getNumber('borderWidth', 0, 0.01),
-		borderColor: helper.getNumber('borderColor', 0),
+		borderColor: helper.getColor('borderColor', 0),
 		borderPosition: helper.getEnum('borderPosition', BORDER_POSITION_CHOICES, 'inside'),
 	}
 }

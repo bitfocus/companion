@@ -246,6 +246,7 @@ describe('VariablesBlinker', () => {
 
 			// No new calls after the interval was cleaned up
 			expect(emitChange.mock.calls.length).toBe(callCountAfterCleanup)
+			expect(emitChange.mock.calls.length).not.toBe(initialCallCount)
 		})
 	})
 

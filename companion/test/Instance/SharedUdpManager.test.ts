@@ -1,10 +1,10 @@
-import type { createSocket } from 'dgram'
-import EventEmitter from 'events'
+import type { createSocket } from 'node:dgram'
+import EventEmitter from 'node:events'
 import { beforeEach, describe, expect, it, test, vi } from 'vitest'
 import { InstanceSharedUdpManager } from '../../lib/Instance/Connection/SharedUdpManager.js'
 
 const mockCreateSocket = vi.hoisted(() =>
-	vi.fn((...args: Parameters<typeof createSocket>): MockSocket => {
+	vi.fn((..._args: Parameters<typeof createSocket>): MockSocket => {
 		throw new Error('Not implemented')
 	})
 )
@@ -205,7 +205,7 @@ describe('SharedUdpManager', () => {
 		})
 
 		test('send bad handleId', async () => {
-			const { service, mockSocket, handleId } = await setupPort()
+			const { service, mockSocket } = await setupPort()
 
 			// Make the call
 			const message = Buffer.from('testing message 5')

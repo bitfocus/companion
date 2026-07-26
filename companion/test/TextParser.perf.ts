@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /**
  * Performance benchmark for drawAlignedText
  *
@@ -177,9 +176,9 @@ function runBenchmark(testCase: BenchmarkCase, iterations: number): BenchmarkRes
 			testCase.text,
 			'#ffffff',
 			testCase.fontSize ?? testCase.height,
-			testCase.allowShrink,
-			'center',
-			'center'
+			{
+				allowShrink: testCase.allowShrink,
+			}
 		)
 	}
 

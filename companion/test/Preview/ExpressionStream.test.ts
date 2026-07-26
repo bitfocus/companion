@@ -1,9 +1,11 @@
 import { initTRPC } from '@trpc/server'
 import { describe, expect, it, vi } from 'vitest'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { RenderClock } from '../../lib/Controls/RenderClock.js'
+import type { IPageStore } from '../../lib/Page/Store.js'
 import { PreviewExpressionStream } from '../../lib/Preview/ExpressionStream.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import type { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
@@ -25,7 +27,16 @@ function createParser(
 ): VariablesAndExpressionParser {
 	// Mirror production's terminal construction (Values.createVariablesAndExpressionParser):
 	// overrides are applied via the constructor's overrideVariableValues arg, not createChildParser.
-	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides, undefined)
+	return new VariablesAndExpressionParser(
+		userconfig,
+		null as any,
+		variables,
+		new Map(),
+		null,
+		overrides,
+		null,
+		undefined
+	)
 }
 
 /**
@@ -49,13 +60,24 @@ function makeLocalVariablesMock(
 ): LocalVariablesController {
 	return {
 		localVariableFor: vi.fn().mockImplementation(() => localVariable),
+		pageVariableFor: vi.fn().mockImplementation(() => localVariable),
 		getLocalVariableContextFor: vi.fn().mockImplementation(getContext),
 	} as unknown as LocalVariablesController
 }
 
-function createStream(controlsController: ControlsController, localVariables: LocalVariablesController) {
+function makePageStoreMock(location: ControlLocation | undefined): IPageStore {
+	return {
+		getLocationOfControlId: vi.fn().mockImplementation(() => location),
+	} as unknown as IPageStore
+}
+
+function createStream(
+	controlsController: ControlsController,
+	localVariables: LocalVariablesController,
+	pageStore: IPageStore = makePageStoreMock(undefined)
+) {
 	const renderClock = { subscribe: vi.fn(() => () => {}) } as unknown as RenderClock
-	const stream = new PreviewExpressionStream(controlsController, localVariables, renderClock)
+	const stream = new PreviewExpressionStream(controlsController, pageStore, localVariables, renderClock)
 	const router = stream.createTrpcRouter()
 	const caller = t.createCallerFactory(router)(testCtx)
 	return { stream, caller }
@@ -203,7 +225,7 @@ describe('localVariable context resolution', () => {
 		// Update context (simulates local variable changing on ctrl1)
 		context = { 'this:current': 9, 'target:counter': 9 }
 		// The resolved target controlId is 'ctrl1' (set during first resolution)
-		stream.onVariablesChanged(new Set(['local:counter']), 'ctrl1')
+		stream.onVariablesChanged(new Set(['local:counter']), new Set(['ctrl1']))
 
 		await sub.expectValue({ ok: true, value: 10 }) // 9 + 1
 		await sub.cleanup()
@@ -232,7 +254,7 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// Change from a different control — must not trigger re-evaluation
-		stream.onVariablesChanged(new Set(['local:counter']), 'different-ctrl')
+		stream.onVariablesChanged(new Set(['local:counter']), new Set(['different-ctrl']))
 
 		// No re-evaluation expected — the parser factory was not invoked again
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
@@ -383,7 +405,7 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// A local-variable change on an unrelated control must not trigger a resolution retry
-		stream.onVariablesChanged(new Set(['local:whatever']), 'other-ctrl')
+		stream.onVariablesChanged(new Set(['local:whatever']), new Set(['other-ctrl']))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -449,7 +471,7 @@ describe('localVariable context resolution', () => {
 		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
 		const callsBefore = parserFactory.mock.calls.length
 
-		stream.onVariablesChanged(new Set(['local:whatever']), 'other-ctrl')
+		stream.onVariablesChanged(new Set(['local:whatever']), new Set(['other-ctrl']))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -498,6 +520,152 @@ describe('localVariable context resolution', () => {
 
 		// Should still return a result, just without context — this:current is unresolved
 		// and resolves to undefined.
+		const result = await sub.next()
+		expect(result).toEqual({ ok: true, value: undefined })
+		await sub.cleanup()
+	})
+})
+
+// ── page variable context ────────────────────────────────────────────────────
+
+describe('pageVariable context resolution', () => {
+	it('injects this:current and target:* from the page variable context', async () => {
+		const context = { 'this:current': 5, 'target:counter': 5 }
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const { caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current) + $(target:counter)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'pageVariable', pageValue: exprVal('2'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 10 }) // 5 + 5
+		// explicit page '2' — "This page" is irrelevant, so no page number is needed
+		expect(lv.pageVariableFor).toHaveBeenCalledWith('2', 'counter', null)
+		await sub.cleanup()
+	})
+
+	it('resolves "This page" (page 0) from a grid control location', async () => {
+		// page 0 is the picker's "This page" — for a grid control it comes from its location.
+		const cc = makeControlsControllerMock(() => ({}))
+		const context = { 'this:current': 7, 'target:counter': 7 }
+		const lv = makeLocalVariablesMock({ controlId: 'page:page-c', name: 'counter' }, () => context)
+		const pageStore = makePageStoreMock({ pageNumber: 3, row: 0, column: 0 })
+		const { caller } = createStream(cc, lv, pageStore)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'pageVariable', pageValue: exprVal('0'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 7 })
+		expect(pageStore.getLocationOfControlId).toHaveBeenCalledWith('ctrl1')
+		expect(lv.pageVariableFor).toHaveBeenCalledWith('0', 'counter', 3)
+		await sub.cleanup()
+	})
+
+	it('resolves "This page" from the page id when the previewed control is a page control', async () => {
+		// A page control has no grid location, so its page comes from its id via getPageNumber.
+		const cc = makeControlsControllerMock(() => ({}))
+		const context = { 'this:current': 4, 'target:counter': 4 }
+		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const pageStore = {
+			getLocationOfControlId: vi.fn().mockReturnValue(undefined),
+			getPageNumber: vi.fn().mockReturnValue(2),
+		} as unknown as IPageStore
+		const { caller } = createStream(cc, lv, pageStore)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'page:page-b',
+				isVariableString: false,
+				contextResolution: { type: 'pageVariable', pageValue: exprVal('0'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 4 })
+		expect(pageStore.getPageNumber).toHaveBeenCalledWith('page-b')
+		expect(pageStore.getLocationOfControlId).not.toHaveBeenCalled()
+		expect(lv.pageVariableFor).toHaveBeenCalledWith('0', 'counter', 2)
+		await sub.cleanup()
+	})
+
+	it('re-evaluates when the target page control changes (isTargetControlChange)', async () => {
+		let context: VariableValues = { 'this:current': 3, 'target:counter': 3 }
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current) + 1',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'pageVariable', pageValue: exprVal('2'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.expectValue({ ok: true, value: 4 }) // 3 + 1
+
+		// The page's variable changed — the change is scoped to the resolved page control
+		context = { 'this:current': 9, 'target:counter': 9 }
+		stream.onVariablesChanged(new Set(['page:counter']), new Set(['page:page-b']))
+
+		await sub.expectValue({ ok: true, value: 10 }) // 9 + 1
+		await sub.cleanup()
+	})
+
+	it('does NOT re-evaluate when a different control changes', async () => {
+		const context = { 'this:current': 3, 'target:counter': 3 }
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const { stream, caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current) + 1',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'pageVariable', pageValue: exprVal('2'), nameValue: exprVal('counter') },
+			})
+		)
+
+		await sub.next() // consume initial
+
+		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
+		const callsBefore = parserFactory.mock.calls.length
+
+		// A change scoped to a different page control must not trigger re-evaluation
+		stream.onVariablesChanged(new Set(['page:counter']), new Set(['page:different']))
+		expect(parserFactory.mock.calls.length).toBe(callsBefore)
+
+		await sub.cleanup()
+	})
+
+	it('evaluates without context when pageVariableFor returns null (page not found)', async () => {
+		const cc = makeControlsControllerMock(() => ({}))
+		const lv = makeLocalVariablesMock(null, () => null) // not found
+		const { caller } = createStream(cc, lv)
+
+		const sub = new SubscriptionTester(
+			await caller.watchExpression({
+				expression: '$(this:current)',
+				controlId: 'ctrl1',
+				isVariableString: false,
+				contextResolution: { type: 'pageVariable', pageValue: exprVal('99'), nameValue: exprVal('missing') },
+			})
+		)
+
 		const result = await sub.next()
 		expect(result).toEqual({ ok: true, value: undefined })
 		await sub.cleanup()
@@ -565,7 +733,7 @@ describe('no contextResolution', () => {
 
 		variables = { test: { val: 8 } }
 		// fromControlId matches session.controlId
-		stream.onVariablesChanged(new Set(['test:val']), 'ctrl1')
+		stream.onVariablesChanged(new Set(['test:val']), new Set(['ctrl1']))
 
 		await sub.expectValue({ ok: true, value: 8 })
 		await sub.cleanup()

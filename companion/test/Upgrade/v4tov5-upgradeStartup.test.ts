@@ -9,10 +9,9 @@ import { importTable } from './util.js'
 function CreateDataDatabase() {
 	const db = new DataDatabase()
 
-	let data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v4.json', 'utf8')
-	data = JSON.parse(data)
+	const data = fs.readFileSync('./companion/test/Upgrade/v4tov5/db.v4.json', 'utf8')
 
-	importTable(db.defaultTableView, data)
+	importTable(db.defaultTableView, JSON.parse(data))
 
 	return db
 }

@@ -57,6 +57,13 @@ export function CreateExpressionVariableControlId(variableId: string): string {
 }
 
 /**
+ * Create the full control id for a page's local-variables control (one per page, keyed by page id).
+ */
+export function CreatePageControlId(pageId: string): string {
+	return `page:${pageId}`
+}
+
+/**
  * Create preset control id
  */
 export function CreatePresetControlId(connectionId: string, presetId: string, variablesHash: string): string {
@@ -75,6 +82,10 @@ export interface ParsedControlIdExpressionVariable {
 	type: 'expression-variable'
 	variableId: string
 }
+export interface ParsedControlIdPage {
+	type: 'page'
+	pageId: string
+}
 export interface ParsedControlIdPreset {
 	type: 'preset'
 	connectionId: string
@@ -82,7 +93,11 @@ export interface ParsedControlIdPreset {
 	variablesHash: string
 }
 export type ParsedControlIdType =
-	ParsedControlIdBank | ParsedControlIdTrigger | ParsedControlIdExpressionVariable | ParsedControlIdPreset
+	| ParsedControlIdBank
+	| ParsedControlIdTrigger
+	| ParsedControlIdExpressionVariable
+	| ParsedControlIdPage
+	| ParsedControlIdPreset
 
 /**
  * Parse a controlId
@@ -110,6 +125,14 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			return {
 				type: 'expression-variable',
 				variableId: matchCv[1],
+			}
+		}
+
+		const matchPage = controlId.match(/^page:(.*)$/)
+		if (matchPage) {
+			return {
+				type: 'page',
+				pageId: matchPage[1],
 			}
 		}
 

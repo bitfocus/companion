@@ -366,6 +366,24 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	}
 
 	/**
+	 * Current on-disk size of the database, from SQLite's own page accounting (`page_count * page_size`).
+	 * `totalBytes` is the size of the main database file (including reusable free pages); `freeBytes` is the
+	 * portion sitting on the freelist. Excludes the transient WAL file. Cheap enough to read at scrape time;
+	 * returns zeros if the pragmas fail.
+	 */
+	public getDiskSizeInfo(): { totalBytes: number; freeBytes: number } {
+		try {
+			const pageSize = (this.store.prepare('PRAGMA page_size').get() as { page_size: number }).page_size
+			const pageCount = (this.store.prepare('PRAGMA page_count').get() as { page_count: number }).page_count
+			const freeCount = (this.store.prepare('PRAGMA freelist_count').get() as { freelist_count: number }).freelist_count
+			return { totalBytes: pageSize * pageCount, freeBytes: pageSize * freeCount }
+		} catch (e) {
+			this.logger.warn(`Error reading database size: ${stringifyError(e)}`)
+			return { totalBytes: 0, freeBytes: 0 }
+		}
+	}
+
+	/**
 	 * Check if a table exists in the database
 	 * @param tableName - the name of the table to check
 	 * @returns true if the table exists, false otherwise

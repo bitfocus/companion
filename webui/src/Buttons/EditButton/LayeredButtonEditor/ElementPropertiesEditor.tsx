@@ -5,10 +5,11 @@ import { Fragment, useCallback, useContext } from 'react'
 import type { JsonValue } from 'type-fest'
 import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ExpressionOrValue,
-	InternalInputFieldList,
-	SomeCompanionInputField,
+import {
+	colorFieldExpressionHint,
+	type ExpressionOrValue,
+	type InternalInputFieldList,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion.js'
@@ -19,6 +20,7 @@ import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
 import { getInputFeatures } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
+import { usePanelCollapseAccordionProps, usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -67,6 +69,8 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 	const { localVariablesStore } = useElementPropertiesContext()
 	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
+	const sectionCollapse = usePanelCollapseHelper(`layered-element-property-sections:${elementProps.type}`, null)
+
 	let schema = elementSchemas[elementProps.type]
 
 	// If this is a composite element, get the full schema
@@ -86,6 +90,11 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 		simpleMode && elementProps.type in elementSimpleModeFields
 			? elementSimpleModeFields[elementProps.type as keyof typeof elementSimpleModeFields]
 			: undefined
+
+	const sectionAccordion = usePanelCollapseAccordionProps(
+		sectionCollapse,
+		(schema ?? []).filter((s) => s.fields.length > 0).map((s) => s.id)
+	)
 
 	if (!schema) {
 		return <div>No schema found for element type: {elementProps.type}</div>
@@ -118,11 +127,9 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 		)
 	}
 
-	const defaultOpenSectionIds = schema.filter((s) => s.fields.length > 0).map((s) => s.id)
-
 	return (
 		<>
-			<Accordion.Root defaultValue={defaultOpenSectionIds} multiple>
+			<Accordion.Root value={sectionAccordion.value} onValueChange={sectionAccordion.onValueChange} multiple>
 				{schema.map((section) => {
 					if (section.fields.length === 0) return null
 					return (
@@ -175,6 +182,8 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			property={field.id}
 			label={field.label}
 			tooltip={field.tooltip}
+			description={field.description}
+			expressionDescription={field.expressionDescription ?? colorFieldExpressionHint(field)}
 			features={features}
 			disableAutoExpression={field.disableAutoExpression}
 		>

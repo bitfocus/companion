@@ -140,7 +140,8 @@ export class ServiceEmberPlus extends ServiceBase {
 			this.#updateButtonState(location, pushed, surfaceId)
 		})
 
-		this.#serviceApi.on('variables_changed', (variables, connection_labels) => {
+		this.#serviceApi.on('variablesChanged', (variables, connection_labels, targetControlId) => {
+			if (targetControlId) return // Per-control (local) variable changes are not relevant here
 			if ((!connection_labels.has('internal') && !connection_labels.has('custom')) || this.#server == undefined) return // We don't care about any other variables
 			variables.forEach((changedVariable) => {
 				//if (this.#server == undefined) return

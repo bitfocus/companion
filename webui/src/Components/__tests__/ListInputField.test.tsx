@@ -21,12 +21,12 @@ const mockStore: Partial<RootAppStore> = {
 const definition: InternalInputFieldList = {
 	id: 'test',
 	type: 'internal:list',
-	label: 'Colour thresholds',
-	tooltip: 'Define colour stops.',
+	label: 'Color thresholds',
+	tooltip: 'Define color stops.',
 	addLabel: 'Add threshold',
 	fields: [
 		{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
-		{ id: 'color', type: 'colorpicker', label: 'Colour', default: 0x00ff00, enableAlpha: false, returnType: 'number' },
+		{ id: 'color', type: 'colorpicker', label: 'Color', default: 0x00ff00, enableAlpha: false, returnType: 'number' },
 	],
 	default: [],
 }
@@ -94,7 +94,7 @@ describe('ListInputField', () => {
 	describe('Rendering', () => {
 		it('renders the field label', () => {
 			render(<Controlled definition={definition} initialValue={[]} />)
-			expect(screen.getByText('Colour thresholds')).toBeInTheDocument()
+			expect(screen.getByText('Color thresholds')).toBeInTheDocument()
 		})
 
 		it('renders a custom add label', () => {
@@ -125,7 +125,7 @@ describe('ListInputField', () => {
 		it('renders the field labels for each item', () => {
 			render(<Controlled definition={definition} initialValue={[{ value: val(50), color: val(0x00ff00) }]} />)
 			expect(screen.getByText('Value')).toBeInTheDocument()
-			expect(screen.getByText('Colour')).toBeInTheDocument()
+			expect(screen.getByText('Color')).toBeInTheDocument()
 		})
 
 		it('renders up/down/delete buttons per item', () => {

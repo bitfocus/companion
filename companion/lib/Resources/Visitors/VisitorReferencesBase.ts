@@ -3,7 +3,6 @@ import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
@@ -17,12 +16,6 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 	constructor(internalModule: InternalController, visitor: T) {
 		this.internalModule = internalModule
 		this.visitor = visitor
-	}
-
-	visitButtonDrawStyle(style: ButtonStyleProperties): this {
-		this.visitor.visitString(style, 'text')
-
-		return this
 	}
 
 	visitEntities(entities: ControlEntityInstance[], rawEntities: SomeEntityModel[]): this {

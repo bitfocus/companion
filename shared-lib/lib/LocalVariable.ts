@@ -6,3 +6,10 @@ export const LocalVariableNameOption = {
 	id: 'name',
 	default: '',
 } as const satisfies CompanionInputFieldTextInputExtended
+
+export const PageVariableNameOption = {
+	type: 'textinput',
+	label: 'Page variable',
+	id: 'name',
+	default: '',
+} as const satisfies CompanionInputFieldTextInputExtended

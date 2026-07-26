@@ -151,7 +151,7 @@ export const SmallTrigger: Story = {
 	),
 }
 
-/** Danger-coloured trigger. */
+/** Danger-colored trigger. */
 export const DangerTrigger: Story = {
 	args: { defaultOpen: true },
 	render: (args: RootArgs) => (
