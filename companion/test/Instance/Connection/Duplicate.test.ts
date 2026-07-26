@@ -59,6 +59,10 @@ describe('InstanceController duplicateConnection', () => {
 			'disabled-source',
 			createConnection({ label: 'disabled', collectionId: undefined, enabled: false, sortOrder: 60 })
 		)
+		instances.set(
+			'legacy-enabled-source',
+			createConnection({ label: 'legacy-enabled', collectionId: undefined, enabled: undefined, sortOrder: 70 })
+		)
 
 		const appInfo = {
 			configDir: ':memory:',
@@ -159,6 +163,13 @@ describe('InstanceController duplicateConnection', () => {
 		expect(duplicate?.enabled).toBe(false)
 	})
 
+	it('keeps a legacy source without an enabled field enabled', () => {
+		const instances = db.getTableView<Record<string, InstanceConfig>>('instances')
+		const newId = controller.duplicateConnection('legacy-enabled-source')
+		const duplicate = instances.get(newId!)
+		expect(duplicate?.enabled).toBe(true)
+	})
+
 	it('duplicates an ungrouped connection immediately after its source', () => {
 		const newId = controller.duplicateConnection('ungrouped')
 		const instances = db.getTableView<Record<string, InstanceConfig>>('instances').all()
@@ -167,7 +178,7 @@ describe('InstanceController duplicateConnection', () => {
 			.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
 			.map(([id]) => id)
 
-		expect(ungroupedOrder).toEqual(['ungrouped', newId, 'disabled-source'])
+		expect(ungroupedOrder).toEqual(['ungrouped', newId, 'disabled-source', 'legacy-enabled-source'])
 	})
 
 	it('uses stable labels and ordering when the same connection is duplicated repeatedly', () => {

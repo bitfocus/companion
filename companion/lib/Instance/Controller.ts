@@ -861,7 +861,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			sourceIndex + 1
 		)
 
-		if (sourceConfig.enabled) this.enableDisableConnection(newId, true)
+		if (sourceConfig.enabled !== false) this.enableDisableConnection(newId, true)
 
 		return newId
 	}
