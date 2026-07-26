@@ -15,12 +15,29 @@ export interface ModalRootProps extends Omit<Dialog.Root.Props, 'disablePointerD
 	disableDismiss?: boolean
 }
 
-function ModalRoot({ disableDismiss, onOpenChange, ...props }: ModalRootProps): JSX.Element {
+function ModalRoot({ disableDismiss, onOpenChange, open, ...props }: ModalRootProps): JSX.Element {
 	const [pulseKey, setPulseKey] = useState(0)
 
+	// When a modal is opened programmatically (not via <Dialog.Trigger>), Base UI can't associate the
+	// opening pointer interaction with the dialog, so the tail of that interaction (a mouseup landing on
+	// the just-mounted backdrop) can immediately dismiss it. A genuine outside-press requires a fresh
+	// pointerdown that begins after the modal is open, so ignore outside-press until we've seen one.
+	const isControlled = open !== undefined
+	const armedRef = useRef(false)
+	useEffect(() => {
+		armedRef.current = false
+		if (!isControlled || !open) return
+		const arm = () => (armedRef.current = true)
+		document.addEventListener('pointerdown', arm, true)
+		return () => document.removeEventListener('pointerdown', arm, true)
+	}, [isControlled, open])
+
 	const handleOpenChange = useCallback(
-		(open: boolean, details: Dialog.Root.ChangeEventDetails) => {
-			if (!open) {
+		(nextOpen: boolean, details: Dialog.Root.ChangeEventDetails) => {
+			if (!nextOpen) {
+				if (details.reason === 'outside-press' && isControlled && !armedRef.current) {
+					return
+				}
 				if (disableDismiss && details.reason === 'outside-press') {
 					setPulseKey((k) => k + 1)
 					return
@@ -30,14 +47,14 @@ function ModalRoot({ disableDismiss, onOpenChange, ...props }: ModalRootProps): 
 					return
 				}
 			}
-			onOpenChange?.(open, details)
+			onOpenChange?.(nextOpen, details)
 		},
-		[disableDismiss, onOpenChange]
+		[disableDismiss, onOpenChange, isControlled]
 	)
 
 	return (
 		<ModalStaticPulseContext.Provider value={{ pulseKey }}>
-			<Dialog.Root {...props} onOpenChange={handleOpenChange} />
+			<Dialog.Root open={open} {...props} onOpenChange={handleOpenChange} />
 		</ModalStaticPulseContext.Provider>
 	)
 }
