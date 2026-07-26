@@ -22,7 +22,7 @@ const t = initTRPC.context<TrpcContext>().create()
 const tempDirs: string[] = []
 afterEach(async () => {
 	vi.restoreAllMocks()
-	await Promise.all(tempDirs.splice(0).map((dir) => fs.remove(dir).catch(() => null)))
+	await Promise.all(tempDirs.splice(0).map(async (dir) => fs.remove(dir).catch(() => null)))
 })
 
 async function setup(options: Partial<InstanceUdevRulesControllerOptions> & { usbIds?: UdevRuleDefinition[] } = {}) {

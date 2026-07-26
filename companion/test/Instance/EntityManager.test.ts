@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	EntityModelType,
-	ReplaceableActionEntityModel,
-	ReplaceableFeedbackEntityModel,
+	type ReplaceableActionEntityModel,
+	type ReplaceableFeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { CompanionOptionValues } from '@companion-module/host'
+import type { CompanionOptionValues } from '@companion-module/host'
 import {
 	ConnectionEntityManager,
-	EntityManagerActionEntity,
-	EntityManagerAdapter,
-	EntityManagerFeedbackEntity,
+	type EntityManagerActionEntity,
+	type EntityManagerAdapter,
+	type EntityManagerFeedbackEntity,
 } from '../../lib/Instance/Connection/EntityManager.js'
 
 // Mock dependencies
@@ -35,7 +35,7 @@ describe('InstanceEntityManager', () => {
 	}
 
 	const mockVariablesParser = {
-		parseEntityOptions: vi.fn().mockImplementation((entityDefinition, options) => {
+		parseEntityOptions: vi.fn().mockImplementation((entityDefinition, _options) => {
 			const parsedOptions: CompanionOptionValues = {}
 
 			let i = 0
@@ -63,7 +63,7 @@ describe('InstanceEntityManager', () => {
 		vi.clearAllMocks()
 
 		// Reset mock implementations to defaults (clearAllMocks only clears call history)
-		mockVariablesParser.parseEntityOptions.mockImplementation((entityDefinition, options) => {
+		mockVariablesParser.parseEntityOptions.mockImplementation((entityDefinition, _options) => {
 			const parsedOptions: CompanionOptionValues = {}
 
 			let i = 0
@@ -85,7 +85,7 @@ describe('InstanceEntityManager', () => {
 		mockAdapter.upgradeFeedbacks.mockResolvedValue([])
 
 		// Create a new instance for each test
-		entityManager = new ConnectionEntityManager(mockAdapter as any, mockControlsController as any, 'test-connection-id')
+		entityManager = new ConnectionEntityManager(mockAdapter, mockControlsController as any, 'test-connection-id')
 
 		vi.useFakeTimers()
 	})
@@ -592,7 +592,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Simulate variables changing for only control-1
-			entityManager.onVariablesChanged(new Set(['var1']), 'control-1')
+			entityManager.onVariablesChanged(new Set(['var1']), new Set(['control-1']))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-1
@@ -674,7 +674,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateFeedbacks.mockClear()
 
 			// Simulate variables changing for only control-2
-			entityManager.onVariablesChanged(new Set(['control-var']), 'control-2')
+			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-2']))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-2, not entity-1
@@ -1183,7 +1183,7 @@ describe('InstanceEntityManager', () => {
 
 			// Track all entities with their own control IDs
 			mockEntities.forEach((entity, i) => {
-				entityManager.trackEntity(entity as any, `control-${i}`)
+				entityManager.trackEntity(entity, `control-${i}`)
 			})
 
 			// Run debounced function
@@ -1752,14 +1752,6 @@ describe('InstanceEntityManager', () => {
 					optionsToIgnoreForSubscribe: [],
 				}),
 			}
-
-			// Setup IPC wrapper to return after delay
-			let resolvePromise: (value: any) => void
-			const delayedPromise = new Promise((resolve) => {
-				resolvePromise = resolve
-			})
-
-			mockAdapter.updateActions.mockReturnValueOnce(delayedPromise)
 
 			entityManager.start(5)
 			entityManager.trackEntity(mockEntity as any, 'control-1')

@@ -335,7 +335,7 @@ export class ImageLibrary {
 	}
 
 	/**
-	 * Set the preview background colour of an existing image
+	 * Set the preview background color of an existing image
 	 */
 	setImageBackgroundColor(name: string, backgroundColor: string): boolean {
 		const data = this.#dbTable.get(name)
@@ -346,7 +346,7 @@ export class ImageLibrary {
 
 		this.#dbTable.set(name, data)
 
-		this.#logger.info(`Updated image ${name} background colour to "${backgroundColor}"`)
+		this.#logger.info(`Updated image ${name} background color to "${backgroundColor}"`)
 
 		// Notify clients
 		this.#events.emit('update', [{ type: 'update', itemName: name, info: data.info }])

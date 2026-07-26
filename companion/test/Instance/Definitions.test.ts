@@ -242,7 +242,6 @@ describe('InstanceDefinitions', () => {
 	describe('setActionDefinitions', () => {
 		it('stores definitions and emits add-connection on first set with listener', () => {
 			const { defs } = createInstanceDefinitions()
-			const emitted: unknown[] = []
 
 			// Attach a listener to the internal #events via the public subscription approach
 			// We use the on('actions', ...) pattern by hooking into the defs' event system
@@ -811,7 +810,7 @@ describe('InstanceDefinitions', () => {
 						? undefined
 						: makeConnectionConfig({ label: instanceId, moduleId: `mod-${instanceId}` })
 				),
-			} as any)
+			})
 			defs.setPresetDefinitions('conn1', presetsToMap([makeButtonPreset('p1')]), {}, false)
 			defs.setPresetDefinitions('conn2', presetsToMap([makeButtonPreset('p1')]), {}, false)
 

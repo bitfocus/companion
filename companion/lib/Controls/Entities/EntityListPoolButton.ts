@@ -1,6 +1,5 @@
 import type { JsonValue } from 'type-fest'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
-import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
@@ -10,9 +9,11 @@ import {
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlStepsRuntimeManager } from './ControlActionSetAndStepsManager.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
@@ -60,7 +61,8 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 	protected readonly steps = new Map<string, ControlEntityListActionStep>()
 
-	readonly #executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult
+	readonly #pageStore: IPageStore
+	readonly #getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 	protected readonly sendRuntimePropsChange: () => void
 
 	/**
@@ -82,15 +84,11 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		}
 	}
 
-	constructor(
-		props: ControlEntityListPoolProps,
-		sendRuntimePropsChange: () => void,
-		executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult,
-		isLayeredButton: boolean
-	) {
+	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void, isLayeredButton: boolean) {
 		super(props, isLayeredButton)
 
-		this.#executeExpressionInControl = executeExpressionInControl
+		this.#pageStore = props.pageStore
+		this.#getPageVariableEntities = props.getPageVariableEntities
 		this.sendRuntimePropsChange = sendRuntimePropsChange
 
 		this.#feedbacks = this.createEntityList({
@@ -133,6 +131,21 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	 */
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return this.#localVariables.getAllEntities()
+	}
+
+	/**
+	 * A button lives on the grid, so its parser gets the full `this:*` context from its location, plus
+	 * its page's `$(page:x)` variables.
+	 */
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		const location = this.#pageStore.getLocationOfControlId(this.controlId)
+
+		return this.variableValues.createVariablesAndExpressionParser(
+			location,
+			this.getLocalVariableEntities(),
+			overrideVariableValues,
+			location ? this.#getPageVariableEntities(location.pageNumber) : null
+		)
 	}
 
 	asNormalButtonSteps(): NormalButtonSteps {
@@ -420,7 +433,9 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 		const stepIds = this.getStepIds()
 
-		const latestValue = this.#executeExpressionInControl(this.currentStep.expression, 'number')
+		const parser = this.createVariablesAndExpressionParser(null)
+
+		const latestValue = parser.executeExpression(this.currentStep.expression, 'number')
 		if (latestValue.ok) {
 			let latestIndex = Math.max(Math.min(Number(latestValue.value) - 1, stepIds.length - 1), 0)
 			if (isNaN(latestIndex)) latestIndex = 0
@@ -710,6 +725,5 @@ export type SomeButtonEntityPool = ControlEntityListPoolButton | EditableControl
 export type ButtonEntityPoolConstructor<TPool extends SomeButtonEntityPool> = new (
 	props: ControlEntityListPoolProps,
 	sendRuntimePropsChange: () => void,
-	executeExpressionInControl: (expression: string, requiredType?: string) => ExecuteExpressionResult,
 	isLayeredButton: boolean
 ) => TPool

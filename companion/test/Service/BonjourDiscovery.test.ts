@@ -92,9 +92,9 @@ function createService(bonjourQueries: Record<string, any> = DEFAULT_QUERIES) {
 	return { service, server, instanceController, userconfig }
 }
 
-function lastServer(): FakeServer {
-	return hoisted.instances.at(-1) as FakeServer
-}
+// function lastServer(): FakeServer {
+// 	return hoisted.instances.at(-1) as FakeServer
+// }
 
 async function subscribe(
 	service: ServiceBonjourDiscovery,
@@ -106,7 +106,7 @@ async function subscribe(
 }
 
 /** Kick the subscription generator (creates the browser & subscribes) without unhandled rejections. */
-function kick(sub: SubscriptionTester<ClientBonjourEvent>): Promise<ClientBonjourEvent> {
+async function kick(sub: SubscriptionTester<ClientBonjourEvent>): Promise<ClientBonjourEvent> {
 	const p = sub.next()
 	p.catch(() => {
 		/* the test may never read this value (eg a `no services` subscription) */
@@ -123,7 +123,7 @@ async function getBrowser(server: FakeServer, idx = 0): Promise<FakeServer['brow
 	throw new Error(`browser[${idx}] was never created`)
 }
 
-const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
+const wait = async (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
 function makeSvc(overrides: Record<string, any> = {}): any {
 	return {

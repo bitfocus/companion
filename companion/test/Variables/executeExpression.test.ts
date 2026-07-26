@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { executeExpression as executeExpressionRaw, VariableValueCache } from '../../lib/Variables/Util.js'
-import { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
+import { executeExpression as executeExpressionRaw, type VariableValueCache } from '../../lib/Variables/Util.js'
+import type { VariablesBlinker } from '../../lib/Variables/VariablesBlinker.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -85,7 +85,7 @@ describe('executeExpression', () => {
 
 	test('array variable', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('test:something', [1, 2, 3] as any)
+		injectedVariableValues.set('test:something', [1, 2, 3])
 
 		const res = executeExpression(mockBlinker, '$(test:something)[1]', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: 2, variableIds: new Set(['test:something']) })
@@ -93,7 +93,7 @@ describe('executeExpression', () => {
 
 	test('object variable', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
-		injectedVariableValues.set('test:something', { a: 1, b: '123' } as any)
+		injectedVariableValues.set('test:something', { a: 1, b: '123' })
 
 		const res = executeExpression(mockBlinker, '$(test:something)["b"]', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '123', variableIds: new Set(['test:something']) })
@@ -126,7 +126,7 @@ describe('executeExpression', () => {
 	test('chained array variable', () => {
 		const injectedVariableValues: VariableValueCache = new Map()
 		injectedVariableValues.set('test:something', '$(another:value)')
-		injectedVariableValues.set('another:value', [1, 2, 3] as any)
+		injectedVariableValues.set('another:value', [1, 2, 3])
 
 		const res = executeExpression(mockBlinker, 'join($(test:something), "/")', {}, undefined, injectedVariableValues)
 		expect(res).toMatchObject({ value: '1/2/3', variableIds: new Set(['test:something', 'another:value']) })

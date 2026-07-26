@@ -31,6 +31,7 @@ import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/
 import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { MetricsRegistry } from '../Data/Metrics.js'
@@ -126,6 +127,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 	// Cumulative count of worker terminations since startup, exposed as a metrics counter
 	#workerTerminationsTotal = 0
+
+	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
+	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
+	// almost always catch it at ~0; a fast sampler (#poolStatsSampler) tracks the peak between scrapes.
+	#poolPendingMax = 0
+	#poolActiveMax = 0
+	#poolStatsSampler: NodeJS.Timeout | undefined
 
 	#poolExec = async <TKey extends keyof typeof GraphicsThreadMethods>(
 		key: TKey,
@@ -270,17 +278,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
 								}
 
-								render = await this.#drawImageResult(renderStyle)
+								render = this.#generateImageResult(cacheKey, renderStyle)
 								this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
-							render = GraphicsRenderer.drawBlank(
+							render = GraphicsRenderer.generateBlankImage(
 								this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 								null
 							)
 						}
 
-						this.emit('presetDrawn', args.controlId, render)
+						// `lastRender` still holds the previous render here: the control's own `presetDrawn`
+						// listener updates it synchronously *after* this emit. Swallow the emit if unchanged.
+						const presetControl = control as ControlButtonPreset | undefined
+						const unchanged = !!render.cacheKey && presetControl?.lastRender?.cacheKey === render.cacheKey
+						if (!unchanged) {
+							this.emit('presetDrawn', args.controlId, render)
+						}
 						return
 					}
 
@@ -322,11 +336,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
-							render = await this.#drawImageResult(renderStyle, buttonStyle.elements, buttonStyle.referencedLocations)
+							render = this.#generateImageResult(
+								cacheKey,
+								renderStyle,
+								buttonStyle.elements,
+								buttonStyle.referencedLocations
+							)
 							this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
-						render = GraphicsRenderer.drawBlank(
+						render = GraphicsRenderer.generateBlankImage(
 							this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 							location
 						)
@@ -371,7 +390,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					// Only cache the render, if it is within the valid bounds
 					if (locationIsInBounds && location) {
-						this.#updateCacheWithRender(location, render)
+						const changed = this.#updateCacheWithRender(location, render)
+						// If the render is identical to the previous one for this location, we can skip emitting the event
+						skipInvalidation = skipInvalidation || !changed
 					}
 
 					if (!skipInvalidation) {
@@ -438,21 +459,24 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					column,
 				}
 
-				const blankRender = GraphicsRenderer.drawBlank(
+				const blankRender = GraphicsRenderer.generateBlankImage(
 					this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 					location
 				)
 
-				this.#updateCacheWithRender(location, blankRender)
-				this.emit('button_drawn', location, blankRender)
+				const changed = this.#updateCacheWithRender(location, blankRender)
+				if (changed) {
+					this.emit('button_drawn', location, blankRender)
+				}
 			}
 		}
 	}
 
 	/**
-	 * Store a new render
+	 * Store a new render for a location.
+	 * @returns whether it differs from the previous render there (an undefined cacheKey always counts as changed).
 	 */
-	#updateCacheWithRender(location: ControlLocation, render: ImageResult): void {
+	#updateCacheWithRender(location: ControlLocation, render: ImageResult): boolean {
 		let pageCache = this.#renderCache.get(location.pageNumber)
 		if (!pageCache) {
 			pageCache = new Map()
@@ -465,16 +489,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			pageCache.set(location.row, rowCache)
 		}
 
+		const previous = rowCache.get(location.column)
 		rowCache.set(location.column, render)
+
+		return !render.cacheKey || previous?.cacheKey !== render.cacheKey
 	}
 
 	/**
 	 * Draw a preview of a button
 	 */
-	async drawPreview(
+	generatePreviewImage(
 		drawType: RendererButtonStyle['drawType'],
 		elements: SomeButtonGraphicsDrawElement[]
-	): Promise<ImageResult> {
+	): ImageResult {
 		const drawStyle: RendererButtonStyle = {
 			style: 'button-layered',
 			drawType,
@@ -493,7 +520,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			location: undefined,
 		}
 
-		return this.#drawImageResult(drawStyle)
+		// One-off preview: never cached or emitted, so it has no content key (never deduped).
+		return this.#generateImageResult(undefined, drawStyle)
 	}
 
 	/**
@@ -610,7 +638,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = this.#renderCache.get(location.pageNumber)?.get(location.row)?.get(location.column)
 		if (render) return render
 
-		return GraphicsRenderer.drawBlank(
+		return GraphicsRenderer.generateBlankImage(
 			this.#drawOptions.buttons_decoration === ButtonGraphicsDecorationType.TopBar,
 			location
 		)
@@ -661,11 +689,61 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			}
 		)
 
-		// Render queue depth, one series per state
+		// Render queue depth, one series per state. This is the app-level ImageWriteQueue that sits in front of
+		// the worker pool, distinct from the pool's own internal queue below.
 		metrics.labeledGauge('companion_render_queue_tasks', 'Button render tasks by state', ['state'], () => [
 			{ labels: { state: 'pending' }, value: this.#renderQueue.pending },
 			{ labels: { state: 'in_progress' }, value: this.#renderQueue.inProgress },
 		])
+
+		// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
+		// tasks currently executing on a thread (active). This is the true render-thread backlog.
+		metrics.labeledGauge('companion_render_pool_tasks', 'Render worker-pool tasks by state', ['state'], () => {
+			const stats = this.#pool.stats()
+			return [
+				{ labels: { state: 'pending' }, value: stats.pendingTasks },
+				{ labels: { state: 'active' }, value: stats.activeTasks },
+			]
+		})
+
+		// Peak pool tasks since the previous scrape - catches bursts that a scrape-time snapshot would miss.
+		// Read-and-reset per scrape, seeding the new window with the current reading so an in-flight burst
+		// isn't lost between reset and the next sampler tick.
+		metrics.labeledGauge(
+			'companion_render_pool_tasks_max',
+			'Peak render worker-pool tasks by state since the previous scrape',
+			['state'],
+			() => {
+				const stats = this.#pool.stats()
+				const pending = Math.max(this.#poolPendingMax, stats.pendingTasks)
+				const active = Math.max(this.#poolActiveMax, stats.activeTasks)
+				this.#poolPendingMax = stats.pendingTasks
+				this.#poolActiveMax = stats.activeTasks
+				return [
+					{ labels: { state: 'pending' }, value: pending },
+					{ labels: { state: 'active' }, value: active },
+				]
+			}
+		)
+
+		// Worker pool threads by state, for saturation context (busy vs idle against the max worker count).
+		metrics.labeledGauge('companion_render_pool_workers', 'Render worker-pool threads by state', ['state'], () => {
+			const stats = this.#pool.stats()
+			return [
+				{ labels: { state: 'busy' }, value: stats.busyWorkers },
+				{ labels: { state: 'idle' }, value: stats.idleWorkers },
+				{ labels: { state: 'total' }, value: stats.totalWorkers },
+			]
+		})
+
+		// Sample the pool backlog on a fast interval to maintain the high-water marks above. unref so it never
+		// keeps the process alive.
+		this.#poolStatsSampler = setInterval(() => {
+			const stats = this.#pool.stats()
+			if (stats.pendingTasks > this.#poolPendingMax) this.#poolPendingMax = stats.pendingTasks
+			if (stats.activeTasks > this.#poolActiveMax) this.#poolActiveMax = stats.activeTasks
+		}, 1000)
+		this.#poolStatsSampler.unref()
 
 		// Current ImageResults retained in memory
 		metrics.gauge('companion_image_results_live', 'ImageResult objects currently retained in memory', () => {
@@ -714,14 +792,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		})
 	}
 
-	async #drawImageResult(
+	#generateImageResult(
+		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
-	): Promise<ImageResult> {
+	): ImageResult {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
 		return new ImageResult(
+			cacheKey,
 			processedStyle,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(

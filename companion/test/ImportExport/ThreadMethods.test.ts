@@ -12,12 +12,12 @@ const gzipAsync = promisify(zlib.gzip)
 /** Encode a string as an ArrayBuffer, the way the main thread transfers it to the worker */
 function toArrayBuffer(str: string): ArrayBuffer {
 	const buf = Buffer.from(str, 'utf-8')
-	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }
 
 async function gzipToArrayBuffer(str: string): Promise<ArrayBuffer> {
 	const buf = await gzipAsync(Buffer.from(str, 'utf-8'))
-	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }
 
 const SAMPLE_EXPORT = { version: 6, type: 'full', someKey: 'someValue' }
@@ -109,7 +109,7 @@ describe('parseImportData', () => {
 			// Random bytes that are not gzip and not valid structured data. gunzip fails (falls back to
 			// raw), and YAML parses the bytes as a scalar string -> rejected as not-an-object.
 			const buf = Buffer.from([0x00, 0x01, 0x02, 0xff, 0xfe])
-			const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
+			const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 			const result = await parseImportData(ab)
 
 			expect(result.error).toBe('File is corrupted or unknown format')

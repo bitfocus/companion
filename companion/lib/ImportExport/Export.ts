@@ -18,7 +18,7 @@ import fs from 'fs-extra'
 import type { ParsedQs } from 'qs'
 import yazl from 'yazl'
 import { ZodError } from 'zod'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type {
@@ -515,6 +515,20 @@ export class ExportController {
 						referencedVariables
 					)
 				}
+			}
+		}
+
+		// Include the page's local variables (from the page:<id> control, which is not on the grid).
+		if (pageInfo.id) {
+			const pageControl = this.#controlsController.getControl(CreatePageControlId(pageInfo.id))
+			if (pageControl && pageControl.type === 'page') {
+				pageExport.pageVariables = pageControl.toJSON(false).localVariables
+
+				pageControl.collectReferencedConnectionsAndVariables(
+					referencedConnectionIds,
+					referencedConnectionLabels,
+					referencedVariables
+				)
 			}
 		}
 

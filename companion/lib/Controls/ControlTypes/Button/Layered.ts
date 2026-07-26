@@ -78,6 +78,7 @@ export class ControlButtonLayered
 			height: { value: 100, isExpression: false },
 			rotation: { value: 0, isExpression: false },
 			color: { value: 0x000000, isExpression: false },
+			cornerRadius: { value: 0, isExpression: false },
 			borderWidth: { value: 0, isExpression: false },
 			borderColor: { value: 0, isExpression: false },
 			borderPosition: { value: 'inside', isExpression: false },
@@ -101,6 +102,8 @@ export class ControlButtonLayered
 			fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
 			fontsizeAllowShrink: { value: true, isExpression: false },
 			font: { value: 'companion-sans', isExpression: false },
+			weight: { value: 'normal', isExpression: false },
+			styles: { value: [], isExpression: false },
 			outlineColor: { value: 0xff000000, isExpression: false },
 		},
 	]
@@ -197,8 +200,8 @@ export class ControlButtonLayered
 		this.drawing.visit(collector)
 	}
 
-	layeredStyleAddElement(type: string, index: number | null): string {
-		return this.drawing.addElement(type, index)
+	layeredStyleAddElement(type: string, afterElementId: string | null): string {
+		return this.drawing.addElement(type, afterElementId)
 	}
 
 	layeredStyleRemoveElement(id: string): boolean {

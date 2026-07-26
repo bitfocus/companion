@@ -28,6 +28,8 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				fontsize: { value: FONTSIZE_SHRINK_DEFAULT, isExpression: false },
 				fontsizeAllowShrink: { value: true, isExpression: false },
 				font: { value: 'companion-sans', isExpression: false },
+				weight: { value: 'normal', isExpression: false },
+				styles: { value: [], isExpression: false },
 				outlineColor: { value: 0xff000000, isExpression: false },
 			}
 		case 'image':
@@ -62,6 +64,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				height: { value: 100, isExpression: false },
 				rotation: { value: 0, isExpression: false },
 				color: { value: 0xff0000, isExpression: false },
+				cornerRadius: { value: 0, isExpression: false },
 				borderWidth: { value: 0, isExpression: false },
 				borderColor: { value: 0, isExpression: false },
 				borderPosition: { value: 'inside', isExpression: false },

@@ -521,7 +521,7 @@ export class ConnectionEntityManager {
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: ReadonlySet<string>, fromControlId: string | null): void {
+	onVariablesChanged(variableIds: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		let anyInvalidated = false
 
 		for (const wrapper of this.#entities.values()) {
@@ -535,8 +535,8 @@ export class ConnectionEntityManager {
 				continue
 			}
 
-			if (fromControlId && wrapper.controlId !== fromControlId) {
-				// The change came from a specific control, and this entity is not in that control
+			if (controlIdFilter && !controlIdFilter.has(wrapper.controlId)) {
+				// The change is scoped to specific control(s), and this entity is not in one of them
 				continue
 			}
 

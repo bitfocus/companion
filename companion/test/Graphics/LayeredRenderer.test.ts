@@ -70,6 +70,8 @@ function makeTextElement(overrides: Partial<ButtonGraphicsTextDrawElement> = {})
 		fontsize: 100,
 		fontsizeAllowShrink: true,
 		font: 'companion-sans',
+		weight: 'normal',
+		styles: [],
 		color: 0xffffff, // white
 		outlineColor: 0xff000000, // alpha=0 → no outline
 		halign: 'center',
@@ -89,6 +91,7 @@ function makeBoxElement(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): 
 		height: 1,
 		rotation: 0,
 		color: 0xff0000, // red
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -107,7 +110,7 @@ function makeLineElement(overrides: Partial<ButtonGraphicsLineDrawElement> = {})
 		toY: 1,
 		borderWidth: 0.01,
 		borderColor: 0xffffff, // white
-		borderPosition: 'inside',
+		borderPosition: 'center',
 		...overrides,
 	}
 }
@@ -228,6 +231,32 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		test('topbar - long location label does not overflow the bar into the padding', async () => {
+			// A tall, narrow button gives a large bar font in a narrow bar, so the label overflows without clipping
+			const width = 50
+			const img = Image.create(width, 120, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					location: { pageNumber: 999, row: 999, column: 999 },
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+
+			const barMaxX = DEFAULT_PADDING.x + (width - DEFAULT_PADDING.x * 2)
+			const data = img.canvasImage.getContext('2d').getImageData(0, 0, width, 120).data
+			let paintedInPadding = 0
+			for (let y = 0; y < 40; y++) {
+				for (let x = barMaxX; x < width; x++) {
+					if (data[(y * width + x) * 4 + 3] > 10) paintedInPadding++
+				}
+			}
+			expect(paintedInPadding).toBe(0)
+		})
 	})
 
 	describe('show_status_icons', () => {
@@ -287,6 +316,40 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('text element with translucent color', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements: [makeTextElement({ color: 'rgba(255, 255, 255, 0.5)' })] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('text element with weight and styles', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeTextElement({
+							fontsize: 30,
+							fontsizeAllowShrink: false,
+							weight: 'bold',
+							styles: ['italic', 'underline', 'strikethrough'],
+						}),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		// The text outline width is proportional to the font size, so it should keep a consistent visual
 		// weight relative to the text across canvas sizes, oversampling factors and font sizes (rather than
 		// being a fixed pixel width). These snapshots let us eyeball the thickness across that matrix.
@@ -331,6 +394,46 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('box element with corner radius', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [makeBoxElement({ x: 0.1, y: 0.1, width: 0.8, height: 0.8, cornerRadius: 0.4 })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('box element with corner radius and border', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeBoxElement({
+							x: 0.1,
+							y: 0.1,
+							width: 0.8,
+							height: 0.8,
+							cornerRadius: 1, // fully rounded
+							borderWidth: 0.05,
+							borderColor: 0xffffff,
+						}),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('line element', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(
@@ -342,6 +445,63 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		// A thick horizontal line offset to one side of its path (looking from start to end)
+		test.each(['left', 'center', 'right'] as const)('line element position %s', async (borderPosition) => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeLineElement({
+							fromX: 0,
+							fromY: 0.5,
+							toX: 1,
+							toY: 0.5,
+							borderWidth: 0.2,
+							borderColor: 0xff0000,
+							borderPosition,
+						}),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test.each(['left', 'center', 'right'] as const)(
+			'line element with zero width draws nothing (%s)',
+			async (borderPosition) => {
+				const img = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					img,
+					makeStyle({
+						decoration: ButtonGraphicsDecorationType.None,
+						elements: [
+							makeLineElement({
+								fromX: 0,
+								fromY: 0.5,
+								toX: 1,
+								toY: 0.5,
+								borderWidth: 0,
+								borderColor: 0xff0000,
+								borderPosition,
+							}),
+						],
+					}),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+				const data = img.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				let painted = 0
+				for (let i = 3; i < data.length; i += 4) if (data[i] > 10) painted++
+				expect(painted).toBe(0)
+			}
+		)
 
 		test('circle element', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -438,6 +598,33 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				makeStyle({ elements: [makeBoxElement({ id: 'sel-box' })] }),
 				new Set(),
 				'sel-box',
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('rotated element - marker follows the element rotation', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					elements: [makeBoxElement({ id: 'sel-box', x: 0.25, y: 0.25, width: 0.5, height: 0.5, rotation: 30 })],
+				}),
+				new Set(),
+				'sel-box',
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('selected child inside a rotated group - marker follows the group rotation', async () => {
+			const img = Image.create(72, 58, 1, null)
+			const child = makeBoxElement({ id: 'sel-child', x: 0.25, y: 0.25, width: 0.5, height: 0.5 })
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ elements: [makeGroupElement([child], { rotation: 25 })] }),
+				new Set(),
+				'sel-child',
 				DEFAULT_PADDING
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
@@ -711,7 +898,19 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				img,
 				makeStyle({
 					...drawOpts,
-					elements: [makeBoxElement({ borderWidth: 0.05, borderColor: 0xffff00, borderPosition: 'outside' })],
+					// Inset so the outward border stays within the button rect (a full-bleed box's outside
+					// border falls entirely in the padding and would be clipped, drawing nothing to test).
+					elements: [
+						makeBoxElement({
+							x: 0.15,
+							y: 0.15,
+							width: 0.7,
+							height: 0.7,
+							borderWidth: 0.05,
+							borderColor: 0xffff00,
+							borderPosition: 'outside',
+						}),
+					],
 				}),
 				new Set(),
 				null,
@@ -1062,6 +1261,73 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		test('off-centre group with rotation - pivots about the group centre, not the canvas centre', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeGroupElement([makeBoxElement({ color: 0xff8800 })], {
+							rotation: 30,
+							x: 0,
+							y: 0,
+							width: 0.4,
+							height: 0.4,
+						}),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		// A child in a rotated group must render identically to the same box standalone, even when it
+		// overflows the image (a nested layer must not clip it in the un-rotated frame). Both fully opaque
+		// and translucent children are covered, since the translucent path composites through a layer.
+		test.each([1, 0.5])(
+			'a rotated group whose child overflows the image matches the box standalone (opacity %s)',
+			async (opacity) => {
+				const pos = { x: 0.4, y: 0.2, width: 1.0, height: 0.6 }
+
+				const standalone = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					standalone,
+					makeStyle({ ...drawOpts, elements: [makeBoxElement({ ...pos, rotation: 45, opacity })] }),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+
+				const grouped = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					grouped,
+					makeStyle({
+						...drawOpts,
+						elements: [
+							makeGroupElement([makeBoxElement({ x: 0, y: 0, width: 1, height: 1, opacity })], {
+								...pos,
+								rotation: 45,
+							}),
+						],
+					}),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+
+				const a = standalone.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				const b = grouped.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				let differing = 0
+				for (let i = 0; i < a.length; i += 4) {
+					if (Math.abs(a[i + 3] - b[i + 3]) > 8) differing++ // compare per-pixel coverage (alpha)
+				}
+				expect(differing).toBe(0)
+			}
+		)
 	})
 
 	describe('gauge element', () => {
@@ -1139,7 +1405,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, reverse: true }))).toMatchImageSnapshot()
 		})
 
-		test('multiColour=false - single colour for entire active region', async () => {
+		test('multiColour=false - single color for entire active region', async () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 75, multiColour: false }))).toMatchImageSnapshot()
 		})
 
@@ -1153,7 +1419,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 0 }))).toMatchImageSnapshot()
 		})
 
-		test('trackAmount=100 - inactive same as active colour', async () => {
+		test('trackAmount=100 - inactive same as active color', async () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 50, trackAmount: 100 }))).toMatchImageSnapshot()
 		})
 
@@ -1171,7 +1437,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ stops: [] }))).toMatchImageSnapshot()
 		})
 
-		test('single segment - full bar one colour', async () => {
+		test('single segment - full bar one color', async () => {
 			await expect(
 				await drawGauge(makeGaugeElement({ value: 50, stops: [{ value: 0, color: 0x0088ff }] }))
 			).toMatchImageSnapshot()
@@ -1195,7 +1461,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			return img.canvasImage
 		}
 
-		test('ring value=33 - one colour, within first segment', async () => {
+		test('ring value=33 - one color, within first segment', async () => {
 			await expect(await drawRing({ value: 33 })).toMatchImageSnapshot()
 		})
 
@@ -1239,7 +1505,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawRing({ value: 75, ringWidth: 40 })).toMatchImageSnapshot()
 		})
 
-		test('ring multiColour=false value=75 - single colour active', async () => {
+		test('ring multiColour=false value=75 - single color active', async () => {
 			await expect(await drawRing({ value: 75, multiColour: false })).toMatchImageSnapshot()
 		})
 
@@ -1317,7 +1583,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 		// --- Gradient stops ---
 
-		test('gradient stop - blends toward the next stop colour', async () => {
+		test('gradient stop - blends toward the next stop color', async () => {
 			await expect(
 				await drawGauge(
 					makeGaugeElement({
@@ -1396,6 +1662,52 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(
 				await drawRing({ value: 40, startAngle: 225, endAngle: 135, roundedEnds: false })
 			).toMatchImageSnapshot()
+		})
+	})
+
+	describe('css color formats', () => {
+		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
+
+		async function renderCanvas(elements: SomeButtonGraphicsDrawElement[]) {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ ...drawOpts, elements }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			return img.canvasImage
+		}
+
+		const renderPng = async (elements: SomeButtonGraphicsDrawElement[]): Promise<Buffer> =>
+			(await renderCanvas(elements)).toBuffer('image/png')
+
+		// Every css form of red must render identically to the packed-number form (0xff0000)
+		test.each([
+			['hex', '#ff0000'],
+			['hex short', '#f00'],
+			['rgb', 'rgb(255, 0, 0)'],
+			['rgb spaces', 'rgb(255 0 0)'],
+			['hsl', 'hsl(0, 100%, 50%)'],
+		])('text color as %s renders identical to the numeric form', async (_name, css) => {
+			const fromString = await renderPng([makeTextElement({ color: css })])
+			const fromNumber = await renderPng([makeTextElement({ color: 0xff0000 })])
+			expect(fromString.equals(fromNumber)).toBe(true)
+		})
+
+		test('box element with a css color string', async () => {
+			await expect(await renderCanvas([makeBoxElement({ color: '#00c800' })])).toMatchImageSnapshot()
+		})
+
+		test('text outline as a css color string draws an outline', async () => {
+			await expect(await renderCanvas([makeTextElement({ outlineColor: 'rgb(255, 0, 0)' })])).toMatchImageSnapshot()
+		})
+
+		test('a fully transparent css outline draws no outline', async () => {
+			const cssTransparent = await renderPng([makeTextElement({ outlineColor: 'rgba(0, 0, 0, 0)' })])
+			const numericTransparent = await renderPng([makeTextElement({ outlineColor: 0xff000000 })]) // alpha byte 0xff = transparent
+			expect(cssTransparent.equals(numericTransparent)).toBe(true)
 		})
 	})
 })

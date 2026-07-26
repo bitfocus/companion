@@ -1,7 +1,6 @@
-import express from 'express'
 import Express from 'express'
 import supertest from 'supertest'
-import { JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import type { ClientConnectionConfig } from '../../../shared-lib/lib/Model/Connections.js'
@@ -26,16 +25,16 @@ describe('HttpApi', () => {
 			getKey: () => true,
 		})
 
-		let router = express.Router()
-		let legacyRouter = express.Router()
+		let router = Express.Router()
+		let legacyRouter = Express.Router()
 
-		const app = express()
+		const app = Express()
 
 		const appHandler = {
-			set apiRouter(newRouter: express.Router) {
+			set apiRouter(newRouter: Express.Router) {
 				router = newRouter
 			},
-			set legacyApiRouter(newRouter: express.Router) {
+			set legacyApiRouter(newRouter: Express.Router) {
 				legacyRouter = newRouter
 			},
 		} as any as UIExpress
@@ -308,7 +307,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue({
 					a: 1,
 					b: 'str',
-				} as any)
+				})
 
 				// Perform the request
 				const res = await supertest(app).get('/api/custom-variable/my-var-name/value').send()
@@ -1277,7 +1276,7 @@ describe('HttpApi', () => {
 				mockFn.mockReturnValue({
 					a: 1,
 					b: 'str',
-				} as any)
+				})
 
 				// Perform the request
 				const res = await supertest(app).get('/api/variable/ConnectionLabel/variableName/value').send()

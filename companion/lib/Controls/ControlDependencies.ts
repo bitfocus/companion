@@ -16,6 +16,9 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { ControlEntityInstance } from './Entities/EntityInstance.js'
+import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
+import type { TriggerEvents } from './TriggerEvents.js'
 
 export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController
@@ -36,6 +39,15 @@ export interface ControlDependencies extends ControlExternalDependencies {
 	readonly events: EventEmitter<ControlCommonEvents>
 
 	readonly changeEvents: EventEmitter<ControlChangeEvents>
+
+	/** Resolve the given page's local-variable entities (its `page:<pageId>` control), for `$(page:x)`. */
+	readonly getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
+
+	/** The shared trigger event bus (used only by trigger controls). */
+	readonly triggerEvents: TriggerEvents
+
+	/** The expression-variable name registry (used only by expression-variable controls). */
+	readonly expressionVariableNamesMap: ExpressionVariableNameMap
 }
 
 export interface ControlCommonEvents {

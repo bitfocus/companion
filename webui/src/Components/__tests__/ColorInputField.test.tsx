@@ -40,7 +40,7 @@ function renderField(opts: RenderOptions = {}) {
 			/>
 		</MenuPortalContext.Provider>
 	)
-	// The swatch is the first div that contains the colour preview.
+	// The swatch is the first div that contains the color preview.
 	// Structure: container > div[lineHeight:0] > div[swatch, cursor:pointer] > div[color, background:rgba]
 	const swatchDiv = utils.container.querySelector<HTMLDivElement>('[style*="cursor: pointer"]')!
 	// colorDiv is the direct child of swatchDiv (querySelector('[style*="background: rgba"]') is
@@ -62,7 +62,7 @@ function getHexInput() {
 // ---------------------------------------------------------------------------
 
 describe('Rendering (swatch)', () => {
-	it('renders a colour swatch', () => {
+	it('renders a color swatch', () => {
 		const { swatchDiv } = renderField()
 		expect(swatchDiv).toBeInTheDocument()
 	})
@@ -94,12 +94,12 @@ describe('Rendering (swatch)', () => {
 		expect(colorDiv.style.background).toContain('rgb(255, 255, 255)')
 	})
 
-	it('accepts a CSS string value and shows the correct colour', () => {
+	it('accepts a CSS string value and shows the correct color', () => {
 		const { colorDiv } = renderField({ value: 'rgb(128, 64, 32)' })
 		expect(colorDiv.style.background).toContain('rgb(128, 64, 32)')
 	})
 
-	it('shows colour with alpha when enableAlpha=true and packed number has alpha byte', () => {
+	it('shows color with alpha when enableAlpha=true and packed number has alpha byte', () => {
 		// 50 % opacity red: high byte = Math.round(255 * 0.5) = 128 → 0x80000000 + 0xFF0000
 		const halfOpacityRed = packRgba(255, 0, 0, 0.5)
 		const { colorDiv } = renderField({ value: halfOpacityRed, enableAlpha: true })

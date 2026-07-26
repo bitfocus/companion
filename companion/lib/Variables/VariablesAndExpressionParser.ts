@@ -36,6 +36,8 @@ export class VariablesAndExpressionParser {
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
+	/** The `page:x` variables of the control's page (see {@link #bindPageVariables}). */
+	readonly #pageValues: VariablesCache = new Map()
 	readonly #overrideVariableValues: VariableValues
 
 	/** User configuration, used to read the configured timezone for date/time expression functions */
@@ -43,11 +45,17 @@ export class VariablesAndExpressionParser {
 
 	readonly #valueCacheAccessor: VariableValueCache = {
 		has: (id: string): boolean => {
-			return this.#thisValues.has(id) || this.#localValues.has(id) || this.#overrideVariableValues[id] !== undefined
+			return (
+				this.#thisValues.has(id) ||
+				this.#localValues.has(id) ||
+				this.#pageValues.has(id) ||
+				this.#overrideVariableValues[id] !== undefined
+			)
 		},
 		get: (id: string): VariableValue | undefined => {
 			if (this.#thisValues.has(id)) return this.#thisValues.get(id)
 			if (this.#localValues.has(id)) return this.#localValues.get(id)
+			if (this.#pageValues.has(id)) return this.#pageValues.get(id)
 			return this.#overrideVariableValues[id]
 		},
 		set: (id: string, value: VariableValue | undefined): void => {
@@ -61,7 +69,8 @@ export class VariablesAndExpressionParser {
 		rawVariableValues: ReadonlyDeep<VariableValueData>,
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		pageValues: ControlEntityInstance[] | null = null
 	) {
 		this.#userconfig = userconfig
 		this.#blinker = blinker
@@ -70,6 +79,7 @@ export class VariablesAndExpressionParser {
 		this.#overrideVariableValues = overrideVariableValues || {}
 
 		if (localValues) this.#bindLocalVariables(localValues)
+		if (pageValues) this.#bindPageVariables(pageValues)
 	}
 
 	createChildParser(overrideVariableValues: VariableValues): VariablesAndExpressionParser {
@@ -88,6 +98,11 @@ export class VariablesAndExpressionParser {
 		// Manual clone the localValues
 		for (const [key, value] of this.#localValues) {
 			if (key.startsWith('local:')) childParser.#localValues.set(key, value)
+		}
+
+		// Manual clone the pageValues
+		for (const [key, value] of this.#pageValues) {
+			childParser.#pageValues.set(key, value)
 		}
 
 		return childParser
@@ -123,6 +138,22 @@ export class VariablesAndExpressionParser {
 			// Push the cached values to the store
 			this.#localValues.set(
 				variableName,
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+			)
+		}
+	}
+
+	/**
+	 * Bind a page's local-variable entities so they resolve as `$(page:x)` for controls on that page.
+	 * Like {@link #bindLocalVariables}, but under the `page:` namespace.
+	 */
+	#bindPageVariables(entities: ControlEntityInstance[]) {
+		for (const entity of entities) {
+			const rawName = entity.rawLocalVariableName
+			if (!rawName) continue
+
+			this.#pageValues.set(
+				`page:${rawName}`,
 				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
 			)
 		}

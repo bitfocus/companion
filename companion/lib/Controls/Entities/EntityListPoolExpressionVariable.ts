@@ -6,6 +6,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
@@ -43,6 +45,15 @@ export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlE
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
 		return this.#localVariables.getDirectEntities()
+	}
+
+	/** An expression variable has no location, so its parser gets no `this:*` context. */
+	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+		return this.variableValues.createVariablesAndExpressionParser(
+			null,
+			this.getLocalVariableEntities(),
+			overrideVariableValues
+		)
 	}
 
 	/**

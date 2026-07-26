@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import z from 'zod'
+import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,
@@ -262,6 +263,10 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
+		// Delete the control that owns this page's local variables. It is not on the grid, so it is not
+		// part of `removedControls` and must be deleted explicitly.
+		this.#controlsController.deleteControl(CreatePageControlId(pageInfo.id))
+
 		// Delete the info for the page
 		this.#store._removePage(pageInfo.id)
 
@@ -301,6 +306,11 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		// Early exit if not inserting anything
 		if (insertedPages.length === 0) {
 			return []
+		}
+
+		// Create the control that owns each new page's local variables
+		for (const page of insertedPages) {
+			this.#controlsController.createPageControl(page.id)
 		}
 
 		// Update cache for controls on later pages
@@ -408,6 +418,9 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		const removedControls = this.#store.getAllControlIdsOnPage(pageNumber)
 
+		// Wiping the page also clears its local variables (the page control is kept, just emptied)
+		this.#controlsController.clearPageVariables(pageInfo.id)
+
 		const controlChanges: PageModelChangesItem['controls'] = []
 
 		// Report each populated location as cleared
@@ -444,6 +457,17 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 		this.emit('controlIdsMoved', removedControls)
 
 		return removedControls
+	}
+
+	/**
+	 * Ensure every page has its `page:<pageId>` control (the control that owns the page's local
+	 * variables). Called once at startup so that configs created before page variables existed get
+	 * their controls created and persisted on first boot. Idempotent - existing controls are left as-is.
+	 */
+	ensurePageControlsExist(): void {
+		for (const pageId of this.#store.getPageIds()) {
+			this.#controlsController.createPageControl(pageId)
+		}
 	}
 
 	/**

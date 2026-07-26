@@ -116,16 +116,9 @@ export class ControlButtonPreset
 				processManager: deps.instance.processManager,
 				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
+				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
-			(expression, requiredType) =>
-				deps.variableValues
-					.createVariablesAndExpressionParser(
-						deps.pageStore.getLocationOfControlId(this.controlId),
-						null, // This doesn't support local variables
-						null
-					)
-					.executeExpression(expression, requiredType),
 			false
 		)
 
@@ -268,7 +261,7 @@ export class ControlButtonPreset
 	/**
 	 * Add an element to the layered style
 	 */
-	layeredStyleAddElement(_type: string, _index: number | null): string {
+	layeredStyleAddElement(_type: string, _afterElementId: string | null): string {
 		throw new Error('ControlButtonPreset does not support mutations')
 	}
 

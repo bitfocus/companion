@@ -12,6 +12,7 @@ import {
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupPageVariables,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
 	type InstanceAppliedRemappings,
@@ -405,6 +406,57 @@ describe('fixupExpressionVariableControl', () => {
 		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
 
 		expect((result.entity?.options.src as any).value).toBe('$(NewLabel:x)')
+	})
+})
+
+// ── fixupPageVariables ──────────────────────────────────────────────────────────
+
+describe('fixupPageVariables', () => {
+	let internalModule: InternalController
+	beforeEach(() => {
+		internalModule = mockInternalModule()
+	})
+
+	test('defaults to an empty list', () => {
+		expect(fixupPageVariables(internalModule, undefined, standardMap(), {})).toEqual([])
+		expect(fixupPageVariables(internalModule, [], standardMap(), {})).toEqual([])
+	})
+
+	test('remaps connectionId on page variables', () => {
+		const result = fixupPageVariables(internalModule, [makeFeedback({ connectionId: 'conn-old' })], standardMap(), {})
+
+		expect(result[0].connectionId).toBe('conn-new')
+	})
+
+	test('drops a page variable whose connection is unknown', () => {
+		const result = fixupPageVariables(
+			internalModule,
+			[makeFeedback({ connectionId: 'unknown-connection' })],
+			standardMap(),
+			{}
+		)
+
+		expect(result).toEqual([])
+	})
+
+	test('rewrites label references inside page variable options', () => {
+		const result = fixupPageVariables(
+			internalModule,
+			[makeFeedback({ connectionId: 'conn-old', options: { src: exprVal('$(OldLabel:x)') } })],
+			standardMap(),
+			{}
+		)
+
+		expect((result[0].options.src as any).value).toBe('$(NewLabel:x)')
+	})
+
+	test('does not mutate the input', () => {
+		const input = [makeFeedback({ connectionId: 'conn-old' })]
+
+		fixupPageVariables(internalModule, input, standardMap(), {})
+
+		// original untouched (structuredClone inside)
+		expect(input[0].connectionId).toBe('conn-old')
 	})
 })
 

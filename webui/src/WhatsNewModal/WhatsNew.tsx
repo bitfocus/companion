@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import semver from 'semver'
-import { useLocalStorage } from 'usehooks-ts'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { shouldAutoOpenWizard } from '~/Wizard/Constants.js'
@@ -28,7 +28,7 @@ export const WhatsNewModal = observer(
 
 		const [show, setShow] = useState(false)
 		const [selectedVersion, setSelectedVersion] = useState<string | undefined>(undefined)
-		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined)
+		const [storedLatest, setStoredLatest] = useLocalStorage<string | undefined>('whatsnew', undefined, { sync: true })
 
 		// The setup wizard takes priority on launch: don't auto-pop What's New while it is pending or open.
 		// Once the wizard finishes (it bumps setup_wizard and clears wizardOpen), this re-evaluates and shows.

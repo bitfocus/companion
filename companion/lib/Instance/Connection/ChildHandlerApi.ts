@@ -77,7 +77,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		changedVariableIds: string[],
-		fromControlId: string | null
+		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void>
 
 	entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void>

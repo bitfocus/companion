@@ -1,10 +1,10 @@
 import { vi } from 'vitest'
-import { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	ActionEntityModel,
 	EntityModelType,
-	FeedbackEntityModel,
 	FeedbackEntitySubType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -73,22 +73,24 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 			async () => undefined
 		),
 	}
+	const executeExpression = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 	const variableValues = {
 		emit: vi.fn(),
-		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		createVariablesAndExpressionParser: vi.fn(() => ({ executeExpression }) as any),
 	}
 	const pageStore = {
 		getLocationOfControlId: vi.fn(() => null),
 	}
 
 	const deps: ControlEntityListPoolProps = {
-		instanceDefinitions: { getEntityDefinition } as any,
+		instanceDefinitions: { getEntityDefinition },
 		internalModule: internalModule as any,
 		processManager: processManager as any,
 		variableValues: variableValues as any,
 		pageStore: pageStore as any,
 		controlId,
 		reportChange,
+		getPageVariableEntities: () => null,
 	}
 
 	return {
@@ -99,6 +101,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		internalModule,
 		processManager,
 		variableValues,
+		executeExpression,
 		pageStore,
 	}
 }
@@ -107,24 +110,17 @@ export function createPool(options: CreatePoolOptions = {}) {
 	const isLayered = options.isLayered ?? false
 
 	const sendRuntimeProps = vi.fn()
-	const executeExpressionInControl = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 
 	const base = createPoolDeps(options)
 
 	// The functional helper builds the editable pool so tests can exercise the entity/step mutators. The
 	// read-only `ControlEntityListPoolButton` is constructed directly by the read-only-by-construction tests.
-	const pool = new EditableControlEntityListPoolButton(
-		base.deps,
-		sendRuntimeProps,
-		executeExpressionInControl,
-		isLayered
-	)
+	const pool = new EditableControlEntityListPoolButton(base.deps, sendRuntimeProps, isLayered)
 
 	return {
 		...base,
 		pool,
 		sendRuntimeProps,
-		executeExpressionInControl,
 	}
 }
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { mock, mockDeep } from 'vitest-mock-extended'
+import { mockDeep } from 'vitest-mock-extended'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { ServiceRosstalk } from '../../lib/Service/Rosstalk.js'
 import type { ServiceApi } from '../../lib/Service/ServiceApi.js'
@@ -88,6 +88,39 @@ describe('Rosstalk', () => {
 
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
 			expect(serviceApi.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')
+		})
+
+		test('ok - index with duplicate CC prefix', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			// Some senders (e.g. ProPresenter) prepend their own `CC ` on top of a user-entered command
+			service.processIncoming(null as any, 'CC CC 12:24')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 12,
+				row: 2,
+				column: 7,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+		})
+
+		test('ok - coordinates with duplicate CC prefix', async () => {
+			const { serviceApi, service } = createService()
+			serviceApi.getControlIdAt.mockReturnValue('myControl')
+
+			service.processIncoming(null as any, 'CC CC 12/3/4')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
+			expect(serviceApi.getControlIdAt).toHaveBeenLastCalledWith({
+				pageNumber: 12,
+				row: 3,
+				column: 4,
+			})
+
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
 		})
 
 		test('command surrounded by garbage is ignored', async () => {

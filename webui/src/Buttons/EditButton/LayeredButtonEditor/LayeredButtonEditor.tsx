@@ -2,7 +2,6 @@ import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
-import { useLocalStorage } from 'usehooks-ts'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -10,6 +9,7 @@ import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { ButtonEditorTabs, type ButtonEditorExtraTabs } from '../ButtonEditorTabs.js'
@@ -54,7 +54,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		styleStore.updateOverridesData(config.feedbacks || [])
 	}, [styleStore, config.feedbacks])
 
-	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, location.pageNumber)
 
 	return (
 		<div className="grow flex flex-column min-h-0">

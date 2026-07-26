@@ -346,7 +346,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with custom KEYS_TOTAL and KEYS_PER_ROW', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -409,7 +409,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with BITMAPS enabled and custom size', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -422,7 +422,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('BITMAPS defaults to 72 when truthy but not a valid number', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -436,7 +436,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('BITMAPS=false produces no bitmap in manifest', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -449,7 +449,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('BITMAPS=0 produces no bitmap in manifest', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -462,7 +462,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with COLORS=hex', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -475,7 +475,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with COLORS=rgb', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -488,7 +488,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with BRIGHTNESS=false', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -501,7 +501,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with PINCODE_LOCK=FULL', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -514,7 +514,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with PINCODE_LOCK=PARTIAL', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -527,7 +527,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with TEXT and TEXT_STYLE enabled', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -580,7 +580,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('adds device with valid VARIABLES', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -612,7 +612,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes SERIAL to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -627,7 +627,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes SERIAL_IS_UNIQUE=false to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -642,7 +642,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes SERIAL_IS_UNIQUE=true to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -659,7 +659,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('serial defaults to deviceId and serialIsUnique defaults to true when not provided', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -721,7 +721,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('configFields is undefined when CONFIG_FIELDS not provided', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -734,7 +734,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('passes CAN_CHANGE_PAGE to addSatelliteDevice', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
@@ -748,7 +748,7 @@ describe('ServiceSatelliteApi', () => {
 
 		test('canChangePage defaults to undefined when CAN_CHANGE_PAGE not provided', () => {
 			const { api, logger, surfaceController } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+			const { processMessage } = createSocketAndInit(api, logger)
 
 			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
 			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)

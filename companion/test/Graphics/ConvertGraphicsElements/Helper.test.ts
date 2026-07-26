@@ -22,14 +22,14 @@ function val<T>(value: T): ExpressionOrValue<T> {
 }
 
 function expr<T>(value: string): ExpressionOrValue<T> {
-	return { isExpression: true, value } as ExpressionOrValue<T>
+	return { isExpression: true, value }
 }
 
 function createMockParser(
 	variableValues: Record<string, Record<string, string | number | boolean>> = {}
 ): VariablesAndExpressionParser {
 	const rawVariableValues: VariableValueData = variableValues
-	const createCache = (): VariableValueCache => new Map() as unknown as VariableValueCache
+	const createCache = (): VariableValueCache => new Map()
 	const blinker = null as any
 
 	const buildParser = (raw: VariableValueData, overrides: VariableValues): VariablesAndExpressionParser => {
@@ -37,14 +37,14 @@ function createMockParser(
 			executeExpression: (str: string, requiredType: string | undefined) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
-					cache.set(key, value as any)
+					cache.set(key, value)
 				}
 				return executeExpression(blinker, str, raw, requiredType, cache, undefined)
 			},
 			parseVariables: (str: string) => {
 				const cache = createCache()
 				for (const [key, value] of Object.entries(overrides)) {
-					cache.set(key, value as any)
+					cache.set(key, value)
 				}
 				return parseVariablesInString(str, raw, cache, VARIABLE_UNKNOWN_VALUE)
 			},
@@ -69,7 +69,9 @@ type TestEl = {
 	numProp: ExpressionOrValue<number>
 	boolProp: ExpressionOrValue<boolean>
 	enumProp: ExpressionOrValue<string>
+	arrProp: ExpressionOrValue<string[]>
 	anyProp: ExpressionOrValue<JsonValue | undefined>
+	colorProp: ExpressionOrValue<number | string>
 }
 
 function makeEl(overrides: Partial<TestEl> = {}): TestEl {
@@ -79,7 +81,9 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 		numProp: val(42),
 		boolProp: val(true),
 		enumProp: val('left'),
-		anyProp: val(99 as JsonValue),
+		arrProp: val([]),
+		anyProp: val(99),
+		colorProp: val(0xff0000),
 		...overrides,
 	}
 }
@@ -229,7 +233,7 @@ describe('ElementExpressionHelper', () => {
 
 	describe('getUnknown', () => {
 		test('returns plain value directly without calling parser', () => {
-			const { helper, usedVariables } = makeHelper(makeEl({ anyProp: val(42 as JsonValue) }))
+			const { helper, usedVariables } = makeHelper(makeEl({ anyProp: val(42) }))
 			expect(helper.getUnknown('anyProp', 0)).toBe(42)
 			expect(usedVariables.size).toBe(0)
 		})
@@ -347,6 +351,74 @@ describe('ElementExpressionHelper', () => {
 		})
 	})
 
+	describe('getColor', () => {
+		test('plain number is returned as a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000) }))
+			expect(helper.getColor('colorProp', 0)).toBe(0xff0000)
+		})
+
+		test('numeric string coerces to a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('255') }))
+			expect(helper.getColor('colorProp', 0)).toBe(255)
+		})
+
+		// Named colors (e.g. 'red') need colord's names plugin, which is not registered - matches parseColor
+		test.each(['#ff0000', '#f00', 'rgb(255, 0, 0)', 'rgb(255 0 0)', 'hsl(0, 100%, 50%)', 'rgba(255, 0, 0, 0.5)'])(
+			'valid css color string %s is kept as-is',
+			(css) => {
+				const { helper } = makeHelper(makeEl({ colorProp: val(css) }))
+				expect(helper.getColor('colorProp', 0)).toBe(css)
+			}
+		)
+
+		test('invalid string falls back to defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('not-a-color') }))
+			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
+		})
+
+		test('expression resolving to a number returns a number', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: expr('$(ns:x) * 2') }), { ns: { x: 5 } })
+			expect(helper.getColor('colorProp', 0)).toBe(10)
+		})
+
+		test('expression resolving to a css color string is kept as a string', () => {
+			// This is the regression getNumber fails: a css string expression result must survive
+			const { helper } = makeHelper(makeEl({ colorProp: expr('"#00ff00"') }))
+			expect(helper.getColor('colorProp', 0)).toBe('#00ff00')
+		})
+
+		test('expression with syntax error returns defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: expr(')') }))
+			expect(helper.getColor('colorProp', 0x123456)).toBe(0x123456)
+		})
+
+		test('preserves alpha by default', () => {
+			const withAlpha = makeHelper(makeEl({ colorProp: val(0xff0000 + 0x80 * 0x1000000) }))
+			expect(withAlpha.helper.getColor('colorProp', 0)).toBe(0xff0000 + 0x80 * 0x1000000)
+
+			const cssAlpha = makeHelper(makeEl({ colorProp: val('rgba(255, 0, 0, 0.5)') }))
+			expect(cssAlpha.helper.getColor('colorProp', 0)).toBe('rgba(255, 0, 0, 0.5)')
+		})
+
+		test('discards alpha from a number when allowAlpha is false', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000 + 0x80 * 0x1000000) }))
+			expect(helper.getColor('colorProp', 0, false)).toBe(0xff0000)
+		})
+
+		test('forces a translucent css string opaque when allowAlpha is false', () => {
+			const { helper } = makeHelper(makeEl({ colorProp: val('rgba(255, 0, 0, 0.5)') }))
+			expect(helper.getColor('colorProp', 0, false)).toBe('rgb(255, 0, 0)')
+		})
+
+		test('leaves an already-opaque value untouched when allowAlpha is false', () => {
+			const num = makeHelper(makeEl({ colorProp: val(0xff0000) }))
+			expect(num.helper.getColor('colorProp', 0, false)).toBe(0xff0000)
+
+			const css = makeHelper(makeEl({ colorProp: val('#ff0000') }))
+			expect(css.helper.getColor('colorProp', 0, false)).toBe('#ff0000')
+		})
+	})
+
 	describe('getString', () => {
 		test('returns null for null plain value', () => {
 			const { helper } = makeHelper(makeEl({ strProp: val(null) }))
@@ -439,6 +511,45 @@ describe('ElementExpressionHelper', () => {
 		test('returns defaultValue for empty expression string', () => {
 			const { helper } = makeHelper(makeEl({ enumProp: expr('') }))
 			expect(helper.getEnum('enumProp', ['left', 'center', 'right'], 'center')).toBe('center')
+		})
+	})
+
+	describe('getEnumArray', () => {
+		const STYLES = ['italic', 'underline', 'strikethrough'] as const
+
+		test('returns the plain array when all values are in the allowed list', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['italic', 'underline']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'underline'])
+		})
+
+		test('filters out values that are not in the allowed list', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['italic', 'bogus', 'strikethrough']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'strikethrough'])
+		})
+
+		test('returns empty array when no values match', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val(['bogus', 'nope']) }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual([])
+		})
+
+		test('returns defaultValue when the plain value is not an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: val('italic' as unknown as string[]) }))
+			expect(helper.getEnumArray('arrProp', STYLES, ['underline'])).toEqual(['underline'])
+		})
+
+		test('evaluates an expression that produces an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr('["italic", "strikethrough"]') }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual(['italic', 'strikethrough'])
+		})
+
+		test('returns defaultValue when the expression result is not an array', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr('"italic"') }))
+			expect(helper.getEnumArray('arrProp', STYLES, [])).toEqual([])
+		})
+
+		test('returns defaultValue when the expression fails', () => {
+			const { helper } = makeHelper(makeEl({ arrProp: expr(')') }))
+			expect(helper.getEnumArray('arrProp', STYLES, ['italic'])).toEqual(['italic'])
 		})
 	})
 
@@ -789,18 +900,14 @@ describe('ElementExpressionHelper', () => {
 	describe('elementOverrides', () => {
 		test('override takes precedence over element property value', () => {
 			const element = makeEl({ strProp: val('original') })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', val('overridden' as JsonValue)],
-			])
+			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getString('strProp', '')).toBe('overridden')
 		})
 
 		test('non-overridden properties use the element value', () => {
 			const element = makeEl({ strProp: val('original'), numProp: val(42) })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', val('overridden' as JsonValue)],
-			])
+			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getNumber('numProp', 0)).toBe(42)
 		})
@@ -837,7 +944,7 @@ describe('createParseElementsContext', () => {
 
 		test('applies feedback overrides to the matching element ID only', () => {
 			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['el1', new Map([['strProp', val('overridden' as JsonValue)]])],
+				['el1', new Map([['strProp', val('overridden')]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 
@@ -850,7 +957,7 @@ describe('createParseElementsContext', () => {
 
 		test('element without matching feedback override uses its own property', () => {
 			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['other-id', new Map([['strProp', val('overridden' as JsonValue)]])],
+				['other-id', new Map([['strProp', val('overridden')]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 			const { helper } = ctx.createHelper({ id: 'el1', strProp: val('original') })

@@ -14,10 +14,10 @@ const withPortal: Decorator = (Story) => (
 const gaugeThresholdDefinition: InternalInputFieldTable = {
 	id: 'thresholds',
 	type: 'internal:table',
-	label: 'Colour thresholds',
+	label: 'Color thresholds',
 	columns: [
 		{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
-		{ id: 'color', type: 'colorpicker', label: 'Colour', default: 0x00ff00, enableAlpha: false, returnType: 'number' },
+		{ id: 'color', type: 'colorpicker', label: 'Color', default: 0x00ff00, enableAlpha: false, returnType: 'number' },
 	],
 	default: [
 		{ value: 0, color: 0x00ff00 },

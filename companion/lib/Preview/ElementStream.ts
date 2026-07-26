@@ -183,9 +183,9 @@ export class PreviewElementStream {
 		}
 	}
 
-	onVariablesChanged = (changed: ReadonlySet<string>, fromControlId: string | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void => {
 		for (const [elementStreamId, session] of this.#sessions) {
-			if (fromControlId && session.controlId !== fromControlId) continue
+			if (controlIdFilter && !controlIdFilter.has(session.controlId)) continue
 
 			// Check if any of the changed variables are used by this element
 			if (session.trackedExpressions.isDisjointFrom(changed)) continue

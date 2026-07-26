@@ -2,6 +2,7 @@ import type {
 	FeedbackValue,
 	RawStoreResultCustomVariable,
 	RawStoreResultLocalVariable,
+	RawStoreResultPageVariable,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionValueType } from '@companion-app/shared/Model/Options.js'
 import type { InstanceDefinitions } from '../../Instance/Definitions.js'
@@ -33,10 +34,16 @@ type StoreResultInLocalVariable = {
 	variableName: ExpressionValueType<RawStoreResultLocalVariable['variableName']>
 }
 
+type StoreResultInPageVariable = {
+	type: RawStoreResultPageVariable['type']
+	page: ExpressionValueType<RawStoreResultPageVariable['page']>
+	variableName: ExpressionValueType<RawStoreResultPageVariable['variableName']>
+}
+
 type StoreResultInCustomVariable = {
 	type: RawStoreResultCustomVariable['type']
 	variableName: ExpressionValueType<RawStoreResultCustomVariable['variableName']>
 	createIfNotExists: RawStoreResultCustomVariable['createIfNotExists']
 }
 
-export type StoreResult = StoreResultInLocalVariable | StoreResultInCustomVariable
+export type StoreResult = StoreResultInLocalVariable | StoreResultInPageVariable | StoreResultInCustomVariable

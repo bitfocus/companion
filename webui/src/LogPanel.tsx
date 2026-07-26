@@ -235,7 +235,7 @@ interface LogLineInnerProps {
 	line: ClientLogLineExt
 }
 const LogLineInner = memo(({ line }: LogLineInnerProps) => {
-	const time_format = line.time === null ? '                 ' : dayjs(line.time).format('YY.MM.DD HH:mm:ss')
+	const time_format = line.time === null ? '                     ' : dayjs(line.time).format('YY.MM.DD HH:mm:ss.SSS')
 	return (
 		<div className={`log-line log-type-${line.level}`}>
 			{time_format} <strong>{line.source}</strong>: <span className="log-message">{line.message}</span>

@@ -62,8 +62,10 @@ export class ServiceRosstalk extends ServiceTcpBase {
 		// Ignore empty lines, e.g. the trailing part left by a command terminator
 		if (!line) return
 
-		// Use anchored matches, so that a command surrounded by garbage is not executed
-		const matchCC = line.match(/^CC ([0-9]+):([0-9]+)$/)
+		// Use anchored matches, so that a command surrounded by garbage is not executed.
+		// The optional leading `CC ` tolerates senders (e.g. ProPresenter) that prepend their own `CC `
+		// on top of a user-entered `CC ...` command, producing `CC CC 1:1`.
+		const matchCC = line.match(/^(?:CC )?CC ([0-9]+):([0-9]+)$/)
 		if (matchCC) {
 			const xy = oldBankIndexToXY(parseInt(matchCC[2]))
 			if (!xy) {
@@ -71,6 +73,7 @@ export class ServiceRosstalk extends ServiceTcpBase {
 				return
 			}
 
+			this.logger.debug(`Got CC (bank) command: ${line}`)
 			this.#fireButtonPressAndRelease({
 				pageNumber: parseInt(matchCC[1]),
 				row: xy[1],
@@ -79,8 +82,9 @@ export class ServiceRosstalk extends ServiceTcpBase {
 			return
 		}
 
-		const matchCCControl = line.match(/^CC ([0-9]+)\/([0-9]+)\/([0-9]+)$/)
+		const matchCCControl = line.match(/^(?:CC )?CC ([0-9]+)\/([0-9]+)\/([0-9]+)$/)
 		if (matchCCControl) {
+			this.logger.debug(`Got CC (coordinates) command: ${line}`)
 			this.#fireButtonPressAndRelease({
 				pageNumber: parseInt(matchCCControl[1]),
 				row: parseInt(matchCCControl[2]),
