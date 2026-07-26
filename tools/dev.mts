@@ -162,7 +162,6 @@ const mainWatcher = chokidar
 			'../shared-lib/dist',
 			'../shared-lib/package.json',
 			'../shared-lib/tsconfig.json',
-			'../docs',
 			'../package.json',
 			'../tsconfig.json',
 		],
