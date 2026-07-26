@@ -74,6 +74,7 @@ export class ControlPage
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 

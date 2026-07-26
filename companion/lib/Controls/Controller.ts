@@ -29,7 +29,10 @@ import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import { NO_CONNECTION_LABELS } from '../Variables/Values.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlExternalDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
@@ -728,8 +731,9 @@ export class ControlsController {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues?: VariableValues | null
+		overrideVariableValues?: VariableValues | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
-		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues ?? null)
+		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues ?? null, options)
 	}
 }

@@ -1412,7 +1412,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		const parser = this.#handlerDependencies.variables.values.createVariablesAndExpressionParser(
 			null,
 			null,
-			this.#getInjectedVariablesForSurfaceId(surfaceId)
+			this.#getInjectedVariablesForSurfaceId(surfaceId),
+			null
 		)
 
 		return parser.executeExpression(str, undefined)

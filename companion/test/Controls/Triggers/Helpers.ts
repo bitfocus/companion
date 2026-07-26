@@ -69,6 +69,7 @@ export function createMockControlDependencies(): MockControlDependencies {
 		} as any,
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
+		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 	}
 
 	return { deps, bus, dbSet, runMultipleActions }

@@ -31,6 +31,7 @@ import type {
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Complete } from '@companion-module/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import type { DataCache } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { LabeledValue, MetricsRegistry } from '../Data/Metrics.js'
@@ -172,7 +173,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		variables: VariablesController,
 		surfaces: SurfaceController,
 		oscSender: ServiceOscSender,
-		metrics: MetricsRegistry
+		metrics: MetricsRegistry,
+		renderClock: RenderClock
 	) {
 		super()
 		this.setMaxListeners(0)
@@ -223,6 +225,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 				instanceDefinitions: this.definitions,
 				instanceStatus: this.status,
 				sharedUdpManager: this.sharedUdpManager,
+				renderClock: renderClock,
 				setConnectionConfig: (instanceId, config, secrets, upgradeIndex) => {
 					this.setConnectionLabelAndConfig(
 						instanceId,

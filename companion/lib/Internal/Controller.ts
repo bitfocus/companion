@@ -465,7 +465,11 @@ export class InternalController {
 			const overrideVariableValues: VariableValues = {
 				'this:surface_id': extras.surfaceId,
 			}
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues)
+			// Actions are sampled once at execution and never re-evaluated, so clock-sensitive
+			// expressions (e.g. oscillate()) would be misleading - reject them, matching module actions.
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
+				allowClockSensitive: false,
+			})
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {

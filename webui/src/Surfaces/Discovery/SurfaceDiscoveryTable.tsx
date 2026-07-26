@@ -181,6 +181,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 						},
 						parseVariables: null, // Not supported here
 						blink: undefined, // Not supported here
+						oscillate: undefined, // Not supported here
 
 						defaultTimezone: undefined, // no timezone context
 					})

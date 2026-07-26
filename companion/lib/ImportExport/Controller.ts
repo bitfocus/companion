@@ -386,7 +386,7 @@ export class ImportExportController {
 							return null
 					}
 
-					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null, null)
 
 					// Compute the new drawing
 					const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(

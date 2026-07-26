@@ -101,6 +101,7 @@ export abstract class ButtonControlRuntimeBase<
 				processManager: deps.instance.processManager,
 				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
+				renderClock: deps.renderClock,
 				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
