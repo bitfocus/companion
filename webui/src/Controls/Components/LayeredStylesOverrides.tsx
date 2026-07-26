@@ -115,7 +115,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 			<hr />
 
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-				<strong>Layered Styles Overrides</strong>
+				<strong>Style Overrides</strong>
 				<div></div>
 			</div>
 
