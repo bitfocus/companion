@@ -176,6 +176,14 @@ export class LayeredButtonDrawer {
 					element.fillMode.value = 'fit'
 				}
 				break
+			case 'line': {
+				// Line position used to reuse the box inside/center/outside enum, which is meaningless for a line
+				const position = element.borderPosition.value
+				if (!element.borderPosition.isExpression && (position === 'inside' || position === 'outside')) {
+					element.borderPosition = { isExpression: false, value: 'center' }
+				}
+				break
+			}
 			case 'group':
 				for (const child of element.children) {
 					this.#normalizeLoadedElement(child)
