@@ -148,8 +148,6 @@ export class ActionRunner {
 		} else {
 			const groupedActions = this.#splitActionsAroundWaits(actions)
 
-			const ps: Promise<void>[] = []
-
 			for (const { waitAction, actions } of groupedActions) {
 				if (extras.abortDelayed.aborted) break
 
@@ -163,17 +161,20 @@ export class ActionRunner {
 				if (extras.abortDelayed.aborted) break
 
 				// Spawn all the actions in parallel
-				for (const action of actions) {
-					ps.push(
-						this.#runAction(action, extras).catch((e) => {
-							this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
-						})
-					)
-				}
-			}
+				const ps = actions.map(async (action) => {
+					try {
+						await this.#runAction(action, extras)
+					} catch (e) {
+						this.#logger.silly(
+							`Error executing action for ${action.connectionId}: ${e instanceof Error ? e.message : e}`
+						)
+					}
+				})
 
-			// Await all the actions, so that the abort signal is respected and the promise is pending until all actions are done
-			await Promise.all(ps)
+				// Wait is a barrier: all actions before the next wait must finish
+				// before the following group is allowed to start.
+				await Promise.all(ps)
+			}
 		}
 	}
 

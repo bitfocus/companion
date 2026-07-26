@@ -209,7 +209,9 @@ describe('ActionRunner', () => {
 		test('a wait action acts as a barrier for the actions after it', async () => {
 			const { runner, internalModule, actionRun } = createRunner()
 			const { extras } = makeExtras()
+			const beforePromise = deferred()
 			const waitPromise = deferred<undefined>()
+			actionRun.mockReturnValueOnce(beforePromise.promise).mockResolvedValueOnce(undefined)
 			internalModule.executeAction.mockReturnValue(waitPromise.promise)
 
 			const before = fakeEntity()
@@ -219,15 +221,18 @@ describe('ActionRunner', () => {
 			const p = runner.runMultipleActions([before, wait, after], extras)
 			await flush()
 
-			// The action before the wait and the wait itself start immediately, the one after does not
+			// The action before the wait starts first; the wait itself is held behind it.
 			expect(actionRun).toHaveBeenCalledTimes(1)
+			expect(internalModule.executeAction).toHaveBeenCalledTimes(0)
+
+			beforePromise.resolve()
+			await flush()
 			expect(internalModule.executeAction).toHaveBeenCalledTimes(1)
+			expect(actionRun).toHaveBeenCalledTimes(1)
 
 			waitPromise.resolve(undefined)
-			await flush()
-			expect(actionRun).toHaveBeenCalledTimes(2)
-
 			await p
+			expect(actionRun).toHaveBeenCalledTimes(2)
 		})
 
 		test('waits are only detected for the internal wait action', async () => {
