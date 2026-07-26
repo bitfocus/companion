@@ -31,9 +31,9 @@ import {
 import type { DrawBounds, HorizontalAlignment, LineOrientation, VerticalAlignment } from './Util.js'
 
 /**
- * Cache for text layout computations
+ * Cache for text layout computations (also memoises font line-box ratios, keyed separately).
  */
-export type TextLayoutCache = QuickLRU<string, TextLayoutResult>
+export type TextLayoutCache = QuickLRU<string, TextLayoutResult | number>
 
 export type PointXY = [x: number, y: number]
 
@@ -788,6 +788,34 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
+	 * Measure a font's line-box ratio: (fontBoundingBoxAscent + fontBoundingBoxDescent) / em.
+	 * The ratio is size-independent, so a desired line-box height can be converted to an em size
+	 * via `em = desiredLineBox / ratio`. Used so that a text size of 100% makes the line box fill
+	 * the box height (making vertical alignment a no-op at 100%), correctly per-font rather than
+	 * assuming a fixed ratio.
+	 */
+	getFontLineBoxRatio(
+		font: DrawAlignedTextOptions['font'],
+		weight: DrawAlignedTextOptions['weight'],
+		italic: boolean
+	): number {
+		const fontSpec = `${italic ? 'italic ' : ''}${weight === 'bold' ? 'bold ' : ''}100px ${resolveFontName(font)}`
+		const cacheKey = `linebox:${fontSpec}`
+		const cached = this.#textLayoutCache?.get(cacheKey)
+		if (typeof cached === 'number') return cached
+
+		const previousFont = this.context2d.font
+		this.context2d.font = fontSpec
+		const metrics = this.context2d.measureText('A')
+		this.context2d.font = previousFont
+		const rawRatio = (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent) / 100
+		const ratio = rawRatio > 0 ? rawRatio : 1.2
+
+		this.#textLayoutCache?.set(cacheKey, ratio)
+		return ratio
+	}
+
+	/**
 	 * Draws aligned text in an boxed area.
 	 * @param x bounding box top left horizontal value
 	 * @param y bounding box top left vertical value
@@ -870,7 +898,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
 			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
-			let layout = this.#textLayoutCache?.get(cacheKey)
+			const cachedLayout = this.#textLayoutCache?.get(cacheKey)
+			let layout = typeof cachedLayout === 'object' ? cachedLayout : undefined
 			if (!layout) {
 				layout = computeTextLayout(this.context2d, normW, NORM_H, displayTextChars, normFontSpec)
 				this.#textLayoutCache?.set(cacheKey, layout)
