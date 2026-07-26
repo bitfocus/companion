@@ -446,6 +446,37 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test.each(['left', 'center', 'right'] as const)(
+			'line element with zero width draws nothing (%s)',
+			async (borderPosition) => {
+				const img = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					img,
+					makeStyle({
+						decoration: ButtonGraphicsDecorationType.None,
+						elements: [
+							makeLineElement({
+								fromX: 0,
+								fromY: 0.5,
+								toX: 1,
+								toY: 0.5,
+								borderWidth: 0,
+								borderColor: 0xff0000,
+								borderPosition,
+							}),
+						],
+					}),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+				const data = img.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				let painted = 0
+				for (let i = 3; i < data.length; i += 4) if (data[i] > 10) painted++
+				expect(painted).toBe(0)
+			}
+		)
+
 		test('circle element', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(

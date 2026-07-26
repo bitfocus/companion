@@ -399,6 +399,9 @@ export class GraphicsLayeredButtonRenderer {
 
 		if (skipDraw) return drawBounds
 
+		// A zero width hides the line; the 1px floor below is only to keep thin (but non-zero) lines visible
+		if (element.borderWidth <= 0) return drawBounds
+
 		// Calculate a pixel width, relative to the parent bounds
 		const borderWidth = Math.max(1, Math.max(parentBounds.width, parentBounds.height) * element.borderWidth)
 
