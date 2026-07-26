@@ -231,6 +231,32 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		test('topbar - long location label does not overflow the bar into the padding', async () => {
+			// A tall, narrow button gives a large bar font in a narrow bar, so the label overflows without clipping
+			const width = 50
+			const img = Image.create(width, 120, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					location: { pageNumber: 999, row: 999, column: 999 },
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+
+			const barMaxX = DEFAULT_PADDING.x + (width - DEFAULT_PADDING.x * 2)
+			const data = img.canvasImage.getContext('2d').getImageData(0, 0, width, 120).data
+			let paintedInPadding = 0
+			for (let y = 0; y < 40; y++) {
+				for (let x = barMaxX; x < width; x++) {
+					if (data[(y * width + x) * 4 + 3] > 10) paintedInPadding++
+				}
+			}
+			expect(paintedInPadding).toBe(0)
+		})
 	})
 
 	describe('show_status_icons', () => {

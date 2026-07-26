@@ -67,7 +67,10 @@ export class GraphicsLayeredButtonRenderer {
 				ButtonDecorationRenderer.drawBorderWhenPushed(img, drawStyle, drawBounds)
 				break
 			case ButtonGraphicsDecorationType.TopBar:
-				ButtonDecorationRenderer.drawStatusBar(img, drawStyle, topBarBounds, false)
+				// Clip to the bar so a long location label cannot overflow into the padding around the button
+				await img.usingClip(topBarBounds, async () => {
+					ButtonDecorationRenderer.drawStatusBar(img, drawStyle, topBarBounds, false)
+				})
 				break
 			default:
 				assertNever(decoration)
