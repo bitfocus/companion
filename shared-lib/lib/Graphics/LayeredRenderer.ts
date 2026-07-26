@@ -583,8 +583,30 @@ export class GraphicsLayeredButtonRenderer {
 		const trackHalf = (crossFull * trackWidth) / 2
 		const bandCenter = isHorizontal ? y + height / 2 : x + width / 2
 
-		const posToX = (p: number): number => (reverse ? maxX - (p / 100) * width : x + (p / 100) * width)
-		const posToY = (p: number): number => (reverse ? y + (p / 100) * height : maxY - (p / 100) * height)
+		const markerW = Math.max(1, Math.min(100, finite(element.markerWidth, 15))) / 100
+
+		// The marker is centred on the value, so at value min/max half of it would overhang the ends and make
+		// the gauge look bigger than the same gauge at another value. Inset the value's travel by half a marker
+		// at each end so the marker stays inside; the runs at the very ends still extend to the true edge (via
+		// `mapX/mapY/mapAngle` below) so the track fills the whole gauge with whatever colour is there.
+		const travelLen = isHorizontal ? width : height
+		const linearInset = element.markerEnabled ? Math.min(Math.max(1, crossFull * markerW) / 2, travelLen / 2) : 0
+
+		// `*Full` maps to the true ends (p=0 → start edge, p=100 → end edge); the plain maps inset the value's
+		// travel by the marker half-width. `atEdge` picks the true edge for run ends that sit at 0/100.
+		const atEdge = (p: number): boolean => p <= 1e-6 || p >= 100 - 1e-6
+		const posToXFull = (p: number): number => (reverse ? maxX - (p / 100) * width : x + (p / 100) * width)
+		const posToYFull = (p: number): number => (reverse ? y + (p / 100) * height : maxY - (p / 100) * height)
+		const posToX = (p: number): number =>
+			reverse
+				? maxX - linearInset - (p / 100) * (width - 2 * linearInset)
+				: x + linearInset + (p / 100) * (width - 2 * linearInset)
+		const posToY = (p: number): number =>
+			reverse
+				? y + linearInset + (p / 100) * (height - 2 * linearInset)
+				: maxY - linearInset - (p / 100) * (height - 2 * linearInset)
+		const mapX = (p: number): number => (atEdge(p) ? posToXFull(p) : posToX(p))
+		const mapY = (p: number): number => (atEdge(p) ? posToYFull(p) : posToY(p))
 
 		// Ring geometry.
 		const cx = x + width / 2
@@ -600,17 +622,28 @@ export class GraphicsLayeredButtonRenderer {
 		const endAngleDeg = finite(element.endAngle, 360)
 		let sweepDeg = (((endAngleDeg - startAngleDeg) % 360) + 360) % 360
 		if (sweepDeg === 0) sweepDeg = 360
+		const sweepRad = (sweepDeg * Math.PI) / 180
 		const degToRad = (deg: number): number => -Math.PI / 2 + (deg * Math.PI) / 180
+		// Inset the ring's angular travel by the marker bead's half-angle, same reasoning as the linear inset.
+		const ringInset = element.markerEnabled
+			? Math.min(Math.max(1, ringWidthPx * markerW) / 2 / arcRadius, sweepRad / 2)
+			: 0
+		const ringInsetFrac = sweepRad > 0 ? ringInset / sweepRad : 0
 		// p=0 at startAngle, p=100 at endAngle (clockwise). reverse flips which end is p=0.
-		const posToAngle = (p: number): number => degToRad(startAngleDeg + (reverse ? 1 - p / 100 : p / 100) * sweepDeg)
+		const posToAngleFull = (p: number): number => degToRad(startAngleDeg + (reverse ? 1 - p / 100 : p / 100) * sweepDeg)
+		const posToAngle = (p: number): number => {
+			const t = (reverse ? 1 - p / 100 : p / 100) * (1 - 2 * ringInsetFrac) + ringInsetFrac
+			return degToRad(startAngleDeg + t * sweepDeg)
+		}
+		const mapAngle = (p: number): number => (atEdge(p) ? posToAngleFull(p) : posToAngle(p))
 
 		// Paint a single position-space interval [a, b] with one solid color onto `target`.
 		// `wide` selects the fill width (full) vs the narrowed track width.
 		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, wide: boolean): void => {
 			if (b - a <= 1e-6) return
 			if (isRing) {
-				const r1 = posToAngle(a)
-				const r2 = posToAngle(b)
+				const r1 = mapAngle(a)
+				const r2 = mapAngle(b)
 				target.arcStroke(cx, cy, arcRadius, Math.min(r1, r2), Math.max(r1, r2), false, {
 					color,
 					width: wide ? fillStrokePx : trackStrokePx,
@@ -620,12 +653,12 @@ export class GraphicsLayeredButtonRenderer {
 				const lo = bandCenter - half
 				const hi = bandCenter + half
 				if (isHorizontal) {
-					const xa = posToX(a)
-					const xb = posToX(b)
+					const xa = mapX(a)
+					const xb = mapX(b)
 					target.box(Math.round(Math.min(xa, xb)), lo, Math.round(Math.max(xa, xb)), hi, color)
 				} else {
-					const ya = posToY(a)
-					const yb = posToY(b)
+					const ya = mapY(a)
+					const yb = mapY(b)
 					target.box(lo, Math.round(Math.min(ya, yb)), hi, Math.round(Math.max(ya, yb)), color)
 				}
 			}
@@ -681,7 +714,7 @@ export class GraphicsLayeredButtonRenderer {
 							[100, lastRun.gradient ? lastRun.colorEnd : lastRun.colorStart],
 						]
 						for (const [p, colorNum] of ends) {
-							const ang = posToAngle(p)
+							const ang = mapAngle(p)
 							target.circle(
 								cx + arcRadius * Math.cos(ang),
 								cy + arcRadius * Math.sin(ang),
@@ -728,7 +761,7 @@ export class GraphicsLayeredButtonRenderer {
 							return span > 0 && p - run.start > span / 2 ? run.colorEnd : run.colorStart
 						}
 						for (const p of [fillLo, fillHi]) {
-							const ang = posToAngle(p)
+							const ang = mapAngle(p)
 							layer.circle(
 								cx + arcRadius * Math.cos(ang),
 								cy + arcRadius * Math.sin(ang),
@@ -746,7 +779,6 @@ export class GraphicsLayeredButtonRenderer {
 				// --- Marker pass: a single-color line at the value, spanning the full fill width. ---
 				if (element.markerEnabled) {
 					const markerColor = parseColor(element.markerColor)
-					const markerW = Math.max(1, Math.min(100, finite(element.markerWidth, 15))) / 100
 					const cap: CanvasLineCap = element.roundedEnds ? 'round' : 'butt'
 					// The marker follows the value: its leading edge(s). In symmetric mode that's both
 					// fill edges; otherwise the single value position.

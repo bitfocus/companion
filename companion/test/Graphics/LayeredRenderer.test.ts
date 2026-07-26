@@ -1581,6 +1581,35 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			).toMatchImageSnapshot()
 		})
 
+		test('marker stays within the gauge bounds at every value (no overhang, consistent size)', async () => {
+			// A sub-bounds gauge so any marker overhang would land outside its own box (and would make the
+			// gauge look wider at value min/max). The painted content must stay within [gaugeLeft, gaugeRight]
+			// for every value - i.e. the same width regardless of value.
+			const pos = { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }
+			const drawW = 72 - DEFAULT_PADDING.x * 2
+			const gaugeLeft = DEFAULT_PADDING.x + pos.x * drawW
+			const gaugeRight = gaugeLeft + pos.width * drawW
+
+			for (const value of [0, 50, 100]) {
+				const canvas = await drawGauge(
+					makeGaugeElement({ ...pos, value, markerEnabled: true, markerColor: 0xffffff, markerWidth: 40 })
+				)
+				const data = canvas.getContext('2d').getImageData(0, 0, 72, 58).data
+				let minX = 72
+				let maxX = -1
+				for (let y = 0; y < 58; y++) {
+					for (let px = 0; px < 72; px++) {
+						if (data[(y * 72 + px) * 4 + 3] > 10) {
+							if (px < minX) minX = px
+							if (px > maxX) maxX = px
+						}
+					}
+				}
+				expect(minX).toBeGreaterThanOrEqual(Math.floor(gaugeLeft) - 1) // no overhang past the left edge
+				expect(maxX).toBeLessThanOrEqual(Math.ceil(gaugeRight) + 1) // nor the right edge
+			}
+		})
+
 		// --- Circular start/end angle (gap positioning) ---
 
 		test('ring partial arc - gap at the bottom (270° arc)', async () => {
