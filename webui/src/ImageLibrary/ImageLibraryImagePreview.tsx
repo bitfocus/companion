@@ -12,7 +12,7 @@ interface ImageLibraryImagePreviewProps {
 	checksum: string
 	className?: string
 	alt?: string
-	onLoad?: () => void
+	onLoad?: (naturalWidth: number, naturalHeight: number) => void
 	onError?: (error: string) => void
 }
 
@@ -28,6 +28,7 @@ export function ImageLibraryImagePreview({
 	checksum,
 	className,
 	alt,
+	onLoad,
 }: ImageLibraryImagePreviewProps): JSX.Element {
 	const {
 		data: queryData,
@@ -79,6 +80,7 @@ export function ImageLibraryImagePreview({
 			src={queryData.image}
 			alt={alt || 'Image preview'}
 			className={classNames('image-library-preview', className)}
+			onLoad={onLoad ? (e) => onLoad(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight) : undefined}
 		/>
 	)
 }
