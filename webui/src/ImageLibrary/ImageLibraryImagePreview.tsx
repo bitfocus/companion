@@ -2,7 +2,7 @@ import { faImage } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import classNames from 'classnames'
-import { useEffect } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { MoonLoader } from 'react-spinners'
 import { trpc } from '~/Resources/TRPC'
 
@@ -42,7 +42,10 @@ export function ImageLibraryImagePreview({
 		})
 	)
 
+	const [aspect, setAspect] = useState<number | null>(null)
+
 	useEffect(() => {
+		setAspect(null)
 		queryRefetch().catch((err) => {
 			console.error('Failed to refetch image data:', err)
 		})
@@ -80,7 +83,12 @@ export function ImageLibraryImagePreview({
 			src={queryData.image}
 			alt={alt || 'Image preview'}
 			className={classNames('image-library-preview', className)}
-			onLoad={onLoad ? (e) => onLoad(e.currentTarget.naturalWidth, e.currentTarget.naturalHeight) : undefined}
+			style={aspect != null ? ({ '--img-aspect': aspect } as CSSProperties) : undefined}
+			onLoad={(e) => {
+				const { naturalWidth: w, naturalHeight: h } = e.currentTarget
+				if (w && h) setAspect(w / h)
+				onLoad?.(w, h)
+			}}
 		/>
 	)
 }

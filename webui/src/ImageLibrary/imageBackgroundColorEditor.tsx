@@ -16,11 +16,11 @@ export const ImageBackgroundColorEditor = observer(function ImageBackgroundColor
 }: ImageBackgroundColorEditorProps) {
 	const setBackgroundColorMutation = useMutationExt(trpc.imageLibrary.setBackgroundColor.mutationOptions())
 
-	const [localValue, setLocalValue] = useState(currentColor ?? '#ffffff')
+	const [localValue, setLocalValue] = useState(currentColor ?? 'transparent')
 
 	// Sync when the server value changes (e.g. switching images)
 	useEffect(() => {
-		setLocalValue(currentColor ?? '#ffffff')
+		setLocalValue(currentColor ?? 'transparent')
 	}, [currentColor])
 
 	const setValue = useCallback(
@@ -33,5 +33,5 @@ export const ImageBackgroundColorEditor = observer(function ImageBackgroundColor
 		[setBackgroundColorMutation, imageName]
 	)
 
-	return <ColorInputField<'string'> id={id} value={localValue} setValue={setValue} returnType="string" />
+	return <ColorInputField<'string'> id={id} value={localValue} setValue={setValue} returnType="string" enableAlpha />
 })
