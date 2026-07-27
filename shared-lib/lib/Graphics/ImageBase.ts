@@ -527,6 +527,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		valign: VerticalAlignment = 'center',
 		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink' = 1
 	): Promise<true | false | null> {
+		// skia-canvas decodes a base64 string up to a stray `=`, but browsers reject the whole thing.
+		// Trim to valid base64 so both renderers behave consistently.
+		base64Image = trimBase64ImageToValid(base64Image)
+
 		if (!base64Image || base64Image.length <= 40) {
 			// No image data. This is a bit cautious of a threshold, as empty buffers cause the canvas to crash
 			return null
@@ -1156,4 +1160,23 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		this.context2d.fill()
 		return true
 	}
+}
+
+/**
+ * Trim a base64 image string to be valid base64. A malformed string with `=` padding in the
+ * middle is decoded by skia-canvas (up to the padding), but rejected outright by browsers.
+ * Trimming at the first `=` and re-padding makes both renderers behave consistently.
+ */
+export function trimBase64ImageToValid(base64Image: string): string {
+	// Skip past any `data:image/...;base64,` prefix, only searching within the encoded body
+	const dataUrlMatch = /^data:[^,]*,/.exec(base64Image)
+	const bodyStart = dataUrlMatch ? dataUrlMatch[0].length : 0
+
+	const paddingIndex = base64Image.indexOf('=', bodyStart)
+	if (paddingIndex === -1) return base64Image // No padding present, nothing to trim
+
+	// Everything from the first `=` onwards must be padding, so discard any junk that follows it.
+	// A final base64 group is 4 chars, so keep the data plus the `=`(s) that complete that group.
+	const remainder = (paddingIndex - bodyStart) % 4
+	return base64Image.slice(0, paddingIndex + ((4 - remainder) % 4))
 }
