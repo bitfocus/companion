@@ -253,7 +253,13 @@ export class Registry {
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
-		this.internalModule = new InternalController(controlStore, pageStore, this.instance, this.variables)
+		this.internalModule = new InternalController(
+			controlStore,
+			pageStore,
+			this.instance,
+			this.variables,
+			this.#renderClock
+		)
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
@@ -554,6 +560,7 @@ export class Registry {
 		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
+			this.internalModule.destroy()
 			this.#renderClock.destroy()
 
 			this.ui.close()
