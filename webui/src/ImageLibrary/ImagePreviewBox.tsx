@@ -49,7 +49,7 @@ export function ImagePreviewBox({
 	return (
 		<div
 			className={classNames('image-preview-full', { 'drag-over': isDragOver }, className)}
-			style={{ backgroundColor: backgroundColor ?? '#ffffff' }}
+			style={{ '--preview-bg-color': backgroundColor ?? 'transparent' } as React.CSSProperties}
 			onDragOver={onFileDrop ? handleDragOver : undefined}
 			onDragLeave={onFileDrop ? handleDragLeave : undefined}
 			onDrop={onFileDrop ? handleDrop : undefined}
