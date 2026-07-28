@@ -9,6 +9,9 @@ interface ImageBackgroundColorEditorProps {
 	currentColor: string | undefined
 }
 
+// rgba, not the 'transparent' keyword, which the colour picker (colord) can't parse
+const TRANSPARENT = 'rgba(0, 0, 0, 0)'
+
 export const ImageBackgroundColorEditor = observer(function ImageBackgroundColorEditor({
 	id,
 	imageName,
@@ -16,11 +19,11 @@ export const ImageBackgroundColorEditor = observer(function ImageBackgroundColor
 }: ImageBackgroundColorEditorProps) {
 	const setBackgroundColorMutation = useMutationExt(trpc.imageLibrary.setBackgroundColor.mutationOptions())
 
-	const [localValue, setLocalValue] = useState(currentColor ?? 'transparent')
+	const [localValue, setLocalValue] = useState(currentColor ?? TRANSPARENT)
 
 	// Sync when the server value changes (e.g. switching images)
 	useEffect(() => {
-		setLocalValue(currentColor ?? 'transparent')
+		setLocalValue(currentColor ?? TRANSPARENT)
 	}, [currentColor])
 
 	const setValue = useCallback(

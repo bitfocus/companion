@@ -3,6 +3,7 @@ import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { capitalize } from 'lodash-es'
 import { observer } from 'mobx-react-lite'
+import { useLayoutEffect, useRef } from 'react'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import {
 	CollectionsNestingTableContextProvider,
@@ -55,6 +56,35 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 	const { source } = useDragOperation()
 	const isDragging = !!collectionsApi && source?.type === dragId
 
+	// Every collection's grid runs its own auto-fill, so nested (indented, narrower) grids would break to a
+	// different column count than the wider ungrouped grid within the same window. Derive one shared column
+	// count from the full (un-indented) width and hand it to every grid via --cnt-grid-cols, so they all show
+	// the same number of columns; nested grids just render marginally smaller tiles for their indent.
+	const rootRef = useRef<HTMLDivElement>(null)
+	useLayoutEffect(() => {
+		const root = rootRef.current
+		if (!root || !gridLayout) return
+
+		const recompute = () => {
+			const grid = root.querySelector<HTMLElement>('.collections-nesting-table-grid-container')
+			if (!grid) return
+			const style = getComputedStyle(grid)
+			const minTile = parseFloat(style.getPropertyValue('--collection-nesting-table-grid-tile-min-width')) || 200
+			const gap = parseFloat(style.columnGap) || 0
+			const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+			// Reference width = a full-width (level 0) grid, so nested grids conform to the widest grid's count
+			const available = root.clientWidth - padX
+			const cols = Math.max(1, Math.floor((available + gap) / (minTile + gap)))
+			root.style.setProperty('--cnt-grid-cols', String(cols))
+			root.style.setProperty('--cnt-grid-track-min', '0')
+		}
+
+		recompute()
+		const observer = new ResizeObserver(recompute)
+		observer.observe(root)
+		return () => observer.disconnect()
+	}, [gridLayout])
+
 	return (
 		<CollectionsNestingTableContextProvider
 			ItemRow={ItemRow}
@@ -66,7 +96,7 @@ export const CollectionsNestingTable = observer(function CollectionsNestingTable
 			selectedItemId={selectedItemId}
 			gridLayout={gridLayout}
 		>
-			<div className="collections-nesting-table">
+			<div className="collections-nesting-table" ref={rootRef}>
 				{/* Rendered here (inside the table) so the drag preview clone is styled by the real CSS */}
 				<CollectionsNestingTableDragLayer />
 
