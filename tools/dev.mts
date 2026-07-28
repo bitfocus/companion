@@ -27,11 +27,13 @@ if (!semver.satisfies(process.versions.node, nodeJsValidRange)) {
 	process.exit(1)
 }
 
+const repoRoot = path.join(import.meta.dirname, '..')
+
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
 
 const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
-const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
+const devModulesPath = rawDevModulesPath ? path.resolve(repoRoot, rawDevModulesPath) : undefined
 
 if (devModulesPath) {
 	const argvIndex = process.argv.indexOf('--extra-module-path')
@@ -55,6 +57,12 @@ if (process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT === undefined) {
 if (process.env.COMPANION_TRUSTED_PROXIES === undefined) {
 	// Allow vite as a proxy
 	process.env.COMPANION_TRUSTED_PROXIES = 'loopback'
+}
+
+// Allow overriding the config base dir, resolved relative to the repo root
+if (process.env.COMPANION_CONFIG_BASEDIR) {
+	const configBaseDir = path.resolve(repoRoot, process.env.COMPANION_CONFIG_BASEDIR)
+	process.argv.push(`--config-dir=${configBaseDir}`)
 }
 
 const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
