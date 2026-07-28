@@ -86,7 +86,8 @@ export function clipLineToRect(
 export function computeSelectionMarkerLines(
 	marker: SelectedElementMarker,
 	width: number,
-	height: number
+	height: number,
+	outset: number
 ): MarkerLine[] {
 	const { bounds, rotations } = marker
 
@@ -116,12 +117,14 @@ export function computeSelectionMarkerLines(
 		return [x, y]
 	}
 
-	// The four edges, each as a midpoint on the edge plus its unrotated direction in degrees
+	// The four edges, each as a midpoint on the edge plus its unrotated direction in degrees. `outset`
+	// pushes each edge outward (away from the centre) so the line sits just outside the element instead
+	// of straddling its edge.
 	const edges: Array<{ x: number; y: number; direction: number }> = [
-		{ x: centerX, y: bounds.y, direction: 0 },
-		{ x: centerX, y: bounds.maxY, direction: 0 },
-		{ x: bounds.x, y: centerY, direction: 90 },
-		{ x: bounds.maxX, y: centerY, direction: 90 },
+		{ x: centerX, y: bounds.y - outset, direction: 0 },
+		{ x: centerX, y: bounds.maxY + outset, direction: 0 },
+		{ x: bounds.x - outset, y: centerY, direction: 90 },
+		{ x: bounds.maxX + outset, y: centerY, direction: 90 },
 	]
 
 	const lines: MarkerLine[] = []

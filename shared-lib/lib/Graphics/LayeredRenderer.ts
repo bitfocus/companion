@@ -825,7 +825,10 @@ export class GraphicsLayeredButtonRenderer {
 	static #drawBoundsLines(img: ImageBase<any>, marker: SelectedElementMarker) {
 		const lineStyle: LineStyle = { color: 'rgb(255, 0, 0)', width: 1 } // TODO - what color is best?
 
-		for (const [x1, y1, x2, y2] of computeSelectionMarkerLines(marker, img.width, img.height)) {
+		// Outset by half the line width so the marker sits just outside the element (its inner edge on the
+		// bound) rather than straddling it and covering the element's own edge pixels.
+		const outset = lineStyle.width / 2
+		for (const [x1, y1, x2, y2] of computeSelectionMarkerLines(marker, img.width, img.height, outset)) {
 			img.line(x1, y1, x2, y2, lineStyle)
 		}
 	}
