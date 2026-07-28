@@ -84,7 +84,7 @@ describe('computeSelectionMarkerLines', () => {
 
 	test('without rotation, the four edges become full-image axis-aligned lines', () => {
 		const marker: SelectedElementMarker = { bounds, rotations: [] }
-		const lines = computeSelectionMarkerLines(marker, 10, 10)
+		const lines = computeSelectionMarkerLines(marker, 10, 10, 0)
 
 		expect(lines).toHaveLength(4)
 		expectLine(lines[0], [0, 2, 10, 2]) // top edge
@@ -93,9 +93,20 @@ describe('computeSelectionMarkerLines', () => {
 		expectLine(lines[3], [6, 0, 6, 10]) // right edge
 	})
 
+	test('outset pushes each edge line outward, away from the centre', () => {
+		const marker: SelectedElementMarker = { bounds, rotations: [] }
+		const lines = computeSelectionMarkerLines(marker, 10, 10, 1)
+
+		expect(lines).toHaveLength(4)
+		expectLine(lines[0], [0, 1, 10, 1]) // top: 2 → 1
+		expectLine(lines[1], [0, 7, 10, 7]) // bottom: 6 → 7
+		expectLine(lines[2], [1, 0, 1, 10]) // left: 2 → 1
+		expectLine(lines[3], [7, 0, 7, 10]) // right: 6 → 7
+	})
+
 	test('rotating 90° about the centre swaps horizontal and vertical edges', () => {
 		const marker: SelectedElementMarker = { bounds, rotations: [{ pivot: bounds, angle: 90 }] }
-		const lines = computeSelectionMarkerLines(marker, 10, 10)
+		const lines = computeSelectionMarkerLines(marker, 10, 10, 0)
 
 		expect(lines).toHaveLength(4)
 		// The top edge (y=2) rotates to a vertical line at x=6; the bottom edge (y=6) to x=2
@@ -108,7 +119,7 @@ describe('computeSelectionMarkerLines', () => {
 
 	test('rotating 45° about the centre produces the expected clipped diagonals', () => {
 		const marker: SelectedElementMarker = { bounds, rotations: [{ pivot: bounds, angle: 45 }] }
-		const lines = computeSelectionMarkerLines(marker, 10, 10)
+		const lines = computeSelectionMarkerLines(marker, 10, 10, 0)
 
 		const d = 2 * Math.SQRT2 // 2√2, the offset where a slope-±1 edge crosses the image border
 		expect(lines).toHaveLength(4)
@@ -121,7 +132,7 @@ describe('computeSelectionMarkerLines', () => {
 	test('an arbitrary angle rotates each edge line by that angle about its midpoint', () => {
 		const angle = 30
 		const marker: SelectedElementMarker = { bounds, rotations: [{ pivot: bounds, angle }] }
-		const lines = computeSelectionMarkerLines(marker, 10, 10)
+		const lines = computeSelectionMarkerLines(marker, 10, 10, 0)
 		expect(lines).toHaveLength(4)
 
 		const rad = (angle * Math.PI) / 180
@@ -164,7 +175,7 @@ describe('computeSelectionMarkerLines', () => {
 				{ pivot: bounds, angle: 90 },
 			],
 		}
-		const lines = computeSelectionMarkerLines(marker, 10, 10)
+		const lines = computeSelectionMarkerLines(marker, 10, 10, 0)
 
 		expect(lines).toHaveLength(4)
 		expectLine(lines[0], [0, 6, 10, 6]) // top edge → bottom
