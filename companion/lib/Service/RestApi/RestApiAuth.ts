@@ -1,0 +1,90 @@
+import type Express from 'express'
+import type { Logger } from '../../Log/Controller.js'
+import { RestApiError } from './errors.js'
+
+export type ApiTokenScope = 'read' | 'write' | 'execute' | 'connections' | 'admin'
+
+export interface ApiToken {
+	id: string
+	name: string
+	token: string
+	scopes: ApiTokenScope[]
+}
+
+export interface RestApiLocals extends Record<string, unknown> {
+	apiToken?: ApiToken
+}
+
+export type RestApiResponse = Express.Response<unknown, RestApiLocals>
+
+/** Maps HTTP method + route semantics to the required scope */
+export type RequiredScope = ApiTokenScope
+
+/**
+ * Check if a token's scopes satisfy the required scope.
+ * admin implies all scopes. write and execute each imply read.
+ */
+export function hasScope(tokenScopes: ApiTokenScope[], required: RequiredScope): boolean {
+	if (tokenScopes.includes('admin')) return true
+	if (required === 'read') {
+		return tokenScopes.includes('read') || tokenScopes.includes('write') || tokenScopes.includes('execute')
+	}
+	return tokenScopes.includes(required)
+}
+
+/** Check that a token satisfies every required scope. */
+export function hasScopes(tokenScopes: ApiTokenScope[], required: readonly RequiredScope[]): boolean {
+	return required.every((scope) => hasScope(tokenScopes, scope))
+}
+
+export interface ApiTokenStore {
+	findByToken(plaintext: string): ApiToken | undefined
+}
+
+/**
+ * Create Bearer token authentication middleware.
+ * Extracts token from Authorization header and looks up by plaintext value.
+ */
+export function createAuthMiddleware(logger: Logger, tokenStore: ApiTokenStore) {
+	return (req: Express.Request, res: RestApiResponse, next: Express.NextFunction): void => {
+		const authHeader = req.headers.authorization
+		const match = authHeader?.match(/^Bearer\s+(.+)$/i)
+		if (!match) {
+			next(RestApiError.unauthorized('Missing or invalid Authorization header'))
+			return
+		}
+
+		const plainToken = match[1].trim()
+		const token = tokenStore.findByToken(plainToken)
+		if (!token) {
+			next(RestApiError.unauthorized('Invalid API token'))
+			return
+		}
+
+		// Attach token to this response's request-local state for scope checks
+		res.locals.apiToken = token
+
+		logger.debug(`API request authenticated: token="${token.name}" path=${req.path}`)
+		next()
+	}
+}
+
+/**
+ * Create scope-checking middleware for a set of required scopes.
+ */
+export function requireScopes(scopes: readonly RequiredScope[]) {
+	return (_req: Express.Request, res: RestApiResponse, next: Express.NextFunction): void => {
+		const token = res.locals.apiToken
+		if (!token) {
+			next(RestApiError.unauthorized())
+			return
+		}
+
+		if (!hasScopes(token.scopes, scopes)) {
+			next(RestApiError.forbidden(`Insufficient scope: requires '${scopes.join("' and '")}'`))
+			return
+		}
+
+		next()
+	}
+}

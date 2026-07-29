@@ -23,6 +23,7 @@ export type UserConfigModel = {
 	http_api_enabled: boolean
 	http_legacy_api_enabled: boolean
 
+	rest_api_enabled: boolean
 	prometheus_enabled: boolean
 	prometheus_token: string
 
