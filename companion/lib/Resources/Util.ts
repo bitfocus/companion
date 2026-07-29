@@ -257,6 +257,7 @@ export function rotateResolution(width: number, height: number, rotation: Surfac
 
 /**
  * Transform a button image render to the format needed for a surface integration
+ * Note: input is assumed to be straight alpha RGBA
  */
 export async function transformButtonImage(
 	buffer: Buffer,
@@ -285,7 +286,9 @@ export async function transformButtonImage(
 		alpha: 255,
 	})
 
-	const computedImage = await image.toBuffer(targetFormat)
+	const computedImage = await image.toBuffer(targetFormat, {
+		premultiplyAlpha: targetFormat.length === 3, // eg rgb/bgr
+	})
 	return computedImage.buffer
 }
 

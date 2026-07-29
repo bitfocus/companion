@@ -123,6 +123,7 @@ export function parseIsVisibleFn(option: SomeCompanionInputField): IsVisibleFn |
 							},
 							parseVariables: null, // Not supported here
 							blink: undefined, // Not supported here
+							oscillate: undefined, // Not supported here
 
 							defaultTimezone: undefined, // no timezone context
 						})

@@ -11,6 +11,7 @@ import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
+import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
@@ -140,6 +141,8 @@ export class Registry {
 	readonly usageStatistics: DataUsageStatistics
 	readonly metrics: DataMetrics
 
+	readonly #renderClock: RenderClock
+
 	/**
 	 * The 'data' controller
 	 */
@@ -213,6 +216,8 @@ export class Registry {
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
+		this.#renderClock = new RenderClock()
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
@@ -220,7 +225,8 @@ export class Registry {
 			this.variables,
 			this.db,
 			this.#internalApiRouter,
-			this.metrics
+			this.metrics,
+			this.#renderClock
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -242,11 +248,18 @@ export class Registry {
 			this.variables,
 			this.surfaces,
 			oscSender,
-			this.metrics
+			this.metrics,
+			this.#renderClock
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
-		this.internalModule = new InternalController(controlStore, pageStore, this.instance, this.variables)
+		this.internalModule = new InternalController(
+			controlStore,
+			pageStore,
+			this.instance,
+			this.variables,
+			this.#renderClock
+		)
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
@@ -261,6 +274,7 @@ export class Registry {
 			userconfig: this.userconfig,
 			graphics: this.graphics,
 			actionRunner: actionRunner,
+			renderClock: this.#renderClock,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -268,7 +282,8 @@ export class Registry {
 			pageStore,
 			this.controls,
 			controlEvents,
-			localVariables
+			localVariables,
+			this.#renderClock
 		)
 
 		this.internalModule.init(
@@ -545,6 +560,9 @@ export class Registry {
 
 		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
+
+			this.internalModule.destroy()
+			this.#renderClock.destroy()
 
 			this.ui.close()
 

@@ -5,6 +5,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
 import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
@@ -33,12 +34,15 @@ export class PreviewElementStream {
 
 	readonly #sessions = new Map<string, ElementStreamSession>()
 
+	readonly #unsubscribeRenderClock: () => void
+
 	constructor(
 		instanceDefinitions: InstanceDefinitions,
 		graphicsController: GraphicsController,
 		pageStore: IPageStore,
 		controlsController: ControlsController,
-		controlEvents: EventEmitter<ControlCommonEvents>
+		controlEvents: EventEmitter<ControlCommonEvents>,
+		renderClock: RenderClock
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#graphicsController = graphicsController
@@ -49,6 +53,12 @@ export class PreviewElementStream {
 		// Listen for element changes to trigger re-evaluation
 		this.#controlEvents.on('layeredStyleElementChanged', this.#onElementChanged)
 		this.#graphicsController.on('button_drawn', this.#onButtonDrawn)
+
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.#onRenderClockTick())
+	}
+
+	destroy(): void {
+		this.#unsubscribeRenderClock()
 	}
 
 	createTrpcRouter() {
@@ -85,6 +95,7 @@ export class PreviewElementStream {
 								trackedExpressions: new Set<string>(),
 								trackedCompositeElements: new Set(),
 								trackedReferencedLocations: new Set(),
+								isClockSensitive: false,
 								latestResult: { ok: true, element: null },
 								changes: new EventEmitter(),
 								isEvaluating: false,
@@ -117,6 +128,13 @@ export class PreviewElementStream {
 					}
 				}),
 		})
+	}
+
+	#onRenderClockTick = (): void => {
+		for (const [, session] of this.#sessions) {
+			if (!session.isClockSensitive) continue
+			this.#triggerElementReEvaluation(session)
+		}
 	}
 
 	#onElementChanged = (controlId: string, elementId: string): void => {
@@ -165,6 +183,7 @@ export class PreviewElementStream {
 			session.trackedExpressions = newValue.referencedVariableIds
 			session.trackedCompositeElements = newValue.referencedCompositeElements
 			session.trackedReferencedLocations = newValue.referencedLocations
+			session.isClockSensitive = newValue.clockSensitive
 
 			session.changes.emit('change', { ok: true, element: newValue.element })
 		} catch (err) {
@@ -219,6 +238,7 @@ export class PreviewElementStream {
 		referencedVariableIds: Set<string>
 		referencedCompositeElements: Set<CompositeElementIdString>
 		referencedLocations: Set<string>
+		clockSensitive: boolean
 	}> {
 		const control = this.#controlsController.getControl(controlId)
 		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
@@ -227,6 +247,7 @@ export class PreviewElementStream {
 				referencedVariableIds: new Set(),
 				referencedCompositeElements: new Set(),
 				referencedLocations: new Set(),
+				clockSensitive: false,
 			}
 		}
 
@@ -237,6 +258,7 @@ export class PreviewElementStream {
 				referencedVariableIds: new Set(),
 				referencedCompositeElements: new Set(),
 				referencedLocations: new Set(),
+				clockSensitive: false,
 			}
 		}
 
@@ -248,6 +270,7 @@ export class PreviewElementStream {
 				referencedVariableIds: new Set(),
 				referencedCompositeElements: new Set(),
 				referencedLocations: new Set(),
+				clockSensitive: false,
 			}
 		}
 
@@ -271,6 +294,7 @@ export class PreviewElementStream {
 				usedVariables,
 				usedCompositeElements: connectionCompositeElements,
 				referencedLocations,
+				clockSensitive,
 			} = await ConvertSomeButtonGraphicsElementForDrawing(
 				this.#instanceDefinitions,
 				parser,
@@ -294,6 +318,7 @@ export class PreviewElementStream {
 				referencedVariableIds: usedVariables,
 				referencedCompositeElements: connectionCompositeElements,
 				referencedLocations,
+				clockSensitive,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)
@@ -309,6 +334,7 @@ interface ElementStreamSession {
 	trackedExpressions: Set<string>
 	trackedCompositeElements: Set<CompositeElementIdString>
 	trackedReferencedLocations: Set<string>
+	isClockSensitive: boolean
 
 	latestResult: ElementStreamResult
 

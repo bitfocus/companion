@@ -268,9 +268,11 @@ export function executeExpression(
 	requiredType: string | undefined,
 	cachedVariableValues: VariableValueCache,
 	defaultTimezone: string | undefined,
-	limits?: ResolveExpressionLimits
+	limits?: ResolveExpressionLimits,
+	allowClockSensitive = true
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
+	let clockSensitive = false
 
 	try {
 		const getVariableValue = (props: GetVariableValueProps): VariableValue | undefined => {
@@ -346,6 +348,33 @@ export function executeExpression(
 			},
 
 			getVariableValue,
+			oscillate(period: any, waveform?: any, phase?: any): number {
+				if (!allowClockSensitive) throw new Error('oscillate() is not supported in this context')
+
+				const p = Math.max(100, Number(period))
+				if (isNaN(p)) return 0
+
+				clockSensitive = true
+				// Snap to the nearest 100ms grid to produce even steps regardless of when
+				// within the tick this is called.
+				const quantizedNow = Math.round(Date.now() / 100) * 100
+				// Offset by the optional phase (a fraction of a cycle). Wrap into [0, 1) so that
+				// negative and >1 phases behave, letting oscillators be staggered against each other.
+				const phaseOffset = Number(phase)
+				const t = ((((quantizedNow % p) / p + (isNaN(phaseOffset) ? 0 : phaseOffset)) % 1) + 1) % 1
+				switch (typeof waveform === 'string' ? waveform.toLowerCase() : 'sine') {
+					case 'sine':
+						return (Math.sin(2 * Math.PI * t - Math.PI / 2) + 1) / 2
+					case 'triangle':
+						return t < 0.5 ? 2 * t : 2 * (1 - t)
+					case 'sawtooth':
+						// Rescale so the last quantized step before the wrap maps to 1.0.
+						// Without this, t ranges over [0, 1) and never reaches full.
+						return p <= 100 ? 0 : Math.min((t * p) / (p - 100), 1)
+					default:
+						return t < 0.5 ? 1 : 0
+				}
+			},
 			blink(interval: any, dutyCycle: any): 0 | 1 {
 				// Validate the interval
 				const int = Number(interval)
@@ -399,6 +428,7 @@ export function executeExpression(
 				ok: false,
 				error: 'Unexpected return type',
 				variableIds: referencedVariableIds,
+				clockSensitive,
 			}
 		}
 
@@ -406,12 +436,14 @@ export function executeExpression(
 			ok: true,
 			value,
 			variableIds: referencedVariableIds,
+			clockSensitive,
 		}
 	} catch (e) {
 		return {
 			ok: false,
 			error: stringifyError(e, true) || 'Unknown error',
 			variableIds: referencedVariableIds,
+			clockSensitive,
 		}
 	}
 }

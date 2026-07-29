@@ -6,6 +6,11 @@ description: The launch-level settings that control how the Companion server sta
 
 # Server configuration
 
+:::tip Running CompanionPi or a headless server?
+This page describes the options themselves. You will need to edit them from the command line as described in
+[Headless configuration](./companion-pi/config-tool.md).
+:::
+
 These are the settings that control **how the Companion server itself starts up** — things like which
 network port it listens on and which security features are allowed. They're separate from the
 [Settings](../3_config/settings.md) page inside the admin interface, which configures Companion once

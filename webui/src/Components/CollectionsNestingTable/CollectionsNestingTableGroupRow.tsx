@@ -48,6 +48,13 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 		[]
 	)
 
+	const handleNameFieldKeyDown = useCallback((e: React.KeyboardEvent) => {
+		if (e.key === 'Enter') {
+			e.preventDefault()
+			setIsEditing(false)
+		}
+	}, [])
+
 	const clickEditName = useCallback((e: React.MouseEvent) => {
 		e.preventDefault()
 		e.stopPropagation()
@@ -81,6 +88,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 							placeholder={`Give this collection a name`}
 							setValue={handleSetName}
 							onBlur={handleNameFieldBlur}
+							onKeyDown={handleNameFieldKeyDown}
 							autoFocus
 						/>
 					) : (

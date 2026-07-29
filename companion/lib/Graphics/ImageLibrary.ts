@@ -264,7 +264,7 @@ export class ImageLibrary {
 			checksum: '',
 			mimeType: '',
 			sortOrder: 0, // Will be updated when moved to collections
-			backgroundColor: '#ffffff',
+			backgroundColor: 'rgba(0, 0, 0, 0)', // transparent
 		}
 
 		const imageData: ImageLibraryData = {

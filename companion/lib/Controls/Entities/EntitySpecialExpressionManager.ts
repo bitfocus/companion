@@ -6,6 +6,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { ExpressionOrValue, JsonValue } from '@companion-module/host'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type { RenderClock } from '../RenderClock.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type {
 	NewSpecialExpressionValue,
@@ -34,14 +35,18 @@ interface EntityWrapper {
 	 * set of variables.
 	 *
 	 * No wrapper is tracked for a special expression that has been computed that
-	 * depends upon no variables.
+	 * depends upon no variables and is not clock-sensitive.
 	 */
 	referencedVariableIds: null | ReadonlySet<string>
+
+	/** Whether the last computed value depends on the render clock */
+	dependsOnRenderClock: boolean
 }
 
 type SpecialExpressionComputation<Expression extends SpecialExpression> = {
 	referencedVariableIds: EntityWrapper['referencedVariableIds']
 	computedValue: SpecialExpressions[Expression]
+	clockSensitive: boolean
 }
 
 type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
@@ -50,7 +55,7 @@ type ComputeSpecialExpressionValueFn<Expression extends SpecialExpression> = (
 	logger: Logger
 ) => SpecialExpressionComputation<Expression>
 
-type EvaluationResult<T> = { variableIds: ReadonlySet<string> } & (
+type EvaluationResult<T> = { variableIds: ReadonlySet<string>; clockSensitive: boolean } & (
 	{ ok: true; value: T } | { ok: false; error: ExecuteExpressionResultError['error'] }
 )
 
@@ -61,15 +66,16 @@ function evaluateBoolean(
 	parser: VariablesAndExpressionParser
 ): EvaluationResult<boolean> {
 	if (!exprOrVal.isExpression) {
-		return { ok: true, variableIds: NoVariables, value: !!exprOrVal.value }
+		return { ok: true, variableIds: NoVariables, clockSensitive: false, value: !!exprOrVal.value }
 	}
 
 	const parsed = parser.executeExpression(exprOrVal.value, 'boolean')
 	return parsed.ok
-		? { ok: true, variableIds: parsed.variableIds, value: !!parsed.value }
+		? { ok: true, variableIds: parsed.variableIds, clockSensitive: parsed.clockSensitive, value: !!parsed.value }
 		: {
 				ok: false,
 				variableIds: parsed.variableIds,
+				clockSensitive: parsed.clockSensitive,
 				error: parsed.error,
 			}
 }
@@ -81,7 +87,7 @@ const ComputeIsInverted: ComputeSpecialExpressionValueFn<'isInverted'> = (
 ): SpecialExpressionComputation<'isInverted'> => {
 	const isInvertedExpression = entity.rawIsInverted
 	if (!isInvertedExpression || !isExpressionOrValue(isInvertedExpression)) {
-		return { referencedVariableIds: null, computedValue: false }
+		return { referencedVariableIds: null, computedValue: false, clockSensitive: false }
 	}
 
 	const result = evaluateBoolean(isInvertedExpression, parser)
@@ -92,7 +98,7 @@ const ComputeIsInverted: ComputeSpecialExpressionValueFn<'isInverted'> = (
 		logger.warn(`Failed to parse boolean expression: ${result.error}`)
 		isInverted = false
 	}
-	return { referencedVariableIds: result.variableIds, computedValue: isInverted }
+	return { referencedVariableIds: result.variableIds, computedValue: isInverted, clockSensitive: result.clockSensitive }
 }
 
 function evaluateString(
@@ -102,7 +108,7 @@ function evaluateString(
 	if (!exprOrVal.isExpression) {
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		const parsed = parser.parseVariables(String(exprOrVal.value))
-		return { ok: true, variableIds: parsed.variableIds, value: parsed.text }
+		return { ok: true, variableIds: parsed.variableIds, clockSensitive: false, value: parsed.text }
 	}
 
 	const parsed = parser.executeExpression(exprOrVal.value, 'string')
@@ -110,12 +116,14 @@ function evaluateString(
 		? {
 				ok: true,
 				variableIds: parsed.variableIds,
+				clockSensitive: parsed.clockSensitive,
 				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				value: String(parsed.value),
 			}
 		: {
 				ok: false,
 				variableIds: parsed.variableIds,
+				clockSensitive: parsed.clockSensitive,
 				error: parsed.error,
 			}
 }
@@ -127,7 +135,7 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 ): SpecialExpressionComputation<'storeResult'> => {
 	const rawStoreResult = entity.rawStoreResult
 	if (rawStoreResult === undefined) {
-		return { referencedVariableIds: null, computedValue: undefined }
+		return { referencedVariableIds: null, computedValue: undefined, clockSensitive: false }
 	}
 
 	const variableNameResult = evaluateString(rawStoreResult.variableName, parser)
@@ -157,6 +165,7 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 				location,
 				variableName,
 			},
+			clockSensitive: locationResult.clockSensitive || variableNameResult.clockSensitive,
 		}
 	}
 
@@ -178,6 +187,7 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 				page,
 				variableName,
 			},
+			clockSensitive: pageResult.clockSensitive || variableNameResult.clockSensitive,
 		}
 	}
 
@@ -189,11 +199,12 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 				variableName,
 				createIfNotExists: rawStoreResult.createIfNotExists,
 			},
+			clockSensitive: variableNameResult.clockSensitive,
 		}
 	}
 
 	assertNever(rawStoreResult)
-	return { referencedVariableIds: null, computedValue: undefined }
+	return { referencedVariableIds: null, computedValue: undefined, clockSensitive: false }
 }
 
 /**
@@ -205,6 +216,7 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 export class EntityPoolSpecialExpressionManager {
 	readonly #controlId: string
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
+	readonly #unsubscribeRenderClock: (() => void) | null
 	#destroyed = false
 
 	private readonly specialExpressions: {
@@ -221,10 +233,12 @@ export class EntityPoolSpecialExpressionManager {
 		createVariablesAndExpressionParser: CreateVariablesAndExpressionParser,
 		updateFns: {
 			[Expression in SpecialExpression]: UpdateSpecialExpressionValuesFn<Expression>
-		}
+		},
+		renderClock: RenderClock
 	) {
 		this.#controlId = controlId
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick()) ?? null
 
 		this.specialExpressions = {
 			isInverted: {
@@ -268,14 +282,20 @@ export class EntityPoolSpecialExpressionManager {
 					// Check whether referenced variables have already been computed
 					if (wrapper.referencedVariableIds) continue
 
-					const { referencedVariableIds, computedValue } = computeNewValueFn(entity, parser, logger)
+					const { referencedVariableIds, computedValue, clockSensitive } = computeNewValueFn(entity, parser, logger)
 					if (!referencedVariableIds || referencedVariableIds.size === 0) {
-						// Do not track a special expression that refers to no variables.
-						logger.silly(`Stopped tracking ${entity.id}/${type} as it refers to no variables`)
-						entities.delete(entity.id)
+						if (!clockSensitive) {
+							// Do not track a special expression that refers to no variables and is not clock-sensitive.
+							logger.silly(`Stopped tracking ${entity.id}/${type} as it refers to no variables`)
+							entities.delete(entity.id)
+						} else {
+							// Keep the entity in the map because it depends on the render clock
+							wrapper.referencedVariableIds = referencedVariableIds || new Set()
+						}
 					} else {
 						wrapper.referencedVariableIds = referencedVariableIds
 					}
+					wrapper.dependsOnRenderClock = clockSensitive
 
 					updatedValues.set(entity.id, {
 						entityId: entity.id,
@@ -305,6 +325,7 @@ export class EntityPoolSpecialExpressionManager {
 	destroy(): void {
 		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
+		this.#unsubscribeRenderClock?.()
 		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.clear()
 		}
@@ -322,6 +343,7 @@ export class EntityPoolSpecialExpressionManager {
 		entities.set(entity.id, {
 			entity: new WeakRef(entity),
 			referencedVariableIds: null,
+			dependsOnRenderClock: false,
 		})
 
 		logger.silly(`Queued entity ${entity.id}/${expression} for processing`)
@@ -337,6 +359,27 @@ export class EntityPoolSpecialExpressionManager {
 		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.delete(entityId)
 		}
+	}
+
+	/**
+	 * Inform the entity manager that the render clock has ticked.
+	 * This will cause any clock-sensitive entities to be re-parsed.
+	 */
+	onRenderClockTick(): void {
+		if (this.#destroyed) return
+
+		let anyInvalidated = false
+		for (const { entities } of Object.values(this.specialExpressions)) {
+			for (const wrapper of entities.values()) {
+				if (!wrapper.dependsOnRenderClock) continue
+
+				// Clock-sensitive entities always need recomputation on tick
+				wrapper.referencedVariableIds = null
+				anyInvalidated = true
+			}
+		}
+
+		if (anyInvalidated) this.#debounceProcessPending()
 	}
 
 	/**

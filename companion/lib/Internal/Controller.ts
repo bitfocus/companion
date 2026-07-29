@@ -31,6 +31,7 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { NewFeedbackValue } from '../Controls/Entities/Types.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -68,6 +69,9 @@ interface FeedbackEntityState {
 	location: ControlLocation | undefined
 	referencedVariables: Set<string> | null
 
+	/** Whether the last computed value depends on the render clock (e.g. oscillate() was called) */
+	clockSensitive: boolean
+
 	entityModel: FeedbackEntityModel
 }
 
@@ -81,6 +85,8 @@ export class InternalController {
 
 	readonly #feedbacks = new Map<string, FeedbackEntityState>()
 
+	readonly #unsubscribeRenderClock: () => void
+
 	#buildingBlocksFragment: InternalBuildingBlocks | undefined
 	readonly #fragments: InternalModuleFragment[]
 
@@ -90,16 +96,23 @@ export class InternalController {
 		controlStore: IControlStore,
 		pageStore: IPageStore,
 		instanceController: InstanceController,
-		variablesController: VariablesController
+		variablesController: VariablesController,
+		renderClock: RenderClock
 	) {
 		this.#controlsStore = controlStore
 		this.#pageStore = pageStore
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
 
+		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.#onRenderClockTick())
+
 		this.#fragments = [
 			// These are pushed during init
 		]
+	}
+
+	destroy(): void {
+		this.#unsubscribeRenderClock()
 	}
 
 	init(
@@ -263,6 +276,7 @@ export class InternalController {
 			controlId,
 			location,
 			referencedVariables: null,
+			clockSensitive: false,
 
 			entityModel: structuredClone(feedback),
 		}
@@ -311,6 +325,7 @@ export class InternalController {
 			if (!entityDefinition) {
 				// No definition found, so cannot evaluate
 				feedbackState.referencedVariables = null
+				feedbackState.clockSensitive = false
 
 				return undefined
 			}
@@ -321,6 +336,11 @@ export class InternalController {
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
 				const parseRes = parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
+
+				// Always track the dependencies, for accurate re-evaluation when something changes
+				feedbackState.referencedVariables = parseRes.referencedVariableIds
+				feedbackState.clockSensitive = parseRes.clockSensitive
+
 				if (!parseRes.ok) {
 					this.#logger.warn(
 						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId} in control ${feedbackState.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -330,11 +350,11 @@ export class InternalController {
 					)
 				} else {
 					parsedOptions = parseRes.parsedOptions
-					feedbackState.referencedVariables = parseRes.referencedVariableIds
 				}
 			} else {
 				parsedOptions = convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options)
 				feedbackState.referencedVariables = new Set<string>()
+				feedbackState.clockSensitive = false
 			}
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
@@ -465,7 +485,11 @@ export class InternalController {
 			const overrideVariableValues: VariableValues = {
 				'this:surface_id': extras.surfaceId,
 			}
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues)
+			// Actions are sampled once at execution and never re-evaluated, so clock-sensitive
+			// expressions (e.g. oscillate()) would be misleading - reject them, matching module actions.
+			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
+				allowClockSensitive: false,
+			})
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
@@ -664,6 +688,27 @@ export class InternalController {
 		}
 
 		this.#variablesController.definitions.setVariableDefinitions('internal', variables)
+	}
+
+	/**
+	 * The render clock has ticked, recompute any clock-sensitive feedbacks (e.g. those using oscillate())
+	 */
+	#onRenderClockTick(): void {
+		if (!this.#initialized) return
+
+		const newValues: NewFeedbackValue[] = []
+
+		for (const [id, feedback] of this.#feedbacks) {
+			if (!feedback.clockSensitive) continue
+
+			newValues.push({
+				entityId: id,
+				controlId: feedback.controlId,
+				value: this.#feedbackGetValue(feedback),
+			})
+		}
+
+		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues('internal', newValues)
 	}
 
 	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {

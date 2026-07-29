@@ -4,6 +4,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
+import type { RenderClock } from '../../lib/Controls/RenderClock.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import { PreviewExpressionStream } from '../../lib/Preview/ExpressionStream.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
@@ -26,7 +27,16 @@ function createParser(
 ): VariablesAndExpressionParser {
 	// Mirror production's terminal construction (Values.createVariablesAndExpressionParser):
 	// overrides are applied via the constructor's overrideVariableValues arg, not createChildParser.
-	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, overrides)
+	return new VariablesAndExpressionParser(
+		userconfig,
+		null as any,
+		variables,
+		new Map(),
+		null,
+		overrides,
+		null,
+		undefined
+	)
 }
 
 /**
@@ -66,7 +76,8 @@ function createStream(
 	localVariables: LocalVariablesController,
 	pageStore: IPageStore = makePageStoreMock(undefined)
 ) {
-	const stream = new PreviewExpressionStream(controlsController, pageStore, localVariables)
+	const renderClock = { subscribe: vi.fn(() => () => {}) } as unknown as RenderClock
+	const stream = new PreviewExpressionStream(controlsController, pageStore, localVariables, renderClock)
 	const router = stream.createTrpcRouter()
 	const caller = t.createCallerFactory(router)(testCtx)
 	return { stream, caller }

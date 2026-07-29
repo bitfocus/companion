@@ -27,11 +27,13 @@ if (!semver.satisfies(process.versions.node, nodeJsValidRange)) {
 	process.exit(1)
 }
 
+const repoRoot = path.join(import.meta.dirname, '..')
+
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
 
 const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
-const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
+const devModulesPath = rawDevModulesPath ? path.resolve(repoRoot, rawDevModulesPath) : undefined
 
 if (devModulesPath) {
 	const argvIndex = process.argv.indexOf('--extra-module-path')
@@ -55,6 +57,12 @@ if (process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT === undefined) {
 if (process.env.COMPANION_TRUSTED_PROXIES === undefined) {
 	// Allow vite as a proxy
 	process.env.COMPANION_TRUSTED_PROXIES = 'loopback'
+}
+
+// Allow overriding the config base dir, resolved relative to the repo root
+if (process.env.COMPANION_CONFIG_BASEDIR) {
+	const configBaseDir = path.resolve(repoRoot, process.env.COMPANION_CONFIG_BASEDIR)
+	process.argv.push(`--config-dir=${configBaseDir}`)
 }
 
 const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
@@ -119,25 +127,57 @@ concurrently([
 
 const cachedDebounces = {} as Record<string, any>
 
+const IGNORED_DIR_NAMES = new Set([
+	'node_modules',
+	'.git',
+	'.yarn',
+	'.cache',
+	'.turbo',
+	'.github',
+	'.vscode',
+	'.idea',
+	'coverage',
+	'.nyc_output',
+	'test',
+	'__tests__',
+	'build',
+	'.docusaurus',
+])
+
+const WATCHED_FILE_EXTENSIONS = ['.mjs', '.js', '.cjs', '.json']
+
+function isIgnoredPath(filePath: string, stats: fs.Stats | undefined): boolean {
+	if (filePath.split(/[\\/]/).some((segment) => IGNORED_DIR_NAMES.has(segment))) {
+		return true
+	}
+
+	const looksLikeFile = stats?.isFile() ?? path.extname(filePath) !== ''
+	if (looksLikeFile) {
+		return !WATCHED_FILE_EXTENSIONS.some((ext) => filePath.endsWith(ext))
+	}
+
+	return false
+}
+
 const mainWatcher = chokidar
-	.watch(['../companion', '../shared-lib', '../docs', '../package.json', '../tsconfig.json'], {
-		ignoreInitial: true,
-		ignored: (filePath, stats) => {
-			if (filePath.includes('node_modules') || filePath.includes('test')) {
-				return true
-			}
-			if (
-				stats?.isFile() &&
-				!filePath.endsWith('.mjs') &&
-				!filePath.endsWith('.js') &&
-				!filePath.endsWith('.cjs') &&
-				!filePath.endsWith('.json')
-			) {
-				return true
-			}
-			return false
-		},
-	})
+	.watch(
+		[
+			// Only the compiled output can trigger a restart, so don't pay to watch the typescript sources
+			'../companion/dist',
+			'../companion/generated',
+			'../companion/package.json',
+			'../companion/tsconfig.json',
+			'../shared-lib/dist',
+			'../shared-lib/package.json',
+			'../shared-lib/tsconfig.json',
+			'../package.json',
+			'../tsconfig.json',
+		],
+		{
+			ignoreInitial: true,
+			ignored: isIgnoredPath,
+		}
+	)
 	.on('all', (event, filename) => {
 		if (filename.endsWith('shared-lib/lib/Paths.mts')) {
 			// Exit when the paths change, as that usually means the config dir will have changed, and that may not be detected fast enough
@@ -158,21 +198,7 @@ if (devModulesPath) {
 			.watch('.', {
 				cwd: devModulesPath,
 				ignoreInitial: true,
-				ignored: (filePath, stats) => {
-					if (
-						stats?.isFile() &&
-						!filePath.endsWith('.mjs') &&
-						!filePath.endsWith('.js') &&
-						!filePath.endsWith('.cjs') &&
-						!filePath.endsWith('.json')
-					) {
-						return true
-					}
-					if (filePath.includes('node_modules')) {
-						return true
-					}
-					return false
-				},
+				ignored: isIgnoredPath,
 			})
 			.on('all', (event, filename) => {
 				const moduleDirName = filename.split(path.sep)[0]

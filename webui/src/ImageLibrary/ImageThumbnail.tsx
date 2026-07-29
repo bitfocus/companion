@@ -28,7 +28,10 @@ export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps
 			onClick={onClick}
 			onKeyDown={onKeyDown}
 		>
-			<div className="image-preview" style={{ backgroundColor: image.backgroundColor ?? '#ffffff' }}>
+			<div
+				className="image-preview"
+				style={{ '--preview-bg-color': image.backgroundColor ?? 'transparent' } as React.CSSProperties}
+			>
 				<ImageLibraryImagePreview
 					imageName={image.name}
 					type="preview"

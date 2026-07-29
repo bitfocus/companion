@@ -26,7 +26,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesCache, VariableValueData } from './Util.js'
-import { VariablesAndExpressionParser } from './VariablesAndExpressionParser.js'
+import { VariablesAndExpressionParser, type ExpressionParserOptions } from './VariablesAndExpressionParser.js'
 import { VariablesBlinker } from './VariablesBlinker.js'
 
 export interface VariablesValuesEvents {
@@ -154,7 +154,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		controlLocation: ControlLocation | null | undefined,
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues | null,
-		pageValues: ControlEntityInstance[] | null = null
+		pageValues: ControlEntityInstance[] | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
 		return new VariablesAndExpressionParser(
 			this.#userconfig,
@@ -163,7 +164,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			InjectedVariablesForLocation(controlLocation),
 			localValues,
 			overrideVariableValues,
-			pageValues
+			pageValues,
+			options
 		)
 	}
 
@@ -171,7 +173,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	createVariablesAndExpressionParserForPage(
 		pageNumber: number | null | undefined,
 		localValues: ControlEntityInstance[] | null,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
 		return new VariablesAndExpressionParser(
 			this.#userconfig,
@@ -182,7 +185,8 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			overrideVariableValues,
 			// A page control owns these variables, so within its own expressions they resolve both as
 			// `$(local:x)` and `$(page:x)`.
-			localValues
+			localValues,
+			options
 		)
 	}
 

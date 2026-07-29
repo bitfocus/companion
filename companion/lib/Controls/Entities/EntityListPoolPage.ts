@@ -9,7 +9,10 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IPageStore } from '../../Page/Store.js'
-import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
@@ -37,14 +40,18 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 	}
 
 	/** A page control has no grid location, so its parser gets the page's `this:page` context instead. */
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
+	): VariablesAndExpressionParser {
 		const parsed = ParseControlId(this.controlId)
 		const pageNumber = parsed?.type === 'page' ? this.#pageStore.getPageNumber(parsed.pageId) : null
 
 		return this.variableValues.createVariablesAndExpressionParserForPage(
 			pageNumber,
 			this.getLocalVariableEntities(),
-			overrideVariableValues
+			overrideVariableValues,
+			options
 		)
 	}
 

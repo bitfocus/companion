@@ -10,6 +10,7 @@ import {
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { Complete } from '@companion-module/host'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../../../Graphics/ConvertGraphicsElements.js'
 import { ElementConversionCache } from '../../../Graphics/ElementConversionCache.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
@@ -176,6 +177,14 @@ export class LayeredButtonDrawer {
 					element.fillMode.value = 'fit'
 				}
 				break
+			case 'line': {
+				// Line position used to reuse the box inside/center/outside enum, which is meaningless for a line
+				const position = element.borderPosition.value
+				if (!element.borderPosition.isExpression && (position === 'inside' || position === 'outside')) {
+					element.borderPosition = { isExpression: false, value: 'center' }
+				}
+				break
+			}
 			case 'group':
 				for (const child of element.children) {
 					this.#normalizeLoadedElement(child)
@@ -200,7 +209,7 @@ export class LayeredButtonDrawer {
 
 		const feedbackOverrides = this.#host.entities?.getFeedbackStyleOverrides() ?? emptyFeedbackOverrides
 
-		const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations } =
+		const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations, clockSensitive } =
 			await ConvertSomeButtonGraphicsElementForDrawing(
 				this.deps.instance.definitions,
 				parser,
@@ -217,11 +226,12 @@ export class LayeredButtonDrawer {
 		this.#lastDrawReferencedLocations = referencedLocations.size > 0 ? referencedLocations : null
 		this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
 
-		const result: DrawStyleLayeredButtonModel = {
+		const result: Complete<DrawStyleLayeredButtonModel> = {
 			...this.#host.getButtonStateProps(),
 
 			elements,
 			referencedLocations,
+			clockSensitive: clockSensitive || undefined,
 
 			style: 'button-layered',
 			drawType: this.#drawType,

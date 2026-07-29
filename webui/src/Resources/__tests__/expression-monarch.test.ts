@@ -16,6 +16,7 @@ describe('Ensure all documentation references real functions', () => {
 		'parseVariables',
 		'getVariable',
 		'blink',
+		'oscillate',
 	])
 
 	for (const funcDocs of builtinFunctionCompletions) {

@@ -115,6 +115,23 @@ describe('Image drawing', () => {
 		})
 	})
 
+	// The whole surface-render alpha pipeline assumes buffer() gives STRAIGHT (non-premultiplied) alpha
+	// (transformButtonImage flattens it over black itself). If a canvas upgrade ever returned premultiplied
+	// pixels here, opacity would silently break on real surfaces - this locks the assumption.
+	describe('alpha is straight (non-premultiplied)', () => {
+		test('a semi-transparent fill keeps full-intensity RGB in the buffer', () => {
+			const img = Image.create(4, 4, 1, null)
+			img.box(0, 0, 4, 4, 'rgba(255, 0, 0, 0.5)')
+			const buf = img.buffer()
+			// Straight: RGB stays full, only alpha drops. Premultiplied would give R≈128.
+			expect(buf[0]).toBe(255) // R
+			expect(buf[1]).toBe(0) // G
+			expect(buf[2]).toBe(0) // B
+			expect(buf[3]).toBeGreaterThanOrEqual(126) // A ≈ 128
+			expect(buf[3]).toBeLessThanOrEqual(129)
+		})
+	})
+
 	// -------------------------------------------------------------------------
 	// lines
 	// -------------------------------------------------------------------------

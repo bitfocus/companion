@@ -110,7 +110,7 @@ function makeLineElement(overrides: Partial<ButtonGraphicsLineDrawElement> = {})
 		toY: 1,
 		borderWidth: 0.01,
 		borderColor: 0xffffff, // white
-		borderPosition: 'inside',
+		borderPosition: 'center',
 		...overrides,
 	}
 }
@@ -230,6 +230,32 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				DEFAULT_PADDING
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('topbar - long location label does not overflow the bar into the padding', async () => {
+			// A tall, narrow button gives a large bar font in a narrow bar, so the label overflows without clipping
+			const width = 50
+			const img = Image.create(width, 120, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.TopBar,
+					location: { pageNumber: 999, row: 999, column: 999 },
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+
+			const barMaxX = DEFAULT_PADDING.x + (width - DEFAULT_PADDING.x * 2)
+			const data = img.canvasImage.getContext('2d').getImageData(0, 0, width, 120).data
+			let paintedInPadding = 0
+			for (let y = 0; y < 40; y++) {
+				for (let x = barMaxX; x < width; x++) {
+					if (data[(y * width + x) * 4 + 3] > 10) paintedInPadding++
+				}
+			}
+			expect(paintedInPadding).toBe(0)
 		})
 	})
 
@@ -419,6 +445,63 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
+
+		// A thick horizontal line offset to one side of its path (looking from start to end)
+		test.each(['left', 'center', 'right'] as const)('line element position %s', async (borderPosition) => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [
+						makeLineElement({
+							fromX: 0,
+							fromY: 0.5,
+							toX: 1,
+							toY: 0.5,
+							borderWidth: 0.2,
+							borderColor: 0xff0000,
+							borderPosition,
+						}),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test.each(['left', 'center', 'right'] as const)(
+			'line element with zero width draws nothing (%s)',
+			async (borderPosition) => {
+				const img = Image.create(72, 58, 1, null)
+				await GraphicsLayeredButtonRenderer.draw(
+					img,
+					makeStyle({
+						decoration: ButtonGraphicsDecorationType.None,
+						elements: [
+							makeLineElement({
+								fromX: 0,
+								fromY: 0.5,
+								toX: 1,
+								toY: 0.5,
+								borderWidth: 0,
+								borderColor: 0xff0000,
+								borderPosition,
+							}),
+						],
+					}),
+					new Set(),
+					null,
+					DEFAULT_PADDING
+				)
+				const data = img.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+				let painted = 0
+				for (let i = 3; i < data.length; i += 4) if (data[i] > 10) painted++
+				expect(painted).toBe(0)
+			}
+		)
 
 		test('circle element', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -1561,6 +1644,35 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(
 				await drawRing({ value: 50, markerEnabled: true, markerColor: 0xffffff, markerWidth: 25 })
 			).toMatchImageSnapshot()
+		})
+
+		test('marker stays within the gauge bounds at every value (no overhang, consistent size)', async () => {
+			// A sub-bounds gauge so any marker overhang would land outside its own box (and would make the
+			// gauge look wider at value min/max). The painted content must stay within [gaugeLeft, gaugeRight]
+			// for every value - i.e. the same width regardless of value.
+			const pos = { x: 0.25, y: 0.25, width: 0.5, height: 0.5 }
+			const drawW = 72 - DEFAULT_PADDING.x * 2
+			const gaugeLeft = DEFAULT_PADDING.x + pos.x * drawW
+			const gaugeRight = gaugeLeft + pos.width * drawW
+
+			for (const value of [0, 50, 100]) {
+				const canvas = await drawGauge(
+					makeGaugeElement({ ...pos, value, markerEnabled: true, markerColor: 0xffffff, markerWidth: 40 })
+				)
+				const data = canvas.getContext('2d').getImageData(0, 0, 72, 58).data
+				let minX = 72
+				let maxX = -1
+				for (let y = 0; y < 58; y++) {
+					for (let px = 0; px < 72; px++) {
+						if (data[(y * 72 + px) * 4 + 3] > 10) {
+							if (px < minX) minX = px
+							if (px > maxX) maxX = px
+						}
+					}
+				}
+				expect(minX).toBeGreaterThanOrEqual(Math.floor(gaugeLeft) - 1) // no overhang past the left edge
+				expect(maxX).toBeLessThanOrEqual(Math.ceil(gaugeRight) + 1) // nor the right edge
+			}
 		})
 
 		// --- Circular start/end angle (gap positioning) ---

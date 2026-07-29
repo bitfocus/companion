@@ -177,7 +177,7 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 		return this.#defaultCollapsed
 	}
 
-	clearUnknownIds = (knownPanelIds: string[]): void => {
+	clearUnknownIds = (knownPanelIds: readonly string[]): void => {
 		runInAction(() => {
 			const knownPanelIdsSet = new Set(knownPanelIds)
 
@@ -236,7 +236,7 @@ export function PanelCollapseHelperProvider({
 	children,
 }: React.PropsWithChildren<{
 	storageId: string
-	knownPanelIds: string[]
+	knownPanelIds: readonly string[] | null
 	defaultCollapsed?: boolean
 	evictionOwner?: CollapseEvictionOwner
 }>): JSX.Element {
@@ -247,7 +247,7 @@ export function PanelCollapseHelperProvider({
 
 export function usePanelCollapseHelper(
 	storageId: string | null,
-	knownPanelIds: string[],
+	knownPanelIds: readonly string[] | null,
 	defaultCollapsed: PanelCollapseDefaultCollapsed = false,
 	evictionOwner?: CollapseEvictionOwner
 ): PanelCollapseHelper {
@@ -264,12 +264,37 @@ export function usePanelCollapseHelper(
 		[storageId, defaultCollapsed, ownerKind, ownerId]
 	)
 
-	// Clear out any unknown panel IDs
+	// Clear out unknown panel IDs (null = never prune, for callers that only know a subset of the keys)
 	useDeepCompareEffect(() => {
-		store.clearUnknownIds(knownPanelIds)
+		if (knownPanelIds) store.clearUnknownIds(knownPanelIds)
 	}, [store, knownPanelIds])
 
 	return store
+}
+
+/**
+ * Bridge a collapse helper to a controlled multi-open accordion's `value`/`onValueChange`. The callback is
+ * stable across renders (panel ids are read through a ref) so it does not churn the accordion each render.
+ */
+export function usePanelCollapseAccordionProps(
+	helper: PanelCollapseHelper,
+	panelIds: readonly string[],
+	parentId: string | null = null
+): { value: string[]; onValueChange: (openIds: readonly string[]) => void } {
+	const panelIdsRef = useRef(panelIds)
+	panelIdsRef.current = panelIds
+
+	const onValueChange = useCallback(
+		(openIds: readonly string[]) => {
+			for (const id of panelIdsRef.current) helper.setPanelCollapsed(id, !openIds.includes(id))
+		},
+		[helper]
+	)
+
+	return {
+		value: panelIds.filter((id) => !helper.isPanelCollapsed(parentId, id)),
+		onValueChange,
+	}
 }
 
 export interface PanelCollapseHelperLite {

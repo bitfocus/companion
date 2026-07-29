@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
+import { Form } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
@@ -113,22 +114,30 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 						<Modal.Header closeButton>
 							<Modal.Title>Edit Image name</Modal.Title>
 						</Modal.Header>
-						<Modal.Body>
-							<ImageNameInput
-								value={localValue}
-								onChange={handleValueChange}
-								disabled={isSaving}
-								errorMessage={errorMessage}
-								showWarning={true}
-								warningText={warningText}
-							/>
-						</Modal.Body>
-						<Modal.Footer>
-							<Modal.Close disabled={isSaving}>Cancel</Modal.Close>
-							<Button color="primary" onClick={handleSave} disabled={!canSave || isSaving}>
-								{isSaving ? 'Saving...' : 'Save'}
-							</Button>
-						</Modal.Footer>
+						<Form
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								handleSave()
+							}}
+						>
+							<Modal.Body>
+								<ImageNameInput
+									value={localValue}
+									onChange={handleValueChange}
+									disabled={isSaving}
+									errorMessage={errorMessage}
+									showWarning={true}
+									warningText={warningText}
+								/>
+							</Modal.Body>
+							<Modal.Footer>
+								<Modal.Close disabled={isSaving}>Cancel</Modal.Close>
+								<Button color="primary" type="submit" disabled={!canSave || isSaving}>
+									{isSaving ? 'Saving...' : 'Save'}
+								</Button>
+							</Modal.Footer>
+						</Form>
 					</Modal.Popup>
 				</Modal.Viewport>
 			</Modal.Portal>
