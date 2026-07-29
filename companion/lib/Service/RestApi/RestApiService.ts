@@ -20,14 +20,16 @@ export class RestApiService {
 
 	constructor(
 		registry: Registry,
-		userconfigController: DataUserConfig,
+		_userconfigController: DataUserConfig,
 		express: UIExpress,
 		appInfo: Pick<AppInfo, 'appVersion'>
 	) {
 		this.tokenStore = new RestApiTokenStoreMemory()
 
-		if (!userconfigController.getKey('rest_api_enabled')) {
-			this.#logger.info('REST API is disabled (set rest_api_enabled and restart to enable)')
+		// Temporarily use an env var instead of the userconfig
+
+		if (!process.env.EXPERIMENTAL_ENABLE_REST_API) {
+			this.#logger.info('Experimental REST API is disabled')
 			return
 		}
 
@@ -37,6 +39,6 @@ export class RestApiService {
 		// This is registered at /api/v2 before the existing /api legacy routes
 		express.restApiRouter = restApiRouter
 
-		this.#logger.info(`REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)
+		this.#logger.info(`Experimental REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)
 	}
 }

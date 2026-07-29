@@ -75,6 +75,11 @@ export default defineConfig(({ mode }) => {
 					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
+				[`${normalizedBase}/api`]: {
+					target: `http://${upstreamUrl}`,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
+					rewrite: (path) => path.slice(normalizedBase.length),
+				},
 				[`${normalizedBase}/user-guide`]: {
 					// forward to Docusaurus (note: if changing hostname, change it in tools/webui-dev-docs.mts too)
 					target: `http://localhost:4000`,
