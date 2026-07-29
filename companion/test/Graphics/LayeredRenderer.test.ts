@@ -603,6 +603,35 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('a selected horizontal line is not hidden under its own selection marker', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					elements: [
+						makeLineElement({
+							id: 'sel-line',
+							fromX: 0,
+							fromY: 0.5,
+							toX: 1,
+							toY: 0.5,
+							borderWidth: 0.05,
+							borderColor: 0xffffff,
+						}),
+					],
+				}),
+				new Set(),
+				'sel-line',
+				DEFAULT_PADDING
+			)
+			// The white line runs across the vertical centre; its bounds are padded so the red marker sits
+			// above/below it. The centre pixel must therefore still be the (white) line, not the (red) marker.
+			const data = img.canvasImage.getContext('2d').getImageData(0, 0, 72, 58).data
+			const i = (29 * 72 + 36) * 4
+			expect(data[i + 1]).toBeGreaterThan(150) // green high → the white line, not the red marker
+		})
+
 		test('rotated element - marker follows the element rotation', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(

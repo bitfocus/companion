@@ -398,20 +398,26 @@ export class GraphicsLayeredButtonRenderer {
 		const toX = parentBounds.x + element.toX * parentBounds.width
 		const toY = parentBounds.y + element.toY * parentBounds.height
 
-		// Calculate bounds for selection (use the bounding box of the line)
+		// Line thickness in pixels (min 1) - used both to stroke the line and to pad the selection bounds.
+		const borderWidth = Math.max(1, Math.max(parentBounds.width, parentBounds.height) * element.borderWidth)
+
+		// Selection bounds from the line's bounding box, but keep each axis at least the line's thickness so a
+		// horizontal/vertical line (whose box is zero-height/width) isn't hidden right under the marker. Only the
+		// degenerate axis grows, so a near-square line doesn't jump as it tips one way or the other.
 		const minX = Math.min(fromX, toX)
 		const minY = Math.min(fromY, toY)
 		const maxX = Math.max(fromX, toX)
 		const maxY = Math.max(fromY, toY)
-		const drawBounds = new DrawBounds(minX, minY, maxX - minX, maxY - minY)
+		const halfW = Math.max(maxX - minX, borderWidth) / 2
+		const halfH = Math.max(maxY - minY, borderWidth) / 2
+		const midX = (minX + maxX) / 2
+		const midY = (minY + maxY) / 2
+		const drawBounds = new DrawBounds(midX - halfW, midY - halfH, halfW * 2, halfH * 2)
 
 		if (skipDraw) return drawBounds
 
-		// A zero width hides the line; the 1px floor below is only to keep thin (but non-zero) lines visible
+		// A zero width hides the line; the 1px floor above is only to keep thin (but non-zero) lines visible
 		if (element.borderWidth <= 0) return drawBounds
-
-		// Calculate a pixel width, relative to the parent bounds
-		const borderWidth = Math.max(1, Math.max(parentBounds.width, parentBounds.height) * element.borderWidth)
 
 		// The stroke is centred on the path; shift it perpendicular by half its width to sit left/right of it
 		let ox = 0
