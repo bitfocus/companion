@@ -54,7 +54,7 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 	 * Get the value from all feedbacks as a single boolean
 	 */
 	checkConditionValue(): boolean {
-		return this.#feedbacks.getBooleanFeedbackValue()
+		return this.#feedbacks.getBooleanFeedbackValue(null)
 	}
 
 	/**

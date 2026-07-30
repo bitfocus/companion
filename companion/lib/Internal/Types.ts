@@ -35,6 +35,22 @@ export interface ActionForInternalExecution {
 	rawEntity: ControlEntityInstance
 }
 
+/**
+ * Context for lazily evaluating an internal feedback that is a child of an action.
+ *
+ * Internal feedbacks which live inside an action subtree (e.g. the `condition` of `logic_if`/`logic_while`)
+ * are not eagerly cached. Instead they are evaluated live at action-execution time, using the parser
+ * carried here. That parser already reflects the control's current variable state plus the extra
+ * `$(this:*)` overrides derived from the running action's execution context, so those execution-derived
+ * variables are visible to the feedback's options.
+ *
+ * A `null` context anywhere in the feedback read path means "use the cached value" - the eager path used
+ * by the feedbacks/local-variables lists and by all module-owned feedbacks.
+ */
+export interface FeedbackExecutionContext {
+	readonly parser: VariablesAndExpressionParser
+}
+
 export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
 
 /**
@@ -83,12 +99,17 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	/**
 	 * Run a single internal action
+	 * @param createFeedbackContext Factory for a {@link FeedbackExecutionContext}, used to lazily evaluate
+	 * any internal feedbacks which are children of this action. Each call builds a fresh parser reflecting
+	 * the current variable state, so callers that re-check conditions (e.g. `logic_while`) must call it
+	 * again for each evaluation.
 	 * @returns Whether the action was handled
 	 */
 	executeAction?(
 		action: ActionForInternalExecution,
 		extras: RunActionExtras,
-		parser: VariablesAndExpressionParser
+		parser: VariablesAndExpressionParser,
+		createFeedbackContext: () => FeedbackExecutionContext
 	): Promise<InternalActionResult> | InternalActionResult
 
 	/**

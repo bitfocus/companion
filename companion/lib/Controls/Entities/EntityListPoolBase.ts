@@ -120,7 +120,9 @@ export abstract class ControlEntityListPoolBase {
 			this.#specialExpressionManager,
 			this.controlId,
 			null,
-			listDefinition
+			listDefinition,
+			// Top-level lists (feedbacks, local-variables, action-sets) are never inside an action subtree.
+			false
 		)
 	}
 
@@ -145,9 +147,11 @@ export abstract class ControlEntityListPoolBase {
 		 * The debounce ensures that rapid bursts of local variable updates (including circular
 		 * computed-variable chains) are rate-limited before notifying the rest of the app.
 		 *
-		 * Additionally, we synchronously call internalModule.onVariablesChanged for this control
-		 * so that condition feedbacks inside logic_while / logic_if have their cached values
-		 * updated immediately, without needing a wait action.
+		 * Additionally, we synchronously call internalModule.onVariablesChanged for this control so that any
+		 * computed (expression-backed) local variable feedbacks referencing the changed variables have their
+		 * cached values updated immediately. This keeps them fresh for the lazily-evaluated conditions inside
+		 * logic_while / logic_if, which read local variable values via their parser mid-chain without needing
+		 * a wait action. (The conditions themselves are no longer cached - they are evaluated live.)
 		 *
 		 * A re-entrance guard on the sync call prevents recursion: if a computed local variable's
 		 * cached value changes as a side effect of the sync update (detected by updateFeedbackValues
@@ -237,7 +241,7 @@ export abstract class ControlEntityListPoolBase {
 			const variableName = entity.localVariableName
 			if (variableName) {
 				// Strip off the prefix, as the ui doesn't expect that
-				values[variableName.slice('local:'.length)] = entity.getResolvedFeedbackValue()
+				values[variableName.slice('local:'.length)] = entity.getResolvedFeedbackValue(null)
 			}
 		}
 

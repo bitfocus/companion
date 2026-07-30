@@ -161,7 +161,7 @@ export class VariablesAndExpressionParser {
 			// Push the cached values to the store
 			this.#localValues.set(
 				variableName,
-				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue(null) : entity.feedbackValue
 			)
 		}
 	}
@@ -177,7 +177,7 @@ export class VariablesAndExpressionParser {
 
 			this.#pageValues.set(
 				`page:${rawName}`,
-				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue(null) : entity.feedbackValue
 			)
 		}
 	}

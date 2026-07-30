@@ -64,6 +64,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		entityDelete: vi.fn(),
 		entityUpgrade: vi.fn(),
 		executeLogicFeedback: vi.fn(),
+		evaluateFeedbackValue: vi.fn(),
 		onVariablesChanged: vi.fn(),
 	}
 	const processManager = {

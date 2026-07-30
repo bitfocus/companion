@@ -11,6 +11,7 @@ import { ControlEntityInstance } from './EntityInstance.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
@@ -37,6 +38,13 @@ export class ControlEntityList {
 
 	readonly #listDefinition: ControlEntityListDefinition
 
+	/**
+	 * Whether the entities directly in this list sit inside an action's child subtree. When true, internal
+	 * feedbacks here are not eagerly cached - they are evaluated lazily at action-execution time. This is
+	 * inherited downward and turns on at an action boundary (see {@link ControlEntityInstance}).
+	 */
+	#insideActionSubtree: boolean
+
 	#entities: ControlEntityInstance[] = []
 
 	get ownerId(): EntityOwner | null {
@@ -47,6 +55,10 @@ export class ControlEntityList {
 		return this.#listDefinition
 	}
 
+	get insideActionSubtree(): boolean {
+		return this.#insideActionSubtree
+	}
+
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
@@ -54,7 +66,8 @@ export class ControlEntityList {
 		specialExpressionManager: EntityPoolSpecialExpressionManager,
 		controlId: string,
 		ownerId: EntityOwner | null,
-		listDefinition: ControlEntityListDefinition
+		listDefinition: ControlEntityListDefinition,
+		insideActionSubtree: boolean
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
@@ -63,6 +76,7 @@ export class ControlEntityList {
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
+		this.#insideActionSubtree = insideActionSubtree
 	}
 
 	/**
@@ -108,7 +122,8 @@ export class ControlEntityList {
 						this.#specialExpressionManager,
 						this.#controlId,
 						entity,
-						!!isCloned
+						!!isCloned,
+						this.#insideActionSubtree
 					)
 			) || []
 
@@ -185,7 +200,8 @@ export class ControlEntityList {
 			this.#specialExpressionManager,
 			this.#controlId,
 			entityModel,
-			!!isCloned
+			!!isCloned,
+			this.#insideActionSubtree
 		)
 
 		// TODO - should this log and return instead of throw?
@@ -303,7 +319,8 @@ export class ControlEntityList {
 				this.#specialExpressionManager,
 				this.#controlId,
 				entityModel,
-				true
+				true,
+				this.#insideActionSubtree
 			)
 
 			this.#entities.splice(entityIndex + 1, 0, newEntity)
@@ -372,9 +389,24 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Get the value of this feedback as a boolean
+	 * Update whether this list (and its entities/descendants) sit inside an action's child subtree.
+	 * Used when an entity is moved between lists, so its internal feedbacks switch between being eagerly
+	 * cached and lazily evaluated. See {@link ControlEntityInstance.applyInsideActionSubtree}.
 	 */
-	getBooleanFeedbackValue(): boolean {
+	applyInsideActionSubtree(insideActionSubtree: boolean): void {
+		this.#insideActionSubtree = insideActionSubtree
+
+		for (const entity of this.#entities) {
+			entity.applyInsideActionSubtree(insideActionSubtree)
+		}
+	}
+
+	/**
+	 * Get the combined value of this feedback list as a single boolean (logical AND of all children).
+	 * @param context Lazy-evaluation context, or `null` to use cached values. See
+	 * {@link ControlEntityInstance.getBooleanFeedbackValue}.
+	 */
+	getBooleanFeedbackValue(context: FeedbackExecutionContext | null): boolean {
 		if (
 			this.#listDefinition.type !== EntityModelType.Feedback ||
 			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
@@ -386,13 +418,17 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			if (entity.disabled) continue
 
-			result = result && entity.getBooleanFeedbackValue()
+			result = result && entity.getBooleanFeedbackValue(context)
 		}
 
 		return result
 	}
 
-	getChildBooleanFeedbackValues(): boolean[] {
+	/**
+	 * Get the individual boolean values of each enabled child feedback (used by logic operators).
+	 * @param context Lazy-evaluation context, or `null` to use cached values.
+	 */
+	getChildBooleanFeedbackValues(context: FeedbackExecutionContext | null): boolean[] {
 		if (
 			this.#listDefinition.type !== EntityModelType.Feedback ||
 			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
@@ -404,7 +440,7 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			if (entity.disabled) continue
 
-			values.push(entity.getBooleanFeedbackValue())
+			values.push(entity.getBooleanFeedbackValue(context))
 		}
 
 		return values

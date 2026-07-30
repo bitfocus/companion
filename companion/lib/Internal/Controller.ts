@@ -44,6 +44,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { InternalControls } from './Controls.js'
@@ -57,6 +58,7 @@ import { InternalTriggers } from './Triggers.js'
 import type {
 	ActionForInternalExecution,
 	ActionForVisitor,
+	FeedbackExecutionContext,
 	FeedbackForInternalExecution,
 	FeedbackForVisitor,
 	InternalModuleFragment,
@@ -64,13 +66,20 @@ import type {
 } from './Types.js'
 import { InternalVariables } from './Variables.js'
 
-interface FeedbackEntityState {
-	controlId: string
-	location: ControlLocation | undefined
+/**
+ * The mutable dependency-tracking fields written back during a feedback evaluation, so it can be
+ * re-evaluated when its inputs change. {@link FeedbackEntityState} satisfies this shape.
+ */
+interface FeedbackDependencyTracking {
 	referencedVariables: Set<string> | null
 
 	/** Whether the last computed value depends on the render clock (e.g. oscillate() was called) */
 	clockSensitive: boolean
+}
+
+interface FeedbackEntityState extends FeedbackDependencyTracking {
+	controlId: string
+	location: ControlLocation | undefined
 
 	entityModel: FeedbackEntityModel
 }
@@ -290,6 +299,27 @@ export class InternalController {
 			},
 		])
 	}
+
+	/**
+	 * Evaluate an internal feedback live, using an externally supplied parser.
+	 *
+	 * This is the lazy entry point used when an internal feedback is a child of an action: the caller
+	 * builds a parser carrying the action's execution-context `$(this:*)` overrides and passes it here.
+	 * Unlike the eager path, this does NOT read or write the `#feedbacks` cache map, and does not track
+	 * variable dependencies (the value is recomputed on each execution).
+	 */
+	evaluateFeedbackValue(
+		entityModel: FeedbackEntityModel,
+		controlId: string,
+		parser: VariablesAndExpressionParser
+	): FeedbackValue {
+		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
+		if (entityModel.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+
+		const location = this.#pageStore.getLocationOfControlId(controlId)
+
+		return this.#computeFeedbackValue(entityModel, controlId, location, parser, null)
+	}
 	/**
 	 * A feedback has been deleted
 	 */
@@ -313,58 +343,91 @@ export class InternalController {
 		}
 	}
 	/**
-	 * Get an updated value for a feedback
+	 * Get an updated value for a tracked (eagerly-cached) feedback.
+	 * Builds a parser for the control (with no execution-context overrides) and records the dependency
+	 * tracking onto the {@link FeedbackEntityState} so it can be re-evaluated when its inputs change.
 	 */
 	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
+		const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
+
+		return this.#computeFeedbackValue(
+			feedbackState.entityModel,
+			feedbackState.controlId,
+			feedbackState.location,
+			parser,
+			feedbackState
+		)
+	}
+
+	/**
+	 * The single feedback evaluation routine shared by the eager (cached) and lazy (execution-context)
+	 * paths. It looks up the definition, parses the options with the supplied parser, then asks each
+	 * fragment to execute the feedback.
+	 *
+	 * @param tracking When non-null, the referenced-variable/clock-sensitivity dependencies discovered
+	 * during evaluation are written back here for accurate re-evaluation (the eager path). When null, no
+	 * dependency tracking is performed (the lazy path re-evaluates on every execution).
+	 */
+	#computeFeedbackValue(
+		entityModel: FeedbackEntityModel,
+		controlId: string,
+		location: ControlLocation | undefined,
+		parser: VariablesAndExpressionParser,
+		tracking: FeedbackDependencyTracking | null
+	): FeedbackValue {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,
 				'internal', // This is the internal instance code
-				feedbackState.entityModel.definitionId
+				entityModel.definitionId
 			)
 			if (!entityDefinition) {
 				// No definition found, so cannot evaluate
-				feedbackState.referencedVariables = null
-				feedbackState.clockSensitive = false
+				if (tracking) {
+					tracking.referencedVariables = null
+					tracking.clockSensitive = false
+				}
 
 				return undefined
 			}
 
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
-
 			// Parse the options if enabled
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
+				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
 
 				// Always track the dependencies, for accurate re-evaluation when something changes
-				feedbackState.referencedVariables = parseRes.referencedVariableIds
-				feedbackState.clockSensitive = parseRes.clockSensitive
+				if (tracking) {
+					tracking.referencedVariables = parseRes.referencedVariableIds
+					tracking.clockSensitive = parseRes.clockSensitive
+				}
 
 				if (!parseRes.ok) {
 					this.#logger.warn(
-						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId} in control ${feedbackState.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+						`Failed to parse options for feedback ${entityModel.definitionId} in control ${controlId}: ${JSON.stringify(parseRes.optionErrors)}`
 					)
 					throw new Error(
-						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId}. One or more options were invalid`
+						`Failed to parse options for feedback ${entityModel.definitionId}. One or more options were invalid`
 					)
 				} else {
 					parsedOptions = parseRes.parsedOptions
 				}
 			} else {
-				parsedOptions = convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options)
-				feedbackState.referencedVariables = new Set<string>()
-				feedbackState.clockSensitive = false
+				parsedOptions = convertExpressionOptionsWithoutParsing(entityModel.options)
+				if (tracking) {
+					tracking.referencedVariables = new Set<string>()
+					tracking.clockSensitive = false
+				}
 			}
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
-				controlId: feedbackState.controlId,
-				location: feedbackState.location,
+				controlId: controlId,
+				location: location,
 
 				options: parsedOptions,
 
-				id: feedbackState.entityModel.id,
-				definitionId: feedbackState.entityModel.definitionId,
+				id: entityModel.id,
+				definitionId: entityModel.definitionId,
 			}
 
 			for (const fragment of this.#fragments) {
@@ -377,8 +440,10 @@ export class InternalController {
 					}
 
 					if (value && typeof value === 'object' && 'referencedVariables' in value) {
-						for (const variable of value.referencedVariables) {
-							feedbackState.referencedVariables.add(variable)
+						if (tracking?.referencedVariables) {
+							for (const variable of value.referencedVariables) {
+								tracking.referencedVariables.add(variable)
+							}
 						}
 
 						return value.value
@@ -388,14 +453,12 @@ export class InternalController {
 				}
 			}
 		} catch (e) {
-			this.#logger.warn(
-				`Feedback get value failed: ${JSON.stringify(feedbackState.entityModel)} - ${stringifyError(e)}`
-			)
+			this.#logger.warn(`Feedback get value failed: ${JSON.stringify(entityModel)} - ${stringifyError(e)}`)
 			return undefined
 		} finally {
 			// If there are no referenced variables, set to null
-			if (feedbackState.referencedVariables && feedbackState.referencedVariables.size === 0) {
-				feedbackState.referencedVariables = null
+			if (tracking?.referencedVariables && tracking.referencedVariables.size === 0) {
+				tracking.referencedVariables = null
 			}
 		}
 
@@ -482,13 +545,20 @@ export class InternalController {
 			)
 			if (!entityDefinition) return
 
-			const overrideVariableValues: VariableValues = {
-				'this:surface_id': extras.surfaceId,
-			}
+			const overrideVariableValues = buildActionExecutionOverrides(extras)
 			// Actions are sampled once at execution and never re-evaluated, so clock-sensitive
 			// expressions (e.g. oscillate()) would be misleading - reject them, matching module actions.
 			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
 				allowClockSensitive: false,
+			})
+
+			// Factory for the context used to lazily evaluate any internal feedbacks which are children of
+			// this action (e.g. `logic_if`/`logic_while` conditions). A fresh parser is built on each call so
+			// that a caller re-checking conditions in a loop always sees the current variable state.
+			const createFeedbackContext = (): FeedbackExecutionContext => ({
+				parser: this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
+					allowClockSensitive: false,
+				}),
 			})
 
 			let parsedOptions: CompanionOptionValues
@@ -517,7 +587,7 @@ export class InternalController {
 
 			for (const fragment of this.#fragments) {
 				if ('executeAction' in fragment && typeof fragment.executeAction === 'function') {
-					let result = fragment.executeAction(executionAction, extras, parser)
+					let result = fragment.executeAction(executionAction, extras, parser, createFeedbackContext)
 					// Only await if it is a promise, to avoid unnecessary async pauses
 					result = result instanceof Promise ? await result : result
 
@@ -745,5 +815,23 @@ export class InternalController {
 				fragment.updateBindIp(bindIp, bindPort)
 			}
 		}
+	}
+}
+
+/**
+ * Build the `$(this:*)` variable overrides derived from an action's execution context.
+ *
+ * These are injected into the parser used to run the action's own options AND to lazily evaluate any
+ * internal feedbacks which are children of the action. Keeping this in one place ensures both see the
+ * same execution-context variables.
+ */
+function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
+	return {
+		'this:surface_id': extras.surfaceId,
+
+		// TODO: the real execution-context variables are still to be decided. This placeholder exists so
+		// the plumbing (deriving `$(this:*)` from the action execution context and injecting it into child
+		// feedback evaluation) is in place and exercised.
+		'this:action_execution_placeholder': undefined,
 	}
 }

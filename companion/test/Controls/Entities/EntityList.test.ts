@@ -13,6 +13,7 @@ import { ControlEntityList, type ControlEntityListDefinition } from '../../../li
 import type { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import type {
+	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
@@ -26,13 +27,20 @@ import {
 	getAllModelsInTree,
 } from './EntityListModels.js'
 
-function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
+function createList(
+	controlId: string,
+	ownerId?: EntityOwner | null,
+	listId?: ControlEntityListDefinition | null,
+	insideActionSubtree = false
+) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
 	const connectionEntityUpdate = vi.fn<ProcessManagerForEntity['connectionEntityUpdate']>(async () => false)
 	const connectionEntityDelete = vi.fn<ProcessManagerForEntity['connectionEntityDelete']>(async () => false)
 	const internalEntityUpdate = vi.fn<InternalControllerForEntity['entityUpdate']>()
 	const internalEntityUpgrade = vi.fn<InternalControllerForEntity['entityUpgrade']>()
 	const internalEntityDelete = vi.fn<InternalControllerForEntity['entityDelete']>()
+	const internalEvaluateFeedbackValue = vi.fn<InternalControllerForEntity['evaluateFeedbackValue']>()
+	const internalExecuteLogicFeedback = vi.fn<InternalControllerForEntity['executeLogicFeedback']>()
 
 	const instanceDefinitions: InstanceDefinitionsForEntity = {
 		getEntityDefinition,
@@ -50,7 +58,8 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
 		entityUpgrade: internalEntityUpgrade,
-		executeLogicFeedback: null as any,
+		executeLogicFeedback: internalExecuteLogicFeedback,
+		evaluateFeedbackValue: internalEvaluateFeedbackValue,
 	}
 
 	const list = new ControlEntityList(
@@ -62,7 +71,8 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		ownerId ?? null,
 		listId ?? {
 			type: EntityModelType.Action,
-		}
+		},
+		insideActionSubtree
 	)
 
 	const newActionModel: ActionEntityModel = {
@@ -80,7 +90,8 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		specialExpressionManager,
 		controlId,
 		newActionModel,
-		false
+		false,
+		insideActionSubtree
 	)
 
 	// Clear any calls made by the above
@@ -94,6 +105,8 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		internalEntityUpdate,
 		internalEntityUpgrade,
 		internalEntityDelete,
+		internalEvaluateFeedbackValue,
+		internalExecuteLogicFeedback,
 		instanceDefinitions,
 		internalController,
 		processManager,
@@ -1347,20 +1360,20 @@ describe('getBooleanFeedbackValue', () => {
 	test('invalid for action list', () => {
 		const { list } = createList('test01', null, { type: EntityModelType.Action })
 
-		expect(() => list.getBooleanFeedbackValue()).toThrow('ControlEntityList is not boolean feedbacks')
+		expect(() => list.getBooleanFeedbackValue(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
 
 	test('invalid for non boolean feedbacks list', () => {
 		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
 
-		expect(() => list.getBooleanFeedbackValue()).toThrow('ControlEntityList is not boolean feedbacks')
+		expect(() => list.getBooleanFeedbackValue(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
 
 	test('empty list', () => {
 		list.loadStorage([], true, false)
 
 		// When empty disabled, should return true
-		expect(list.getBooleanFeedbackValue()).toBe(true)
+		expect(list.getBooleanFeedbackValue(null)).toBe(true)
 	})
 
 	test('all disabled', () => {
@@ -1374,7 +1387,7 @@ describe('getBooleanFeedbackValue', () => {
 		}
 
 		// When all disabled, should return true
-		expect(list.getBooleanFeedbackValue()).toBe(true)
+		expect(list.getBooleanFeedbackValue(null)).toBe(true)
 	})
 
 	test('boolean values values', () => {
@@ -1387,11 +1400,11 @@ describe('getBooleanFeedbackValue', () => {
 		list.updateFeedbackValues('conn01', translateFeedbackValues({ '01': true }))
 
 		// check still false
-		expect(list.getBooleanFeedbackValue()).toBe(false)
+		expect(list.getBooleanFeedbackValue(null)).toBe(false)
 
 		// set final value
 		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
-		expect(list.getBooleanFeedbackValue()).toBe(true)
+		expect(list.getBooleanFeedbackValue(null)).toBe(true)
 	})
 })
 
@@ -1405,13 +1418,13 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('invalid for action list', () => {
 		const { list } = createList('test01', null, { type: EntityModelType.Action })
 
-		expect(() => list.getChildBooleanFeedbackValues()).toThrow('ControlEntityList is not boolean feedbacks')
+		expect(() => list.getChildBooleanFeedbackValues(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
 
 	test('invalid for non boolean feedbacks list', () => {
 		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
 
-		expect(() => list.getChildBooleanFeedbackValues()).toThrow('ControlEntityList is not boolean feedbacks')
+		expect(() => list.getChildBooleanFeedbackValues(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
 
 	test('all disabled', () => {
@@ -1424,7 +1437,276 @@ describe('getChildBooleanFeedbackValues', () => {
 			entity.setEnabled(false)
 		}
 
-		expect(list.getChildBooleanFeedbackValues()).toHaveLength(0)
+		expect(list.getChildBooleanFeedbackValues(null)).toHaveLength(0)
+	})
+})
+
+describe('lazy feedback evaluation (with context)', () => {
+	const booleanContext = (): FeedbackExecutionContext => ({ parser: { marker: 'the-parser' } as any })
+
+	/** A boolean feedback list whose entities sit inside an action subtree (i.e. the lazy case). */
+	function createBooleanFeedbackList(showInvert = false) {
+		const deps = createList(
+			'test01',
+			null,
+			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Boolean },
+			true
+		)
+		deps.getEntityDefinition.mockImplementation((_entityType, _connectionId, definitionId) => {
+			if (definitionId.startsWith('logic_')) {
+				return {
+					entityType: EntityModelType.Feedback,
+					feedbackType: FeedbackEntitySubType.Boolean,
+					showInvert: true,
+					supportsChildGroups: [
+						{
+							type: EntityModelType.Feedback,
+							feedbackListType: FeedbackEntitySubType.Boolean,
+							groupId: 'default',
+							entityTypeLabel: 'condition',
+							label: '',
+						},
+					],
+				} as Partial<ClientEntityDefinition> as any
+			}
+			return {
+				entityType: EntityModelType.Feedback,
+				feedbackType: FeedbackEntitySubType.Boolean,
+				showInvert,
+			} as Partial<ClientEntityDefinition> as any
+		})
+		return deps
+	}
+
+	test('internal feedback is evaluated live via the context parser', () => {
+		const deps = createBooleanFeedbackList()
+		const entity = deps.list.addEntity({
+			type: EntityModelType.Feedback,
+			id: 'fb1',
+			connectionId: 'internal',
+			definitionId: 'my-feedback',
+			options: {},
+			upgradeIndex: undefined,
+		})
+
+		// The eager cache is empty, but the live evaluation should be used
+		deps.internalEvaluateFeedbackValue.mockReturnValue(true)
+
+		const context = booleanContext()
+		expect(entity.getBooleanFeedbackValue(context)).toBe(true)
+
+		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledTimes(1)
+		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'fb1', connectionId: 'internal', definitionId: 'my-feedback' }),
+			'test01',
+			context.parser
+		)
+	})
+
+	test('module feedback falls back to its cached value and is not evaluated live', () => {
+		const deps = createBooleanFeedbackList()
+		const entity = deps.list.addEntity({
+			type: EntityModelType.Feedback,
+			id: 'fb-mod',
+			connectionId: 'conn01',
+			definitionId: 'my-feedback',
+			options: {},
+			upgradeIndex: undefined,
+		})
+
+		deps.list.updateFeedbackValues('conn01', translateFeedbackValues({ 'fb-mod': true }))
+
+		expect(entity.getBooleanFeedbackValue(booleanContext())).toBe(true)
+		expect(deps.internalEvaluateFeedbackValue).not.toHaveBeenCalled()
+	})
+
+	test('logic feedback recurses with the same context and combines child values', () => {
+		const deps = createBooleanFeedbackList()
+		const parent = deps.list.addEntity({
+			type: EntityModelType.Feedback,
+			id: 'logic1',
+			connectionId: 'internal',
+			definitionId: 'logic_operator',
+			options: {},
+			upgradeIndex: undefined,
+			children: {
+				default: [
+					{
+						type: EntityModelType.Feedback,
+						id: 'child-a',
+						connectionId: 'internal',
+						definitionId: 'my-feedback',
+						options: {},
+						upgradeIndex: undefined,
+					},
+					{
+						type: EntityModelType.Feedback,
+						id: 'child-b',
+						connectionId: 'internal',
+						definitionId: 'my-feedback',
+						options: {},
+						upgradeIndex: undefined,
+					},
+				],
+			},
+		})
+
+		deps.internalEvaluateFeedbackValue.mockImplementation((model) => model.id === 'child-a')
+		deps.internalExecuteLogicFeedback.mockReturnValue(true)
+
+		const context = booleanContext()
+		expect(parent.getBooleanFeedbackValue(context)).toBe(true)
+
+		// Both children evaluated live with the same context parser
+		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'child-a' }),
+			'test01',
+			context.parser
+		)
+		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'child-b' }),
+			'test01',
+			context.parser
+		)
+
+		// The logic operator is executed with the combined child boolean values
+		expect(deps.internalExecuteLogicFeedback).toHaveBeenCalledWith(expect.anything(), false, [true, false])
+	})
+
+	test('invert is applied from the cached isInverted value', () => {
+		const deps = createBooleanFeedbackList(true)
+		const entity = deps.list.addEntity({
+			type: EntityModelType.Feedback,
+			id: 'fb-inv',
+			connectionId: 'internal',
+			definitionId: 'my-feedback',
+			options: {},
+			isInverted: { isExpression: false, value: true },
+			upgradeIndex: undefined,
+		})
+
+		deps.internalEvaluateFeedbackValue.mockReturnValue(true)
+
+		// showInvert && cachedIsInverted -> invert the live value
+		expect(entity.getBooleanFeedbackValue(booleanContext())).toBe(false)
+	})
+})
+
+describe('applyInsideActionSubtree', () => {
+	function addInternalBooleanFeedback(connectionId: string) {
+		const deps = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
+		deps.getEntityDefinition.mockImplementation(
+			() =>
+				({
+					entityType: EntityModelType.Feedback,
+					feedbackType: FeedbackEntitySubType.Boolean,
+				}) as Partial<ClientEntityDefinition> as any
+		)
+		const entity = deps.list.addEntity({
+			type: EntityModelType.Feedback,
+			id: 'fb1',
+			connectionId,
+			definitionId: 'my-feedback',
+			options: {},
+			upgradeIndex: undefined,
+		})
+		// Clear any calls made during setup
+		deps.internalEntityUpdate.mockClear()
+		deps.internalEntityDelete.mockClear()
+		deps.connectionEntityUpdate.mockClear()
+		deps.connectionEntityDelete.mockClear()
+		return { deps, entity }
+	}
+
+	test('internal feedback moving into an action subtree stops being eagerly cached', () => {
+		const { deps, entity } = addInternalBooleanFeedback('internal')
+
+		entity.applyInsideActionSubtree(true)
+
+		expect(deps.internalEntityDelete).toHaveBeenCalledTimes(1)
+		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('internal feedback moving back out of an action subtree is eagerly cached again', () => {
+		const { deps, entity } = addInternalBooleanFeedback('internal')
+
+		entity.applyInsideActionSubtree(true)
+		deps.internalEntityDelete.mockClear()
+
+		entity.applyInsideActionSubtree(false)
+
+		expect(deps.internalEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(deps.internalEntityDelete).not.toHaveBeenCalled()
+	})
+
+	test('re-applying the same membership does nothing', () => {
+		const { deps, entity } = addInternalBooleanFeedback('internal')
+
+		// Was constructed with insideActionSubtree=false
+		entity.applyInsideActionSubtree(false)
+
+		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
+		expect(deps.internalEntityDelete).not.toHaveBeenCalled()
+	})
+
+	test('module feedback is never (un)subscribed from its connection when moved', () => {
+		const { deps, entity } = addInternalBooleanFeedback('conn01')
+
+		entity.applyInsideActionSubtree(true)
+		entity.applyInsideActionSubtree(false)
+
+		expect(deps.internalEntityDelete).not.toHaveBeenCalled()
+		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
+		expect(deps.connectionEntityDelete).not.toHaveBeenCalled()
+		expect(deps.connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+})
+
+describe('subscribe skips eager registration inside an action subtree', () => {
+	function loadInternalFeedback(insideActionSubtree: boolean) {
+		const deps = createList(
+			'test01',
+			null,
+			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Boolean },
+			insideActionSubtree
+		)
+		deps.getEntityDefinition.mockImplementation(
+			() =>
+				({
+					entityType: EntityModelType.Feedback,
+					feedbackType: FeedbackEntitySubType.Boolean,
+				}) as Partial<ClientEntityDefinition> as any
+		)
+		deps.list.loadStorage(
+			[
+				{
+					type: EntityModelType.Feedback,
+					id: 'fb1',
+					connectionId: 'internal',
+					definitionId: 'my-feedback',
+					options: {},
+					upgradeIndex: undefined,
+				},
+			],
+			false,
+			false
+		)
+		return deps
+	}
+
+	test('inside an action subtree: no eager registration', () => {
+		const deps = loadInternalFeedback(true)
+		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
+		// isInverted tracking still happens
+		expect(deps.specialExpressionManager.trackEntity).toHaveBeenCalled()
+	})
+
+	test('outside an action subtree: eager registration', () => {
+		const deps = loadInternalFeedback(false)
+		expect(deps.internalEntityUpdate).toHaveBeenCalledTimes(1)
 	})
 })
 
@@ -1581,7 +1863,7 @@ describe('updateIsInvertedValues', () => {
 		expect(entity).toBeTruthy()
 
 		// Initial state
-		expect(entity!.getBooleanFeedbackValue()).toBe(true)
+		expect(entity!.getBooleanFeedbackValue(null)).toBe(true)
 
 		// Invert
 		const invertValues = translateIsInvertedValues({
@@ -1593,7 +1875,7 @@ describe('updateIsInvertedValues', () => {
 		expect(changed[0]).toBe(entity)
 
 		// Should be inverted now
-		expect(entity!.getBooleanFeedbackValue()).toBe(false)
+		expect(entity!.getBooleanFeedbackValue(null)).toBe(false)
 
 		// Un-invert
 		const unInvertValues = translateIsInvertedValues({
@@ -1602,7 +1884,7 @@ describe('updateIsInvertedValues', () => {
 		const changed2 = list.updateIsInvertedValues(unInvertValues)
 
 		expect(changed2).toHaveLength(1)
-		expect(entity!.getBooleanFeedbackValue()).toBe(true)
+		expect(entity!.getBooleanFeedbackValue(null)).toBe(true)
 	})
 
 	test('update value unchanged', () => {
@@ -1639,7 +1921,7 @@ describe('updateIsInvertedValues', () => {
 
 		// Ensure value remains
 		const entity = list.findById('01')
-		expect(entity!.getBooleanFeedbackValue()).toBe(false)
+		expect(entity!.getBooleanFeedbackValue(null)).toBe(false)
 	})
 
 	test('update value for nested feedback', () => {
@@ -1664,7 +1946,7 @@ describe('updateIsInvertedValues', () => {
 		// Assuming int1 is a normal feedback in this mock tree logic
 		list.updateFeedbackValues('internal', translateFeedbackValues({ int1: true }))
 
-		expect(entity!.getBooleanFeedbackValue()).toBe(true)
+		expect(entity!.getBooleanFeedbackValue(null)).toBe(true)
 
 		const values = translateIsInvertedValues({
 			int1: true,
@@ -1674,7 +1956,7 @@ describe('updateIsInvertedValues', () => {
 		expect(changed).toHaveLength(1)
 		expect(changed[0]).toBe(entity)
 
-		expect(entity!.getBooleanFeedbackValue()).toBe(false)
+		expect(entity!.getBooleanFeedbackValue(null)).toBe(false)
 	})
 
 	test('update multiple values', () => {
@@ -1709,8 +1991,8 @@ describe('updateIsInvertedValues', () => {
 		expect(changed).toContain(entity1)
 		expect(changed).toContain(entity2)
 
-		expect(entity1!.getBooleanFeedbackValue()).toBe(false)
-		expect(entity2!.getBooleanFeedbackValue()).toBe(false)
+		expect(entity1!.getBooleanFeedbackValue(null)).toBe(false)
+		expect(entity2!.getBooleanFeedbackValue(null)).toBe(false)
 	})
 
 	test('lifecycle tracks inverted', () => {

@@ -326,8 +326,12 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 
 				if (newParent) {
 					newParent.pushChild(movedEntity, newOwnerId!.childGroup, newIndex)
+					// The entity may have crossed an action boundary (e.g. into a logic_if condition), so update
+					// the eager/lazy classification of it and its descendants.
+					movedEntity.applyInsideActionSubtree(newParent.childEntitiesAreInsideActionSubtree)
 				} else {
 					newEntityList.pushEntity(movedEntity, newIndex)
+					movedEntity.applyInsideActionSubtree(newEntityList.insideActionSubtree)
 				}
 			}
 
