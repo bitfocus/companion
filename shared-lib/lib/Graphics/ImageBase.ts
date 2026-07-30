@@ -896,16 +896,23 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Find the best fitting size at the normalized scale
 		let normLayout: TextLayoutResult | undefined
 		let usedNormSize = normCheckSizes[0]
-		for (const normSize of normCheckSizes) {
-			usedNormSize = normSize
-			const normFontSpec = `${fontStylePrefix}${normSize}px/${normSize * 1.1}px ${fontNameStr}`
+		for (let i = 0; i < normCheckSizes.length; i += 1) {
+			usedNormSize = normCheckSizes[i]
+			const normFontSpec = `${fontStylePrefix}${usedNormSize}px/${usedNormSize * 1.1}px ${fontNameStr}`
 
 			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
 			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
 			const cachedLayout = this.#textLayoutCache?.get(cacheKey)
 			let layout = typeof cachedLayout === 'object' ? cachedLayout : undefined
 			if (!layout) {
-				layout = computeTextLayout(this.context2d, normW, NORM_H, displayTextChars, normFontSpec)
+				layout = computeTextLayout(
+					this.context2d,
+					normW,
+					NORM_H,
+					displayTextChars,
+					normFontSpec,
+					!allowShrink || i == normCheckSizes.length - 1 ? false : true // don't exit early if not trying to shrink or this is the smallest size we try
+				)
 				this.#textLayoutCache?.set(cacheKey, layout)
 			}
 
@@ -913,7 +920,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			if (layout.fits) break
 		}
 
-		// If no layout was resolved, something went wrong
+		// If no layout was returned at all, something went wrong
 		if (!normLayout) return
 
 		// Scale the normalized layout up to the actual canvas dimensions for rendering
@@ -923,6 +930,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			lines: normLayout.lines,
 			measuredLineHeight: normLayout.measuredLineHeight * upScale,
 			measuredAscent: normLayout.measuredAscent * upScale,
+			totalHeight: normLayout.totalHeight * upScale,
 			fits: normLayout.fits,
 		}
 
@@ -931,7 +939,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
-	 * Draw text using a computed layout
+	 * Draw text using a computed layout  
+	 * when the text fits into the area, alignemnt will be trivial. When text overflows the line break has precedence. That means text should be broken into hopefully fitting lines (even inside of words) and then those lines are aligned.
 	 */
 	#drawTextLayout(
 		x: number,
@@ -967,20 +976,30 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				break
 		}
 
-		const linesTotalHeight = layout.lines.length * layout.measuredLineHeight
+		// how many lines can we fit?
+		const numLines = Math.min(Math.max(Math.floor((h + h * 1e-4) / layout.measuredLineHeight), 1), layout.lines.length) // no Linespacing, make h a little taller to compensate for rounding errors around the breakpoints, draw at least one line even if it is too big and maximum the lines that really are there
+		let lineNumbers = [0]
+
+		const drawingLinesTotalHeight = layout.measuredLineHeight * numLines
 		let yAnchor = 0
+		let startline = 0
 		switch (valign) {
 			case 'top':
 				yAnchor = layout.measuredAscent
+				startline = 0
 				break
 			case 'center':
-				yAnchor = (h - linesTotalHeight) / 2 + layout.measuredAscent
+				yAnchor = (h - drawingLinesTotalHeight) / 2 + layout.measuredAscent
+				startline = Math.floor((layout.lines.length - numLines) / 2)
 				break
 			case 'bottom':
-				yAnchor = h - linesTotalHeight + layout.measuredAscent
+				yAnchor = h - drawingLinesTotalHeight + layout.measuredAscent
+				startline = layout.lines.length - numLines
 				break
 		}
 		yAnchor += y
+
+		lineNumbers = Array.from({ length: numLines }, (_, i) => i + startline)
 
 		this.context2d.fillStyle = color
 		if (outlineStyle && outlineStyle.width > 0) {
@@ -988,17 +1007,17 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			this.context2d.lineWidth = outlineStyle.width
 		}
 
-		for (const line of layout.lines) {
+		for (const lineToDraw of lineNumbers) {
 			if (outlineStyle && outlineStyle.width > 0) {
-				this.context2d.strokeText(line.text, xAnchor, yAnchor)
+				this.context2d.strokeText(layout.lines[lineToDraw].text, xAnchor, yAnchor)
 			}
 
-			this.context2d.fillText(line.text, xAnchor, yAnchor)
+			this.context2d.fillText(layout.lines[lineToDraw].text, xAnchor, yAnchor)
 
 			// Underline/strikethrough have no native canvas support, so draw them manually.
 			// fillStyle is still `color` here, so the decorations match the text color.
 			if (underline || strikethrough) {
-				const metrics = this.context2d.measureText(line.text)
+				const metrics = this.context2d.measureText(layout.lines[lineToDraw].text)
 				const width = metrics.width
 				if (width > 0) {
 					const ascent = metrics.fontBoundingBoxAscent
