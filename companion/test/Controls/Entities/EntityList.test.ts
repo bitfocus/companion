@@ -27,12 +27,7 @@ import {
 	getAllModelsInTree,
 } from './EntityListModels.js'
 
-function createList(
-	controlId: string,
-	ownerId?: EntityOwner | null,
-	listId?: ControlEntityListDefinition | null,
-	insideActionSubtree = false
-) {
+function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
 	const connectionEntityUpdate = vi.fn<ProcessManagerForEntity['connectionEntityUpdate']>(async () => false)
 	const connectionEntityDelete = vi.fn<ProcessManagerForEntity['connectionEntityDelete']>(async () => false)
@@ -71,8 +66,7 @@ function createList(
 		ownerId ?? null,
 		listId ?? {
 			type: EntityModelType.Action,
-		},
-		insideActionSubtree
+		}
 	)
 
 	const newActionModel: ActionEntityModel = {
@@ -90,8 +84,7 @@ function createList(
 		specialExpressionManager,
 		controlId,
 		newActionModel,
-		false,
-		insideActionSubtree
+		false
 	)
 
 	// Clear any calls made by the above
@@ -1444,14 +1437,12 @@ describe('getChildBooleanFeedbackValues', () => {
 describe('lazy feedback evaluation (with context)', () => {
 	const booleanContext = (): FeedbackExecutionContext => ({ parser: { marker: 'the-parser' } as any })
 
-	/** A boolean feedback list whose entities sit inside an action subtree (i.e. the lazy case). */
+	/** A boolean feedback list, exercised via the lazy (non-null context) read path. */
 	function createBooleanFeedbackList(showInvert = false) {
-		const deps = createList(
-			'test01',
-			null,
-			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Boolean },
-			true
-		)
+		const deps = createList('test01', null, {
+			type: EntityModelType.Feedback,
+			feedbackListType: FeedbackEntitySubType.Boolean,
+		})
 		deps.getEntityDefinition.mockImplementation((_entityType, _connectionId, definitionId) => {
 			if (definitionId.startsWith('logic_')) {
 				return {
@@ -1589,124 +1580,6 @@ describe('lazy feedback evaluation (with context)', () => {
 
 		// showInvert && cachedIsInverted -> invert the live value
 		expect(entity.getBooleanFeedbackValue(booleanContext())).toBe(false)
-	})
-})
-
-describe('applyInsideActionSubtree', () => {
-	function addInternalBooleanFeedback(connectionId: string) {
-		const deps = createList('test01', null, {
-			type: EntityModelType.Feedback,
-			feedbackListType: FeedbackEntitySubType.Boolean,
-		})
-		deps.getEntityDefinition.mockImplementation(
-			() =>
-				({
-					entityType: EntityModelType.Feedback,
-					feedbackType: FeedbackEntitySubType.Boolean,
-				}) as Partial<ClientEntityDefinition> as any
-		)
-		const entity = deps.list.addEntity({
-			type: EntityModelType.Feedback,
-			id: 'fb1',
-			connectionId,
-			definitionId: 'my-feedback',
-			options: {},
-			upgradeIndex: undefined,
-		})
-		// Clear any calls made during setup
-		deps.internalEntityUpdate.mockClear()
-		deps.internalEntityDelete.mockClear()
-		deps.connectionEntityUpdate.mockClear()
-		deps.connectionEntityDelete.mockClear()
-		return { deps, entity }
-	}
-
-	test('internal feedback moving into an action subtree stops being eagerly cached', () => {
-		const { deps, entity } = addInternalBooleanFeedback('internal')
-
-		entity.applyInsideActionSubtree(true)
-
-		expect(deps.internalEntityDelete).toHaveBeenCalledTimes(1)
-		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
-	})
-
-	test('internal feedback moving back out of an action subtree is eagerly cached again', () => {
-		const { deps, entity } = addInternalBooleanFeedback('internal')
-
-		entity.applyInsideActionSubtree(true)
-		deps.internalEntityDelete.mockClear()
-
-		entity.applyInsideActionSubtree(false)
-
-		expect(deps.internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(deps.internalEntityDelete).not.toHaveBeenCalled()
-	})
-
-	test('re-applying the same membership does nothing', () => {
-		const { deps, entity } = addInternalBooleanFeedback('internal')
-
-		// Was constructed with insideActionSubtree=false
-		entity.applyInsideActionSubtree(false)
-
-		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
-		expect(deps.internalEntityDelete).not.toHaveBeenCalled()
-	})
-
-	test('module feedback is never (un)subscribed from its connection when moved', () => {
-		const { deps, entity } = addInternalBooleanFeedback('conn01')
-
-		entity.applyInsideActionSubtree(true)
-		entity.applyInsideActionSubtree(false)
-
-		expect(deps.internalEntityDelete).not.toHaveBeenCalled()
-		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
-		expect(deps.connectionEntityDelete).not.toHaveBeenCalled()
-		expect(deps.connectionEntityUpdate).not.toHaveBeenCalled()
-	})
-})
-
-describe('subscribe skips eager registration inside an action subtree', () => {
-	function loadInternalFeedback(insideActionSubtree: boolean) {
-		const deps = createList(
-			'test01',
-			null,
-			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Boolean },
-			insideActionSubtree
-		)
-		deps.getEntityDefinition.mockImplementation(
-			() =>
-				({
-					entityType: EntityModelType.Feedback,
-					feedbackType: FeedbackEntitySubType.Boolean,
-				}) as Partial<ClientEntityDefinition> as any
-		)
-		deps.list.loadStorage(
-			[
-				{
-					type: EntityModelType.Feedback,
-					id: 'fb1',
-					connectionId: 'internal',
-					definitionId: 'my-feedback',
-					options: {},
-					upgradeIndex: undefined,
-				},
-			],
-			false,
-			false
-		)
-		return deps
-	}
-
-	test('inside an action subtree: no eager registration', () => {
-		const deps = loadInternalFeedback(true)
-		expect(deps.internalEntityUpdate).not.toHaveBeenCalled()
-		// isInverted tracking still happens
-		expect(deps.specialExpressionManager.trackEntity).toHaveBeenCalled()
-	})
-
-	test('outside an action subtree: eager registration', () => {
-		const deps = loadInternalFeedback(false)
-		expect(deps.internalEntityUpdate).toHaveBeenCalledTimes(1)
 	})
 })
 

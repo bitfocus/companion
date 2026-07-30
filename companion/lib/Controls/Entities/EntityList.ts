@@ -38,13 +38,6 @@ export class ControlEntityList {
 
 	readonly #listDefinition: ControlEntityListDefinition
 
-	/**
-	 * Whether the entities directly in this list sit inside an action's child subtree. When true, internal
-	 * feedbacks here are not eagerly cached - they are evaluated lazily at action-execution time. This is
-	 * inherited downward and turns on at an action boundary (see {@link ControlEntityInstance}).
-	 */
-	#insideActionSubtree: boolean
-
 	#entities: ControlEntityInstance[] = []
 
 	get ownerId(): EntityOwner | null {
@@ -55,10 +48,6 @@ export class ControlEntityList {
 		return this.#listDefinition
 	}
 
-	get insideActionSubtree(): boolean {
-		return this.#insideActionSubtree
-	}
-
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
@@ -66,8 +55,7 @@ export class ControlEntityList {
 		specialExpressionManager: EntityPoolSpecialExpressionManager,
 		controlId: string,
 		ownerId: EntityOwner | null,
-		listDefinition: ControlEntityListDefinition,
-		insideActionSubtree: boolean
+		listDefinition: ControlEntityListDefinition
 	) {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
@@ -76,7 +64,6 @@ export class ControlEntityList {
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
-		this.#insideActionSubtree = insideActionSubtree
 	}
 
 	/**
@@ -122,8 +109,7 @@ export class ControlEntityList {
 						this.#specialExpressionManager,
 						this.#controlId,
 						entity,
-						!!isCloned,
-						this.#insideActionSubtree
+						!!isCloned
 					)
 			) || []
 
@@ -200,8 +186,7 @@ export class ControlEntityList {
 			this.#specialExpressionManager,
 			this.#controlId,
 			entityModel,
-			!!isCloned,
-			this.#insideActionSubtree
+			!!isCloned
 		)
 
 		// TODO - should this log and return instead of throw?
@@ -319,8 +304,7 @@ export class ControlEntityList {
 				this.#specialExpressionManager,
 				this.#controlId,
 				entityModel,
-				true,
-				this.#insideActionSubtree
+				true
 			)
 
 			this.#entities.splice(entityIndex + 1, 0, newEntity)
@@ -386,19 +370,6 @@ export class ControlEntityList {
 		}
 
 		return changed
-	}
-
-	/**
-	 * Update whether this list (and its entities/descendants) sit inside an action's child subtree.
-	 * Used when an entity is moved between lists, so its internal feedbacks switch between being eagerly
-	 * cached and lazily evaluated. See {@link ControlEntityInstance.applyInsideActionSubtree}.
-	 */
-	applyInsideActionSubtree(insideActionSubtree: boolean): void {
-		this.#insideActionSubtree = insideActionSubtree
-
-		for (const entity of this.#entities) {
-			entity.applyInsideActionSubtree(insideActionSubtree)
-		}
 	}
 
 	/**

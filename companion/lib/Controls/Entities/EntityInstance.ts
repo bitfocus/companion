@@ -71,27 +71,10 @@ export class ControlEntityInstance {
 	#children = new Map<string, ControlEntityList>()
 
 	/**
-	 * Whether this entity sits inside an action's child subtree. When true and this is an internal
-	 * feedback, it is not eagerly cached - it is evaluated lazily at action-execution time so the action's
-	 * execution-context `$(this:*)` variables are visible. This turns on at an action boundary and is
-	 * inherited by all descendants (see {@link #childEntitiesAreInsideActionSubtree}).
-	 */
-	#insideActionSubtree: boolean
-
-	/**
 	 * Get the id of this entity
 	 */
 	get id(): string {
 		return this.#data.id
-	}
-
-	get insideActionSubtree(): boolean {
-		return this.#insideActionSubtree
-	}
-
-	/** Whether entities in this entity's own child groups sit inside an action subtree. */
-	get childEntitiesAreInsideActionSubtree(): boolean {
-		return this.#insideActionSubtree || this.type === EntityModelType.Action
 	}
 
 	get disabled(): boolean {
@@ -213,8 +196,7 @@ export class ControlEntityInstance {
 		specialExpressionManager: EntityPoolSpecialExpressionManager,
 		controlId: string,
 		data: SomeEntityModel,
-		isCloned: boolean,
-		insideActionSubtree: boolean
+		isCloned: boolean
 	) {
 		this.#logger = LogController.createLogger(`Controls/Fragments/EntityInstance/${controlId}/${data.id}`)
 
@@ -223,7 +205,6 @@ export class ControlEntityInstance {
 		this.#processManager = processManager
 		this.#specialExpressionManager = specialExpressionManager
 		this.#controlId = controlId
-		this.#insideActionSubtree = insideActionSubtree
 
 		{
 			const newData = structuredClone(data)
@@ -275,8 +256,7 @@ export class ControlEntityInstance {
 			this.#specialExpressionManager,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
-			listDefinition,
-			this.childEntitiesAreInsideActionSubtree
+			listDefinition
 		)
 		this.#children.set(listDefinition.groupId, childGroup)
 
@@ -343,11 +323,11 @@ export class ControlEntityInstance {
 			const thisData = this.#data
 
 			if (thisData.connectionId === 'internal') {
-				// Internal feedbacks inside an action subtree are evaluated lazily at execution time, so they
-				// are not eagerly registered/cached here. (isInverted tracking below still applies.)
-				if (!(thisData.type === EntityModelType.Feedback && this.#insideActionSubtree)) {
-					this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-				}
+				// Note: internal feedbacks that are children of an action (e.g. logic_if/logic_while
+				// conditions) are registered/cached here like any other, even though they are ALSO
+				// evaluated live at execution time (see getBooleanFeedbackValue). We deliberately do not
+				// suppress the eager caching for them - see the note on getBooleanFeedbackValue for why.
+				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
@@ -792,34 +772,6 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Recompute whether this entity (and its descendants) sit inside an action's child subtree, updating
-	 * the eager-caching registration of internal feedbacks accordingly. Called when an entity is moved
-	 * between lists (e.g. from the feedbacks list into a `logic_if` condition, or back out again).
-	 *
-	 * Only internal feedbacks change behaviour here - a move never (un)subscribes a module feedback from
-	 * its connection, so there is no IPC round-trip or value reset.
-	 */
-	applyInsideActionSubtree(insideActionSubtree: boolean): void {
-		const changed = this.#insideActionSubtree !== insideActionSubtree
-		this.#insideActionSubtree = insideActionSubtree
-
-		if (changed && this.#data.type === EntityModelType.Feedback && this.#data.connectionId === 'internal') {
-			if (insideActionSubtree) {
-				// Now lazy: stop eagerly caching this feedback's value
-				this.#internalModule.entityDelete(this.asEntityModel())
-			} else {
-				// Now eager: register it so its value is cached again
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-			}
-		}
-
-		const childInsideActionSubtree = insideActionSubtree || this.#data.type === EntityModelType.Action
-		for (const childGroup of this.#children.values()) {
-			childGroup.applyInsideActionSubtree(childInsideActionSubtree)
-		}
-	}
-
-	/**
 	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
 	 * @param context When non-null, evaluate any internal feedback live using the execution context;
 	 * when null, use the eagerly-cached value. See {@link getBooleanFeedbackValue}.
@@ -847,6 +799,25 @@ export class ControlEntityInstance {
 	 *   are visible. Only applies to internal feedbacks - a module feedback cannot be evaluated
 	 *   synchronously and always falls back to its cached value. The feedback's invert (`isInverted`) is
 	 *   always taken from its cached value.
+	 *
+	 * NOTE ON THE DELIBERATELY-OMITTED OPTIMISATION:
+	 * An internal feedback that is a child of an action (e.g. a logic_if/logic_while condition) is
+	 * evaluated BOTH ways: it is still eagerly evaluated and cached like any other internal feedback, and
+	 * it is ALSO re-evaluated live here at execution time (the live value is the one that matters, because
+	 * only it sees the execution-context variables). That double evaluation is redundant.
+	 *
+	 * We considered avoiding it by tracking whether a feedback sits "inside an action subtree" and skipping
+	 * the eager caching for those (with re-registration when a feedback is moved in/out of an action's
+	 * child list). That was implemented and then removed on purpose: it added a required constructor
+	 * parameter threaded through EntityList/EntityInstance/the pool, a recursive re-registration pass, and
+	 * move-time bookkeeping in entityMoveTo - a meaningful amount of subtle, higher-risk code whose ONLY
+	 * benefit is skipping this one redundant evaluation. These feedbacks are cheap (boolean/variable reads)
+	 * and re-evaluate only when a dependency changes or the action runs, so the saving is negligible and
+	 * not worth the complexity/risk today. The redundant eager value is simply never read for conditions.
+	 *
+	 * If a future change makes these child feedbacks expensive, or their eager (context-less) evaluation
+	 * becomes actively harmful, revisit this: the git history for `insideActionSubtree` shows the removed
+	 * approach.
 	 */
 	getBooleanFeedbackValue(context: FeedbackExecutionContext | null): boolean {
 		if (this.#data.disabled) return false
