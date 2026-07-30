@@ -116,7 +116,7 @@ export function resolveFontSizes(
  * @param context2d - the canvas context used to do test renderings
  * @param w - the width in pixels of that context you want to fit in
  * @param h - the height in pixels of that context you want to fit in
- * @param displayTextChars - an array holding the text that should be drawn
+ * @param displayTextChars - an array holding the text that should be drawn, intentionally an array to keep the bytes of an unicode character together
  * @param fontDefinition - definition of the font to use for the check
  * @param exitEarly - if set the layouting process will be abortet as soon as it is clear that the text will not fit with the given parameters, if unset the complete layout will be generated even if it overflows. Defaults to `true`
  */
@@ -278,13 +278,32 @@ export function computeTextLayout(
 		return { ascent: measure.fontBoundingBoxAscent, descent: measure.fontBoundingBoxDescent, maxCodepoints: length }
 	}
 
+	const strip = (layout: TextLayoutResult) => {
+		const lines = layout.lines.map((line) => {
+			return { text: line.text, ascent: line.ascent, descent: line.descent }
+		})
+		return {
+			...layout,
+			...lines,
+		} as TextLayoutResult
+	}
+
 	// console.log('processing layout for', displayTextChars.join(''), fontDefinition.substring(0, 20))
 	// first split the text into lines by existing line breaks
-	const lines: { text: string; ascent: number; descent: number; fitsH?: boolean }[] = displayTextChars
-		.join('')
-		.split('\n')
-		.map((text) => {
-			return { text, ascent: 0, descent: 0 }
+	const lines: { chars: string[]; text: string; ascent: number; descent: number; fitsH?: boolean }[] = displayTextChars
+		.reduce((chunks: string[][], glyph: string) => {
+			if (glyph === '\n') {
+				if (chunks.length > 0 || chunks.some((c) => c.length > 0)) {
+					chunks.push([])
+				}
+			} else {
+				if (chunks.length === 0) chunks.push([])
+				chunks[chunks.length - 1].push(glyph)
+			}
+			return chunks
+		}, [])
+		.map((chars) => {
+			return { chars, text: '', ascent: 0, descent: 0 }
 		})
 
 	// console.log('lines are', JSON.stringify(lines, null, 2))
@@ -295,7 +314,7 @@ export function computeTextLayout(
 	while (currentLine < lines.length) {
 		// console.log('length check for line', currentLine, lines[currentLine].text)
 		let lastDrawnCharIndex = 0
-		const lineChars: string[] = lines[currentLine].text.split('')
+		const lineChars: string[] = lines[currentLine].chars
 
 		// get rid of one space at line start, but keep more spaces
 		if (lineChars[0] === ' ') lineChars.shift()
@@ -303,13 +322,14 @@ export function computeTextLayout(
 		// if line is empty there is no need for expensive measurement
 		if (lineChars.length === 0) {
 			lines[currentLine] = {
+				chars: [],
 				text: '',
 				ascent: lineHeightSample.fontBoundingBoxAscent,
 				descent: lineHeightSample.fontBoundingBoxDescent,
 				fitsH: true,
 			}
 			totalHeight += measuredLineHeight
-			if (totalHeight > verticalFitLimit && exitEarly) return layout
+			if (totalHeight > verticalFitLimit && exitEarly) return strip(layout)
 
 			currentLine++
 
@@ -361,11 +381,10 @@ export function computeTextLayout(
 
 			if (breakFound) {
 				// we found a good breaking position in the line, update the current line with the part before the break
+				const partialLine = possibleLine.slice(0, breakPos + 1)
 				lines[currentLine] = {
-					text: possibleLine
-						.slice(0, breakPos + 1)
-						.join('')
-						.trimEnd(),
+					chars: partialLine,
+					text: partialLine.join('').trimEnd(),
 					ascent,
 					descent,
 					fitsH: true,
@@ -373,8 +392,10 @@ export function computeTextLayout(
 				totalHeight += ascent + descent
 
 				// insert a new line with the remaining part
+				const remainingLine = lineChars.slice(breakPos + 1)
 				lines.splice(currentLine + 1, 0, {
-					text: lineChars.slice(breakPos + 1).join(''),
+					chars: remainingLine,
+					text: remainingLine.join(''),
 					ascent,
 					descent,
 				})
@@ -384,9 +405,10 @@ export function computeTextLayout(
 				// )
 			} else {
 				// we did not find a good breaking position, push the maximum chars to the line (breaking inside a word) and mark it
-				if (exitEarly) return layout
+				if (exitEarly) return strip(layout)
 				if (possibleLine.length >= 1) {
 					lines[currentLine] = {
+						chars: possibleLine,
 						text: possibleLine.join('').trimEnd(),
 						ascent,
 						descent,
@@ -394,8 +416,10 @@ export function computeTextLayout(
 					}
 					totalHeight += ascent + descent
 					// insert a new line with the remaining part
+					const remainingLine = lineChars.slice(possibleLine.length)
 					lines.splice(currentLine + 1, 0, {
-						text: lineChars.slice(possibleLine.length).join(''),
+						chars: remainingLine,
+						text: remainingLine.join(''),
 						ascent,
 						descent,
 					})
@@ -406,6 +430,7 @@ export function computeTextLayout(
 				} else {
 					// the text is so big that not even a single char fits, but we have to place at least one char in a line anyhow to get finished eventually
 					lines[currentLine] = {
+						chars: [lineChars[0]],
 						text: lineChars[0],
 						ascent,
 						descent,
@@ -414,6 +439,7 @@ export function computeTextLayout(
 					totalHeight += ascent + descent
 					// insert a new line with the remaining part
 					lines.splice(currentLine + 1, 0, {
+						chars: lineChars.slice(1),
 						text: lineChars.slice(1).join(''),
 						ascent,
 						descent,
@@ -425,7 +451,7 @@ export function computeTextLayout(
 				}
 			}
 		}
-		if (totalHeight > verticalFitLimit && exitEarly) return layout
+		if (totalHeight > verticalFitLimit && exitEarly) return strip(layout)
 
 		currentLine++
 	}
@@ -439,12 +465,12 @@ export function computeTextLayout(
 	const fitsHorizontally = !lines.some((line) => line.fitsH === false)
 	const fits = fitsHorizontally && fitsVertically
 
-	return {
+	return strip({
 		fontDefinition,
 		lines,
 		measuredLineHeight,
 		measuredAscent,
 		totalHeight,
 		fits,
-	}
+	})
 }
