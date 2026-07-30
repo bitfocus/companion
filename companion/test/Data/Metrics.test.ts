@@ -24,7 +24,7 @@ describe('DataMetrics', () => {
 			},
 		})
 
-		const metrics = new DataMetrics(appInfo, userconfig)
+		const metrics = new DataMetrics(appInfo, () => userconfig)
 
 		const app = express()
 		app.use('/api/metrics', metrics.metricsRouter)
@@ -110,6 +110,27 @@ describe('DataMetrics', () => {
 		// 0.05 falls in the 0.1 bucket but not the 0.01 bucket
 		expect(res.text).toContain('companion_test_duration_seconds_bucket{le="0.01"} 0')
 		expect(res.text).toContain('companion_test_duration_seconds_bucket{le="0.1"} 1')
+	})
+
+	test('labeled histograms record observations per label combination', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const observe = metrics.labeledHistogram(
+			'companion_test_op_seconds',
+			'A test labeled histogram',
+			['op'],
+			[0.01, 0.1, 1]
+		)
+		observe({ op: 'read' }, 0.05)
+		observe({ op: 'read' }, 0.005)
+		observe({ op: 'write' }, 0.5)
+
+		const res = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(res.text).toContain('companion_test_op_seconds_count{op="read"} 2')
+		expect(res.text).toContain('companion_test_op_seconds_count{op="write"} 1')
+		expect(res.text).toContain('companion_test_op_seconds_sum{op="write"} 0.5')
+		// One of the two 'read' observations (0.005) falls in the 0.01 bucket
+		expect(res.text).toContain('companion_test_op_seconds_bucket{le="0.01",op="read"} 1')
 	})
 
 	test('labeled gauges and counters emit one series per label combination', async () => {

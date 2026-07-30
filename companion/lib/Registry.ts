@@ -15,6 +15,7 @@ import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
+import { registerDatabaseDurationHistogram, registerDatabaseMetrics } from './Data/StoreMetrics.js'
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
@@ -200,13 +201,14 @@ export class Registry {
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
 		controlEvents.setMaxListeners(0)
 
-		this.db = new DataDatabase(this.#appInfo.configDir)
-		this.#data = new DataController(this.#appInfo, this.db)
-		this.userconfig = this.#data.userconfig
+		// Built before the databases so the duration observer can be injected into each store at construction;
+		// its userconfig is read lazily (only at scrape time) so it can predate userconfig.
+		this.metrics = new DataMetrics(this.#appInfo, () => this.userconfig)
+		const databaseObserverFor = registerDatabaseDurationHistogram(this.metrics)
 
-		// Constructed before the UI so its router can be handed to UIExpress at construction, and before
-		// graphics/surfaces/instance so those subsystems can register their own metrics inline as they build.
-		this.metrics = new DataMetrics(this.#appInfo, this.userconfig)
+		this.db = new DataDatabase(this.#appInfo.configDir, databaseObserverFor('main'))
+		this.#data = new DataController(this.#appInfo, this.db, databaseObserverFor('cache'))
+		this.userconfig = this.#data.userconfig
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
 
@@ -359,11 +361,11 @@ export class Registry {
 			controls: this.controls,
 			variables: this.variables,
 			services: this.services,
-			databases: [
-				{ name: 'main', store: this.db },
-				{ name: 'cache', store: this.#data.cache },
-			],
 		})
+		registerDatabaseMetrics(this.metrics, [
+			{ name: 'main', store: this.db },
+			{ name: 'cache', store: this.#data.cache },
+		])
 
 		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 		controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))

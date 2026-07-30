@@ -40,3 +40,8 @@ Prometheus data source when prompted.
   → outer" transformation). Each query is wrapped in `sum by (instance_id, ...)` so the frames only
   carry the labels used for the join and the display columns. If you add or rename metrics, update
   the `organize` transformation's `Value #A`…`Value #F` field names to match.
+- The **Storage** row's SQLite panels (`companion_database_operations_total`,
+  `companion_database_operation_errors_total`, `companion_database_operation_duration_seconds`,
+  `companion_database_table_rows`) are labelled by `database`, `table` and `operation`. Because
+  node:sqlite is synchronous, **Time spent in SQLite** (rate of the duration histogram's `_sum`) is
+  the key panel — it reads as the fraction of wall-clock time the event loop is blocked in the DB.

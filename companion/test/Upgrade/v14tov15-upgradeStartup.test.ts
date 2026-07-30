@@ -6,7 +6,7 @@ import LogController from '../../lib/Log/Controller.js'
 
 class DataDatabase extends DataStoreBase<any> {
 	constructor() {
-		super(':memory:', '', 'main', 'Data/Database')
+		super(':memory:', '', 'main', 'Data/Database', () => {})
 		this.startSQLite()
 	}
 	protected create(): void {

@@ -2047,6 +2047,300 @@
 					"legendFormat": "{{database}} free"
 				}
 			]
+		},
+		{
+			"id": 52,
+			"type": "timeseries",
+			"title": "Database operation rate by kind",
+			"description": "rate(companion_database_operations_total) summed per database and operation (get / get_all / set / delete / clear). node:sqlite is synchronous, so this is a proxy for how hard the DBs are being worked.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 101
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (database, operation) (rate(companion_database_operations_total[$__rate_interval]))",
+					"legendFormat": "{{database}} {{operation}}"
+				}
+			]
+		},
+		{
+			"id": 53,
+			"type": "timeseries",
+			"title": "Database operation rate by table (top 15)",
+			"description": "topk(15) of rate(companion_database_operations_total) summed per database and table. Surfaces which tables are the busiest.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 101
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(15, sum by (database, table) (rate(companion_database_operations_total[$__rate_interval])))",
+					"legendFormat": "{{database}}/{{table}}"
+				}
+			]
+		},
+		{
+			"id": 54,
+			"type": "timeseries",
+			"title": "Operation latency (p95 / p99)",
+			"description": "histogram_quantile over companion_database_operation_duration_seconds, by operation. SQLite calls block the event loop, so tail latency here is time the app is stalled.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 109
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "s",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "histogram_quantile(0.95, sum by (le, operation) (rate(companion_database_operation_duration_seconds_bucket[$__rate_interval])))",
+					"legendFormat": "p95 {{operation}}"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "histogram_quantile(0.99, sum by (le, operation) (rate(companion_database_operation_duration_seconds_bucket[$__rate_interval])))",
+					"legendFormat": "p99 {{operation}}"
+				}
+			]
+		},
+		{
+			"id": 55,
+			"type": "timeseries",
+			"title": "Time spent in SQLite",
+			"description": "rate(companion_database_operation_duration_seconds_sum) per database — seconds of DB time per second, i.e. the fraction of wall-clock time the event loop spends blocked inside SQLite.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 109
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull", "max"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (database) (rate(companion_database_operation_duration_seconds_sum[$__rate_interval]))",
+					"legendFormat": "{{database}}"
+				}
+			]
+		},
+		{
+			"id": 56,
+			"type": "timeseries",
+			"title": "Database operation error rate",
+			"description": "rate(companion_database_operation_errors_total) by database, table and operation. These are SQLite errors the store otherwise only warn-logs, so any sustained value here is worth investigating.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 117
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum by (database, table, operation) (rate(companion_database_operation_errors_total[$__rate_interval]))",
+					"legendFormat": "{{database}}/{{table}} {{operation}}"
+				}
+			]
+		},
+		{
+			"id": 57,
+			"type": "bargauge",
+			"title": "Rows per table (top 15)",
+			"description": "Current companion_database_table_rows — the largest tables by row count.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 117
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"color": {
+						"mode": "continuous-BlPu"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"orientation": "horizontal",
+				"displayMode": "gradient",
+				"reduceOptions": {
+					"calcs": ["lastNotNull"]
+				},
+				"showUnfilled": true
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(15, sum by (database, table) (companion_database_table_rows))",
+					"legendFormat": "{{database}}/{{table}}",
+					"instant": true
+				}
+			]
 		}
 	]
 }
