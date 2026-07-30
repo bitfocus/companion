@@ -323,10 +323,7 @@ export class ControlEntityInstance {
 			const thisData = this.#data
 
 			if (thisData.connectionId === 'internal') {
-				// Note: internal feedbacks that are children of an action (e.g. logic_if/logic_while
-				// conditions) are registered/cached here like any other, even though they are ALSO
-				// evaluated live at execution time (see getBooleanFeedbackValue). We deliberately do not
-				// suppress the eager caching for them - see the note on getBooleanFeedbackValue for why.
+				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
@@ -773,8 +770,7 @@ export class ControlEntityInstance {
 
 	/**
 	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
-	 * @param context When non-null, evaluate any internal feedback live using the execution context;
-	 * when null, use the eagerly-cached value. See {@link getBooleanFeedbackValue}.
+	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}.
 	 */
 	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): any {
 		if (this.#data.type !== EntityModelType.Feedback) return null
@@ -791,33 +787,15 @@ export class ControlEntityInstance {
 	/**
 	 * Get the value of this feedback as a boolean.
 	 *
-	 * @param context The lazy-evaluation context, or `null`.
-	 * - `null` (the default/eager path used by the feedbacks & local-variables lists and by triggers):
-	 *   read the eagerly-cached value.
-	 * - non-null (the lazy path, used when this feedback is a child of a running action): evaluate the
-	 *   feedback live using the context's parser, so the action's execution-context `$(this:*)` variables
-	 *   are visible. Only applies to internal feedbacks - a module feedback cannot be evaluated
-	 *   synchronously and always falls back to its cached value. The feedback's invert (`isInverted`) is
-	 *   always taken from its cached value.
+	 * `context` null → cached value. Non-null → evaluate live with its parser so the running action's
+	 * `$(this:*)` are visible; internal feedbacks only, module feedbacks fall back to the cache. `isInverted`
+	 * always comes from the cache.
 	 *
-	 * NOTE ON THE DELIBERATELY-OMITTED OPTIMISATION:
-	 * An internal feedback that is a child of an action (e.g. a logic_if/logic_while condition) is
-	 * evaluated BOTH ways: it is still eagerly evaluated and cached like any other internal feedback, and
-	 * it is ALSO re-evaluated live here at execution time (the live value is the one that matters, because
-	 * only it sees the execution-context variables). That double evaluation is redundant.
-	 *
-	 * We considered avoiding it by tracking whether a feedback sits "inside an action subtree" and skipping
-	 * the eager caching for those (with re-registration when a feedback is moved in/out of an action's
-	 * child list). That was implemented and then removed on purpose: it added a required constructor
-	 * parameter threaded through EntityList/EntityInstance/the pool, a recursive re-registration pass, and
-	 * move-time bookkeeping in entityMoveTo - a meaningful amount of subtle, higher-risk code whose ONLY
-	 * benefit is skipping this one redundant evaluation. These feedbacks are cheap (boolean/variable reads)
-	 * and re-evaluate only when a dependency changes or the action runs, so the saving is negligible and
-	 * not worth the complexity/risk today. The redundant eager value is simply never read for conditions.
-	 *
-	 * If a future change makes these child feedbacks expensive, or their eager (context-less) evaluation
-	 * becomes actively harmful, revisit this: the git history for `insideActionSubtree` shows the removed
-	 * approach.
+	 * A child-of-action internal feedback is therefore evaluated twice - eagerly cached, and live here (only
+	 * the live value sees the execution context). Skipping the eager caching for such feedbacks was tried and
+	 * removed: it needed a flag threaded through the entity tree plus move-time re-registration, all to save
+	 * one evaluation of feedbacks that are cheap and rarely run. See git history for `insideActionSubtree` if
+	 * that ever stops being true.
 	 */
 	getBooleanFeedbackValue(context: FeedbackExecutionContext | null): boolean {
 		if (this.#data.disabled) return false
@@ -846,8 +824,7 @@ export class ControlEntityInstance {
 		)
 			return false
 
-		// Lazy path: evaluate an internal feedback live so the execution-context variables are visible.
-		// Module feedbacks fall through to the cached value below.
+		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
 		if (context && this.#data.connectionId === 'internal') {
 			const value = this.#internalModule.evaluateFeedbackValue(
 				this.asEntityModel(false) as FeedbackEntityModel,

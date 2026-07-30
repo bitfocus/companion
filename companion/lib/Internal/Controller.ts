@@ -552,9 +552,8 @@ export class InternalController {
 				allowClockSensitive: false,
 			})
 
-			// Factory for the context used to lazily evaluate any internal feedbacks which are children of
-			// this action (e.g. `logic_if`/`logic_while` conditions). A fresh parser is built on each call so
-			// that a caller re-checking conditions in a loop always sees the current variable state.
+			// Context for lazily evaluating this action's child feedbacks. Fresh parser per call, so a caller
+			// re-checking conditions in a loop (logic_while) sees the current variable state each time.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
 				parser: this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
 					allowClockSensitive: false,
@@ -819,19 +818,14 @@ export class InternalController {
 }
 
 /**
- * Build the `$(this:*)` variable overrides derived from an action's execution context.
- *
- * These are injected into the parser used to run the action's own options AND to lazily evaluate any
- * internal feedbacks which are children of the action. Keeping this in one place ensures both see the
- * same execution-context variables.
+ * The `$(this:*)` overrides derived from an action's execution context. Shared by the parser for the
+ * action's own options and by the one for its child feedbacks, so both see the same variables.
  */
 function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
 	return {
 		'this:surface_id': extras.surfaceId,
 
-		// TODO: the real execution-context variables are still to be decided. This placeholder exists so
-		// the plumbing (deriving `$(this:*)` from the action execution context and injecting it into child
-		// feedback evaluation) is in place and exercised.
+		// TODO: real execution-context variables TBD. Placeholder so the plumbing exists and is exercised.
 		'this:action_execution_placeholder': undefined,
 	}
 }

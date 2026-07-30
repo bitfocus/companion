@@ -13,4 +13,4 @@ Internal feedbacks that are **children of an action** (today the `condition` of 
 
 Both paths go through the one routine `InternalController.#computeFeedbackValue`; the eager path (`#feedbackGetValue`) builds a plain parser, while the lazy path (`evaluateFeedbackValue`, reached from `ControlEntityInstance.getBooleanFeedbackValue(context)`) is handed a parser carrying the action's overrides. A `null` context means "use the cache".
 
-Note: a child-of-action feedback is therefore evaluated both eagerly (cached) and lazily (at execution). That redundancy is deliberate - see the long note on `ControlEntityInstance.getBooleanFeedbackValue` for why the optimisation to skip the eager caching was considered and intentionally left out.
+Such a feedback is thus evaluated both ways (cached and live); skipping the eager caching for it was deliberately not done - see the note on `ControlEntityInstance.getBooleanFeedbackValue`.

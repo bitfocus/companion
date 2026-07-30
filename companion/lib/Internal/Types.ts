@@ -36,16 +36,9 @@ export interface ActionForInternalExecution {
 }
 
 /**
- * Context for lazily evaluating an internal feedback that is a child of an action.
- *
- * Internal feedbacks which live inside an action subtree (e.g. the `condition` of `logic_if`/`logic_while`)
- * are not eagerly cached. Instead they are evaluated live at action-execution time, using the parser
- * carried here. That parser already reflects the control's current variable state plus the extra
- * `$(this:*)` overrides derived from the running action's execution context, so those execution-derived
- * variables are visible to the feedback's options.
- *
- * A `null` context anywhere in the feedback read path means "use the cached value" - the eager path used
- * by the feedbacks/local-variables lists and by all module-owned feedbacks.
+ * Passed down the feedback read path when a feedback that is a child of an action is evaluated live at
+ * execution time. The parser carries the running action's extra `$(this:*)` overrides, which the eagerly
+ * cached value cannot see. A `null` context instead means "use the cached value".
  */
 export interface FeedbackExecutionContext {
 	readonly parser: VariablesAndExpressionParser
