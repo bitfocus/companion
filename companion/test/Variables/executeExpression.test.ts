@@ -367,11 +367,27 @@ describe('executeExpression', () => {
 			expect(blinker.trackDependencyOnInterval).toHaveBeenCalledWith(1000, 0.5)
 		})
 
-		test('invalid intervals return 0 without tracking', () => {
+		test('a non-numeric interval returns 0 without tracking', () => {
 			// mockBlinker throws if trackDependencyOnInterval is called
-			expect(executeExpression(mockBlinker, 'blink(0)', {}, undefined, new Map())).toMatchObject({ value: 0 })
-			expect(executeExpression(mockBlinker, 'blink(-5)', {}, undefined, new Map())).toMatchObject({ value: 0 })
 			expect(executeExpression(mockBlinker, "blink('abc')", {}, undefined, new Map())).toMatchObject({ value: 0 })
+		})
+
+		test('an out-of-range interval is clamped to the minimum period and still tracked', () => {
+			// The library clamps the interval to MIN_CLOCK_PERIOD_MS (100ms) before invoking the host
+			// callback, so 0/negative intervals now become a 100ms blink rather than a constant 0.
+			const blinker = mock<VariablesBlinker>({}, mockOptions)
+			blinker.trackDependencyOnInterval.mockReturnValue({
+				variableId: 'internal:__interval_50_50',
+				label: 'internal',
+				name: '__interval_50_50',
+			})
+
+			executeExpression(blinker, 'blink(0)', {}, undefined, new Map())
+			expect(blinker.trackDependencyOnInterval).toHaveBeenCalledWith(100, 0.5)
+
+			blinker.trackDependencyOnInterval.mockClear()
+			executeExpression(blinker, 'blink(-5)', {}, undefined, new Map())
+			expect(blinker.trackDependencyOnInterval).toHaveBeenCalledWith(100, 0.5)
 		})
 
 		test('a rejected interval returns 0', () => {
