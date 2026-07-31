@@ -13,8 +13,8 @@
 
 		"target": "es2024",
 		"noImplicitAny": true,
-		"sourceMap": true,
 		"declaration": true,
+		"emitDeclarationOnly": true,
 		"importHelpers": false,
 		"listFiles": false,
 		"traceResolution": false,

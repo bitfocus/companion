@@ -17,7 +17,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import LogController, { type Logger } from '../Log/Controller.js'
-import { isPackaged } from '../Resources/Util.js'
+import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import { DataChannelServer } from './Common/DataChannelServer.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
 import { doesModuleUseNewChildHandler } from './Connection/ApiVersions.js'
@@ -879,10 +879,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				if (doesModuleUseNewChildHandler(moduleApiVersion)) {
 					return {
 						apiVersion: moduleApiVersion,
-						entrypoint: path.join(
-							import.meta.dirname,
-							isPackaged() ? './ConnectionThread.js' : './Connection/Thread/Entrypoint.js'
-						),
+						entrypoint: resolveThreadEntrypoint(import.meta.dirname, 'ConnectionThread.js'),
 						arguments: ['--enable-source-maps'],
 						moduleEntrypoint: jsFullPath,
 						env: {
@@ -930,10 +927,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 				return {
 					apiVersion: moduleApiVersion,
-					entrypoint: path.join(
-						import.meta.dirname,
-						isPackaged() ? './SurfaceThread.js' : './Surface/Thread/Entrypoint.js'
-					),
+					entrypoint: resolveThreadEntrypoint(import.meta.dirname, 'SurfaceThread.js'),
 					arguments: ['--enable-source-maps'],
 					moduleEntrypoint: jsFullPath,
 					env: {

@@ -1,6 +1,18 @@
+import { defaultClientConditions, defaultServerConditions } from 'vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
+	// Resolve @companion-app/shared to its raw TypeScript sources (no separate `tsc` emit).
+	// The node-environment projects (shared-lib, companion, config-tool) resolve via SSR, so the
+	// condition must be set for both. Setting conditions replaces the defaults, so re-add them.
+	resolve: {
+		conditions: ['companion:source', ...defaultClientConditions],
+	},
+	ssr: {
+		resolve: {
+			conditions: ['companion:source', ...defaultServerConditions],
+		},
+	},
 	test: {
 		projects: [
 			'webui/vitest.config.ts',

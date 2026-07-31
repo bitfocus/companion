@@ -1,3 +1,4 @@
+import path from 'node:path'
 import * as imageRs from '@julusian/image-rs'
 import { colord } from 'colord'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
@@ -340,6 +341,19 @@ export function sendOverIpc(data: any): void {
 export function isPackaged(): boolean {
 	// process.env.COMPANION_BUNDLED is replaced with '"1"' at compile time via esbuild define
 	return process.env.COMPANION_BUNDLED === '1'
+}
+
+/**
+ * Resolve the path to a worker-thread / module-subprocess entrypoint bundle.
+ *
+ * When packaged, these bundles sit alongside the calling module (`packagedDir`). In development the
+ * backend itself runs from TypeScript source via tsx, but these entrypoints are esbuild-bundled into
+ * a separate directory (they run in threads/subprocesses that cannot use the tsx loader - see
+ * tools/dev.mts and tools/build_dev_threads.mts); COMPANION_DEV_THREAD_DIR points at it.
+ */
+export function resolveThreadEntrypoint(packagedDir: string, bundleName: string): string {
+	const dir = isPackaged() ? packagedDir : (process.env.COMPANION_DEV_THREAD_DIR ?? packagedDir)
+	return path.join(dir, bundleName)
 }
 
 /**

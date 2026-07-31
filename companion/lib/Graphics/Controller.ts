@@ -12,7 +12,6 @@
 import { EventEmitter } from 'node:events'
 import fs from 'node:fs'
 import os from 'node:os'
-import path from 'node:path'
 import type * as imageRs from '@julusian/image-rs'
 import { GlobalFonts } from '@napi-rs/canvas'
 import compressionMiddleware from 'compression'
@@ -40,7 +39,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { isPackaged } from '../Resources/Util.js'
+import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
@@ -110,7 +109,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	readonly imageLibrary: ImageLibrary
 
-	#pool = workerPool.pool(path.join(import.meta.dirname, isPackaged() ? './RenderThread.js' : './Thread.js'), {
+	#pool = workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
 		minWorkers: 2,
 		maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
 		workerType: 'thread',

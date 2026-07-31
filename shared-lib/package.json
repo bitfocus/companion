@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./*.js": {
+      "companion:source": "./lib/*.ts",
       "types": "./dist/*.d.ts",
       "default": "./dist/*.js"
     },

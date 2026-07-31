@@ -7,7 +7,7 @@
   "main": "lib/main.ts",
   "scripts": {
     "build:typecheck": "tsc --noEmit",
-    "dev": "COMPANION_CONFIG_FILE=../.cache/config-tool/config.yaml run -TB tsx lib/main.ts",
+    "dev": "COMPANION_CONFIG_FILE=../.cache/config-tool/config.yaml NODE_OPTIONS=--conditions=companion:source run -TB tsx lib/main.ts",
     "dev:init": "run dev init",
     "dev:generate": "run dev generate",
     "dev:validate": "run dev validate"

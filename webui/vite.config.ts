@@ -4,7 +4,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 import { normalizeBasePath } from '../tools/webui-dev-utils'
 
 const buildFile = fs
@@ -54,6 +54,9 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			tsconfigPaths: true,
+			// Resolve @companion-app/shared to its raw TypeScript sources (no separate `tsc` emit).
+			// Setting conditions replaces the defaults, so re-add them.
+			conditions: ['companion:source', ...defaultClientConditions],
 		},
 		server: {
 			port: parseInt(env.COMPANION_UI_PORT || '', 10) || undefined,
