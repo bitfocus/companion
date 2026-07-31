@@ -10,6 +10,7 @@ import Store from 'electron-store'
 import fileStreamRotator from 'file-stream-rotator'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
+import { parse as parsePlist } from 'plist'
 import stripAnsi from 'strip-ansi'
 import systeminformation from 'systeminformation'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
@@ -24,15 +25,13 @@ let version_warning = null
 if (process.platform === 'darwin') {
 	try {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const plist = require('plist')
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const semver = require('semver')
 
 		const minimumVersion = '13.5'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		/** @type {any} */
-		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
+		const versionInfo = parsePlist(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
 		const productVersion = semver.coerce(versionInfo.ProductVersion)
 
 		if (productVersion && !supportedVersions.test(productVersion)) {
