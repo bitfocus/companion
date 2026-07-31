@@ -1642,4 +1642,108 @@ describe('VariablesAndExpressionParser', () => {
 			expect(child.executeExpression('oscillate(1000)', undefined).ok).toBe(false)
 		})
 	})
+
+	describe('parseEntityOptions with hidden fields', () => {
+		const createHideableDefinition = () =>
+			createDefinition({
+				optionsSupportExpressions: true,
+				options: [
+					{
+						id: 'mode',
+						type: 'dropdown',
+						label: 'Mode',
+						default: 'simple',
+						disableAutoExpression: true, // required so isVisible may reference it
+						choices: [
+							{ id: 'simple', label: 'Simple' },
+							{ id: 'advanced', label: 'Advanced' },
+						],
+					},
+					{
+						id: 'level',
+						type: 'number',
+						label: 'Level',
+						min: 0,
+						max: 100,
+						default: 5,
+						isVisibleUi: { type: 'expression', fn: '$(options:mode) == "advanced"' },
+					},
+				],
+			})
+
+		it('skips validation of a hidden field and returns its default', () => {
+			const parser = createParser()
+			const entityDefinition = createHideableDefinition()
+			const options: ExpressionableOptionsObject = {
+				mode: { isExpression: false, value: 'simple' }, // hides `level`
+				level: { isExpression: false, value: 999 }, // out of range, but hidden
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				expect(result.parsedOptions.mode).toBe('simple')
+				// Uses the default instead of the invalid stored value
+				expect(result.parsedOptions.level).toBe(5)
+			}
+		})
+
+		it('still validates the field when it is visible', () => {
+			const parser = createParser()
+			const entityDefinition = createHideableDefinition()
+			const options: ExpressionableOptionsObject = {
+				mode: { isExpression: false, value: 'advanced' }, // shows `level`
+				level: { isExpression: false, value: 999 }, // out of range and now visible
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(false)
+			if (!result.ok) {
+				expect(result.optionErrors.level).toBeTruthy()
+			}
+		})
+
+		it('does not apply visibility when optionsSupportExpressions is false', () => {
+			const parser = createParser()
+			const entityDefinition = createDefinition({
+				// legacy path: fields pass through without validation and visibility is not evaluated
+				options: [
+					{
+						id: 'mode',
+						type: 'dropdown',
+						label: 'Mode',
+						default: 'simple',
+						disableAutoExpression: true,
+						choices: [
+							{ id: 'simple', label: 'Simple' },
+							{ id: 'advanced', label: 'Advanced' },
+						],
+					},
+					{
+						id: 'level',
+						type: 'number',
+						label: 'Level',
+						min: 0,
+						max: 100,
+						default: 5,
+						isVisibleUi: { type: 'expression', fn: '$(options:mode) == "advanced"' },
+					},
+				],
+			})
+			const options: ExpressionableOptionsObject = {
+				mode: { isExpression: false, value: 'simple' },
+				level: { isExpression: false, value: 999 },
+			}
+
+			const result = parser.parseEntityOptions(entityDefinition, options)
+
+			expect(result.ok).toBe(true)
+			if (result.ok) {
+				// passthrough - the stored value is kept as-is, not replaced with the default
+				expect(result.parsedOptions.level).toBe(999)
+			}
+		})
+	})
 })

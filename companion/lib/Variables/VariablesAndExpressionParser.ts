@@ -13,6 +13,7 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import {
+	computeHiddenEntityOptionFields,
 	executeExpression,
 	parseVariablesInString,
 	visitEntityOptionsForVariables,
@@ -233,10 +234,20 @@ export class VariablesAndExpressionParser {
 		const parseErrors: Record<string, string | undefined> = {}
 		let clockSensitive = false
 
+		// Fields hidden by their isVisible logic must not be parsed/validated - the user can't see
+		// them, so their (possibly stale/invalid) value would only produce confusing errors. Emit
+		// the field default instead.
+		const hiddenFields = computeHiddenEntityOptionFields(entityDefinition, options)
+
 		const parsedOptions = visitEntityOptionsForVariables(entityDefinition, options, (field, optionValue, fieldType) => {
 			// For passthrough fields, skip all processing and just extract the raw value
 			if (fieldType === null) {
 				return optionValue?.value
+			}
+
+			// Hidden fields are not parsed/validated; use the field default so the value stays type-safe
+			if (hiddenFields.has(field.id)) {
+				return 'default' in field ? structuredClone(field.default) : undefined
 			}
 
 			const parsedValue = this.parseEntityOption(optionValue, fieldType)
