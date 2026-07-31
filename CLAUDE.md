@@ -1,0 +1,100 @@
+# Working on Companion (core repo)
+
+Notes for agents/contributors working on this repository, so the conventions don't have to be
+repeated each time. See `DEVELOPER.md` for the human-facing setup guide; this file captures the
+day-to-day workflow, conventions and gotchas in one place.
+
+## Git workflow
+
+- Develop on the designated feature branch for the task. Create it from the latest default branch
+  if it doesn't exist yet. **Never push to a different branch without explicit permission.**
+- Commit with clear, descriptive messages. **Only commit and push when explicitly asked to.**
+- **Do not open a pull request unless explicitly asked.**
+
+## Commands
+
+This is a Yarn 4 (Berry, via Corepack) monorepo using TypeScript project references — always use
+`yarn`, never `npm`.
+
+```bash
+yarn install          # install dependencies (Corepack provides yarn 4)
+yarn test             # run all tests (vitest, watch mode)
+yarn test --run       # run all tests once
+yarn vitest run       # run all tests once (CI-style); add a path/pattern to scope
+yarn vitest run --project companion <path>   # scope to one project + path
+yarn check-types      # type-check everything (tsc --build across all packages)
+yarn lint             # eslint (prettier runs inside eslint)
+yarn format           # prettier --write .
+```
+
+Vitest projects are `companion`, `webui`, `shared-lib`, and `config-tool` (config at the repo root
+`vitest.config.ts`). Scope with `--project <name>` and/or a path to keep runs fast.
+
+Finer-grained invocations when you don't want the whole suite:
+
+- Typecheck one package (builds its referenced projects, e.g. `shared-lib`, first):
+  `tsc --build companion/tsconfig.json`
+- Typecheck the tests: `tsc --build tsconfig.vitest.json`
+- Run a single test file: `yarn vitest run <path>`
+- Lint specific files: `eslint <files>` (config `eslint.config.mjs`); `eslint --fix` handles most
+  formatting.
+
+Before finishing a change, make sure `yarn check-types`, `yarn lint`, and `yarn vitest run` all
+pass. A husky + lint-staged **pre-commit hook** runs `eslint` and `tsc --build` on staged files, so a
+commit will fail if types or lint don't pass — expect that and fix it rather than bypassing the hook.
+
+## Repository layout
+
+- `companion/` — the backend (Node). Feedback/style/graphics logic lives here:
+  `lib/Controls/Entities/` (entity pools & instances), `lib/Graphics/` (element conversion,
+  rendering), `lib/Variables/` (expression evaluation), `lib/Internal/` (internal actions/feedbacks),
+  `lib/Data/` (SQLite-backed stores). Tests live in `companion/test/**` mirroring `lib/`.
+- `webui/` — the frontend (React + Vite). Tests are co-located in `__tests__/` dirs (jsdom).
+- `shared-lib/` — `@companion-app/shared`: types/models & pure logic shared by backend and frontend
+  (`lib/Model/`, `lib/Expressions.ts`, …). Tests in co-located `__tests__/` dirs.
+- `config-tool/`, `launcher/`, `launcher-ui/`, `docs/` — supporting packages.
+
+## Code conventions
+
+- **New function parameters are required, not optional.** Backwards compatibility is NOT a good
+  enough reason to make a parameter optional. When adding a parameter, thread it through all call
+  sites rather than defaulting it. When a new argument has a "none" case, model it explicitly (e.g.
+  pass `null`) at every call site rather than leaving the parameter optional.
+- Match the style, naming and comment density of the surrounding code.
+- When changing behaviour, improve unit-test coverage for it; do not rely on manual testing alone.
+
+### Formatting (enforced by Prettier, via ESLint)
+
+- Tabs, no semicolons, single quotes, printWidth 120.
+- Imports are auto-sorted (`@ianvs/prettier-plugin-sort-imports`); let `yarn format` /
+  `eslint --fix` handle ordering.
+- Prefer `import type { … }` for type-only imports (enforced by lint).
+- Gotcha: `@typescript-eslint/no-unnecessary-type-assertion` can flag an `as any` that is actually
+  needed to avoid "excessively deep type instantiation" from deep mocks — prefer an `any`-typed
+  local/helper in that case.
+
+## Testing notes
+
+- Framework is **Vitest** (not Jest). Prefer pure/unit tests where possible; heavy UI components
+  (e.g. anything rendering the Monaco expression editor) are awkward in jsdom, so extract testable
+  logic into plain functions and test those.
+- Backend pool/entity tests use the shared harness in
+  `companion/test/Controls/Entities/EntityListPoolTestHelpers.ts` (mocked collaborators + real class
+  under test). The pool schedules debounced timers, so those tests use `vi.useFakeTimers()`.
+
+## Environment & tooling
+
+- The Node version is pinned in `.node-version` (also enforced by `package.json` `engines`). The data
+  layer relies on it: `node:sqlite` (used by `lib/Data/`) is only a stable builtin on that Node
+  version, so use it rather than an older Node.
+- Corepack provides Yarn 4 — run `corepack enable` if `yarn` isn't already the Berry release. Do not
+  fall back to the global Yarn 1.
+- Full local setup mirrors CI: `yarn install` then `yarn build:ts`. The TS build compiles the project
+  references, which the test run currently still depends on to resolve `@companion-app/shared`.
+
+### Claude Code on the web
+
+A `SessionStart` hook (`.claude/hooks/session-start.sh`) provisions the container for remote sessions:
+it installs the `.node-version` Node if the base image is older, activates Yarn 4 via Corepack, then
+runs `yarn install` and `yarn build:ts`. It only runs in the remote environment (guarded by
+`$CLAUDE_CODE_REMOTE`).
