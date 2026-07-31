@@ -253,6 +253,10 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 					this.tableCache.clear()
 					this.defaultTableView.get('test')
 				} catch (_e) {
+					// Release our handle on the unreadable file before touching it on disk. Windows keeps a
+					// lock on open files, so leaving it open would block the rename below (and leak the handle).
+					this.#closeStoreQuietly()
+
 					try {
 						try {
 							if (fs.existsSync(this.cfgCorruptFile)) {
@@ -281,6 +285,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 					this.migrateFileToSqlite()
 					this.defaultTableView.get('test')
 				} catch (e) {
+					// Release the handle opened above before resetting (see the corrupt-file path)
+					this.#closeStoreQuietly()
+
 					this.setStartupState(DatabaseStartupState.Reset)
 					this.logger.error(stringifyError(e))
 					this.startSQLiteWithDefaults()
@@ -323,6 +330,17 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		}
 
 		this.setBackupCycle()
+	}
+
+	/** Close the current database handle if one is open, swallowing any error. Used on the recovery
+	 * paths before a file is renamed/deleted or the store is reopened, so a stale handle isn't leaked
+	 * (and doesn't keep a Windows file lock that would block the rename). */
+	#closeStoreQuietly(): void {
+		try {
+			this.store?.close()
+		} catch (_e) {
+			// Already closed or never opened; nothing to do
+		}
 	}
 
 	#createDatabase(filename: string) {
