@@ -2,7 +2,7 @@ import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
 import { registerInstanceRestApiPaths } from '../../Instance/RestApi.js'
 import type { AppInfo } from '../../Registry.js'
 import { REST_API_BASE_PATH } from './constants.js'
-import { registry } from './registry.js'
+import { createOpenApiRegistry } from './registry.js'
 
 /**
  * Generate the OpenAPI 3.0 JSON document from the registry.
@@ -11,8 +11,10 @@ import { registry } from './registry.js'
 export function generateOpenApiDocument(
 	appInfo: Pick<AppInfo, 'appVersion'>
 ): ReturnType<OpenApiGeneratorV3['generateDocument']> {
+	const registry = createOpenApiRegistry()
+
 	// Register all route paths into the registry
-	registerInstanceRestApiPaths()
+	registerInstanceRestApiPaths(registry)
 
 	const generator = new OpenApiGeneratorV3(registry.definitions)
 

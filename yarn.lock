@@ -330,14 +330,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@asteasolutions/zod-to-openapi@npm:^8.5.0":
-  version: 8.5.0
-  resolution: "@asteasolutions/zod-to-openapi@npm:8.5.0"
+"@asteasolutions/zod-to-openapi@npm:^9.1.0":
+  version: 9.1.0
+  resolution: "@asteasolutions/zod-to-openapi@npm:9.1.0"
   dependencies:
-    openapi3-ts: "npm:^4.1.2"
+    openapi3-ts: "npm:^4.6.0"
   peerDependencies:
     zod: ^4.0.0
-  checksum: 10c0/989674e297dbf5daef56813795d5b40a18d8de49e95f67d4d81f17e5b59f678f1a202b68631fa1a2bc83f9bbcb57db90c6a33d33e71a09579e46a0707e785a4b
+  checksum: 10c0/a6bfbdeab046036ed5e8ba1d460e7c2fb4b780f0c3f6d36afe76cea29cd1b8fc33de00661c57b7835c1cb5235c192ab87ff339b0785f328dacfee6eb1396277f
   languageName: node
   linkType: hard
 
@@ -10940,7 +10940,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "companion@workspace:companion"
   dependencies:
-    "@asteasolutions/zod-to-openapi": "npm:^8.5.0"
+    "@asteasolutions/zod-to-openapi": "npm:^9.1.0"
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
     "@companion-module/host": "npm:1.1.1"
@@ -18596,12 +18596,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"openapi3-ts@npm:^4.1.2":
-  version: 4.6.0
-  resolution: "openapi3-ts@npm:4.6.0"
+"openapi3-ts@npm:^4.6.0":
+  version: 4.6.1
+  resolution: "openapi3-ts@npm:4.6.1"
   dependencies:
     yaml: "npm:^2.9.0"
-  checksum: 10c0/c6d867c84e57145134bdbf8dcc8942f0dab550b7acad6b5c481ee340d98fbf2701a59add25d436fe36150932eb243916fd302137591ba54dae323594acb6a433
+  checksum: 10c0/6593453cb4cc39de4216118946a473244cfc2a1cbc766df27e15be1922e202016fed6e2fc568e67a82535f596f62cbbe5c66e8aafd6c4891849d677140096932
   languageName: node
   linkType: hard
 

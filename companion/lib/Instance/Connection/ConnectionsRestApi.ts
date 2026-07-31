@@ -1,3 +1,4 @@
+import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi'
 import Express from 'express'
 import z from 'zod'
 import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
@@ -10,7 +11,6 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 import type { Logger } from '../../Log/Controller.js'
 import { REST_API_BASE_PATH } from '../../Service/RestApi/constants.js'
 import { RestApiError } from '../../Service/RestApi/errors.js'
-import { registry } from '../../Service/RestApi/registry.js'
 import {
 	collectionResponse,
 	createCollectionSchema,
@@ -860,7 +860,7 @@ function mapConnectionOperationError(e: unknown): RestApiError {
  * Register all /connections paths in the OpenAPI registry.
  * Called once at startup before the spec is generated.
  */
-export function registerConnectionPaths(): void {
+export function registerConnectionPaths(registry: OpenAPIRegistry): void {
 	for (const endpointSpec of connectionEndpointSpecs) {
 		registerRestEndpoint(registry, CONNECTIONS_API_BASE_PATH, endpointSpec.contract)
 	}

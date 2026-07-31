@@ -1,3 +1,4 @@
+import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi'
 import express from 'express'
 import type { Logger } from '../Log/Controller.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
@@ -23,6 +24,6 @@ export function createInstanceRestApiRouter(
 	return router
 }
 
-export function registerInstanceRestApiPaths(): void {
-	registerConnectionPaths()
+export function registerInstanceRestApiPaths(registry: OpenAPIRegistry): void {
+	return registerConnectionPaths(registry)
 }
