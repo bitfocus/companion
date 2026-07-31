@@ -9,7 +9,7 @@
  * this program.
  */
 
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import {
 	ParseExpression,
@@ -17,6 +17,7 @@ import {
 	type GetVariableValueProps,
 	type ResolveExpressionLimits,
 } from '@companion-app/shared/Expressions.js'
+import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -122,6 +123,55 @@ export function visitEntityOptionsForVariables<T>(
 	}
 
 	return result
+}
+
+/**
+ * Determine which of an entity's option fields are currently hidden by their `isVisible` logic.
+ *
+ * Mirrors the frontend's restricted visibility path (`useOptionsVisibility`): visibility depends
+ * only on the raw values of sibling options that cannot themselves be expressions
+ * (`disableAutoExpression`), plus the static `isVisibleData`. It never resolves expressions or
+ * runtime variables, so it can be computed directly from the raw options object. Evaluation
+ * fails open (treated as visible) on any error, so this can only ever suppress spurious
+ * validation - never hide a field that should be validated.
+ *
+ * Only meaningful for definitions with `optionsSupportExpressions` - legacy definitions pass
+ * their fields through without validation, so there are no errors to suppress.
+ */
+export function computeHiddenEntityOptionFields(
+	definition: ClientEntityDefinition,
+	options: ExpressionableOptionsObject
+): Set<string> {
+	const hiddenFields = new Set<string>()
+
+	if (!definition.optionsSupportExpressions) return hiddenFields
+
+	const allowedReferences = new Set<string>()
+	for (const field of definition.options) {
+		if (field.disableAutoExpression) allowedReferences.add(field.id)
+	}
+
+	const restrictedGetOptionValue = (optionId: string): JsonValue | undefined => {
+		if (!allowedReferences.has(optionId)) {
+			throw new Error(`Access to option "${optionId}" not allowed, as it is either unknown or can be an expression.`)
+		}
+		return options[optionId]?.value
+	}
+
+	for (const field of definition.options) {
+		if (!field.isVisibleUi) continue
+
+		// The function form is a stringified module function and must never run on the backend;
+		// leave those fields visible (validated as before).
+		const compiled = getCompiledIsVisibleExpressionFn(field.isVisibleUi)
+		if (!compiled) continue
+
+		if (!compiled(restrictedGetOptionValue, field.isVisibleUi.data)) {
+			hiddenFields.add(field.id)
+		}
+	}
+
+	return hiddenFields
 }
 
 export function parseVariablesInString(
