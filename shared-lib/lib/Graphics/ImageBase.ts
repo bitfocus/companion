@@ -982,19 +982,19 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		const drawingLinesTotalHeight = layout.measuredLineHeight * numLines
 		let yAnchor = 0
-		let startline = 0
+		const startline = 0
 		switch (valign) {
 			case 'top':
 				yAnchor = layout.measuredAscent
-				startline = 0
+				// startline = 0 // in this version shown lines should not follow v alignment
 				break
 			case 'center':
 				yAnchor = (h - drawingLinesTotalHeight) / 2 + layout.measuredAscent
-				startline = Math.floor((layout.lines.length - numLines) / 2)
+				// startline = Math.floor((layout.lines.length - numLines) / 2) // in this version shown lines should not follow v alignment
 				break
 			case 'bottom':
 				yAnchor = h - drawingLinesTotalHeight + layout.measuredAscent
-				startline = layout.lines.length - numLines
+				// startline = layout.lines.length - numLines // in this version shown lines should not follow v alignment
 				break
 		}
 		yAnchor += y

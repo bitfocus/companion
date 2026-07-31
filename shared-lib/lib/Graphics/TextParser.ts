@@ -160,6 +160,11 @@ export function computeTextLayout(
 	/** accumulated height of the lines, used check height constrained on the way */
 	let totalHeight = 0
 
+	/**
+	 * Finds the position of the last char of a line that still fits in the width
+	 * @param textChars array with all the chars
+	 * @returns an object with the ascend and the descent of the measured test and the number of fitting chars in maxCodepoints
+	 */
 	const findLastChar = (textChars: string[]): { ascent: number; descent: number; maxCodepoints: number } => {
 		// skia-canvas built-in line break algorithm is poor
 		// const substring = (arr: any[], start: number, end: number) => {
@@ -336,17 +341,16 @@ export function computeTextLayout(
 			continue
 		}
 
-		// check if remaining text fits in line
-		const maxCharsPerLine = w // Limit how many characters we attempt to draw per line
-		const { maxCodepoints, ascent, descent } = findLastChar(
-			lineChars.slice(lastDrawnCharIndex, lastDrawnCharIndex + maxCharsPerLine + 1)
-		)
+		// check if remaining text of line fits in width
+		const maxCharsPerLine = w // Limit how many characters we attempt to draw per line, no need to draw more chars than we have pixels (beware this pixels are not necessaryily the numbers of pixels of the real canvas)
+		const { maxCodepoints, ascent, descent } = findLastChar(lineChars.slice(0, maxCharsPerLine))
 
 		// console.log(
-		// 	`check text "${lineChars.slice(lastDrawnCharIndex, lastDrawnCharIndex + maxCharsPerLine).join('')}" arr=${lineChars} lastDrawnCharIndex=${lastDrawnCharIndex} length=${lineChars.length - lastDrawnCharIndex} max=${maxCodepoints}`
+		// 	`check text "${lineChars.join('')}" arr=${lineChars.slice(0, maxCharsPerLine)} lastDrawnCharIndex=${lastDrawnCharIndex} length=${lineChars.length - lastDrawnCharIndex} max=${maxCodepoints}`
 		// )
 		if (maxCodepoints >= lineChars.length) {
 			// console.log(`line ${currentLine} width fits`)
+			lines[currentLine].text = lineChars.join('')
 			lines[currentLine].ascent = ascent
 			lines[currentLine].descent = descent
 			lines[currentLine].fitsH = true
@@ -358,7 +362,7 @@ export function computeTextLayout(
 			lastDrawnCharIndex = lineChars.length
 		} else {
 			// console.log(`line ${currentLine} is too long by ${lineChars.length - maxCodepoints} chars`)
-			//if (exitEarly) return layout
+			// no early exit possible here
 
 			const possibleLine = lineChars.slice(lastDrawnCharIndex, lastDrawnCharIndex + maxCodepoints)
 
@@ -457,7 +461,7 @@ export function computeTextLayout(
 	}
 	// console.log(
 	// 	'line breaking finished',
-	// 	lines.map((line) => `${line.text} fitsH:${line.fitsH}`)
+	// 	lines.map((line) => `${line.text} asc${line.ascent.toFixed(2)} des${line.descent.toFixed(2)} fitsH:${line.fitsH}`)
 	// )
 
 	// Check if text fits
