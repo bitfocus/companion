@@ -11,6 +11,7 @@ import { ControlEntityInstance } from './EntityInstance.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
@@ -372,9 +373,11 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Get the value of this feedback as a boolean
+	 * Get the combined value of this feedback list as a single boolean (logical AND of all children).
+	 * @param context Lazy-evaluation context, or `null` to use cached values. See
+	 * {@link ControlEntityInstance.getBooleanFeedbackValue}.
 	 */
-	getBooleanFeedbackValue(): boolean {
+	getBooleanFeedbackValue(context: FeedbackExecutionContext | null): boolean {
 		if (
 			this.#listDefinition.type !== EntityModelType.Feedback ||
 			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
@@ -386,13 +389,17 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			if (entity.disabled) continue
 
-			result = result && entity.getBooleanFeedbackValue()
+			result = result && entity.getBooleanFeedbackValue(context)
 		}
 
 		return result
 	}
 
-	getChildBooleanFeedbackValues(): boolean[] {
+	/**
+	 * Get the individual boolean values of each enabled child feedback (used by logic operators).
+	 * @param context Lazy-evaluation context, or `null` to use cached values.
+	 */
+	getChildBooleanFeedbackValues(context: FeedbackExecutionContext | null): boolean[] {
 		if (
 			this.#listDefinition.type !== EntityModelType.Feedback ||
 			this.#listDefinition.feedbackListType !== FeedbackEntitySubType.Boolean
@@ -404,7 +411,7 @@ export class ControlEntityList {
 		for (const entity of this.#entities) {
 			if (entity.disabled) continue
 
-			values.push(entity.getBooleanFeedbackValue())
+			values.push(entity.getBooleanFeedbackValue(context))
 		}
 
 		return values

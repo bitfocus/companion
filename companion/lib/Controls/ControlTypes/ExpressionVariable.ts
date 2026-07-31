@@ -338,7 +338,7 @@ export class ControlExpressionVariable
 			if (!this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) return
 
 			this.deps.variableValues.setVariableValues('expression', [
-				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
+				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue(null) },
 			])
 		},
 		{

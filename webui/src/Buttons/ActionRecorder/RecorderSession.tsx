@@ -30,6 +30,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 				readonly={!!sessionInfo.isRunning}
 				localVariablesStore={null}
 				localVariablePrefix={null}
+				insideActionsList={true}
 			>
 				<MinimalEntityList
 					ownerId={null}

@@ -13,6 +13,8 @@ export interface EntityEditorContextType {
 	localVariablePrefix: string | null
 	/** When set, inline expression previews show a compact validity status instead of the value (shown elsewhere) */
 	previewStatusOnly?: boolean
+	/** Whether this editor's entities live in an actions list (vs feedbacks/local-variables). */
+	insideActionsList: boolean
 }
 
 const EntityEditorContext = createContext<EntityEditorContextType | null>(null)
@@ -38,6 +40,7 @@ export function EntityEditorContextProvider({
 	localVariablesStore,
 	localVariablePrefix,
 	previewStatusOnly,
+	insideActionsList,
 	children,
 }: React.PropsWithChildren<EntityEditorContextProviderProps>): React.JSX.Element {
 	const value = useMemo<EntityEditorContextType>(() => {
@@ -49,8 +52,18 @@ export function EntityEditorContextProvider({
 			localVariablesStore,
 			localVariablePrefix,
 			previewStatusOnly,
+			insideActionsList,
 		}
-	}, [controlId, location, serviceFactory, readonly, localVariablesStore, localVariablePrefix, previewStatusOnly])
+	}, [
+		controlId,
+		location,
+		serviceFactory,
+		readonly,
+		localVariablesStore,
+		localVariablePrefix,
+		previewStatusOnly,
+		insideActionsList,
+	])
 
 	return <EntityEditorContext.Provider value={value}>{children}</EntityEditorContext.Provider>
 }

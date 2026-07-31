@@ -9,6 +9,8 @@ import type { InstanceDefinitions } from '../../Instance/Definitions.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
 
+export type { FeedbackExecutionContext } from '../../Internal/Types.js'
+
 export type InstanceDefinitionsForEntity = Pick<InstanceDefinitions, 'getEntityDefinition'>
 
 export type ProcessManagerForEntity = Pick<
@@ -18,7 +20,7 @@ export type ProcessManagerForEntity = Pick<
 
 export type InternalControllerForEntity = Pick<
 	InternalController,
-	'entityUpdate' | 'entityDelete' | 'entityUpgrade' | 'executeLogicFeedback'
+	'entityUpdate' | 'entityDelete' | 'entityUpgrade' | 'executeLogicFeedback' | 'evaluateFeedbackValue'
 >
 
 export interface NewFeedbackValue {

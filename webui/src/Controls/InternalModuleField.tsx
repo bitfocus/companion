@@ -375,7 +375,14 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 	const { variablesStore } = useContext(RootAppStoreContext)
 
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
-	const localVariableDefinitions = supportsLocal ? localVariablesStore?.getOptions(null, true, false) : undefined
+	const localVariableDefinitions = supportsLocal
+		? localVariablesStore?.getOptions({
+				entityType: null,
+				internalParser: true,
+				isLocatedInGrid: false,
+				insideActionsList: false,
+			})
+		: undefined
 	const choices = useComputed(() => {
 		const choices: Array<DropdownChoice> = []
 

@@ -27,6 +27,7 @@ import { ControlEntityList } from './EntityList.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
@@ -322,6 +323,7 @@ export class ControlEntityInstance {
 			const thisData = this.#data
 
 			if (thisData.connectionId === 'internal') {
+				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
@@ -766,22 +768,36 @@ export class ControlEntityInstance {
 		return changed
 	}
 
-	getResolvedFeedbackValue(): any {
+	/**
+	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
+	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}.
+	 */
+	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): any {
 		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const definition = this.getEntityDefinition()
 
 		if (definition?.feedbackType === FeedbackEntitySubType.Boolean) {
-			return this.getBooleanFeedbackValue()
+			return this.getBooleanFeedbackValue(context)
 		} else {
 			return this.feedbackValue
 		}
 	}
 
 	/**
-	 * Get the value of this feedback as a boolean
+	 * Get the value of this feedback as a boolean.
+	 *
+	 * `context` null → cached value. Non-null → evaluate live with its parser so the running action's
+	 * `$(this:*)` are visible; internal feedbacks only, module feedbacks fall back to the cache. `isInverted`
+	 * always comes from the cache.
+	 *
+	 * A child-of-action internal feedback is therefore evaluated twice - eagerly cached, and live here (only
+	 * the live value sees the execution context). Skipping the eager caching for these (tracking whether a
+	 * feedback is inside an action subtree, and re-registering it when moved between lists) was considered and
+	 * rejected: the sole gain is avoiding one evaluation of feedbacks that are cheap and rarely run, which
+	 * isn't worth the extra moving parts. Revisit if these child feedbacks ever become expensive.
 	 */
-	getBooleanFeedbackValue(): boolean {
+	getBooleanFeedbackValue(context: FeedbackExecutionContext | null): boolean {
 		if (this.#data.disabled) return false
 
 		if (this.#data.type !== EntityModelType.Feedback) return false
@@ -792,7 +808,7 @@ export class ControlEntityInstance {
 		if (isInternalLogicFeedback(this)) {
 			// Future: This could probably be made a bit more generic by checking `definition.supportsChildFeedbacks`
 			const childGroup = this.#children.get('default') || this.#children.get('children')
-			const childValues = childGroup?.getChildBooleanFeedbackValues() ?? []
+			const childValues = childGroup?.getChildBooleanFeedbackValues(context) ?? []
 
 			return this.#internalModule.executeLogicFeedback(
 				this.asEntityModel() as FeedbackEntityModel,
@@ -807,6 +823,21 @@ export class ControlEntityInstance {
 			definition.feedbackType !== FeedbackEntitySubType.Boolean
 		)
 			return false
+
+		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
+		if (context && this.#data.connectionId === 'internal') {
+			const value = this.#internalModule.evaluateFeedbackValue(
+				this.asEntityModel(false) as FeedbackEntityModel,
+				this.#controlId,
+				context.parser
+			)
+
+			if (typeof value === 'boolean') {
+				if (definition.showInvert && this.#cachedIsInverted) return !value
+				return value
+			}
+			return false
+		}
 
 		if (typeof this.#cachedFeedbackValue === 'boolean') {
 			if (definition.showInvert && this.#cachedIsInverted) return !this.#cachedFeedbackValue

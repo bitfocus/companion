@@ -198,6 +198,7 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={null}
 				previewStatusOnly
+				insideActionsList={false}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`feedbacks_${controlId}_entities`}
@@ -308,6 +309,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 				readonly={false}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix="local"
+				insideActionsList={false}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`localVariables_${controlId}_entities`}

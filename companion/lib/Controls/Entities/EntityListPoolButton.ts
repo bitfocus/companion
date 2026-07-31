@@ -240,7 +240,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			// Special case to flatten the 'conditionalise existing feedbacks'
 			if (feedback.connectionId === 'internal' && feedback.definitionId === 'logic_conditionalise_advanced') {
 				// Check if the condition (all 'children' boolean feedbacks) is true
-				if (!feedback.getBooleanFeedbackValue()) return
+				if (!feedback.getBooleanFeedbackValue(null)) return
 
 				// Get the children to treat as overrides
 				const children = feedback.getChildren('feedbacks')
@@ -262,7 +262,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 				case FeedbackEntitySubType.Boolean:
 					// For boolean values, we only care about the true case
 					// And the override stores the value to be applied
-					if (feedback.getBooleanFeedbackValue()) {
+					if (feedback.getBooleanFeedbackValue(null)) {
 						for (const override of overrides) {
 							pushOverride(override.elementId, override.elementProperty, override.override)
 						}

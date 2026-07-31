@@ -12,6 +12,14 @@ import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
+export interface GetLocalVariableOptions {
+	entityType: EntityModelType | null
+	/** Whether the field is parsed by the internal module's parser (which injects the `this:*` values). */
+	internalParser: boolean
+	isLocatedInGrid: boolean
+	insideActionsList: boolean
+}
+
 export class LocalVariablesStore {
 	readonly controlId: string
 
@@ -46,14 +54,20 @@ export class LocalVariablesStore {
 	}
 
 	getOptions = computedFn(
-		(entityType: EntityModelType | null, internalParser: boolean, isLocatedInGrid: boolean): DropdownChoiceInt[] => {
+		({
+			entityType,
+			internalParser,
+			isLocatedInGrid,
+			insideActionsList,
+		}: GetLocalVariableOptions): DropdownChoiceInt[] => {
 			const isPageControl = ParseControlId(this.controlId)?.type === 'page'
 
 			let fixedVariables: DropdownChoiceInt[] = []
 
 			if (isLocatedInGrid) {
 				fixedVariables = ControlLocalVariables
-				if (internalParser && entityType === EntityModelType.Action) {
+				// Actions (and feedbacks under them) can reference the action's execution-context variables.
+				if (internalParser && (entityType === EntityModelType.Action || insideActionsList)) {
 					fixedVariables = ControlWithInternalLocalVariables
 				}
 			} else if (isPageControl) {
