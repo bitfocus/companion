@@ -4,8 +4,8 @@ import { useMemo, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
+	EntityModelType,
 	stringifySocketEntityLocation,
-	type EntityModelType,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -66,6 +66,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 				readonly={false}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
+				insideActionsList={entityType === EntityModelType.Action}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}

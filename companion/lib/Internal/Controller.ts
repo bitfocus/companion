@@ -552,8 +552,10 @@ export class InternalController {
 				allowClockSensitive: false,
 			})
 
-			// Context for lazily evaluating this action's child feedbacks. Fresh parser per call, so a caller
-			// re-checking conditions in a loop (logic_while) sees the current variable state each time.
+			// Context for lazily evaluating this action's child feedbacks. A parser snapshots local/page
+			// variable values at construction, so we build a fresh one per call rather than reusing the
+			// action's `parser`: logic_while re-checks its condition each iteration and must see values that
+			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
 				parser: this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
 					allowClockSensitive: false,
@@ -824,8 +826,5 @@ export class InternalController {
 function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
 	return {
 		'this:surface_id': extras.surfaceId,
-
-		// TODO: real execution-context variables TBD. Placeholder so the plumbing exists and is exercised.
-		'this:action_execution_placeholder': undefined,
 	}
 }

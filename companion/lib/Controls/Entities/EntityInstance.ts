@@ -792,10 +792,10 @@ export class ControlEntityInstance {
 	 * always comes from the cache.
 	 *
 	 * A child-of-action internal feedback is therefore evaluated twice - eagerly cached, and live here (only
-	 * the live value sees the execution context). Skipping the eager caching for such feedbacks was tried and
-	 * removed: it needed a flag threaded through the entity tree plus move-time re-registration, all to save
-	 * one evaluation of feedbacks that are cheap and rarely run. See git history for `insideActionSubtree` if
-	 * that ever stops being true.
+	 * the live value sees the execution context). Skipping the eager caching for these (tracking whether a
+	 * feedback is inside an action subtree, and re-registering it when moved between lists) was considered and
+	 * rejected: the sole gain is avoiding one evaluation of feedbacks that are cheap and rarely run, which
+	 * isn't worth the extra moving parts. Revisit if these child feedbacks ever become expensive.
 	 */
 	getBooleanFeedbackValue(context: FeedbackExecutionContext | null): boolean {
 		if (this.#data.disabled) return false

@@ -13,6 +13,7 @@ import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { useOptionalEntityEditorContext } from './Components/EntityEditorContext.js'
 import type { InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
 import { DeferredParsingContextVariables, type LocalVariablesStore } from './LocalVariablesStore.js'
@@ -43,6 +44,8 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	localVariablesStore,
 	features,
 }: Readonly<OptionsInputControlProps>): React.JSX.Element {
+	const insideActionsList = useOptionalEntityEditorContext()?.insideActionsList ?? false
+
 	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
 	const checkValid = useCallback((value: JsonValue | undefined) => validateInputValue(option, value).validity, [option])
 
@@ -53,11 +56,12 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			const contextVars = option.contextVariableResolution ? DeferredParsingContextVariables : []
 			const baseLocalVariables =
 				features?.local || option.deferParsing
-					? (localVariablesStore?.getOptions(
+					? (localVariablesStore?.getOptions({
 							entityType,
-							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-							isLocatedInGrid
-						) ?? [])
+							internalParser: option.useVariables === CompanionFieldVariablesSupport.InternalParser,
+							isLocatedInGrid,
+							insideActionsList,
+						}) ?? [])
 					: []
 			const allLocalVariables = [...baseLocalVariables, ...contextVars]
 
@@ -76,7 +80,12 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			)
 		}
 		case 'expression': {
-			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+			const localVariables = localVariablesStore?.getOptions({
+				entityType,
+				internalParser: true,
+				isLocatedInGrid,
+				insideActionsList,
+			})
 
 			return (
 				<ExpressionInputField
