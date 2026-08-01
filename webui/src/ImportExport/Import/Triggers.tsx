@@ -97,13 +97,11 @@ export function ImportTriggersTab({
 					{Object.entries(snapshot.triggers || {}).map(([id, info]) => (
 						<tr key={id}>
 							<td className="compact text-center">
-								<div className="form-check form-check-inline mr-1 mt-1">
-									<CheckboxInputField
-										id={undefined} // TODO - link up with a label
-										value={selectedTriggers.includes(id)}
-										setValue={(value) => toggleTrigger(id, value)}
-									/>
-								</div>
+								<CheckboxInputField
+									id={undefined} // TODO - link up with a label
+									value={selectedTriggers.includes(id)}
+									setValue={(value) => toggleTrigger(id, value)}
+								/>
 							</td>
 							<td>{info.name}</td>
 						</tr>

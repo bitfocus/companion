@@ -1,11 +1,9 @@
 @use "sass:meta";
 @use "functions/color" as *;
 @use "functions/to-rgb" as *;
-@use "mixins/color-mode" as *;
 @use "vendor/rfs" as *;
 @use "maps" as *;
 @use "variables" as *;
-@use "variables-dark" as *;
 
 :root,
 [data#{$data-infix}theme="light"] {
@@ -89,24 +87,6 @@
   --#{$prefix}tertiary-bg: #{$body-tertiary-bg};
   --#{$prefix}tertiary-bg-rgb: #{to-rgb($body-tertiary-bg)};
 
-  --#{$prefix}body-color-dark: #{$body-color-dark};
-  --#{$prefix}body-color-rgb-dark: #{to-rgb($body-color-dark)};
-  --#{$prefix}body-bg-dark: #{$body-bg-dark};
-  --#{$prefix}body-bg-rgb-dark: #{to-rgb($body-bg-dark)};
-
-  --#{$prefix}emphasis-color-dark: #{$body-emphasis-color-dark};
-  --#{$prefix}emphasis-color-rgb-dark: #{to-rgb($body-emphasis-color-dark)};
-
-  --#{$prefix}secondary-color-dark: #{$body-secondary-color-dark};
-  --#{$prefix}secondary-color-rgb-dark: #{to-rgb($body-secondary-color-dark)};
-  --#{$prefix}secondary-bg-dark: #{$body-secondary-bg-dark};
-  --#{$prefix}secondary-bg-rgb-dark: #{to-rgb($body-secondary-bg-dark)};
-
-  --#{$prefix}tertiary-color-dark: #{$body-tertiary-color-dark};
-  --#{$prefix}tertiary-color-rgb-dark: #{to-rgb($body-tertiary-color-dark)};
-  --#{$prefix}tertiary-bg-dark: #{$body-tertiary-bg-dark};
-  --#{$prefix}tertiary-bg-rgb-dark: #{to-rgb($body-tertiary-bg-dark)};
-
   --#{$prefix}high-emphasis: #{$high-emphasis}; // Deprecated in v5.0.0
   --#{$prefix}medium-emphasis: #{$medium-emphasis}; // Deprecated in v5.0.0
   --#{$prefix}disabled: #{$disabled}; // Deprecated in v5.0.0
@@ -167,77 +147,4 @@
   --#{$prefix}form-invalid-color: #{$form-invalid-color};
   --#{$prefix}form-invalid-border-color: #{$form-invalid-border-color};
   // scss-docs-end root-form-validation-variables
-}
-
-@if $enable-dark-mode {
-  @include color-mode(dark, true) {
-    color-scheme: dark;
-
-    // scss-docs-start root-dark-mode-vars
-    --#{$prefix}body-color: #{$body-color-dark};
-    --#{$prefix}body-color-rgb: #{to-rgb($body-color-dark)};
-    --#{$prefix}body-bg: #{$body-bg-dark};
-    --#{$prefix}body-bg-rgb: #{to-rgb($body-bg-dark)};
-
-    --#{$prefix}emphasis-color: #{$body-emphasis-color-dark};
-    --#{$prefix}emphasis-color-rgb: #{to-rgb($body-emphasis-color-dark)};
-
-    --#{$prefix}secondary-color: #{$body-secondary-color-dark};
-    --#{$prefix}secondary-color-rgb: #{to-rgb($body-secondary-color-dark)};
-    --#{$prefix}secondary-bg: #{$body-secondary-bg-dark};
-    --#{$prefix}secondary-bg-rgb: #{to-rgb($body-secondary-bg-dark)};
-
-    --#{$prefix}tertiary-color: #{$body-tertiary-color-dark};
-    --#{$prefix}tertiary-color-rgb: #{to-rgb($body-tertiary-color-dark)};
-    --#{$prefix}tertiary-bg: #{$body-tertiary-bg-dark};
-    --#{$prefix}tertiary-bg-rgb: #{to-rgb($body-tertiary-bg-dark)};
-
-    --#{$prefix}high-emphasis: #{$high-emphasis-dark}; // Deprecated in v5.0.0
-    --#{$prefix}medium-emphasis: #{$medium-emphasis-dark}; // Deprecated in v5.0.0
-    --#{$prefix}disabled: #{$disabled-dark}; // Deprecated in v5.0.0
-
-    @each $color, $value in $theme-colors-dark {
-      --#{$prefix}#{$color}: #{$value};
-    }
-
-    @each $color, $value in $grays-dark {
-      --#{$prefix}gray-#{$color}: #{$value};
-    }
-
-    @each $color, $value in $theme-colors-rgb-dark {
-      --#{$prefix}#{$color}-rgb: #{$value};
-    }
-
-    @each $color, $value in $theme-colors-text-dark {
-      --#{$prefix}#{$color}-text-emphasis: #{$value};
-    }
-
-    @each $color, $value in $theme-colors-bg-subtle-dark {
-      --#{$prefix}#{$color}-bg-subtle: #{$value};
-    }
-
-    @each $color, $value in $theme-colors-border-subtle-dark {
-      --#{$prefix}#{$color}-border-subtle: #{$value};
-    }
-
-    --#{$prefix}heading-color: #{$headings-color-dark};
-
-    --#{$prefix}link-color: #{$link-color-dark};
-    --#{$prefix}link-hover-color: #{$link-hover-color-dark};
-    --#{$prefix}link-color-rgb: #{to-rgb($link-color-dark)};
-    --#{$prefix}link-hover-color-rgb: #{to-rgb($link-hover-color-dark)};
-
-    --#{$prefix}code-color: #{$code-color-dark};
-    --#{$prefix}highlight-color: #{$mark-color-dark};
-    --#{$prefix}highlight-bg: #{$mark-bg-dark};
-
-    --#{$prefix}border-color: #{$border-color-dark};
-    --#{$prefix}border-color-translucent: #{$border-color-translucent-dark};
-
-    --#{$prefix}form-valid-color: #{$form-valid-color-dark};
-    --#{$prefix}form-valid-border-color: #{$form-valid-border-color-dark};
-    --#{$prefix}form-invalid-color: #{$form-invalid-color-dark};
-    --#{$prefix}form-invalid-border-color: #{$form-invalid-border-color-dark};
-    // scss-docs-end root-dark-mode-vars
-  }
 }

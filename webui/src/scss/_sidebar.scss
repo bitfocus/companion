@@ -1,5 +1,5 @@
+@use 'sass:color';
 @use 'variables' as *;
-@use 'vendor/coreui/variables-dark' as *;
 @use 'vendor/coreui/mixins/breakpoints' as *;
 @use 'vendor/coreui/mixins/transition' as *;
 
@@ -187,19 +187,21 @@ $sb-bg: #111;
 	}
 }
 
+// The sidebar is always dark (see Sidebar.tsx). These were CoreUI's dark-theme body values; inlined
+// here now that we no longer vendor _variables-dark / support CoreUI dark mode.
 .sidebar-dark {
-	--cui-body-color: #{$body-color-dark};
-	--cui-body-bg: #{$body-bg-dark};
+	--cui-body-color: rgba(255, 255, 255, 0.87);
+	--cui-body-bg: #212631;
 
-	--cui-emphasis-color: #{$body-emphasis-color-dark};
+	--cui-emphasis-color: #fff;
 
-	--cui-secondary-color: #{$body-secondary-color-dark};
-	--cui-secondary-bg: #{$body-secondary-bg-dark};
+	--cui-secondary-color: rgba(255, 255, 255, 0.6);
+	--cui-secondary-bg: #323a49;
 
-	--cui-tertiary-color: #{$body-tertiary-color-dark};
-	--cui-tertiary-bg: #{$body-tertiary-bg-dark};
+	--cui-tertiary-color: rgba(255, 255, 255, 0.38);
+	--cui-tertiary-bg: #{color.mix(#323a49, #212631, 50%)};
 
-	--cui-border-color: #{$border-color-dark};
+	--cui-border-color: #323a49;
 
 	.sidebar-toggler {
 		filter: var(--cui-sidebar-toggler-white-filter);

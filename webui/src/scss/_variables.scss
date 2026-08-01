@@ -6,9 +6,11 @@
 // Define variables that should override the vendored CoreUI defaults:
 // note that Sass may issue a strange error message if a variable specified here is not already in CoreUI. (As of Sass 1.89)
 $_private-header-bg: #d50215; // note: this is currently used for $primary as well as header
-// CoreUI doesn't define a header-brand-bg, so define it here and use it for sidebar, which CoreUI does define
-$header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
 @forward 'vendor/coreui/variables' with (
+	// The app has no dark theme, so disable CoreUI's dark mode entirely (see also: we don't vendor
+	// _variables-dark). This skips all the `@if $enable-dark-mode` blocks in root/maps/close/utilities.
+	$enable-dark-mode: false,
+
 	$primary: $_private-header-bg,
 	$secondary: #ccc,
 	$body-bg: #333,
@@ -18,35 +20,20 @@ $header-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
 	$header-color: #fff,
 	$header-brand-color: #fff,
 	$header-brand-hover-color: #fff,
-	$sidebar-bg: #111,
-	$sidebar-brand-bg: $header-brand-bg,
-	$form-switch-color: #fff,
-	$form-switch-checked-color: #fff,
-	$form-switch-focus-color: #fff,
-	$form-switch-widths: (
-		xl: (
-			width: 2.75em,
-			height: 1.5em,
-		),
-	)
-	!default,
 
 	$btn-font-size-sm: 12px,
 	$btn-font-size: 0.9rem,
 
 	$modal-content-bg: #fff,
-	$table-bg: #fff,
-	$dropdown-bg: #fff,
-
-	$card-bg: #f7f7f7,
-
-	$sidebar-nav-link-padding-x: 0.5rem,
-
-	$tooltip-color: #f7f7f7
+	$table-bg: #fff
 );
 
 // PART 2:
 // Define variables that do *not* have defaults in CoreUI
+
+// The sidebar is our own (see _sidebar.scss), so its brand background is defined here rather than
+// configured into CoreUI. CoreUI has no header-brand-bg, so derive one from the header background.
+$sidebar-brand-bg: color.adjust($_private-header-bg, $lightness: -10%);
 
 // note $header-border appears to be defined but never used
 $header-border: (
