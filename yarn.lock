@@ -1810,7 +1810,6 @@ __metadata:
   dependencies:
     "@base-ui/react": "npm:^1.6.0"
     "@companion-app/shared": "npm:*"
-    "@coreui/coreui": "npm:^5.6.1"
     "@dnd-kit/dom": "npm:^0.5.0"
     "@dnd-kit/helpers": "npm:^0.5.0"
     "@dnd-kit/react": "npm:^0.5.0"
@@ -1823,7 +1822,6 @@ __metadata:
     "@fortawesome/free-solid-svg-icons": "npm:^7.3.1"
     "@fortawesome/react-fontawesome": "npm:^3.5.0"
     "@monaco-editor/react": "npm:^4.8.0-rc.3"
-    "@popperjs/core": "npm:^2.11.8"
     "@sentry/react": "npm:^10.68.0"
     "@sentry/vite-plugin": "npm:^5.4.0"
     "@storybook/react-vite": "npm:^10.5.5"
@@ -1999,17 +1997,6 @@ __metadata:
     "@companion-surface/base": "npm:~1.3.0"
     fast-deep-equal: "npm:^3.1.3"
   checksum: 10c0/a1f99af3bc8c52b2777a187b2e01b4e30ceaeccbcddf8a0198295cf8d2bb1948477235bd64a22c93757c7fd0da5dfc09a93a3e16c89998ad5a731996d13b5581
-  languageName: node
-  linkType: hard
-
-"@coreui/coreui@npm:^5.6.1":
-  version: 5.6.1
-  resolution: "@coreui/coreui@npm:5.6.1"
-  dependencies:
-    html-entities: "npm:^2.6.0"
-  peerDependencies:
-    "@popperjs/core": ^2.11.8
-  checksum: 10c0/9fcd3d1536742fbc52152bdebe8d84b98bfcc2933143b039fc1025c18be67f2a51b755650ca3e6572f7d9f96728fc6b2541ed3256e57f85c5facfed71b1ecd96
   languageName: node
   linkType: hard
 
@@ -5715,13 +5702,6 @@ __metadata:
   version: 1.0.0-next.28
   resolution: "@polka/url@npm:1.0.0-next.28"
   checksum: 10c0/acc5ea62597e4da2fb42dbee02749d07f102ae7d6d2c966bf7e423c79cd65d1621da305af567e6e7c232f3b565e242d1ec932cbb3dcc0db1508d02e9a2cafa2e
-  languageName: node
-  linkType: hard
-
-"@popperjs/core@npm:^2.11.8":
-  version: 2.11.8
-  resolution: "@popperjs/core@npm:2.11.8"
-  checksum: 10c0/4681e682abc006d25eb380d0cf3efc7557043f53b6aea7a5057d0d1e7df849a00e281cd8ea79c902a35a414d7919621fc2ba293ecec05f413598e0b23d5a1e63
   languageName: node
   linkType: hard
 
@@ -14777,13 +14757,6 @@ __metadata:
   dependencies:
     "@exodus/bytes": "npm:^1.6.0"
   checksum: 10c0/66dc3f6f5539cc3beb814fcbfae7eacf4ec38cf824d6e1425b72039b51a40f4456bd8541ba66f4f4fe09cdf885ab5cd5bae6ec6339d6895a930b2fdb83c53025
-  languageName: node
-  linkType: hard
-
-"html-entities@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "html-entities@npm:2.6.0"
-  checksum: 10c0/7c8b15d9ea0cd00dc9279f61bab002ba6ca8a7a0f3c36ed2db3530a67a9621c017830d1d2c1c65beb9b8e3436ea663e9cf8b230472e0e413359399413b27c8b7
   languageName: node
   linkType: hard
 

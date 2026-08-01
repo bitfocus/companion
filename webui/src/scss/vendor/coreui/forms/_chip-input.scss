@@ -1,0 +1,109 @@
+@use "../mixins/border-radius" as *;
+@use "../mixins/box-shadow" as *;
+@use "../mixins/focus-ring" as *;
+@use "../mixins/transition" as *;
+@use "../vendor/rfs" as *;
+@use "../variables" as *;
+
+// scss-docs-start chip-input-variables
+$chip-input-min-height:        $input-height !default;
+$chip-input-padding-y:         .25rem !default;
+$chip-input-padding-x:         .75rem !default;
+$chip-input-font-size:         $input-font-size !default;
+$chip-input-bg:                var(--#{$prefix}body-bg) !default;
+$chip-input-color:             var(--#{$prefix}body-color) !default;
+$chip-input-border-width:      var(--#{$prefix}border-width) !default;
+$chip-input-border-color:      var(--#{$prefix}border-color) !default;
+$chip-input-border-radius:     var(--#{$prefix}border-radius) !default;
+$chip-input-gap:               .375rem !default;
+$chip-input-transition:        $input-transition !default;
+
+$chip-input-min-height-sm:     $input-height-sm !default;
+$chip-input-padding-y-sm:      .125rem !default;
+$chip-input-padding-x-sm:      .5rem !default;
+$chip-input-font-size-sm:      $input-font-size-sm !default;
+$chip-input-border-radius-sm:  var(--#{$prefix}border-radius-sm) !default;
+$chip-input-gap-sm:            .125rem !default;
+
+$chip-input-min-height-lg:     $input-height-lg !default;
+$chip-input-padding-y-lg:      .375rem !default;
+$chip-input-padding-x-lg:      1rem !default;
+$chip-input-font-size-lg:      $input-font-size-lg !default;
+$chip-input-border-radius-lg:  var(--#{$prefix}border-radius-lg) !default;
+$chip-input-gap-lg:            .5rem !default;
+// scss-docs-end chip-input-variables
+
+.chip-input {
+  // scss-docs-start chip-input-css-vars
+  --#{$prefix}chip-input-min-height: #{$chip-input-min-height};
+  --#{$prefix}chip-input-padding-y: #{$chip-input-padding-y};
+  --#{$prefix}chip-input-padding-x: #{$chip-input-padding-x};
+  --#{$prefix}chip-input-font-size: #{$chip-input-font-size};
+  --#{$prefix}chip-input-bg: #{$chip-input-bg};
+  --#{$prefix}chip-input-color: #{$chip-input-color};
+  --#{$prefix}chip-input-border-width: #{$chip-input-border-width};
+  --#{$prefix}chip-input-border-color: #{$chip-input-border-color};
+  --#{$prefix}chip-input-border-radius: #{$chip-input-border-radius};
+  --#{$prefix}chip-input-gap: #{$chip-input-gap};
+  --#{$prefix}chip-input-transition: #{$chip-input-transition};
+  // scss-docs-end chip-input-css-vars
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--#{$prefix}chip-input-gap);
+  align-items: center;
+  min-height: var(--#{$prefix}chip-input-min-height);
+  padding: var(--#{$prefix}chip-input-padding-y) var(--#{$prefix}chip-input-padding-x);
+  @include font-size(var(--#{$prefix}chip-input-font-size));
+  color: var(--#{$prefix}chip-input-color);
+  background-color: var(--#{$prefix}chip-input-bg);
+  border: var(--#{$prefix}chip-input-border-width) solid var(--#{$prefix}chip-input-border-color);
+  @include border-radius(var(--#{$prefix}chip-input-border-radius), 0);
+  @include transition(var(--#{$prefix}chip-input-transition));
+
+  // Focus state when ghost input is focused
+  &:focus-within {
+    border-color: $input-focus-border-color;
+    @include focus-ring();
+  }
+
+  // Disabled state
+  &.disabled {
+    background-color: $input-disabled-bg;
+    opacity: 1;
+
+    > .chip {
+      opacity: .65;
+
+      .chip-dismiss {
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+.chip-input-field {
+  flex: 1 1 auto;
+  margin: 0;
+  border: 0;
+  outline: 0;
+}
+
+// Sizing variants
+.chip-input-lg {
+  --#{$prefix}chip-input-min-height: #{$chip-input-min-height-lg};
+  --#{$prefix}chip-input-padding-y: #{$chip-input-padding-y-lg};
+  --#{$prefix}chip-input-padding-x: #{$chip-input-padding-x-lg};
+  --#{$prefix}chip-input-border-radius: #{$chip-input-border-radius-lg};
+  --#{$prefix}chip-input-font-size: #{$chip-input-font-size-lg};
+  --#{$prefix}chip-input-gap: #{$chip-input-gap-lg};
+}
+
+.chip-input-sm {
+  --#{$prefix}chip-input-min-height: #{$chip-input-min-height-sm};
+  --#{$prefix}chip-input-padding-y: #{$chip-input-padding-y-sm};
+  --#{$prefix}chip-input-padding-x: #{$chip-input-padding-x-sm};
+  --#{$prefix}chip-input-border-radius: #{$chip-input-border-radius-sm};
+  --#{$prefix}chip-input-font-size: #{$chip-input-font-size-sm};
+  --#{$prefix}chip-input-gap: #{$chip-input-gap-sm};
+}

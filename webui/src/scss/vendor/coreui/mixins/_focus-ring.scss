@@ -1,0 +1,9 @@
+@use "../variables" as *;
+
+@mixin focus-ring($color: null) {
+  @if $color != null {
+    --#{$prefix}focus-ring-color: #{$color};
+  }
+  outline: 0;
+  box-shadow: 0 0 var(--#{$prefix}focus-ring-blur) var(--#{$prefix}focus-ring-width) var(--#{$prefix}focus-ring-color);
+}

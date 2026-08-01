@@ -1,0 +1,300 @@
+@use "mixins/border-radius" as *;
+@use "mixins/gradients" as *;
+@use "mixins/transition" as *;
+@use "vendor/rfs" as *;
+@use "variables" as *;
+
+// Base class
+//
+// Kickstart any navigation component with a set of style resets. Works with
+// `<nav>`s, `<ul>`s or `<ol>`s.
+
+.nav {
+  // scss-docs-start nav-css-vars
+  --#{$prefix}nav-link-padding-x: #{$nav-link-padding-x};
+  --#{$prefix}nav-link-padding-y: #{$nav-link-padding-y};
+  @include rfs($nav-link-font-size, --#{$prefix}nav-link-font-size);
+  --#{$prefix}nav-link-font-weight: #{$nav-link-font-weight};
+  --#{$prefix}nav-link-color: #{$nav-link-color};
+  --#{$prefix}nav-link-hover-color: #{$nav-link-hover-color};
+  --#{$prefix}nav-link-disabled-color: #{$nav-link-disabled-color};
+  // scss-docs-end nav-css-vars
+
+  display: flex;
+  flex-wrap: wrap;
+  padding-inline-start: 0;
+  margin-bottom: 0;
+  list-style: none;
+}
+
+.nav-link {
+  display: block;
+  padding: var(--#{$prefix}nav-link-padding-y) var(--#{$prefix}nav-link-padding-x);
+  @include font-size(var(--#{$prefix}nav-link-font-size));
+  font-weight: var(--#{$prefix}nav-link-font-weight);
+  color: var(--#{$prefix}nav-link-color);
+  text-decoration: if(not sass($link-decoration == none): none);
+  background: none;
+  border: 0;
+  @include transition($nav-link-transition);
+
+  &:hover,
+  &:focus {
+    color: var(--#{$prefix}nav-link-hover-color);
+    // stylelint-disable-next-line scss/at-function-named-arguments
+    text-decoration: if(sass($link-hover-decoration == underline): none);
+  }
+
+  &:focus-visible {
+    outline: 0;
+    box-shadow: $nav-link-focus-box-shadow;
+  }
+
+  // Disabled state lightens text
+  &.disabled,
+  &:disabled {
+    color: var(--#{$prefix}nav-link-disabled-color);
+    pointer-events: none;
+    cursor: default;
+  }
+}
+
+//
+// Tabs
+//
+
+.nav-tabs {
+  // scss-docs-start nav-tabs-css-vars
+  --#{$prefix}nav-tabs-border-width: #{$nav-tabs-border-width};
+  --#{$prefix}nav-tabs-border-color: #{$nav-tabs-border-color};
+  --#{$prefix}nav-tabs-border-radius: #{$nav-tabs-border-radius};
+  --#{$prefix}nav-tabs-link-hover-border-color: #{$nav-tabs-link-hover-border-color};
+  --#{$prefix}nav-tabs-link-active-color: #{$nav-tabs-link-active-color};
+  --#{$prefix}nav-tabs-link-active-bg: #{$nav-tabs-link-active-bg};
+  --#{$prefix}nav-tabs-link-active-border-color: #{$nav-tabs-link-active-border-color};
+  // scss-docs-end nav-tabs-css-vars
+
+  border-bottom: var(--#{$prefix}nav-tabs-border-width) solid var(--#{$prefix}nav-tabs-border-color);
+
+  .nav-link {
+    margin-bottom: calc(-1 * var(--#{$prefix}nav-tabs-border-width)); // stylelint-disable-line function-disallowed-list
+    border: var(--#{$prefix}nav-tabs-border-width) solid transparent;
+    @include border-top-radius(var(--#{$prefix}nav-tabs-border-radius));
+
+    &:hover,
+    &:focus {
+      // Prevents active .nav-link tab overlapping focus outline of previous/next .nav-link
+      isolation: isolate;
+      border-color: var(--#{$prefix}nav-tabs-link-hover-border-color);
+    }
+  }
+
+  .nav-link.active,
+  .nav-item.show .nav-link {
+    color: var(--#{$prefix}nav-tabs-link-active-color);
+    background-color: var(--#{$prefix}nav-tabs-link-active-bg);
+    border-color: var(--#{$prefix}nav-tabs-link-active-border-color);
+  }
+
+  .dropdown-menu {
+    // Make dropdown border overlap tab border
+    margin-top: calc(-1 * var(--#{$prefix}nav-tabs-border-width)); // stylelint-disable-line function-disallowed-list
+    // Remove the top rounded corners here since there is a hard edge above the menu
+    @include border-top-radius(0);
+  }
+}
+
+
+//
+// Pills
+//
+
+.nav-pills {
+  // scss-docs-start nav-pills-css-vars
+  --#{$prefix}nav-pills-border-radius: #{$nav-pills-border-radius};
+  --#{$prefix}nav-pills-link-active-color: #{$nav-pills-link-active-color};
+  --#{$prefix}nav-pills-link-active-bg: #{$nav-pills-link-active-bg};
+  // scss-docs-end nav-pills-css-vars
+
+  .nav-link {
+    @include border-radius(var(--#{$prefix}nav-pills-border-radius));
+  }
+
+  .nav-link.active,
+  .show > .nav-link {
+    color: var(--#{$prefix}nav-pills-link-active-color);
+    @include gradient-bg(var(--#{$prefix}nav-pills-link-active-bg));
+  }
+}
+
+
+//
+// Underline
+//
+
+.nav-underline {
+  // scss-docs-start nav-underline-css-vars
+  --#{$prefix}nav-underline-gap: #{$nav-underline-gap};
+  --#{$prefix}nav-underline-border-width: #{$nav-underline-border-width};
+  --#{$prefix}nav-underline-link-active-color: #{$nav-underline-link-active-color};
+  // scss-docs-end nav-underline-css-vars
+
+  gap: var(--#{$prefix}nav-underline-gap);
+
+  .nav-link {
+    padding-right: 0;
+    padding-left: 0;
+    border-bottom: var(--#{$prefix}nav-underline-border-width) solid transparent;
+
+    &:hover,
+    &:focus {
+      border-bottom-color: currentcolor;
+    }
+  }
+
+  .nav-link.active,
+  .show > .nav-link {
+    font-weight: $font-weight-bold;
+    color: var(--#{$prefix}nav-underline-link-active-color);
+    border-bottom-color: currentcolor;
+  }
+}
+
+
+//
+// Underline border
+//
+
+.nav-underline-border {
+  // scss-docs-start nav-underline-border-css-vars
+  --#{$prefix}nav-underline-border-gap: #{$nav-underline-border-gap};
+  --#{$prefix}nav-underline-border-border-color: #{$nav-underline-border-border-color};
+  --#{$prefix}nav-underline-border-border-width: #{$nav-underline-border-border-width};
+  --#{$prefix}nav-underline-border-link-padding-x: #{$nav-underline-border-link-padding-x};
+  --#{$prefix}nav-underline-border-link-padding-y: #{$nav-underline-border-link-padding-y};
+  --#{$prefix}nav-underline-border-link-color: #{$nav-underline-border-link-color};
+  --#{$prefix}nav-underline-border-link-active-color: #{$nav-underline-border-link-active-color};
+  --#{$prefix}nav-underline-border-link-disabled-color: #{$nav-underline-border-link-disabled-color};
+  // scss-docs-end nav-underline-border-css-vars
+
+  --#{$prefix}nav-link-color: var(--#{$prefix}nav-underline-border-link-color);
+  --#{$prefix}nav-link-disabled-color: var(--#{$prefix}nav-underline-border-link-disabled-color);
+
+  gap: var(--#{$prefix}nav-underline-border-gap);
+  border-bottom: var(--#{$prefix}nav-underline-border-border-width) solid var(--#{$prefix}nav-underline-border-border-color);
+
+  .nav-link {
+    padding: var(--#{$prefix}nav-underline-border-link-padding-y) var(--#{$prefix}nav-underline-border-link-padding-x);
+    margin-bottom: calc(-1 * var(--#{$prefix}nav-underline-border-border-width)); // stylelint-disable-line function-disallowed-list
+    border-bottom: var(--#{$prefix}nav-underline-border-border-width) solid transparent;
+
+    &:hover,
+    &:focus {
+      border-bottom-color: currentcolor;
+    }
+  }
+
+  .nav-link.active,
+  .show > .nav-link {
+    font-weight: $font-weight-bold;
+    color: var(--#{$prefix}nav-underline-border-link-active-color);
+    border-bottom-color: currentcolor;
+  }
+}
+
+
+//
+// Enclosed
+//
+
+.nav-enclosed {
+  --#{$prefix}nav-enclosed-padding: #{$nav-enclosed-padding};
+  --#{$prefix}nav-enclosed-bg: #{$nav-enclosed-bg};
+  --#{$prefix}nav-enclosed-border-radius: #{$nav-enclosed-border-radius};
+  --#{$prefix}nav-enclosed-link-padding-x: #{$nav-enclosed-link-padding-x};
+  --#{$prefix}nav-enclosed-link-padding-y: #{$nav-enclosed-link-padding-y};
+  --#{$prefix}nav-enclosed-link-color: #{$nav-enclosed-link-color};
+  --#{$prefix}nav-enclosed-link-border-width: #{$nav-enclosed-link-border-width};
+  --#{$prefix}nav-enclosed-link-active-color: #{$nav-enclosed-link-active-color};
+  --#{$prefix}nav-enclosed-link-active-bg: #{$nav-enclosed-link-active-bg};
+  --#{$prefix}nav-enclosed-link-active-border-color: #{$nav-enclosed-link-active-border-color};
+  --#{$prefix}nav-enclosed-link-hover-box-shadow: #{$nav-enclosed-link-hover-box-shadow};
+  --#{$prefix}nav-enclosed-link-disabled-color: #{$nav-enclosed-link-disabled-color};
+
+  display: inline-flex;
+  padding: var(--#{$prefix}nav-enclosed-padding);
+  background-color: var(--#{$prefix}nav-enclosed-bg);
+  @include border-radius(var(--#{$prefix}nav-enclosed-border-radius));
+
+  .nav-link {
+    padding: calc(var(--#{$prefix}nav-enclosed-link-padding-y) - var(--#{$prefix}nav-enclosed-link-border-width)) calc(var(--#{$prefix}nav-enclosed-link-padding-x) - var(--#{$prefix}nav-enclosed-link-border-width)); // stylelint-disable-line function-disallowed-list
+    color: var(--#{$prefix}nav-enclosed-link-color);
+    border: var(--#{$prefix}nav-enclosed-link-border-width) solid transparent;
+    @include border-radius(calc(var(--#{$prefix}nav-enclosed-border-radius) - var(--#{$prefix}nav-enclosed-padding)));
+
+    &.disabled,
+    &:disabled {
+      color: var(--#{$prefix}nav-enclosed-link-disabled-color);
+    }
+  }
+
+  .nav-link.active,
+  .show > .nav-link {
+    color: var(--#{$prefix}nav-enclosed-link-active-color);
+    background-color: var(--#{$prefix}nav-enclosed-link-active-bg);
+    border: 1px solid var(--#{$prefix}nav-enclosed-link-active-border-color);
+
+    &:not(:focus-visible) {
+      box-shadow: var(--#{$prefix}nav-enclosed-link-hover-box-shadow);
+    }
+  }
+}
+
+// Enclosed pills
+
+.nav-enclosed-pills {
+  --#{$prefix}nav-enclosed-border-radius: #{$border-radius-pill};
+}
+
+
+//
+// Justified variants
+//
+
+.nav-fill {
+  > .nav-link,
+  .nav-item {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
+.nav-justified {
+  > .nav-link,
+  .nav-item {
+    flex-grow: 1;
+    flex-basis: 0;
+    text-align: center;
+  }
+}
+
+.nav-fill,
+.nav-justified {
+  .nav-item .nav-link {
+    width: 100%; // Make sure button will grow
+  }
+}
+
+
+// Tabbable tabs
+//
+// Hide tabbable panes to start, show them when `.active`
+
+.tab-content {
+  > .tab-pane {
+    display: none;
+  }
+  > .active {
+    display: block;
+  }
+}

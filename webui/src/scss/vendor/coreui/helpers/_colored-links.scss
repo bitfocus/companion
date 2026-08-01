@@ -1,0 +1,43 @@
+@use "../functions/color" as *;
+@use "../functions/color-contrast" as *;
+@use "../functions/to-rgb" as *;
+@use "../variables" as *;
+
+@each $color, $value in $theme-colors {
+  .link-#{$color} {
+    // stylelint-disable-next-line scss/at-function-named-arguments
+    color: rgba(var(--#{$prefix}#{$color}-rgb), var(--#{$prefix}link-opacity, 1)) if(sass($enable-important-utilities): !important);
+    // stylelint-disable-next-line scss/at-function-named-arguments
+    text-decoration-color: rgba(var(--#{$prefix}#{$color}-rgb), var(--#{$prefix}link-underline-opacity, 1)) if(sass($enable-important-utilities): !important);
+
+    @if $link-shade-percentage != 0 {
+      &:hover,
+      &:focus {
+        // stylelint-disable-next-line scss/at-function-named-arguments, @stylistic/function-whitespace-after
+        $hover-color: if(sass(color-contrast($value) == $color-contrast-light): shade-color($value, $link-shade-percentage); else: tint-color($value, $link-shade-percentage));
+        // stylelint-disable-next-line scss/at-function-named-arguments
+        color: rgba(#{to-rgb($hover-color)}, var(--#{$prefix}link-opacity, 1)) if(sass($enable-important-utilities): !important);
+        // stylelint-disable-next-line scss/at-function-named-arguments
+        text-decoration-color: rgba(to-rgb($hover-color), var(--#{$prefix}link-underline-opacity, 1)) if(sass($enable-important-utilities): !important);
+      }
+    }
+  }
+}
+
+// One-off special link helper as a bridge until v6
+.link-body-emphasis {
+  // stylelint-disable-next-line scss/at-function-named-arguments
+  color: rgba(var(--#{$prefix}emphasis-color-rgb), var(--#{$prefix}link-opacity, 1)) if(sass($enable-important-utilities): !important);
+  // stylelint-disable-next-line scss/at-function-named-arguments
+  text-decoration-color: rgba(var(--#{$prefix}emphasis-color-rgb), var(--#{$prefix}link-underline-opacity, 1)) if(sass($enable-important-utilities): !important);
+
+  @if $link-shade-percentage != 0 {
+    &:hover,
+    &:focus {
+      // stylelint-disable-next-line scss/at-function-named-arguments
+      color: rgba(var(--#{$prefix}emphasis-color-rgb), var(--#{$prefix}link-opacity, .75)) if(sass($enable-important-utilities): !important);
+      // stylelint-disable-next-line scss/at-function-named-arguments
+      text-decoration-color: rgba(var(--#{$prefix}emphasis-color-rgb), var(--#{$prefix}link-underline-opacity, .75)) if(sass($enable-important-utilities): !important);
+    }
+  }
+}

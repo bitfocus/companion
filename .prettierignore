@@ -8,6 +8,8 @@ dist/
 webui/build/
 webui/public/legacy
 webui/src/routeTree.gen.ts
+# Vendored CoreUI SCSS - kept byte-identical to upstream, do not reformat
+webui/src/scss/vendor/
 /LICENSE.md
 
 module-local-dev

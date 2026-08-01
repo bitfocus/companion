@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/mixins/breakpoints';
+@use 'vendor/coreui/mixins/breakpoints';
 
 .edit-button-panel {
 	height: 100%;

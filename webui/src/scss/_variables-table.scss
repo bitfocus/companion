@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/mixins/breakpoints';
+@use 'vendor/coreui/mixins/breakpoints';
 
 .variables-panel {
 	margin-right: -0.5rem;

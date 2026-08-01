@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/mixins/ltr-rtl'; // not strictly necessary, but it allows us to clarify the origin of mixins
+@use 'vendor/coreui/mixins/ltr-rtl'; // not strictly necessary, but it allows us to clarify the origin of mixins
 @use 'sass:color';
 
 body {
