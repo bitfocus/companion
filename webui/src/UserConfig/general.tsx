@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
 import { Grid } from '~/Components/Grid'
+import { Table } from '~/Components/Table.js'
 import { useUserConfigProps } from './Context.js'
 import { CompanionConfig } from './Sections/CompanionConfig.js'
 import { DataCollectionConfig } from './Sections/DataCollection.js'
@@ -33,16 +34,16 @@ const UserConfigTable = observer(function UserConfigTable() {
 
 	return (
 		<>
-			<table className="table table-responsive-sm table-settings">
+			<Table className="table-settings">
 				<tbody>
 					<CompanionConfig {...userConfigProps} />
 				</tbody>
-			</table>
-			<table className="table table-responsive-sm table-settings">
+			</Table>
+			<Table className="table-settings">
 				<tbody>
 					<DataCollectionConfig {...userConfigProps} />
 				</tbody>
-			</table>
+			</Table>
 		</>
 	)
 })

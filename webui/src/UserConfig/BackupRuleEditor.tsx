@@ -8,6 +8,7 @@ import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
+import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField, TextInputFieldSimple } from '../Components/TextInputField.js'
@@ -216,13 +217,13 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				<FormLabel htmlFor={undefined}>Previous Backups</FormLabel>
 				{rule.previousBackups && rule.previousBackups.length > 0 && (
 					<div className="table-responsive">
-						<table className="table table-sm table-striped">
+						<Table size="sm" striped responsive={false}>
 							<tbody>
 								{previousBackups.map((backup) => (
 									<PreviousBackupRow key={`${backup.filePath}-${backup.createdAt}`} backup={backup} ruleId={ruleId} />
 								))}
 							</tbody>
-						</table>
+						</Table>
 					</div>
 				)}
 

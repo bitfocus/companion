@@ -6,6 +6,7 @@ import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Table } from '~/Components/Table.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface TriggerPickerRowProps {
@@ -46,7 +47,7 @@ export const TriggerPicker = observer(function TriggerPicker({ selectControl }: 
 
 	return (
 		<>
-			<table className="table table-responsive-sm width-100">
+			<Table className="width-100">
 				<thead>
 					<tr>
 						<th>Name</th>
@@ -66,7 +67,7 @@ export const TriggerPicker = observer(function TriggerPicker({ selectControl }: 
 						</tr>
 					)}
 				</tbody>
-			</table>
+			</Table>
 		</>
 	)
 })

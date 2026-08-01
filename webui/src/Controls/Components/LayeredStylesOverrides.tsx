@@ -19,6 +19,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { Table } from '~/Components/Table.js'
 import { useComputed } from '~/Resources/util.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
@@ -119,7 +120,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				<div></div>
 			</div>
 
-			<table className="table table-responsive-sm width-100 layered-overrides-table">
+			<Table className="width-100 layered-overrides-table">
 				<thead>
 					<tr>
 						<th>Element & Property</th>
@@ -148,7 +149,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 						/>
 					))}
 				</tbody>
-			</table>
+			</Table>
 		</>
 	)
 })

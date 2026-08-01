@@ -5,6 +5,7 @@ import type { ClientImportObject } from '@companion-app/shared/Model/ImportExpor
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Callout } from '~/Components/Callout.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportRemap } from './Page.js'
@@ -82,7 +83,7 @@ export function ImportTriggersTab({
 		<>
 			<h4>Triggers</h4>
 			<p>Select the triggers you want to import.</p>
-			<table className="table table-responsive-sm mb-3">
+			<Table className="mb-3">
 				<colgroup>
 					<col style={{ width: '5rem' }}></col>
 					<col style={{ width: 'auto' }}></col>
@@ -107,7 +108,7 @@ export function ImportTriggersTab({
 						</tr>
 					))}
 				</tbody>
-			</table>
+			</Table>
 			<ButtonGroup className="mb-3">
 				<Button
 					color="info"

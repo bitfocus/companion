@@ -12,7 +12,6 @@
 @forward 'scss/vendor/coreui/containers';
 @forward 'scss/vendor/coreui/forms';
 @forward 'scss/vendor/coreui/grid';
-@forward 'scss/vendor/coreui/tables';
 @forward 'scss/vendor/coreui/transitions';
 @forward 'scss/vendor/coreui/nav';
 @forward 'scss/vendor/coreui/close';
@@ -51,6 +50,7 @@
 @use 'scss/components/number-range';
 @use 'scss/components/switch-field';
 @use 'scss/components/tab-area';
+@use 'scss/components/table';
 @use 'scss/components/text-field';
 @use 'scss/components/time-picker';
 

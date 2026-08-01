@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
 import { Grid } from '~/Components/Grid'
+import { Table } from '~/Components/Table.js'
 import { useUserConfigProps } from './Context.js'
 import { AdminPasswordConfig } from './Sections/AdminPasswordConfig.js'
 import { ExperimentsConfig } from './Sections/ExperimentsConfig.js'
@@ -41,7 +42,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 	if (!userConfigProps) return null
 
 	return (
-		<table className="table table-responsive-sm table-settings">
+		<Table className="table-settings">
 			<tbody>
 				<AdminPasswordConfig {...userConfigProps} />
 
@@ -49,6 +50,6 @@ const UserConfigTable = observer(function UserConfigTable() {
 
 				<ExperimentsConfig {...userConfigProps} />
 			</tbody>
-		</table>
+		</Table>
 	)
 })

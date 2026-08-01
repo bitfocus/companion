@@ -106,37 +106,6 @@ h5 {
 	font-weight: bold;
 }
 
-.table-tight {
-	width: 100%;
-}
-
-.table-tight td,
-th {
-	padding: 5px 10px;
-	border-bottom: 1px solid #ddd;
-}
-
-.table-responsive-sm {
-	border: 1px solid #ddd;
-	border-collapse: collapse;
-	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
-
-	th {
-		// border-radius: 10%;
-		background-color: #f0f0f0;
-		padding-top: 6px;
-		padding-bottom: 6px;
-
-		&.fit {
-			width: 1px;
-		}
-	}
-
-	td {
-		vertical-align: middle;
-	}
-}
-
 .table-header-buttons {
 	float: right;
 	margin: 0;
@@ -188,9 +157,6 @@ code {
 
 .form-control[type='text']:read-only {
 	background-color: #eeeeee;
-}
-.table {
-	color: #111;
 }
 
 .markdown {
@@ -249,10 +215,6 @@ code {
 	margin-bottom: 0.75rem;
 }
 
-.noBorder td {
-	border: none;
-}
-
 .nav-item {
 	&.hidden {
 		display: none;
@@ -267,22 +229,6 @@ code {
 
 .float-right {
 	float: right;
-}
-
-table .td-reorder {
-	cursor: ns-resize;
-	background-color: #f7f7f7;
-
-	padding-right: 10px;
-	padding-left: 10px;
-	vertical-align: middle;
-
-	// as narrow as possible
-	width: 0;
-
-	svg {
-		color: #333;
-	}
 }
 
 .list-group {
