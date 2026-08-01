@@ -137,6 +137,13 @@ export default [
 		files: ['launcher/**/*.ts', 'launcher/**/*.js', 'shared-lib/**/*.ts', 'shared-lib/**/*.js'],
 		rules: {
 			'n/prefer-node-protocol': 'error',
+			'n/no-missing-import': [
+				'error',
+				{
+					// @companion-app/shared resolves to its TS sources during dev/test
+					allowModules: ['@companion-app/shared'],
+				},
+			],
 		},
 	},
 	{

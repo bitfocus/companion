@@ -33,7 +33,6 @@ jobs:
 
       - name: run linter
         run: |
-          yarn build:ts
           yarn build:graphics-types
           yarn lint
 
@@ -62,7 +61,6 @@ jobs:
 
       - name: Check generated config reference is up to date
         run: |
-          yarn build:ts
           yarn build:config-reference
           git diff --exit-code docs/user-guide/1_getting-started/config-reference.generated.md
 

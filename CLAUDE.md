@@ -89,12 +89,17 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
   version, so use it rather than an older Node.
 - Corepack provides Yarn 4 — run `corepack enable` if `yarn` isn't already the Berry release. Do not
   fall back to the global Yarn 1.
-- Full local setup mirrors CI: `yarn install` then `yarn build:ts`. The TS build compiles the project
-  references, which the test run currently still depends on to resolve `@companion-app/shared`.
+- `yarn install` is enough to start developing — you do **not** need to run `yarn build:ts` first.
+  Tests, lint, `dev` and the production build all resolve `@companion-app/shared` (and the other
+  workspace packages) to their raw TS sources via the `companion:source` export condition, so there
+  is no separate `dist` to keep in sync. `yarn check-types` is `tsc --build` and still emits `dist` as
+  a by-product of type-checking the project references, but you never invoke `build:ts` as a
+  prerequisite. Run `yarn build:ts` only to produce the distributable `dist` output (packaging, and
+  the plain-JS `launcher` which loads `@companion-app/shared` from `dist` at runtime).
 
 ### Claude Code on the web
 
 A `SessionStart` hook (`.claude/hooks/session-start.sh`) provisions the container for remote sessions:
 it installs the `.node-version` Node if the base image is older, activates Yarn 4 via Corepack, then
-runs `yarn install` and `yarn build:ts`. It only runs in the remote environment (guarded by
+runs `yarn install` (no `build:ts` — see above). It only runs in the remote environment (guarded by
 `$CLAUDE_CODE_REMOTE`).

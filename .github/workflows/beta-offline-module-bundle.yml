@@ -47,7 +47,6 @@ jobs:
           yarn --immutable
 
           yarn build:writefile
-          yarn build:ts
         env:
           CI: 1
 
@@ -57,7 +56,7 @@ jobs:
         run: |
           VERSION=$(cat ./BUILD)
 
-          yarn tsx tools/prepare_offline_module_bundle.mts
+          yarn tsx --conditions=companion:source tools/prepare_offline_module_bundle.mts
 
           echo "sourcename=offline-bundle.tar.gz" >> $GITHUB_OUTPUT
           echo "targetname=companion-offline-module-bundle-${VERSION}.tar.gz" >> $GITHUB_OUTPUT

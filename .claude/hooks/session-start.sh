@@ -1,6 +1,6 @@
 #!/bin/bash
 # SessionStart hook for Claude Code on the web: make the repo testable out of the box.
-# Ensures the Node version pinned in .node-version, activates Yarn 4, installs deps, builds packages.
+# Ensures the Node version pinned in .node-version, activates Yarn 4, and installs deps.
 # Idempotent and non-interactive; only runs in the remote (web) environment.
 set -euo pipefail
 
@@ -38,8 +38,9 @@ export YARN_APPROVED_GIT_REPOSITORIES="https://github.com/evs-broadcast/node-asn
 corepack enable >/dev/null 2>&1 || true
 corepack prepare "$(node -p 'require("./package.json").packageManager')" --activate
 
-# --- Dependencies + build (mirrors CI: install then build project references) ---
+# --- Dependencies ---
+# Tests, lint, dev and check-types all resolve @companion-app/shared to its TS sources (via the
+# `companion:source` export condition) and check-types self-builds, so no `yarn build:ts` is needed.
 yarn install
-yarn build:ts
 
 echo "session-start: environment ready"

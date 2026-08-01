@@ -16,7 +16,6 @@ COPY . /app/
 # Generate version number file
 RUN yarn
 RUN yarn build:writefile
-RUN yarn build:ts
 
 # build the application
 RUN ELECTRON=0 yarn dist
