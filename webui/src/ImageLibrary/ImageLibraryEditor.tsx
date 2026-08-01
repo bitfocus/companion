@@ -133,6 +133,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		return new Date(timestamp).toLocaleString()
 	}
 
+	const imageNameFieldId = useId()
 	const descriptionFieldId = useId()
 	const backgroundColorFieldId = useId()
 
@@ -182,10 +183,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<Form className="row mb-3">
-				<div className="form-label col-sm-4 col-form-label col-form-label-sm">Name</div>
+				<FormLabel htmlFor={imageNameFieldId} sm={4} column="sm">
+					Name
+				</FormLabel>
 				<Grid.Col sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
-						<span className="font-monospace">{imageInfo.name}</span>
+						<span id={imageNameFieldId} className="font-monospace">
+							{imageInfo.name}
+						</span>
 						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
 					</div>
 
@@ -197,7 +202,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</Grid.Col>
 			</Form>
 			<Form className="row mb-3">
-				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={descriptionFieldId} sm={4} column="sm">
 					Description
 				</FormLabel>
 				<Grid.Col sm={8}>
@@ -209,7 +214,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</Grid.Col>
 			</Form>
 			<Form className="row mb-3">
-				<FormLabel htmlFor={backgroundColorFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={backgroundColorFieldId} sm={4} column="sm">
 					Preview background
 				</FormLabel>
 				<Grid.Col sm={8} className="d-flex align-items-center">

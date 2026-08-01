@@ -159,10 +159,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	return (
 		<>
-			<FormLabel
-				htmlFor={inputId}
-				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
-			>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ displayNone: !visibility })}>
 				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
 				{isInExpressionMode && (
 					<ExpressionValuePreview

@@ -251,7 +251,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 			<ImageNameInput value={imageName} onChange={setImageName} disabled={isUploading} />
 
 			<div className="mb-3 row">
-				<FormLabel htmlFor="upload-description" className="col-sm-3 col-form-label">
+				<FormLabel htmlFor="upload-description" sm={3} column>
 					Description
 				</FormLabel>
 				<div className="col-sm-9">

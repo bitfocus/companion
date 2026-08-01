@@ -72,7 +72,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 			<Form className="row g-2 grow" onSubmit={PreventDefaultHandler}>
-				<FormLabel htmlFor={stepProgressionId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={stepProgressionId} sm={4} column="sm">
 					Step Progression
 					<InlineHelpIcon className="ms-1">
 						When this button has multiple steps, control how the next step changes
@@ -89,7 +89,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 
 				{options.stepProgression === 'expression' && (
 					<>
-						<FormLabel htmlFor={stepExpressionId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={stepExpressionId} sm={4} column="sm">
 							Step Progression Expression <InputFeatureIcons variables local />
 						</FormLabel>
 						<Grid.Col sm={8}>
@@ -103,7 +103,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					</>
 				)}
 
-				<FormLabel htmlFor={rotaryActionsId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={rotaryActionsId} sm={4} column="sm">
 					Rotary Actions
 					<InlineHelpIcon className="ms-1">Make this button compatible with rotation events</InlineHelpIcon>
 				</FormLabel>
@@ -111,7 +111,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 					<SwitchInputField id={rotaryActionsId} value={options.rotaryActions} setValue={setRotaryActions} />
 				</Grid.Col>
 
-				<FormLabel htmlFor={canModifyStyleInApisId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={canModifyStyleInApisId} sm={4} column="sm">
 					Allow style changes
 					<InlineHelpIcon className="ms-1">
 						Allow the external APIs and internal actions to modify the style of this button

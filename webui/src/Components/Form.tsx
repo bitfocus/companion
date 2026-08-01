@@ -1,5 +1,6 @@
 import classNames from 'classnames'
 import { forwardRef, type FormHTMLAttributes, type HTMLAttributes, type LabelHTMLAttributes } from 'react'
+import { getGridColClasses, type GridBreakpointProps } from './Grid.js'
 
 export interface FormProps extends FormHTMLAttributes<HTMLFormElement> {
 	/**
@@ -16,7 +17,7 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(({ children, ...rest 
 	)
 })
 
-export interface FormLabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
+export interface FormLabelProps extends LabelHTMLAttributes<HTMLLabelElement>, GridBreakpointProps {
 	/**
 	 * A string of all className you want applied to the component.
 	 */
@@ -26,15 +27,30 @@ export interface FormLabelProps extends LabelHTMLAttributes<HTMLLabelElement> {
 	 * The id of the form element this label is associated with. This is required for accessibility reasons.
 	 */
 	htmlFor: string | undefined
+
+	/**
+	 * Style as a column label in a horizontal form (vertical padding to align with the adjacent
+	 * input). Pass 'sm'/'lg' to also size it.
+	 */
+	column?: boolean | 'sm' | 'lg'
 }
 
-export const FormLabel = forwardRef<HTMLLabelElement, FormLabelProps>(({ children, className, ...rest }, ref) => {
-	return (
-		<label className={classNames('form-label2', className)} {...rest} ref={ref}>
-			{children}
-		</label>
-	)
-})
+export const FormLabel = forwardRef<HTMLLabelElement, FormLabelProps>(
+	({ children, className, column, xs, sm, md, lg, xl, xxl, ...rest }, ref) => {
+		const classes = classNames(
+			'form-label',
+			getGridColClasses({ xs, sm, md, lg, xl, xxl }),
+			column && 'col-form-label',
+			typeof column === 'string' && `col-form-label-${column}`,
+			className
+		)
+		return (
+			<label className={classes} {...rest} ref={ref}>
+				{children}
+			</label>
+		)
+	}
+)
 
 export type InputGroupProps = HTMLAttributes<HTMLDivElement>
 

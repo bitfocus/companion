@@ -26,7 +26,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 
 	return (
 		<>
-			<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 				Element Name
 			</FormLabel>
 			<Grid.Col sm={8}>
@@ -35,7 +35,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
 				<>
-					<FormLabel htmlFor={usageFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+					<FormLabel htmlFor={usageFieldId} sm={4} column="sm">
 						External Usage
 						<InlineHelpIcon className="ms-1">
 							Some surfaces do not have full rgb displays and require specific elements for providing feedback in

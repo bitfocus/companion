@@ -12,7 +12,7 @@ const Row = forwardRef<HTMLDivElement, RowProps>(function Row({ className, ...re
 
 // ─── Col ──────────────────────────────────────────────────────────────────────
 
-type ColBreakpointValue =
+export type ColBreakpointValue =
 	| number
 	| boolean
 	| 'auto'
@@ -22,7 +22,7 @@ type ColBreakpointValue =
 			order?: number | 'first' | 'last'
 	  }
 
-export interface ColProps extends HTMLAttributes<HTMLDivElement> {
+export interface GridBreakpointProps {
 	xs?: ColBreakpointValue
 	sm?: ColBreakpointValue
 	md?: ColBreakpointValue
@@ -30,6 +30,8 @@ export interface ColProps extends HTMLAttributes<HTMLDivElement> {
 	xl?: ColBreakpointValue
 	xxl?: ColBreakpointValue
 }
+
+export interface ColProps extends HTMLAttributes<HTMLDivElement>, GridBreakpointProps {}
 
 const BREAKPOINTS = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'] as const
 type Breakpoint = (typeof BREAKPOINTS)[number]
@@ -65,13 +67,17 @@ function getColClasses(bp: Breakpoint, value: ColBreakpointValue): string[] {
 	return classes
 }
 
-const Col = forwardRef<HTMLDivElement, ColProps>(function Col({ className, xs, sm, md, lg, xl, xxl, ...rest }, ref) {
-	const bpValues: Partial<Record<Breakpoint, ColBreakpointValue>> = { xs, sm, md, lg, xl, xxl }
-
-	const bpClasses = BREAKPOINTS.flatMap((bp) => {
-		const value = bpValues[bp]
+// Map a set of breakpoint props to Bootstrap grid classes. Returns [] when none are set; the
+// caller decides any fallback (e.g. Col adds a plain 'col', FormLabel adds nothing).
+export function getGridColClasses(props: GridBreakpointProps): string[] {
+	return BREAKPOINTS.flatMap((bp) => {
+		const value = props[bp]
 		return value !== undefined ? getColClasses(bp, value) : []
 	})
+}
+
+const Col = forwardRef<HTMLDivElement, ColProps>(function Col({ className, xs, sm, md, lg, xl, xxl, ...rest }, ref) {
+	const bpClasses = getGridColClasses({ xs, sm, md, lg, xl, xxl })
 
 	// If no breakpoint props provided, fall back to a plain 'col'
 	const colClasses = bpClasses.length > 0 ? bpClasses : ['col']

@@ -155,10 +155,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													children={(field) => (
 														<>
 															<div className="col-sm-3 d-flex align-items-center">
-																<FormLabel
-																	htmlFor={versionFieldId}
-																	className="col-form-label col-form-label-sm mb-0 flex-grow-1"
-																>
+																<FormLabel htmlFor={versionFieldId} column="sm" className="mb-0 flex-grow-1">
 																	Version
 																</FormLabel>
 																{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
@@ -200,7 +197,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 												</StaticAlert>
 											</Grid.Col>
 
-											<FormLabel htmlFor={moduleFieldId} className="col-sm-3 col-form-label col-form-label-sm">
+											<FormLabel htmlFor={moduleFieldId} sm={3} column="sm">
 												Module
 											</FormLabel>
 											<Grid.Col sm={9}>

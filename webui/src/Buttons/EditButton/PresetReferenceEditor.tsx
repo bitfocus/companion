@@ -77,7 +77,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 			)}
 
 			<Form className="row g-2" onSubmit={PreventDefaultHandler}>
-				<FormLabel htmlFor={connectionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={connectionFieldId} sm={4} column="sm">
 					Connection
 				</FormLabel>
 				<Grid.Col sm={8}>
@@ -136,7 +136,7 @@ function PresetReferenceVariableRow({ location, variableName, value }: PresetRef
 
 	return (
 		<>
-			<FormLabel htmlFor={fieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={fieldId} sm={4} column="sm">
 				{variableName}
 			</FormLabel>
 			<Grid.Col sm={8}>

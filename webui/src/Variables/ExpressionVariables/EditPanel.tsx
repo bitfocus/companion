@@ -137,7 +137,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	return (
 		<Grid.Col sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
-				<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 					Name
 					<InlineHelpIcon className="ms-1">
 						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
@@ -152,14 +152,14 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					/>
 				</Grid.Col>
 
-				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={descriptionFieldId} sm={4} column="sm">
 					Description
 				</FormLabel>
 				<Grid.Col xs={8}>
 					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
 				</Grid.Col>
 
-				<FormLabel htmlFor={notesFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={notesFieldId} sm={4} column="sm">
 					Notes
 				</FormLabel>
 				<Grid.Col xs={8}>
@@ -254,7 +254,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 		<>
 			<Grid.Col sm={12} className="p-0">
 				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
-					<FormLabel htmlFor={undefined} className="col-sm-4 col-form-label col-form-label-sm">
+					<FormLabel htmlFor={undefined} sm={4} column="sm">
 						Current Value
 					</FormLabel>
 					<Grid.Col xs={8}>

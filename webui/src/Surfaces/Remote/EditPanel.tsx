@@ -125,7 +125,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						}}
 						children={(field) => (
 							<>
-								<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 									Name
 								</FormLabel>
 								<Grid.Col className="fieldtype-textinput" sm={8}>
@@ -147,7 +147,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						)}
 					/>
 
-					<FormLabel htmlFor={integrationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+					<FormLabel htmlFor={integrationFieldId} sm={4} column="sm">
 						Surface Integration
 					</FormLabel>
 					<Grid.Col sm={8} className="flex px-2">

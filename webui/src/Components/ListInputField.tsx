@@ -121,7 +121,11 @@ export function ListRowControls({
 }: ListRowControlsProps): React.ReactNode {
 	return (
 		<>
-			<div className={classNames('col-sm-4 col-form-label col-form-label-sm text-muted', { displayNone: hidden })}>
+			<div
+				className={classNames('form-label col-sm-4 col-form-label col-form-label-sm text-muted', {
+					displayNone: hidden,
+				})}
+			>
 				Item {rowIndex + 1}
 			</div>
 			<Grid.Col sm={8} className={classNames('d-flex gap-1', { displayNone: hidden })}>
@@ -189,10 +193,7 @@ export const ListInputField = observer(function ListInputField({
 
 	return (
 		<>
-			<FormLabel
-				htmlFor={undefined}
-				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: hidden })}
-			>
+			<FormLabel htmlFor={undefined} sm={4} column="sm" className={classNames({ displayNone: hidden })}>
 				{definition.label}
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
@@ -243,10 +244,7 @@ export const ListInputField = observer(function ListInputField({
 
 						return (
 							<Fragment key={field.id}>
-								<FormLabel
-									htmlFor={inputId}
-									className={classNames('col-sm-4 col-form-label col-form-label-sm ps-4', { displayNone: hidden })}
-								>
+								<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames('ps-4', { displayNone: hidden })}>
 									{field.label}
 									<InputFeatureIcons
 										{...(cell.isExpression ? ExpressionModeFeatures : (getInputFeatures(field) ?? {}))}

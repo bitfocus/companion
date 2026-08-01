@@ -84,14 +84,14 @@ export const ConfirmExportModal = observer(
 							</Modal.Header>
 							<Modal.Body>
 								<Form className="row g-3" onSubmit={doAction}>
-									<FormLabel htmlFor={exportFormatId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={exportFormatId} sm={4} column="sm">
 										File format
 									</FormLabel>
 									<div className="col-sm-8">
 										<SelectExportFormat id={exportFormatId} value={format} setValue={setFormat} />
 									</div>
 
-									<FormLabel htmlFor={exportNameId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={exportNameId} sm={4} column="sm">
 										File name
 									</FormLabel>
 									<div className="col-sm-8">
@@ -104,7 +104,7 @@ export const ConfirmExportModal = observer(
 										/>
 									</div>
 
-									<FormLabel htmlFor={exportSecretsId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={exportSecretsId} sm={4} column="sm">
 										Include secrets
 										<InlineHelpIcon className="ms-1">
 											Some connections have secret values that can be omitted from the export. Not all modules are

@@ -157,7 +157,7 @@ export const AddInstanceModal = observer(
 										</p>
 									)}
 									<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
-										<FormLabel htmlFor={labelFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+										<FormLabel htmlFor={labelFieldId} sm={4} column="sm">
 											Label&nbsp;
 										</FormLabel>
 										<Grid.Col sm={8}>
@@ -169,7 +169,7 @@ export const AddInstanceModal = observer(
 											/>
 										</Grid.Col>
 
-										<FormLabel htmlFor={versionFieldId} className="col-sm-4 col-form-label col-form-label-sm pe-0">
+										<FormLabel htmlFor={versionFieldId} sm={4} column="sm" className="pe-0">
 											<div className="flex">
 												<span className="grow">Module Version&nbsp;</span>
 												{moduleInfo && selectedVersionInfo && (

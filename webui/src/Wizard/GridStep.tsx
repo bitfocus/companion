@@ -63,7 +63,7 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				</p>
 			</Grid.Col>
 
-			<FormLabel htmlFor={rowFieldId} className="col-sm-4 col-form-label col-form-label-sm mb-2">
+			<FormLabel htmlFor={rowFieldId} sm={4} column="sm" className="mb-2">
 				Rows
 			</FormLabel>
 			<Grid.Col sm={5} className="mb-2">
@@ -71,7 +71,7 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 			</Grid.Col>
 			<Grid.Col sm={3}></Grid.Col>
 
-			<FormLabel htmlFor={columnFieldId} className="col-sm-4 col-form-label col-form-label-sm mb-2">
+			<FormLabel htmlFor={columnFieldId} sm={4} column="sm" className="mb-2">
 				Columns
 			</FormLabel>
 			<Grid.Col sm={5} className="mb-2">

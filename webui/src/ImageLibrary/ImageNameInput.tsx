@@ -55,7 +55,7 @@ export function ImageNameInput({
 			)}
 
 			<div className={`row ${className || ''}`}>
-				<FormLabel htmlFor={labelInputId} className="col-sm-3 col-form-label">
+				<FormLabel htmlFor={labelInputId} sm={3} column>
 					Image name
 				</FormLabel>
 				<div className="col-sm-9">

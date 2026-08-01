@@ -86,7 +86,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>
-								<FormLabel htmlFor={variableNameId} className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={variableNameId} sm={4} column="sm">
 									Variable name
 									<InlineHelpIcon className="ms-1">
 										The name to give this value as a {localVariablePrefix} variable
@@ -227,7 +227,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 
 	return (
 		<MyErrorBoundary>
-			<FormLabel htmlFor={invertFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={invertFieldId} sm={4} column="sm">
 				Current Value
 			</FormLabel>
 			<Grid.Col sm={8}>
