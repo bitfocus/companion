@@ -212,7 +212,8 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			</Grid.Col>
 
 			<Grid.Col sm={12}>
-				<label className="form-label">Previous Backups</label>
+				<hr />
+				<FormLabel htmlFor={undefined}>Previous Backups</FormLabel>
 				{rule.previousBackups && rule.previousBackups.length > 0 && (
 					<div className="table-responsive">
 						<table className="table table-sm table-striped">
