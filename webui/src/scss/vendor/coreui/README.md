@@ -17,11 +17,11 @@ replace every rule here with first-party SCSS under `webui/src/scss/` and then
 delete this directory.
 
 Entry points currently referenced from our SCSS:
-- `variables`, `root`, `reboot`, `type`, `containers`, `forms`, `grid`,
-  `tables`, `transitions`, `nav`, `close`, `header`, `sidebar`, `helpers`,
-  `utilities/api`
+- `variables`, `variables-dark`, `root`, `reboot`, `type`, `containers`,
+  `forms`, `grid`, `tables`, `transitions`, `nav`, `close`, `header`,
+  `helpers`, `utilities/api`
 - `forms/form-control`
-- `mixins/ltr-rtl`, `mixins/breakpoints`
+- `mixins/ltr-rtl`, `mixins/breakpoints`, `mixins/transition`
 
 Pruned as entirely unused (no matching class rendered anywhere in the webui):
 - Forms: `chip-input`, `form-select`, `form-range`, `floating-labels`,
@@ -36,3 +36,9 @@ Pruned as entirely unused (no matching class rendered anywhere in the webui):
 The compiled CSS shrank by ~28 KB with these removals. Structural forwards
 (`grid`, `utilities/api`, …) still generate far more classes than the app uses,
 but those are Bootstrap-style config-driven and were left intact.
+
+The **sidebar** is no longer vendored here: CoreUI's `_sidebar`, `sidebar/*`
+partials were consolidated into our own `webui/src/scss/_sidebar.scss` (which
+already carried heavy customisations), with the ~90 sidebar configuration
+variables inlined. That file still `@use`s a few generic vendored mixins
+(`breakpoints`, `transition`) and `variables`/`variables-dark`.

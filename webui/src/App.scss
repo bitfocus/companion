@@ -18,7 +18,9 @@
 @forward 'scss/vendor/coreui/close';
 
 @forward 'scss/vendor/coreui/header';
-@forward 'scss/vendor/coreui/sidebar';
+
+// Sidebar: our own consolidated styles (previously CoreUI's vendored sidebar + our overrides)
+@use 'scss/sidebar';
 
 // Helpers
 @forward 'scss/vendor/coreui/helpers';
@@ -58,7 +60,6 @@
 @use 'scss/emulator';
 @use 'scss/standalone-status';
 @use 'scss/modules-manage';
-@use 'scss/sidebar';
 
 @use 'scss/action-recorder';
 @use 'scss/button-control';
