@@ -15,6 +15,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ButtonReferenceEditor } from './ButtonReferenceEditor.js'
 import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
@@ -25,9 +26,10 @@ import { PresetReferenceEditor } from './PresetReferenceEditor.js'
 interface EditButtonProps {
 	location: ControlLocation
 	onKeyUp: (e: React.KeyboardEvent<HTMLDivElement>) => void
+	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 
-export const EditButton = observer(function EditButton({ location, onKeyUp }: EditButtonProps) {
+export const EditButton = observer(function EditButton({ location, onKeyUp, navigateToControl }: EditButtonProps) {
 	const { pages } = useContext(RootAppStoreContext)
 
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)
@@ -64,6 +66,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 								previewImage={previewImage}
 								config={controlConfig.config}
 								runtimeProps={controlConfig.runtime}
+								navigateToControl={navigateToControl}
 							/>
 						))}
 				</>
@@ -96,6 +99,7 @@ interface EditButtonContentProps {
 	previewImage: string | null
 	config: SomeButtonModel
 	runtimeProps: Record<string, any> | false
+	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 const EditButtonContent = observer(function EditButton({
 	resetModalRef,
@@ -104,6 +108,7 @@ const EditButtonContent = observer(function EditButton({
 	previewImage,
 	config,
 	runtimeProps,
+	navigateToControl,
 }: EditButtonContentProps) {
 	return (
 		<>
@@ -115,13 +120,21 @@ const EditButtonContent = observer(function EditButton({
 							{(config.type === 'pageup' ||
 								config.type === 'pagenum' ||
 								config.type === 'pagedown' ||
-								config.type === 'preset-reference') && <ConvertToNormalButton location={location} />}
-							{(config.type === 'button-layered' || config.type === 'preset-reference') && (
-								<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+								config.type === 'preset-reference' ||
+								config.type === 'button-reference') && <ConvertToNormalButton location={location} />}
+							{(config.type === 'button-layered' ||
+								config.type === 'preset-reference' ||
+								config.type === 'button-reference') && (
+								<ControlHotPressButtons
+									location={location}
+									showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
+								/>
 							)}
 						</MyErrorBoundary>
 					</div>
-					{(config.type === 'button-layered' || config.type === 'preset-reference') && (
+					{(config.type === 'button-layered' ||
+						config.type === 'preset-reference' ||
+						config.type === 'button-reference') && (
 						<MyErrorBoundary>
 							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-100 mt-1" />
 						</MyErrorBoundary>
@@ -154,6 +167,12 @@ const EditButtonContent = observer(function EditButton({
 			{config.type === 'preset-reference' && (
 				<MyErrorBoundary>
 					<PresetReferenceEditor config={config} location={location} />
+				</MyErrorBoundary>
+			)}
+
+			{config.type === 'button-reference' && (
+				<MyErrorBoundary>
+					<ButtonReferenceEditor config={config} controlId={controlId} navigateToControl={navigateToControl} />
 				</MyErrorBoundary>
 			)}
 
