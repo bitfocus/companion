@@ -77,11 +77,6 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 	// Only top-level elements with plain (non-expression) bounds can be dragged. Anything else still gets an
 	// outline so the selection is visible, rather than the overlay silently disappearing.
 	const isInteractive = isTopLevelSelection && !!boundsFields
-	const readonlyReason = !isTopLevelSelection
-		? "Elements inside a group can't be moved on the canvas yet - use the properties below"
-		: !boundsFields
-			? 'Position is set by an expression - edit it in the properties below'
-			: null
 
 	const [liveFields, setLiveFields] = useState<BoundsFractions | null>(null)
 	// Mirrors `liveFields` synchronously so onPointerUp can read the final drag value without relying on
@@ -391,7 +386,8 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 
 	const percentOf = (value: number, total: number) => `${(value / total) * 100}%`
 
-	// A selection the overlay can't drag still gets an outline, so it's clear what's selected
+	// A selection the overlay can't drag still gets an outline, so it's clear what's selected. The reason why
+	// is carried by the quick-actions toolbar's tooltip - this outline is click-through, so it can't be hovered.
 	if (!isInteractive || !boundsFields) {
 		if (!selectedElementRect) return null
 
@@ -407,7 +403,7 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 			pointerEvents: 'none',
 		}
 
-		return <div style={readonlyStyle} title={readonlyReason ?? undefined} />
+		return <div style={readonlyStyle} />
 	}
 
 	const displayFields = liveFields ?? boundsFields

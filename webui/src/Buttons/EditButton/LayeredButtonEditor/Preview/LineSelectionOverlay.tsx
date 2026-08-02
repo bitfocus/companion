@@ -79,11 +79,6 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 	const lineFields = getDraggableLineFields(selectedElement)
 
 	const isInteractive = isTopLevelSelection && !!lineFields
-	const readonlyReason = !isTopLevelSelection
-		? "Elements inside a group can't be moved on the canvas yet - use the properties below"
-		: !lineFields
-			? 'The endpoints are set by an expression - edit them in the properties below'
-			: null
 
 	const [liveFields, setLiveFields] = useState<LineFractions | null>(null)
 	// Mirrors `liveFields` synchronously so onPointerUp can read the final drag value without a setState
@@ -267,7 +262,8 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 
 	const percentOf = (value: number, total: number) => `${(value / total) * 100}%`
 
-	// A line the overlay can't edit still gets an outline, so the selection stays visible
+	// A line the overlay can't edit still gets an outline, so the selection stays visible. The reason why is
+	// carried by the quick-actions toolbar's tooltip - this outline is click-through, so it can't be hovered.
 	if (!isInteractive || !lineFields) {
 		if (!selectedElementRect) return null
 
@@ -283,7 +279,7 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 			pointerEvents: 'none',
 		}
 
-		return <div style={readonlyStyle} title={readonlyReason ?? undefined} />
+		return <div style={readonlyStyle} />
 	}
 
 	const displayFields = liveFields ?? lineFields

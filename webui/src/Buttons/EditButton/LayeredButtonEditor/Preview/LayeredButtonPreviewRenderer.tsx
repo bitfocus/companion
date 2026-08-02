@@ -18,7 +18,13 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
-import { buildOptionValues, getDraggableBoundsFields, type BoundsFractions, type BoundsKey } from './boundsFields.js'
+import {
+	buildOptionValues,
+	getDraggableBoundsFields,
+	getDraggableLineFields,
+	type BoundsFractions,
+	type BoundsKey,
+} from './boundsFields.js'
 import { fitCanvasSize, PAD_X, PAD_Y, parseAspectRatio } from './canvasSize.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import { buildElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
@@ -166,14 +172,18 @@ const ElementQuickActions = observer(function ElementQuickActions({
 	const isTopLevel = indexInParent >= 0
 	const boundsDisabled = !elementId || !boundsFields || !isTopLevel
 
+	// The only place these explanations reach the user: the outline the overlays draw over a selection they
+	// can't edit is `pointer-events: none`, so a `title` on it would never be hovered.
 	const boundsDisabledReason = !elementId
 		? 'Select an element to edit it on the canvas'
 		: selectedElement?.type === 'canvas'
 			? 'The Canvas layer has no position or scale to edit'
-			: selectedElement?.type === 'line'
-				? 'Lines have no position or scale - drag their endpoints on the canvas instead'
-				: !isTopLevel
-					? 'Elements inside a group are not yet editable in the preview'
+			: !isTopLevel
+				? 'Elements inside a group are not yet editable in the preview'
+				: selectedElement?.type === 'line'
+					? getDraggableLineFields(selectedElement)
+						? 'Lines have no position or scale - drag their endpoints on the canvas instead'
+						: 'The line endpoints are set by an expression - edit them in the properties below'
 					: !boundsFields
 						? 'Preview editing is disabled because this element uses an expression to control its position or scale.'
 						: null
