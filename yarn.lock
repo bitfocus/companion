@@ -8200,6 +8200,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/stream-chain@npm:*":
+  version: 2.1.0
+  resolution: "@types/stream-chain@npm:2.1.0"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/b9acf2740068c20defed8a0066040375d7b75ce3f51100b61b888c9425818d92ef794110468350f51109d9c1aa890a645953abe8fcb25a57ee4e86a19559bda4
+  languageName: node
+  linkType: hard
+
 "@types/stream-demux@npm:*":
   version: 10.0.0
   resolution: "@types/stream-demux@npm:10.0.0"
@@ -8207,6 +8216,16 @@ __metadata:
     "@types/consumable-stream": "npm:*"
     "@types/writable-consumable-stream": "npm:*"
   checksum: 10c0/47e44bb279aa0831d1b679f4ab1400a67936ed9ae24f9cb05e7492ac4ca74bd359446e52961facffac9c71c5c2beb0a5d833549a48cbe587a5b3df1bcc75b54b
+  languageName: node
+  linkType: hard
+
+"@types/stream-json@npm:^1.7.7":
+  version: 1.7.8
+  resolution: "@types/stream-json@npm:1.7.8"
+  dependencies:
+    "@types/node": "npm:*"
+    "@types/stream-chain": "npm:*"
+  checksum: 10c0/c88f4dca65332d3847b37b16a60dc9d9a7401a6c47b0553e5a424e35f989757afeede32397b1a9ee9c1e5ba4a013832d2938fa60590e2b1dffa848185ac33b93
   languageName: node
   linkType: hard
 
@@ -10944,6 +10963,7 @@ __metadata:
     "@types/proxy-addr": "npm:^2.0.3"
     "@types/semver": "npm:^7.7.1"
     "@types/socketcluster-client": "npm:^20.0.0"
+    "@types/stream-json": "npm:^1.7.7"
     "@types/supertest": "npm:^7.2.1"
     "@types/tar-fs": "npm:^2.0.4"
     "@types/tar-stream": "npm:^3.1.4"
@@ -10983,6 +11003,7 @@ __metadata:
     selfsigned: "npm:^5.5.0"
     semver: "npm:^7.8.5"
     socketcluster-client: "npm:^20.0.1"
+    stream-json: "npm:^1.9.1"
     supertest: "npm:^7.2.2"
     supports-color: "npm:^11.0.0"
     swagger-ui-dist: "npm:^5.32.11"
@@ -22656,6 +22677,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"stream-chain@npm:^2.2.5":
+  version: 2.2.5
+  resolution: "stream-chain@npm:2.2.5"
+  checksum: 10c0/c512f50190d7c92d688fa64e7af540c51b661f9c2b775fc72bca38ea9bca515c64c22c2197b1be463741daacbaaa2dde8a8ea24ebda46f08391224f15249121a
+  languageName: node
+  linkType: hard
+
 "stream-demux@npm:^10.0.1":
   version: 10.0.1
   resolution: "stream-demux@npm:10.0.1"
@@ -22663,6 +22691,15 @@ __metadata:
     consumable-stream: "npm:^3.0.0"
     writable-consumable-stream: "npm:^4.1.0"
   checksum: 10c0/9c6b42af758560ceab49b0fdae169599cfca95fcd6f234b45fa3e1465751c2576ad65fd86e54bf5365fda6152955d06d6e6957c506b51460343c4801260402cf
+  languageName: node
+  linkType: hard
+
+"stream-json@npm:^1.9.1":
+  version: 1.9.1
+  resolution: "stream-json@npm:1.9.1"
+  dependencies:
+    stream-chain: "npm:^2.2.5"
+  checksum: 10c0/0521e5cb3fb6b0e2561d715975e891bd81fa77d0239c8d0b1756846392bc3c7cdd7f1ddb0fe7ed77e6fdef58daab9e665d3b39f7d677bd0859e65a2bff59b92c
   languageName: node
   linkType: hard
 

@@ -1,48 +1,75 @@
-import { promisify } from 'node:util'
+import { Readable, type Writable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import zlib from 'node:zlib'
+import Disassembler from 'stream-json/Disassembler.js'
+import Stringer from 'stream-json/Stringer.js'
 import yaml from 'yaml'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { Logger } from '../Log/Controller.js'
 
-const gzipAsync = promisify(zlib.gzip)
+/** Error thrown when an export is too large to serialise in the requested (non-streamed) format. */
+export class ExportTooLargeError extends Error {}
 
-export interface StringifiedExportData {
-	data: string | Buffer
-	asciiFilename: string
-	utf8Filename: string
-}
+/**
+ * The result of {@link prepareExport}: either a fully-serialised buffer/string ready to send, or an
+ * instruction to stream the export (used when the data is too large for a single JS string).
+ */
+export type PreparedExport = { kind: 'buffer'; data: string | Buffer } | { kind: 'stream'; format: 'json' | 'json-gz' }
 
-export async function stringifyExport(
-	logger: Logger,
-	data: SomeExportv6,
-	filename: string,
-	format: ExportFormat | undefined
-): Promise<StringifiedExportData | null> {
-	if (!format || format === 'json-gz') {
+/**
+ * Decide how to serialise an export:
+ * - `json-gz` always streams, so a giant JSON string is never created (it would exceed the V8
+ *   string limit for large configs).
+ * - `json` is serialised pretty (tab-indented) for git-diff-ability, falling back to compact
+ *   streaming only if it exceeds the string limit.
+ * - `yaml` is serialised natively; if it is too large it is rejected with a clear
+ *   {@link ExportTooLargeError} rather than crashing.
+ *
+ * An undefined/unknown format defaults to `json-gz` (matching the historic behaviour).
+ */
+export function prepareExport(data: SomeExportv6, format: ExportFormat | undefined): PreparedExport {
+	if (format === 'json') {
 		try {
-			const dataGz = await gzipAsync(JSON.stringify(data))
-			return {
-				data: dataGz,
-				...formatAttachmentFilename(filename),
-			}
-		} catch (err) {
-			logger.warn(`Failed to gzip data, retrying uncompressed: ${err}`)
-			return stringifyExport(logger, data, filename, 'json')
-		}
-	} else if (format === 'json') {
-		return {
-			data: JSON.stringify(data, undefined, '\t'),
-			...formatAttachmentFilename(filename),
+			return { kind: 'buffer', data: JSON.stringify(data, undefined, '\t') }
+		} catch (e) {
+			// A config too large to stringify still needs to export - fall back to compact streaming.
+			if (e instanceof RangeError) return { kind: 'stream', format: 'json' }
+			throw e
 		}
 	} else if (format === 'yaml') {
-		return {
-			data: yaml.stringify(data, splitLongPng64Values),
-			...formatAttachmentFilename(filename),
+		try {
+			return { kind: 'buffer', data: yaml.stringify(data, splitLongPng64Values) }
+		} catch (e) {
+			if (e instanceof RangeError) {
+				throw new ExportTooLargeError('Export is too large for the YAML format. Please export as JSON.')
+			}
+			throw e
 		}
 	} else {
-		return null
+		// json-gz (and the undefined/default case)
+		return { kind: 'stream', format: 'json-gz' }
+	}
+}
+
+/**
+ * Stream an export object to a destination as JSON, walking the object graph token-by-token (via
+ * stream-json) so the giant intermediate string is never created. gzips the output for `json-gz`.
+ */
+export async function streamExport(
+	data: SomeExportv6,
+	format: 'json' | 'json-gz',
+	destination: Writable
+): Promise<void> {
+	// Wrap in an array so Readable.from emits the export object itself as a single object-mode chunk.
+	const source = Readable.from([data], { objectMode: true })
+	const disassembler = new Disassembler()
+	const stringer = new Stringer()
+
+	if (format === 'json-gz') {
+		await pipeline(source, disassembler, stringer, zlib.createGzip(), destination)
+	} else {
+		await pipeline(source, disassembler, stringer, destination)
 	}
 }
 

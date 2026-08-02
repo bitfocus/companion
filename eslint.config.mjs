@@ -120,7 +120,9 @@ export default [
 			'n/no-missing-import': [
 				'error',
 				{
-					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest'],
+					// stream-json is a CJS package without an `exports` map; the resolver can't follow its
+					// `.js` subpath imports (Assembler/Disassembler/Stringer) that TS requires.
+					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest', 'stream-json'],
 				},
 			],
 			'n/prefer-node-protocol': 'error',

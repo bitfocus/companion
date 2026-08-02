@@ -1,6 +1,27 @@
+import { Writable } from 'node:stream'
+import zlib from 'node:zlib'
 import { describe, expect, test, vi } from 'vitest'
+import yaml from 'yaml'
 import type { ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
-import { find_smallest_grid_for_page, formatAttachmentFilename, stringifyExport } from '../../lib/ImportExport/Util.js'
+import {
+	ExportTooLargeError,
+	find_smallest_grid_for_page,
+	formatAttachmentFilename,
+	prepareExport,
+	streamExport,
+} from '../../lib/ImportExport/Util.js'
+
+/** A Writable that collects everything written to it, for asserting on streamed output. */
+class CollectingWritable extends Writable {
+	readonly #chunks: Buffer[] = []
+	_write(chunk: Buffer, _encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
+		this.#chunks.push(Buffer.from(chunk))
+		callback()
+	}
+	get collected(): Buffer {
+		return Buffer.concat(this.#chunks)
+	}
+}
 
 // ── formatAttachmentFilename ──────────────────────────────────────────────────
 
@@ -115,50 +136,79 @@ describe('find_smallest_grid_for_page', () => {
 	})
 })
 
-// ── stringifyExport ───────────────────────────────────────────────────────────
+// ── prepareExport ─────────────────────────────────────────────────────────────
 
-describe('stringifyExport', () => {
-	const logger = { warn: vi.fn() } as any
+describe('prepareExport', () => {
 	const sampleData = { type: 'full', version: 6, instances: {}, pages: {} } as any
-	const filename = 'my-export'
 
-	test('format "json" returns tab-indented JSON string', async () => {
-		const result = await stringifyExport(logger, sampleData, filename, 'json')
-		expect(result).not.toBeNull()
-		expect(typeof result!.data).toBe('string')
-		expect(result!.data as string).toContain(JSON.stringify(sampleData, undefined, '\t'))
-		expect(result!.asciiFilename).toBe(`"${filename}"`)
+	test('format "json" returns a tab-indented JSON buffer result', () => {
+		const result = prepareExport(sampleData, 'json')
+		expect(result).toEqual({ kind: 'buffer', data: JSON.stringify(sampleData, undefined, '\t') })
 	})
 
-	test('format "yaml" returns a YAML string', async () => {
-		const result = await stringifyExport(logger, sampleData, filename, 'yaml')
-		expect(result).not.toBeNull()
-		expect(typeof result!.data).toBe('string')
-		// YAML output contains the version number
-		expect(result!.data as string).toContain('version: 6')
+	test('format "yaml" returns a YAML buffer result', () => {
+		const result = prepareExport(sampleData, 'yaml')
+		expect(result.kind).toBe('buffer')
+		expect((result as { data: string }).data).toContain('version: 6')
 	})
 
-	test('format "json-gz" returns a Buffer', async () => {
-		const result = await stringifyExport(logger, sampleData, filename, 'json-gz')
-		expect(result).not.toBeNull()
-		expect(Buffer.isBuffer(result!.data)).toBe(true)
+	test('format "json-gz" streams', () => {
+		expect(prepareExport(sampleData, 'json-gz')).toEqual({ kind: 'stream', format: 'json-gz' })
 	})
 
-	test('format undefined defaults to gzip (returns a Buffer)', async () => {
-		const result = await stringifyExport(logger, sampleData, filename, undefined)
-		expect(result).not.toBeNull()
-		expect(Buffer.isBuffer(result!.data)).toBe(true)
+	test('undefined format defaults to streaming json-gz', () => {
+		expect(prepareExport(sampleData, undefined)).toEqual({ kind: 'stream', format: 'json-gz' })
 	})
 
-	test('unknown format returns null', async () => {
-		const result = await stringifyExport(logger, sampleData, filename, 'unknown-format' as any)
-		expect(result).toBeNull()
+	test('json falls back to streaming when it exceeds the string limit', () => {
+		const spy = vi.spyOn(JSON, 'stringify').mockImplementationOnce(() => {
+			throw new RangeError('Invalid string length')
+		})
+		try {
+			expect(prepareExport(sampleData, 'json')).toEqual({ kind: 'stream', format: 'json' })
+		} finally {
+			spy.mockRestore()
+		}
 	})
 
-	test('both json-gz and json produce the correct filename fields', async () => {
-		const result = await stringifyExport(logger, sampleData, 'café-export', 'json')
-		expect(result!.asciiFilename).toBe('"cafe-export"')
-		// typos:disable-line test of transformation
-		expect(result!.utf8Filename).toBe('caf%C3%A9-export')
+	test('yaml rejects with ExportTooLargeError when it exceeds the string limit', () => {
+		const spy = vi.spyOn(yaml, 'stringify').mockImplementationOnce(() => {
+			throw new RangeError('Invalid string length')
+		})
+		try {
+			expect(() => prepareExport(sampleData, 'yaml')).toThrow(ExportTooLargeError)
+		} finally {
+			spy.mockRestore()
+		}
+	})
+})
+
+// ── streamExport ──────────────────────────────────────────────────────────────
+
+describe('streamExport', () => {
+	const sampleData = { type: 'full', version: 6, instances: {}, pages: { 1: { name: 'p1' } } } as any
+
+	test('json produces compact JSON that round-trips to the original', async () => {
+		const dest = new CollectingWritable()
+		await streamExport(sampleData, 'json', dest)
+
+		const text = dest.collected.toString('utf-8')
+		expect(JSON.parse(text)).toEqual(sampleData)
+		// Compact output - no pretty-print indentation
+		expect(text).not.toContain('\n')
+		expect(text).not.toContain('\t')
+	})
+
+	test('json-gz produces gzip that gunzips back to the original', async () => {
+		const dest = new CollectingWritable()
+		await streamExport(sampleData, 'json-gz', dest)
+
+		const gz = dest.collected
+		// gzip magic bytes
+		expect(gz[0]).toBe(0x1f)
+		expect(gz[1]).toBe(0x8b)
+
+		const text = zlib.gunzipSync(gz).toString('utf-8')
+		expect(JSON.parse(text)).toEqual(sampleData)
 	})
 })

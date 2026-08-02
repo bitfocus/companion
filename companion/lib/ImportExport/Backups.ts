@@ -10,6 +10,7 @@
  *
  */
 
+import { createWriteStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { nanoid } from 'nanoid'
@@ -24,7 +25,7 @@ import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ExportController } from './Export.js'
-import { stringifyExport } from './Util.js'
+import { prepareExport, streamExport } from './Util.js'
 
 /**
  * BackupController handles scheduled backups of companion app data.
@@ -432,8 +433,8 @@ export class BackupController {
 		format: ExportFormat
 	): Promise<PreviousBackupInfo> {
 		const data = this.#exportController.generateCustomExport(null)
-		const exportData = await stringifyExport(logger, data, `${filename}.companionconfig`, format)
-		if (!exportData) throw new Error('Failed to stringify export data')
+		// May throw ExportTooLargeError for an oversized YAML backup - surfaced to the caller.
+		const prepared = prepareExport(data, format)
 
 		const filePath = path.join(backupDir, `${filename}.companionconfig`)
 
@@ -441,11 +442,19 @@ export class BackupController {
 
 		logger.info(`Exporting to ${filePath}`)
 
-		await fs.writeFile(filePath, exportData.data)
+		let fileSize: number
+		if (prepared.kind === 'buffer') {
+			await fs.writeFile(filePath, prepared.data)
+			fileSize = Buffer.byteLength(prepared.data)
+		} else {
+			// Large export - stream it to the file so the giant JSON string is never created.
+			await streamExport(data, prepared.format, createWriteStream(filePath))
+			fileSize = (await fs.stat(filePath)).size
+		}
 
 		return {
 			filePath,
-			fileSize: exportData.data.length,
+			fileSize,
 			createdAt: Date.now(),
 		}
 	}
