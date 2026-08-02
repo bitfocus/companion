@@ -1,4 +1,11 @@
-import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faChevronLeft,
+	faChevronRight,
+	faClone,
+	faInfoCircle,
+	faPlus,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -37,6 +44,20 @@ export function ControlActionStepTab({
 	localVariablesStore,
 	disabledSetStep,
 }: ControlActionStepTabProps): React.JSX.Element {
+	// Heading with an inline hint (no extra vertical space) pointing at the $(this:delta) variable, which is
+	// available to expressions inside rotary actions.
+	const rotaryHeading = (label: string): React.JSX.Element => (
+		<>
+			{label}{' '}
+			<FontAwesomeIcon
+				icon={faInfoCircle}
+				size="xs"
+				className="text-muted"
+				title="In an expression here, use $(this:delta) to read this turn's rotation amount and direction (some surfaces report a larger value for faster spins)."
+			/>
+		</>
+	)
+
 	return (
 		<>
 			{stepKeys.length > 1 && (
@@ -92,7 +113,7 @@ export function ControlActionStepTab({
 					<>
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading="Rotate left actions"
+								heading={rotaryHeading('Rotate left actions')}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'rotate_left' }}
@@ -107,7 +128,7 @@ export function ControlActionStepTab({
 
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading="Rotate right actions"
+								heading={rotaryHeading('Rotate right actions')}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'rotate_right' }}
