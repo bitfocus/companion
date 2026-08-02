@@ -60,11 +60,15 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
 					localVariableValueName !== null && localVariablesStore ? (
 						<div className="cell-name-local-variable">
-							<span className="cell-name-local-variable-label">{headline}</span>
-							<VariableValueDisplayPopover
-								value={localVariablesStore.getValue(localVariableValueName)}
-								showCopy={false}
-							/>
+							<span className="cell-name-local-variable-label" title={headline}>
+								{headline}
+							</span>
+							<div className="cell-name-local-variable-value">
+								<VariableValueDisplayPopover
+									value={localVariablesStore.getValue(localVariableValueName)}
+									showCopy={false}
+								/>
+							</div>
 						</div>
 					) : (
 						headline

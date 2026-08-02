@@ -181,6 +181,9 @@
 			font-weight: bold;
 			align-self: center;
 
+			// Long headlines/names (including unbreakable strings) wrap instead of overflowing the row
+			overflow-wrap: anywhere;
+
 			input {
 				font-weight: bold;
 				margin-bottom: 5px;
@@ -195,11 +198,18 @@
 				min-width: 0;
 
 				.cell-name-local-variable-label {
-					flex: 0 0 auto;
+					// Fixed-basis column so the value previews line up across rows. A name longer than the
+					// column is truncated with an ellipsis (full text on hover) rather than overflowing, and
+					// the column shrinks gracefully when the panel is too narrow to fit it.
+					flex: 0 1 16rem;
+					overflow: hidden;
+					text-overflow: ellipsis;
 					white-space: nowrap;
-					// Give the name a shared minimum width so the value previews line up into a column across
-					// rows (for typical names); longer names simply push their own value past the column.
-					min-width: 12rem;
+				}
+
+				.cell-name-local-variable-value {
+					flex: 1 1 auto;
+					min-width: 0;
 				}
 			}
 		}
