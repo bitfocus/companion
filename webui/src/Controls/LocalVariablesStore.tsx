@@ -210,7 +210,7 @@ export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 	},
 	{
 		value: 'this:delta',
-		label: 'The rotation amount/direction of this rotary action',
+		label: 'The rotation amount of this rotary action (positive = right/clockwise, negative = left/counter-clockwise)',
 	},
 ]
 

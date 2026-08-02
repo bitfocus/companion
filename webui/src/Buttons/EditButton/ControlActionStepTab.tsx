@@ -1,16 +1,10 @@
-import {
-	faChevronLeft,
-	faChevronRight,
-	faClone,
-	faInfoCircle,
-	faPlus,
-	faTrash,
-} from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
@@ -49,12 +43,10 @@ export function ControlActionStepTab({
 	const rotaryHeading = (label: string): React.JSX.Element => (
 		<>
 			{label}{' '}
-			<FontAwesomeIcon
-				icon={faInfoCircle}
-				size="xs"
-				className="text-muted"
-				title="In an expression here, use $(this:delta) to read this turn's rotation amount and direction (some surfaces report a larger value for faster spins)."
-			/>
+			<InlineHelpIcon className="text-muted">
+				In an expression here, use $(this:delta) to read this turn's rotation amount and direction (positive =
+				right/clockwise, negative = left/counter-clockwise; some surfaces report a larger value for faster spins).
+			</InlineHelpIcon>
 		</>
 	)
 

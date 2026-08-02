@@ -64,8 +64,8 @@ import {
  * 1.13.0 - Add `leds` capability to advanced-mode style presets (addressable LED strips/rings)
  * 1.14.0 - DIRECTION on KEY-ROTATE and SUB-ROTATE may now be a signed number to carry a rotation
  *          amount (velocity/step count): sign is the direction, magnitude is the number of steps.
- *          `0` still means a single counter-clockwise step, and `1` a single clockwise step, so
- *          existing clients are unaffected. Support is advertised via ROTARY_AMOUNT in CAPS.
+ *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
+ *          advertised via ROTARY_AMOUNT in CAPS.
  */
 export const API_VERSION = '1.14.0'
 

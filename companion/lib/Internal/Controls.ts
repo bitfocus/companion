@@ -14,7 +14,11 @@ import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	FeedbackEntitySubType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type {
@@ -187,18 +191,23 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				optionsSupportExpressions: true,
 			},
 
-			button_rotate_left: {
-				label: 'Button: Trigger rotate left',
+			button_rotate: {
+				label: 'Button: Trigger rotate',
 				description: 'Make sure to enable rotary actions for the specified button',
 				showButtonPreview: true,
-				options: [ControlLocationOption],
-				optionsSupportExpressions: true,
-			},
-			button_rotate_right: {
-				label: 'Button: Trigger rotate right',
-				description: 'Make sure to enable rotary actions for the specified button',
-				showButtonPreview: true,
-				options: [ControlLocationOption],
+				options: [
+					ControlLocationOption,
+					{
+						type: 'number',
+						label: 'Amount',
+						id: 'delta',
+						default: 1,
+						min: Number.MIN_SAFE_INTEGER,
+						max: Number.MAX_SAFE_INTEGER,
+						description:
+							'1 rotates one step clockwise (right), -1 one step counter-clockwise (left). Larger magnitudes rotate by that many steps. Tip: switch to an expression and use $(this:delta) to forward the amount of a physical rotation.',
+					},
+				],
 				optionsSupportExpressions: true,
 			},
 
@@ -551,6 +560,17 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#pushStateSubscriptions.delete(feedback.id)
 	}
 
+	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+		// The separate rotate-left/right actions were merged into a single `button_rotate` action that takes a
+		// signed delta. Map the old direction onto -1 (left) / +1 (right), preserving the other options.
+		if (action.definitionId === 'button_rotate_left' || action.definitionId === 'button_rotate_right') {
+			const delta = action.definitionId === 'button_rotate_right' ? 1 : -1
+			action.definitionId = 'button_rotate'
+			action.options.delta = { value: delta, isExpression: false }
+			return action
+		}
+	}
+
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
 			case 'button_pressrelease': {
@@ -577,17 +597,13 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				}
 				break
 			}
-			case 'button_rotate_left': {
+			case 'button_rotate': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.rotateControl(theControlId, -1, extras.surfaceId)
-				}
-				break
-			}
-			case 'button_rotate_right': {
-				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (theControlId) {
-					this.#controlsStore.rotateControl(theControlId, 1, extras.surfaceId)
+					const delta = Number(action.options.delta)
+					if (Number.isFinite(delta) && delta !== 0) {
+						this.#controlsStore.rotateControl(theControlId, delta, extras.surfaceId)
+					}
 				}
 				break
 			}

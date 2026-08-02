@@ -137,5 +137,5 @@ Additionally, in some places there are some builtin local variables under the `$
   - Variable: `this:page_name`
 - The id of the surface triggering this action
   - Variable: `this:surface_id`
-- The rotation amount/direction of a rotary action (signed; only set while a rotary action is running)
+- The rotation amount of a rotary action (positive = right/clockwise, negative = left/counter-clockwise; only set while a rotary action is running)
   - Variable: `this:delta`
