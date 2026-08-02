@@ -113,6 +113,10 @@ export class ControlStore implements IControlStore {
 	 * @param surfaceId The surface that initiated this rotate
 	 */
 	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
+		// A zero or non-finite delta is not a meaningful rotation. Reject it here so no producer can
+		// accidentally run the `rotate_left` set (chosen when `delta > 0` is false) for a zero delta.
+		if (!Number.isFinite(delta) || delta === 0) return false
+
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
 			control.rotateControl(delta, surfaceId)

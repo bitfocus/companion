@@ -516,7 +516,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 					this.#controls.rotateControl(controlId, delta, this.surfaceId)
 				}
 				this.#logger.debug(
-					`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${delta > 0 ? 'right' : 'left'} by ${delta}`
+					`Rotary ${thisPage}/${y2 + yOffset}/${x2 + xOffset} rotated ${delta > 0 ? 'right' : 'left'} by ${Math.abs(delta)}`
 				)
 			} else {
 				// Ignore when locked out
