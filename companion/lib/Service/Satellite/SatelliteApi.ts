@@ -62,9 +62,10 @@ import {
  * 1.11.0 - Add NONSQUARE to CAPS to indicate support for non-square buttons
  * 1.12.0 - Add BITMAP_FORMATS to CAPS and BITMAP_FORMAT to ADD-DEVICE and ADD-SUB to negotiate bitmap encoding (rgb/png/webp)
  * 1.13.0 - Add `leds` capability to advanced-mode style presets (addressable LED strips/rings)
- * 1.14.0 - Add optional AMOUNT parameter to KEY-ROTATE and SUB-ROTATE to carry a signed rotation
- *          amount (velocity/step count). Advertised via ROTARY_AMOUNT in CAPS. When omitted, DIRECTION
- *          is used as before (+/-1), so existing clients are unaffected.
+ * 1.14.0 - DIRECTION on KEY-ROTATE and SUB-ROTATE may now be a signed number to carry a rotation
+ *          amount (velocity/step count): sign is the direction, magnitude is the number of steps.
+ *          `0` still means a single counter-clockwise step, and `1` a single clockwise step, so
+ *          existing clients are unaffected. Support is advertised via ROTARY_AMOUNT in CAPS.
  */
 export const API_VERSION = '1.14.0'
 
@@ -961,20 +962,21 @@ interface SatelliteSocketState {
 }
 
 /**
- * Resolve the signed rotation delta for a KEY-ROTATE/SUB-ROTATE command. Prefers the optional AMOUNT
- * parameter (a signed number, added in API 1.14.0) and falls back to the boolean DIRECTION (+/-1) for
- * older clients or when AMOUNT is missing/invalid.
+ * Resolve the signed rotation delta for a KEY-ROTATE/SUB-ROTATE command from the DIRECTION parameter.
+ * DIRECTION is a signed number where the sign is the direction and the magnitude is the number of steps
+ * (added in API 1.14.0). `0` is kept as -1 (a single counter-clockwise step) for backwards compatibility
+ * with clients that used `0`/`1` as a boolean direction. A non-numeric DIRECTION falls back to the legacy
+ * "truthy means clockwise" behaviour.
  */
 function parseSatelliteRotationDelta(params: ParsedParams): number {
-	const direction = params.DIRECTION !== undefined && params.DIRECTION >= '1'
+	const raw = params.DIRECTION
 
-	const amountRaw = params.AMOUNT
-	if (typeof amountRaw === 'string') {
-		const amount = Number(amountRaw)
-		if (Number.isFinite(amount) && amount !== 0) return amount
+	if (typeof raw === 'string') {
+		const num = Number(raw)
+		if (Number.isFinite(num)) return num === 0 ? -1 : num
 	}
 
-	return direction ? 1 : -1
+	return raw !== undefined && raw >= '1' ? 1 : -1
 }
 
 function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {

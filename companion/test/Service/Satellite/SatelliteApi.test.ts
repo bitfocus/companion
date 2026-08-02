@@ -1090,7 +1090,7 @@ describe('ServiceSatelliteApi', () => {
 				expect(socket.lastMessage).toContain('DEVICEID="dev1"')
 			})
 
-			test('AMOUNT overrides the direction-derived delta', () => {
+			test('a positive DIRECTION magnitude rotates clockwise by that amount', () => {
 				const { api, logger, surfaceController } = createService()
 				const { socket, processMessage } = createSocketAndInit(api, logger)
 
@@ -1098,13 +1098,13 @@ describe('ServiceSatelliteApi', () => {
 				mockDevice.parseKeyParam.mockReturnValue([1, 2])
 				mockDevice.doRotate.mockReturnValue(undefined)
 
-				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=1 AMOUNT=5\n')
+				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=5\n')
 
 				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, 5)
 				expect(socket.lastMessage).toContain('OK')
 			})
 
-			test('invalid AMOUNT falls back to the direction-derived delta', () => {
+			test('a negative DIRECTION magnitude rotates counter-clockwise by that amount', () => {
 				const { api, logger, surfaceController } = createService()
 				const { socket, processMessage } = createSocketAndInit(api, logger)
 
@@ -1112,9 +1112,9 @@ describe('ServiceSatelliteApi', () => {
 				mockDevice.parseKeyParam.mockReturnValue([1, 2])
 				mockDevice.doRotate.mockReturnValue(undefined)
 
-				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=0 AMOUNT=notanumber\n')
+				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=-3\n')
 
-				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, -1)
+				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, -3)
 				expect(socket.lastMessage).toContain('OK')
 			})
 		})
@@ -1791,7 +1791,7 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
 		})
 
-		test('AMOUNT overrides the direction-derived delta', () => {
+		test('a signed DIRECTION magnitude carries the rotation amount', () => {
 			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
 
@@ -1803,7 +1803,7 @@ describe('ServiceSatelliteApi', () => {
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
 			socket.clearMessages()
 
-			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=0 AMOUNT=-4\n')
+			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=-4\n')
 
 			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', -4, expect.stringContaining('satellite-sub:'))
 			expect(socket.lastMessage).toContain('OK')
