@@ -16,11 +16,6 @@
 @forward 'scss/vendor/coreui/nav';
 @forward 'scss/vendor/coreui/close';
 
-@forward 'scss/vendor/coreui/header';
-
-// Sidebar: our own consolidated styles (previously CoreUI's vendored sidebar + our overrides)
-@use 'scss/sidebar';
-
 // Helpers
 @forward 'scss/vendor/coreui/helpers';
 
@@ -60,6 +55,8 @@
 @use 'scss/emulator';
 @use 'scss/standalone-status';
 @use 'scss/modules-manage';
+@use 'scss/header';
+@use 'scss/sidebar';
 
 @use 'scss/action-recorder';
 @use 'scss/button-control';
@@ -138,19 +135,6 @@ body {
 	.text-muted {
 		color: #ccc !important;
 	}
-}
-
-.unstable-warning {
-	z-index: 10000;
-}
-
-.install-name {
-	padding: 0 var(--cui-header-nav-link-padding-x);
-	color: var(--cui-header-color);
-
-	align-content: center;
-	font-size: 1.25em;
-	font-weight: bold;
 }
 
 .section {
