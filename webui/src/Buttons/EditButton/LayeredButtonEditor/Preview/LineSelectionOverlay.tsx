@@ -163,7 +163,22 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 
 			// The schema caps the endpoint fields at 0-100%, so keep drags inside the same range rather than
 			// producing values the properties panel would reject
-			for (const key of LINE_KEYS) next[key] = clamp01(next[key])
+			if (state.mode === 'move') {
+				for (const axis of ['x', 'y'] as const) {
+					const fromKey = axis === 'x' ? 'fromX' : 'fromY'
+					const toKey = axis === 'x' ? 'toX' : 'toY'
+					const start = state.startFields
+
+					const lowEnd = Math.min(start[fromKey], start[toKey])
+					const highEnd = Math.max(start[fromKey], start[toKey])
+					const shift = Math.min(Math.max(next[fromKey] - start[fromKey], -lowEnd), 1 - highEnd)
+
+					next[fromKey] = start[fromKey] + shift
+					next[toKey] = start[toKey] + shift
+				}
+			} else {
+				for (const key of LINE_KEYS) next[key] = clamp01(next[key])
+			}
 
 			setSnapLines(lines)
 			liveFieldsRef.current = next
