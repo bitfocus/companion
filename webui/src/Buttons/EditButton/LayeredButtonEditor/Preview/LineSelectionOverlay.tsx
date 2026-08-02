@@ -96,6 +96,20 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 	// position for a frame on drop. Mirrors SelectionOverlay's pendingCommitRef.
 	const pendingCommitRef = useRef<LineFractions | null>(null)
 
+	// Detaches whichever listeners are actually attached. Held in a ref rather than removed by identity so a
+	// re-render that changes the handler identities mid-drag can't detach the wrong pair (or none).
+	const detachListenersRef = useRef<(() => void) | null>(null)
+
+	// Nothing else drops the listeners if the overlay unmounts mid-drag (selection cleared, panel closed),
+	// which would otherwise leave a stray pointerup committing a mutation for a component that's gone.
+	useEffect(() => {
+		return () => {
+			dragState.current = null
+			detachListenersRef.current?.()
+			detachListenersRef.current = null
+		}
+	}, [])
+
 	useEffect(() => {
 		if (dragState.current) return
 		pendingCommitRef.current = null
@@ -190,8 +204,8 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 	const onPointerUp = useCallback(() => {
 		const state = dragState.current
 		dragState.current = null
-		window.removeEventListener('pointermove', onPointerMove)
-		window.removeEventListener('pointerup', onPointerUp)
+		detachListenersRef.current?.()
+		detachListenersRef.current = null
 		setSnapLines({ x: null, y: null })
 
 		if (!state) return
@@ -212,7 +226,7 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 		updateOptionsMutation
 			.mutateAsync({ controlId, elementId, values: buildOptionValues(rounded, CHANGED_KEYS[state.mode]) })
 			.catch((e) => console.error('Failed to update line endpoints', e))
-	}, [onPointerMove, updateOptionsMutation, controlId, elementId])
+	}, [updateOptionsMutation, controlId, elementId])
 
 	// Once the props round-trip what was committed, drop back to tracking them directly
 	useEffect(() => {
@@ -243,6 +257,10 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 
 			window.addEventListener('pointermove', onPointerMove)
 			window.addEventListener('pointerup', onPointerUp)
+			detachListenersRef.current = () => {
+				window.removeEventListener('pointermove', onPointerMove)
+				window.removeEventListener('pointerup', onPointerUp)
+			}
 		},
 		[lineFields, onPointerMove, onPointerUp, elementId, elementRects, contentBoundsPx]
 	)

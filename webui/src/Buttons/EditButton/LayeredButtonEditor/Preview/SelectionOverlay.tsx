@@ -96,6 +96,20 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 	// mutation resolves - a visible flicker on every move/resize.
 	const pendingCommitRef = useRef<BoundsFractions | null>(null)
 
+	// Detaches whichever listeners are actually attached. Held in a ref rather than removed by identity so a
+	// re-render that changes the handler identities mid-drag can't detach the wrong pair (or none).
+	const detachListenersRef = useRef<(() => void) | null>(null)
+
+	// Nothing else drops the listeners if the overlay unmounts mid-drag (selection cleared, panel closed),
+	// which would otherwise leave a stray pointerup committing a mutation for a component that's gone.
+	useEffect(() => {
+		return () => {
+			dragState.current = null
+			detachListenersRef.current?.()
+			detachListenersRef.current = null
+		}
+	}, [])
+
 	// Discard any in-flight drag/pending-commit state when the selection changes to a different element -
 	// otherwise the overlay could keep showing the previous element's held position over the new one.
 	useEffect(() => {
@@ -276,8 +290,8 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 	const onPointerUp = useCallback(() => {
 		const state = dragState.current
 		dragState.current = null
-		window.removeEventListener('pointermove', onPointerMove)
-		window.removeEventListener('pointerup', onPointerUp)
+		detachListenersRef.current?.()
+		detachListenersRef.current = null
 		setSnapLines({ x: null, y: null })
 
 		if (!state) return
@@ -302,7 +316,7 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 
 		const changedKeys = state.mode === 'move' ? (['x', 'y'] as const) : (['x', 'y', 'width', 'height'] as const)
 		commit(rounded, changedKeys, state.targetId)
-	}, [commit, onPointerMove])
+	}, [commit])
 
 	// Once the server-confirmed bounds (via props) match what was last committed, drop back to tracking
 	// `boundsFields` directly so future prop updates (eg from someone else editing) are reflected live.
@@ -357,6 +371,10 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 
 			window.addEventListener('pointermove', onPointerMove)
 			window.addEventListener('pointerup', onPointerUp)
+			detachListenersRef.current = () => {
+				window.removeEventListener('pointermove', onPointerMove)
+				window.removeEventListener('pointerup', onPointerUp)
+			}
 		},
 		[
 			boundsFields,
