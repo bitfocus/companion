@@ -456,22 +456,28 @@
 			border-top: 1px solid rgb(221, 221, 221);
 			background-color: rgb(245, 245, 245);
 
+			// Truncates rather than pushing the buttons out of the strip when the panel is narrow
 			.button-layer-footer-label {
 				white-space: nowrap;
 				font-size: 0.85em;
 				color: #4a4a4a;
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
 			}
 
 			.button-layer-aspect-options {
 				display: flex;
 				gap: 2px;
 				margin-left: auto;
+				flex: 0 0 auto;
 			}
 
 			.button-layer-aspect-option {
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				flex: 0 0 auto;
 				width: 24px;
 				height: 24px;
 				padding: 0;
@@ -491,6 +497,14 @@
 					border-color: #2276d2;
 					color: #fff;
 				}
+			}
+
+			// The custom option is a popover trigger, which always carries the `btn` class - undo its metrics
+			// so it keeps the same 24x24 box as the preset buttons
+			.button-layer-aspect-option.btn {
+				line-height: 1;
+				font-size: inherit;
+				min-width: 0;
 			}
 
 			// Outlined rectangle drawn to the option's ratio; currentColor flips to white when active
@@ -688,6 +702,17 @@
 	.button-group-vertical {
 		width: 100%;
 	}
+}
+
+// Portaled to the body, so it can't live inside the .button-layer-preview block
+.button-layer-aspect-custom {
+	// Sized for the two-digit values these ratios realistically use
+	width: 135px;
+	min-width: 0;
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .layered-style-element-picker-modal {
