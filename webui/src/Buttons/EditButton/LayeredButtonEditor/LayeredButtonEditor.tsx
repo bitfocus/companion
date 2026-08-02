@@ -187,7 +187,8 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 					<ButtonGroup aria-label="Property detail level" className="button-layer-mode-toggle">
 						<Button
 							size="sm"
-							color={simpleMode ? 'primary' : 'secondary'}
+							className={simpleMode ? 'active' : undefined}
+							aria-pressed={simpleMode}
 							onClick={() => setSimpleMode(true)}
 							// pointerdown: claim the gesture before the separator starts a resize (click may be suppressed)
 							onPointerDown={() => setSimpleMode(true)}
@@ -196,12 +197,13 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						</Button>
 						<Button
 							size="sm"
-							color={!simpleMode ? 'primary' : 'secondary'}
+							className={!simpleMode ? 'active' : undefined}
+							aria-pressed={!simpleMode}
 							onClick={() => setSimpleMode(false)}
 							onPointerDown={() => setSimpleMode(false)}
 							title="Show every property for the selected element, including the less commonly used ones"
 						>
-							Advanced
+							All Properties
 						</Button>
 					</ButtonGroup>
 				</SeparatorInteractive>
