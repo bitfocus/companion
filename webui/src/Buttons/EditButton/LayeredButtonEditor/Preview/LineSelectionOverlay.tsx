@@ -12,6 +12,7 @@ import {
 	type LineKey,
 } from './boundsFields.js'
 import type { ElementRect, PixelRect } from './elementHitTest.js'
+import { SnapGuide } from './SnapGuide.js'
 import { collectSnapTargets, snapAxis, thresholdFractionFor } from './snapping.js'
 
 /** Which end is being dragged, or the whole line */
@@ -298,10 +299,16 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 	return (
 		<>
 			{snapLines.x !== null && (
-				<SnapGuide orientation="vertical" positionPx={contentBoundsPx.x + snapLines.x * contentBoundsPx.width} />
+				<SnapGuide
+					orientation="vertical"
+					positionPercent={percentOf(contentBoundsPx.x + snapLines.x * contentBoundsPx.width, canvasSizePx.width)}
+				/>
 			)}
 			{snapLines.y !== null && (
-				<SnapGuide orientation="horizontal" positionPx={contentBoundsPx.y + snapLines.y * contentBoundsPx.height} />
+				<SnapGuide
+					orientation="horizontal"
+					positionPercent={percentOf(contentBoundsPx.y + snapLines.y * contentBoundsPx.height, canvasSizePx.height)}
+				/>
 			)}
 
 			{/* SVG rather than a div: only a stroke can be a hit target that follows a diagonal. The viewBox is
@@ -352,21 +359,6 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 		</>
 	)
 })
-
-function SnapGuide({ orientation, positionPx }: { orientation: 'vertical' | 'horizontal'; positionPx: number }) {
-	const vertical = orientation === 'vertical'
-
-	const style: React.CSSProperties = {
-		position: 'absolute',
-		background: '#00a3ff',
-		pointerEvents: 'none',
-		...(vertical
-			? { left: positionPx, top: 0, bottom: 0, width: 1 }
-			: { top: positionPx, left: 0, right: 0, height: 1 }),
-	}
-
-	return <div style={style} />
-}
 
 function EndpointHandle({
 	leftPercent,

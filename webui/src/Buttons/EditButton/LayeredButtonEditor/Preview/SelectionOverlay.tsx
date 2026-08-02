@@ -12,6 +12,7 @@ import {
 	type BoundsKey,
 } from './boundsFields.js'
 import type { ElementRect, PixelRect } from './elementHitTest.js'
+import { SnapGuide } from './SnapGuide.js'
 import { collectSnapTargets, snapAxis, thresholdFractionFor } from './snapping.js'
 
 type Corner = 'nw' | 'ne' | 'sw' | 'se'
@@ -431,10 +432,16 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 	return (
 		<>
 			{snapLines.x !== null && (
-				<SnapGuide orientation="vertical" positionPx={contentBoundsPx.x + snapLines.x * contentBoundsPx.width} />
+				<SnapGuide
+					orientation="vertical"
+					positionPercent={percentOf(contentBoundsPx.x + snapLines.x * contentBoundsPx.width, canvasSizePx.width)}
+				/>
 			)}
 			{snapLines.y !== null && (
-				<SnapGuide orientation="horizontal" positionPx={contentBoundsPx.y + snapLines.y * contentBoundsPx.height} />
+				<SnapGuide
+					orientation="horizontal"
+					positionPercent={percentOf(contentBoundsPx.y + snapLines.y * contentBoundsPx.height, canvasSizePx.height)}
+				/>
 			)}
 			<div style={style} onPointerDown={(e) => startDrag('move', undefined, e)}>
 				{(['nw', 'ne', 'sw', 'se'] as const).map((corner) => (
@@ -444,22 +451,6 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 		</>
 	)
 })
-
-function SnapGuide({ orientation, positionPx }: { orientation: 'vertical' | 'horizontal'; positionPx: number }) {
-	const vertical = orientation === 'vertical'
-
-	const style: React.CSSProperties = {
-		// Blue, to stay distinct from the red bounds lines the renderer draws around the selected element
-		position: 'absolute',
-		background: '#00a3ff',
-		pointerEvents: 'none',
-		...(vertical
-			? { left: positionPx, top: 0, bottom: 0, width: 1 }
-			: { top: positionPx, left: 0, right: 0, height: 1 }),
-	}
-
-	return <div style={style} />
-}
 
 function ResizeHandle({ corner, onPointerDown }: { corner: Corner; onPointerDown: (e: React.PointerEvent) => void }) {
 	const style: React.CSSProperties = {
