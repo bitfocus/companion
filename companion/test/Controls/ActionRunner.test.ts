@@ -583,6 +583,14 @@ describe('ControlActionRunner', () => {
 		})
 	})
 
+	test('forwards a rotation delta through to the action runner', async () => {
+		const { actionRunner, controlRunner } = createControlRunner()
+
+		await controlRunner.runActions([fakeEntity()], { ...runActionsExtras(), rotationDelta: -5 })
+
+		expect(passedExtras(actionRunner).rotationDelta).toBe(-5)
+	})
+
 	test('redraws when the first chain starts and the last one finishes', async () => {
 		const { actionRunner, triggerRedraw, controlRunner } = createControlRunner()
 		const first = deferred<void>()
