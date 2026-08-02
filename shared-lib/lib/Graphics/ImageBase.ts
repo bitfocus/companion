@@ -78,6 +78,13 @@ export type CompanionImageContext2D = Omit<
 	CanvasRenderingContext2D,
 	'drawImage' | 'createPattern' | 'drawFocusIfNeeded' | 'scrollPathIntoView' | 'canvas'
 >
+/**
+ * This factor compensates the "adjusted" part of Arimo-Regular-adjusted
+ * This font has been scaled up to match the metrics of our remaining Noto fonts, the have now the same Caps height and Bounding box per Em.
+ * The font size is given in % of the element height, so with the wider ascend and descend the font would look smaller.
+ * This factor compensates the measured ascent and descent to give back the original value for Arimo and effectively condensing all other fonts' white space.
+ */
+export const FONT_COMPATIBILITY_FACTOR = 0.85127
 
 /**
  * A simple image pool, to allow for using temporary images for compositing purposes
@@ -732,7 +739,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		if (!dummy) {
 			this.context2d.textAlign = 'left'
 			this.context2d.fillStyle = color
-			this.context2d.fillText(text, x, y + Math.round(metrics.fontBoundingBoxAscent))
+			this.context2d.fillText(text, x, y + Math.round(metrics.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR))
 		}
 
 		return metrics.width
@@ -774,15 +781,15 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		let vOffset = 0
 		switch (valignment) {
 			case 'top':
-				vOffset = metrics.fontBoundingBoxAscent
+				vOffset = metrics.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR
 				break
 
 			case 'center':
-				vOffset = metrics.fontBoundingBoxAscent / 2
+				vOffset = (metrics.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR) / 2
 				break
 
 			case 'bottom':
-				vOffset = metrics.fontBoundingBoxDescent * -1
+				vOffset = metrics.fontBoundingBoxDescent * FONT_COMPATIBILITY_FACTOR * -1
 				break
 		}
 
@@ -812,7 +819,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		this.context2d.font = fontSpec
 		const metrics = this.context2d.measureText('A')
 		this.context2d.font = previousFont
-		const rawRatio = (metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent) / 100
+		const rawRatio =
+			(metrics.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR +
+				metrics.fontBoundingBoxDescent * FONT_COMPATIBILITY_FACTOR) /
+			100
 		const ratio = rawRatio > 0 ? rawRatio : 1.2
 
 		this.#textLayoutCache?.set(cacheKey, ratio)
@@ -1020,8 +1030,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				const metrics = this.context2d.measureText(layout.lines[lineToDraw].text)
 				const width = metrics.width
 				if (width > 0) {
-					const ascent = metrics.fontBoundingBoxAscent
-					const descent = metrics.fontBoundingBoxDescent
+					const ascent = metrics.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR
+					const descent = metrics.fontBoundingBoxDescent * FONT_COMPATIBILITY_FACTOR
 					const thickness = Math.max(1, (ascent + descent) / 14)
 					// textAlign is set above, so derive the line's left edge from the anchor.
 					const left = halign === 'center' ? xAnchor - width / 2 : halign === 'right' ? xAnchor - width : xAnchor

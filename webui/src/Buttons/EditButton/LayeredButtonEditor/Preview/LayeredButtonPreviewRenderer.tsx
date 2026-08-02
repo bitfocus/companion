@@ -153,7 +153,7 @@ function LayeredButtonCanvas({
 	// Future: maybe the first paint should be blocked until either the fonts are loaded, or a timeout is reached?
 	useEffect(() => {
 		const unsub = FontLoader.listenForFontLoad(() => {
-			console.log('font loaded!', Date.now())
+			// console.log('font loaded!', Date.now())
 			if (drawContext.current) drawContext.current.redraw()
 		})
 

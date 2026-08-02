@@ -1,11 +1,11 @@
-import type { CompanionImageContext2D } from './ImageBase.js'
+import { FONT_COMPATIBILITY_FACTOR, type CompanionImageContext2D } from './ImageBase.js'
 
 /**
  * Cached text layout result
  */
 export interface TextLayoutResult {
 	fontDefinition: string
-	lines: { text: string; ascent: number; descent: number; fitsH?: boolean }[]
+	lines: { text: string; chars?: string[]; ascent: number; descent: number; fitsH?: boolean }[]
 	measuredLineHeight: number
 	measuredAscent: number
 	totalHeight: number
@@ -118,7 +118,7 @@ export function resolveFontSizes(
  * @param h - the height in pixels of that context you want to fit in
  * @param displayTextChars - an array holding the text that should be drawn, intentionally an array to keep the bytes of an unicode character together
  * @param fontDefinition - definition of the font to use for the check
- * @param exitEarly - if set the layouting process will be abortet as soon as it is clear that the text will not fit with the given parameters, if unset the complete layout will be generated even if it overflows. Defaults to `true`
+ * @param exitEarly - if set the layouting process will be abortet as soon as it is clear that the text will not fit with the given parameters, if unset the complete layout will be generated even if it overflows. Defaults to `false`
  */
 export function computeTextLayout(
 	context2d: CompanionImageContext2D,
@@ -126,11 +126,11 @@ export function computeTextLayout(
 	h: number,
 	displayTextChars: string[],
 	fontDefinition: string,
-	exitEarly = true
+	exitEarly = false
 ): TextLayoutResult {
 	const layout = {
 		fontDefinition,
-		lines: [],
+		lines: [] as any[],
 		measuredLineHeight: 0,
 		measuredAscent: 0,
 		totalHeight: 0,
@@ -148,8 +148,10 @@ export function computeTextLayout(
 
 	// Measure the line height with a consistent string, to avoid issues with emoji being too tall
 	const lineHeightSample = context2d.measureText('A')
-	const measuredLineHeight = lineHeightSample.fontBoundingBoxAscent + lineHeightSample.fontBoundingBoxDescent
-	const measuredAscent = lineHeightSample.fontBoundingBoxAscent
+	const measuredLineHeight =
+		lineHeightSample.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR +
+		lineHeightSample.fontBoundingBoxDescent * FONT_COMPATIBILITY_FACTOR
+	const measuredAscent = lineHeightSample.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR
 
 	layout.measuredLineHeight = measuredLineHeight
 	layout.measuredAscent = measuredAscent
@@ -175,12 +177,20 @@ export function computeTextLayout(
 
 		// let's check how far we're off
 		const measure = context2d.measureText(textChars.join(''))
+		/** The measured ascent of the bounding box of the current line */
+		const ascent = measure.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR
+		/** The measured descent of the bounding box of the current line */
+		const descent = measure.fontBoundingBoxDescent * FONT_COMPATIBILITY_FACTOR
 		let diff = w - measure.width
 		// console.log('measured width', measure.width, 'diff', diff)
 
 		// if all fits we are done
 		if (diff >= 0) {
-			return { ascent: measure.fontBoundingBoxAscent, descent: measure.fontBoundingBoxDescent, maxCodepoints: length }
+			return {
+				ascent,
+				descent,
+				maxCodepoints: length,
+			}
 		}
 
 		// ok, we are not done. let's start with an assumption of how big one char is in average
@@ -238,8 +248,8 @@ export function computeTextLayout(
 				// perfect match or one char is too wide meaning we can't try less
 				// console.log('line algo says perfect match with ' + chars + ' chars', substring(textChars, 0, chars))
 				return {
-					ascent: measure.fontBoundingBoxAscent,
-					descent: measure.fontBoundingBoxDescent,
+					ascent,
+					descent,
 					maxCodepoints: chars,
 				}
 			} else if (diff > 0 && w - context2d.measureText(textChars.slice(0, chars + 1).join('')).width < 0) {
@@ -250,8 +260,8 @@ export function computeTextLayout(
 				// 	context2d.measureText(substring(textChars, 0, chars)).width
 				// )
 				return {
-					ascent: measure.fontBoundingBoxAscent,
-					descent: measure.fontBoundingBoxDescent,
+					ascent,
+					descent,
 					maxCodepoints: chars,
 				}
 			} else if (diff < 0 && w - context2d.measureText(textChars.slice(0, chars - 1).join('')).width > 0) {
@@ -262,8 +272,8 @@ export function computeTextLayout(
 				// 	context2d.measureText(substring(textChars, 0, chars - 1)).width
 				// )
 				return {
-					ascent: measure.fontBoundingBoxAscent,
-					descent: measure.fontBoundingBoxDescent,
+					ascent,
+					descent,
 					maxCodepoints: chars - 1,
 				}
 			} else {
@@ -280,38 +290,51 @@ export function computeTextLayout(
 		}
 
 		// console.log('line algo failed', chars)
-		return { ascent: measure.fontBoundingBoxAscent, descent: measure.fontBoundingBoxDescent, maxCodepoints: length }
-	}
-
-	const strip = (layout: TextLayoutResult) => {
-		const lines = layout.lines.map((line) => {
-			return { text: line.text, ascent: line.ascent, descent: line.descent }
-		})
-		return {
-			...layout,
-			...lines,
-		} as TextLayoutResult
+		return { ascent, descent, maxCodepoints: length }
 	}
 
 	// console.log('processing layout for', displayTextChars.join(''), fontDefinition.substring(0, 20))
 	// first split the text into lines by existing line breaks
-	const lines: { chars: string[]; text: string; ascent: number; descent: number; fitsH?: boolean }[] = displayTextChars
-		.reduce((chunks: string[][], glyph: string) => {
-			if (glyph === '\n') {
-				if (chunks.length > 0 || chunks.some((c) => c.length > 0)) {
-					chunks.push([])
-				}
+
+	const splitToLines = (chars: string[]): string[][] => {
+		const result: string[][] = []
+		let chunk: string[] = []
+
+		for (const char of chars) {
+			if (char === '\n') {
+				result.push(chunk)
+				chunk = []
 			} else {
-				if (chunks.length === 0) chunks.push([])
-				chunks[chunks.length - 1].push(glyph)
+				chunk.push(char)
 			}
-			return chunks
-		}, [])
-		.map((chars) => {
-			return { chars, text: '', ascent: 0, descent: 0 }
-		})
+		}
+
+		result.push(chunk)
+		return result
+	}
+	const lines: { chars: string[]; text: string; ascent: number; descent: number; fitsH?: boolean }[] = splitToLines(
+		displayTextChars
+	).map((chars) => {
+		return { chars, text: '', ascent: 0, descent: 0 }
+	})
 
 	// console.log('lines are', JSON.stringify(lines, null, 2))
+
+	const makeLayout = () => {
+		const strippedLines = lines.map((line) => {
+			return { text: line.text, ascent: line.ascent, descent: line.descent }
+		})
+
+		layout.lines = strippedLines
+		layout.totalHeight = totalHeight
+
+		// Check if text fits
+		const fitsVertically = totalHeight <= verticalFitLimit
+		const fitsHorizontally = !lines.some((line) => line.fitsH === false)
+		layout.fits = fitsHorizontally && fitsVertically
+
+		return layout
+	}
 
 	// now check if each line fits or if we have to split it again
 
@@ -324,17 +347,17 @@ export function computeTextLayout(
 		// get rid of one space at line start, but keep more spaces
 		if (lineChars[0] === ' ') lineChars.shift()
 
-		// if line is empty there is no need for expensive measurement
+		// if line is (now) empty there is no need for expensive measurement
 		if (lineChars.length === 0) {
 			lines[currentLine] = {
 				chars: [],
 				text: '',
-				ascent: lineHeightSample.fontBoundingBoxAscent,
-				descent: lineHeightSample.fontBoundingBoxDescent,
+				ascent: lineHeightSample.fontBoundingBoxAscent * FONT_COMPATIBILITY_FACTOR,
+				descent: lineHeightSample.fontBoundingBoxDescent * FONT_COMPATIBILITY_FACTOR,
 				fitsH: true,
 			}
 			totalHeight += measuredLineHeight
-			if (totalHeight > verticalFitLimit && exitEarly) return strip(layout)
+			if (totalHeight > verticalFitLimit && exitEarly) return makeLayout()
 
 			currentLine++
 
@@ -350,10 +373,13 @@ export function computeTextLayout(
 		// )
 		if (maxCodepoints >= lineChars.length) {
 			// console.log(`line ${currentLine} width fits`)
-			lines[currentLine].text = lineChars.join('')
-			lines[currentLine].ascent = ascent
-			lines[currentLine].descent = descent
-			lines[currentLine].fitsH = true
+			lines[currentLine] = {
+				chars: lineChars,
+				text: lineChars.join('').trimEnd(),
+				ascent,
+				descent,
+				fitsH: true,
+			}
 			totalHeight += ascent + descent
 			// console.log(
 			// 	'lines are now',
@@ -409,7 +435,7 @@ export function computeTextLayout(
 				// )
 			} else {
 				// we did not find a good breaking position, push the maximum chars to the line (breaking inside a word) and mark it
-				if (exitEarly) return strip(layout)
+				if (exitEarly) return makeLayout()
 				if (possibleLine.length >= 1) {
 					lines[currentLine] = {
 						chars: possibleLine,
@@ -455,7 +481,7 @@ export function computeTextLayout(
 				}
 			}
 		}
-		if (totalHeight > verticalFitLimit && exitEarly) return strip(layout)
+		if (totalHeight > verticalFitLimit && exitEarly) return makeLayout()
 
 		currentLine++
 	}
@@ -464,17 +490,5 @@ export function computeTextLayout(
 	// 	lines.map((line) => `${line.text} asc${line.ascent.toFixed(2)} des${line.descent.toFixed(2)} fitsH:${line.fitsH}`)
 	// )
 
-	// Check if text fits
-	const fitsVertically = totalHeight <= verticalFitLimit
-	const fitsHorizontally = !lines.some((line) => line.fitsH === false)
-	const fits = fitsHorizontally && fitsVertically
-
-	return strip({
-		fontDefinition,
-		lines,
-		measuredLineHeight,
-		measuredAscent,
-		totalHeight,
-		fits,
-	})
+	return makeLayout()
 }

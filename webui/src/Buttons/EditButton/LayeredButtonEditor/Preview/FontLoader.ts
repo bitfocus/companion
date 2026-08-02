@@ -44,9 +44,14 @@ class PreviewCanvasFontLoader {
 			ALL_FONTS.values().map(async (name) => {
 				const fontPath = makeAbsolutePath(`/int/graphics/font/${name}`)
 				const fontface = new FontFace(name, `url(${fontPath})`)
-				await fontface.load().catch((e) => {
-					console.error('Failed to load font', name, e)
-				})
+				await fontface
+					.load()
+					.then(() => {
+						console.log('Loaded Font', name, fontPath)
+					})
+					.catch((e) => {
+						console.error('Failed to load font', name, e)
+					})
 
 				// Add the font to the document
 				document.fonts.add(fontface)
