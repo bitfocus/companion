@@ -109,13 +109,13 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
-	 * @param rightward Whether the control is rotated to the right
+	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
-			control.rotateControl(rightward, surfaceId)
+			control.rotateControl(delta, surfaceId)
 			return true
 		}
 

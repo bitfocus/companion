@@ -181,8 +181,8 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		return this.#controlStore.pressControl(controlId, pressed, surfaceId)
 	}
 
-	rotateControl(controlId: string, direction: boolean, surfaceId: string): boolean {
-		return this.#controlStore.rotateControl(controlId, direction, surfaceId)
+	rotateControl(controlId: string, delta: number, surfaceId: string): boolean {
+		return this.#controlStore.rotateControl(controlId, delta, surfaceId)
 	}
 
 	getControl(controlId: string): ServiceApiControl | null {

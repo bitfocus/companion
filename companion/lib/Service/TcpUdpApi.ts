@@ -355,7 +355,7 @@ export class ServiceTcpUdpApi {
 
 		this.logger.info(`Got location rotate-left at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.#serviceApi.rotateControl(controlId, false, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.rotateControl(controlId, -1, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 	}
@@ -368,7 +368,7 @@ export class ServiceTcpUdpApi {
 
 		this.logger.info(`Got location rotate-right at ${formatLocation(location)} (${controlId})`)
 
-		if (!controlId || !this.#serviceApi.rotateControl(controlId, true, this.#protocolName)) {
+		if (!controlId || !this.#serviceApi.rotateControl(controlId, 1, this.#protocolName)) {
 			throw new ApiMessageError('No control at location')
 		}
 	}

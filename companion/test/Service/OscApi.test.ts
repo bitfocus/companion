@@ -430,7 +430,7 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', false, 'osc')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', -1, 'osc')
 			})
 
 			test('bad page', async () => {
@@ -517,7 +517,7 @@ describe('OscApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', true, 'osc')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', 1, 'osc')
 			})
 
 			test('bad page', async () => {

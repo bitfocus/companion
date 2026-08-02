@@ -208,6 +208,10 @@ export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
 		value: 'this:surface_id',
 		label: 'The id of the surface triggering this action',
 	},
+	{
+		value: 'this:delta',
+		label: 'The rotation amount/direction of this rotary action',
+	},
 ]
 
 /** The subset of `this:*` variables that make sense for a page control (no grid location). */

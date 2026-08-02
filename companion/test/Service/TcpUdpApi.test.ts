@@ -367,7 +367,7 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', -1, 'fake-proto')
 			})
 
 			test('bad page', async () => {
@@ -450,7 +450,7 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', 1, 'fake-proto')
 			})
 
 			test('bad page', async () => {

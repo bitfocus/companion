@@ -580,14 +580,14 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			case 'button_rotate_left': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.rotateControl(theControlId, false, extras.surfaceId)
+					this.#controlsStore.rotateControl(theControlId, -1, extras.surfaceId)
 				}
 				break
 			}
 			case 'button_rotate_right': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.rotateControl(theControlId, true, extras.surfaceId)
+					this.#controlsStore.rotateControl(theControlId, 1, extras.surfaceId)
 				}
 				break
 			}

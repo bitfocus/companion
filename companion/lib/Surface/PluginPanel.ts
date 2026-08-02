@@ -444,7 +444,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			return
 		}
 
-		this.emit('rotate', control.column, control.row, delta > 0)
+		this.emit('rotate', control.column, control.row, delta)
 	}
 
 	changePage(forward: boolean): void {
