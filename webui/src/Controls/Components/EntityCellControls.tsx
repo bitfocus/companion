@@ -2,11 +2,14 @@ import { faClone, faCompressArrowsAlt, faExpandArrowsAlt, faPencil, faTrash } fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
-import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
+import { VariableValueDisplayPopover } from '~/Components/VariableValueDisplay.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
+import type { LocalVariablesStore } from '../LocalVariablesStore.js'
+import { getEntityRowHeaderDisplay } from './EntityRowHeaderDisplay.js'
 
 interface EntityCellControlProps {
 	service: IEntityEditorActionService
@@ -20,6 +23,7 @@ interface EntityCellControlProps {
 	headlineExpanded: boolean
 	setHeadlineExpanded: () => void
 	readonly: boolean
+	localVariablesStore: LocalVariablesStore | null
 	localVariablePrefix: string | null
 }
 
@@ -35,25 +39,36 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	headlineExpanded,
 	setHeadlineExpanded,
 	readonly,
+	localVariablesStore,
 	localVariablePrefix,
 }: EntityCellControlProps) {
 	const doCollapse = useCallback(() => setPanelCollapsed(true), [setPanelCollapsed])
 	const doExpand = useCallback(() => setPanelCollapsed(false), [setPanelCollapsed])
 
-	let headline = entity.headline || definitionName
-	if (isPanelCollapsed && localVariablePrefix && entity.type === EntityModelType.Feedback && !ownerId) {
-		if (entity.variableName) {
-			headline = `$(${localVariablePrefix}:${entity.variableName}) ${entity.headline || ''}`
-		} else {
-			headline = `Unnamed: ${entity.headline || ''}`
-		}
-	}
+	// When a local variable is collapsed, show its name and current value instead of the definition name
+	const { headline, localVariableValueName } = getEntityRowHeaderDisplay(
+		entity,
+		ownerId,
+		definitionName,
+		isPanelCollapsed,
+		localVariablePrefix
+	)
 
 	return (
 		<div className="editor-grid-header">
 			<div className="cell-name">
 				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
-					headline
+					localVariableValueName !== null && localVariablesStore ? (
+						<div className="cell-name-local-variable">
+							<span className="cell-name-local-variable-label">{headline}</span>
+							<VariableValueDisplayPopover
+								value={localVariablesStore.getValue(localVariableValueName)}
+								showCopy={false}
+							/>
+						</div>
+					) : (
+						headline
+					)
 				) : (
 					<TextInputFieldSimple
 						id={undefined}

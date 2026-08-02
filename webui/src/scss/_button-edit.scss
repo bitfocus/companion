@@ -176,6 +176,7 @@
 
 		.cell-name {
 			flex-grow: 1;
+			min-width: 0;
 
 			font-weight: bold;
 			align-self: center;
@@ -183,6 +184,20 @@
 			input {
 				font-weight: bold;
 				margin-bottom: 5px;
+			}
+
+			// A collapsed local variable shows its name alongside a compact preview of its current value
+			.cell-name-local-variable {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				gap: 0.5rem;
+				min-width: 0;
+
+				.cell-name-local-variable-label {
+					flex-shrink: 0;
+					white-space: nowrap;
+				}
 			}
 		}
 		.cell-controls {
