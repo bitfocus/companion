@@ -189,6 +189,8 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				description: 'A value that can be used in other fields',
 				feedbackStyle: undefined,
 				showInvert: false,
+				// A user value is only meaningful as a local variable, not as a style override
+				feedbackStyleOverridesUnsupported: true,
 				options: [
 					{
 						type: 'checkbox',

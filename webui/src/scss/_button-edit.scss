@@ -553,6 +553,24 @@
 	}
 }
 
-.layered-overrides-table > tbody > tr {
-	border-color: #ccc;
+.layered-overrides-table {
+	// Fixed layout so the value control (esp. the expression editor for value feedbacks) can't gobble
+	// the row width and squash the element/property column - all feedback types then line up the same.
+	table-layout: fixed;
+
+	> thead > tr > th,
+	> tbody > tr > td {
+		// Element & Property column
+		&:first-child {
+			width: 40%;
+		}
+		// Trailing add/delete action column
+		&:last-child {
+			width: 3rem;
+		}
+	}
+
+	> tbody > tr {
+		border-color: #ccc;
+	}
 }

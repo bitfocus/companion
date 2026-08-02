@@ -701,6 +701,7 @@ export class InternalController {
 						feedbackStyle: undefined,
 						feedbackAffectedProperties: undefined,
 						feedbackDisableStyleOverrides: false,
+						feedbackStyleOverridesUnsupported: false,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -735,6 +736,7 @@ export class InternalController {
 						supportsChildGroups: feedback.supportsChildGroups ?? [],
 						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
 						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
+						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 

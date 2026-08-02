@@ -20,6 +20,8 @@ export interface ClientEntityDefinition {
 	 * Special case for 'conditionalise existing feedbacks' to avoid the root getting style overrides, as we defer that to the children feedbacks
 	 */
 	feedbackDisableStyleOverrides?: boolean
+	/** When true, this feedback cannot be used as a style override: it is hidden from the add menu and rejected by validation. */
+	feedbackStyleOverridesUnsupported?: boolean
 	hasLifecycleFunctions: boolean
 	hasLearn: boolean
 	learnTimeout: number | undefined

@@ -6,6 +6,7 @@ import {
 	getElementSchemaProperty,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
@@ -96,7 +97,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	parser: VariablesAndExpressionParser,
 	drawPixelBuffers: DrawPixelBuffers,
 	elements: SomeButtonGraphicsElement[],
-	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>,
+	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>,
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null,
 	currentLocationStr: string | null = null,

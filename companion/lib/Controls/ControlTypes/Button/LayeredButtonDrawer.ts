@@ -1,8 +1,7 @@
 import debounceFn from 'debounce-fn'
-import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsShowStatusIcons,
@@ -31,7 +30,7 @@ export interface DrawElementsVisitor {
  */
 export interface LayeredButtonDrawerEntitySource {
 	getLocalVariableEntities(): ControlEntityInstance[]
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>
+	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>
 }
 
 /**
