@@ -173,6 +173,7 @@
 		display: flex;
 		flex-direction: row;
 		margin-right: -0.75rem;
+		min-width: 0;
 
 		.cell-name {
 			flex-grow: 1;
@@ -181,8 +182,10 @@
 			font-weight: bold;
 			align-self: center;
 
-			// Long headlines/names (including unbreakable strings) wrap instead of overflowing the row
+			// Long headlines/names (including unbreakable strings) wrap instead of overflowing the row,
+			// and anything that still can't fit is clipped here rather than spilling under the controls
 			overflow-wrap: anywhere;
+			overflow: hidden;
 
 			input {
 				font-weight: bold;
@@ -201,21 +204,27 @@
 					// Fixed-basis column so the value previews line up across rows. A name longer than the
 					// column is truncated with an ellipsis (full text on hover) rather than overflowing, and
 					// the column shrinks gracefully when the panel is too narrow to fit it.
-					flex: 0 1 16rem;
+					flex: 0 1 14rem;
+					min-width: 0;
 					overflow: hidden;
 					text-overflow: ellipsis;
 					white-space: nowrap;
 				}
 
 				.cell-name-local-variable-value {
+					// Takes the remaining space; clips its own overflow so a long value can't slide under
+					// the controls on a narrow panel
 					flex: 1 1 auto;
 					min-width: 0;
+					overflow: hidden;
 				}
 			}
 		}
 		.cell-controls {
 			text-align: right;
 			align-self: center;
+			// Never shrink the buttons - otherwise they get squeezed and overlap the name/value
+			flex-shrink: 0;
 		}
 	}
 	.editor-grid {
