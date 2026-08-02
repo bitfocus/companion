@@ -105,30 +105,32 @@ export const ElementsList = observer(function ElementsList({
 	return (
 		<>
 			<GenericConfirmModal ref={confirmModalRef} />
-			<div className="button-layer-elementlist-table">
-				<div className="button-layer-elementlist-table-row heading">
-					<div className="td-reorder-placeholder">&nbsp;</div>
-					<div>Name</div>
-					<div></div>
-					<div className="element-buttons">
-						<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
-					</div>
+			<div className="button-layer-elementlist-table-row heading">
+				<div className="td-reorder-placeholder">&nbsp;</div>
+				<div>Name</div>
+				<div></div>
+				<div className="element-buttons">
+					<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
 				</div>
-				{sortableElements.map((element, index) => (
-					<ElementListItem
-						key={element.id}
-						element={element}
-						group={ROOT_GROUP}
-						index={index}
-						depth={0}
-						styleStore={styleStore}
-						confirmModalRef={confirmModalRef}
-						controlId={controlId}
-					/>
-				))}
-				{canvasElements.map((element) => (
-					<CanvasElementRow key={element.id} element={element} styleStore={styleStore} />
-				))}
+			</div>
+			<div className="button-layer-elementlist-body">
+				<div className="button-layer-elementlist-table">
+					{sortableElements.map((element, index) => (
+						<ElementListItem
+							key={element.id}
+							element={element}
+							group={ROOT_GROUP}
+							index={index}
+							depth={0}
+							styleStore={styleStore}
+							confirmModalRef={confirmModalRef}
+							controlId={controlId}
+						/>
+					))}
+					{canvasElements.map((element) => (
+						<CanvasElementRow key={element.id} element={element} styleStore={styleStore} />
+					))}
+				</div>
 			</div>
 		</>
 	)

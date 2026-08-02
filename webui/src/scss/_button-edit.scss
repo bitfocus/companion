@@ -594,15 +594,19 @@
 	}
 
 	.button-layer-elementlist {
-		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
 		min-height: 0;
 
-		.button-layer-elementlist-table {
-			.heading {
-				position: sticky;
-				top: 0;
-				background-color: #fff;
-			}
+		// Only the rows scroll; the heading is a static sibling above them
+		> .heading {
+			flex: 0 0 auto;
+		}
+
+		.button-layer-elementlist-body {
+			flex: 1 1 auto;
+			overflow-y: auto;
+			min-height: 0;
 		}
 
 		.button-layer-elementlist-table-row {
