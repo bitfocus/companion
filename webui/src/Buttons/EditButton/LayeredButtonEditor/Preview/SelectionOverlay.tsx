@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import {
-	buildBoundsValues,
+	buildOptionValues,
 	getDraggableBoundsFields,
 	MIN_FRACTION_SIZE,
 	ROUND_STEP,
@@ -113,7 +113,7 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 			// Sent as one mutation so the element is never persisted or redrawn half-updated (eg x applied
 			// but height not yet), which otherwise shows as a flicker on drop.
 			updateOptionsMutation
-				.mutateAsync({ controlId, elementId: targetElementId, values: buildBoundsValues(fields, changedKeys) })
+				.mutateAsync({ controlId, elementId: targetElementId, values: buildOptionValues(fields, changedKeys) })
 				.catch((e) => console.error('Failed to update element bounds', e))
 		},
 		[updateOptionsMutation, controlId]

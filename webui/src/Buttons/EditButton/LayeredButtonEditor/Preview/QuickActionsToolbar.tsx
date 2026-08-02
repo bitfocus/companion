@@ -22,10 +22,10 @@ export interface QuickActionsToolbarProps {
 	onSendToBack: () => void
 	canBringToFront: boolean
 	canSendToBack: boolean
-	/** Actions are disabled when the selection isn't one the canvas can edit */
-	disabled: boolean
+	/** The position/scale actions need a selection with plain bounds; snapping and z-order don't */
+	boundsDisabled: boolean
 	/** Shown as a tooltip on the disabled buttons to explain why */
-	disabledReason: string | null
+	boundsDisabledReason: string | null
 }
 
 /**
@@ -45,33 +45,33 @@ export function QuickActionsToolbar({
 	onSendToBack,
 	canBringToFront,
 	canSendToBack,
-	disabled,
-	disabledReason,
+	boundsDisabled,
+	boundsDisabledReason,
 }: QuickActionsToolbarProps): React.JSX.Element {
 	// Only the element-level disable (expression/nested/no selection) gets an explanation; a z-order button
 	// greyed out because it's already at the front/back is self-evident.
-	const reason = disabled ? disabledReason : null
+	const reason = boundsDisabled ? boundsDisabledReason : null
 	return (
 		<div className="button-layer-quick-actions">
 			<ToolbarButton
 				title="Center horizontally"
 				icon={faArrowsLeftRight}
 				onClick={onCenterHorizontal}
-				disabled={disabled}
+				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
 			<ToolbarButton
 				title="Center vertically"
 				icon={faArrowsUpDown}
 				onClick={onCenterVertical}
-				disabled={disabled}
+				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
 			<ToolbarButton
 				title="Fill (100% width and height)"
 				icon={faExpand}
 				onClick={onFill}
-				disabled={disabled}
+				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
 			<ToolbarButton
@@ -79,32 +79,22 @@ export function QuickActionsToolbar({
 				icon={faLink}
 				active={linked}
 				onClick={onToggleLinked}
-				disabled={disabled}
+				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
+			{/* A preference for the canvas as a whole rather than an action on the selection, so it stays
+			    usable no matter what (or whether anything) is selected */}
 			<ToolbarButton
 				title={snapEnabled ? 'Disable snapping' : 'Enable snapping'}
 				icon={faMagnet}
 				active={snapEnabled}
 				onClick={onToggleSnapEnabled}
-				disabled={disabled}
-				disabledReason={reason}
 			/>
 			<div className="button-layer-quick-actions-separator" />
-			<ToolbarButton
-				title="Bring to front"
-				icon={faLayerGroup}
-				onClick={onBringToFront}
-				disabled={disabled || !canBringToFront}
-				disabledReason={reason}
-			/>
-			<ToolbarButton
-				title="Send to back"
-				icon={faObjectGroup}
-				onClick={onSendToBack}
-				disabled={disabled || !canSendToBack}
-				disabledReason={reason}
-			/>
+			{/* Z-order applies to any top-level element, including ones with no editable bounds (eg lines),
+			    so it's gated on the can* flags alone */}
+			<ToolbarButton title="Bring to front" icon={faLayerGroup} onClick={onBringToFront} disabled={!canBringToFront} />
+			<ToolbarButton title="Send to back" icon={faObjectGroup} onClick={onSendToBack} disabled={!canSendToBack} />
 		</div>
 	)
 }

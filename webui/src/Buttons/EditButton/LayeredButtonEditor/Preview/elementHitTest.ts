@@ -16,6 +16,9 @@ export interface ElementRect {
 	isTopLevel: boolean
 }
 
+/** Minimum clickable thickness given to a line's bounding box, in canvas backing pixels */
+const LINE_HIT_THICKNESS_PX = 8
+
 function toRect(bounds: DrawBounds): PixelRect {
 	return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
 }
@@ -60,13 +63,18 @@ export function buildElementRects(
 				const toY = parentBounds.y + element.toY * parentBounds.height
 
 				if (selectable) {
+					// A horizontal or vertical line has a zero-thickness bounding box, which is all but
+					// impossible to click, so give every line rect a minimum grabbable thickness.
+					const padX = Math.max(0, (LINE_HIT_THICKNESS_PX - Math.abs(toX - fromX)) / 2)
+					const padY = Math.max(0, (LINE_HIT_THICKNESS_PX - Math.abs(toY - fromY)) / 2)
+
 					out.push({
 						id: element.id,
 						rect: {
-							x: Math.min(fromX, toX),
-							y: Math.min(fromY, toY),
-							width: Math.abs(toX - fromX),
-							height: Math.abs(toY - fromY),
+							x: Math.min(fromX, toX) - padX,
+							y: Math.min(fromY, toY) - padY,
+							width: Math.abs(toX - fromX) + padX * 2,
+							height: Math.abs(toY - fromY) + padY * 2,
 						},
 						isTopLevel,
 					})

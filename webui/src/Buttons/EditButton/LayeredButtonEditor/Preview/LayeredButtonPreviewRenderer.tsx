@@ -18,12 +18,13 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
-import { buildBoundsValues, getDraggableBoundsFields, type BoundsFractions, type BoundsKey } from './boundsFields.js'
+import { buildOptionValues, getDraggableBoundsFields, type BoundsFractions, type BoundsKey } from './boundsFields.js'
 import { fitCanvasSize, PAD_X, PAD_Y, parseAspectRatio } from './canvasSize.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import { buildElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
 import FontLoader from './FontLoader.js'
 import { GraphicsImage } from './Image.js'
+import { LineSelectionOverlay } from './LineSelectionOverlay.js'
 import { QuickActionsToolbar } from './QuickActionsToolbar.js'
 import { SelectionOverlay } from './SelectionOverlay.js'
 
@@ -163,23 +164,25 @@ const ElementQuickActions = observer(function ElementQuickActions({
 	// Only top-level elements with plain bounds can be repositioned from here
 	const indexInParent = styleStore.elements.findIndex((el) => el.id === elementId)
 	const isTopLevel = indexInParent >= 0
-	const disabled = !elementId || !boundsFields || !isTopLevel
+	const boundsDisabled = !elementId || !boundsFields || !isTopLevel
 
-	const disabledReason = !elementId
+	const boundsDisabledReason = !elementId
 		? 'Select an element to edit it on the canvas'
 		: selectedElement?.type === 'canvas'
 			? 'The Canvas layer has no position or scale to edit'
-			: !isTopLevel
-				? 'Elements inside a group are not yet editable in the preview'
-				: !boundsFields
-					? 'Preview editing is disabled because this element uses an expression to control its position or scale.'
-					: null
+			: selectedElement?.type === 'line'
+				? 'Lines have no position or scale - drag their endpoints on the canvas instead'
+				: !isTopLevel
+					? 'Elements inside a group are not yet editable in the preview'
+					: !boundsFields
+						? 'Preview editing is disabled because this element uses an expression to control its position or scale.'
+						: null
 
 	const commit = useCallback(
 		(fields: BoundsFractions, changedKeys: readonly BoundsKey[]) => {
 			if (!elementId) return
 			updateOptionsMutation
-				.mutateAsync({ controlId, elementId, values: buildBoundsValues(fields, changedKeys) })
+				.mutateAsync({ controlId, elementId, values: buildOptionValues(fields, changedKeys) })
 				.catch((e) => console.error('Failed to update element bounds', e))
 		},
 		[updateOptionsMutation, controlId, elementId]
@@ -226,8 +229,8 @@ const ElementQuickActions = observer(function ElementQuickActions({
 			onSendToBack={sendToBack}
 			canBringToFront={isTopLevel && indexInParent < siblingCount - 1}
 			canSendToBack={isTopLevel && indexInParent > 1}
-			disabled={disabled}
-			disabledReason={disabledReason}
+			boundsDisabled={boundsDisabled}
+			boundsDisabledReason={boundsDisabledReason}
 		/>
 	)
 })
@@ -427,21 +430,38 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 	return (
 		<div className="button-layer-canvas-wrapper">
 			{canvasEl}
-			{canvas && drawStyle && contentBoundsPx && selectedElement && (
-				<SelectionOverlay
-					controlId={controlId}
-					canvas={canvas}
-					selectedElement={selectedElement}
-					selectedElementRect={findElementRect(elementRects, selectedElement.id)?.rect ?? null}
-					isTopLevelSelection={styleStore.elements.some((el) => el.id === selectedElement.id)}
-					elementRects={elementRects}
-					contentBoundsPx={contentBoundsPx}
-					canvasSizePx={{ width: canvasWidthPx, height: canvasHeightPx }}
-					linkedRef={linkedRef}
-					snapEnabledRef={snapEnabledRef}
-					onSelectElement={selectElementById}
-				/>
-			)}
+			{canvas &&
+				drawStyle &&
+				contentBoundsPx &&
+				selectedElement &&
+				// Lines are defined by two endpoints rather than bounds, so they get their own overlay
+				(selectedElement.type === 'line' ? (
+					<LineSelectionOverlay
+						controlId={controlId}
+						canvas={canvas}
+						selectedElement={selectedElement}
+						selectedElementRect={findElementRect(elementRects, selectedElement.id)?.rect ?? null}
+						isTopLevelSelection={styleStore.elements.some((el) => el.id === selectedElement.id)}
+						elementRects={elementRects}
+						contentBoundsPx={contentBoundsPx}
+						canvasSizePx={{ width: canvasWidthPx, height: canvasHeightPx }}
+						snapEnabledRef={snapEnabledRef}
+					/>
+				) : (
+					<SelectionOverlay
+						controlId={controlId}
+						canvas={canvas}
+						selectedElement={selectedElement}
+						selectedElementRect={findElementRect(elementRects, selectedElement.id)?.rect ?? null}
+						isTopLevelSelection={styleStore.elements.some((el) => el.id === selectedElement.id)}
+						elementRects={elementRects}
+						contentBoundsPx={contentBoundsPx}
+						canvasSizePx={{ width: canvasWidthPx, height: canvasHeightPx }}
+						linkedRef={linkedRef}
+						snapEnabledRef={snapEnabledRef}
+						onSelectElement={selectElementById}
+					/>
+				))}
 		</div>
 	)
 })
