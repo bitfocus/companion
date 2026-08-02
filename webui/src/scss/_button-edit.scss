@@ -195,8 +195,11 @@
 				min-width: 0;
 
 				.cell-name-local-variable-label {
-					flex-shrink: 0;
+					flex: 0 0 auto;
 					white-space: nowrap;
+					// Give the name a shared minimum width so the value previews line up into a column across
+					// rows (for typical names); longer names simply push their own value past the column.
+					min-width: 12rem;
 				}
 			}
 		}
