@@ -22,10 +22,8 @@
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 
-@use 'scss/components/alert';
 @use 'scss/components/button';
 @use 'scss/components/close-button';
-@use 'scss/components/checkbox-field';
 @use 'scss/components/date-picker';
 @use 'scss/components/dropdown-field';
 @use 'scss/components/form';
@@ -33,12 +31,8 @@
 @use 'scss/components/notifications';
 @use 'scss/components/number-field';
 @use 'scss/components/popover';
-@use 'scss/components/spinner';
 @use 'scss/components/step-selector';
-@use 'scss/components/tooltip';
 @use 'scss/components/image-input-field';
-@use 'scss/components/number-range';
-@use 'scss/components/switch-field';
 @use 'scss/components/tab-area';
 @use 'scss/components/table';
 @use 'scss/components/time-picker';

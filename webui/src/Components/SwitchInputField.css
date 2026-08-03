@@ -1,7 +1,3 @@
-.switch-input-with-label {
-	// display: flex;
-}
-
 .switch-input {
 	all: unset;
 	box-sizing: border-box;
@@ -37,11 +33,7 @@
 	}
 
 	&[data-checked] {
-		background-color: var(--cui-primary);
-
-		// &.switch-input-dimmed {
-		// 	background-color: var(--cui-success);
-		// }
+		background-color: var(--color-primary);
 
 		.switch-thumb {
 			left: calc(100% - 3px - 16px);
@@ -78,7 +70,7 @@
 	}
 }
 
-// When a checkbox is disabled, also visually indicate that the label is disabled by reducing its opacity
+/* When a checkbox is disabled, also visually indicate that the label is disabled by reducing its opacity */
 .switch-input[data-disabled] ~ .form-label {
 	opacity: 0.5;
 }

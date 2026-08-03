@@ -1,7 +1,5 @@
-// ─── Tooltip ──────────────────────────────────────────────────────────────────
-
 .tooltip2-positioner {
-	z-index: 1080; // above everything
+	z-index: 1080; /* above everything */
 	pointer-events: none;
 }
 
@@ -40,7 +38,7 @@
 		border-style: solid;
 
 		&[data-side='bottom'] {
-			top: -7px; // 3px overlap into body to guarantee no gap
+			top: -7px; /* 3px overlap into body to guarantee no gap */
 			border-width: 0 10px 10px;
 			border-color: transparent transparent var(--cui-body-color) transparent;
 		}

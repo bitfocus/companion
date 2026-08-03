@@ -1,4 +1,5 @@
 import { NumberField } from '@base-ui/react/number-field'
+import './number-range.css'
 import { Slider } from '@base-ui/react/slider'
 import classNames from 'classnames'
 import { MinusIcon, PlusIcon } from 'lucide-react'

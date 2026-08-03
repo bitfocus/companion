@@ -16,10 +16,6 @@
 	border: var(--alert-elm-border);
 	border-radius: var(--alert-elm-border-radius);
 
-	// .alert-link {
-	// 	font-weight: 700;
-	// 	color: var(--alert-elm-link-color);
-	// }
 	&.alert-dismissible {
 		padding-inline-end: 3rem;
 	}

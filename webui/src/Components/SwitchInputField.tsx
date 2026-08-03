@@ -1,4 +1,5 @@
 import { Switch } from '@base-ui/react/switch'
+import './SwitchInputField.css'
 import classNames from 'classnames'
 import { useId } from 'react'
 import type { SetOptional } from 'type-fest'
