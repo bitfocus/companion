@@ -57,7 +57,7 @@ export class GraphicsLayeredButtonRenderer {
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
 		paddingPx: { x: number; y: number }
-	): Promise<DrawBounds | null> {
+	): Promise<SelectedElementMarker | null> {
 		const backgroundElement = drawStyle.elements[0]?.type === 'canvas' ? drawStyle.elements[0] : undefined
 
 		// Read the resolved `decoration`, not the raw one off the canvas
@@ -106,7 +106,7 @@ export class GraphicsLayeredButtonRenderer {
 		// Draw a border around the selected element, do this last so it's on top
 		if (selectedMarker) this.#drawBoundsLines(img, selectedMarker)
 
-		return selectedMarker?.bounds || null // TODO - does this need rotation?
+		return selectedMarker
 	}
 
 	/**
