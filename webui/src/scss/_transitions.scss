@@ -1,0 +1,13 @@
+@use 'vendor/coreui/mixins/transition' as *;
+@use 'vendor/coreui/variables' as *;
+
+// `.fade` cross-fades an element between hidden and shown: opacity 0 until the `.show` class is
+// added. Used by the Alert component and the mobile Sidebar overlay.
+
+.fade {
+	@include transition($transition-fade);
+
+	&:not(.show) {
+		opacity: 0;
+	}
+}
