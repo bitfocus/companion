@@ -1068,7 +1068,7 @@ describe('ServiceSatelliteApi', () => {
 
 				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=1\n')
 
-				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, true)
+				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, 1)
 				expect(socket.lastMessage).toContain('KEY-ROTATE')
 				expect(socket.lastMessage).toContain('OK')
 				expect(socket.lastMessage).toContain('DEVICEID="dev1"')
@@ -1084,10 +1084,38 @@ describe('ServiceSatelliteApi', () => {
 
 				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=0 DIRECTION=0\n')
 
-				expect(mockDevice.doRotate).toHaveBeenCalledWith(0, 0, false)
+				expect(mockDevice.doRotate).toHaveBeenCalledWith(0, 0, -1)
 				expect(socket.lastMessage).toContain('KEY-ROTATE')
 				expect(socket.lastMessage).toContain('OK')
 				expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+			})
+
+			test('a positive DIRECTION magnitude rotates clockwise by that amount', () => {
+				const { api, logger, surfaceController } = createService()
+				const { socket, processMessage } = createSocketAndInit(api, logger)
+
+				const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+				mockDevice.parseKeyParam.mockReturnValue([1, 2])
+				mockDevice.doRotate.mockReturnValue(undefined)
+
+				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=5\n')
+
+				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, 5)
+				expect(socket.lastMessage).toContain('OK')
+			})
+
+			test('a negative DIRECTION magnitude rotates counter-clockwise by that amount', () => {
+				const { api, logger, surfaceController } = createService()
+				const { socket, processMessage } = createSocketAndInit(api, logger)
+
+				const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+				mockDevice.parseKeyParam.mockReturnValue([1, 2])
+				mockDevice.doRotate.mockReturnValue(undefined)
+
+				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=-3\n')
+
+				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, -3)
+				expect(socket.lastMessage).toContain('OK')
 			})
 		})
 
@@ -1146,7 +1174,7 @@ describe('ServiceSatelliteApi', () => {
 
 				processMessage('KEY-ROTATE DEVICEID="dev1" CONTROLID="knob1" DIRECTION=1\n')
 
-				expect(mockDevice.doRotateFromId).toHaveBeenCalledWith('knob1', true)
+				expect(mockDevice.doRotateFromId).toHaveBeenCalledWith('knob1', 1)
 				expect(socket.lastMessage).toContain('KEY-ROTATE')
 				expect(socket.lastMessage).toContain('OK')
 				expect(socket.lastMessage).toContain('DEVICEID="dev1"')
@@ -1757,10 +1785,28 @@ describe('ServiceSatelliteApi', () => {
 
 			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=1\n')
 
-			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', true, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', 1, expect.stringContaining('satellite-sub:'))
 			expect(socket.lastMessage).toContain('SUB-ROTATE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
+		})
+
+		test('a signed DIRECTION magnitude carries the rotation amount', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockRender = mock<ImageResult>()
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
+			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.rotateControl.mockReturnValue(true)
+
+			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
+			socket.clearMessages()
+
+			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=-4\n')
+
+			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', -4, expect.stringContaining('satellite-sub:'))
+			expect(socket.lastMessage).toContain('OK')
 		})
 
 		test('still succeeds when no control at location', () => {

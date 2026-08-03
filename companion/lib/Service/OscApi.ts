@@ -247,7 +247,7 @@ export class ServiceOscApi {
 		this.#logger.info(`Got OSC control rotate left ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.#serviceApi.rotateControl(controlId, false, 'osc')
+		this.#serviceApi.rotateControl(controlId, -1, 'osc')
 	}
 
 	/**
@@ -258,7 +258,7 @@ export class ServiceOscApi {
 		this.#logger.info(`Got OSC control rotate right ${formatLocation(location)} - ${controlId}`)
 		if (!controlId) return
 
-		this.#serviceApi.rotateControl(controlId, true, 'osc')
+		this.#serviceApi.rotateControl(controlId, 1, 'osc')
 	}
 
 	/**

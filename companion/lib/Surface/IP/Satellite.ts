@@ -410,15 +410,16 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 	/**
 	 * Produce a rotation event
+	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 */
-	doRotate(column: number, row: number, direction: boolean): void {
-		this.emit('rotate', column, row, direction)
+	doRotate(column: number, row: number, delta: number): void {
+		this.emit('rotate', column, row, delta)
 	}
-	doRotateFromId(controlId: string, direction: boolean): boolean {
+	doRotateFromId(controlId: string, delta: number): boolean {
 		const controlManifest = this.#surfaceManifest.controls[controlId]
 		if (!controlManifest) return false
 
-		this.emit('rotate', controlManifest.column, controlManifest.row, direction)
+		this.emit('rotate', controlManifest.column, controlManifest.row, delta)
 		return true
 	}
 
