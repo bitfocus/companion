@@ -27,7 +27,7 @@
 	&:focus-visible {
 		border-color: #ea818a;
 		outline: 0;
-		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
+		box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
 	}
 
 	/*

@@ -55,7 +55,7 @@
 			outline: 0;
 			box-shadow:
 				0 0 0 1px #333,
-				0 0 0 0.25rem rgba(213, 2, 21, 0.25);
+				0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
 		}
 
 		&:active {
