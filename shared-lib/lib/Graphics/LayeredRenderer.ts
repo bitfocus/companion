@@ -312,8 +312,9 @@ export class GraphicsLayeredButtonRenderer {
 		// line box exactly. Divide by the font's real line-box ratio (fontBoundingBox height / em) so
 		// this holds per-font, and vertical alignment produces no visual change at 100%.
 		const italic = element.styles.includes('italic')
-		const lineBoxRatio = img.getFontLineBoxRatio(element.font, element.weight, italic)
-		const fontSize = (element.fontsize * innerHeight) / 100 / lineBoxRatio
+		// const lineBoxRatio = img.getFontLineBoxRatio(element.font, element.weight, italic)
+		// const fontSize = (element.fontsize * innerHeight) / 100 / lineBoxRatio
+		const fontSize = element.fontsize / 100
 
 		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {

@@ -45,8 +45,8 @@ export function segmentTextToUnicodeChars(
 	}
 }
 
-/** Minimum auto font size as a fraction of canvas height (10%) */
-export const MIN_FONT_SIZE_FRACTION = 0.1
+/** Minimum auto line size as a fraction of canvas height (10%) */
+export const MIN_LINE_SIZE_FRACTION = 0.1
 
 /**
  * returns a list of font sizes to try when shrinking the text to fit or the configured size without shrink to fit
@@ -54,17 +54,16 @@ export const MIN_FONT_SIZE_FRACTION = 0.1
 export function resolveFontSizes(
 	w: number,
 	h: number,
-	fontsize: number,
+	linesize: number,
 	allowShrink: boolean,
 	charCount: number
 ): number[] {
 	// Clamp the configured size to a sane pixel range
-	const clamped = Math.min(Math.max(fontsize, 3), h * 1.2)
+	const clampedLineHeight = Math.min(Math.max(linesize, MIN_LINE_SIZE_FRACTION), 1.2)
 
 	if (!allowShrink) {
-		return [clamped]
+		return [clampedLineHeight]
 	}
-	const relLineHeight = (clamped * 1) / h
 
 	// Estimate how many characters fit per font-height-squared of available area.
 	// Capacity at fraction s ≈ (w/h) / (s² × char_aspect), so threshold comparisons
@@ -74,38 +73,41 @@ export function resolveFontSizes(
 	// Sizes expressed as fractions of canvas height
 	let baseSizes: number[]
 	if (charCount < 7 * relativeWidth) {
-		baseSizes = [1.0, 0.8, 0.65, 0.56, 0.5, 0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
-	} else if (charCount < 30 * relativeWidth) {
-		baseSizes = [0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
-	} else if (charCount < 40 * relativeWidth) {
-		baseSizes = [0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [1.0, 0.8, 0.65, 0.56, 0.5, 0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
+	} else if (charCount < 13 * relativeWidth) {
+		baseSizes = [0.65, 0.56, 0.5, 0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
+	} else if (charCount < 20 * relativeWidth) {
+		baseSizes = [0.5, 0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
+	} else if (charCount < 35 * relativeWidth) {
+		baseSizes = [0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
 	} else if (charCount < 50 * relativeWidth) {
-		baseSizes = [0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
+	} else if (charCount < 65 * relativeWidth) {
+		baseSizes = [0.2, 0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
 	} else {
-		baseSizes = [0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [0.166, 0.14, 0.125, 0.11, MIN_LINE_SIZE_FRACTION]
 	}
 
-	console.log('baseSizes', baseSizes, 'fnt', fontsize, 'h', h, 'relFnt', relLineHeight)
-	if (baseSizes[0] <= relLineHeight) {
+	if (baseSizes[0] <= clampedLineHeight) {
 		// we will not reach that configured fontsize, let's go with our list only
 		// maximum size for shrink to fit should be 1.0, unfortunately due to rounding not every 100% will be caught here
-		return baseSizes.map((size) => Math.max(size * h, 1))
+		return baseSizes //.map((size) => Math.max(size * h, 1))
 	} else {
 		// the configured fontsize is smaller than what we would try first
 		// let's first find the subset that is below that
-		let candidateStart = baseSizes.findIndex((size) => size <= relLineHeight)
+		let candidateStart = baseSizes.findIndex((size) => size <= clampedLineHeight)
 		// if not found the configured size is smaller than our smallest candidate, use the smallest candidate
 		if (candidateStart < 0) candidateStart = baseSizes.length - 1
 
 		// we want to start the size check with the configured size. let's check if the configured fontsize is close to our first candidate, then we use it instead
-		if (relLineHeight - baseSizes[candidateStart] < baseSizes[candidateStart] * 0.1) {
-			baseSizes[candidateStart] = relLineHeight
+		if (clampedLineHeight - baseSizes[candidateStart] < baseSizes[candidateStart] * 0.09) {
+			baseSizes[candidateStart] = clampedLineHeight
 		} else {
 			// distance is too far, let's insert the configured fontsize in front
-			baseSizes.splice(candidateStart, 0, relLineHeight)
+			baseSizes.splice(candidateStart, 0, clampedLineHeight)
 		}
 
-		return baseSizes.slice(candidateStart).map((size) => Math.max(size * h, 1))
+		return baseSizes.slice(candidateStart) //.map((size) => Math.max(size * h, 1))
 	}
 }
 

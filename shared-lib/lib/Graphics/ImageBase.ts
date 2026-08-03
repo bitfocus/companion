@@ -23,7 +23,7 @@ import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js
 import { resolveFontName } from './Fonts.js'
 import {
 	computeTextLayout,
-	MIN_FONT_SIZE_FRACTION,
+	MIN_LINE_SIZE_FRACTION,
 	resolveFontSizes,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
@@ -837,7 +837,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	 * @param h bounding box height
 	 * @param text the text to draw
 	 * @param color CSS color string
-	 * @param fontsize height of font, either pixels or 'auto'
+	 * @param lineheight height of the line as a fraction, e.g. 0.5 for 50% of the height, fontsize will have a fixed ratio to that as all our fonts are forced to the same ratio between line and Em
 	 * @param options optional styling: allowShrink, alignment, outline, font, weight and character styles
 	 */
 	drawAlignedText(
@@ -847,7 +847,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		h: number,
 		text: string,
 		color: string,
-		fontsize: number,
+		lineheight: number,
 		options: DrawAlignedTextOptions = {}
 	): void {
 		const {
@@ -871,11 +871,12 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		displayTextStr = displayTextStr.replaceAll('\\n', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\r', '\n') // users can add deliberate line breaks, let's replace it with a real line break
 		displayTextStr = displayTextStr.replaceAll('\\t', '\t') // users can add deliberate tabs, let's replace it with a real tab
+		displayTextStr = displayTextStr.replace(/[ \t]+(?=\n*$)/, '') // remove trailing white spaces as they are trimmed anyway later and should not be taken into account for layouting (but keep trailing newlines)
 
 		// Resolution-independent upper bound: capacity ≈ (w/h) / (fontFrac² × charAspect).
 		// When shrinking, the minimum font fraction is the absolute limit; when fixed, use the
 		// configured size (clamped to its minimum of h/24), giving a much tighter bound.
-		const effectiveFontFrac = allowShrink ? MIN_FONT_SIZE_FRACTION : Math.min(Math.max(fontsize / h, 1 / 24), 1)
+		const effectiveFontFrac = allowShrink ? MIN_LINE_SIZE_FRACTION : Math.min(Math.max(lineheight / h, 1 / 24), 1)
 		const maxPossibleChars = Math.ceil(w / h / (effectiveFontFrac * effectiveFontFrac * 0.3))
 
 		const { displayTextChars, displayTextCharsStr, wasTruncated } = segmentTextToUnicodeChars(
@@ -883,14 +884,20 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			maxPossibleChars
 		)
 
+		// get the ratio between the line height and the fontsize in em
+		const lineBoxRatio = this.getFontLineBoxRatio(font, weight, italic)
+
 		// Normalize layout decisions to a fixed reference height (72 px) so that font-size selection
 		// and line-breaking use identical absolute pixel measurements regardless of actual canvas size.
-		const NORM_H = 72
-		const normScale = NORM_H / h
+		const NORM_HEIGHT = 72
+		const normScale = NORM_HEIGHT / h
 		const normW = Math.round(w * normScale)
 		// When fontsize === h (signals "heuristics only"), normFontsize === NORM_H — same signal preserved.
-		const normFontsize = fontsize * normScale
-		const upScale = h / NORM_H
+
+		//const normFontsize = lineheight * normScale
+		//const normFontsize = (h * lineheight) / lineBoxRatio
+
+		const upScale = h / NORM_HEIGHT
 		const fontNameStr = resolveFontName(font)
 
 		// CSS font shorthand prefix: `font-style font-weight` (skia/browsers synthesize faux italic/bold).
@@ -898,45 +905,35 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		const fontStylePrefix = `${italic ? 'italic ' : ''}${weight === 'bold' ? 'bold ' : ''}`
 
 		// If we hit the character limit, only the smallest font size could possibly fit
-		const normCheckSizes =
+		const relCheckSizes =
 			allowShrink && wasTruncated
-				? [Math.max(MIN_FONT_SIZE_FRACTION * NORM_H, 1)]
-				: resolveFontSizes(normW, NORM_H, normFontsize, allowShrink, displayTextChars.length)
-
-		console.log(
-			'sizes to check for h',
-			h,
-			'fonsize',
-			fontsize,
-			displayTextChars.join(''),
-			'chars',
-			displayTextChars.length,
-			normCheckSizes
-		)
+				? [MIN_LINE_SIZE_FRACTION]
+				: resolveFontSizes(normW, NORM_HEIGHT, lineheight, allowShrink, displayTextChars.length)
 
 		// Find the best fitting size at the normalized scale
 		let normLayout: TextLayoutResult | undefined
-		let usedNormSize = normCheckSizes[0]
-		for (let i = 0; i < normCheckSizes.length; i += 1) {
-			usedNormSize = normCheckSizes[i]
-			const normFontSpec = `${fontStylePrefix}${usedNormSize}px/${usedNormSize * 1.1}px ${fontNameStr}`
+		let usedRelSize = relCheckSizes[0]
+		for (let i = 0; i < relCheckSizes.length; i += 1) {
+			usedRelSize = relCheckSizes[i]
+			const pixelFontsize = (NORM_HEIGHT * usedRelSize) / lineBoxRatio
+			const normFontSpec = `${fontStylePrefix}${pixelFontsize}px/${pixelFontsize * 1.1}px ${fontNameStr}`
 
 			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
-			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
+			const cacheKey = `${normFontSpec}:${normW}:${NORM_HEIGHT}:${displayTextCharsStr}`
 			const cachedLayout = this.#textLayoutCache?.get(cacheKey)
 			let layout = typeof cachedLayout === 'object' ? cachedLayout : undefined
 			if (!layout) {
 				layout = computeTextLayout(
 					this.context2d,
 					normW,
-					NORM_H,
+					NORM_HEIGHT,
 					displayTextChars,
 					normFontSpec,
-					!allowShrink || i == normCheckSizes.length - 1 ? false : true // don't exit early if not trying to shrink or this is the smallest size we try
+					!allowShrink || i == relCheckSizes.length - 1 ? false : true // don't exit early if not trying to shrink or this is the smallest size we try
 				)
 				this.#textLayoutCache?.set(cacheKey, layout)
 			}
-			console.log('got layout', JSON.stringify(layout, null, 2))
+			// console.log('got layout', JSON.stringify(layout, null, 2))
 			normLayout = layout
 			if (layout.fits) break
 		}
@@ -945,7 +942,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		if (!normLayout) return
 
 		// Scale the normalized layout up to the actual canvas dimensions for rendering
-		const actualSize = usedNormSize * upScale
+		const actualSize = (h * usedRelSize) / lineBoxRatio
 		const textLayout: TextLayoutResult = {
 			fontDefinition: `${fontStylePrefix}${actualSize}px/${actualSize * 1.1}px ${fontNameStr}`,
 			lines: normLayout.lines,
