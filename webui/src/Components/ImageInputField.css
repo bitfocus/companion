@@ -23,7 +23,7 @@
 
 	padding: 2px;
 	border-radius: 3px;
-	box-shadow: rgba(0, 0, 0, 0.3) 0px 0px 0px 1px;
+	box-shadow: color-mix(in srgb, var(--color-shadow) 30%, transparent) 0px 0px 0px 1px;
 	cursor: pointer;
 
 	img,

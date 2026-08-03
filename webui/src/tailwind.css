@@ -41,6 +41,9 @@
 	/* Primary tints */
 	--color-primary-soft: #ea818a;
 	--color-primary-softer: #f2b3b9;
+
+	/* Drop-shadow colour (alpha applied per shadow via color-mix) */
+	--color-shadow: #000;
 }
 
 @source '../index.html';

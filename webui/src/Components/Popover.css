@@ -27,8 +27,8 @@
 	border: 1px solid var(--popover2-border-color);
 	border-radius: var(--popover2-border-radius);
 	box-shadow:
-		0 0.5rem 1rem rgba(0, 0, 0, 0.15),
-		0 2px 6px rgba(0, 0, 0, 0.1);
+		0 0.5rem 1rem color-mix(in srgb, var(--color-shadow) 15%, transparent),
+		0 2px 6px color-mix(in srgb, var(--color-shadow) 10%, transparent);
 	padding: var(--popover2-padding-y) 0;
 	min-width: 10rem;
 	outline: none;
