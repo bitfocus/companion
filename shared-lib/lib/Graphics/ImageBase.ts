@@ -864,7 +864,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 		if (w <= 0 || h <= 0) return
 
-		let displayTextStr = this.#sanitiseText(text).toString().trim() // remove leading and trailing spaces for display
+		let displayTextStr = this.#sanitiseText(text).toString() // for space formatting only the first leading space and all trailing spaces per line will be removed by the layout system
 		if (!displayTextStr) return
 
 		displayTextStr = displayTextStr.replaceAll('\r\n', '\n') // we only want \n as a linebreak
@@ -903,6 +903,17 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				? [Math.max(MIN_FONT_SIZE_FRACTION * NORM_H, 1)]
 				: resolveFontSizes(normW, NORM_H, normFontsize, allowShrink, displayTextChars.length)
 
+		console.log(
+			'sizes to check for h',
+			h,
+			'fonsize',
+			fontsize,
+			displayTextChars.join(''),
+			'chars',
+			displayTextChars.length,
+			normCheckSizes
+		)
+
 		// Find the best fitting size at the normalized scale
 		let normLayout: TextLayoutResult | undefined
 		let usedNormSize = normCheckSizes[0]
@@ -925,7 +936,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				)
 				this.#textLayoutCache?.set(cacheKey, layout)
 			}
-
+			console.log('got layout', JSON.stringify(layout, null, 2))
 			normLayout = layout
 			if (layout.fits) break
 		}
@@ -950,7 +961,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 	/**
 	 * Draw text using a computed layout  
-	 * when the text fits into the area, alignemnt will be trivial. When text overflows the line break has precedence. That means text should be broken into hopefully fitting lines (even inside of words) and then those lines are aligned.
+	 * when the text fits into the area, alignment will be trivial. When text overflows the line break has precedence. That means text should be broken into hopefully fitting lines (even inside of words) and then those lines are aligned.
 	 */
 	#drawTextLayout(
 		x: number,

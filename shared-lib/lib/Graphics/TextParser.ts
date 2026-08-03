@@ -58,12 +58,13 @@ export function resolveFontSizes(
 	allowShrink: boolean,
 	charCount: number
 ): number[] {
-	// Clamp the configured size to a sane pixel range (minimum is calibrated to 72px reference height)
-	const clamped = Math.min(Math.max(fontsize, Math.round(h / 24)), h)
+	// Clamp the configured size to a sane pixel range
+	const clamped = Math.min(Math.max(fontsize, 3), h * 1.2)
 
 	if (!allowShrink) {
 		return [clamped]
 	}
+	const relLineHeight = (clamped * 1) / h
 
 	// Estimate how many characters fit per font-height-squared of available area.
 	// Capacity at fraction s ≈ (w/h) / (s² × char_aspect), so threshold comparisons
@@ -73,41 +74,39 @@ export function resolveFontSizes(
 	// Sizes expressed as fractions of canvas height
 	let baseSizes: number[]
 	if (charCount < 7 * relativeWidth) {
-		baseSizes = [0.83, 0.71, 0.61, 0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [1.0, 0.8, 0.65, 0.56, 0.5, 0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
 	} else if (charCount < 30 * relativeWidth) {
-		baseSizes = [0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [0.4, 0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
 	} else if (charCount < 40 * relativeWidth) {
-		baseSizes = [0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [0.33, 0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
 	} else if (charCount < 50 * relativeWidth) {
-		baseSizes = [0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [0.25, 0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
 	} else {
-		baseSizes = [0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
+		baseSizes = [0.2, 0.166, 0.14, 0.125, 0.11, MIN_FONT_SIZE_FRACTION]
 	}
 
-	// When fontsize equals h the caller is signalling "use heuristics only" (no user-chosen cap),
-	// so we skip prepending the configured size and just return the heuristic list.
-	const prependConfigured = fontsize !== h
+	console.log('baseSizes', baseSizes, 'fnt', fontsize, 'h', h, 'relFnt', relLineHeight)
+	if (baseSizes[0] <= relLineHeight) {
+		// we will not reach that configured fontsize, let's go with our list only
+		// maximum size for shrink to fit should be 1.0, unfortunately due to rounding not every 100% will be caught here
+		return baseSizes.map((size) => Math.max(size * h, 1))
+	} else {
+		// the configured fontsize is smaller than what we would try first
+		// let's first find the subset that is below that
+		let candidateStart = baseSizes.findIndex((size) => size <= relLineHeight)
+		// if not found the configured size is smaller than our smallest candidate, use the smallest candidate
+		if (candidateStart < 0) candidateStart = baseSizes.length - 1
 
-	// Start with the configured size (if appropriate), then add heuristic candidates smaller than it
-	const seen = new Set<number>()
-	const candidates: number[] = []
-
-	if (prependConfigured) {
-		seen.add(clamped)
-		candidates.push(clamped)
-	}
-
-	// Multiply fraction by h to get pixel size; only include sizes strictly below the cap,
-	// and deduplicate while preserving order
-	for (const s of baseSizes) {
-		const v = Math.max(s * h, 1)
-		if (!seen.has(v) && v < clamped) {
-			seen.add(v)
-			candidates.push(v)
+		// we want to start the size check with the configured size. let's check if the configured fontsize is close to our first candidate, then we use it instead
+		if (relLineHeight - baseSizes[candidateStart] < baseSizes[candidateStart] * 0.1) {
+			baseSizes[candidateStart] = relLineHeight
+		} else {
+			// distance is too far, let's insert the configured fontsize in front
+			baseSizes.splice(candidateStart, 0, relLineHeight)
 		}
-	}
 
-	return candidates
+		return baseSizes.slice(candidateStart).map((size) => Math.max(size * h, 1))
+	}
 }
 
 /**
@@ -320,7 +319,7 @@ export function computeTextLayout(
 
 	// console.log('lines are', JSON.stringify(lines, null, 2))
 
-	const makeLayout = () => {
+	const makeLayout = (fits?: boolean | undefined) => {
 		const strippedLines = lines.map((line) => {
 			return { text: line.text, ascent: line.ascent, descent: line.descent }
 		})
@@ -329,9 +328,13 @@ export function computeTextLayout(
 		layout.totalHeight = totalHeight
 
 		// Check if text fits
-		const fitsVertically = totalHeight <= verticalFitLimit
-		const fitsHorizontally = !lines.some((line) => line.fitsH === false)
-		layout.fits = fitsHorizontally && fitsVertically
+		if (typeof fits === 'boolean') {
+			layout.fits = fits
+		} else {
+			const fitsVertically = totalHeight <= verticalFitLimit
+			const fitsHorizontally = !lines.some((line) => line.fitsH === false)
+			layout.fits = fitsHorizontally && fitsVertically
+		}
 
 		return layout
 	}
@@ -357,7 +360,7 @@ export function computeTextLayout(
 				fitsH: true,
 			}
 			totalHeight += measuredLineHeight
-			if (totalHeight > verticalFitLimit && exitEarly) return makeLayout()
+			if (totalHeight > verticalFitLimit && exitEarly) return makeLayout(false)
 
 			currentLine++
 
@@ -388,7 +391,7 @@ export function computeTextLayout(
 			lastDrawnCharIndex = lineChars.length
 		} else {
 			// console.log(`line ${currentLine} is too long by ${lineChars.length - maxCodepoints} chars`)
-			// no early exit possible here
+			// no early exit possible here, we migth still fit after breaking
 
 			const possibleLine = lineChars.slice(lastDrawnCharIndex, lastDrawnCharIndex + maxCodepoints)
 
@@ -435,7 +438,8 @@ export function computeTextLayout(
 				// )
 			} else {
 				// we did not find a good breaking position, push the maximum chars to the line (breaking inside a word) and mark it
-				if (exitEarly) return makeLayout()
+				// console.log('now breaking inside word or exit', exitEarly)
+				if (exitEarly) return makeLayout(false)
 				if (possibleLine.length >= 1) {
 					lines[currentLine] = {
 						chars: possibleLine,
@@ -481,7 +485,7 @@ export function computeTextLayout(
 				}
 			}
 		}
-		if (totalHeight > verticalFitLimit && exitEarly) return makeLayout()
+		if (totalHeight > verticalFitLimit && exitEarly) return makeLayout(false)
 
 		currentLine++
 	}

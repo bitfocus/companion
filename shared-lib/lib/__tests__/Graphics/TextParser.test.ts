@@ -1115,7 +1115,7 @@ describe('computeTextLayout', () => {
 	})
 
 	describe('long text handling', () => {
-		test('very long text abborts adding lines when height exceeded and it should exit early', () => {
+		test('very long text aborts adding lines when height exceeded and it should exit early', () => {
 			const context = createMockContext(10, 14)
 			// With h=72, fits 8 lines. Each line fits 'A A A' (5 chars * 10px = 50px < 72px)
 			const veryLongText = 'A '.repeat(90)
