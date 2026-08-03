@@ -26,7 +26,11 @@ import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { Table } from '~/Components/Table.js'
 import { useComputed } from '~/Resources/util.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
-import { FeedbackValueContextVariables, type LocalVariablesStore } from '../LocalVariablesStore.js'
+import {
+	EntityListActionContext,
+	FeedbackValueContextVariables,
+	type LocalVariablesStore,
+} from '../LocalVariablesStore.js'
 import { OptionsInputControl } from '../OptionsInputControl.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
@@ -424,7 +428,7 @@ const ValueFeedbackOverrideInput = observer(function ValueFeedbackOverrideInput(
 				entityType: EntityModelType.Feedback,
 				internalParser: true,
 				isLocatedInGrid: true,
-				insideActionsList: false,
+				actionContext: EntityListActionContext.NotActions,
 			}) ?? []),
 			...FeedbackValueContextVariables,
 		],

@@ -204,12 +204,31 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getParsedString(propertyName: keyof T, defaultValue: string): string {
-		const { value } = this.#getValue(propertyName)
-		if (value.isExpression) {
-			return stringifyVariableValue(this.getUnknown(propertyName, defaultValue)) ?? defaultValue
-		} else {
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
+
+		// A plain string (the element's own value, or a boolean/advanced override) is a template: interpolate
+		// its variables.
+		if (!value.isExpression) {
 			return this.parseVariablesInString(stringifyVariableValue(value.value) ?? '', defaultValue)
 		}
+
+		// An expression (an expression element value, or a value-feedback transform). Evaluate it - but pass
+		// `null` for the fallback: a value-feedback override that resolves to `undefined` means "no override",
+		// and the element's own value is a template that must be variable-interpolated, not stringified raw.
+		const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, null)
+		if (result.ok && result.value !== undefined) {
+			return stringifyVariableValue(result.value) ?? defaultValue
+		}
+
+		if (undefinedFallback) {
+			if (!undefinedFallback.isExpression) {
+				return this.parseVariablesInString(stringifyVariableValue(undefinedFallback.value) ?? '', defaultValue)
+			}
+			const fallback = this.executeExpressionAndTrackVariables(undefinedFallback.value, undefined)
+			return fallback.ok ? (stringifyVariableValue(fallback.value) ?? defaultValue) : defaultValue
+		}
+
+		return defaultValue
 	}
 
 	getNumber(propertyName: keyof T, defaultValue: number, scale = 1): number {

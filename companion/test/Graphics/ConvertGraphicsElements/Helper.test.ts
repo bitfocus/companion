@@ -284,6 +284,24 @@ describe('ElementExpressionHelper', () => {
 			expect(helper.getParsedString('strProp', '')).toBe('World')
 		})
 
+		test('value-feedback override transforms $(this:value) for a string property', () => {
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['strProp', valueOverride('$(this:value)', 'Hello')],
+			])
+			const { helper } = makeHelper(makeEl({ strProp: val('base') }), {}, overrides)
+			expect(helper.getParsedString('strProp', 'default')).toBe('Hello')
+		})
+
+		test('value-feedback override resolving to undefined uses the element value, still interpolating variables', () => {
+			// `$(ns:missing)` is unknown -> the override resolves to undefined ("no override"), so the element's
+			// own template `$(ns:name)` must be rendered AND variable-interpolated.
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['strProp', valueOverride('$(ns:missing)', 'ignored')],
+			])
+			const { helper } = makeHelper(makeEl({ strProp: val('$(ns:name)') }), { ns: { name: 'World' } }, overrides)
+			expect(helper.getParsedString('strProp', 'default')).toBe('World')
+		})
+
 		test('evaluates expression and stringifies result', () => {
 			const { helper } = makeHelper(makeEl({ strProp: expr('$(ns:count) + 1') }), { ns: { count: 5 } })
 			expect(helper.getParsedString('strProp', '')).toBe('6')
