@@ -1,3 +1,7 @@
+.switch-input-with-label {
+	/* display: flex; */
+}
+
 .switch-input {
 	all: unset;
 	box-sizing: border-box;
@@ -34,6 +38,12 @@
 
 	&[data-checked] {
 		background-color: var(--color-primary);
+
+		/*
+		&.switch-input-dimmed {
+			background-color: var(--cui-success);
+		}
+		*/
 
 		.switch-thumb {
 			left: calc(100% - 3px - 16px);

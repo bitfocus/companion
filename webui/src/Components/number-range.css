@@ -25,7 +25,14 @@
 
 	.number-range-indicator {
 		height: 100%;
+		/* background-color: var(--cui-primary); */
 		border-radius: 1rem;
+
+		/*
+		&[data-disabled] {
+			background-color: transparent;
+		}
+		*/
 	}
 
 	.number-range-thumb {

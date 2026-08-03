@@ -1,4 +1,4 @@
-/* Overlays a validity tick/cross on the right edge of a text input */
+/* Wrapper that overlays a validity tick/cross on the right edge of a text input */
 .input-validity-wrapper {
 	position: relative;
 	display: flex;

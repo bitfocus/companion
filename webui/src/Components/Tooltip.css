@@ -1,3 +1,5 @@
+/* ─── Tooltip ──────────────────────────────────────────────────────────────── */
+
 .tooltip2-positioner {
 	z-index: 1080; /* above everything */
 	pointer-events: none;

@@ -1,4 +1,6 @@
 .text-input-field {
+	/* Future: replace this with css we control */
+
 	&:focus {
 		/* Dont change background color on focus */
 		background-color: var(--color-input-bg);
