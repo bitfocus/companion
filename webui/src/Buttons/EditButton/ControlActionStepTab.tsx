@@ -4,6 +4,7 @@ import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
@@ -37,6 +38,18 @@ export function ControlActionStepTab({
 	localVariablesStore,
 	disabledSetStep,
 }: ControlActionStepTabProps): React.JSX.Element {
+	// Heading with an inline hint (no extra vertical space) pointing at the $(this:delta) variable, which is
+	// available to expressions inside rotary actions.
+	const rotaryHeading = (label: string): React.JSX.Element => (
+		<>
+			{label}{' '}
+			<InlineHelpIcon className="text-muted">
+				In an expression here, use $(this:delta) to read this turn's rotation amount and direction (positive =
+				right/clockwise, negative = left/counter-clockwise; some surfaces report a larger value for faster spins).
+			</InlineHelpIcon>
+		</>
+	)
+
 	return (
 		<>
 			{stepKeys.length > 1 && (
@@ -92,7 +105,7 @@ export function ControlActionStepTab({
 					<>
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading="Rotate left actions"
+								heading={rotaryHeading('Rotate left actions')}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'rotate_left' }}
@@ -107,7 +120,7 @@ export function ControlActionStepTab({
 
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading="Rotate right actions"
+								heading={rotaryHeading('Rotate right actions')}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'rotate_right' }}

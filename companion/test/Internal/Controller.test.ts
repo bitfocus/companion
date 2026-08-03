@@ -8,7 +8,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { RenderClock } from '../../lib/Controls/RenderClock.js'
-import { InternalController } from '../../lib/Internal/Controller.js'
+import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
+import { buildActionExecutionOverrides, InternalController } from '../../lib/Internal/Controller.js'
 import type { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 
 /**
@@ -136,5 +137,31 @@ describe('evaluateFeedbackValue', () => {
 		expect(() => controller.evaluateFeedbackValue(model, 'control1', stubParser({}))).toThrow(
 			'Feedback is not for internal instance'
 		)
+	})
+})
+
+describe('buildActionExecutionOverrides', () => {
+	function makeExtras(overrides: Partial<RunActionExtras>): RunActionExtras {
+		return {
+			controlId: 'control1',
+			surfaceId: undefined,
+			location: undefined,
+			abortDelayed: new AbortController().signal,
+			executionMode: 'concurrent',
+			rotationDelta: null,
+			...overrides,
+		}
+	}
+
+	test('exposes this:surface_id and this:delta for a rotary execution', () => {
+		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: -3 }))
+		expect(overrides['this:surface_id']).toBe('surface0')
+		expect(overrides['this:delta']).toBe(-3)
+	})
+
+	test('this:delta is undefined for a non-rotary execution', () => {
+		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: null }))
+		expect(overrides['this:surface_id']).toBe('surface0')
+		expect(overrides['this:delta']).toBeUndefined()
 	})
 })

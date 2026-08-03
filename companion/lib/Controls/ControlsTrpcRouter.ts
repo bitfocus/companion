@@ -321,7 +321,7 @@ export function createControlsTrpcRouter(
 
 				controlsController.rotateControl(
 					controlId,
-					input.direction,
+					input.direction ? 1 : -1,
 					input.surfaceId ? `hot:${input.surfaceId}` : undefined
 				)
 			}),

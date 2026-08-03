@@ -169,7 +169,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	feedbackListType,
 	disableLazyMount,
 }: EntityEditorRowContentProps) {
-	const { serviceFactory, readonly, localVariablePrefix } = useEntityEditorContext()
+	const { serviceFactory, readonly, localVariablesStore, localVariablePrefix } = useEntityEditorContext()
 	const entityService = useControlEntityService(serviceFactory, entity, entityTypeLabel)
 
 	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
@@ -206,6 +206,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				headlineExpanded={headlineExpanded}
 				setHeadlineExpanded={doEditHeadline}
 				readonly={readonly}
+				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
 			/>
 

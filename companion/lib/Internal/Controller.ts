@@ -825,8 +825,9 @@ export class InternalController {
  * The `$(this:*)` overrides derived from an action's execution context. Shared by the parser for the
  * action's own options and by the one for its child feedbacks, so both see the same variables.
  */
-function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
+export function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
 	return {
 		'this:surface_id': extras.surfaceId,
+		'this:delta': extras.rotationDelta ?? undefined,
 	}
 }

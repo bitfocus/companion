@@ -12,12 +12,26 @@ import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
+/**
+ * An entity editor list's relationship to an action set, which governs the `this:*` execution-context
+ * variables it (and any feedbacks nested under its actions) may reference.
+ */
+export enum EntityListActionContext {
+	/** Not an actions list (feedbacks, local variables, style overrides, ...) — no execution context. */
+	NotActions = 'notActions',
+	/** A non-rotary action set (press/release/duration), or a feedback nested under such an action. Exposes `$(this:surface_id)`. */
+	Actions = 'actions',
+	/** A rotary action set (rotate left/right), or a feedback nested under such an action. Also exposes `$(this:delta)`. */
+	RotaryActions = 'rotaryActions',
+}
+
 export interface GetLocalVariableOptions {
 	entityType: EntityModelType | null
 	/** Whether the field is parsed by the internal module's parser (which injects the `this:*` values). */
 	internalParser: boolean
 	isLocatedInGrid: boolean
-	insideActionsList: boolean
+	/** This field's relationship to an action set, gating the execution-context `this:*` variables. */
+	actionContext: EntityListActionContext
 }
 
 export class LocalVariablesStore {
@@ -54,12 +68,7 @@ export class LocalVariablesStore {
 	}
 
 	getOptions = computedFn(
-		({
-			entityType,
-			internalParser,
-			isLocatedInGrid,
-			insideActionsList,
-		}: GetLocalVariableOptions): DropdownChoiceInt[] => {
+		({ internalParser, isLocatedInGrid, actionContext }: GetLocalVariableOptions): DropdownChoiceInt[] => {
 			const isPageControl = ParseControlId(this.controlId)?.type === 'page'
 
 			let fixedVariables: DropdownChoiceInt[] = []
@@ -67,8 +76,14 @@ export class LocalVariablesStore {
 			if (isLocatedInGrid) {
 				fixedVariables = ControlLocalVariables
 				// Actions (and feedbacks under them) can reference the action's execution-context variables.
-				if (internalParser && (entityType === EntityModelType.Action || insideActionsList)) {
-					fixedVariables = ControlWithInternalLocalVariables
+				// `actionContext` is the single source of truth here: a field not wrapped in an actions-list
+				// editor (context defaults to `NotActions`) has no execution-time value to offer.
+				if (internalParser && actionContext !== EntityListActionContext.NotActions) {
+					fixedVariables = [...ControlLocalVariables, ThisSurfaceIdVariable]
+					// `$(this:delta)` only carries a value while a rotary action runs, so only offer it in (or
+					// under) a rotate action set.
+					if (actionContext === EntityListActionContext.RotaryActions)
+						fixedVariables = [...fixedVariables, ThisDeltaVariable]
 				}
 			} else if (isPageControl) {
 				// A page control has no grid location, but its variables belong to a page
@@ -202,13 +217,17 @@ type _VerifyControlVariablesDropdownIsComplete = Expect<
 	Equal<(typeof ControlLocalVariables)[number]['value'], ThisLocationVariable>
 >
 
-export const ControlWithInternalLocalVariables: DropdownChoiceInt[] = [
-	...ControlLocalVariables,
-	{
-		value: 'this:surface_id',
-		label: 'The id of the surface triggering this action',
-	},
-]
+/** The id of the surface running the action. Available to any action (and feedbacks under it). */
+export const ThisSurfaceIdVariable: DropdownChoiceInt = {
+	value: 'this:surface_id',
+	label: 'The id of the surface triggering this action',
+}
+
+/** The rotation amount/direction. Only available while a rotary action set runs. */
+export const ThisDeltaVariable: DropdownChoiceInt = {
+	value: 'this:delta',
+	label: 'The rotation amount of this rotary action (positive = right/clockwise, negative = left/counter-clockwise)',
+}
 
 /** The subset of `this:*` variables that make sense for a page control (no grid location). */
 export const PageLocalVariables = [

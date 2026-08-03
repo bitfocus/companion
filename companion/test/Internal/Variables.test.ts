@@ -40,6 +40,7 @@ const fakeExtras: RunActionExtras = {
 	location: undefined,
 	abortDelayed: new AbortController().signal,
 	executionMode: 'sequential',
+	rotationDelta: null,
 }
 
 // ---- local_variable_set_value -----------------------------------------------

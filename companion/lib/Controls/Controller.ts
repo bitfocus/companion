@@ -198,8 +198,8 @@ export class ControlsController {
 		return this.#store.pressControl(controlId, pressed, surfaceId, force)
 	}
 
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
-		return this.#store.rotateControl(controlId, rightward, surfaceId)
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
+		return this.#store.rotateControl(controlId, delta, surfaceId)
 	}
 
 	abortAllDelayedActions(exceptSignal: AbortSignal | null): void {

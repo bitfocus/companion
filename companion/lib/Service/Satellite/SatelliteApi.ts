@@ -62,8 +62,12 @@ import {
  * 1.11.0 - Add NONSQUARE to CAPS to indicate support for non-square buttons
  * 1.12.0 - Add BITMAP_FORMATS to CAPS and BITMAP_FORMAT to ADD-DEVICE and ADD-SUB to negotiate bitmap encoding (rgb/png/webp)
  * 1.13.0 - Add `leds` capability to advanced-mode style presets (addressable LED strips/rings)
+ * 1.14.0 - DIRECTION on KEY-ROTATE and SUB-ROTATE may now be a signed number to carry a rotation
+ *          amount (velocity/step count): sign is the direction, magnitude is the number of steps.
+ *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
+ *          advertised via ROTARY_AMOUNT in CAPS.
  */
-export const API_VERSION = '1.13.0'
+export const API_VERSION = '1.14.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the
@@ -450,6 +454,7 @@ export class ServiceSatelliteApi {
 			SUBSCRIPTIONS: !!this.#userconfig.getKey('satellite_subscriptions_enabled'),
 			NONSQUARE: true,
 			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
+			ROTARY_AMOUNT: true,
 		})
 
 		// Register the per-socket state only once the handshake has been sent, so a failure while
@@ -625,9 +630,9 @@ export class ServiceSatelliteApi {
 			if (!params.DIRECTION) {
 				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
 			}
-			const direction = params.DIRECTION >= '1'
+			const delta = parseSatelliteRotationDelta(params)
 
-			if (!device.device.doRotateFromId(controlId, direction)) {
+			if (!device.device.doRotateFromId(controlId, delta)) {
 				return this.#formatAndSendError(socket, messageName, id, 'Unknown CONTROLID')
 			}
 		} else {
@@ -642,9 +647,9 @@ export class ServiceSatelliteApi {
 				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
 			}
 
-			const direction = params.DIRECTION >= '1'
+			const delta = parseSatelliteRotationDelta(params)
 
-			device.device.doRotate(...xy, direction)
+			device.device.doRotate(...xy, delta)
 		}
 
 		socket.sendMessage(messageName, 'OK', id, {})
@@ -880,12 +885,12 @@ export class ServiceSatelliteApi {
 		if (!params.DIRECTION) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DIRECTION')
 		}
-		const direction = params.DIRECTION >= '1'
+		const delta = parseSatelliteRotationDelta(params)
 
 		const controlId = this.#serviceApi.getControlIdAt(sub.location)
 		if (controlId) {
 			const surfaceId = `satellite-sub:${socketState.clientId}:${subIdStr}`
-			this.#serviceApi.rotateControl(controlId, direction, surfaceId)
+			this.#serviceApi.rotateControl(controlId, delta, surfaceId)
 		}
 
 		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
@@ -954,6 +959,24 @@ interface SatelliteSocketState {
 	clientId: string
 	subscriptions: Map<string, SatelliteSubscription>
 	writeQueue: ImageWriteQueue<string, [ImageResult]>
+}
+
+/**
+ * Resolve the signed rotation delta for a KEY-ROTATE/SUB-ROTATE command from the DIRECTION parameter.
+ * DIRECTION is a signed number where the sign is the direction and the magnitude is the number of steps
+ * (added in API 1.14.0). `0` is kept as -1 (a single counter-clockwise step) for backwards compatibility
+ * with clients that used `0`/`1` as a boolean direction. A non-numeric DIRECTION falls back to the legacy
+ * "truthy means clockwise" behaviour.
+ */
+function parseSatelliteRotationDelta(params: ParsedParams): number {
+	const raw = params.DIRECTION
+
+	if (typeof raw === 'string') {
+		const num = Number(raw)
+		if (Number.isFinite(num)) return num === 0 ? -1 : num
+	}
+
+	return raw !== undefined && raw >= '1' ? 1 : -1
 }
 
 function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {
