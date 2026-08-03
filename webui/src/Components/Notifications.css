@@ -1,10 +1,10 @@
-// ─── Notifications (Toast) ────────────────────────────────────────────────────
-// Styles based on CoreUI's .toast, .toast-container, .toast-header, .toast-body
-// Adapted for the @base-ui/react/toast component structure.
+/* ─── Notifications (Toast) ────────────────────────────────────────────────────
+   Styles based on CoreUI's .toast, .toast-container, .toast-header, .toast-body
+   Adapted for the @base-ui/react/toast component structure. */
 
 .notification-viewport,
 .notification {
-	// Mapped from CoreUI's --cui-toast-* CSS custom properties
+	/* Mapped from CoreUI's --cui-toast-* CSS custom properties */
 	--notification-zindex: 1090;
 	--notification-max-width: 350px;
 	--notification-padding-x: 0.75rem;
@@ -21,7 +21,7 @@
 	--notification-header-border-color: var(--cui-border-color-translucent);
 }
 
-// ─── Viewport (replaces .toast-container) ────────────────────────────────────
+/* ─── Viewport (replaces .toast-container) ──────────────────────────────────── */
 
 .notification-viewport {
 	position: fixed;
@@ -36,7 +36,7 @@
 	gap: var(--notification-spacing);
 }
 
-// ─── Toast root (replaces .toast) ────────────────────────────────────────────
+/* ─── Toast root (replaces .toast) ──────────────────────────────────────────── */
 
 .notification {
 	width: var(--notification-max-width);
@@ -64,14 +64,14 @@
 	}
 }
 
-// ─── Content wrapper ─────────────────────────────────────────────────────────
+/* ─── Content wrapper ───────────────────────────────────────────────────────── */
 
 .notification-content {
 	overflow: hidden;
 	border-radius: inherit;
 }
 
-// ─── Header (replaces .toast-header) ─────────────────────────────────────────
+/* ─── Header (replaces .toast-header) ───────────────────────────────────────── */
 
 .notification-header {
 	display: flex;
@@ -84,14 +84,14 @@
 	border-top-left-radius: calc(var(--notification-border-radius) - var(--notification-border-width));
 	border-top-right-radius: calc(var(--notification-border-radius) - var(--notification-border-width));
 
-	// Mirror CoreUI's .toast-header .btn-close margin
+	/* Mirror CoreUI's .toast-header .btn-close margin */
 	.btn-close {
 		margin-inline: var(--notification-padding-x) calc(-0.5 * var(--notification-padding-x));
 		filter: invert(1) grayscale(1);
 	}
 }
 
-// ─── Title (replaces .toast-header strong / label) ───────────────────────────
+/* ─── Title (replaces .toast-header strong / label) ─────────────────────────── */
 
 .notification-title {
 	flex-grow: 1;
@@ -100,7 +100,7 @@
 	font-weight: 600;
 }
 
-// ─── Body (replaces .toast-body) ─────────────────────────────────────────────
+/* ─── Body (replaces .toast-body) ───────────────────────────────────────────── */
 
 .notification-body {
 	padding: var(--notification-padding-x);

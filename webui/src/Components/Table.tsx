@@ -1,4 +1,5 @@
 import classNames from 'classnames'
+import './Table.css'
 import { forwardRef, type TableHTMLAttributes } from 'react'
 
 export interface TableProps extends TableHTMLAttributes<HTMLTableElement> {
