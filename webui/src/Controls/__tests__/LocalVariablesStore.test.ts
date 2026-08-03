@@ -39,7 +39,9 @@ describe('this:surface_id gating', () => {
 	const store = new LocalVariablesStore(GRID_CONTROL)
 
 	test('offered for actions', () => {
-		expect(valuesFor(store, { entityType: EntityModelType.Action })).toContain('this:surface_id')
+		expect(
+			valuesFor(store, { entityType: EntityModelType.Action, actionContext: EntityListActionContext.Actions })
+		).toContain('this:surface_id')
 	})
 
 	test('offered for feedbacks inside an actions list', () => {
@@ -48,6 +50,13 @@ describe('this:surface_id gating', () => {
 
 	test('NOT offered for feedbacks outside an actions list', () => {
 		expect(valuesFor(store, { actionContext: EntityListActionContext.NotActions })).not.toContain('this:surface_id')
+	})
+
+	test('NOT offered for an action field with no actions-list context (e.g. an unwrapped editor)', () => {
+		// actionContext is authoritative: entityType alone must not surface a variable with no execution-time value.
+		expect(
+			valuesFor(store, { entityType: EntityModelType.Action, actionContext: EntityListActionContext.NotActions })
+		).not.toContain('this:surface_id')
 	})
 
 	test('NOT offered when the field is not internal-parser', () => {

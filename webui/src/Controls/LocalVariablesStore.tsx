@@ -68,7 +68,7 @@ export class LocalVariablesStore {
 	}
 
 	getOptions = computedFn(
-		({ entityType, internalParser, isLocatedInGrid, actionContext }: GetLocalVariableOptions): DropdownChoiceInt[] => {
+		({ internalParser, isLocatedInGrid, actionContext }: GetLocalVariableOptions): DropdownChoiceInt[] => {
 			const isPageControl = ParseControlId(this.controlId)?.type === 'page'
 
 			let fixedVariables: DropdownChoiceInt[] = []
@@ -76,9 +76,9 @@ export class LocalVariablesStore {
 			if (isLocatedInGrid) {
 				fixedVariables = ControlLocalVariables
 				// Actions (and feedbacks under them) can reference the action's execution-context variables.
-				const isActionContext =
-					entityType === EntityModelType.Action || actionContext !== EntityListActionContext.NotActions
-				if (internalParser && isActionContext) {
+				// `actionContext` is the single source of truth here: a field not wrapped in an actions-list
+				// editor (context defaults to `NotActions`) has no execution-time value to offer.
+				if (internalParser && actionContext !== EntityListActionContext.NotActions) {
 					fixedVariables = [...ControlLocalVariables, ThisSurfaceIdVariable]
 					// `$(this:delta)` only carries a value while a rotary action runs, so only offer it in (or
 					// under) a rotate action set.
