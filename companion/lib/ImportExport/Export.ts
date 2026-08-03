@@ -94,7 +94,7 @@ export class ExportController {
 		apiRouter.get('/export/support', this.#exportSupportBundleHandler)
 	}
 
-	#exportTriggerListHandler: RequestHandler = (req, res, next) => {
+	#exportTriggerListHandler: RequestHandler = async (req, res, next) => {
 		const triggerControls = this.#controlsController.getAllTriggers()
 		const includeSecrets = req.query.includeSecrets !== 'false'
 		const exp = this.#generateTriggersExport(triggerControls, {
@@ -104,10 +104,10 @@ export class ExportController {
 
 		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
 
-		void downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+		await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
-	#exportTriggerSingleHandler: RequestHandler = (req, res, next) => {
+	#exportTriggerSingleHandler: RequestHandler = async (req, res, next) => {
 		const control = this.#controlsController.getTrigger(req.params.id)
 		if (control) {
 			const exp = this.#generateTriggersExport([control], {
@@ -122,13 +122,13 @@ export class ExportController {
 				'companionconfig'
 			)
 
-			void downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+			await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 		} else {
 			next()
 		}
 	}
 
-	#exportPageSingleHandler: RequestHandler = (req, res, next) => {
+	#exportPageSingleHandler: RequestHandler = async (req, res, next) => {
 		const page = Number(req.params.page)
 		if (isNaN(page)) {
 			next()
@@ -188,11 +188,11 @@ export class ExportController {
 
 			const filename = this.#generateFilename(String(req.query.filename as any), `page${page}`, 'companionconfig')
 
-			void downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+			await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 		}
 	}
 
-	#exportCustomHandler: RequestHandler = (req, res, next) => {
+	#exportCustomHandler: RequestHandler = async (req, res, next) => {
 		try {
 			// Convert flat dot-notation query params back to nested object
 			const unflattened = unflattenQueryParams(req.query)
@@ -204,7 +204,7 @@ export class ExportController {
 
 			const filename = this.#generateFilename(config.filename ?? '', 'custom_config', 'companionconfig')
 
-			void downloadBlob(this.#logger, res, next, exp, filename, config.format)
+			await downloadBlob(this.#logger, res, next, exp, filename, config.format)
 		} catch (error) {
 			if (error instanceof ZodError) {
 				res.status(400).json({
@@ -217,7 +217,7 @@ export class ExportController {
 		}
 	}
 
-	#exportFullHandler: RequestHandler = (req, res, next) => {
+	#exportFullHandler: RequestHandler = async (req, res, next) => {
 		const exp = this.generateCustomExport(null)
 
 		const filename = this.#generateFilename(
@@ -226,7 +226,7 @@ export class ExportController {
 			'companionconfig'
 		)
 
-		void downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+		await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
 	#exportLogHandler: RequestHandler = (_req, res, _next) => {

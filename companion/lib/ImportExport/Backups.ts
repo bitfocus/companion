@@ -448,8 +448,8 @@ export class BackupController {
 			fileSize = Buffer.byteLength(prepared.data)
 		} else {
 			// Large export - stream it to the file so the giant JSON string is never created.
-			await streamExport(data, prepared.format, createWriteStream(filePath))
-			fileSize = (await fs.stat(filePath)).size
+			// streamExport counts the bytes as they are written, so no separate stat is needed.
+			fileSize = await streamExport(data, prepared.format, createWriteStream(filePath))
 		}
 
 		return {

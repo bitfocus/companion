@@ -1,7 +1,7 @@
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
- * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ * Authors: Julian Waller <git@julusian.co.uk>
  *
  * This program is free software.
  * You should have received a copy of the MIT licence as well as the Bitfocus
@@ -12,8 +12,8 @@
 import { Readable, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import zlib from 'node:zlib'
-import makeParser from 'stream-json'
-import Assembler from 'stream-json/Assembler.js'
+import parser from 'stream-json'
+import Assembler from 'stream-json/assembler.js'
 import { MAX_STREAMED_DECOMPRESSED_FILE_SIZE } from './Constants.js'
 
 /** Size of the slices fed into the streaming parser, so it yields between chunks instead of
@@ -112,7 +112,7 @@ export async function parseImportBuffer(buffer: Buffer, parseYaml: ParseYamlFn):
 async function streamParseJson(buffer: Buffer, gz: boolean): Promise<unknown> {
 	const source = createChunkedReadable(buffer, IMPORT_CHUNK_SIZE)
 	const guard = createByteCountingTransform(MAX_STREAMED_DECOMPRESSED_FILE_SIZE)
-	const jsonParser = makeParser()
+	const jsonParser = parser()
 	const assembler = Assembler.connectTo(jsonParser)
 
 	if (gz) {

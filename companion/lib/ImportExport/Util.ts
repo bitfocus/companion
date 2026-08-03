@@ -1,8 +1,8 @@
-import { Readable, type Writable } from 'node:stream'
+import { Readable, Transform, type Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import zlib from 'node:zlib'
-import Disassembler from 'stream-json/Disassembler.js'
-import Stringer from 'stream-json/Stringer.js'
+import disassembler from 'stream-json/disassembler.js'
+import stringer from 'stream-json/stringer.js'
 import yaml from 'yaml'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -55,22 +55,36 @@ export function prepareExport(data: SomeExportv6, format: ExportFormat | undefin
 /**
  * Stream an export object to a destination as JSON, walking the object graph token-by-token (via
  * stream-json) so the giant intermediate string is never created. gzips the output for `json-gz`.
+ *
+ * @returns the number of bytes written to `destination`.
  */
 export async function streamExport(
 	data: SomeExportv6,
 	format: 'json' | 'json-gz',
 	destination: Writable
-): Promise<void> {
+): Promise<number> {
 	// Wrap in an array so Readable.from emits the export object itself as a single object-mode chunk.
 	const source = Readable.from([data], { objectMode: true })
-	const disassembler = new Disassembler()
-	const stringer = new Stringer()
+	const disassemblerStream = disassembler.asStream()
+	const stringerStream = stringer.asStream()
+
+	// Count the bytes as they flow to the destination, so callers (e.g. backups) don't have to stat
+	// the file afterwards.
+	let byteCount = 0
+	const counter = new Transform({
+		transform(chunk: Buffer, _encoding, callback) {
+			byteCount += chunk.length
+			callback(null, chunk)
+		},
+	})
 
 	if (format === 'json-gz') {
-		await pipeline(source, disassembler, stringer, zlib.createGzip(), destination)
+		await pipeline(source, disassemblerStream, stringerStream, zlib.createGzip(), counter, destination)
 	} else {
-		await pipeline(source, disassembler, stringer, destination)
+		await pipeline(source, disassemblerStream, stringerStream, counter, destination)
 	}
+
+	return byteCount
 }
 
 /**

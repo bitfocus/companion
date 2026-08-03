@@ -190,18 +190,20 @@ describe('streamExport', () => {
 
 	test('json produces compact JSON that round-trips to the original', async () => {
 		const dest = new CollectingWritable()
-		await streamExport(sampleData, 'json', dest)
+		const byteCount = await streamExport(sampleData, 'json', dest)
 
 		const text = dest.collected.toString('utf-8')
 		expect(JSON.parse(text)).toEqual(sampleData)
 		// Compact output - no pretty-print indentation
 		expect(text).not.toContain('\n')
 		expect(text).not.toContain('\t')
+		// The returned count matches the bytes actually written
+		expect(byteCount).toBe(dest.collected.length)
 	})
 
 	test('json-gz produces gzip that gunzips back to the original', async () => {
 		const dest = new CollectingWritable()
-		await streamExport(sampleData, 'json-gz', dest)
+		const byteCount = await streamExport(sampleData, 'json-gz', dest)
 
 		const gz = dest.collected
 		// gzip magic bytes
@@ -210,5 +212,7 @@ describe('streamExport', () => {
 
 		const text = zlib.gunzipSync(gz).toString('utf-8')
 		expect(JSON.parse(text)).toEqual(sampleData)
+		// The returned count matches the compressed bytes written
+		expect(byteCount).toBe(gz.length)
 	})
 })
