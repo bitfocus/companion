@@ -1,4 +1,4 @@
-// ─── Popover ────────────────────────────────────────────────────────────────
+/* ─── Popover ──────────────────────────────────────────────────────────────── */
 
 .popover2-popup {
 	--popover2-bg: var(--cui-dropdown-bg, #fff);
@@ -14,13 +14,13 @@
 	--popover2-arrow-color: var(--cui-body-color, #000);
 }
 
-// ─── Positioner ──────────────────────────────────────────────────────────────
+/* ─── Positioner ─────────────────────────────────────────────────────────────── */
 
 .popover2-positioner {
 	z-index: 1030;
 }
 
-// ─── Popup panel ──────────────────────────────────────────────────────────────
+/* ─── Popup panel ─────────────────────────────────────────────────────────────── */
 
 .popover2-popup {
 	background-color: var(--popover2-bg);
@@ -53,7 +53,7 @@
 	}
 }
 
-// ─── Item ─────────────────────────────────────────────────────────────────────
+/* ─── Item ────────────────────────────────────────────────────────────────────── */
 
 .popover2-item {
 	display: block;
@@ -82,19 +82,19 @@
 	}
 }
 
-// ─── Split-button border-radius fix ─────────────────────────────────────────
-//
-// When a Popover.Trigger with a caret is the last button in a .btn-group,
-// CoreUI's btn-group rules can strip the right border-radius. Restore it.
+/* ─── Split-button border-radius fix ─────────────────────────────────────────
+ *
+ * When a Popover.Trigger with a caret is the last button in a .btn-group,
+ * CoreUI's btn-group rules can strip the right border-radius. Restore it. */
 
 .btn-group .popover2-trigger-caret {
 	border-top-right-radius: var(--cui-btn-border-radius, 0.375rem) !important;
 	border-bottom-right-radius: var(--cui-btn-border-radius, 0.375rem) !important;
 }
 
-// ─── Trigger caret ────────────────────────────────────────────────────────────
+/* ─── Trigger caret ──────────────────────────────────────────────────────────── */
 
-// ─── Arrow ───────────────────────────────────────────────────────────────────
+/* ─── Arrow ──────────────────────────────────────────────────────────────────── */
 
 .popover2-arrow {
 	width: 0;
@@ -126,7 +126,7 @@
 	}
 }
 
-// ─── Trigger caret ────────────────────────────────────────────────────────────
+/* ─── Trigger caret ──────────────────────────────────────────────────────────── */
 
 .popover2-trigger-caret::after {
 	display: inline-block;
