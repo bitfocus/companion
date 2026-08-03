@@ -123,9 +123,7 @@ export default defineConfig(({ mode }) => {
 			}),
 			reactPlugin(),
 			legacyPlugin({
-				// Tailwind v4 sets the browser floor: it relies on @property, color-mix() and oklch(),
-				// so Safari 16.4+, Chrome 111+ and Firefox 128+ are the oldest usable browsers. Start from
-				// browserslist defaults, then subtract anything below that floor.
+				// Browser floor: Safari 16.4+, Chrome 111+, Firefox 128+.
 				targets: [
 					'defaults',
 					'not dead',
@@ -135,7 +133,6 @@ export default defineConfig(({ mode }) => {
 					'not edge < 111',
 					'not firefox < 128',
 				],
-				// Usage-based polyfilling of the modern bundle for the remaining older-but-supported engines.
 				modernPolyfills: true,
 			}),
 			env.VITE_SENTRY_DSN
