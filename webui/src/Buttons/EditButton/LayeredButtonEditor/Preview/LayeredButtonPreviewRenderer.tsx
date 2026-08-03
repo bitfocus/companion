@@ -390,12 +390,11 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		() =>
 			drawStyle
 				? GraphicsLayeredButtonRenderer.computeContentBounds(
-						new DrawBounds(0, 0, canvasWidthPx, canvasHeightPx),
-
+						new DrawBounds(PAD_X, PAD_Y, width, height),
 						drawStyle.decoration
 					)
 				: null,
-		[drawStyle, canvasWidthPx, canvasHeightPx]
+		[drawStyle, width, height]
 	)
 
 	// Absolute pixel rects for every element, used both for click-to-select and for outlining a selection
