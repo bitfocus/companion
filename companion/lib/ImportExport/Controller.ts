@@ -11,6 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import type express from 'express'
+import workerPool from 'workerpool'
 import z from 'zod'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -41,6 +42,7 @@ import type { PageController } from '../Page/Controller.js'
 import { zodLocation } from '../Preview/Graphics.js'
 import type { AppInfo } from '../Registry.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
+import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -48,7 +50,8 @@ import { BackupController } from './Backups.js'
 import { FILE_VERSION, MAX_IMPORT_FILE_SIZE } from './Constants.js'
 import { ExportController } from './Export.js'
 import { ImportController } from './Import.js'
-import { parseImportBuffer } from './ParseImport.js'
+import { parseImportBuffer, type ParseImportResult } from './ParseImport.js'
+import type { ImportExportThreadMethods } from './ThreadMethods.js'
 import { find_smallest_grid_for_page } from './Util.js'
 
 export class ImportExportController {
@@ -66,16 +69,49 @@ export class ImportExportController {
 	readonly #exportController: ExportController
 	readonly #importController: ImportController
 
+	// JSON is parsed on the main thread (streamed), so the worker is only used for YAML - which has
+	// no streaming parser and would otherwise block the event loop. Lazy (minWorkers: 0) so no idle
+	// thread lingers: it is spawned on demand for a YAML import and terminated when idle.
+	#pool = workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'ImportExportThread.js'), {
+		minWorkers: 0,
+		maxWorkers: 1, // Only need one worker for import parsing
+		workerType: 'thread',
+		onCreateWorker: () => {
+			this.#logger.info('ImportExport worker created')
+			return undefined
+		},
+		onTerminateWorker: () => {
+			this.#logger.info('ImportExport worker terminated')
+		},
+	})
+
+	#poolExec = async <TKey extends keyof typeof ImportExportThreadMethods>(
+		key: TKey,
+		args: Parameters<(typeof ImportExportThreadMethods)[TKey]>,
+		transfer?: object[]
+	): Promise<ReturnType<(typeof ImportExportThreadMethods)[TKey]>> => {
+		return this.#pool.exec(key, args, {
+			transfer: transfer || [],
+		})
+	}
+
+	/** Parse YAML in the worker thread so a large synchronous parse never blocks the event loop. */
+	readonly #parseYamlInWorker = async (buffer: Buffer, gz: boolean): Promise<ParseImportResult> => {
+		// Zero-copy transfer of the bytes to the worker (the ArrayBuffer is detached here afterwards).
+		const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer
+		return this.#poolExec('parseImportData', [arrayBuffer, gz], [arrayBuffer])
+	}
+
 	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
 		async (_name, data, _userData, _updateProgress, sessionCtx) => {
-			// Parse on the main thread. JSON (plain or gz) is stream-parsed so it is never held as a
-			// single giant string and there is no worker->main IPC copy of the parsed object.
+			// JSON (plain or gz) is stream-parsed on the main thread - never held as a single giant
+			// string, and no worker->main IPC copy. YAML is parsed in the worker (see #parseYamlInWorker).
 			this.#logger.info(`Import: Parsing ${data.byteLength} bytes`)
 
 			const parseStartTime = performance.now()
-			const result = await parseImportBuffer(data)
+			const result = await parseImportBuffer(data, this.#parseYamlInWorker)
 			this.#logger.info(`Import: Parsing complete in ${(performance.now() - parseStartTime).toFixed(1)}ms`)
 
 			if (result.error) {

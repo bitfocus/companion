@@ -2,6 +2,15 @@ import zlib from 'node:zlib'
 import { describe, expect, test } from 'vitest'
 import yaml from 'yaml'
 import { parseImportBuffer, stripBomAndLooksLikeJson } from '../../lib/ImportExport/ParseImport.js'
+import { ImportExportThreadMethods } from '../../lib/ImportExport/ThreadMethods.js'
+
+// The real YAML path runs in a worker via ImportExportThreadMethods.parseImportData. Call it inline
+// (no worker spawn) so the JSON-vs-YAML routing is exercised end-to-end against the actual parser.
+const parseYaml = async (buffer: Buffer, gz: boolean) =>
+	ImportExportThreadMethods.parseImportData(
+		buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer,
+		gz
+	)
 
 // ── stripBomAndLooksLikeJson ──────────────────────────────────────────────────
 
@@ -37,59 +46,52 @@ describe('stripBomAndLooksLikeJson', () => {
 describe('parseImportBuffer', () => {
 	const sample = { type: 'full', version: 6, instances: { a: { label: 'A' } }, pages: { 1: { name: 'p1' } } }
 
-	test('parses plain JSON', async () => {
-		const result = await parseImportBuffer(Buffer.from(JSON.stringify(sample)))
+	test('parses plain JSON (main-thread streaming)', async () => {
+		const result = await parseImportBuffer(Buffer.from(JSON.stringify(sample)), parseYaml)
 		expect(result.error).toBeNull()
 		expect(result.data).toEqual(sample)
 	})
 
 	test('parses tab-indented (pretty) JSON', async () => {
-		const result = await parseImportBuffer(Buffer.from(JSON.stringify(sample, undefined, '\t')))
+		const result = await parseImportBuffer(Buffer.from(JSON.stringify(sample, undefined, '\t')), parseYaml)
 		expect(result.error).toBeNull()
 		expect(result.data).toEqual(sample)
 	})
 
-	test('parses gzipped JSON', async () => {
+	test('parses gzipped JSON (main-thread streaming)', async () => {
 		const gz = zlib.gzipSync(Buffer.from(JSON.stringify(sample)))
-		const result = await parseImportBuffer(gz)
+		const result = await parseImportBuffer(gz, parseYaml)
 		expect(result.error).toBeNull()
 		expect(result.data).toEqual(sample)
 	})
 
-	test('parses YAML', async () => {
-		const result = await parseImportBuffer(Buffer.from(yaml.stringify(sample)))
+	test('parses YAML (via the injected worker parser)', async () => {
+		const result = await parseImportBuffer(Buffer.from(yaml.stringify(sample)), parseYaml)
 		expect(result.error).toBeNull()
 		expect(result.data).toEqual(sample)
 	})
 
 	test('a `{`-starting YAML flow map (invalid JSON) falls back to YAML', async () => {
 		// Valid YAML flow-style map, but invalid JSON (unquoted keys/values)
-		const result = await parseImportBuffer(Buffer.from('{ host: localhost, port: 8080 }'))
+		const result = await parseImportBuffer(Buffer.from('{ host: localhost, port: 8080 }'), parseYaml)
 		expect(result.error).toBeNull()
 		expect(result.data).toEqual({ host: 'localhost', port: 8080 })
 	})
 
-	test('a JSON export round-trips through gzip and back to an object', async () => {
-		// Simulate an export -> import cycle for the gz format
-		const gz = zlib.gzipSync(Buffer.from(JSON.stringify(sample)))
-		const result = await parseImportBuffer(gz)
-		expect(result.data).toEqual(sample)
-	})
-
 	test('a non-object scalar is rejected', async () => {
-		const result = await parseImportBuffer(Buffer.from(JSON.stringify('just a string')))
+		const result = await parseImportBuffer(Buffer.from(JSON.stringify('just a string')), parseYaml)
 		expect(result.data).toBeNull()
 		expect(result.error).toBe('File is corrupted or unknown format')
 	})
 
 	test('an empty file is rejected', async () => {
-		const result = await parseImportBuffer(Buffer.from(''))
+		const result = await parseImportBuffer(Buffer.from(''), parseYaml)
 		expect(result.data).toBeNull()
 		expect(result.error).toBe('File is corrupted or unknown format')
 	})
 
 	test('malformed content is rejected', async () => {
-		const result = await parseImportBuffer(Buffer.from('this: is: not: valid: yaml: [ {'))
+		const result = await parseImportBuffer(Buffer.from('this: is: not: valid: yaml: [ {'), parseYaml)
 		expect(result.data).toBeNull()
 		expect(result.error).toBe('File is corrupted or unknown format')
 	})

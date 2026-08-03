@@ -11,21 +11,16 @@
 
 import { Readable, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
-import { promisify } from 'node:util'
 import zlib from 'node:zlib'
 import makeParser from 'stream-json'
 import Assembler from 'stream-json/Assembler.js'
-import yaml from 'yaml'
-import { MAX_DECOMPRESSED_FILE_SIZE, MAX_STREAMED_DECOMPRESSED_FILE_SIZE } from './Constants.js'
-
-const gunzipAsync = promisify(zlib.gunzip)
+import { MAX_STREAMED_DECOMPRESSED_FILE_SIZE } from './Constants.js'
 
 /** Size of the slices fed into the streaming parser, so it yields between chunks instead of
  * blocking the event loop on one giant buffer. */
 const IMPORT_CHUNK_SIZE = 1024 * 1024 // 1MiB
 
 const TOO_LARGE_MESSAGE = 'File is too large'
-const YAML_TOO_LARGE_MESSAGE = 'This file is too large to import as YAML. Please re-export it as JSON and try again.'
 const CORRUPTED_MESSAGE = 'File is corrupted or unknown format'
 
 export interface ParseImportResult {
@@ -33,6 +28,13 @@ export interface ParseImportResult {
 	/** The parsed object, or null if parsing failed */
 	data: unknown
 }
+
+/**
+ * Parses a buffer as YAML. Injected into {@link parseImportBuffer} so the caller can run it off the
+ * main thread: YAML has no streaming parser, and a large synchronous parse would block the event
+ * loop (timing out connections). `gz` indicates whether the bytes are gzip compressed.
+ */
+export type ParseYamlFn = (buffer: Buffer, gz: boolean) => Promise<ParseImportResult>
 
 /** Thrown by the byte-counting guard when the decompressed data exceeds the streaming size cap. */
 class StreamTooLargeError extends Error {}
@@ -67,11 +69,12 @@ export function stripBomAndLooksLikeJson(data: Buffer | string): boolean {
 /**
  * Parse an uploaded import file (already assembled into a Buffer on the main thread).
  *
- * JSON (plain or gz) is parsed by streaming, so it is never materialised as a single JS string and
- * is not bound by MAX_STRING_LENGTH. YAML is parsed natively (bounded by the string limit); a YAML
- * file too large to fit in a string is rejected with a clear message rather than crashing.
+ * JSON (plain or gz) is stream-parsed here on the main thread, so it is never materialised as a
+ * single JS string (not bound by MAX_STRING_LENGTH) and there is no worker->main IPC copy. YAML -
+ * which has no streaming parser - is handed to `parseYaml` (the caller runs it in a worker so a
+ * large synchronous parse does not block the event loop).
  */
-export async function parseImportBuffer(buffer: Buffer): Promise<ParseImportResult> {
+export async function parseImportBuffer(buffer: Buffer, parseYaml: ParseYamlFn): Promise<ParseImportResult> {
 	// gzip magic bytes - a cheap check that avoids sniffing the content itself.
 	const isGz = buffer.length >= 2 && buffer[0] === 0x1f && buffer[1] === 0x8b
 
@@ -82,8 +85,8 @@ export async function parseImportBuffer(buffer: Buffer): Promise<ParseImportResu
 			return validateParsedObject(data)
 		} catch (e) {
 			if (e instanceof StreamTooLargeError) return { error: TOO_LARGE_MESSAGE, data: null }
-			// Not valid JSON (e.g. a hand-gzipped YAML file, which we never produce). Fall back to YAML.
-			return parseYamlNative(buffer, true)
+			// Not valid JSON (e.g. a hand-gzipped YAML file, which we never produce). Parse as YAML.
+			return parseYaml(buffer, true)
 		}
 	}
 
@@ -94,12 +97,12 @@ export async function parseImportBuffer(buffer: Buffer): Promise<ParseImportResu
 			return validateParsedObject(data)
 		} catch (e) {
 			if (e instanceof StreamTooLargeError) return { error: TOO_LARGE_MESSAGE, data: null }
-			return parseYamlNative(buffer, false)
+			return parseYaml(buffer, false)
 		}
 	}
 
-	// Not JSON-looking - parse as YAML (bounded by the string limit).
-	return parseYamlNative(buffer, false)
+	// Not JSON-looking - parse as YAML.
+	return parseYaml(buffer, false)
 }
 
 /**
@@ -121,39 +124,9 @@ async function streamParseJson(buffer: Buffer, gz: boolean): Promise<unknown> {
 	return assembler.current
 }
 
-/** Parse a buffer as YAML natively. Requires the (optionally decompressed) data to fit in a single
- * JS string; anything larger is rejected with a clear message. */
-async function parseYamlNative(buffer: Buffer, gz: boolean): Promise<ParseImportResult> {
-	let dataStr: string
-	if (gz) {
-		try {
-			const unzipped = await gunzipAsync(buffer, { maxOutputLength: MAX_DECOMPRESSED_FILE_SIZE })
-			dataStr = unzipped.toString('utf-8')
-		} catch (e) {
-			if (isBufferTooLarge(e)) return { error: YAML_TOO_LARGE_MESSAGE, data: null }
-			return { error: CORRUPTED_MESSAGE, data: null }
-		}
-	} else {
-		// toString('utf-8') throws for a buffer larger than MAX_STRING_LENGTH; reject cleanly first.
-		if (buffer.length > MAX_DECOMPRESSED_FILE_SIZE) return { error: YAML_TOO_LARGE_MESSAGE, data: null }
-		dataStr = buffer.toString('utf-8')
-	}
-
-	let parsed: unknown
-	try {
-		// The YAML parser handles JSON too
-		parsed = yaml.parse(dataStr)
-	} catch {
-		return { error: CORRUPTED_MESSAGE, data: null }
-	}
-
-	return validateParsedObject(parsed)
-}
-
 /**
- * A valid export is always an object. Reject primitives/null - YAML leniently parses an empty file
- * as `null` and arbitrary text/binary as a scalar string, neither of which is a usable export and
- * would otherwise crash the downstream upgrade step.
+ * A valid export is always an object. Reject primitives/null - an empty or non-object JSON document
+ * is not a usable export and would otherwise crash the downstream upgrade step.
  */
 function validateParsedObject(parsed: unknown): ParseImportResult {
 	if (!parsed || typeof parsed !== 'object') return { error: CORRUPTED_MESSAGE, data: null }
@@ -184,8 +157,4 @@ function createByteCountingTransform(limit: number): Transform {
 			callback(null, chunk)
 		},
 	})
-}
-
-function isBufferTooLarge(e: unknown): boolean {
-	return !!e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === 'ERR_BUFFER_TOO_LARGE'
 }

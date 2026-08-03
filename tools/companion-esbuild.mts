@@ -34,6 +34,7 @@ export interface CompanionThreadEntry {
  */
 export const companionThreadEntryPoints: CompanionThreadEntry[] = [
 	{ in: 'lib/Graphics/Thread.ts', out: 'RenderThread', target: 'node26' },
+	{ in: 'lib/ImportExport/Thread.ts', out: 'ImportExportThread', target: 'node26' },
 	{ in: 'lib/Instance/Surface/Thread/Entrypoint.ts', out: 'SurfaceThread', target: 'node22' },
 	{ in: 'lib/Instance/Connection/Thread/Entrypoint.ts', out: 'ConnectionThread', target: 'node22' },
 ]
