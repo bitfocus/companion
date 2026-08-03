@@ -44,13 +44,14 @@ import type { AppInfo } from '../Registry.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { BackupController } from './Backups.js'
 import { FILE_VERSION, MAX_IMPORT_FILE_SIZE } from './Constants.js'
 import { ExportController } from './Export.js'
 import { ImportController } from './Import.js'
-import type { ImportExportThreadMethods, ParseImportDataResult } from './ThreadMethods.js'
+import { parseImportBuffer, type ParseImportResult } from './ParseImport.js'
+import type { ImportExportThreadMethods } from './ThreadMethods.js'
 import { find_smallest_grid_for_page } from './Util.js'
 
 export class ImportExportController {
@@ -68,8 +69,11 @@ export class ImportExportController {
 	readonly #exportController: ExportController
 	readonly #importController: ImportController
 
+	// JSON is parsed on the main thread (streamed), so the worker is only used for YAML - which has
+	// no streaming parser and would otherwise block the event loop. Lazy (minWorkers: 0) so no idle
+	// thread lingers: it is spawned on demand for a YAML import and terminated when idle.
 	#pool = workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'ImportExportThread.js'), {
-		minWorkers: 1,
+		minWorkers: 0,
 		maxWorkers: 1, // Only need one worker for import parsing
 		workerType: 'thread',
 		onCreateWorker: () => {
@@ -91,139 +95,133 @@ export class ImportExportController {
 		})
 	}
 
+	/** Parse YAML in the worker thread so a large synchronous parse never blocks the event loop. */
+	readonly #parseYamlInWorker = async (buffer: Buffer, gz: boolean): Promise<ParseImportResult> => {
+		// Transfer the bytes to the worker. When the Buffer owns its whole backing store - the usual
+		// case, since MultipartUploader uses Buffer.alloc - the ArrayBuffer is moved with no copy;
+		// otherwise fall back to copying the slice out. Either way `buffer` is not used again.
+		const ownsWholeBuffer = buffer.byteOffset === 0 && buffer.byteLength === buffer.buffer.byteLength
+		const arrayBuffer = ownsWholeBuffer
+			? (buffer.buffer as ArrayBuffer)
+			: (buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer)
+		return this.#poolExec('parseImportData', [arrayBuffer, gz], [arrayBuffer])
+	}
+
 	readonly #multipartUploader = new MultipartUploader<[string | null, ClientImportObject | null], null>(
 		'ImportExport/Controller',
 		MAX_IMPORT_FILE_SIZE,
 		async (_name, data, _userData, _updateProgress, sessionCtx) => {
-			// Extract ArrayBuffer from the Buffer for zero-copy transfer
-			// The buffer becomes detached/unusable in this thread after transfer
-			const arrayBuffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer
+			// JSON (plain or gz) is stream-parsed on the main thread - never held as a single giant
+			// string, and no worker->main IPC copy. YAML is parsed in the worker (see #parseYamlInWorker).
+			this.#logger.info(`Import: Parsing ${data.byteLength} bytes`)
 
-			const mainThreadSendTime = performance.now()
-			this.#logger.info(`Import: Transferring ${arrayBuffer.byteLength} bytes to worker`)
-
-			let result: ParseImportDataResult
-			try {
-				result = await this.#poolExec('parseImportData', [arrayBuffer], [arrayBuffer])
-			} catch (e) {
-				this.#logger.error(`Import: Worker error: ${e}`)
-				return ['Worker error during import parsing', null]
-			}
-
-			const mainThreadReceiveTime = performance.now()
-
-			// Log detailed timing information
-			const { timing } = result
-			const totalMainThreadTime = mainThreadReceiveTime - mainThreadSendTime
-			const workerTotalTime = timing.workerEndTime - timing.workerStartTime
-			const gunzipTime = timing.gunzipEndTime - timing.gunzipStartTime
-			const parseTime = timing.parseEndTime - timing.parseStartTime
-			const ipcOverhead = totalMainThreadTime - workerTotalTime
-
-			this.#logger.info(
-				`Import: Parsing complete. ` +
-					`Total: ${totalMainThreadTime.toFixed(1)}ms, ` +
-					`Worker: ${workerTotalTime.toFixed(1)}ms (gunzip: ${gunzipTime.toFixed(1)}ms, parse: ${parseTime.toFixed(1)}ms), ` +
-					`IPC overhead: ${ipcOverhead.toFixed(1)}ms`
-			)
+			const parseStartTime = performance.now()
+			const result = await parseImportBuffer(data, this.#parseYamlInWorker)
+			this.#logger.info(`Import: Parsing complete in ${(performance.now() - parseStartTime).toFixed(1)}ms`)
 
 			if (result.error) {
 				return [result.error, null]
 			}
 
-			const rawObject = result.data
-
-			let importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
-
-			// fix any db instances missing the upgradeIndex property
-			if (importObject.instances) {
-				for (const connectionConfig of Object.values(importObject.instances)) {
-					if (connectionConfig) {
-						connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
-					}
-				}
-			}
-
-			if (importObject.type === 'trigger_list') {
-				importObject = {
-					type: 'full',
-					version: FILE_VERSION,
-					companionBuild: importObject.companionBuild,
-					triggers: importObject.triggers,
-					triggerCollections: importObject.triggerCollections,
-					instances: importObject.instances,
-					connectionCollections: importObject.connectionCollections,
-				} satisfies ExportFullv6
-			}
-
-			// Store the object on the client
-			sessionCtx.pendingImport = {
-				object: importObject,
-				timeout: null, // TODO
-			}
-
-			const importContainsKey = (key: keyof (ExportFullv6 & ExportPageContentv6)): boolean =>
-				key in importObject && Object.keys(importObject[key as keyof typeof importObject] || {}).length > 0
-
-			// Build a minimal object to send back to the client
-			const clientObject: ClientImportObject = {
-				type: importObject.type,
-				connections: {},
-				buttons: 'pages' in importObject,
-				customVariables: importContainsKey('custom_variables'),
-				expressionVariables: importContainsKey('expressionVariables'),
-				surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
-				surfacesInstances: importContainsKey('surfaceInstances'),
-				surfacesRemote: importContainsKey('surfacesRemote'),
-				triggers: null,
-				imageLibrary: importContainsKey('imageLibrary'),
-			}
-
-			for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
-				if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
-
-				clientObject.connections[connectionId] = {
-					moduleId: connectionConfig.moduleId,
-					moduleVersionId: connectionConfig.moduleVersionId ?? null,
-					label: connectionConfig.label,
-					sortOrder: connectionConfig.sortOrder,
-				}
-			}
-
-			function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
-				return {
-					name: pageInfo.name,
-					gridSize: find_smallest_grid_for_page(pageInfo),
-				}
-			}
-
-			if (importObject.type === 'page') {
-				clientObject.page = simplifyPageForClient(importObject.page)
-				clientObject.oldPageNumber = importObject.oldPageNumber || 1
-			} else {
-				if (importObject.pages) {
-					clientObject.pages = Object.fromEntries(
-						Object.entries(importObject.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
-					)
-				}
-
-				// Simplify triggers
-				if (importObject.triggers && Object.keys(importObject.triggers).length > 0) {
-					clientObject.triggers = {}
-
-					for (const [id, trigger] of Object.entries(importObject.triggers)) {
-						clientObject.triggers[id] = {
-							name: trigger.options.name,
-						}
-					}
-				}
-			}
-
-			// rest is done from browser
-			return [null, clientObject]
+			return this.#buildClientImportObject(result.data, sessionCtx)
 		},
 		z.null()
 	)
+
+	/**
+	 * Upgrade a freshly-parsed import object, store it on the session as the pending import, and build
+	 * the minimal summary object sent back to the client.
+	 */
+	#buildClientImportObject(rawObject: unknown, sessionCtx: TrpcContext): [string | null, ClientImportObject | null] {
+		let importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
+
+		// fix any db instances missing the upgradeIndex property
+		if (importObject.instances) {
+			for (const connectionConfig of Object.values(importObject.instances)) {
+				if (connectionConfig) {
+					connectionConfig.lastUpgradeIndex = connectionConfig.lastUpgradeIndex ?? -1
+				}
+			}
+		}
+
+		if (importObject.type === 'trigger_list') {
+			importObject = {
+				type: 'full',
+				version: FILE_VERSION,
+				companionBuild: importObject.companionBuild,
+				triggers: importObject.triggers,
+				triggerCollections: importObject.triggerCollections,
+				instances: importObject.instances,
+				connectionCollections: importObject.connectionCollections,
+			} satisfies ExportFullv6
+		}
+
+		// Store the object on the client
+		sessionCtx.pendingImport = {
+			object: importObject,
+			timeout: null, // TODO
+		}
+
+		const importContainsKey = (key: keyof (ExportFullv6 & ExportPageContentv6)): boolean =>
+			key in importObject && Object.keys(importObject[key as keyof typeof importObject] || {}).length > 0
+
+		// Build a minimal object to send back to the client
+		const clientObject: ClientImportObject = {
+			type: importObject.type,
+			connections: {},
+			buttons: 'pages' in importObject,
+			customVariables: importContainsKey('custom_variables'),
+			expressionVariables: importContainsKey('expressionVariables'),
+			surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
+			surfacesInstances: importContainsKey('surfaceInstances'),
+			surfacesRemote: importContainsKey('surfacesRemote'),
+			triggers: null,
+			imageLibrary: importContainsKey('imageLibrary'),
+		}
+
+		for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
+			if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
+
+			clientObject.connections[connectionId] = {
+				moduleId: connectionConfig.moduleId,
+				moduleVersionId: connectionConfig.moduleVersionId ?? null,
+				label: connectionConfig.label,
+				sortOrder: connectionConfig.sortOrder,
+			}
+		}
+
+		function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
+			return {
+				name: pageInfo.name,
+				gridSize: find_smallest_grid_for_page(pageInfo),
+			}
+		}
+
+		if (importObject.type === 'page') {
+			clientObject.page = simplifyPageForClient(importObject.page)
+			clientObject.oldPageNumber = importObject.oldPageNumber || 1
+		} else {
+			if (importObject.pages) {
+				clientObject.pages = Object.fromEntries(
+					Object.entries(importObject.pages).map(([id, pageInfo]) => [id, simplifyPageForClient(pageInfo)])
+				)
+			}
+
+			// Simplify triggers
+			if (importObject.triggers && Object.keys(importObject.triggers).length > 0) {
+				clientObject.triggers = {}
+
+				for (const [id, trigger] of Object.entries(importObject.triggers)) {
+					clientObject.triggers[id] = {
+						name: trigger.options.name,
+					}
+				}
+			}
+		}
+
+		// rest is done from browser
+		return [null, clientObject]
+	}
 
 	/**
 	 * If there is a current import task that clients should be aware of, this will be set

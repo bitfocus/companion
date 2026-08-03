@@ -24,7 +24,7 @@ import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ExportController } from './Export.js'
-import { stringifyExport } from './Util.js'
+import { writeExportToFile } from './Util.js'
 
 /**
  * BackupController handles scheduled backups of companion app data.
@@ -432,8 +432,6 @@ export class BackupController {
 		format: ExportFormat
 	): Promise<PreviousBackupInfo> {
 		const data = this.#exportController.generateCustomExport(null)
-		const exportData = await stringifyExport(logger, data, `${filename}.companionconfig`, format)
-		if (!exportData) throw new Error('Failed to stringify export data')
 
 		const filePath = path.join(backupDir, `${filename}.companionconfig`)
 
@@ -441,11 +439,13 @@ export class BackupController {
 
 		logger.info(`Exporting to ${filePath}`)
 
-		await fs.writeFile(filePath, exportData.data)
+		// Writes atomically (temp file + rename), so a failure never leaves a partial backup at
+		// filePath. May throw ExportTooLargeError for an oversized YAML backup - surfaced to the caller.
+		const fileSize = await writeExportToFile(data, format, filePath)
 
 		return {
 			filePath,
-			fileSize: exportData.data.length,
+			fileSize,
 			createdAt: Date.now(),
 		}
 	}

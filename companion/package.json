@@ -89,6 +89,7 @@
     "selfsigned": "^5.5.0",
     "semver": "^7.8.5",
     "socketcluster-client": "^20.0.1",
+    "stream-json": "^3.5.0",
     "supports-color": "^11.0.0",
     "swagger-ui-dist": "^5.32.11",
     "systeminformation": "^5.33.1",

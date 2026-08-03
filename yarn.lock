@@ -10983,6 +10983,7 @@ __metadata:
     selfsigned: "npm:^5.5.0"
     semver: "npm:^7.8.5"
     socketcluster-client: "npm:^20.0.1"
+    stream-json: "npm:^3.5.0"
     supertest: "npm:^7.2.2"
     supports-color: "npm:^11.0.0"
     swagger-ui-dist: "npm:^5.32.11"
@@ -22665,6 +22666,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"stream-chain@npm:^4.2.5":
+  version: 4.2.5
+  resolution: "stream-chain@npm:4.2.5"
+  checksum: 10c0/c47e3895344e356d0aa641b08735c9f4cc7486a12275cef9549a114ea0e8348f75443f31f75053eefef0eee620a13bf6e9841479c64954b8d4dcc1a41a5511b8
+  languageName: node
+  linkType: hard
+
 "stream-demux@npm:^10.0.1":
   version: 10.0.1
   resolution: "stream-demux@npm:10.0.1"
@@ -22672,6 +22680,15 @@ __metadata:
     consumable-stream: "npm:^3.0.0"
     writable-consumable-stream: "npm:^4.1.0"
   checksum: 10c0/9c6b42af758560ceab49b0fdae169599cfca95fcd6f234b45fa3e1465751c2576ad65fd86e54bf5365fda6152955d06d6e6957c506b51460343c4801260402cf
+  languageName: node
+  linkType: hard
+
+"stream-json@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "stream-json@npm:3.5.0"
+  dependencies:
+    stream-chain: "npm:^4.2.5"
+  checksum: 10c0/208302af64f110b58bab68fa7a90439e5f7e7afe96cf2979b45b8259c738570aeee42affe2280cdcab1870c45db063ed0e93e71353bfdfe393157da71ca7ef14
   languageName: node
   linkType: hard
 

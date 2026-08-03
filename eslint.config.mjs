@@ -120,7 +120,9 @@ export default [
 			'n/no-missing-import': [
 				'error',
 				{
-					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest'],
+					// stream-json's `exports` map only exposes `./*` -> `./src/*.js`; the resolver rewrites
+					// the `.js` subpath imports to `.ts` and fails to find a source, so allow the package.
+					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest', 'stream-json'],
 				},
 			],
 			'n/prefer-node-protocol': 'error',
