@@ -91,12 +91,15 @@ export async function streamExport(
 }
 
 /**
- * Serialise an export and write it to `filePath` atomically: the data is written to a uniquely-named
- * temporary sibling and only renamed into place once the write completes. A failure (a broken stream,
- * a full disk, ...) therefore never leaves a partial or corrupt file at `filePath`.
+ * Serialise an export and write it to `filePath` atomically and without clobbering: the data is
+ * written to a uniquely-named temporary sibling and only published once the write completes, so a
+ * failure (a broken stream, a full disk, ...) never leaves a partial or corrupt file at `filePath`,
+ * and a file already present at `filePath` (e.g. a backup written concurrently under the same
+ * generated name) is never overwritten.
  *
  * @returns the number of bytes written.
  * @throws {ExportTooLargeError} when an oversized export cannot be serialised in the requested format.
+ * @throws an `EEXIST` error when `filePath` already exists.
  */
 export async function writeExportToFile(
 	data: SomeExportv6,
@@ -117,11 +120,30 @@ export async function writeExportToFile(
 			fileSize = await streamExport(data, prepared.format, createWriteStream(tempPath))
 		}
 
-		await fs.rename(tempPath, filePath)
+		await publishFileNoClobber(tempPath, filePath)
 		return fileSize
-	} catch (e) {
-		// Best-effort cleanup of the partial temp file; never mask the original error.
+	} finally {
+		// Always drop the temp name: on success the content lives on at filePath (via the hard link);
+		// on any failure this removes the partial/orphaned temp file. Best-effort - never mask the error.
 		await fs.rm(tempPath, { force: true }).catch(() => {})
+	}
+}
+
+/**
+ * Publish a completed temp file to its final path without clobbering an existing file. `fs.link` is
+ * atomic and fails with `EEXIST` if `filePath` already exists, so a file written concurrently under
+ * the same name is never overwritten (`fs.rename` would silently clobber it). Filesystems without
+ * hard-link support fall back to `rename`, where that race is unavoidable.
+ */
+async function publishFileNoClobber(tempPath: string, filePath: string): Promise<void> {
+	try {
+		await fs.link(tempPath, filePath)
+	} catch (e) {
+		const code = (e as NodeJS.ErrnoException)?.code
+		if (code === 'EPERM' || code === 'ENOSYS' || code === 'ENOTSUP' || code === 'EOPNOTSUPP') {
+			await fs.rename(tempPath, filePath)
+			return
+		}
 		throw e
 	}
 }

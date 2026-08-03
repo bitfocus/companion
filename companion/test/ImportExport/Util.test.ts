@@ -265,4 +265,32 @@ describe('writeExportToFile', () => {
 		// No target file and no leftover temp files in the (existing) tmp dir
 		expect(await fs.readdir(tmpDir)).toEqual([])
 	})
+
+	test('does not clobber an existing file at the target path', async () => {
+		const filePath = path.join(tmpDir, 'out.companionconfig')
+		await fs.writeFile(filePath, 'EXISTING')
+
+		await expect(writeExportToFile(sampleData, 'json', filePath)).rejects.toThrow()
+
+		// The existing file is untouched and no temp file is left behind
+		expect(await fs.readFile(filePath, 'utf-8')).toBe('EXISTING')
+		expect(await fs.readdir(tmpDir)).toEqual(['out.companionconfig'])
+	})
+
+	test('concurrent writes to the same path: one wins, the other fails, content stays intact', async () => {
+		const filePath = path.join(tmpDir, 'out.companionconfig')
+
+		const results = await Promise.allSettled([
+			writeExportToFile({ ...sampleData, marker: 'A' }, 'json', filePath),
+			writeExportToFile({ ...sampleData, marker: 'B' }, 'json', filePath),
+		])
+
+		expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
+		expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1)
+
+		// The file holds exactly one of the two payloads, fully intact, with no leftover temp files
+		const contents = JSON.parse(await fs.readFile(filePath, 'utf-8'))
+		expect(['A', 'B']).toContain(contents.marker)
+		expect(await fs.readdir(tmpDir)).toEqual(['out.companionconfig'])
+	})
 })
