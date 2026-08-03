@@ -660,7 +660,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', false, 'http')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', -1, 'http')
 			})
 
 			test('bad page', async () => {
@@ -757,7 +757,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', true, 'http')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', 1, 'http')
 			})
 
 			test('bad page', async () => {

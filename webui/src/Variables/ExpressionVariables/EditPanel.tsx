@@ -27,7 +27,11 @@ import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/
 import { EditableEntityList } from '~/Controls/Components/EntityList'
 import { useEntityListReorderMonitor } from '~/Controls/Components/useEntityListReorderMonitor.js'
 import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
-import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore'
+import {
+	EntityListActionContext,
+	useLocalVariablesStore,
+	type LocalVariablesStore,
+} from '~/Controls/LocalVariablesStore'
 import { findAllEntityIdsDeep } from '~/Controls/Util.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useControlConfig } from '~/Hooks/useControlConfig'
@@ -198,7 +202,7 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={null}
 				previewStatusOnly
-				insideActionsList={false}
+				actionContext={EntityListActionContext.NotActions}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`feedbacks_${controlId}_entities`}
@@ -309,7 +313,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 				readonly={false}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix="local"
-				insideActionsList={false}
+				actionContext={EntityListActionContext.NotActions}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`localVariables_${controlId}_entities`}

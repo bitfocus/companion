@@ -202,7 +202,22 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 // The 'ipc' channel is retained only for the disconnect signal below.
 const channel = new FramedChannel(dataSocket, (msg) => ipcWrapper.receivedMessage(msg as any))
 
-process.on('disconnect', () => process.exit())
+// Safety net: if the parent dies/crashes without sending 'destroy', the IPC channel
+// closes. Since we now ignore signals, this is the only thing that reaps us — attempt a
+// best-effort surface reset, then exit. Hard-bounded so a hung destroy still exits.
+let disconnecting = false
+process.on('disconnect', () => {
+	if (disconnecting) return
+	disconnecting = true
+	const forceExit = setTimeout(() => process.exit(1), 2000)
+	forceExit.unref?.()
+	Promise.resolve()
+		.then(async () => {
+			if (instance && instanceInitialized) await instance.destroy()
+		})
+		.catch(() => {})
+		.finally(() => process.exit(1))
+})
 
 registerLoggingSink((source, level, message) => {
 	ipcWrapper.sendWithNoCb('log-message', {

@@ -272,6 +272,7 @@ export class ControlTrigger
 			.runActions(actions, {
 				surfaceId: this.controlId,
 				location: undefined,
+				rotationDelta: null,
 			})
 			.catch((e) => {
 				this.logger.error(`Failed to run actions: ${e.message}`)
