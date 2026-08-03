@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
@@ -115,16 +116,26 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		plugins: [
+			tailwindcss(),
 			tanstackRouter({
 				virtualRouteConfig: './src/routes/-routes.ts',
 				addExtensions: true,
 			}),
 			reactPlugin(),
 			legacyPlugin({
-				targets: ['defaults', 'not IE 11', 'safari >= 12.1'],
-				// Safari 12.1 / old Edge support ES modules, so they load the MODERN bundle, not the legacy one.
-				// Without this, the modern bundle ships to them with no polyfills (missing Object.fromEntries,
-				// String.replaceAll, Array.at, etc). true = usage-based detection against the modern targets.
+				// Tailwind v4 sets the browser floor: it relies on @property, color-mix() and oklch(),
+				// so Safari 16.4+, Chrome 111+ and Firefox 128+ are the oldest usable browsers. Start from
+				// browserslist defaults, then subtract anything below that floor.
+				targets: [
+					'defaults',
+					'not dead',
+					'not safari < 16.4',
+					'not ios_saf < 16.4',
+					'not chrome < 111',
+					'not edge < 111',
+					'not firefox < 128',
+				],
+				// Usage-based polyfilling of the modern bundle for the remaining older-but-supported engines.
 				modernPolyfills: true,
 			}),
 			env.VITE_SENTRY_DSN

@@ -1,0 +1,22 @@
+/*
+ * Tailwind v4 utilities, available for new and migrated UI.
+ *
+ * Precedence: everything Tailwind emits is confined to its own cascade layers (theme, utilities).
+ * The existing CoreUI / app styles are unlayered, and an unlayered rule always outranks a layered
+ * one regardless of specificity — so vendor styling wins over a Tailwind utility while the UI is
+ * migrated off CoreUI. Cascade layers are supported by every browser we target (Safari 16.4+).
+ *
+ * Preflight (Tailwind's base reset) is intentionally NOT imported: the app ships its own reset
+ * (CoreUI reboot). Importing theme + utilities directly is the documented v4 way to opt out of it.
+ */
+@layer theme, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Scan the app source for class names. Test files are excluded so their comments/fixtures don't
+   trip the class extractor (e.g. a `[lineHeight:0]` mention in a test comment). */
+@source '../index.html';
+@source './**/*.{ts,tsx}';
+@source not './**/*.{test,spec}.{ts,tsx}';
+@source not './**/__tests__/**';

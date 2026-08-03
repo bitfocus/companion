@@ -115,7 +115,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					)}
 				</HeaderNav>
 
-				<HeaderNav className="ml-auto header-right">
+				<HeaderNav className="header-right">
 					{canLock && (
 						<Button color="primary" className="help-toggle" onClick={() => setLocked(true)} title="Lock Admin UI">
 							<FontAwesomeIcon icon={faLock} className="fa-lg" />

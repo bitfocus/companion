@@ -1,6 +1,7 @@
 import './Resources/Sentry.js'
 import '@fontsource/roboto'
 import '@fontsource/fira-code'
+import './tailwind.css' // Tailwind utilities live in cascade layers; unlayered CoreUI outranks them (see tailwind.css)
 import './App.scss'
 import './Resources/Constants.js'
 import alignmentImg from '~/scss/img/alignment.png'
