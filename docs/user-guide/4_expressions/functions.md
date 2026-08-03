@@ -128,37 +128,37 @@ eg `pow(2, 10)` gives `1024`
 
 **sin(v)**
 
-Calculate the sine of a number in radians.
+Takes an angle in radians and calculates the sine of the angle.
 
 eg `sin(0)` gives `0`
 
 **cos(v)**
 
-Calculate the cosine of a number in radians.
+Takes an angle in radians and calculate the cosine of the angle.
 
 eg `cos(0)` gives `1`
 
 **tan(v)**
 
-Calculate the tangent of a number in radians.
+Takes an angle in radians and calculate the tangent of the angle.
 
 eg `tan(0)` gives `0`
 
 **asin(v)**
 
-Calculate the inverse sine of a number in radians.
+Takes a number and calculates the inverse sine angle of the number in radians.
 
 eg `asin(0)` gives `0`
 
 **acos(v)**
 
-Calculate the inverse cosine of a number in radians.
+Takes a number and calculates the inverse cosine angle of the number in radians.
 
 eg `acos(0)` gives `PI / 2`
 
 **atan(v)**
 
-Calculate the inverse tangent of a number in radians.
+Takes a number and calculates the inverse tangent angle of the number in radians.
 
 eg `atan(0)` gives `0`
 
