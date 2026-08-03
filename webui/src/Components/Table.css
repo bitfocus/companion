@@ -7,15 +7,15 @@
 .table {
 	width: 100%;
 	margin: 0;
-	color: #111;
-	border-color: #ddd;
+	color: var(--color-text);
+	border-color: var(--color-border);
 	border-collapse: collapse;
 	vertical-align: top;
 
 	/* th & td. The child combinator keeps styles from leaking into nested tables. */
 	> :not(caption) > * > * {
 		padding: 0.5rem;
-		border-bottom: 1px solid #ddd;
+		border-bottom: 1px solid var(--color-border);
 	}
 
 	> tbody {
@@ -42,12 +42,12 @@
 
 /* Framed, horizontally-scrollable-on-small-screens table (the default companion look). */
 .table-responsive-sm {
-	border: 1px solid #ddd;
+	border: 1px solid var(--color-border);
 	border-collapse: collapse;
 	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
 
 	th {
-		background-color: #f0f0f0;
+		background-color: var(--color-surface-muted);
 		padding-top: 6px;
 		padding-bottom: 6px;
 
@@ -78,7 +78,7 @@
 .table-tight {
 	> :not(caption) > * > * {
 		padding: 5px 10px;
-		border-bottom: 1px solid #ddd;
+		border-bottom: 1px solid var(--color-border);
 	}
 }
 
@@ -91,7 +91,7 @@
 	}
 
 	> :not(caption) > * > td {
-		border-bottom: 1px solid #dddfe2;
+		border-bottom: 1px solid var(--color-border-muted);
 		padding-top: 5px;
 		padding-bottom: 7px;
 		background: none;
@@ -108,7 +108,7 @@
 /* Drag-to-reorder handle cell */
 .table .td-reorder {
 	cursor: ns-resize;
-	background-color: #f7f7f7;
+	background-color: var(--color-surface-alt);
 
 	padding-right: 10px;
 	padding-left: 10px;
@@ -118,7 +118,7 @@
 	width: 0;
 
 	svg {
-		color: #333;
+		color: var(--color-icon);
 	}
 }
 

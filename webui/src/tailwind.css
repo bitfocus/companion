@@ -17,6 +17,30 @@
 	--color-input-bg: #ffffff;
 	--color-input-readonly-bg: #eeeeee;
 	--color-input-invalid: red;
+
+	/* Surfaces */
+	--color-surface: #fff;
+	--color-surface-muted: #f0f0f0;
+	--color-surface-alt: #f7f7f7;
+
+	/* Borders */
+	--color-border: #ddd;
+	--color-border-muted: #dddfe2;
+	--color-border-strong: #999;
+
+	/* Text */
+	--color-text: #111;
+	--color-text-strong: #000;
+	--color-icon: #333;
+	--color-text-disabled: #ccc;
+
+	/* Text on dark/coloured backgrounds */
+	--color-on-dark: #fff;
+	--color-on-dark-muted: rgba(255, 255, 255, 0.75);
+
+	/* Primary tints */
+	--color-primary-soft: #ea818a;
+	--color-primary-softer: #f2b3b9;
 }
 
 @source '../index.html';

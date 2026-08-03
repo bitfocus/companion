@@ -54,12 +54,12 @@
 		&[data-focused] {
 			outline: 0;
 			box-shadow:
-				0 0 0 1px #333,
+				0 0 0 1px var(--color-icon),
 				0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
 		}
 
 		&:active {
-			background-color: #f2b3b9;
+			background-color: var(--color-primary-softer);
 		}
 
 		&[data-disabled] {

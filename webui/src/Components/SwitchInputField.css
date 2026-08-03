@@ -70,7 +70,7 @@
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
-		background-color: #fff;
+		background-color: var(--color-surface);
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 		transition: left 0.15s ease-in-out;
 

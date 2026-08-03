@@ -24,7 +24,7 @@
 	align-content: center;
 
 	&.disabled {
-		color: #ccc;
+		color: var(--color-text-disabled);
 	}
 
 	/* Column label for horizontal forms: vertical padding aligns the label with the adjacent input
@@ -52,7 +52,7 @@
 		display: inline-flex;
 		align-items: center;
 
-		background-color: #ddd;
+		background-color: var(--color-border);
 		border-radius: 100px; /* as much as possible */
 
 		margin-left: 3px;
