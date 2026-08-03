@@ -1,5 +1,3 @@
-// ─── Accordion ───────────────────────────────────────────────────────────────
-
 .accordion2 {
 	--accordion2-trigger-bg: var(--cui-tertiary-bg, #f8f9fa);
 	--accordion2-trigger-border: var(--popover2-border-color, var(--cui-border-color, rgba(0, 0, 21, 0.175)));

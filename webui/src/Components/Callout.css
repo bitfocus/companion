@@ -8,33 +8,33 @@
 }
 
 .callout2-primary {
-	--callout2-border-left-color: var(--cui-primary);
+	--callout2-border-left-color: var(--color-primary);
 }
 
 .callout2-secondary {
-	--callout2-border-left-color: var(--cui-secondary);
+	--callout2-border-left-color: var(--color-secondary);
 }
 
 .callout2-success {
-	--callout2-border-left-color: var(--cui-success);
+	--callout2-border-left-color: var(--color-success);
 }
 
 .callout2-danger {
-	--callout2-border-left-color: var(--cui-danger);
+	--callout2-border-left-color: var(--color-danger);
 }
 
 .callout2-warning {
-	--callout2-border-left-color: var(--cui-warning);
+	--callout2-border-left-color: var(--color-warning);
 }
 
 .callout2-info {
-	--callout2-border-left-color: var(--cui-info);
+	--callout2-border-left-color: var(--color-info);
 }
 
 .callout2-light {
-	--callout2-border-left-color: var(--cui-light);
+	--callout2-border-left-color: var(--color-light);
 }
 
 .callout2-dark {
-	--callout2-border-left-color: var(--cui-dark);
+	--callout2-border-left-color: var(--color-dark);
 }

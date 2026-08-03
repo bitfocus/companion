@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Collapsible } from '@base-ui/react/collapsible'
+import './Collapse.css'
 import classNames from 'classnames'
 import type { HTMLAttributes } from 'react'
 

@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Accordion as BaseAccordion } from '@base-ui/react/accordion'
+import './Accordion.css'
 import classNames from 'classnames'
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
 	--progress-bg: var(--cui-secondary-bg, #e9ecef);
 	--progress-border-radius: var(--cui-border-radius, 0.375rem);
 	--progress-bar-color: #fff;
-	--progress-bar-bg: var(--cui-primary, #d50215);
+	--progress-bar-bg: var(--color-primary);
 	--progress-bar-transition: width 0.6s ease;
 
 	display: flex;
