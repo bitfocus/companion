@@ -1,6 +1,6 @@
 import { toJS } from 'mobx'
 import type { JsonValue } from 'type-fest'
-import { ParseExpression, ResolveExpression } from '@companion-app/shared/Expressions.js'
+import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
 import {
 	convertExpressionOptionsWithoutParsing,
 	type ExpressionableOptionsObject,
@@ -102,35 +102,12 @@ export function parseIsVisibleFn(option: SomeCompanionInputField): IsVisibleFn |
 				return (options: CompanionOptionValues) => fn(options, userData)
 			}
 			case 'expression': {
-				const expression = ParseExpression(option.isVisibleUi.fn)
+				const compiled = getCompiledIsVisibleExpressionFn(option.isVisibleUi)
+				if (!compiled) return null
 				const userData = deepFreeze(toJS(option.isVisibleUi.data))
 				return (optionsRaw: CompanionOptionValues, getOptionValue?: (id: string) => JsonValue | undefined) => {
-					try {
-						const options = toJS(optionsRaw)
-						const val = ResolveExpression(expression, {
-							// Config-match expressions should be trivial - keep the budget tight
-							maxOperations: 1000,
-							maxCallDepth: 16,
-
-							getVariableValue: (props) => {
-								if (props.label === 'this' || props.label === 'options') {
-									return getOptionValue ? getOptionValue(props.name) : options[props.name]
-								} else if (props.label === 'data') {
-									return userData[props.name]
-								} else {
-									throw new Error(`Unknown variable "${props.variableId}"`)
-								}
-							},
-							parseVariables: null, // Not supported here
-							blink: undefined, // Not supported here
-
-							defaultTimezone: undefined, // no timezone context
-						})
-						return !!val && val !== 'false' && val !== '0'
-					} catch (e) {
-						console.error('Failed to resolve expression', e)
-						return true
-					}
+					const options = toJS(optionsRaw)
+					return compiled(getOptionValue ?? ((name) => options[name]), userData)
 				}
 			}
 			default:

@@ -168,6 +168,7 @@ export class ControlTrigger
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
@@ -271,6 +272,7 @@ export class ControlTrigger
 			.runActions(actions, {
 				surfaceId: this.controlId,
 				location: undefined,
+				rotationDelta: null,
 			})
 			.catch((e) => {
 				this.logger.error(`Failed to run actions: ${e.message}`)

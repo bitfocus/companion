@@ -13,9 +13,14 @@ import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { useOptionalEntityEditorContext } from './Components/EntityEditorContext.js'
 import type { InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
-import { DeferredParsingContextVariables, type LocalVariablesStore } from './LocalVariablesStore.js'
+import {
+	DeferredParsingContextVariables,
+	EntityListActionContext,
+	type LocalVariablesStore,
+} from './LocalVariablesStore.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 
 export interface OptionsInputControlProps {
@@ -43,6 +48,8 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	localVariablesStore,
 	features,
 }: Readonly<OptionsInputControlProps>): React.JSX.Element {
+	const actionContext = useOptionalEntityEditorContext()?.actionContext ?? EntityListActionContext.NotActions
+
 	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
 	const checkValid = useCallback((value: JsonValue | undefined) => validateInputValue(option, value).validity, [option])
 
@@ -53,11 +60,15 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			const contextVars = option.contextVariableResolution ? DeferredParsingContextVariables : []
 			const baseLocalVariables =
 				features?.local || option.deferParsing
-					? (localVariablesStore?.getOptions(
+					? (localVariablesStore?.getOptions({
 							entityType,
-							option.useVariables === CompanionFieldVariablesSupport.InternalParser,
-							isLocatedInGrid
-						) ?? [])
+							// A deferred-parsing field (e.g. set-value actions) is parsed by the internal parser at
+							// execution time, so it sees the `this:*` execution context just like an InternalParser field.
+							internalParser:
+								option.useVariables === CompanionFieldVariablesSupport.InternalParser || !!option.deferParsing,
+							isLocatedInGrid,
+							actionContext,
+						}) ?? [])
 					: []
 			const allLocalVariables = [...baseLocalVariables, ...contextVars]
 
@@ -76,7 +87,12 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			)
 		}
 		case 'expression': {
-			const localVariables = localVariablesStore?.getOptions(entityType, true, isLocatedInGrid)
+			const localVariables = localVariablesStore?.getOptions({
+				entityType,
+				internalParser: true,
+				isLocatedInGrid,
+				actionContext,
+			})
 
 			return (
 				<ExpressionInputField

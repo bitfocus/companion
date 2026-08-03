@@ -1,6 +1,6 @@
 import type { ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { DataLegacyCache } from './Legacy/Cache.js'
-import { DataStoreBase } from './StoreBase.js'
+import { DataStoreBase, type OperationObserver } from './StoreBase.js'
 
 export interface DataCacheDefaultTable {
 	cloud_servers: Record<string, unknown>
@@ -25,9 +25,10 @@ export interface DataCacheDefaultTable {
 export class DataCache extends DataStoreBase<DataCacheDefaultTable> {
 	/**
 	 * @param configDir - the root config directory
+	 * @param operationObserver - sink for per-operation timings
 	 */
-	constructor(configDir: string) {
-		super(configDir, 'cache', 'main', 'Data/Cache')
+	constructor(configDir: string, operationObserver: OperationObserver) {
+		super(configDir, 'cache', 'main', 'Data/Cache', operationObserver)
 
 		this.startSQLite()
 	}

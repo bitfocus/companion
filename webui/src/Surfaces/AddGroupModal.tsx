@@ -98,7 +98,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 										name="name"
 										children={(field) => (
 											<>
-												<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 													Name
 													<InlineHelpIcon className="ms-1">
 														Display name for the group. This can be changed later
@@ -131,7 +131,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 										}}
 										children={(field) => (
 											<>
-												<FormLabel htmlFor={idFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={idFieldId} sm={4} column="sm">
 													Id
 													<InlineHelpIcon className="ms-1">
 														Id for the group, this is used for internal references. This cannot be changed once set.

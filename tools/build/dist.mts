@@ -139,6 +139,10 @@ for (const name of copyPrebuildsFromDependencies) {
 await fs.mkdirp('dist/assets/Fonts')
 await fs.copy(path.join('assets', 'Fonts'), 'dist/assets/Fonts')
 
+// Copy Swagger UI browser assets
+await fs.copy(path.join('node_modules', 'swagger-ui-dist'), 'dist/assets/swagger-ui')
+await fs.copy(path.join('assets', 'swagger-ui'), 'dist/assets/swagger-ui')
+
 // Do this last so webpack can find resources (esp. package.json)
 // (note currently this isn't needed since we've disabled URL processing, but in the future this may help...)
 // Build application

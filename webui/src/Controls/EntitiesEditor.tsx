@@ -4,8 +4,8 @@ import { useMemo, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
+	EntityModelType,
 	stringifySocketEntityLocation,
-	type EntityModelType,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -15,7 +15,7 @@ import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEnti
 import { EntityEditorContextProvider } from './Components/EntityEditorContext.js'
 import { EditableEntityList } from './Components/EntityList.js'
 import { useEntityListReorderMonitor } from './Components/useEntityListReorderMonitor.js'
-import type { LocalVariablesStore } from './LocalVariablesStore.js'
+import { EntityListActionContext, type LocalVariablesStore } from './LocalVariablesStore.js'
 import { findAllEntityIdsDeep } from './Util.js'
 
 interface ControlEntitiesEditorProps {
@@ -55,6 +55,16 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 
 	const entityIds = useMemo(() => findAllEntityIdsDeep(entities ?? []), [entities])
 
+	// Classify this list's relationship to an action set, which gates the `this:*` execution-context
+	// variables (surface_id for any action, delta only for rotary). Propagated via context to feedbacks
+	// nested under these actions too.
+	const actionContext = useMemo((): EntityListActionContext => {
+		if (entityType !== EntityModelType.Action) return EntityListActionContext.NotActions
+		if (typeof listId === 'object' && (listId.setId === 'rotate_left' || listId.setId === 'rotate_right'))
+			return EntityListActionContext.RotaryActions
+		return EntityListActionContext.Actions
+	}, [entityType, listId])
+
 	useEntityListReorderMonitor(controlId, entityType, serviceFactory)
 
 	return (
@@ -66,6 +76,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 				readonly={false}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
+				actionContext={actionContext}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}

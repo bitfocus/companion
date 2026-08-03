@@ -1,7 +1,7 @@
 import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useId, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton.js'
@@ -30,11 +30,17 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 }: ImageLibraryEditorProps) {
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
+	const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	// Get image info from the store
 	const imageInfo = selectedImageName ? imageLibrary.getImage(selectedImageName) : null
+
+	// Reset the measured dimensions whenever the image (or its data) changes
+	useEffect(() => {
+		setDimensions(null)
+	}, [selectedImageName, imageInfo?.checksum])
 
 	const deleteMutation = useMutationExt(trpc.imageLibrary.delete.mutationOptions())
 	const { uploadImageFile } = useImageLibraryUpload()
@@ -127,6 +133,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		return new Date(timestamp).toLocaleString()
 	}
 
+	const imageNameFieldId = useId()
 	const descriptionFieldId = useId()
 	const backgroundColorFieldId = useId()
 
@@ -176,10 +183,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			</div>
 
 			<Form className="row mb-3">
-				<div className="form-label col-sm-4 col-form-label col-form-label-sm">Name</div>
+				<FormLabel htmlFor={imageNameFieldId} sm={4} column="sm">
+					Name
+				</FormLabel>
 				<Grid.Col sm={8} className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center">
-						<span className="font-monospace">{imageInfo.name}</span>
+						<span id={imageNameFieldId} className="font-monospace">
+							{imageInfo.name}
+						</span>
 						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
 					</div>
 
@@ -191,7 +202,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</Grid.Col>
 			</Form>
 			<Form className="row mb-3">
-				<FormLabel htmlFor={descriptionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={descriptionFieldId} sm={4} column="sm">
 					Description
 				</FormLabel>
 				<Grid.Col sm={8}>
@@ -203,7 +214,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</Grid.Col>
 			</Form>
 			<Form className="row mb-3">
-				<FormLabel htmlFor={backgroundColorFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+				<FormLabel htmlFor={backgroundColorFieldId} sm={4} column="sm">
 					Preview background
 				</FormLabel>
 				<Grid.Col sm={8} className="d-flex align-items-center">
@@ -225,6 +236,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					type="original"
 					checksum={imageInfo.checksum}
 					alt={imageInfo.name}
+					onLoad={(width, height) => setDimensions({ width, height })}
 				/>
 			</ImagePreviewBox>
 
@@ -234,6 +246,14 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						<span className="metadata-label">Type:</span>
 						<span>{imageInfo.mimeType}</span>
 					</div>
+					{dimensions && (
+						<div className="metadata-row">
+							<span className="metadata-label">Dimensions:</span>
+							<span>
+								{dimensions.width} × {dimensions.height} px
+							</span>
+						</div>
+					)}
 					<div className="metadata-row">
 						<span className="metadata-label">Modified:</span>
 						<span>{formatDate(imageInfo.modifiedAt)}</span>

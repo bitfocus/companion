@@ -12,9 +12,40 @@ import {
 	parseStringParamWithBooleanFallback,
 	rgb,
 	rotateResolution,
+	transformButtonImage,
 	translateRotation,
 	uint8ArrayToBuffer,
 } from '../../lib/Resources/Util.js'
+
+/** Build a solid width×height straight-alpha RGBA buffer. */
+function solidRgba(width: number, height: number, r: number, g: number, b: number, a: number): Buffer {
+	const buf = Buffer.alloc(width * height * 4)
+	for (let i = 0; i < buf.length; i += 4) {
+		buf[i] = r
+		buf[i + 1] = g
+		buf[i + 2] = b
+		buf[i + 3] = a
+	}
+	return buf
+}
+
+/** Build a width×height RGBA buffer from row-major [r,g,b,a] pixels. */
+function rgbaFromPixels(width: number, height: number, pixels: Array<[number, number, number, number]>): Buffer {
+	const buf = Buffer.alloc(width * height * 4)
+	pixels.forEach(([r, g, b, a], p) => {
+		buf[p * 4] = r
+		buf[p * 4 + 1] = g
+		buf[p * 4 + 2] = b
+		buf[p * 4 + 3] = a
+	})
+	return buf
+}
+
+/** Read the channels of pixel (x,y) from a packed output buffer. */
+function pixelAt(buf: Buffer, width: number, channels: number, x: number, y: number): number[] {
+	const i = (y * width + x) * channels
+	return Array.from(buf.subarray(i, i + channels))
+}
 
 // ── rgb ───────────────────────────────────────────────────────────────────────
 
@@ -540,5 +571,122 @@ describe('lazy', () => {
 		const get = lazy(() => obj)
 		expect(get()).toBe(obj)
 		expect(get()).toBe(obj)
+	})
+})
+
+// ── transformButtonImage ────────────────────────────────────────────────────────
+
+describe('transformButtonImage', () => {
+	describe('pixel format & alpha', () => {
+		// A 50% pixel: straight alpha keeps RGB at full, premultiplied-over-black halves it.
+		test('rgb output flattens straight alpha over black', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 128), 2, 2, null, 2, 2, 'rgb')
+			expect(out.length).toBe(2 * 2 * 3)
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual([128, 0, 0])
+		})
+
+		test('rgba output preserves straight alpha (transparency is kept)', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 128), 2, 2, null, 2, 2, 'rgba')
+			expect(out.length).toBe(2 * 2 * 4)
+			expect(pixelAt(out, 2, 4, 0, 0)).toEqual([255, 0, 0, 128])
+		})
+
+		test('bgr output flattens over black and swaps channel order', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 128), 2, 2, null, 2, 2, 'bgr')
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual([0, 0, 128]) // B, G, R
+		})
+
+		test('bgra output swaps channel order and preserves alpha', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 128), 2, 2, null, 2, 2, 'bgra')
+			expect(pixelAt(out, 2, 4, 0, 0)).toEqual([0, 0, 255, 128]) // B, G, R, A
+		})
+
+		test('opaque pixels are unchanged in rgb', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 10, 20, 30, 255), 2, 2, null, 2, 2, 'rgb')
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual([10, 20, 30])
+		})
+
+		test('fully transparent pixels become black in rgb', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 0), 2, 2, null, 2, 2, 'rgb')
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual([0, 0, 0])
+		})
+
+		test('a mid-alpha colour is flattened proportionally', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 128, 0, 128), 2, 2, null, 2, 2, 'rgb')
+			const [r, g, b] = pixelAt(out, 2, 3, 0, 0)
+			// (255,128,0) * 128/255 ≈ (128, 64, 0)
+			expect(r).toBeGreaterThanOrEqual(127)
+			expect(r).toBeLessThanOrEqual(129)
+			expect(g).toBeGreaterThanOrEqual(63)
+			expect(g).toBeLessThanOrEqual(65)
+			expect(b).toBe(0)
+		})
+	})
+
+	describe('scaling', () => {
+		test('upscales a solid colour to the target size', async () => {
+			const out = await transformButtonImage(solidRgba(1, 1, 255, 0, 0, 255), 1, 1, null, 4, 4, 'rgb')
+			expect(out.length).toBe(4 * 4 * 3)
+			expect(pixelAt(out, 4, 3, 0, 0)).toEqual([255, 0, 0])
+			expect(pixelAt(out, 4, 3, 3, 3)).toEqual([255, 0, 0])
+		})
+
+		test('downscales a solid colour to the target size', async () => {
+			const out = await transformButtonImage(solidRgba(4, 4, 0, 255, 0, 255), 4, 4, null, 2, 2, 'rgb')
+			expect(out.length).toBe(2 * 2 * 3)
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual([0, 255, 0])
+		})
+
+		test('always outputs targetWidth×targetHeight regardless of input size', async () => {
+			const out = await transformButtonImage(solidRgba(3, 3, 1, 2, 3, 255), 3, 3, null, 5, 7, 'rgb')
+			expect(out.length).toBe(5 * 7 * 3)
+		})
+	})
+
+	describe('letterbox padding', () => {
+		test('pads a square render into a wider target with black bars', async () => {
+			// 'Fit' keeps the 2×2 square (limited by height 2), centred in the 4×2 target → 1px black bar each side
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 255), 2, 2, null, 4, 2, 'rgb')
+			expect(pixelAt(out, 4, 3, 0, 0)).toEqual([0, 0, 0]) // left bar
+			expect(pixelAt(out, 4, 3, 1, 0)).toEqual([255, 0, 0]) // content
+			expect(pixelAt(out, 4, 3, 3, 0)).toEqual([0, 0, 0]) // right bar
+		})
+
+		test('letterbox padding is opaque black even in rgba', async () => {
+			const out = await transformButtonImage(solidRgba(2, 2, 255, 0, 0, 255), 2, 2, null, 4, 2, 'rgba')
+			expect(pixelAt(out, 4, 4, 0, 0)).toEqual([0, 0, 0, 255])
+		})
+	})
+
+	describe('rotation', () => {
+		// Four distinct opaque pixels, row-major: (0,0)=A (1,0)=B / (0,1)=C (1,1)=D
+		const A: [number, number, number, number] = [10, 0, 0, 255]
+		const B: [number, number, number, number] = [0, 20, 0, 255]
+		const C: [number, number, number, number] = [0, 0, 30, 255]
+		const D: [number, number, number, number] = [40, 40, 40, 255]
+		const grid = () => rgbaFromPixels(2, 2, [A, B, C, D])
+		const rgb3 = (p: [number, number, number, number]) => [p[0], p[1], p[2]]
+
+		test('no rotation leaves the image as-is', async () => {
+			const out = await transformButtonImage(grid(), 2, 2, null, 2, 2, 'rgb')
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual(rgb3(A))
+			expect(pixelAt(out, 2, 3, 1, 1)).toEqual(rgb3(D))
+		})
+
+		test('180 rotates the image', async () => {
+			const out = await transformButtonImage(grid(), 2, 2, 180, 2, 2, 'rgb')
+			expect(pixelAt(out, 2, 3, 0, 0)).toEqual(rgb3(D))
+			expect(pixelAt(out, 2, 3, 1, 0)).toEqual(rgb3(C))
+			expect(pixelAt(out, 2, 3, 0, 1)).toEqual(rgb3(B))
+			expect(pixelAt(out, 2, 3, 1, 1)).toEqual(rgb3(A))
+		})
+
+		test('90 and -90 rotate in opposite directions', async () => {
+			const cw = await transformButtonImage(grid(), 2, 2, 90, 2, 2, 'rgb')
+			const ccw = await transformButtonImage(grid(), 2, 2, -90, 2, 2, 'rgb')
+			// top-left of the two must differ (opposite rotations), and neither equals the un-rotated A
+			expect(pixelAt(cw, 2, 3, 0, 0)).not.toEqual(pixelAt(ccw, 2, 3, 0, 0))
+			expect(pixelAt(cw, 2, 3, 0, 0)).not.toEqual(rgb3(A))
+		})
 	})
 })

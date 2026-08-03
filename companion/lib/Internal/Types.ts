@@ -35,6 +35,15 @@ export interface ActionForInternalExecution {
 	rawEntity: ControlEntityInstance
 }
 
+/**
+ * Passed down the feedback read path when a feedback that is a child of an action is evaluated live at
+ * execution time. The parser carries the running action's extra `$(this:*)` overrides, which the eagerly
+ * cached value cannot see. A `null` context instead means "use the cached value".
+ */
+export interface FeedbackExecutionContext {
+	readonly parser: VariablesAndExpressionParser
+}
+
 export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
 
 /**
@@ -83,12 +92,17 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	/**
 	 * Run a single internal action
+	 * @param createFeedbackContext Factory for a {@link FeedbackExecutionContext}, used to lazily evaluate
+	 * any internal feedbacks which are children of this action. Each call builds a fresh parser reflecting
+	 * the current variable state, so callers that re-check conditions (e.g. `logic_while`) must call it
+	 * again for each evaluation.
 	 * @returns Whether the action was handled
 	 */
 	executeAction?(
 		action: ActionForInternalExecution,
 		extras: RunActionExtras,
-		parser: VariablesAndExpressionParser
+		parser: VariablesAndExpressionParser,
+		createFeedbackContext: () => FeedbackExecutionContext
 	): Promise<InternalActionResult> | InternalActionResult
 
 	/**

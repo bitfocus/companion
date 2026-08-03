@@ -1,5 +1,8 @@
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 
@@ -38,7 +41,7 @@ export interface IControlStore {
 	/**
 	 * Dispatch a rotate event to a control
 	 */
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
 
 	/**
 	 * Abort all delayed actions, optionally keeping one exception signal alive
@@ -47,7 +50,8 @@ export interface IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser
 
 	/**

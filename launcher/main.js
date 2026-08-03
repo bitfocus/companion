@@ -10,6 +10,7 @@ import Store from 'electron-store'
 import fileStreamRotator from 'file-stream-rotator'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
+import { parse as parsePlist } from 'plist'
 import stripAnsi from 'strip-ansi'
 import systeminformation from 'systeminformation'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
@@ -24,15 +25,13 @@ let version_warning = null
 if (process.platform === 'darwin') {
 	try {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const plist = require('plist')
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const semver = require('semver')
 
 		const minimumVersion = '13.5'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 
 		/** @type {any} */
-		const versionInfo = plist.parse(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
+		const versionInfo = parsePlist(fs.readFileSync('/System/Library/CoreServices/SystemVersion.plist', 'utf8'))
 		const productVersion = semver.coerce(versionInfo.ProductVersion)
 
 		if (productVersion && !supportedVersions.test(productVersion)) {
@@ -290,6 +289,38 @@ if (!lock) {
 
 	let restartCounter = 0
 
+	const ignoredDirNames = new Set([
+		'node_modules',
+		'.git',
+		'.yarn',
+		'.cache',
+		'.turbo',
+		'.github',
+		'.vscode',
+		'.idea',
+		'coverage',
+		'.nyc_output',
+	])
+	const watchedFileExtensions = ['.mjs', '.js', '.cjs', '.json']
+
+	/**
+	 * @param {string} filePath
+	 * @param {import('fs').Stats | undefined} stats
+	 * @returns {boolean}
+	 */
+	function isIgnoredPath(filePath, stats) {
+		if (filePath.split(/[\\/]/).some((segment) => ignoredDirNames.has(segment))) {
+			return true
+		}
+
+		const looksLikeFile = stats?.isFile() ?? path.extname(filePath) !== ''
+		if (looksLikeFile) {
+			return !watchedFileExtensions.some((ext) => filePath.endsWith(ext))
+		}
+
+		return false
+	}
+
 	/** @type {ReturnType<typeof chokidar.watch> | null} */
 	let watcher = null
 	/** @type {boolean} */
@@ -317,21 +348,7 @@ if (!lock) {
 					watcher = chokidar.watch('.', {
 						ignoreInitial: true,
 						cwd: devModulesPath,
-						ignored: (path, stats) => {
-							if (
-								stats?.isFile() &&
-								!path.endsWith('.mjs') &&
-								!path.endsWith('.js') &&
-								!path.endsWith('.cjs') &&
-								!path.endsWith('.json')
-							) {
-								return true
-							}
-							if (path.includes('node_modules')) {
-								return true
-							}
-							return false
-						},
+						ignored: isIgnoredPath,
 					})
 
 					watcher.on('error', (error) => {

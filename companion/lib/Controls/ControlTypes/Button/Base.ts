@@ -101,6 +101,7 @@ export abstract class ButtonControlRuntimeBase<
 				processManager: deps.instance.processManager,
 				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
+				renderClock: deps.renderClock,
 				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
@@ -314,6 +315,7 @@ export abstract class ButtonControlRuntimeBase<
 						.runActions(actions, {
 							surfaceId,
 							location,
+							rotationDelta: null,
 						})
 						.catch((e) => {
 							this.logger.error(`action execution failed: ${e}`)
@@ -347,10 +349,11 @@ export abstract class ButtonControlRuntimeBase<
 
 	/**
 	 * Execute a rotate of this control
-	 * @param rightward Whether the control was rotated to the right
+	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(rightward: boolean, surfaceId: string | undefined): void {
+	rotateControl(delta: number, surfaceId: string | undefined): void {
+		const rightward = delta > 0
 		const actions = this.entities.getActionsToExecuteForSet(rightward ? 'rotate_right' : 'rotate_left')
 
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
@@ -360,6 +363,7 @@ export abstract class ButtonControlRuntimeBase<
 			.runActions(actions, {
 				surfaceId,
 				location,
+				rotationDelta: delta,
 			})
 			.catch((e) => {
 				this.logger.error(`action execution failed: ${e}`)

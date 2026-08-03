@@ -4,7 +4,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
-import { defineConfig, loadEnv } from 'vite'
+import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 import { normalizeBasePath } from '../tools/webui-dev-utils'
 
 const buildFile = fs
@@ -54,6 +54,9 @@ export default defineConfig(({ mode }) => {
 		},
 		resolve: {
 			tsconfigPaths: true,
+			// Resolve @companion-app/shared to its raw TypeScript sources (no separate `tsc` emit).
+			// Setting conditions replaces the defaults, so re-add them.
+			conditions: ['companion:source', ...defaultClientConditions],
 		},
 		server: {
 			port: parseInt(env.COMPANION_UI_PORT || '', 10) || undefined,
@@ -71,6 +74,11 @@ export default defineConfig(({ mode }) => {
 					rewrite: (path) => path.slice(normalizedBase.length),
 				},
 				[`${normalizedBase}/int`]: {
+					target: `http://${upstreamUrl}`,
+					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
+					rewrite: (path) => path.slice(normalizedBase.length),
+				},
+				[`${normalizedBase}/api`]: {
 					target: `http://${upstreamUrl}`,
 					xfwd: true, // forward X-Forwarded-For so companion sees the real client ip (not the vite proxy)
 					rewrite: (path) => path.slice(normalizedBase.length),
@@ -114,6 +122,10 @@ export default defineConfig(({ mode }) => {
 			reactPlugin(),
 			legacyPlugin({
 				targets: ['defaults', 'not IE 11', 'safari >= 12.1'],
+				// Safari 12.1 / old Edge support ES modules, so they load the MODERN bundle, not the legacy one.
+				// Without this, the modern bundle ships to them with no polyfills (missing Object.fromEntries,
+				// String.replaceAll, Array.at, etc). true = usage-based detection against the modern targets.
+				modernPolyfills: true,
 			}),
 			env.VITE_SENTRY_DSN
 				? sentryVitePlugin({

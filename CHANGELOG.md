@@ -1,5 +1,20 @@
 # Bitfocus Companion
 
+## Companion v5.0.2 - Release Notes
+
+### 🐞 BUG FIXES
+
+- make element type clearer in list #4320
+- make element editor remember which element was last selected (by type and instance number) #4324
+- button element editor DND behaving weirdly
+- canvas element not showing as selected
+- bad default values for layered preset definitions
+- emulator long presses not possible #4322
+- Event On Sunrise/Sunset wrong time after DST switch #3737 #3754
+- allow double CC prefix for rosstalk commands #4323
+- enable tcp no-delay for satellite and tcp clients
+- local variable name copy button alignment
+
 ## Companion v5.0.1 - Release Notes
 
 ### 🐞 BUG FIXES

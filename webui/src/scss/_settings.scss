@@ -17,35 +17,6 @@
 	cursor: pointer;
 }
 
-.table {
-	border-width: 0;
-	padding: 0;
-	margin: 0;
-	box-shadow: none;
-}
-
-.table-settings td,
-.table-settings th {
-	padding: 0;
-	margin: 0;
-	padding-left: 5px;
-}
-
-.table-settings td {
-	border-width: 0;
-	border-bottom: 1px solid #dddfe2;
-	padding-top: 5px;
-	padding-bottom: 7px;
-	background: none;
-
-	// make sure text input isn't squeezed because the first column is set to 100% in UserConfigSwitchRow.tsx
-	input[type='text'],
-	input[type='number'],
-	.uc-button {
-		min-width: 6em;
-	}
-}
-
 .settings-grid-card {
 	color: inherit;
 	display: block;

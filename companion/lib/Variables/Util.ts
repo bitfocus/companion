@@ -9,7 +9,7 @@
  * this program.
  */
 
-import type { ReadonlyDeep } from 'type-fest'
+import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import {
 	ParseExpression,
@@ -17,6 +17,7 @@ import {
 	type GetVariableValueProps,
 	type ResolveExpressionLimits,
 } from '@companion-app/shared/Expressions.js'
+import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -122,6 +123,55 @@ export function visitEntityOptionsForVariables<T>(
 	}
 
 	return result
+}
+
+/**
+ * Determine which of an entity's option fields are currently hidden by their `isVisible` logic.
+ *
+ * Mirrors the frontend's restricted visibility path (`useOptionsVisibility`): visibility depends
+ * only on the raw values of sibling options that cannot themselves be expressions
+ * (`disableAutoExpression`), plus the static `isVisibleData`. It never resolves expressions or
+ * runtime variables, so it can be computed directly from the raw options object. Evaluation
+ * fails open (treated as visible) on any error, so this can only ever suppress spurious
+ * validation - never hide a field that should be validated.
+ *
+ * Only meaningful for definitions with `optionsSupportExpressions` - legacy definitions pass
+ * their fields through without validation, so there are no errors to suppress.
+ */
+export function computeHiddenEntityOptionFields(
+	definition: ClientEntityDefinition,
+	options: ExpressionableOptionsObject
+): Set<string> {
+	const hiddenFields = new Set<string>()
+
+	if (!definition.optionsSupportExpressions) return hiddenFields
+
+	const allowedReferences = new Set<string>()
+	for (const field of definition.options) {
+		if (field.disableAutoExpression) allowedReferences.add(field.id)
+	}
+
+	const restrictedGetOptionValue = (optionId: string): JsonValue | undefined => {
+		if (!allowedReferences.has(optionId)) {
+			throw new Error(`Access to option "${optionId}" not allowed, as it is either unknown or can be an expression.`)
+		}
+		return options[optionId]?.value
+	}
+
+	for (const field of definition.options) {
+		if (!field.isVisibleUi) continue
+
+		// The function form is a stringified module function and must never run on the backend;
+		// leave those fields visible (validated as before).
+		const compiled = getCompiledIsVisibleExpressionFn(field.isVisibleUi)
+		if (!compiled) continue
+
+		if (!compiled(restrictedGetOptionValue, field.isVisibleUi.data)) {
+			hiddenFields.add(field.id)
+		}
+	}
+
+	return hiddenFields
 }
 
 export function parseVariablesInString(
@@ -268,9 +318,11 @@ export function executeExpression(
 	requiredType: string | undefined,
 	cachedVariableValues: VariableValueCache,
 	defaultTimezone: string | undefined,
-	limits?: ResolveExpressionLimits
+	limits?: ResolveExpressionLimits,
+	allowClockSensitive = true
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
+	let clockSensitive = false
 
 	try {
 		const getVariableValue = (props: GetVariableValueProps): VariableValue | undefined => {
@@ -346,19 +398,28 @@ export function executeExpression(
 			},
 
 			getVariableValue,
-			blink(interval: any, dutyCycle: any): 0 | 1 {
-				// Validate the interval
-				const int = Number(interval)
-				if (isNaN(int) || int <= 0) return 0
+			oscillate: {
+				// The library applies the phase offset and waveform shaping; we only supply where we are
+				// in the cycle and how finely we can tell (Companion redraws at 10Hz, so 100ms).
+				getCycleFraction: (periodMs: number): number => {
+					if (!allowClockSensitive) throw new Error('oscillate() is not supported in this context')
 
-				const dutyRaw = Number(dutyCycle)
-				const duty = isNaN(dutyRaw) ? 0.5 : dutyRaw
-
+					clockSensitive = true
+					// Snap to the nearest 100ms grid to produce even steps regardless of when
+					// within the tick this is called. Aligned to the unix epoch so separate
+					// evaluations of the same period stay in sync.
+					const quantizedNow = Math.round(Date.now() / 100) * 100
+					return (quantizedNow % periodMs) / periodMs
+				},
+				granularityMs: 100,
+			},
+			blink: (intervalMs: number, dutyCycle: number): boolean => {
+				// The library has already validated/clamped intervalMs (>= 100) and dutyCycle (0-1).
 				// Fetch the name of the variable to watch
-				const variableName = blinker.trackDependencyOnInterval(int, duty)
-				if (!variableName) return 0
+				const variableName = blinker.trackDependencyOnInterval(intervalMs, dutyCycle)
+				if (!variableName) return false
 
-				return getVariableValue(variableName) ? 1 : 0
+				return !!getVariableValue(variableName)
 			},
 			parseVariables: (str: string, undefinedValue?: string): string => {
 				const result = parseVariablesInString(
@@ -399,6 +460,7 @@ export function executeExpression(
 				ok: false,
 				error: 'Unexpected return type',
 				variableIds: referencedVariableIds,
+				clockSensitive,
 			}
 		}
 
@@ -406,12 +468,14 @@ export function executeExpression(
 			ok: true,
 			value,
 			variableIds: referencedVariableIds,
+			clockSensitive,
 		}
 	} catch (e) {
 		return {
 			ok: false,
 			error: stringifyError(e, true) || 'Unknown error',
 			variableIds: referencedVariableIds,
+			clockSensitive,
 		}
 	}
 }

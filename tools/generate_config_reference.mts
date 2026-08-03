@@ -7,9 +7,9 @@
  * This keeps the docs from drifting: the config.yaml keys, defaults, cli flags and env vars are
  * exactly what the server accepts and the config-tool reads/writes. Run via `yarn build:config-reference`.
  *
- * Note: this imports config-tool/lib/presentation.ts, which resolves `@companion-app/shared` to its
- * built `dist`, so shared-lib must be built first (run `yarn build:ts`). It is intentionally NOT part
- * of `postinstall` for that reason.
+ * Note: this imports config-tool/lib/presentation.ts, which imports `@companion-app/shared`. The
+ * `yarn build:config-reference` script passes `--conditions=companion:source` so it resolves to the
+ * TS sources - no `yarn build:ts` needed first.
  */
 import { fileURLToPath } from 'url'
 import { $, fs, usePowerShell } from 'zx'

@@ -21,6 +21,7 @@ import { Button } from '~/Components/Button'
 import { Callout } from '~/Components/Callout'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { Grid } from '~/Components/Grid'
+import { Table } from '~/Components/Table.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -241,7 +242,7 @@ export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: I
 				Otherwise, new connections will be created for any connections left unlinked. You can also choose to ignore
 				certain connections if they are not needed.
 			</p>
-			<table className="table table-responsive-sm">
+			<Table>
 				<thead>
 					<tr>
 						<th>Behavior</th>
@@ -265,7 +266,7 @@ export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: I
 						/>
 					))}
 				</tbody>
-			</table>
+			</Table>
 		</div>
 	)
 }

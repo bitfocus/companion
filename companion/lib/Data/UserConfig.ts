@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import selfsigned from 'selfsigned'
 import z from 'zod'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
@@ -68,6 +69,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		http_api_enabled: true,
 		http_legacy_api_enabled: false,
 
+		rest_api_enabled: false,
 		prometheus_enabled: false,
 		prometheus_token: '',
 
@@ -121,6 +123,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		installName: '',
 		mdns_announcements_enabled: true,
 		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
+		default_export_format: ExportFormatDefault,
 
 		timezone: '',
 

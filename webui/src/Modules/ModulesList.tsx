@@ -17,6 +17,7 @@ import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { TabArea } from '~/Components/TabArea.js'
+import { Table } from '~/Components/Table.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
@@ -191,7 +192,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
 
 			<div className="scrollable-content">
-				<table className="table-tight table-responsive-sm">
+				<Table className="table-tight">
 					<thead>
 						<tr>
 							<th colSpan={3}>
@@ -252,7 +253,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							</tr>
 						)}
 					</tbody>
-				</table>
+				</Table>
 			</div>
 		</div>
 	)

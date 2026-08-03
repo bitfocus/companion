@@ -12,7 +12,8 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 				z.object({
 					controlId: z.string(),
 					type: z.string(),
-					index: z.number().nullable(),
+					// Insert the new element immediately above this one in the layer list; null appends to the top
+					afterElementId: z.string().nullable(),
 				})
 			)
 			.mutation(async ({ input }) => {
@@ -21,7 +22,7 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 
 				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
 
-				return control.layeredStyleAddElement(input.type, input.index)
+				return control.layeredStyleAddElement(input.type, input.afterElementId)
 			}),
 
 		duplicateElement: publicProcedure

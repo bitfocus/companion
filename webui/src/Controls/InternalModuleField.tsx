@@ -18,7 +18,7 @@ import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 import { useComputed } from '~/Resources/util.js'
 import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import type { LocalVariablesStore } from './LocalVariablesStore'
+import { EntityListActionContext, type LocalVariablesStore } from './LocalVariablesStore'
 
 export function InternalModuleField(
 	id: string | undefined,
@@ -375,7 +375,14 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 	const { variablesStore } = useContext(RootAppStoreContext)
 
 	const baseVariableDefinitions = variablesStore.allVariableDefinitions.get()
-	const localVariableDefinitions = supportsLocal ? localVariablesStore?.getOptions(null, true, false) : undefined
+	const localVariableDefinitions = supportsLocal
+		? localVariablesStore?.getOptions({
+				entityType: null,
+				internalParser: true,
+				isLocatedInGrid: false,
+				actionContext: EntityListActionContext.NotActions,
+			})
+		: undefined
 	const choices = useComputed(() => {
 		const choices: Array<DropdownChoice> = []
 

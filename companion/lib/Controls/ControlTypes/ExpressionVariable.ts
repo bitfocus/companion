@@ -108,6 +108,7 @@ export class ControlExpressionVariable
 			processManager: deps.instance.processManager,
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
+			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
@@ -337,7 +338,7 @@ export class ControlExpressionVariable
 			if (!this.#expressionVariableNameMap.isExpressionVariableActive(this.controlId)) return
 
 			this.deps.variableValues.setVariableValues('expression', [
-				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue() },
+				{ id: name, value: this.entities.getRootEntity()?.getResolvedFeedbackValue(null) },
 			])
 		},
 		{

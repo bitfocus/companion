@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } fro
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
+import { Form } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { ImageNameInput } from './ImageNameInput'
@@ -116,21 +117,29 @@ export const ImageAddModal = observer(
 							<Modal.Header closeButton>
 								<Modal.Title>Add New Image</Modal.Title>
 							</Modal.Header>
-							<Modal.Body>
-								<ImageNameInput
-									value={localValue}
-									onChange={handleValueChange}
-									disabled={isCreating}
-									errorMessage={errorMessage}
-									helpText={helpText}
-								/>
-							</Modal.Body>
-							<Modal.Footer>
-								<Modal.Close disabled={isCreating}>Cancel</Modal.Close>
-								<Button color="primary" onClick={handleCreate} disabled={!canCreate || isCreating}>
-									{isCreating ? 'Creating...' : 'Create'}
-								</Button>
-							</Modal.Footer>
+							<Form
+								onSubmit={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+									handleCreate()
+								}}
+							>
+								<Modal.Body>
+									<ImageNameInput
+										value={localValue}
+										onChange={handleValueChange}
+										disabled={isCreating}
+										errorMessage={errorMessage}
+										helpText={helpText}
+									/>
+								</Modal.Body>
+								<Modal.Footer>
+									<Modal.Close disabled={isCreating}>Cancel</Modal.Close>
+									<Button color="primary" type="submit" disabled={!canCreate || isCreating}>
+										{isCreating ? 'Creating...' : 'Create'}
+									</Button>
+								</Modal.Footer>
+							</Form>
 						</Modal.Popup>
 					</Modal.Viewport>
 				</Modal.Portal>

@@ -108,7 +108,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										name="name"
 										children={(field) => (
 											<>
-												<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 													Name
 													<InlineHelpIcon className="ms-1">
 														Display name for the emulator. This can be changed later
@@ -143,7 +143,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										}}
 										children={(field) => (
 											<>
-												<FormLabel htmlFor={idFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={idFieldId} sm={4} column="sm">
 													Id
 													<InlineHelpIcon className="ms-1">
 														Id for the emulator, this is used in the url and internally. This cannot be changed once
@@ -183,7 +183,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										}}
 										children={(field) => (
 											<>
-												<FormLabel htmlFor={rowsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={rowsFieldId} sm={4} column="sm">
 													Rows
 												</FormLabel>
 												<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -219,7 +219,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										}}
 										children={(field) => (
 											<>
-												<FormLabel htmlFor={columnsFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+												<FormLabel htmlFor={columnsFieldId} sm={4} column="sm">
 													Columns
 												</FormLabel>
 												<Grid.Col className={`fieldtype-textinput`} sm={8}>

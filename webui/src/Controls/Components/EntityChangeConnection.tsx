@@ -53,7 +53,7 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 
 	return (
 		<>
-			<FormLabel htmlFor={connectionFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={connectionFieldId} sm={4} column="sm">
 				Connection
 			</FormLabel>
 			<Grid.Col sm={8}>

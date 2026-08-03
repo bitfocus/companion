@@ -42,7 +42,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		this.#host = host
 	}
 
-	addElement(type: string, index: number | null): string {
+	addElement(type: string, afterElementId: string | null): string {
 		let newElement: SomeButtonGraphicsElement
 
 		// Check if this is a composite element (contains semicolon)
@@ -79,8 +79,13 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 			newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
 		}
 
-		if (typeof index === 'number' && index >= 0 && index < this.drawElementsList.length) {
-			this.drawElementsList.splice(index, 0, newElement)
+		// Insert immediately above the given element. Falls back to the top of the
+		// top-level stack when there is no such element (e.g. nothing selected).
+		const insertAfter = afterElementId
+			? this.#findElementIndexAndParent(this.drawElementsList, null, afterElementId)
+			: null
+		if (insertAfter) {
+			insertAfter.currentParentElementArray.splice(insertAfter.indexOfElement + 1, 0, newElement)
 		} else {
 			this.drawElementsList.push(newElement)
 		}

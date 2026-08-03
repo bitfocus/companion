@@ -13,7 +13,10 @@ import { stringifyVariableValue, type VariableValues } from '@companion-app/shar
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
-import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlStepsRuntimeManager } from './ControlActionSetAndStepsManager.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
@@ -137,14 +140,18 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	 * A button lives on the grid, so its parser gets the full `this:*` context from its location, plus
 	 * its page's `$(page:x)` variables.
 	 */
-	createVariablesAndExpressionParser(overrideVariableValues: VariableValues | null): VariablesAndExpressionParser {
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
+	): VariablesAndExpressionParser {
 		const location = this.#pageStore.getLocationOfControlId(this.controlId)
 
 		return this.variableValues.createVariablesAndExpressionParser(
 			location,
 			this.getLocalVariableEntities(),
 			overrideVariableValues,
-			location ? this.#getPageVariableEntities(location.pageNumber) : null
+			location ? this.#getPageVariableEntities(location.pageNumber) : null,
+			options
 		)
 	}
 
@@ -233,7 +240,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			// Special case to flatten the 'conditionalise existing feedbacks'
 			if (feedback.connectionId === 'internal' && feedback.definitionId === 'logic_conditionalise_advanced') {
 				// Check if the condition (all 'children' boolean feedbacks) is true
-				if (!feedback.getBooleanFeedbackValue()) return
+				if (!feedback.getBooleanFeedbackValue(null)) return
 
 				// Get the children to treat as overrides
 				const children = feedback.getChildren('feedbacks')
@@ -255,7 +262,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 				case FeedbackEntitySubType.Boolean:
 					// For boolean values, we only care about the true case
 					// And the override stores the value to be applied
-					if (feedback.getBooleanFeedbackValue()) {
+					if (feedback.getBooleanFeedbackValue(null)) {
 						for (const override of overrides) {
 							pushOverride(override.elementId, override.elementProperty, override.override)
 						}

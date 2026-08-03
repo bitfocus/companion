@@ -5,7 +5,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 import { useLocalStorage, useResizeObserver } from 'usehooks-ts'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
-import type { ResolveButtonStylePropertiesConfig } from '@companion-app/shared/Graphics/Util.js'
+import { DrawBounds, type ResolveButtonStylePropertiesConfig } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
@@ -246,9 +246,9 @@ const ElementQuickActions = observer(function ElementQuickActions({
 })
 
 const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
-	{ id: '1:1', label: 'Square (1:1)' },
-	{ id: '9:7', label: 'Stream Deck Studio (9:7)' },
-	{ id: '2:1', label: 'Stream Deck Plus & Plus XL (2:1)' },
+	{ id: '1:1', label: '1:1 (Square)' },
+	{ id: '9:7', label: '9:7 (Stream Deck Studio)' },
+	{ id: '2:1', label: '2:1 (Stream Deck Plus & Plus XL)' },
 ]
 
 const CUSTOM_RATIO_MIN = 1
@@ -390,9 +390,8 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		() =>
 			drawStyle
 				? GraphicsLayeredButtonRenderer.computeContentBounds(
-						canvasWidthPx,
-						canvasHeightPx,
-						{ x: PAD_X, y: PAD_Y },
+						new DrawBounds(0, 0, canvasWidthPx, canvasHeightPx),
+
 						drawStyle.decoration
 					)
 				: null,

@@ -14,7 +14,7 @@ const defaultVariables: VariableValueData = {}
 const userconfig = mockUserConfig({ timezone: '' })
 
 function createParser(variables: VariableValueData = defaultVariables): VariablesAndExpressionParser {
-	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, null)
+	return new VariablesAndExpressionParser(userconfig, null as any, variables, new Map(), null, null, null, undefined)
 }
 
 function makeAction(
@@ -39,6 +39,7 @@ const fakeExtras: RunActionExtras = {
 	location: undefined,
 	abortDelayed: new AbortController().signal,
 	executionMode: 'sequential',
+	rotationDelta: null,
 }
 
 function makeVariablesController(currentValue: unknown, exists = true) {

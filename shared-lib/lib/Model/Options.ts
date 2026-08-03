@@ -251,6 +251,20 @@ export interface CompanionInputFieldColorExtended extends CompanionInputFieldBas
 
 	presetColors?: CompanionColorPresetValue[]
 }
+
+/**
+ * Default expression-mode hint for a color field. Any color field accepts either form and normalizes it to
+ * the field's returnType, so the guidance is the same regardless of returnType.
+ */
+export const DEFAULT_COLOR_EXPRESSION_DESCRIPTION =
+	"Return a color number (e.g. 16711680 or 0xff0000) or a css color string (e.g. '#ff0000' or 'rgb(255, 0, 0))'"
+
+/**
+ * The default expression-mode hint for a color field, or undefined for non-color fields.
+ */
+export function colorFieldExpressionHint(field: SomeCompanionInputField): string | undefined {
+	return field.type === 'colorpicker' ? DEFAULT_COLOR_EXPRESSION_DESCRIPTION : undefined
+}
 export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldBaseExtended {
 	type: 'textinput'
 

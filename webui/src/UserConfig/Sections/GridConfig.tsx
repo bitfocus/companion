@@ -173,7 +173,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									</Grid.Col>
 								)}
 
-								<FormLabel htmlFor={minRowFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
+								<FormLabel htmlFor={minRowFieldId} sm={3} column="sm" className="mb-2">
 									Min Row
 								</FormLabel>
 								<Grid.Col sm={9} className="mb-2">
@@ -187,7 +187,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</Grid.Col>
 
-								<FormLabel htmlFor={maxRowFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
+								<FormLabel htmlFor={maxRowFieldId} sm={3} column="sm" className="mb-2">
 									Max Row
 								</FormLabel>
 								<Grid.Col sm={9} className="mb-2">
@@ -201,7 +201,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</Grid.Col>
 
-								<FormLabel htmlFor={minColumnFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
+								<FormLabel htmlFor={minColumnFieldId} sm={3} column="sm" className="mb-2">
 									Min Column
 								</FormLabel>
 								<Grid.Col sm={9} className="mb-2">
@@ -215,7 +215,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</Grid.Col>
 
-								<FormLabel htmlFor={maxColumnFieldId} className="col-sm-3 col-form-label col-form-label-sm mb-2">
+								<FormLabel htmlFor={maxColumnFieldId} sm={3} column="sm" className="mb-2">
 									Max Column
 								</FormLabel>
 								<Grid.Col sm={9} className="mb-2">

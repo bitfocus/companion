@@ -21,9 +21,11 @@ import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
+import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
 	ActionForVisitor,
+	FeedbackExecutionContext,
 	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
@@ -254,7 +256,9 @@ export class InternalBuildingBlocks
 
 	executeAction(
 		action: ActionForInternalExecution,
-		extras: RunActionExtras
+		extras: RunActionExtras,
+		_parser: VariablesAndExpressionParser,
+		createFeedbackContext: () => FeedbackExecutionContext
 	): Promise<InternalActionResult> | InternalActionResult {
 		switch (action.definitionId) {
 			case 'wait': {
@@ -308,7 +312,8 @@ export class InternalBuildingBlocks
 			case 'logic_if': {
 				if (extras.abortDelayed.aborted) break
 
-				const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+				const conditionValues =
+					action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues(createFeedbackContext()) ?? []
 
 				const executeGroup = booleanAnd(false, conditionValues) ? 'actions' : 'else_actions'
 				const childActions = action.rawEntity.getChildren(executeGroup)?.getDirectEntities() ?? []
@@ -326,7 +331,9 @@ export class InternalBuildingBlocks
 
 				return Promise.resolve().then(async () => {
 					while (!extras.abortDelayed.aborted) {
-						const conditionValues = action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues() ?? []
+						// Build a fresh context each iteration so the condition sees the current variable state
+						const conditionValues =
+							action.rawEntity.getChildren('condition')?.getChildBooleanFeedbackValues(createFeedbackContext()) ?? []
 						if (!booleanAnd(false, conditionValues)) break
 
 						const childActions = action.rawEntity.getChildren('actions')?.getDirectEntities() ?? []

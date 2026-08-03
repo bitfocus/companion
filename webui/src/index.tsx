@@ -9,6 +9,9 @@ import indeterminateImg from '~/scss/img/indeterminate.svg?no-inline' // This do
 
 // polyfills
 import 'intersection-observer'
+// Iterator helpers (Iterator.prototype.map/filter/etc) - can't be usage-detected by plugin-legacy, so import explicitly
+import 'core-js/proposals/iterator-helpers'
+// -------
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import React from 'react'
 import { createRoot } from 'react-dom/client'

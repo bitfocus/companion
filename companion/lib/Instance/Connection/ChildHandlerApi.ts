@@ -6,6 +6,7 @@ import type { ExpressionableOptionsObject, SomeCompanionInputField } from '@comp
 import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
+import type { RenderClock } from '../../Controls/RenderClock.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { ServiceOscSender } from '../../Service/OscSender.js'
 import type { VariablesController } from '../../Variables/Controller.js'
@@ -24,6 +25,8 @@ export interface ConnectionChildHandlerDependencies {
 	readonly instanceDefinitions: InstanceDefinitions
 	readonly instanceStatus: InstanceStatus
 	readonly sharedUdpManager: InstanceSharedUdpManager
+
+	readonly renderClock: RenderClock
 
 	readonly setConnectionConfig: (
 		connectionId: string,
@@ -114,4 +117,10 @@ export interface RunActionExtras {
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal
 	executionMode: 'sequential' | 'concurrent'
+	/**
+	 * The signed rotation amount when this execution was triggered by a rotary action (sign is the
+	 * direction, magnitude is the number of steps), or `null` for non-rotary executions (press, trigger).
+	 * Exposed to expressions as `$(this:delta)`.
+	 */
+	rotationDelta: number | null
 }

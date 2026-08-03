@@ -149,10 +149,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	return (
 		<>
-			<FormLabel
-				htmlFor={inputId}
-				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !isVisible })}
-			>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ displayNone: !isVisible })}>
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}

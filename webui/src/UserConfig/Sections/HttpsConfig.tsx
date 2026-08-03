@@ -6,6 +6,7 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
@@ -80,7 +81,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 					{props.config.https_cert_type === 'self' && (
 						<tr>
 							<td colSpan={3}>
-								<table className="table table-responsive-sm">
+								<Table>
 									<tbody>
 										<tr>
 											<td colSpan={3}>This tool will help create a self-signed certificate for the server to use.</td>
@@ -138,7 +139,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 											<td>&nbsp;</td>
 										</tr>
 									</tbody>
-								</table>
+								</Table>
 							</td>
 						</tr>
 					)}
@@ -146,7 +147,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 					{props.config.https_cert_type === 'external' && (
 						<tr>
 							<td colSpan={3}>
-								<table className="table table-responsive-sm">
+								<Table>
 									<tbody>
 										<tr>
 											<td colSpan={3}>
@@ -183,7 +184,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 											field="https_ext_chain"
 										/>
 									</tbody>
-								</table>
+								</Table>
 							</td>
 						</tr>
 					)}

@@ -18,7 +18,7 @@
 	}
 }
 
-.form-label2 {
+.form-label {
 	margin-bottom: 0.5rem;
 	font-weight: bold;
 	align-content: center;
@@ -27,9 +27,25 @@
 		color: #ccc;
 	}
 
+	// Column label for horizontal forms: vertical padding aligns the label with the adjacent input
+	// (input padding-y + 1px border).
 	&.col-form-label {
-		// Respect the override
+		padding-top: calc(0.375rem + 1px);
+		padding-bottom: calc(0.375rem + 1px);
 		margin-bottom: 0;
+		line-height: 1.5;
+
+		&.col-form-label-lg {
+			padding-top: calc(0.5rem + 1px);
+			padding-bottom: calc(0.5rem + 1px);
+			font-size: 1.25rem;
+		}
+
+		&.col-form-label-sm {
+			padding-top: calc(0.25rem + 1px);
+			padding-bottom: calc(0.25rem + 1px);
+			font-size: 0.875rem;
+		}
 	}
 
 	.feature-icons {

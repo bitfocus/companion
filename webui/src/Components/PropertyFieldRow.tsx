@@ -70,10 +70,7 @@ export function PropertyFieldRow({
 
 	return (
 		<>
-			<FormLabel
-				htmlFor={inputId}
-				className={classNames('col-sm-4 col-form-label col-form-label-sm', labelClassName, { displayNone: hidden })}
-			>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { displayNone: hidden })}>
 				{label}
 				{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}

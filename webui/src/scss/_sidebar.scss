@@ -1,5 +1,473 @@
-@use 'variables' as *;
 @use 'sass:color';
+@use 'variables' as *;
+@use 'vendor/coreui/mixins/breakpoints' as *;
+@use 'vendor/coreui/mixins/transition' as *;
+
+// Sidebar styles.
+//
+// This file consolidates the parts of CoreUI's sidebar SCSS that we actually use
+// (previously three vendored partials: _sidebar, _sidebar-nav, _sidebar-narrow)
+// together with our own heavy customisations, which used to live further down in
+// this same file.
+//
+// CoreUI defined ~90 `$sidebar-*` variables, each emitted as a `--cui-sidebar-*`
+// CSS custom property, to make every dimension and colour runtime-configurable.
+// We don't want that configurability, so those values have been inlined directly
+// into the rules below. Only the custom properties that are read from elsewhere
+// are kept:
+//   --cui-sidebar-occupy-start        (read by _layout.scss to pad the main content)
+//   --cui-sidebar-narrow-width        (read by the narrow-mode rules)
+//   --cui-sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
+//                                     (set/overridden by our own rules further down)
+// Theming still flows through --cui-body-color / --cui-tertiary-* / --cui-emphasis-color,
+// which `.sidebar-dark` overrides.
+//
+// Dead CoreUI sidebar features that we never render have been dropped:
+//   .sidebar-end (+ RTL branches), .sidebar-overlaid, the .sidebar-{sm,md,lg,…}
+//   width loop, .sidebar-body, CoreUI's .sidebar-footer, .nav-title, .compact,
+//   .hide, and the inert `.nav-icon-bullet` active/hover/disabled rules (which
+//   referenced undefined `--cui-sidebar-link-*` custom properties in CoreUI).
+
+// A few tweakable dimensions kept named for readability; everything else is inlined.
+$sb-width: 16rem;
+$sb-narrow-width: 4rem;
+$sb-bg: #111;
+
+// =====================================================================
+// CoreUI base (used parts, values inlined)
+// =====================================================================
+
+.sidebar {
+	position: relative;
+	display: flex;
+	flex: 0 0 $sb-width;
+	flex-direction: column;
+	// put the nav on the left
+	order: -1;
+	width: $sb-width;
+	color: var(--cui-body-color);
+	background: $sb-bg;
+	box-shadow: none;
+	margin-inline-start: 0;
+	@include transition(
+		margin-left 0.15s,
+		margin-right 0.15s,
+		box-shadow 0.075s,
+		transform 0.15s,
+		width 0.15s,
+		z-index 0s ease 0.15s
+	);
+
+	@include media-breakpoint-up(lg) {
+		// push sibling content across by our width (consumed by _layout.scss)
+		&:not(.sidebar-narrow):not(.sidebar-narrow-unfoldable) ~ * {
+			--cui-sidebar-occupy-start: #{$sb-width};
+		}
+	}
+
+	@include media-breakpoint-down(lg) {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		z-index: 1035;
+		inset-inline-start: 0;
+
+		&:not(.show) {
+			margin-inline-start: calc(-1 * #{$sb-width});
+		}
+	}
+}
+
+// Placeholder so the `@extend`s on `.sidebar-narrow-unfoldable` only pull in these
+// CoreUI base rules — not our own `.sidebar-narrow` customisations further down. (Those
+// used to be a separate SCSS module, which @extend could not reach; consolidating into
+// one file would otherwise widen the extend to them and change the generated selectors.)
+%sidebar-fixed {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	z-index: 1035;
+	inset-inline-start: 0;
+}
+
+.sidebar-fixed {
+	@extend %sidebar-fixed;
+}
+
+.sidebar-brand {
+	color: var(--cui-body-color);
+	white-space: nowrap;
+
+	.sidebar-brand-narrow {
+		display: none;
+	}
+}
+
+.sidebar-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem 1rem;
+
+	.btn-close {
+		padding: calc(1rem * 0.5) calc(1rem * 0.5);
+		margin-inline-end: calc(-0.5 * 1rem);
+		margin-top: calc(-0.5 * 1rem);
+		margin-bottom: calc(-0.5 * 1rem);
+	}
+}
+
+.sidebar-toggler {
+	position: relative;
+	box-sizing: content-box;
+	width: 0.5rem;
+	height: 0.5rem;
+	padding: 0.25rem 0.25rem;
+	background-color: transparent;
+	border: 0;
+	border-radius: 0.375rem;
+
+	&::before {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		content: '';
+		background-color: var(--cui-tertiary-color);
+		mask: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg xmlns='http://www.w3.org/2000/svg' transform='matrix%28-1 0 0 -1 512 512%29'%3E%3Cpath fill='%23000' d='M472,16H40A24.028,24.028,0,0,0,16,40V200H48V48H464V464H48V304H16V472a24.028,24.028,0,0,0,24,24H472a24.028,24.028,0,0,0,24-24V40A24.028,24.028,0,0,0,472,16Z'/%3E%3Cpolygon fill='%23000' points='209.377 363.306 232.004 385.933 366.627 251.31 232.004 116.687 209.377 139.313 305.374 235.311 16 235.311 16 267.311 305.372 267.311 209.377 363.306'/%3E%3C/g%3E%3C/svg%3E")
+			no-repeat center;
+		@include transition(transform 0.15s);
+	}
+
+	// Override <a>'s hover style
+	&:hover {
+		text-decoration: none;
+		&::before {
+			background-color: var(--cui-secondary-color);
+		}
+	}
+
+	&:focus {
+		position: relative;
+		outline: 0;
+		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
+
+		&::before {
+			background-color: var(--cui-secondary-color);
+		}
+	}
+
+	@include media-breakpoint-down(lg) {
+		display: none;
+	}
+}
+
+// Backdrop background (mobile overlay)
+.sidebar-backdrop {
+	--cui-backdrop-zindex: 1034;
+	--cui-backdrop-bg: #080a0c;
+	--cui-backdrop-opacity: 0.5;
+
+	@include media-breakpoint-down(lg) {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: var(--cui-backdrop-zindex);
+		width: 100vw;
+		height: 100vh;
+		background-color: var(--cui-backdrop-bg);
+
+		&.fade {
+			opacity: 0;
+		}
+		&.show {
+			opacity: var(--cui-backdrop-opacity);
+		}
+	}
+}
+
+// The sidebar is always dark (see Sidebar.tsx). These were CoreUI's dark-theme body values; inlined
+// here now that we no longer vendor _variables-dark / support CoreUI dark mode.
+.sidebar-dark {
+	--cui-body-color: rgba(255, 255, 255, 0.87);
+	--cui-body-bg: #212631;
+
+	--cui-emphasis-color: #fff;
+
+	--cui-secondary-color: rgba(255, 255, 255, 0.6);
+	--cui-secondary-bg: #323a49;
+
+	--cui-tertiary-color: rgba(255, 255, 255, 0.38);
+	--cui-tertiary-bg: #{color.mix(#323a49, #212631, 50%)};
+
+	--cui-border-color: #323a49;
+
+	.sidebar-toggler {
+		filter: var(--cui-sidebar-toggler-white-filter);
+	}
+}
+
+.sidebar-nav {
+	// Kept custom properties (set/overridden by our own rules below):
+	--cui-sidebar-nav-link-bg: transparent;
+	--cui-sidebar-nav-link-active-bg: var(--cui-tertiary-bg);
+	--cui-sidebar-nav-link-border-radius: var(--cui-border-radius);
+	--cui-sidebar-nav-link-icon-color: var(--cui-tertiary-color);
+	--cui-sidebar-nav-link-padding-x: 0.5rem;
+
+	position: relative;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	padding: 0.5rem 0.5rem;
+	margin-bottom: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	list-style: none;
+
+	.nav-item + .nav-item,
+	.nav-item + .nav-group,
+	.nav-group + .nav-item {
+		margin-top: 1px;
+	}
+
+	.nav-link {
+		display: flex;
+		flex: 1;
+		align-items: center;
+		padding: 0.75rem var(--cui-sidebar-nav-link-padding-x);
+		color: var(--cui-body-color);
+		text-decoration: none;
+		white-space: nowrap;
+		background: var(--cui-sidebar-nav-link-bg);
+		border: 0 solid transparent;
+		border-radius: var(--cui-sidebar-nav-link-border-radius);
+		@include transition(background 0.15s ease, color 0.15s ease, gap 0.15s ease);
+
+		&.active {
+			color: var(--cui-emphasis-color);
+			background: var(--cui-sidebar-nav-link-active-bg);
+
+			.nav-icon {
+				color: var(--cui-emphasis-color);
+			}
+		}
+
+		&.disabled {
+			color: var(--cui-tertiary-color);
+			pointer-events: none;
+			cursor: not-allowed;
+			background: transparent;
+
+			.nav-icon {
+				color: var(--cui-tertiary-color);
+			}
+
+			&:hover {
+				color: var(--cui-tertiary-color);
+
+				.nav-icon {
+					color: var(--cui-tertiary-color);
+				}
+
+				&.nav-dropdown-toggle::after {
+					background-color: var(--cui-emphasis-color);
+					mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
+				}
+			}
+		}
+
+		@media (hover: hover), (-ms-high-contrast: none) {
+			&:hover {
+				color: var(--cui-emphasis-color);
+				text-decoration: none;
+				background: var(--cui-tertiary-bg);
+
+				.nav-icon {
+					color: var(--cui-body-color);
+				}
+
+				&.nav-group-toggle::after {
+					background-color: var(--cui-emphasis-color);
+					mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
+				}
+			}
+		}
+	}
+
+	.nav-icon {
+		display: flex;
+		flex: 0 0 1.25rem;
+		align-items: center;
+		justify-content: center;
+		height: 1.25rem;
+		margin-inline-end: 0.75rem;
+		font-size: 1.25rem;
+		color: var(--cui-sidebar-nav-link-icon-color);
+		text-align: center;
+		pointer-events: none;
+		fill: currentcolor;
+		@include transition(inherit);
+	}
+
+	.nav-icon-bullet {
+		display: inline-block;
+		width: 0.3125rem;
+		height: 0.3125rem;
+		background: transparent;
+		border: 1px solid var(--cui-tertiary-color);
+		border-radius: 50rem; // stylelint-disable-line property-disallowed-list
+	}
+
+	// stylelint-disable-next-line selector-no-qualifying-type
+	svg.nav-icon {
+		overflow: hidden; // fix chrome 105+ width issue
+	}
+
+	.nav-group {
+		position: relative;
+		border: 0 solid transparent;
+		border-radius: var(--cui-border-radius);
+		@include transition(background 0.15s ease-in-out);
+
+		.nav-group-items {
+			padding: 0 0;
+			overflow: hidden;
+			@include transition(height 0.15s ease);
+		}
+
+		&:not(.show) .nav-group-items {
+			display: none;
+		}
+
+		&.show {
+			background: transparent;
+
+			.nav-group-toggle {
+				color: var(--cui-body-color);
+			}
+
+			> .nav-group-toggle::after {
+				transform: rotate(180deg);
+			}
+
+			+ .show {
+				margin-top: 1px;
+			}
+		}
+	}
+
+	.nav-group-toggle {
+		cursor: pointer;
+
+		&::after {
+			display: block;
+			flex: 0 12px;
+			height: 12px;
+			margin-inline-start: auto;
+			content: '';
+			background-color: var(--cui-tertiary-color);
+			mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
+			@include transition(transform 0.15s);
+		}
+	}
+
+	.nav-group-items {
+		padding: 0;
+		list-style: none;
+
+		.nav-link {
+			padding-inline-start: calc(
+				var(--cui-sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
+			); // stylelint-disable-line function-disallowed-list
+		}
+
+		.nav-icon {
+			margin-inline-start: calc(-1 * (1.25rem + 0.75rem)); // stylelint-disable-line function-disallowed-list
+		}
+	}
+}
+
+%sidebar-narrow {
+	--cui-sidebar-narrow-width: #{$sb-narrow-width};
+
+	@include media-breakpoint-up(lg) {
+		flex: 0 0 var(--cui-sidebar-narrow-width);
+		width: var(--cui-sidebar-narrow-width);
+		padding-bottom: 0.5rem;
+		overflow: visible;
+
+		.sidebar-brand-full {
+			display: none;
+		}
+
+		.sidebar-brand-narrow {
+			display: block;
+		}
+
+		.sidebar-header {
+			justify-content: center;
+			padding-right: 0;
+			padding-left: 0;
+		}
+
+		.nav-link {
+			overflow: hidden;
+		}
+
+		.nav-icon {
+			flex: 0 0 calc(var(--cui-sidebar-narrow-width) - (0.5rem * 2) - (var(--cui-sidebar-nav-link-padding-x) * 2)); // stylelint-disable-line function-disallowed-list
+		}
+
+		.nav-group-items,
+		.nav-group.show .nav-group-items {
+			height: 0 !important; // stylelint-disable-line declaration-no-important
+			padding: 0 !important; // stylelint-disable-line declaration-no-important
+			margin: 0 !important; // stylelint-disable-line declaration-no-important
+			visibility: hidden;
+			opacity: 0;
+		}
+
+		.sidebar-toggler::before {
+			transform: rotate(-180deg);
+		}
+	}
+}
+
+.sidebar-narrow {
+	@extend %sidebar-narrow;
+}
+
+.sidebar-narrow-unfoldable {
+	@extend %sidebar-fixed;
+
+	&:not(:hover) {
+		@extend %sidebar-narrow;
+	}
+
+	&:hover {
+		box-shadow: var(--cui-box-shadow);
+		box-shadow: $box-shadow;
+
+		.sidebar-toggler::before {
+			transform: rotate(-180deg);
+		}
+	}
+}
+
+.sidebar-narrow,
+.sidebar-narrow-unfoldable {
+	@include media-breakpoint-up(lg) {
+		& ~ * {
+			--cui-sidebar-occupy-start: #{$sb-narrow-width};
+		}
+	}
+}
+
+// =====================================================================
+// Companion customisations
+// =====================================================================
 
 .sidebar {
 	will-change: contents;

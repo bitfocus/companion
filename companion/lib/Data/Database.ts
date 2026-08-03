@@ -4,7 +4,7 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
-import { DataStoreBase } from './StoreBase.js'
+import { DataStoreBase, type OperationObserver } from './StoreBase.js'
 import { targetVersion, upgradeStartup } from './Upgrade.js'
 
 export interface DataDatabaseDefaultTable {
@@ -30,9 +30,10 @@ export interface DataDatabaseDefaultTable {
 export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 	/**
 	 * @param configDir - the root config directory
+	 * @param operationObserver - sink for per-operation timings
 	 */
-	constructor(configDir: string) {
-		super(configDir, 'db', 'main', 'Data/Database')
+	constructor(configDir: string, operationObserver: OperationObserver) {
+		super(configDir, 'db', 'main', 'Data/Database', operationObserver)
 
 		this.startSQLite()
 

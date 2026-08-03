@@ -54,6 +54,7 @@ function makeBoxEl(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): Butto
 		id: 'box1',
 		type: 'box',
 		color: 0x112233,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',

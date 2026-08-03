@@ -64,6 +64,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		entityDelete: vi.fn(),
 		entityUpgrade: vi.fn(),
 		executeLogicFeedback: vi.fn(),
+		evaluateFeedbackValue: vi.fn(),
 		onVariablesChanged: vi.fn(),
 	}
 	const processManager = {
@@ -90,6 +91,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		pageStore: pageStore as any,
 		controlId,
 		reportChange,
+		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 		getPageVariableEntities: () => null,
 	}
 

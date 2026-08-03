@@ -14,7 +14,11 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import { NO_CONNECTION_LABELS, type VariablesValues } from '../../Variables/Values.js'
-import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../../Variables/VariablesAndExpressionParser.js'
+import type { RenderClock } from '../RenderClock.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
@@ -39,6 +43,7 @@ export interface ControlEntityListPoolProps {
 	pageStore: IPageStore
 	controlId: string
 	reportChange: (options: ControlEntityListChangeProps) => void
+	renderClock: RenderClock
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 }
@@ -102,7 +107,8 @@ export abstract class ControlEntityListPoolBase {
 			{
 				isInverted: this.updateIsInvertedValues.bind(this),
 				storeResult: this.updateStoreResultValues.bind(this),
-			}
+			},
+			props.renderClock
 		)
 	}
 
@@ -139,9 +145,11 @@ export abstract class ControlEntityListPoolBase {
 		 * The debounce ensures that rapid bursts of local variable updates (including circular
 		 * computed-variable chains) are rate-limited before notifying the rest of the app.
 		 *
-		 * Additionally, we synchronously call internalModule.onVariablesChanged for this control
-		 * so that condition feedbacks inside logic_while / logic_if have their cached values
-		 * updated immediately, without needing a wait action.
+		 * Additionally, we synchronously call internalModule.onVariablesChanged for this control so that
+		 * condition feedbacks inside logic_while / logic_if have their cached values updated immediately,
+		 * without needing a wait action. This also keeps computed (expression-backed) local variable
+		 * feedbacks fresh, which the conditions read via their parser when they are re-evaluated live at
+		 * execution time.
 		 *
 		 * A re-entrance guard on the sync call prevents recursion: if a computed local variable's
 		 * cached value changes as a side effect of the sync update (detected by updateFeedbackValues
@@ -192,7 +200,8 @@ export abstract class ControlEntityListPoolBase {
 
 	/** Build a parser for this control's variables. The injected `this:*` context is control-type specific, so each pool provides its own. */
 	abstract createVariablesAndExpressionParser(
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser
 
 	/**
@@ -230,7 +239,7 @@ export abstract class ControlEntityListPoolBase {
 			const variableName = entity.localVariableName
 			if (variableName) {
 				// Strip off the prefix, as the ui doesn't expect that
-				values[variableName.slice('local:'.length)] = entity.getResolvedFeedbackValue()
+				values[variableName.slice('local:'.length)] = entity.getResolvedFeedbackValue(null)
 			}
 		}
 

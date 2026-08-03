@@ -38,7 +38,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 
 			{config.admin_lockout && (
 				<>
-					<FormLabel htmlFor={passwordFieldId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={passwordFieldId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Password
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">
@@ -51,7 +51,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 					</Grid.Col>
 					<Grid.Col sm={2}></Grid.Col>
 
-					<FormLabel htmlFor={timeoutFieldId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={timeoutFieldId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Session Timeout
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">

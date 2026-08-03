@@ -78,7 +78,7 @@ export const EditPagePropertiesModal = forwardRef<EditPagePropertiesModalRef, Ed
 								<Form onSubmit={doAction}>
 									{includeName && (
 										<Grid.Row className="mb-3">
-											<FormLabel htmlFor={nameFieldId} className="col-sm-3 col-form-label col-form-label-sm">
+											<FormLabel htmlFor={nameFieldId} sm={3} column="sm">
 												Name
 											</FormLabel>
 											<Grid.Col sm={9}>

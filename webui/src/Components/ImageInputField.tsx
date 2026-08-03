@@ -127,8 +127,8 @@ export const ImageInputField = observer(function ImageInputField({
 			<ImagePickerModal ref={modalRef} setValue={setValue} min={min} max={max} />
 			<div id={id} className="image-input-field d-flex align-items-center gap-2">
 				<div
-					className="image-input-field__preview"
-					style={{ backgroundColor: libraryImage?.backgroundColor ?? '#ffffff' }}
+					className="image-input-field__preview image-preview-checkerboard"
+					style={{ '--preview-bg-color': libraryImage?.backgroundColor ?? 'transparent' } as React.CSSProperties}
 				>
 					{thumbnail}
 				</div>

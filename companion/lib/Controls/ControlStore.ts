@@ -3,7 +3,10 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { VariablesValues } from '../Variables/Values.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { IControlStore } from './IControlStore.js'
@@ -106,13 +109,17 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Execute rotation of a control
 	 * @param controlId Id of the control
-	 * @param rightward Whether the control is rotated to the right
+	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
+		// A zero or non-finite delta is not a meaningful rotation. Reject it here so no producer can
+		// accidentally run the `rotate_left` set (chosen when `delta > 0` is false) for a zero delta.
+		if (!Number.isFinite(delta) || delta === 0) return false
+
 		const control = this.getControl(controlId)
 		if (control && control.supportsActionSets) {
-			control.rotateControl(rightward, surfaceId)
+			control.rotateControl(delta, surfaceId)
 			return true
 		}
 
@@ -166,15 +173,16 @@ export class ControlStore implements IControlStore {
 
 	createVariablesAndExpressionParser(
 		controlId: string | null | undefined,
-		overrideVariableValues: VariableValues | null
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
 		const control = controlId && this.getControl(controlId)
 
 		// If the control exists and supports entities, use its parser for local variables
 		if (control && control.supportsEntities)
-			return control.entities.createVariablesAndExpressionParser(overrideVariableValues)
+			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
 		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues)
+		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, null, options)
 	}
 }

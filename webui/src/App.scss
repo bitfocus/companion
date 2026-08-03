@@ -1,27 +1,26 @@
-// IMPORTANT: 'scss/variables' MUST be the first @use rule: it loads and overrides the defaults in @coreui
-//  See Sass @use documentation: "A module will keep the same configuration ... even if it’s loaded multiple times"
-@use 'scss/variables' as *; // local definitions not related to @coreui definitions
+// IMPORTANT: 'scss/variables' MUST be the first @use rule: it loads and overrides the defaults in the
+//  vendored CoreUI (see scss/vendor/coreui/). See Sass @use documentation: "A module will keep the same
+//  configuration ... even if it’s loaded multiple times"
+@use 'scss/variables' as *; // local definitions not related to the vendored CoreUI definitions
 
+// Vendored CoreUI (scss/vendor/coreui/) — a copy of the CoreUI SCSS we still consume, kept so we can
+// drop the @coreui/coreui dependency while we progressively replace these styles with our own.
 // Layout & components
-@forward '@coreui/coreui/scss/root';
-@forward '@coreui/coreui/scss/reboot';
-@forward '@coreui/coreui/scss/type';
-@forward '@coreui/coreui/scss/containers';
-@forward '@coreui/coreui/scss/forms';
-@forward '@coreui/coreui/scss/grid';
-@forward '@coreui/coreui/scss/tables';
-@forward '@coreui/coreui/scss/transitions';
-@forward '@coreui/coreui/scss/nav';
-@forward '@coreui/coreui/scss/close';
-
-@forward '@coreui/coreui/scss/header';
-@forward '@coreui/coreui/scss/sidebar';
+@forward 'scss/vendor/coreui/root';
+@forward 'scss/vendor/coreui/reboot';
+@forward 'scss/vendor/coreui/type';
+@forward 'scss/vendor/coreui/containers';
+@forward 'scss/vendor/coreui/forms';
+@forward 'scss/vendor/coreui/grid';
+@forward 'scss/vendor/coreui/transitions';
+@forward 'scss/vendor/coreui/nav';
+@forward 'scss/vendor/coreui/close';
 
 // Helpers
-@forward '@coreui/coreui/scss/helpers';
+@forward 'scss/vendor/coreui/helpers';
 
 // Utilities
-@forward '@coreui/coreui/scss/utilities/api';
+@forward 'scss/vendor/coreui/utilities/api';
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 
@@ -46,6 +45,7 @@
 @use 'scss/components/number-range';
 @use 'scss/components/switch-field';
 @use 'scss/components/tab-area';
+@use 'scss/components/table';
 @use 'scss/components/text-field';
 @use 'scss/components/time-picker';
 
@@ -55,6 +55,7 @@
 @use 'scss/emulator';
 @use 'scss/standalone-status';
 @use 'scss/modules-manage';
+@use 'scss/header';
 @use 'scss/sidebar';
 
 @use 'scss/action-recorder';
@@ -134,19 +135,6 @@ body {
 	.text-muted {
 		color: #ccc !important;
 	}
-}
-
-.unstable-warning {
-	z-index: 10000;
-}
-
-.install-name {
-	padding: 0 var(--cui-header-nav-link-padding-x);
-	color: var(--cui-header-color);
-
-	align-content: center;
-	font-size: 1.25em;
-	font-weight: bold;
 }
 
 .section {

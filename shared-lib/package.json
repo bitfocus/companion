@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     "./*.js": {
+      "companion:source": "./lib/*.ts",
       "types": "./dist/*.d.ts",
       "default": "./dist/*.js"
     },
@@ -16,7 +17,7 @@
     "node": ">=22.20"
   },
   "dependencies": {
-    "@companion-app/expressions": "^0.5.0",
+    "@companion-app/expressions": "^0.7.0",
     "colord": "^2.9.3",
     "quick-lru": "^7.3.0",
     "semver": "^7.8.5",

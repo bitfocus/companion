@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite'
 import { memo, useState } from 'react'
 import { Grid } from '~/Components/Grid'
 import { TabArea } from '~/Components/TabArea.js'
+import { Table } from '~/Components/Table.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { useUserConfigProps } from './Context.js'
@@ -60,7 +61,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 	if (!userConfigProps) return null
 
 	return (
-		<table className="table table-responsive-sm table-settings">
+		<Table className="table-settings">
 			<tbody>
 				<SatelliteConfig {...userConfigProps} />
 				<TcpConfig {...userConfigProps} />
@@ -72,7 +73,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 				<EmberPlusConfig {...userConfigProps} />
 				<ArtnetConfig {...userConfigProps} />
 			</tbody>
-		</table>
+		</Table>
 	)
 })
 

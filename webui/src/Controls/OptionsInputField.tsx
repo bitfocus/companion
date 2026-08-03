@@ -4,6 +4,7 @@ import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
+	colorFieldExpressionHint,
 	type ExpressionableOptionsObject,
 	type ExpressionOrValue,
 	type SomeCompanionInputField,
@@ -152,15 +153,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 		}
 	}
 
-	const description =
-		isInExpressionMode && option.expressionDescription !== undefined ? option.expressionDescription : option.description
+	const description = isInExpressionMode
+		? (option.expressionDescription ?? option.description ?? colorFieldExpressionHint(option))
+		: option.description
 
 	return (
 		<>
-			<FormLabel
-				htmlFor={inputId}
-				className={classNames('col-sm-4 col-form-label col-form-label-sm', { displayNone: !visibility })}
-			>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ displayNone: !visibility })}>
 				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
 				{isInExpressionMode && (
 					<ExpressionValuePreview

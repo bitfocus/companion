@@ -1,4 +1,19 @@
+import { defaultServerConditions } from 'vite'
 import { defineConfig } from 'vitest/config'
+
+// Resolve @companion-app/shared to its raw TypeScript sources (no separate `tsc` emit) via the
+// `companion:source` export condition. The node-environment projects resolve dependencies through
+// Vite's SSR resolver, and inline projects do NOT inherit the root config's `resolve`/`ssr`
+// options, so this must be set on each project that imports the package.
+//
+// Setting conditions replaces the defaults, so we re-add `defaultServerConditions` — but drop
+// `module`, which otherwise makes some externalised deps (e.g. @opentelemetry/api) resolve to a
+// bundler-only ESM build with extensionless imports that Node cannot load.
+const ssrSourceResolve = {
+	resolve: {
+		conditions: ['companion:source', ...defaultServerConditions.filter((c) => c !== 'module')],
+	},
+}
 
 export default defineConfig({
 	test: {
@@ -22,6 +37,7 @@ export default defineConfig({
 			},
 
 			{
+				ssr: ssrSourceResolve,
 				test: {
 					name: 'companion',
 					root: 'companion',
@@ -39,6 +55,7 @@ export default defineConfig({
 			},
 
 			{
+				ssr: ssrSourceResolve,
 				test: {
 					name: 'config-tool',
 					root: 'config-tool',

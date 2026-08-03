@@ -30,7 +30,7 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	 * @param type Element type to add
 	 * @param index Index to insert the element at, or null to append
 	 */
-	layeredStyleAddElement(type: string, index: number | null): string
+	layeredStyleAddElement(type: string, afterElementId: string | null): string
 
 	/**
 	 * Remove an element from the layered style
@@ -206,10 +206,10 @@ export interface ControlWithActionSets extends ControlBase<any> {
 
 	/**
 	 * Execute a rotate of this control
-	 * @param rightward Whether the control was rotated to the right
+	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(rightward: boolean, surfaceId: string | undefined): void
+	rotateControl(delta: number, surfaceId: string | undefined): void
 }
 
 export interface ControlWithoutActionSets extends ControlBase<any> {

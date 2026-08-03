@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
+import { Table } from '~/Components/Table.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
@@ -32,7 +33,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 				<br />
 
 				{userConfigProps && (
-					<table className="table table-responsive-sm table-settings">
+					<Table className="table-settings">
 						<thead>
 							<UserConfigHeadingRow
 								label="General Surface Settings"
@@ -55,7 +56,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 							/>
 							<PinLockoutConfig {...userConfigProps} />
 						</tbody>
-					</table>
+					</Table>
 				)}
 			</div>
 		</>

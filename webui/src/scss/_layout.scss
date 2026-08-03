@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/mixins/ltr-rtl'; // not strictly necessary, but it allows us to clarify the origin of mixins
+@use 'vendor/coreui/mixins/ltr-rtl'; // not strictly necessary, but it allows us to clarify the origin of mixins
 @use 'sass:color';
 
 body {
@@ -86,14 +86,12 @@ form.row > * {
 // that opens the sidebar in "mobile" mode (narrow window).
 // OTOH, .sidebar-footer (in this file) refers to the toggler at the bottom of the sidebar in the other modes
 .header-toggler {
-	--cui-header-toggler-color: white; // kinder than color: #fff; ?
-	--cui-header-toggler-hover-color: white;
-
 	// the next two keep the hover highlight border more uniform w/o changing spacing
-	padding: var(--cui-header-toggler-padding-y) !important; // !important overrides .ps-1, just in case
-	margin-right: calc(var(--cui-header-toggler-padding-x) - var(--cui-header-toggler-padding-y));
+	// (toggler padding is 0.25rem y / 0.75rem x, see components/_header.scss)
+	padding: 0.25rem !important; // !important overrides .ps-1, just in case
+	margin-right: 0.5rem; // toggler-padding-x - toggler-padding-y
 
-	//  make the color similar to --cui-btn-hover-bg, which is not accessible here;  alt: #{$header-brand-bg} is a bit darker.
+	//  make the color similar to --cui-btn-hover-bg, which is not accessible here
 	&:hover {
 		background-color: color.adjust($header-bg, $lightness: -6%);
 	}
@@ -131,7 +129,7 @@ form.row > * {
 .help-menu {
 	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
 	.help-toggle {
-		color: var(--cui-header-color); // Keep toggle white on red header
+		color: $header-color; // Keep toggle white on red header
 		margin-left: 1em; // buffer between this and the lock icon
 		// the following line makes the focus/hover-highlight a square that is the same size as the notification
 		padding: 0.2em 0em;

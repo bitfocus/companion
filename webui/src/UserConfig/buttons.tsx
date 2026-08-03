@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
 import { Grid } from '~/Components/Grid'
+import { Table } from '~/Components/Table.js'
 import { useUserConfigProps } from './Context.js'
 import { ButtonsConfig } from './Sections/ButtonsConfig.js'
 import { GridConfigRows } from './Sections/GridConfig.js'
@@ -42,12 +43,12 @@ const UserConfigTable = observer(function UserConfigTable() {
 
 	return (
 		<>
-			<table className="table table-responsive-sm table-settings">
+			<Table className="table-settings">
 				<tbody>
 					<ButtonsConfig {...userConfigProps} />
 					<GridConfigRows {...userConfigProps} />
 				</tbody>
-			</table>
+			</Table>
 		</>
 	)
 })

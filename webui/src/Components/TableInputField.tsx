@@ -9,6 +9,7 @@ import { getInputFeatures } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { Button } from './Button.js'
+import { Table } from './Table.js'
 
 function columnDefault(col: SomeCompanionInputField): JsonValue {
 	if ('default' in col && col.default !== undefined) return col.default
@@ -80,7 +81,7 @@ export function TableInputField({
 	return (
 		<div>
 			{sortedRows.length > 0 && (
-				<table className="table table-sm mb-1">
+				<Table size="sm" responsive={false} className="mb-1">
 					<thead>
 						<tr>
 							{columns.map((col) => (
@@ -124,7 +125,7 @@ export function TableInputField({
 							</tr>
 						))}
 					</tbody>
-				</table>
+				</Table>
 			)}
 			<Button color="primary" size="sm" onClick={addRow} disabled={disabled}>
 				<FontAwesomeIcon icon={faPlus} className="me-1" />

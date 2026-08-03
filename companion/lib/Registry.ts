@@ -11,9 +11,11 @@ import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
+import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
 import { DataMetrics, registerCoreMetrics } from './Data/Metrics.js'
+import { registerDatabaseDurationHistogram, registerDatabaseMetrics } from './Data/StoreMetrics.js'
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
@@ -140,6 +142,8 @@ export class Registry {
 	readonly usageStatistics: DataUsageStatistics
 	readonly metrics: DataMetrics
 
+	readonly #renderClock: RenderClock
+
 	/**
 	 * The 'data' controller
 	 */
@@ -197,13 +201,14 @@ export class Registry {
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
 		controlEvents.setMaxListeners(0)
 
-		this.db = new DataDatabase(this.#appInfo.configDir)
-		this.#data = new DataController(this.#appInfo, this.db)
-		this.userconfig = this.#data.userconfig
+		// Built before the databases so the duration observer can be injected into each store at construction;
+		// its userconfig is read lazily (only at scrape time) so it can predate userconfig.
+		this.metrics = new DataMetrics(this.#appInfo, () => this.userconfig)
+		const databaseObserverFor = registerDatabaseDurationHistogram(this.metrics)
 
-		// Constructed before the UI so its router can be handed to UIExpress at construction, and before
-		// graphics/surfaces/instance so those subsystems can register their own metrics inline as they build.
-		this.metrics = new DataMetrics(this.#appInfo, this.userconfig)
+		this.db = new DataDatabase(this.#appInfo.configDir, databaseObserverFor('main'))
+		this.#data = new DataController(this.#appInfo, this.db, databaseObserverFor('cache'))
+		this.userconfig = this.#data.userconfig
 
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
 
@@ -213,6 +218,8 @@ export class Registry {
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values)
 
+		this.#renderClock = new RenderClock()
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
@@ -220,7 +227,8 @@ export class Registry {
 			this.variables,
 			this.db,
 			this.#internalApiRouter,
-			this.metrics
+			this.metrics,
+			this.#renderClock
 		)
 
 		this.surfaces = new SurfaceController(this.db, {
@@ -242,11 +250,18 @@ export class Registry {
 			this.variables,
 			this.surfaces,
 			oscSender,
-			this.metrics
+			this.metrics,
+			this.#renderClock
 		)
 		this.ui.express.connectionApiRouter = this.instance.connectionApiRouter
 
-		this.internalModule = new InternalController(controlStore, pageStore, this.instance, this.variables)
+		this.internalModule = new InternalController(
+			controlStore,
+			pageStore,
+			this.instance,
+			this.variables,
+			this.#renderClock
+		)
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
@@ -261,6 +276,7 @@ export class Registry {
 			userconfig: this.userconfig,
 			graphics: this.graphics,
 			actionRunner: actionRunner,
+			renderClock: this.#renderClock,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -268,7 +284,8 @@ export class Registry {
 			pageStore,
 			this.controls,
 			controlEvents,
-			localVariables
+			localVariables,
+			this.#renderClock
 		)
 
 		this.internalModule.init(
@@ -321,7 +338,8 @@ export class Registry {
 			pageStore,
 			this.instance,
 			this.ui.io,
-			this.ui.express
+			this.ui.express,
+			this
 		)
 		this.cloud = new CloudController(this.#appInfo, this.db, this.#data.cache, controlStore, this.graphics, pageStore)
 		this.usageStatistics = new DataUsageStatistics(
@@ -343,11 +361,11 @@ export class Registry {
 			controls: this.controls,
 			variables: this.variables,
 			services: this.services,
-			databases: [
-				{ name: 'main', store: this.db },
-				{ name: 'cache', store: this.#data.cache },
-			],
 		})
+		registerDatabaseMetrics(this.metrics, [
+			{ name: 'main', store: this.db },
+			{ name: 'cache', store: this.#data.cache },
+		])
 
 		this.instance.status.on('status_change', () => this.controls.checkAllStatus())
 		controlEvents.on('invalidateControlRender', (controlId) => this.graphics.invalidateControl(controlId))
@@ -544,6 +562,9 @@ export class Registry {
 
 		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
+
+			this.internalModule.destroy()
+			this.#renderClock.destroy()
 
 			this.ui.close()
 

@@ -2,7 +2,7 @@
 import { createContext, useContext, useMemo } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { IEntityEditorService } from '~/Services/Controls/ControlEntitiesService.js'
-import type { LocalVariablesStore } from '../LocalVariablesStore.js'
+import type { EntityListActionContext, LocalVariablesStore } from '../LocalVariablesStore.js'
 
 export interface EntityEditorContextType {
 	controlId: string
@@ -13,6 +13,8 @@ export interface EntityEditorContextType {
 	localVariablePrefix: string | null
 	/** When set, inline expression previews show a compact validity status instead of the value (shown elsewhere) */
 	previewStatusOnly?: boolean
+	/** This editor's relationship to an action set, gating the execution-context `this:*` variables. */
+	actionContext: EntityListActionContext
 }
 
 const EntityEditorContext = createContext<EntityEditorContextType | null>(null)
@@ -38,6 +40,7 @@ export function EntityEditorContextProvider({
 	localVariablesStore,
 	localVariablePrefix,
 	previewStatusOnly,
+	actionContext,
 	children,
 }: React.PropsWithChildren<EntityEditorContextProviderProps>): React.JSX.Element {
 	const value = useMemo<EntityEditorContextType>(() => {
@@ -49,8 +52,18 @@ export function EntityEditorContextProvider({
 			localVariablesStore,
 			localVariablePrefix,
 			previewStatusOnly,
+			actionContext,
 		}
-	}, [controlId, location, serviceFactory, readonly, localVariablesStore, localVariablePrefix, previewStatusOnly])
+	}, [
+		controlId,
+		location,
+		serviceFactory,
+		readonly,
+		localVariablesStore,
+		localVariablePrefix,
+		previewStatusOnly,
+		actionContext,
+	])
 
 	return <EntityEditorContext.Provider value={value}>{children}</EntityEditorContext.Provider>
 }

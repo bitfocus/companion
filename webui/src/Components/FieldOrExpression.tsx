@@ -7,7 +7,8 @@ import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
-import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { useOptionalEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
+import { EntityListActionContext, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { useComputed } from '~/Resources/util'
 import { Button } from './Button'
 import { ExpressionInputField } from './ExpressionInputField'
@@ -70,12 +71,19 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 		[setIsExpression, value.isExpression]
 	)
 
+	const actionContext = useOptionalEntityEditorContext()?.actionContext ?? EntityListActionContext.NotActions
+
 	const expressionLocalVariables = useComputed(
 		() => [
-			...(localVariablesStore?.getOptions(entityType, true, isLocatedInGrid) ?? []),
+			...(localVariablesStore?.getOptions({
+				entityType,
+				internalParser: true,
+				isLocatedInGrid,
+				actionContext,
+			}) ?? []),
 			...(extraLocalVariables ?? []),
 		],
-		[localVariablesStore, extraLocalVariables, entityType, isLocatedInGrid]
+		[localVariablesStore, extraLocalVariables, entityType, isLocatedInGrid, actionContext]
 	)
 
 	return (

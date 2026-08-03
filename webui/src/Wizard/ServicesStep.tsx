@@ -37,7 +37,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.tcp_enabled && (
 				<>
-					<FormLabel htmlFor={tcpListenPortId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={tcpListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Listen Port
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">
@@ -61,7 +61,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.udp_enabled && (
 				<>
-					<FormLabel htmlFor={udpListenPortId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={udpListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Listen Port
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">
@@ -85,7 +85,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.osc_enabled && (
 				<>
-					<FormLabel htmlFor={oscListenPortId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={oscListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Listen Port
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">
@@ -124,7 +124,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.artnet_enabled && (
 				<>
-					<FormLabel htmlFor={artnetUniveriseId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={artnetUniveriseId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Universe (first is 0)
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">
@@ -139,7 +139,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					</Grid.Col>
 					<Grid.Col sm={2}></Grid.Col>
 
-					<FormLabel htmlFor={artnetChannelId} className="col-sm-4 offset-sm-1 col-form-label col-form-label-sm mb-2">
+					<FormLabel htmlFor={artnetChannelId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Channel
 					</FormLabel>
 					<Grid.Col sm={5} className="mb-2">

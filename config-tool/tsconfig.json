@@ -13,9 +13,9 @@
 
 		"target": "es2024",
 		"noImplicitAny": true,
-		"sourceMap": true,
 		"declaration": true,
 		"declarationMap": true,
+		"emitDeclarationOnly": true,
 		"importHelpers": false,
 		"listFiles": false,
 		"traceResolution": false,

@@ -155,7 +155,7 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 
 	/**
 	 * returns the pixels of the image in a buffer
-	 * color order is RGBA
+	 * color order is RGBA, with staight alpha
 	 * @returns RGBA buffer of the pixels
 	 */
 	buffer(): Buffer {

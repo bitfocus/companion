@@ -10,6 +10,7 @@ import { mergeEventTriggers, publicProcedure, router, toIterable } from '../../U
 import type { InstanceConfigStore } from '../ConfigStore.js'
 import type { InstanceController, InstanceControllerEvents } from '../Controller.js'
 import { computeInstanceConfigState } from '../EditConfigState.js'
+import { ConnectionOperationError, ConnectionOperations } from './ConnectionOperations.js'
 
 /**
  * Ensure every field has a unique id.
@@ -33,6 +34,8 @@ export function createConnectionsTrpcRouter(
 	instanceEvents: EventEmitter<InstanceControllerEvents>,
 	configStore: InstanceConfigStore
 ) {
+	const connectionOperations = new ConnectionOperations({ logger, instanceController, configStore })
+
 	return router({
 		collections: instanceController.connectionCollections.createTrpcRouter(),
 
@@ -59,13 +62,15 @@ export function createConnectionsTrpcRouter(
 					versionId: z.string(),
 				})
 			)
-			.mutation(({ input }) => {
-				const connectionInfo = instanceController.addConnectionWithLabel(input.module, input.label, {
+			.mutation(async ({ input }) => {
+				return connectionOperations.createConnection({
+					moduleId: input.module.type,
+					product: input.module.product,
+					label: input.label,
 					versionId: input.versionId,
 					updatePolicy: InstanceVersionUpdatePolicy.Stable,
 					disabled: false,
 				})
-				return connectionInfo[0]
 			}),
 
 		delete: publicProcedure
@@ -75,7 +80,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(async ({ input }) => {
-				await instanceController.removeConnection(input.connectionId)
+				await connectionOperations.deleteConnection(input.connectionId)
 			}),
 
 		reorder: publicProcedure
@@ -87,7 +92,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				configStore.moveInstance(input.collectionId, ModuleInstanceType.Connection, input.connectionId, input.dropIndex)
+				connectionOperations.reorderConnection(input)
 			}),
 
 		setEnabled: publicProcedure
@@ -98,7 +103,7 @@ export function createConnectionsTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				instanceController.enableDisableConnection(input.connectionId, input.enabled)
+				connectionOperations.setConnectionEnabled(input.connectionId, input.enabled)
 			}),
 
 		watchEdit: publicProcedure
@@ -142,19 +147,22 @@ export function createConnectionsTrpcRouter(
 					updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
 				})
 			)
-			.mutation(({ input }) => {
+			.mutation(async ({ input }) => {
 				logger.info('Updating config for ', input.connectionId, input.label)
 
-				const res = instanceController.setConnectionLabelAndConfig(input.connectionId, {
-					label: input.label,
-					enabled: input.enabled ?? null,
-					config: input.config ?? null,
-					secrets: input.secrets ?? null,
-					updatePolicy: input.updatePolicy ?? null,
-					upgradeIndex: null,
-				})
-
-				if (!res.ok) return res.message
+				try {
+					await connectionOperations.setConnectionConfig({
+						connectionId: input.connectionId,
+						label: input.label,
+						enabled: input.enabled,
+						config: input.config,
+						secrets: input.secrets,
+						updatePolicy: input.updatePolicy,
+					})
+				} catch (e) {
+					if (e instanceof ConnectionOperationError) return e.message
+					throw e
+				}
 
 				return null
 			}),
@@ -167,14 +175,17 @@ export function createConnectionsTrpcRouter(
 					versionId: z.string().nullable(),
 				})
 			)
-			.mutation(({ input }) => {
-				const res = instanceController.setModuleVersionAndActivate(
-					input.connectionId,
-					`${input.moduleId}@${input.versionId ?? ''}`,
-					null
-				)
-
-				if (!res) return 'no connection' // Update the config
+			.mutation(async ({ input }) => {
+				try {
+					await connectionOperations.setConnectionModuleVersion({
+						connectionId: input.connectionId,
+						moduleId: input.moduleId,
+						versionId: input.versionId,
+					})
+				} catch (e) {
+					if (e instanceof ConnectionOperationError) return e.message
+					throw e
+				}
 
 				return null
 			}),

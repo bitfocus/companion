@@ -1,3 +1,4 @@
+import { colord } from 'colord'
 import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
@@ -24,25 +25,51 @@ export interface ExpressionReferences {
 	readonly referencedLocations: Set<string>
 	/** Locations where a cycle was detected during this conversion (subset of referencedLocations) */
 	readonly cyclicLocations: Set<string>
+	/** Whether any expression evaluated during this conversion depends on the render clock */
+	clockSensitive: boolean
+}
+
+/**
+ * References accumulated while converting a single element, merged into the shared
+ * {@link ExpressionReferences} afterward via {@link mergeElementReferences}. Kept
+ * per-element so siblings converted concurrently via `Promise.all` don't clobber
+ * each other (e.g. one oscillating sibling marking another as clock-insensitive).
+ */
+export interface ElementReferences {
+	/** Variables referenced during expression evaluation for this element */
+	readonly usedVariables: Set<string>
+	/** Whether any expression evaluated for this element depends on the render clock */
+	clockSensitive: boolean
+}
+
+/** Create a fresh, empty per-element references accumulator. */
+export function createElementReferences(): ElementReferences {
+	return { usedVariables: new Set(), clockSensitive: false }
+}
+
+/** Merge a single element's accumulated references into the global references. */
+export function mergeElementReferences(global: ExpressionReferences, element: ElementReferences): void {
+	for (const variable of element.usedVariables) global.variables.add(variable)
+	if (element.clockSensitive) global.clockSensitive = true
 }
 
 export class ElementExpressionHelper<T> {
 	readonly #parser: VariablesAndExpressionParser
 
-	/** Per-element references tracked during conversion */
-	readonly #usedVariables: Set<string>
+	/** Per-element references, merged into the global references after conversion */
+	readonly #references: ElementReferences
 
 	readonly #element: T
 	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
 
 	constructor(
 		parser: VariablesAndExpressionParser,
-		usedVariables: Set<string>,
+		references: ElementReferences,
 		element: T,
 		elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
 	) {
 		this.#parser = parser
-		this.#usedVariables = usedVariables
+		this.#references = references
 
 		this.#element = element
 		this.#elementOverrides = elementOverrides
@@ -53,8 +80,11 @@ export class ElementExpressionHelper<T> {
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
-			this.#usedVariables.add(variable)
+			this.#references.usedVariables.add(variable)
 		}
+
+		// Track clock sensitivity, even when the expression failed
+		if (result.clockSensitive) this.#references.clockSensitive = true
 
 		return result
 	}
@@ -65,7 +95,7 @@ export class ElementExpressionHelper<T> {
 
 			// Track the variables used
 			for (const variable of result.variableIds) {
-				this.#usedVariables.add(variable)
+				this.#references.usedVariables.add(variable)
 			}
 
 			return String(result.text)
@@ -119,6 +149,45 @@ export class ElementExpressionHelper<T> {
 		// (e.g. when a referenced variable doesn't exist). Treat NaN as a missing value.
 		const num = Number(result.value)
 		return isNaN(num) ? defaultValue : num * scale
+	}
+
+	/**
+	 * Resolve a color property, preserving css color strings. A numeric (or numeric-string) value becomes a number;
+	 * a valid css color string is kept as-is; anything else falls back to the default. Mirrors the number/string
+	 * semantics of parseColor so the value renders correctly downstream.
+	 *
+	 * When allowAlpha is false (the field disables alpha) any transparency is discarded, so a translucent value is
+	 * forced fully opaque.
+	 */
+	getColor(propertyName: keyof T, defaultValue: number | string, allowAlpha = true): number | string {
+		const value = this.#getValue(propertyName)
+
+		let raw: unknown
+		if (!value.isExpression) {
+			raw = value.value
+		} else {
+			// Do not force a 'number' result type, otherwise a css color string would be rejected
+			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+			raw = result.ok ? result.value : undefined
+		}
+
+		let color: number | string
+		if (typeof raw === 'number' && !isNaN(raw)) {
+			color = raw
+		} else if (typeof raw === 'string' && raw.trim() !== '' && !isNaN(Number(raw))) {
+			color = Number(raw)
+		} else if (typeof raw === 'string' && colord(raw).isValid()) {
+			color = raw
+		} else {
+			color = defaultValue
+		}
+
+		if (!allowAlpha) {
+			// Discard any transparency: clear the alpha byte on a number, or force a css string fully opaque
+			if (typeof color === 'number') return color & 0xffffff
+			if (colord(color).alpha() < 1) return colord(color).alpha(1).toRgbString()
+		}
+		return color
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
@@ -253,7 +322,7 @@ export class ElementExpressionHelper<T> {
 				normalised[key] = isExpressionOrValue(val) ? val : { isExpression: false, value: val as JsonValue | undefined }
 			}
 		}
-		return new ElementExpressionHelper(this.#parser, this.#usedVariables, normalised, undefined)
+		return new ElementExpressionHelper(this.#parser, this.#references, normalised, undefined)
 	}
 
 	getVerticalAlignment(propertyName: keyof T): VerticalAlignment {
@@ -293,7 +362,7 @@ export interface ParseElementsContext {
 	 */
 	createHelper<T extends { readonly id: string }>(
 		element: T
-	): { helper: ElementExpressionHelper<T>; usedVariables: ReadonlySet<string> }
+	): { helper: ElementExpressionHelper<T>; references: ElementReferences }
 
 	/** The cache for storing/retrieving converted elements */
 	readonly cache: ElementConversionCache | null
@@ -357,13 +426,11 @@ export function createParseElementsContext(
 
 		createHelper<T extends { readonly id: string }>(
 			element: T
-		): { helper: ElementExpressionHelper<T>; usedVariables: ReadonlySet<string> } {
-			// Create per-element references that will be merged into global references
-			const usedVariables = new Set<string>()
+		): { helper: ElementExpressionHelper<T>; references: ElementReferences } {
+			const references = createElementReferences()
+			const helper = new ElementExpressionHelper(parser, references, element, feedbackOverrides.get(element.id))
 
-			const helper = new ElementExpressionHelper(parser, usedVariables, element, feedbackOverrides.get(element.id))
-
-			return { helper, usedVariables }
+			return { helper, references }
 		},
 
 		withPropOverrides(propOverrides: VariableValues): ParseElementsContext {

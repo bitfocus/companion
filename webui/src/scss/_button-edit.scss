@@ -1,5 +1,5 @@
 @use 'variables' as *;
-@use '@coreui/coreui/scss/mixins/breakpoints';
+@use 'vendor/coreui/mixins/breakpoints';
 
 .edit-button-panel {
 	height: 100%;
@@ -152,7 +152,7 @@
 
 	.entity-row.entity-disabled {
 		.cell-name,
-		.form-label2 {
+		.form-label {
 			color: var(--cui-disabled);
 		}
 	}
@@ -173,21 +173,58 @@
 		display: flex;
 		flex-direction: row;
 		margin-right: -0.75rem;
+		min-width: 0;
 
 		.cell-name {
 			flex-grow: 1;
+			min-width: 0;
 
 			font-weight: bold;
 			align-self: center;
+
+			// Long headlines/names (including unbreakable strings) wrap instead of overflowing the row,
+			// and anything that still can't fit is clipped here rather than spilling under the controls
+			overflow-wrap: anywhere;
+			overflow: hidden;
 
 			input {
 				font-weight: bold;
 				margin-bottom: 5px;
 			}
+
+			// A collapsed local variable shows its name alongside a compact preview of its current value
+			.cell-name-local-variable {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				gap: 0.5rem;
+				min-width: 0;
+
+				.cell-name-local-variable-label {
+					// Fixed-basis column so the value previews line up across rows. A name longer than the
+					// column is truncated with an ellipsis (full text on hover) rather than overflowing, and
+					// the column shrinks gracefully when the panel is too narrow to fit it.
+					flex: 0 1 14rem;
+					min-width: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+
+				.cell-name-local-variable-value {
+					// Takes the remaining space; clips its own overflow so a long value can't slide under
+					// the controls on a narrow panel
+					flex: 1 1 auto;
+					min-width: 0;
+					overflow: hidden;
+				}
+			}
 		}
 		.cell-controls {
 			text-align: right;
 			align-self: center;
+			// Never shrink the buttons - otherwise they get squeezed and overlap the name/value
+			flex-shrink: 0;
 		}
 	}
 	.editor-grid {
@@ -647,12 +684,17 @@
 				padding-right: 0.2rem;
 			}
 
-			// dnd-kit sortable feedback (no blur - a filter on the top-layer popover breaks rendering)
-			&[data-dnd-placeholder] {
+			// Reorders on hover: dim the in-place source row; the floating preview clone gets the lifted look
+			&.row-dragging {
 				opacity: 0.4;
 			}
-			&[data-dnd-dragging] {
+			&.dnd-drag-preview {
 				@include dragging-style(#fff);
+
+				// Blend the reorder handle into the lifted card
+				.td-reorder {
+					background-color: transparent;
+				}
 			}
 
 			&.last-row {

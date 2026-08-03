@@ -10,7 +10,6 @@
  */
 
 import { EventEmitter } from 'node:events'
-import path from 'node:path'
 import type express from 'express'
 import workerPool from 'workerpool'
 import z from 'zod'
@@ -43,7 +42,7 @@ import type { PageController } from '../Page/Controller.js'
 import { zodLocation } from '../Preview/Graphics.js'
 import type { AppInfo } from '../Registry.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { isPackaged } from '../Resources/Util.js'
+import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -69,7 +68,7 @@ export class ImportExportController {
 	readonly #exportController: ExportController
 	readonly #importController: ImportController
 
-	#pool = workerPool.pool(path.join(import.meta.dirname, isPackaged() ? './ImportExportThread.js' : './Thread.js'), {
+	#pool = workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'ImportExportThread.js'), {
 		minWorkers: 1,
 		maxWorkers: 1, // Only need one worker for import parsing
 		workerType: 'thread',
@@ -386,7 +385,7 @@ export class ImportExportController {
 							return null
 					}
 
-					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null)
+					const parser = this.#variablesController.values.createVariablesAndExpressionParser(null, null, null, null)
 
 					// Compute the new drawing
 					const { elements } = await ConvertSomeButtonGraphicsElementForDrawing(

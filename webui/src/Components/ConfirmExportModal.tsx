@@ -1,10 +1,11 @@
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useRef, useState } from 'react'
+import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
 import { windowLinkOpen } from '~/Helpers/Window.js'
-import { ExportFormatDefault, SelectExportFormat } from '~/ImportExport/ExportFormat.js'
+import { SelectExportFormat } from '~/ImportExport/ExportFormat.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InlineHelpIcon } from './InlineHelp.js'
 import { SwitchInputField } from './SwitchInputField.js'
@@ -22,9 +23,11 @@ export const ConfirmExportModal = observer(
 	forwardRef<ConfirmExportModalRef, ConfirmExportModalProps>(function ConfirmExportModal(props, ref) {
 		const { userConfig } = useContext(RootAppStoreContext)
 
+		const defaultExportFormat = userConfig.properties?.default_export_format ?? ExportFormatDefault
+
 		const [data, setData] = useState<string | null>(null)
 		const [show, setShow] = useState(false)
-		const [format, setFormat] = useState(ExportFormatDefault)
+		const [format, setFormat] = useState(defaultExportFormat)
 		const [filename, setFilename] = useState<string>('')
 		const [includeSecrets, setIncludeSecrets] = useState<boolean>(true)
 
@@ -52,12 +55,13 @@ export const ConfirmExportModal = observer(
 					setData(url)
 					setShow(true)
 
-					// Reset to default filename each time modal is opened
+					// Reset to defaults each time modal is opened
+					setFormat(defaultExportFormat)
 					setFilename(String(defaultExportFilename))
 					setIncludeSecrets(true)
 				},
 			}),
-			[defaultExportFilename]
+			[defaultExportFilename, defaultExportFormat]
 		)
 
 		const exportFormatId = useId()
@@ -80,14 +84,14 @@ export const ConfirmExportModal = observer(
 							</Modal.Header>
 							<Modal.Body>
 								<Form className="row g-3" onSubmit={doAction}>
-									<FormLabel htmlFor={exportFormatId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={exportFormatId} sm={4} column="sm">
 										File format
 									</FormLabel>
 									<div className="col-sm-8">
 										<SelectExportFormat id={exportFormatId} value={format} setValue={setFormat} />
 									</div>
 
-									<FormLabel htmlFor={exportNameId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={exportNameId} sm={4} column="sm">
 										File name
 									</FormLabel>
 									<div className="col-sm-8">
@@ -100,7 +104,7 @@ export const ConfirmExportModal = observer(
 										/>
 									</div>
 
-									<FormLabel htmlFor={exportSecretsId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={exportSecretsId} sm={4} column="sm">
 										Include secrets
 										<InlineHelpIcon className="ms-1">
 											Some connections have secret values that can be omitted from the export. Not all modules are

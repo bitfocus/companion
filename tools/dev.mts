@@ -2,11 +2,9 @@
 import { ChildProcess } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import chokidar from 'chokidar'
-import concurrently from 'concurrently'
-import debounceFn from 'debounce-fn'
 import semver from 'semver'
 import { $, argv, usePowerShell } from 'zx'
+import { devThreadOutDir, startDevThreadBuild } from './build_dev_threads.mts'
 import { determinePlatformInfo } from './build/util.mts'
 import { fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
 import { fetchNodejs } from './fetch_nodejs.mts'
@@ -27,11 +25,13 @@ if (!semver.satisfies(process.versions.node, nodeJsValidRange)) {
 	process.exit(1)
 }
 
+const repoRoot = path.join(import.meta.dirname, '..')
+
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
 
 const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
-const devModulesPath = rawDevModulesPath ? path.resolve(rawDevModulesPath) : undefined
+const devModulesPath = rawDevModulesPath ? path.resolve(repoRoot, rawDevModulesPath) : undefined
 
 if (devModulesPath) {
 	const argvIndex = process.argv.indexOf('--extra-module-path')
@@ -57,6 +57,12 @@ if (process.env.COMPANION_TRUSTED_PROXIES === undefined) {
 	process.env.COMPANION_TRUSTED_PROXIES = 'loopback'
 }
 
+// Allow overriding the config base dir, resolved relative to the repo root
+if (process.env.COMPANION_CONFIG_BASEDIR) {
+	const configBaseDir = path.resolve(repoRoot, process.env.COMPANION_CONFIG_BASEDIR)
+	process.argv.push(`--config-dir=${configBaseDir}`)
+}
+
 const inspectIndex = process.argv.findIndex((arg) => arg.startsWith('--inspect'))
 if (inspectIndex !== -1) {
 	const inspectArg = process.argv[inspectIndex]
@@ -79,18 +85,9 @@ await $`git submodule init`
 await $`git submodule sync`
 await $`git submodule update`
 
-console.log('Performing first build of components')
-
-if (!fs.existsSync('../shared-lib/dist')) {
-	await $`yarn workspace @companion-app/shared build:ts`.catch((e) => {
-		console.error(e)
-	})
-}
-if (!fs.existsSync('../companion/dist')) {
-	await $`yarn workspace companion build`.catch((e) => {
-		console.error(e)
-	})
-}
+// The backend and shared-lib run directly from their TypeScript sources via tsx (below), so there
+// is no `tsc` emit to perform first. Only the webui needs a build up-front, since the backend
+// serves `webui/build`.
 if (!fs.existsSync('../webui/build')) {
 	await $`yarn workspace @companion-app/webui build`.catch((e) => {
 		console.error(e)
@@ -99,163 +96,51 @@ if (!fs.existsSync('../webui/build')) {
 	console.warn('Skipping webui build, you may need to run `yarn dist:webui` if changes have been made recently')
 }
 
-console.log('Starting typescript watchers')
+// Bundle the worker-thread / module-subprocess entrypoints with esbuild (watched). These cannot run
+// from raw source under tsx: the module subprocesses run in Node's --permission sandbox with a
+// stripped env, so no tsx loader reaches them. Everything else runs from source. Wait for the first
+// build so the backend never spawns a thread before its bundle exists.
+console.log('Building worker-thread entrypoints (esbuild, watched)')
+await startDevThreadBuild()
 
-concurrently([
-	{
-		command: `yarn build:watch --preserveWatchOutput`,
-		cwd: '../',
-		name: 'tsc',
-	},
-]).result.catch((e) => {
-	console.error(e)
-
-	if (node) {
-		node.kill()
-	}
-
-	process.exit(1)
-})
-
-const cachedDebounces = {} as Record<string, any>
-
-const mainWatcher = chokidar
-	.watch(['../companion', '../shared-lib', '../docs', '../package.json', '../tsconfig.json'], {
-		ignoreInitial: true,
-		ignored: (filePath, stats) => {
-			if (filePath.includes('node_modules') || filePath.includes('test')) {
-				return true
-			}
-			if (
-				stats?.isFile() &&
-				!filePath.endsWith('.mjs') &&
-				!filePath.endsWith('.js') &&
-				!filePath.endsWith('.cjs') &&
-				!filePath.endsWith('.json')
-			) {
-				return true
-			}
-			return false
-		},
-	})
-	.on('all', (event, filename) => {
-		if (filename.endsWith('shared-lib/lib/Paths.mts')) {
-			// Exit when the paths change, as that usually means the config dir will have changed, and that may not be detected fast enough
-			console.warn('Config paths changed, exiting')
-			process.exit(0)
-		}
-		// Something else changed
-		restart()
-	})
-	.on('error', (error) => {
-		console.warn(`Watcher error: ${error}`)
-	})
-
-if (devModulesPath) {
-	// Stagger module watcher startup to avoid FD spike during initialization
-	mainWatcher.on('ready', () => {
-		chokidar
-			.watch('.', {
-				cwd: devModulesPath,
-				ignoreInitial: true,
-				ignored: (filePath, stats) => {
-					if (
-						stats?.isFile() &&
-						!filePath.endsWith('.mjs') &&
-						!filePath.endsWith('.js') &&
-						!filePath.endsWith('.cjs') &&
-						!filePath.endsWith('.json')
-					) {
-						return true
-					}
-					if (filePath.includes('node_modules')) {
-						return true
-					}
-					return false
-				},
-			})
-			.on('all', (event, filename) => {
-				const moduleDirName = filename.split(path.sep)[0]
-				// Module changed
-
-				let fn = cachedDebounces[moduleDirName]
-				if (!fn) {
-					fn = debounceFn(
-						() => {
-							console.log('Sending reload for module:', moduleDirName)
-							if (node) {
-								node.send({
-									messageType: 'reload-extra-module',
-									fullpath: path.join(devModulesPath, moduleDirName),
-								})
-							}
-						},
-						{
-							after: true,
-							before: false,
-							wait: 1000,
-						}
-					)
-					cachedDebounces[moduleDirName] = fn
-				}
-
-				fn()
-			})
-			.on('error', (error) => {
-				console.warn(`Module watcher error: ${error}`)
-			})
-	})
-}
-
-async function start() {
-	node = $.spawn('node', [...nodeArgs, 'dist/main.js', ...process.argv.slice(3)], {
-		stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+function start() {
+	// Run the backend directly from TypeScript source, watched+restarted by `tsx watch`. tsx is
+	// launched through zx's shell (like the tsx call above) so the binary resolves cross-platform.
+	// The companion:source condition (via NODE_OPTIONS, so it also reaches child node processes)
+	// redirects @companion-app/shared imports to its `.ts` sources. COMPANION_DEV_THREAD_DIR tells
+	// the backend where to find the esbuild-bundled thread entrypoints; COMPANION_DEV_MODULES_PATH
+	// tells main-dev.ts which local-dev module directory to watch for hot-reload. Any --inspect flag
+	// is placed after `watch` so tsx forwards it to the watched process rather than the supervisor.
+	//
+	// `--include` also watches the esbuild-bundled thread entrypoints: tsx only watches its own
+	// import graph, and the thread bundles are not in it, so without this a change to thread code
+	// would rebuild the bundle but never restart the backend that spawns those threads. The glob is
+	// passed interpolated so zx quotes it (the shell must not expand it - tsx expands it itself).
+	const threadBundleGlob = path.join(devThreadOutDir, '*.js')
+	const proc = $({
 		cwd: path.join(import.meta.dirname, '../companion'),
+		stdio: 'inherit',
 		env: {
 			...process.env,
 
+			NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --conditions=companion:source`.trim(),
 			COMPANION_DEV_MODULES: '1',
+			COMPANION_DEV_MODULES_PATH: devModulesPath ?? '',
+			COMPANION_DEV_THREAD_DIR: devThreadOutDir,
 		},
-	})
+	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(3)}`
+
+	node = proc.child ?? null
+
+	// tsx watch exiting means the dev session is over (e.g. Ctrl-C); mirror its exit code.
+	proc.then(
+		(r) => process.exit(r.exitCode ?? 0),
+		(r) => process.exit(r?.exitCode ?? 1)
+	)
 }
 
-let canStart = false
-const restart = debounceFn(
-	() => {
-		if (!canStart) return
-
-		if (node) {
-			// Check if process has already exited
-			if (node.exitCode !== null) node = null
-
-			// Try and kill the process
-			if (node && !node.kill()) {
-				console.error('Failed to kill')
-				process.exit(1)
-			}
-		}
-
-		console.log('********')
-		console.log('RESTARTING')
-		console.log('********')
-
-		if (!node) {
-			start()
-		} else if (node.listenerCount('close') === 0) {
-			node.on('close', () => {
-				node = null
-				start()
-			})
-		}
-	},
-	{
-		after: true,
-		before: false,
-		wait: 1000,
-	}
-)
-
-function signalHandler(signal: NodeJS.Signals) {
+function signalHandler(_signal: NodeJS.Signals) {
+	if (node) node.kill()
 	process.exit()
 }
 
@@ -264,10 +149,5 @@ process.on('SIGINT', signalHandler)
 process.on('SIGTERM', signalHandler)
 process.on('SIGQUIT', signalHandler)
 
-// Trigger a start soon
-setTimeout(() => {
-	console.log('Starting application')
-	canStart = true
-
-	restart()
-}, 3000)
+console.log('Starting application')
+start()

@@ -13,6 +13,7 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import {
+	computeHiddenEntityOptionFields,
 	executeExpression,
 	parseVariablesInString,
 	visitEntityOptionsForVariables,
@@ -25,6 +26,18 @@ import {
 import type { VariablesBlinker } from './VariablesBlinker.js'
 
 /**
+ * Options controlling how an expression parser behaves in its evaluation context.
+ */
+export interface ExpressionParserOptions {
+	/**
+	 * Whether clock-sensitive expression functions (e.g. `oscillate()`) are permitted.
+	 * Defaults to `true`. Set `false` in contexts that have no render clock to drive re-evaluation
+	 * (e.g. when parsing action options), so such expressions are rejected rather than silently frozen.
+	 */
+	allowClockSensitive?: boolean
+}
+
+/**
  * A class to parse and execute expressions with variables
  * This allows for preparing any injected/lazy variables before executing multiple expressions
  */
@@ -33,6 +46,10 @@ export class VariablesAndExpressionParser {
 
 	readonly #blinker: VariablesBlinker
 
+	/**
+	 * The resolved options for this parser.
+	 */
+	readonly #options: ExpressionParserOptions
 	readonly #rawVariableValues: ReadonlyDeep<VariableValueData>
 	readonly #thisValues: VariablesCache
 	readonly #localValues: VariablesCache = new Map()
@@ -70,10 +87,12 @@ export class VariablesAndExpressionParser {
 		thisValues: VariablesCache,
 		localValues: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues | null,
-		pageValues: ControlEntityInstance[] | null = null
+		pageValues: ControlEntityInstance[] | null,
+		options: ExpressionParserOptions | undefined
 	) {
 		this.#userconfig = userconfig
 		this.#blinker = blinker
+		this.#options = options ?? {}
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
 		this.#overrideVariableValues = overrideVariableValues || {}
@@ -92,7 +111,9 @@ export class VariablesAndExpressionParser {
 			{
 				...this.#overrideVariableValues,
 				...overrideVariableValues,
-			}
+			},
+			null,
+			this.#options
 		)
 
 		// Manual clone the localValues
@@ -126,7 +147,9 @@ export class VariablesAndExpressionParser {
 			{},
 			new Map(),
 			null,
-			overrideVariableValues
+			overrideVariableValues,
+			null,
+			this.#options
 		)
 	}
 
@@ -138,7 +161,7 @@ export class VariablesAndExpressionParser {
 			// Push the cached values to the store
 			this.#localValues.set(
 				variableName,
-				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue(null) : entity.feedbackValue
 			)
 		}
 	}
@@ -154,7 +177,7 @@ export class VariablesAndExpressionParser {
 
 			this.#pageValues.set(
 				`page:${rawName}`,
-				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue() : entity.feedbackValue
+				isInternalLogicFeedback(entity) ? entity.getBooleanFeedbackValue(null) : entity.feedbackValue
 			)
 		}
 	}
@@ -172,7 +195,9 @@ export class VariablesAndExpressionParser {
 			this.#rawVariableValues,
 			requiredType,
 			this.#valueCacheAccessor,
-			this.#userconfig.getKey('timezone') || undefined
+			this.#userconfig.getKey('timezone') || undefined,
+			undefined,
+			this.#options.allowClockSensitive ?? true
 		)
 	}
 
@@ -197,19 +222,32 @@ export class VariablesAndExpressionParser {
 				ok: true
 				parsedOptions: CompanionOptionValues
 				referencedVariableIds: Set<string>
+				clockSensitive: boolean
 		  }
 		| {
 				ok: false
 				optionErrors: Record<string, string | undefined>
 				referencedVariableIds: Set<string>
+				clockSensitive: boolean
 		  } {
 		const referencedVariableIds = new Set<string>()
 		const parseErrors: Record<string, string | undefined> = {}
+		let clockSensitive = false
+
+		// Fields hidden by their isVisible logic must not be parsed/validated - the user can't see
+		// them, so their (possibly stale/invalid) value would only produce confusing errors. Emit
+		// the field default instead.
+		const hiddenFields = computeHiddenEntityOptionFields(entityDefinition, options)
 
 		const parsedOptions = visitEntityOptionsForVariables(entityDefinition, options, (field, optionValue, fieldType) => {
 			// For passthrough fields, skip all processing and just extract the raw value
 			if (fieldType === null) {
 				return optionValue?.value
+			}
+
+			// Hidden fields are not parsed/validated; use the field default so the value stays type-safe
+			if (hiddenFields.has(field.id)) {
+				return 'default' in field ? structuredClone(field.default) : undefined
 			}
 
 			const parsedValue = this.parseEntityOption(optionValue, fieldType)
@@ -232,13 +270,16 @@ export class VariablesAndExpressionParser {
 				}
 			}
 
+			// Track clock sensitivity
+			if (parsedValue.clockSensitive) clockSensitive = true
+
 			return sanitisedValue
 		})
 
 		if (Object.keys(parseErrors).length > 0) {
-			return { ok: false, optionErrors: parseErrors, referencedVariableIds }
+			return { ok: false, optionErrors: parseErrors, referencedVariableIds, clockSensitive }
 		} else {
-			return { ok: true, parsedOptions, referencedVariableIds }
+			return { ok: true, parsedOptions, referencedVariableIds, clockSensitive }
 		}
 	}
 
@@ -254,12 +295,14 @@ export class VariablesAndExpressionParser {
 	): {
 		value: JsonValue | undefined
 		referencedVariableIds: ReadonlySet<string>
+		clockSensitive: boolean
 	} {
 		// No object, so just return undefined
 		if (!rawValue) {
 			return {
 				value: undefined,
 				referencedVariableIds: new Set(),
+				clockSensitive: false,
 			}
 		}
 
@@ -271,6 +314,7 @@ export class VariablesAndExpressionParser {
 			return {
 				value: parseResult.value,
 				referencedVariableIds: parseResult.variableIds,
+				clockSensitive: parseResult.clockSensitive,
 			}
 		} else if ((!rawValue.isExpression || !options.allowExpression) && options.parseVariables) {
 			// Field needs parsing
@@ -280,12 +324,14 @@ export class VariablesAndExpressionParser {
 			return {
 				value: parseResult.text,
 				referencedVariableIds: parseResult.variableIds,
+				clockSensitive: false,
 			}
 		} else {
 			// 'expression-or-variables' with isExpression=false - just use the value as-is
 			return {
 				value: rawValue.value,
 				referencedVariableIds: new Set(),
+				clockSensitive: false,
 			}
 		}
 	}

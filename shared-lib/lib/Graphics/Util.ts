@@ -112,6 +112,26 @@ export const parseColor = (color: number | string, skipValidation = false): stri
 	return 'rgba(0, 0, 0, 0)'
 }
 
+/**
+ * Get the alpha (0-1) of a Companion color number or css color string. Safe for both numbers and css strings.
+ */
+export const parseColorAlpha = (color: number | string): number => colord(parseColor(color)).alpha()
+
+/**
+ * Parse a Companion color number or a css color string and return a Companion color number.
+ * Alpha is packed into the top 8 bits (inverted), matching the encoding used elsewhere. Invalid input returns 0.
+ * (Numeric strings such as '123' are treated as a color number, matching parseColor.)
+ */
+export const colorToNumber = (color: number | string): number => {
+	if (typeof color === 'number') return color
+	if (color.trim() !== '' && !isNaN(Number(color))) return Number(color)
+	if (!colord(color).isValid()) return 0
+
+	const { r, g, b, a } = colord(color).toRgb()
+	const alphaByte = Math.round(255 * (1 - a))
+	return ((r << 16) | (g << 8) | b) + (alphaByte > 0 ? alphaByte * 0x1000000 : 0)
+}
+
 export type ResolveButtonStylePropertiesConfig = Pick<UserConfigModel, 'buttons_decoration' | 'buttons_status_icons'>
 
 export function resolveButtonStyleProperties(

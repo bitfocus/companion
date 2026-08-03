@@ -107,7 +107,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 							</div>
 						</div>
 						<Grid.Row>
-							<FormLabel htmlFor={descriptionFieldId} className="col-sm-3 align-right">
+							<FormLabel htmlFor={descriptionFieldId} sm={3} className="align-right">
 								Description:
 							</FormLabel>
 							<Grid.Col sm={9}>
@@ -119,7 +119,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								/>
 							</Grid.Col>
 
-							<FormLabel htmlFor={currentValueFieldId} className="col-sm-3 align-right">
+							<FormLabel htmlFor={currentValueFieldId} sm={3} className="align-right">
 								Current value:
 							</FormLabel>
 							<Grid.Col sm={9}>
@@ -130,7 +130,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 								/>
 							</Grid.Col>
 
-							<FormLabel htmlFor={startupValueFieldId} className="col-sm-3 align-right">
+							<FormLabel htmlFor={startupValueFieldId} sm={3} className="align-right">
 								Startup value:
 							</FormLabel>
 							<Grid.Col sm={9}>

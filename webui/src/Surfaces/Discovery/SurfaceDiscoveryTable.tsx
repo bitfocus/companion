@@ -11,6 +11,7 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { assertNever, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -56,7 +57,7 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 		<>
 			<SetupSatelliteModal ref={setupSatelliteRef} />
 
-			<table className="table table-responsive-sm">
+			<Table>
 				<thead>
 					<tr>
 						<th>Name</th>
@@ -86,7 +87,7 @@ export const SurfaceDiscoveryTable = observer(function SurfaceDiscoveryTable() {
 						</tr>
 					)}
 				</tbody>
-			</table>
+			</Table>
 		</>
 	)
 })
@@ -181,6 +182,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 						},
 						parseVariables: null, // Not supported here
 						blink: undefined, // Not supported here
+						oscillate: undefined, // Not supported here
 
 						defaultTimezone: undefined, // no timezone context
 					})

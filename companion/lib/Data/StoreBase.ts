@@ -13,6 +13,32 @@ enum DatabaseStartupState {
 }
 
 /**
+ * The kinds of row-level operation a DataStoreTableView performs, used as a metrics label.
+ * `get` = point read, `get_all` = full-table read, `set` = insert/update, `delete`/`clear` = removals.
+ */
+export type DatabaseOperation = 'get' | 'get_all' | 'set' | 'delete' | 'clear'
+
+export const DATABASE_OPERATIONS: DatabaseOperation[] = ['get', 'get_all', 'set', 'delete', 'clear']
+
+/** Per-table operation and error counts, accumulated over the process lifetime for metrics. */
+export interface TableOperationStats {
+	table: string
+	counts: Record<DatabaseOperation, number>
+	errors: Record<DatabaseOperation, number>
+}
+
+/** Sink called with the timing of each completed SQLite operation. */
+export type OperationObserver = (table: string, operation: DatabaseOperation, seconds: number) => void
+
+/** Callbacks a table view invokes back into its owning store. */
+interface DataStoreTableViewHooks {
+	/** Mark the database as having unsaved changes. */
+	onDirty: () => void
+	/** Report the timing of a completed operation (table is filled in by the store). */
+	onOperation: (operation: DatabaseOperation, seconds: number) => void
+}
+
+/**
  * Abstract class to be extended by the DB classes.
  * See {@link DataCache} and {@link DataDatabase}
  *
@@ -88,6 +114,11 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	private tableCache = new Map<string, DataStoreTableView<any>>()
 	/**
+	 * Sink for per-operation timings. Required and injected at construction, so it is immutable for the
+	 * store's lifetime and cannot be forgotten when a new store type is added.
+	 */
+	private readonly operationObserver: OperationObserver
+	/**
 	 * The SQLite database
 	 */
 	public store!: DatabaseSync
@@ -99,13 +130,21 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * @param name - the name of the flat file
 	 * @param defaultTable - the default table for data
 	 * @param debug - module path to be used in the debugger
+	 * @param operationObserver - sink for per-operation timings
 	 */
-	constructor(configDir: string, name: string, defaultTable: string, debug: string) {
+	constructor(
+		configDir: string,
+		name: string,
+		defaultTable: string,
+		debug: string,
+		operationObserver: OperationObserver
+	) {
 		this.logger = LogController.createLogger(debug)
 
 		this.cfgDir = configDir
 		this.name = name
 		this.defaultTable = defaultTable
+		this.operationObserver = operationObserver
 
 		if (configDir != ':memory:') {
 			this.cfgFile = path.join(this.cfgDir, this.name + '.sqlite')
@@ -214,6 +253,10 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 					this.tableCache.clear()
 					this.defaultTableView.get('test')
 				} catch (_e) {
+					// Release our handle on the unreadable file before touching it on disk. Windows keeps a
+					// lock on open files, so leaving it open would block the rename below (and leak the handle).
+					this.#closeStoreQuietly()
+
 					try {
 						try {
 							if (fs.existsSync(this.cfgCorruptFile)) {
@@ -242,6 +285,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 					this.migrateFileToSqlite()
 					this.defaultTableView.get('test')
 				} catch (e) {
+					// Release the handle opened above before resetting (see the corrupt-file path)
+					this.#closeStoreQuietly()
+
 					this.setStartupState(DatabaseStartupState.Reset)
 					this.logger.error(stringifyError(e))
 					this.startSQLiteWithDefaults()
@@ -284,6 +330,17 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		}
 
 		this.setBackupCycle()
+	}
+
+	/** Close the current database handle if one is open, swallowing any error. Used on the recovery
+	 * paths before a file is renamed/deleted or the store is reopened, so a stale handle isn't leaked
+	 * (and doesn't keep a Windows file lock that would block the rename). */
+	#closeStoreQuietly(): void {
+		try {
+			this.store?.close()
+		} catch (_e) {
+			// Already closed or never opened; nothing to do
+		}
 	}
 
 	#createDatabase(filename: string) {
@@ -359,10 +416,42 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		const cachedTable = this.tableCache.get(tableName)
 		if (cachedTable) return cachedTable
 
-		const newTable = new DataStoreTableView<TableContent>(this.logger, this.store, tableName, () => this.setDirty())
+		const newTable = new DataStoreTableView<TableContent>(this.logger, this.store, tableName, {
+			onDirty: () => this.setDirty(),
+			// The view knows the table; the store adds the database name when forwarding to the observer.
+			onOperation: (operation, seconds) => this.operationObserver(tableName, operation, seconds),
+		})
 		this.tableCache.set(tableName, newTable)
 
 		return newTable
+	}
+
+	/** Operation/error counts, for metrics. Only covers tables that have a cached view (i.e. seen traffic). */
+	public getTableOperationStats(): TableOperationStats[] {
+		return Array.from(this.tableCache.values(), (view) => view.collectOperationStats())
+	}
+
+	/** Row count of every table, enumerated from `sqlite_master` so untouched tables are included too. */
+	public getTableRowCounts(): { table: string; rows: number }[] {
+		try {
+			const tables = this.store
+				.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`)
+				.all() as { name: string }[]
+
+			const out: { table: string; rows: number }[] = []
+			for (const { name } of tables) {
+				try {
+					const row = this.store.prepare(`SELECT COUNT(*) AS count FROM "${name}"`).get() as { count: number }
+					out.push({ table: name, rows: row.count })
+				} catch (e) {
+					this.logger.warn(`Error counting rows in ${name}: ${stringifyError(e)}`)
+				}
+			}
+			return out
+		} catch (e) {
+			this.logger.warn(`Error reading table list: ${stringifyError(e)}`)
+			return []
+		}
 	}
 
 	/**
@@ -498,7 +587,10 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 
 	readonly #store: DatabaseSync
 	readonly tableName: string
-	readonly #triggerDirty: () => void
+	readonly #hooks: DataStoreTableViewHooks
+
+	readonly #opCounts: Record<DatabaseOperation, number> = { get: 0, get_all: 0, set: 0, delete: 0, clear: 0 }
+	readonly #opErrors: Record<DatabaseOperation, number> = { get: 0, get_all: 0, set: 0, delete: 0, clear: 0 }
 
 	readonly #deleteByIdQuery: StatementSync
 	readonly #emptyTableQuery: StatementSync
@@ -506,11 +598,11 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 	readonly #getByIdQuery: StatementSync
 	readonly #setByIdQuery: StatementSync
 
-	constructor(logger: Logger, store: DatabaseSync, tableName: string, triggerDirty: () => void) {
+	constructor(logger: Logger, store: DatabaseSync, tableName: string, hooks: DataStoreTableViewHooks) {
 		this.#logger = logger.child({ source: tableName })
 		this.#store = store
 		this.tableName = tableName
-		this.#triggerDirty = triggerDirty
+		this.#hooks = hooks
 
 		// Ensure the table exists
 		this.#store.prepare(`CREATE TABLE IF NOT EXISTS ${tableName} (id STRING UNIQUE, value STRING);`).run()
@@ -529,6 +621,33 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 	}
 
 	/**
+	 * Run a single SQLite statement, recording its count, timing, and (on throw) error against the operation.
+	 * Rethrows so the caller's existing error handling still logs and falls back.
+	 */
+	#runOp<T>(operation: DatabaseOperation, fn: () => T): T {
+		const start = process.hrtime.bigint()
+		try {
+			const result = fn()
+			this.#opCounts[operation]++
+			return result
+		} catch (e) {
+			this.#opErrors[operation]++
+			throw e
+		} finally {
+			this.#hooks.onOperation(operation, Number(process.hrtime.bigint() - start) / 1e9)
+		}
+	}
+
+	/** Snapshot of this table's accumulated operation and error counts, for metrics. */
+	collectOperationStats(): TableOperationStats {
+		return {
+			table: this.tableName,
+			counts: { ...this.#opCounts },
+			errors: { ...this.#opErrors },
+		}
+	}
+
+	/**
 	 * Get all rows from the table
 	 */
 	all(): TableContent {
@@ -539,7 +658,7 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		this.#logger.silly(`Get table`)
 
 		try {
-			const rows = this.#getAllQuery.all()
+			const rows = this.#runOp('get_all', () => this.#getAllQuery.all())
 			for (const record of rows) {
 				try {
 					// @ts-expect-error can't use as index
@@ -560,7 +679,7 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		this.#logger.silly(`Get table key: ${key}`)
 
 		try {
-			const row = this.#getByIdQuery.get({ id: key })
+			const row = this.#runOp('get', () => this.#getByIdQuery.get({ id: key }))
 			return row?.value as string | undefined
 		} catch (e) {
 			this.#logger.warn(`Error getting ${key}: ${stringifyError(e)}`)
@@ -577,12 +696,12 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		this.#logger.silly(`Set table key ${key} - ${value}`)
 
 		try {
-			this.#setByIdQuery.run({ id: key, value: value })
+			this.#runOp('set', () => this.#setByIdQuery.run({ id: key, value: value }))
 		} catch (e) {
 			this.#logger.warn(`Error updating ${key}: ${stringifyError(e)}`)
 		}
 
-		this.#triggerDirty()
+		this.#hooks.onDirty()
 	}
 
 	/**
@@ -679,12 +798,12 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		this.#logger.silly(`Delete key: ${id}`)
 
 		try {
-			this.#deleteByIdQuery.run({ id })
+			this.#runOp('delete', () => this.#deleteByIdQuery.run({ id }))
 		} catch (e) {
 			this.#logger.warn(`Error deleting ${id}: ${stringifyError(e)}`)
 		}
 
-		this.#triggerDirty()
+		this.#hooks.onDirty()
 	}
 
 	/**
@@ -694,11 +813,11 @@ export class DataStoreTableView<TableContent extends Record<string, any>> {
 		this.#logger.silly(`Empty table`)
 
 		try {
-			this.#emptyTableQuery.run()
+			this.#runOp('clear', () => this.#emptyTableQuery.run())
 		} catch (e) {
 			this.#logger.warn(`Error emptying: ${stringifyError(e)}`)
 		}
 
-		this.#triggerDirty()
+		this.#hooks.onDirty()
 	}
 }

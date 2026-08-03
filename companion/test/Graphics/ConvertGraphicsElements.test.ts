@@ -92,6 +92,7 @@ function makeBoxDrawEl(overrides: Partial<ButtonGraphicsBoxDrawElement> = {}): B
 		height: 100,
 		rotation: 0,
 		color: 0,
+		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
 		borderPosition: 'inside',
@@ -141,6 +142,7 @@ function makeBoxEl(overrides: Partial<ButtonGraphicsBoxElement> = {}): ButtonGra
 		height: val(100),
 		rotation: val(0),
 		color: val(0),
+		cornerRadius: val(0),
 		borderWidth: val(0),
 		borderColor: val(0),
 		borderPosition: val('inside'),
@@ -499,6 +501,22 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
+		test('keeps a translucent color (the text color field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeTextEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'text', color: 'rgba(255, 0, 0, 0.5)' })
+		})
+
 		test('filters disabled text element when onlyEnabled is true', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello'), enabled: val(false) })]
 
@@ -645,6 +663,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					width: val(50),
 					height: val(60),
 					color: val(0xff0000),
+					cornerRadius: val(40),
 					borderWidth: val(2),
 					borderColor: val(0x00ff00),
 				}),
@@ -671,9 +690,58 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				width: 0.5, // 50 * 0.01
 				height: 0.6, // 60 * 0.01
 				color: 0xff0000,
+				cornerRadius: 0.4, // 40 * 0.01
 				borderWidth: 0.02, // 2 * 0.01
 				borderColor: 0x00ff00,
 			})
+		})
+
+		test('keeps a css color string (plain value)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('#ff8800') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a css color string returned by an expression', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: expr('"#ff8800"') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: '#ff8800' })
+		})
+
+		test('keeps a translucent color (the box color field allows alpha)', async () => {
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[makeBoxEl({ color: val('rgba(255, 0, 0, 0.5)') })],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.elements[0]).toMatchObject({ type: 'box', color: 'rgba(255, 0, 0, 0.5)' })
 		})
 	})
 
@@ -719,7 +787,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					toY: val(100),
 					borderWidth: val(3),
 					borderColor: val(0xffff00),
-					borderPosition: val('center'),
+					borderPosition: val('left'),
 				},
 			]
 
@@ -744,6 +812,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				toX: 1, // line coords not scaled
 				toY: 1,
 				borderWidth: 0.03, // 3 * 0.01
+				borderPosition: 'left',
 			})
 		})
 	})
@@ -1582,6 +1651,98 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			// Missing variables should show $NA
 			expect((result.elements[0] as { text: string }).text).toBe('Value: $NA')
 			expect(result.usedVariables.has('nonexistent:var')).toBe(true)
+		})
+	})
+
+	describe('clockSensitive', () => {
+		test('reports clockSensitive when an element expression uses oscillate', async () => {
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: expr('oscillate(1000)') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.clockSensitive).toBe(true)
+		})
+
+		test('reports clockSensitive false for a plain element', async () => {
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello') })]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect(result.clockSensitive).toBe(false)
+		})
+
+		test('does not cache a clock-sensitive element, but does cache a plain one', async () => {
+			const cache = new ElementConversionCache()
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'osc', text: expr('oscillate(1000)') }),
+				makeTextEl({ id: 'plain', text: val('Hello') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+
+			expect(result.clockSensitive).toBe(true)
+			// The clock-sensitive element must recompute each tick, so it is not cached
+			expect(cache.get('osc')).toBeUndefined()
+			// A plain element running alongside a clock-sensitive one is not itself
+			// clock-sensitive, so it is still cached
+			expect(cache.get('plain')).toBeDefined()
+		})
+
+		test('does not cache either of two clock-sensitive siblings', async () => {
+			// Regression: clock sensitivity is tracked per element, not via a shared flag.
+			// Previously the first oscillating sibling set a shared flag, so the second was
+			// wrongly seen as clock-insensitive, cached, and frozen.
+			const cache = new ElementConversionCache()
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'osc1', text: expr('oscillate(1000)') }),
+				makeTextEl({ id: 'osc2', text: expr('oscillate(2000)') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+
+			expect(result.clockSensitive).toBe(true)
+			expect(cache.get('osc1')).toBeUndefined()
+			expect(cache.get('osc2')).toBeUndefined()
 		})
 	})
 

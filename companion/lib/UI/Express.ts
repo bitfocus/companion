@@ -18,6 +18,7 @@ import Express from 'express'
 import serveZip from 'express-serve-zip'
 import onHeaders from 'on-headers'
 import { isPackaged } from '../Resources/Util.js'
+import { REST_API_BASE_PATH } from '../Service/RestApi/constants.js'
 import { isLoopbackHostAllowed } from './Handler.js'
 import { createRewriteMiddleware, getCustomPrefixHeader } from './middleware/rewriteRootUrl.js'
 import { makeIsTrustedProxyAddress, parseTrustedProxies } from './TRPC.js'
@@ -89,6 +90,7 @@ function createCacheControlMiddleware(): Express.RequestHandler {
 export class UIExpress {
 	readonly app = Express()
 	#apiRouter = Express.Router()
+	#restApiRouter = Express.Router()
 	#legacyApiRouter = Express.Router()
 	#connectionApiRouter = Express.Router()
 
@@ -152,6 +154,9 @@ export class UIExpress {
 		// enforces the enable toggle and bearer-token auth.
 		this.app.use('/api/metrics', metricsRouter)
 
+		// Keep the new REST API isolated from the legacy /api routes.
+		this.app.use(REST_API_BASE_PATH, async (r, s, n) => this.#restApiRouter(r, s, n))
+
 		// Use the router #apiRouter to add API routes dynamically, this router can be redefined at runtime with setter
 		// CORS is enabled here as this is part of the intentionally cross-origin accessible HTTP api.
 		this.app.use('/api', cors(), async (r, s, n) => this.#apiRouter(r, s, n))
@@ -202,6 +207,13 @@ export class UIExpress {
 				return webuiServer(req, res, next)
 			}
 		})
+	}
+
+	/**
+	 * Set a new router as the REST API router
+	 */
+	set restApiRouter(router: Express.Router) {
+		this.#restApiRouter = router
 	}
 
 	/**

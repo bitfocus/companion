@@ -37,7 +37,7 @@ function makeStyle(overrides: Partial<RendererButtonStyle> = {}): RendererButton
 	}
 }
 
-/** Create a solid-colour PNG data URL of the given size. */
+/** Create a solid-color PNG data URL of the given size. */
 function makePngDataUrl(width: number, height: number, color = '#ff0000'): string {
 	const canvas = new Canvas(width, height)
 	const ctx = canvas.getContext('2d')
@@ -239,7 +239,7 @@ describe('GraphicsRenderer', () => {
 	})
 
 	describe('drawImageBuffers', () => {
-		/** A raw RGBA pixel buffer of the given size, filled with one colour. */
+		/** A raw RGBA pixel buffer of the given size, filled with one color. */
 		function makeRgbaBuffer(width: number, height: number): DrawImageBuffer {
 			const buffer = Buffer.alloc(width * height * 4)
 			for (let i = 0; i < width * height; i++) {

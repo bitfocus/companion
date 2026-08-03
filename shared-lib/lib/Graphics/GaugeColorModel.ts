@@ -9,7 +9,7 @@ export interface GaugeRGBA {
 }
 
 /**
- * A contiguous run of the track between two colour stops, in 0–100 track-position space.
+ * A contiguous run of the track between two color stops, in 0–100 track-position space.
  * `gradient` runs interpolate from `colorStart` to `colorEnd`; solid runs use `colorStart` throughout.
  */
 export interface GaugeColorRun {
@@ -23,7 +23,7 @@ export interface GaugeColorRun {
 /**
  * The parts of a gauge that are expensive/fiddly to compute and must be identical between the on-screen
  * pixel renderer (`GraphicsLayeredButtonRenderer`) and the LED baker (`bakeGaugeToLeds`): the fill
- * interval, the colour runs and the fill colour. Everything works in 0–100 "track-position" space
+ * interval, the color runs and the fill color. Everything works in 0–100 "track-position" space
  * (0 = the min/start end, 100 = the max/end); the caller maps that onto its own pixels or LED segments.
  *
  * Trivial per-element flags (`symmetric`, `trackStyle`, `multiColour`, geometry, …) are intentionally
@@ -40,13 +40,13 @@ export interface GaugeColorModel {
 	fillEnd: number
 	/** Whether any fill is drawn (fill enabled and the interval is non-empty). */
 	hasFill: boolean
-	/** Dimming for the unfilled track (0 = off … 1 = full colour). Shared so pixels and LEDs dim alike. */
+	/** Dimming for the unfilled track (0 = off … 1 = full color). Shared so pixels and LEDs dim alike. */
 	trackAmount: number
-	/** The colour stops resolved into contiguous runs tiling the whole 0–100 track. */
+	/** The color stops resolved into contiguous runs tiling the whole 0–100 track. */
 	runs: GaugeColorRun[]
-	/** Fill colour when the gauge is single-colour: the highest stop at or below the value. */
+	/** Fill color when the gauge is single-color: the highest stop at or below the value. */
 	singleColor: number
-	/** Colour of a run at track position `p` (interpolates gradient runs). */
+	/** Color of a run at track position `p` (interpolates gradient runs). */
 	rgbaAt: (run: GaugeColorRun, p: number) => GaugeRGBA
 }
 
@@ -56,8 +56,8 @@ const finite = (v: unknown, fallback: number): number => {
 }
 
 /**
- * Resolve a gauge's value + colour stops into the shared {@link GaugeColorModel}. Returns `null` when
- * there is nothing to draw (no colour stops / no runs), matching the renderer's early-out.
+ * Resolve a gauge's value + color stops into the shared {@link GaugeColorModel}. Returns `null` when
+ * there is nothing to draw (no color stops / no runs), matching the renderer's early-out.
  */
 export function buildGaugeColorModel(element: ButtonGraphicsGaugeDrawElement): GaugeColorModel | null {
 	// --- Value mapping (authored Min..Max domain → 0–100 track position) ---
@@ -89,8 +89,8 @@ export function buildGaugeColorModel(element: ButtonGraphicsGaugeDrawElement): G
 
 	const trackAmount = Math.max(0, Math.min(100, finite(element.trackAmount, 0))) / 100
 
-	// --- Colour stops → runs between consecutive stops, with the first anchored to position 0
-	//     and the last extended to 100 so the track never has an uncoloured gap. ---
+	// --- Color stops → runs between consecutive stops, with the first anchored to position 0
+	//     and the last extended to 100 so the track never has an uncolored gap. ---
 	const stops = [...element.stops]
 		.map((s) => ({ pos: norm(finite(s.value, 0)), color: finite(s.color, 0), gradient: !!s.gradient }))
 		.sort((a, b) => a.pos - b.pos)
@@ -112,7 +112,7 @@ export function buildGaugeColorModel(element: ButtonGraphicsGaugeDrawElement): G
 	}
 	if (runs.length === 0) return null
 
-	// Single-colour fill: colour of the highest stop whose position <= value.
+	// Single-color fill: color of the highest stop whose position <= value.
 	let singleColor = stops[0].color
 	for (const s of stops) if (s.pos <= valuePos) singleColor = s.color
 

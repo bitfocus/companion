@@ -8,6 +8,7 @@ import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
+import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField, TextInputFieldSimple } from '../Components/TextInputField.js'
@@ -125,7 +126,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 
 	return (
 		<Form className="p-3 row g-sm-2">
-			<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 				Rule Name
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -137,7 +138,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</InputGroup>
 			</Grid.Col>
 
-			<FormLabel htmlFor={cronFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={cronFieldId} sm={4} column="sm">
 				Cron Schedule
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -153,7 +154,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</small>
 			</Grid.Col>
 
-			<FormLabel htmlFor={backupTypeFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={backupTypeFieldId} sm={4} column="sm">
 				Backup Type
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -173,7 +174,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</Grid.Col>
 			)}
 
-			<FormLabel htmlFor={backupPathFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={backupPathFieldId} sm={4} column="sm">
 				Backup Path
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -189,7 +190,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</small>
 			</Grid.Col>
 
-			<FormLabel htmlFor={backupNamePatternFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={backupNamePatternFieldId} sm={4} column="sm">
 				Backup Name Pattern
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -201,7 +202,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				/>
 			</Grid.Col>
 
-			<FormLabel htmlFor={keepFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={keepFieldId} sm={4} column="sm">
 				Number of Backups to Keep
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -212,16 +213,17 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 			</Grid.Col>
 
 			<Grid.Col sm={12}>
-				<label className="form-label">Previous Backups</label>
+				<hr />
+				<FormLabel htmlFor={undefined}>Previous Backups</FormLabel>
 				{rule.previousBackups && rule.previousBackups.length > 0 && (
 					<div className="table-responsive">
-						<table className="table table-sm table-striped">
+						<Table size="sm" striped responsive={false}>
 							<tbody>
 								{previousBackups.map((backup) => (
 									<PreviousBackupRow key={`${backup.filePath}-${backup.createdAt}`} backup={backup} ruleId={ruleId} />
 								))}
 							</tbody>
-						</table>
+						</Table>
 					</div>
 				)}
 

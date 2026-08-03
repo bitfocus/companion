@@ -70,7 +70,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 							</Modal.Header>
 							<Modal.Body>
 								<Form className="row g-sm-2" onSubmit={doAction}>
-									<FormLabel htmlFor={pressDurationFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={pressDurationFieldId} sm={4} column="sm">
 										Press duration
 									</FormLabel>
 									<Grid.Col sm={8}>
@@ -85,7 +85,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 										/>
 									</Grid.Col>
 
-									<FormLabel htmlFor={whileHeldFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+									<FormLabel htmlFor={whileHeldFieldId} sm={4} column="sm">
 										Execute while held
 									</FormLabel>
 									<Grid.Col sm={8}>

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin'
 import type { BuildOptions } from 'esbuild'
 import * as esbuild from 'esbuild'
-import { companionNativeExternals } from './companion-externals.mts'
+import { companionEsbuildBaseOptions, companionThreadEntryPoints } from './companion-esbuild.mts'
 
 const devMode = process.env.ESBUILD_IN_DEV_MODE === '1'
 console.log(`Running esbuild in ${devMode ? 'development' : 'production'} mode.`)
@@ -15,32 +15,13 @@ const buildFile = fs.readFileSync(path.resolve(import.meta.dirname, '../BUILD'),
 const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN
 
 const sharedOptions: BuildOptions = {
-	platform: 'node',
-	format: 'esm',
-	bundle: true,
+	...companionEsbuildBaseOptions({ packaged: true, minify: !devMode }),
 	absWorkingDir: companionDir,
 	outdir: distPath,
-	sourcemap: 'linked',
-	external: companionNativeExternals,
-	define: {
-		'process.env.COMPANION_BUNDLED': '"1"',
-		'process.env.WS_NO_UTF_8_VALIDATE': '"1"',
-	},
-	minify: !devMode,
-	// CJS packages (e.g. workerpool) use require() inside try/catch blocks that esbuild
-	// cannot statically trace. Injecting createRequire makes the synthetic require shim
-	// delegate to the real Node.js require instead of throwing.
-	banner: {
-		js: [
-			`import { createRequire as __esbuild_createRequire } from 'module';`,
-			`import { fileURLToPath as __esbuild_fileURLToPath } from 'url';`,
-			`import { dirname as __esbuild_dirname } from 'path';`,
-			`const require = __esbuild_createRequire(import.meta.url);`,
-			`const __filename = __esbuild_fileURLToPath(import.meta.url);`,
-			`const __dirname = __esbuild_dirname(__filename);`,
-		].join('\n'),
-	},
 }
+
+const threadEntryPointsFor = (target: 'node22' | 'node26') =>
+	companionThreadEntryPoints.filter((e) => e.target === target).map(({ in: input, out }) => ({ in: input, out }))
 
 // Sentry source-map uploads: each build invocation uploads its own output files to the
 // same release. Builds run sequentially so there is no race on release creation/finalization.
@@ -65,11 +46,7 @@ await esbuild.build({
 	...sharedOptions,
 	plugins: sentryPlugins,
 	target: 'node26',
-	entryPoints: [
-		{ in: 'lib/main.ts', out: 'main' },
-		{ in: 'lib/Graphics/Thread.ts', out: 'RenderThread' },
-		{ in: 'lib/ImportExport/Thread.ts', out: 'ImportExportThread' },
-	],
+	entryPoints: [{ in: 'lib/main.ts', out: 'main' }, ...threadEntryPointsFor('node26')],
 })
 
 // Node.js 26: standalone headless config tool (companion-pi launch tooling).
@@ -90,8 +67,5 @@ await esbuild.build({
 	...sharedOptions,
 	plugins: sentryPlugins,
 	target: 'node22',
-	entryPoints: [
-		{ in: 'lib/Instance/Surface/Thread/Entrypoint.ts', out: 'SurfaceThread' },
-		{ in: 'lib/Instance/Connection/Thread/Entrypoint.ts', out: 'ConnectionThread' },
-	],
+	entryPoints: threadEntryPointsFor('node22'),
 })

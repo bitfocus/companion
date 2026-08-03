@@ -177,7 +177,12 @@
 		--collection-nesting-table-grid-tile-min-width: 200px;
 
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(var(--collection-nesting-table-grid-tile-min-width), 1fr));
+		// --cnt-grid-cols is a shared column count set by the table (from the full width) so every collection's
+		// grid shows the same number of columns regardless of nesting indent; falls back to auto-fill until set.
+		grid-template-columns: repeat(
+			var(--cnt-grid-cols, auto-fill),
+			minmax(var(--cnt-grid-track-min, var(--collection-nesting-table-grid-tile-min-width)), 1fr)
+		);
 		gap: 1rem;
 		padding: 1rem;
 		position: relative;
@@ -295,7 +300,7 @@
 
 // The natively-dragged feedback ([data-dnd-dragging]) and the DragOverlay preview clone
 // (.dnd-drag-preview) share the same lifted look via the dragging-style mixin; only the background
-// colour differs per element type.
+// color differs per element type.
 .collections-nesting-table-row-item {
 	&[data-dnd-dragging],
 	&.dnd-drag-preview {

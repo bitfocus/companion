@@ -110,5 +110,10 @@ typings/
 
 #ignore copilot files
 .github/copilot-instructions.md
-.claude/
 /AGENTS.md
+
+# ignore personal Claude Code config, but track shared project hooks/settings
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
+.claude/settings.local.json

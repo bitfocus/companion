@@ -22,6 +22,7 @@ import type {
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { Table } from '~/Components/Table.js'
 import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -98,7 +99,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 		.filter((r) => !!r)
 
 	return (
-		<table className="table-tight table-responsive-sm">
+		<Table className="table-tight">
 			<thead>
 				<tr>
 					<th>Version</th>
@@ -131,7 +132,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 					</tr>
 				)}
 			</tbody>
-		</table>
+		</Table>
 	)
 })
 

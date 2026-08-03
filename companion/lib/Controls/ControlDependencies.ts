@@ -18,6 +18,7 @@ import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
+import type { RenderClock } from './RenderClock.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 
 export interface ControlExternalDependencies {
@@ -31,6 +32,8 @@ export interface ControlExternalDependencies {
 	readonly graphics: GraphicsController
 
 	readonly actionRunner: ActionRunner
+
+	readonly renderClock: RenderClock
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {

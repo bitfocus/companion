@@ -20,7 +20,6 @@ import type { AppInfo } from '../Registry.js'
 import type { ServiceController } from '../Service/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import type { DataStoreBase } from './StoreBase.js'
 import type { DataUserConfig } from './UserConfig.js'
 
 /**
@@ -64,6 +63,17 @@ export interface MetricsRegistry {
 	 * push-based: call the returned function once per observed event (e.g. a render duration in seconds).
 	 */
 	histogram(name: string, help: string, buckets?: number[]): (value: number) => void
+
+	/**
+	 * Register a histogram with labels and return an `observe(labels, value)` function. Like histogram()
+	 * this is push-based; each call records one observation into the series for that label combination.
+	 */
+	labeledHistogram(
+		name: string,
+		help: string,
+		labelNames: string[],
+		buckets?: number[]
+	): (labels: Record<string, string>, value: number) => void
 }
 
 /**
@@ -78,7 +88,8 @@ export interface MetricsRegistry {
 export class DataMetrics implements MetricsRegistry {
 	readonly #logger = LogController.createLogger('Data/Metrics')
 
-	readonly #userConfigController: DataUserConfig
+	// Resolved lazily (at scrape time) so DataMetrics can be constructed before userconfig exists.
+	readonly #getUserConfig: () => DataUserConfig
 	readonly #register = new Registry()
 
 	/**
@@ -88,8 +99,8 @@ export class DataMetrics implements MetricsRegistry {
 	 */
 	readonly metricsRouter: Express.Router
 
-	constructor(appInfo: AppInfo, userConfigController: DataUserConfig) {
-		this.#userConfigController = userConfigController
+	constructor(appInfo: AppInfo, getUserConfig: () => DataUserConfig) {
+		this.#getUserConfig = getUserConfig
 
 		// Passive process metrics: rss, heap, external, arrayBuffers, GC duration, event-loop lag, handles
 		collectDefaultMetrics({ register: this.#register })
@@ -191,19 +202,37 @@ export class DataMetrics implements MetricsRegistry {
 		return (value: number) => histogram.observe(value)
 	}
 
+	labeledHistogram(
+		name: string,
+		help: string,
+		labelNames: string[],
+		buckets?: number[]
+	): (labels: Record<string, string>, value: number) => void {
+		const histogram = new Histogram({
+			name,
+			help,
+			labelNames,
+			registers: [this.#register],
+			...(buckets ? { buckets } : {}),
+		})
+		return (labels: Record<string, string>, value: number) => histogram.observe(labels, value)
+	}
+
 	#createRouter(): Express.Router {
 		const router = Express.Router()
 
 		router.get('/', (req, res) => {
+			const userConfig = this.#getUserConfig()
+
 			// Endpoint is opt-in
-			if (!this.#userConfigController.getKey('prometheus_enabled')) {
+			if (!userConfig.getKey('prometheus_enabled')) {
 				res.status(404).send('Not found')
 				return
 			}
 
 			// Require a bearer token. The token is auto-generated when the feature is enabled, so it should
 			// never be empty here, but refuse rather than expose metrics if it somehow is.
-			const expectedToken: string = this.#userConfigController.getKey('prometheus_token')
+			const expectedToken: string = userConfig.getKey('prometheus_token')
 			if (!expectedToken || !this.#isAuthorized(req, expectedToken)) {
 				res.set('WWW-Authenticate', 'Bearer')
 				res.status(401).send('Unauthorized')
@@ -254,7 +283,6 @@ export function registerCoreMetrics(
 		controls: ControlsController
 		variables: VariablesController
 		services: ServiceController
-		databases: { name: string; store: DataStoreBase<any> }[]
 	}
 ): void {
 	metrics.labeledGauge(
@@ -295,29 +323,4 @@ export function registerCoreMetrics(
 	metrics.gauge('companion_custom_variables', 'Number of custom variables', () => {
 		return Object.keys(deps.variables.custom.getDefinitions()).length
 	})
-
-	// SQLite database size, one series per database. Sourced from SQLite's page accounting rather than a
-	// filesystem stat, so it is portable and doesn't need file paths; it excludes the transient WAL file.
-	// free_bytes is the reusable freelist portion of total_bytes, so bloat/fragmentation shows as the gap
-	// between them (and what a VACUUM would reclaim).
-	metrics.labeledGauge(
-		'companion_database_size_bytes',
-		'On-disk size of each SQLite database (page_count * page_size; excludes the transient WAL)',
-		['database'],
-		() =>
-			deps.databases.map(({ name, store }) => ({
-				labels: { database: name },
-				value: store.getDiskSizeInfo().totalBytes,
-			}))
-	)
-	metrics.labeledGauge(
-		'companion_database_free_bytes',
-		'Reusable free space within each SQLite database (freelist_count * page_size)',
-		['database'],
-		() =>
-			deps.databases.map(({ name, store }) => ({
-				labels: { database: name },
-				value: store.getDiskSizeInfo().freeBytes,
-			}))
-	)
 }

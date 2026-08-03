@@ -116,7 +116,7 @@ function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceE
 
 	return (
 		<>
-			<FormLabel htmlFor={inputId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={inputId} sm={4} column="sm">
 				Enabled
 				<InlineHelpIcon className="ms-1">When disabled, Companion will not open this surface.</InlineHelpIcon>
 			</FormLabel>
@@ -350,7 +350,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
 				{surfaceInfo && (
 					<>
-						<FormLabel htmlFor={nameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 							Surface Name
 						</FormLabel>
 						<Grid.Col sm={8}>
@@ -370,7 +370,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							/>
 						)}
 
-						<FormLabel htmlFor={groupFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={groupFieldId} sm={4} column="sm">
 							Surface Group
 							<InlineHelpIcon className="ms-1">
 								When in a group, surfaces will follow the page number of that group
@@ -391,7 +391,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					<>
 						{!groupInfo.isAutoGroup && (
 							<>
-								<FormLabel htmlFor={groupNameFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={groupNameFieldId} sm={4} column="sm">
 									Group Name
 								</FormLabel>
 								<Grid.Col sm={8}>
@@ -404,7 +404,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</>
 						)}
 
-						<FormLabel htmlFor={useLastPageFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={useLastPageFieldId} sm={4} column="sm">
 							Use Last Page At Startup
 						</FormLabel>
 						<Grid.Col sm={8}>
@@ -417,7 +417,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</div>
 						</Grid.Col>
 
-						<FormLabel htmlFor={startupPageFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={startupPageFieldId} sm={4} column="sm">
 							{groupConfig.config.use_last_page ? 'Home Page' : 'Startup Page'}
 						</FormLabel>
 						<Grid.Col sm={8}>
@@ -433,7 +433,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 						{(surfaceInfo === null || !!surfaceInfo.isConnected || !!groupConfig.config.use_last_page) && (
 							<>
-								<FormLabel htmlFor={currentPageFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={currentPageFieldId} sm={4} column="sm">
 									{surfaceInfo === null || surfaceInfo?.isConnected ? 'Current Page' : 'Last Page'}
 								</FormLabel>
 								<Grid.Col sm={8}>
@@ -449,7 +449,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</>
 						)}
 
-						<FormLabel htmlFor={restrictPagesFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={restrictPagesFieldId} sm={4} column="sm">
 							Restrict pages accessible to this {surfaceId === null ? 'group' : 'surface'}
 						</FormLabel>
 						<Grid.Col sm={8}>
@@ -464,7 +464,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 						{!!groupConfig.config.restrict_pages && (
 							<>
-								<FormLabel htmlFor={allowedPagesFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+								<FormLabel htmlFor={allowedPagesFieldId} sm={4} column="sm">
 									Allowed pages:
 								</FormLabel>
 								<Grid.Col sm={8}>
@@ -481,7 +481,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</>
 						)}
 
-						<FormLabel htmlFor={neverLockFieldId} className="col-sm-4 col-form-label col-form-label-sm">
+						<FormLabel htmlFor={neverLockFieldId} sm={4} column="sm">
 							Never pin code lock
 						</FormLabel>
 						<Grid.Col sm={8}>

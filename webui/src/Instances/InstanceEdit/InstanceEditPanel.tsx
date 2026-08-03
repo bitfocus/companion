@@ -139,7 +139,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 
 	return (
 		<>
-			<FormLabel htmlFor={labelId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={labelId} sm={4} column="sm">
 				Label
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -172,7 +172,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 
 	return (
 		<>
-			<FormLabel htmlFor={moduleVersionId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={moduleVersionId} sm={4} column="sm">
 				Module Version
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -208,7 +208,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 
 	return (
 		<>
-			<FormLabel htmlFor={enabledId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={enabledId} sm={4} column="sm">
 				Enabled
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
@@ -243,7 +243,7 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 
 	return (
 		<>
-			<FormLabel htmlFor={updatePolicyId} className="col-sm-4 col-form-label col-form-label-sm">
+			<FormLabel htmlFor={updatePolicyId} sm={4} column="sm">
 				Update Policy
 				<InlineHelpIcon className="ms-1">
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
@@ -474,11 +474,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 		return (
 			<React.Fragment>
-				<FormLabel
-					htmlFor={inputId}
-					className="col-sm-4 col-form-label col-form-label-sm"
-					style={{ display: !isVisible ? 'none' : undefined }}
-				>
+				<FormLabel htmlFor={inputId} sm={4} column="sm" style={{ display: !isVisible ? 'none' : undefined }}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
 				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="align-self-center">
