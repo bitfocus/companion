@@ -6,6 +6,7 @@ import { Grid } from '~/Components/Grid'
 import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
 import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
 import { useEntityListReorderMonitor } from '~/Controls/Components/useEntityListReorderMonitor.js'
+import { EntityListActionContext } from '~/Controls/LocalVariablesStore'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { useActionRecorderActionService } from '~/Services/Controls/ControlActionsService.js'
 
@@ -30,7 +31,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 				readonly={!!sessionInfo.isRunning}
 				localVariablesStore={null}
 				localVariablePrefix={null}
-				insideActionsList={true}
+				actionContext={EntityListActionContext.Actions}
 			>
 				<MinimalEntityList
 					ownerId={null}

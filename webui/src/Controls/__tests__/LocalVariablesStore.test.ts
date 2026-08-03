@@ -4,7 +4,7 @@ import {
 	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { LocalVariablesStore, type GetLocalVariableOptions } from '../LocalVariablesStore.js'
+import { EntityListActionContext, LocalVariablesStore, type GetLocalVariableOptions } from '../LocalVariablesStore.js'
 
 const GRID_CONTROL = 'bank:1'
 const PAGE_CONTROL = 'page:1'
@@ -16,7 +16,7 @@ function valuesFor(store: LocalVariablesStore, opts: Partial<GetLocalVariableOpt
 			entityType: EntityModelType.Feedback,
 			internalParser: true,
 			isLocatedInGrid: true,
-			insideActionsList: false,
+			actionContext: EntityListActionContext.NotActions,
 			...opts,
 		})
 		.map((c) => c.value)
@@ -43,21 +43,57 @@ describe('this:surface_id gating', () => {
 	})
 
 	test('offered for feedbacks inside an actions list', () => {
-		expect(valuesFor(store, { insideActionsList: true })).toContain('this:surface_id')
+		expect(valuesFor(store, { actionContext: EntityListActionContext.Actions })).toContain('this:surface_id')
 	})
 
 	test('NOT offered for feedbacks outside an actions list', () => {
-		expect(valuesFor(store, { insideActionsList: false })).not.toContain('this:surface_id')
+		expect(valuesFor(store, { actionContext: EntityListActionContext.NotActions })).not.toContain('this:surface_id')
 	})
 
 	test('NOT offered when the field is not internal-parser', () => {
-		expect(valuesFor(store, { insideActionsList: true, internalParser: false })).not.toContain('this:surface_id')
+		expect(valuesFor(store, { actionContext: EntityListActionContext.Actions, internalParser: false })).not.toContain(
+			'this:surface_id'
+		)
 	})
 
 	test('NOT offered off the grid (e.g. a trigger), even for an action', () => {
 		expect(valuesFor(store, { entityType: EntityModelType.Action, isLocatedInGrid: false })).not.toContain(
 			'this:surface_id'
 		)
+	})
+})
+
+describe('this:delta gating', () => {
+	const store = new LocalVariablesStore(GRID_CONTROL)
+
+	test('offered for actions in a rotary action set', () => {
+		expect(
+			valuesFor(store, { entityType: EntityModelType.Action, actionContext: EntityListActionContext.RotaryActions })
+		).toContain('this:delta')
+	})
+
+	test('offered for feedbacks nested under a rotary action', () => {
+		expect(valuesFor(store, { actionContext: EntityListActionContext.RotaryActions })).toContain('this:delta')
+	})
+
+	test('NOT offered for actions outside a rotary set (e.g. press/release)', () => {
+		const values = valuesFor(store, {
+			entityType: EntityModelType.Action,
+			actionContext: EntityListActionContext.Actions,
+		})
+		expect(values).not.toContain('this:delta')
+		// surface_id is still offered for non-rotary actions
+		expect(values).toContain('this:surface_id')
+	})
+
+	test('NOT offered when the field is not internal-parser', () => {
+		expect(
+			valuesFor(store, {
+				entityType: EntityModelType.Action,
+				actionContext: EntityListActionContext.RotaryActions,
+				internalParser: false,
+			})
+		).not.toContain('this:delta')
 	})
 })
 
@@ -119,7 +155,7 @@ describe('local variables from the control entities', () => {
 			entityType: EntityModelType.Feedback,
 			internalParser: true,
 			isLocatedInGrid: true,
-			insideActionsList: false,
+			actionContext: EntityListActionContext.NotActions,
 		})
 		expect(options.find((o) => o.value === 'local:foo')?.label).toBe('My Foo')
 		expect(options.find((o) => o.value === 'local:bar')?.label).toBe('bar')
