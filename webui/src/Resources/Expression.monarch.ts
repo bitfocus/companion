@@ -84,7 +84,17 @@ export const builtinFunctionCompletions: Array<{
 	{ name: 'log10', detail: 'log10(number)', documentation: 'Returns the base-10 logarithm of a number' },
 	{ name: 'exp', detail: 'exp(number)', documentation: 'Returns e raised to the power of a number' },
 	{ name: 'sqrt', detail: 'sqrt(number)', documentation: 'Returns the square root of a number' },
+	{ name: 'cbrt', detail: 'cbrt(number)', documentation: 'Returns the cube root of a number' },
 	{ name: 'pow', detail: 'pow(base, exponent)', documentation: 'Returns the base raised to the power of the exponent' },
+	{ name: 'sin', detail: 'sin(number)', documentation: 'Returns the sine of a number in radians' },
+	{ name: 'cos', detail: 'cos(number)', documentation: 'Returns the cosine of a number in radians' },
+	{ name: 'tan', detail: 'tan(number)', documentation: 'Returns the tangent of a number in radians' },
+	{ name: 'asin', detail: 'asin(number)', documentation: 'Returns the inverse sine of a number in radians' },
+	{ name: 'acos', detail: 'acos(number)', documentation: 'Returns the inverse cosine of a number in radians' },
+	{ name: 'atan', detail: 'atan(number)', documentation: 'Returns the inverse tangent of a number in radians' },
+	{ name: 'asinh', detail: 'asinh(number)', documentation: 'Returns the inverse hyperbolic sine of a number' },
+	{ name: 'acosh', detail: 'acosh(number)', documentation: 'Returns the inverse hyperbolic cosine of a number' },
+	{ name: 'atanh', detail: 'atanh(number)', documentation: 'Returns the inverse hyperbolic tangent of a number' },
 
 	// String operations
 	{ name: 'trim', detail: 'trim(string)', documentation: 'Removes whitespace from both ends of a string' },
