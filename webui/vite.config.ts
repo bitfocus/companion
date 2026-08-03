@@ -51,6 +51,7 @@ export default defineConfig(({ mode }) => {
 			outDir: 'build',
 			chunkSizeWarningLimit: 1 * 1000 * 1000, // Disable warning about large chunks
 			sourcemap: true,
+			cssCodeSplit: false, // emit a single stylesheet rather than per-chunk CSS
 			cssMinify: 'esbuild', // default (lightningcss) downlevels properties in a way that breaks backwards compatibility
 		},
 		resolve: {

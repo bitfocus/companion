@@ -1,4 +1,6 @@
 import { Input } from '@base-ui/react'
+import './text-field.css'
+import './input-validity.css'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -159,7 +161,7 @@ export function TextInputFieldSimple({
 			ref={inputRef}
 			type="text"
 			className={classNames(
-				'text-input-field',
+				'form-control text-input-field',
 				{ 'invalid-value': valueIsInvalid, 'has-validity-icon': validity !== 'unknown' },
 				className
 			)}

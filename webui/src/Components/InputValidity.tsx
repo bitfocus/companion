@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { CheckIcon, XIcon } from 'lucide-react'
+import './input-validity.css'
 
 export type InputValidity = 'valid' | 'invalid' | 'unknown'
 

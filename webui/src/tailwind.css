@@ -4,7 +4,7 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-@theme {
+@theme static {
 	--color-primary: #d50215;
 	--color-secondary: #ccc;
 	--color-success: #1b9e3e;
@@ -13,6 +13,10 @@
 	--color-info: #3399ff;
 	--color-light: #e9e9e9;
 	--color-dark: #212631;
+
+	--color-input-bg: #ffffff;
+	--color-input-readonly-bg: #eeeeee;
+	--color-input-invalid: red;
 }
 
 @source '../index.html';
