@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto'
+import { createWriteStream } from 'node:fs'
+import fs from 'node:fs/promises'
 import { Readable, Transform, type Writable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import zlib from 'node:zlib'
@@ -85,6 +88,42 @@ export async function streamExport(
 	}
 
 	return byteCount
+}
+
+/**
+ * Serialise an export and write it to `filePath` atomically: the data is written to a uniquely-named
+ * temporary sibling and only renamed into place once the write completes. A failure (a broken stream,
+ * a full disk, ...) therefore never leaves a partial or corrupt file at `filePath`.
+ *
+ * @returns the number of bytes written.
+ * @throws {ExportTooLargeError} when an oversized export cannot be serialised in the requested format.
+ */
+export async function writeExportToFile(
+	data: SomeExportv6,
+	format: ExportFormat | undefined,
+	filePath: string
+): Promise<number> {
+	// May throw ExportTooLargeError before anything is written - surfaced to the caller.
+	const prepared = prepareExport(data, format)
+
+	const tempPath = `${filePath}.${randomUUID()}.tmp`
+	try {
+		let fileSize: number
+		if (prepared.kind === 'buffer') {
+			await fs.writeFile(tempPath, prepared.data)
+			fileSize = Buffer.byteLength(prepared.data)
+		} else {
+			// Large export - stream it to the file so the giant JSON string is never created.
+			fileSize = await streamExport(data, prepared.format, createWriteStream(tempPath))
+		}
+
+		await fs.rename(tempPath, filePath)
+		return fileSize
+	} catch (e) {
+		// Best-effort cleanup of the partial temp file; never mask the original error.
+		await fs.rm(tempPath, { force: true }).catch(() => {})
+		throw e
+	}
 }
 
 /**

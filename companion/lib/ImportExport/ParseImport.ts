@@ -45,6 +45,8 @@ class StreamTooLargeError extends Error {}
  * valid YAML flow map but invalid JSON, so callers must fall back to YAML on a JSON parse error.
  */
 export function stripBomAndLooksLikeJson(data: Buffer | string): boolean {
+	const totalLength = typeof data === 'string' ? data.length : data.byteLength
+
 	// Only the very start matters. Decode a small prefix; the leading whitespace and first
 	// meaningful character are always ASCII, so a truncated multi-byte tail is harmless.
 	const prefix = typeof data === 'string' ? data.slice(0, 64) : data.subarray(0, 64).toString('utf-8')
@@ -63,7 +65,12 @@ export function stripBomAndLooksLikeJson(data: Buffer | string): boolean {
 		break
 	}
 
-	return prefix[i] === '{'
+	if (prefix[i] === '{') return true
+
+	// The whole inspected prefix was whitespace but there is more content beyond it - we can't classify
+	// from the prefix, so prefer the streaming JSON path (it falls back to YAML if the parse fails)
+	// rather than sending a large whitespace-padded JSON document down the non-streaming YAML path.
+	return i === prefix.length && totalLength > prefix.length
 }
 
 /**

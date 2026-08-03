@@ -1,6 +1,9 @@
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { Writable } from 'node:stream'
 import zlib from 'node:zlib'
-import { describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import yaml from 'yaml'
 import type { ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
@@ -9,6 +12,7 @@ import {
 	formatAttachmentFilename,
 	prepareExport,
 	streamExport,
+	writeExportToFile,
 } from '../../lib/ImportExport/Util.js'
 
 /** A Writable that collects everything written to it, for asserting on streamed output. */
@@ -214,5 +218,51 @@ describe('streamExport', () => {
 		expect(JSON.parse(text)).toEqual(sampleData)
 		// The returned count matches the compressed bytes written
 		expect(byteCount).toBe(gz.length)
+	})
+})
+
+// ── writeExportToFile ─────────────────────────────────────────────────────────
+
+describe('writeExportToFile', () => {
+	const sampleData = { type: 'full', version: 6, instances: {}, pages: { 1: { name: 'p1' } } } as any
+
+	let tmpDir: string
+	beforeEach(async () => {
+		tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ie-export-'))
+	})
+	afterEach(async () => {
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+
+	test('writes buffered (json) output, returns the byte count, and leaves no temp file', async () => {
+		const filePath = path.join(tmpDir, 'out.companionconfig')
+		const size = await writeExportToFile(sampleData, 'json', filePath)
+
+		const contents = await fs.readFile(filePath, 'utf-8')
+		expect(JSON.parse(contents)).toEqual(sampleData)
+		expect(size).toBe(Buffer.byteLength(contents))
+		// The temp file was renamed into place - nothing left behind
+		expect(await fs.readdir(tmpDir)).toEqual(['out.companionconfig'])
+	})
+
+	test('writes streamed (json-gz) output that gunzips back, returning the byte count', async () => {
+		const filePath = path.join(tmpDir, 'out.companionconfig')
+		const size = await writeExportToFile(sampleData, 'json-gz', filePath)
+
+		const gz = await fs.readFile(filePath)
+		expect(size).toBe(gz.length)
+		expect(JSON.parse(zlib.gunzipSync(gz).toString('utf-8'))).toEqual(sampleData)
+		expect(await fs.readdir(tmpDir)).toEqual(['out.companionconfig'])
+	})
+
+	test('a failing write leaves no file at the target path and removes the temp file', async () => {
+		// The target directory does not exist, so the (temp) write fails
+		const filePath = path.join(tmpDir, 'missing-subdir', 'out.companionconfig')
+
+		await expect(writeExportToFile(sampleData, 'json-gz', filePath)).rejects.toThrow()
+		await expect(writeExportToFile(sampleData, 'json', filePath)).rejects.toThrow()
+
+		// No target file and no leftover temp files in the (existing) tmp dir
+		expect(await fs.readdir(tmpDir)).toEqual([])
 	})
 })

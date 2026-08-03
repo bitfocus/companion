@@ -17,4 +17,6 @@ export const MAX_DECOMPRESSED_FILE_SIZE = bufferConstants.MAX_STRING_LENGTH
 // The streaming JSON import path never builds a single JS string, so it is not bound by
 // MAX_STRING_LENGTH. It still holds the fully-parsed object graph in memory, so cap the total
 // decompressed byte count to protect against a decompression bomb inflating far beyond the upload.
-export const MAX_STREAMED_DECOMPRESSED_FILE_SIZE = 1024 * 1024 * 1024 * 2 // 2GiB
+// Keep this within reach of the V8 heap: the parsed object graph costs several times the byte count,
+// so a much larger cap would OOM before it could reject cleanly. Matches the 1GiB plain-JSON upload cap.
+export const MAX_STREAMED_DECOMPRESSED_FILE_SIZE = 1024 * 1024 * 1024 // 1GiB

@@ -97,8 +97,13 @@ export class ImportExportController {
 
 	/** Parse YAML in the worker thread so a large synchronous parse never blocks the event loop. */
 	readonly #parseYamlInWorker = async (buffer: Buffer, gz: boolean): Promise<ParseImportResult> => {
-		// Zero-copy transfer of the bytes to the worker (the ArrayBuffer is detached here afterwards).
-		const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer
+		// Transfer the bytes to the worker. When the Buffer owns its whole backing store - the usual
+		// case, since MultipartUploader uses Buffer.alloc - the ArrayBuffer is moved with no copy;
+		// otherwise fall back to copying the slice out. Either way `buffer` is not used again.
+		const ownsWholeBuffer = buffer.byteOffset === 0 && buffer.byteLength === buffer.buffer.byteLength
+		const arrayBuffer = ownsWholeBuffer
+			? (buffer.buffer as ArrayBuffer)
+			: (buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer)
 		return this.#poolExec('parseImportData', [arrayBuffer, gz], [arrayBuffer])
 	}
 

@@ -10,7 +10,6 @@
  *
  */
 
-import { createWriteStream } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { nanoid } from 'nanoid'
@@ -25,7 +24,7 @@ import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ExportController } from './Export.js'
-import { prepareExport, streamExport } from './Util.js'
+import { writeExportToFile } from './Util.js'
 
 /**
  * BackupController handles scheduled backups of companion app data.
@@ -433,8 +432,6 @@ export class BackupController {
 		format: ExportFormat
 	): Promise<PreviousBackupInfo> {
 		const data = this.#exportController.generateCustomExport(null)
-		// May throw ExportTooLargeError for an oversized YAML backup - surfaced to the caller.
-		const prepared = prepareExport(data, format)
 
 		const filePath = path.join(backupDir, `${filename}.companionconfig`)
 
@@ -442,15 +439,9 @@ export class BackupController {
 
 		logger.info(`Exporting to ${filePath}`)
 
-		let fileSize: number
-		if (prepared.kind === 'buffer') {
-			await fs.writeFile(filePath, prepared.data)
-			fileSize = Buffer.byteLength(prepared.data)
-		} else {
-			// Large export - stream it to the file so the giant JSON string is never created.
-			// streamExport counts the bytes as they are written, so no separate stat is needed.
-			fileSize = await streamExport(data, prepared.format, createWriteStream(filePath))
-		}
+		// Writes atomically (temp file + rename), so a failure never leaves a partial backup at
+		// filePath. May throw ExportTooLargeError for an oversized YAML backup - surfaced to the caller.
+		const fileSize = await writeExportToFile(data, format, filePath)
 
 		return {
 			filePath,

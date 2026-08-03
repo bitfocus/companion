@@ -39,6 +39,18 @@ describe('stripBomAndLooksLikeJson', () => {
 		expect(stripBomAndLooksLikeJson('[1,2,3]')).toBe(false)
 		expect(stripBomAndLooksLikeJson('')).toBe(false)
 	})
+
+	test('an all-whitespace prefix with more content is treated as JSON (inconclusive -> streaming)', () => {
+		// More than 64 bytes of leading whitespace: the brace is beyond the inspected prefix, so we
+		// can't classify it - prefer the streaming path (it falls back to YAML on a parse error).
+		expect(stripBomAndLooksLikeJson(' '.repeat(65) + '{"a":1}')).toBe(true)
+		expect(stripBomAndLooksLikeJson(Buffer.from(' '.repeat(65) + '{"a":1}'))).toBe(true)
+	})
+
+	test('an all-whitespace short input is not treated as JSON', () => {
+		expect(stripBomAndLooksLikeJson('    ')).toBe(false)
+		expect(stripBomAndLooksLikeJson(' '.repeat(64))).toBe(false)
+	})
 })
 
 // ── parseImportBuffer ─────────────────────────────────────────────────────────
@@ -69,6 +81,20 @@ describe('parseImportBuffer', () => {
 		const result = await parseImportBuffer(Buffer.from(yaml.stringify(sample)), parseYaml)
 		expect(result.error).toBeNull()
 		expect(result.data).toEqual(sample)
+	})
+
+	test('JSON with >64 bytes of leading whitespace stays on the streaming path (parseYaml not called)', async () => {
+		let yamlCalls = 0
+		const spyParseYaml = async (buffer: Buffer, gz: boolean) => {
+			yamlCalls++
+			return parseYaml(buffer, gz)
+		}
+
+		const padded = Buffer.from(' '.repeat(65) + JSON.stringify(sample))
+		const result = await parseImportBuffer(padded, spyParseYaml)
+		expect(result.error).toBeNull()
+		expect(result.data).toEqual(sample)
+		expect(yamlCalls).toBe(0)
 	})
 
 	test('a `{`-starting YAML flow map (invalid JSON) falls back to YAML', async () => {
