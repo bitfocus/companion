@@ -41,7 +41,7 @@ export interface IControlStore {
 	/**
 	 * Dispatch a rotate event to a control
 	 */
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
 
 	/**
 	 * Abort all delayed actions, optionally keeping one exception signal alive

@@ -436,7 +436,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#serviceApi.rotateControl(controlId, false, HTTP_API_SURFACE_ID)
+		this.#serviceApi.rotateControl(controlId, -1, HTTP_API_SURFACE_ID)
 
 		res.send('ok')
 	}
@@ -453,7 +453,7 @@ export class ServiceHttpApi {
 			return
 		}
 
-		this.#serviceApi.rotateControl(controlId, true, HTTP_API_SURFACE_ID)
+		this.#serviceApi.rotateControl(controlId, 1, HTTP_API_SURFACE_ID)
 
 		res.send('ok')
 	}

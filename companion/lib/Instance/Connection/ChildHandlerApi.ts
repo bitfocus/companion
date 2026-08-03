@@ -117,4 +117,10 @@ export interface RunActionExtras {
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal
 	executionMode: 'sequential' | 'concurrent'
+	/**
+	 * The signed rotation amount when this execution was triggered by a rotary action (sign is the
+	 * direction, magnitude is the number of steps), or `null` for non-rotary executions (press, trigger).
+	 * Exposed to expressions as `$(this:delta)`.
+	 */
+	rotationDelta: number | null
 }

@@ -55,6 +55,7 @@ function makeExtras(overrides: Partial<RunActionExtras> = {}): { extras: RunActi
 			location: { pageNumber: 2, row: 1, column: 3 },
 			abortDelayed: abort.signal,
 			executionMode: 'concurrent',
+			rotationDelta: null,
 			...overrides,
 		},
 	}
@@ -556,6 +557,7 @@ describe('ControlActionRunner', () => {
 		return {
 			surfaceId: 'surface0',
 			location: { pageNumber: 1, row: 2, column: 3 },
+			rotationDelta: null,
 		}
 	}
 
@@ -577,7 +579,16 @@ describe('ControlActionRunner', () => {
 			location: { pageNumber: 1, row: 2, column: 3 },
 			executionMode: 'concurrent',
 			abortDelayed: expect.any(AbortSignal),
+			rotationDelta: null,
 		})
+	})
+
+	test('forwards a rotation delta through to the action runner', async () => {
+		const { actionRunner, controlRunner } = createControlRunner()
+
+		await controlRunner.runActions([fakeEntity()], { ...runActionsExtras(), rotationDelta: -5 })
+
+		expect(passedExtras(actionRunner).rotationDelta).toBe(-5)
 	})
 
 	test('redraws when the first chain starts and the last one finishes', async () => {

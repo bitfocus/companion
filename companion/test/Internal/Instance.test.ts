@@ -77,6 +77,7 @@ const fakeExtras: RunActionExtras = {
 	location: undefined,
 	abortDelayed: new AbortController().signal,
 	executionMode: 'sequential',
+	rotationDelta: null,
 }
 
 function makeAction(definitionId: string, options: Record<string, unknown>): ActionForInternalExecution {

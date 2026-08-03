@@ -1983,20 +1983,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:1.4.0-nightly-main-20260714-131236-17ba70a":
-  version: 1.4.0-nightly-main-20260714-131236-17ba70a
-  resolution: "@companion-surface/base@npm:1.4.0-nightly-main-20260714-131236-17ba70a"
-  checksum: 10c0/6cda7bb1aa57cd619e7b18cf60221d8e8c58d40ca8dc00020bfd08d1c6e83e70b6fb61c3ef7f6c200788c0020d3079cd36cd9ebb2410845f16cd374476a0c6e9
+"@companion-surface/base@npm:1.4.0-nightly-main-20260802-210833-c2d781c":
+  version: 1.4.0-nightly-main-20260802-210833-c2d781c
+  resolution: "@companion-surface/base@npm:1.4.0-nightly-main-20260802-210833-c2d781c"
+  checksum: 10c0/4d40cace3da97e4e0a83774f946bb3d3ec94f0631c5492a5e38c38a2466ba7d226e136312084b1825a302306a36f41db36b03fb78aaaa7954dfd237bb16732e6
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:1.3.3-nightly-main-20260713-213540-a42afb9":
-  version: 1.3.3-nightly-main-20260713-213540-a42afb9
-  resolution: "@companion-surface/host@npm:1.3.3-nightly-main-20260713-213540-a42afb9"
+"@companion-surface/host@npm:1.4.0-nightly-main-20260803-170424-c2d781c":
+  version: 1.4.0-nightly-main-20260803-170424-c2d781c
+  resolution: "@companion-surface/host@npm:1.4.0-nightly-main-20260803-170424-c2d781c"
   dependencies:
     "@companion-surface/base": "npm:~1.3.0"
     fast-deep-equal: "npm:^3.1.3"
-  checksum: 10c0/a1f99af3bc8c52b2777a187b2e01b4e30ceaeccbcddf8a0198295cf8d2bb1948477235bd64a22c93757c7fd0da5dfc09a93a3e16c89998ad5a731996d13b5581
+  checksum: 10c0/8ad94c81572664658bf0ba6a14f891e53d28fb435e347c8b007857aa52b211bdc5222263167217d883b2f2fb050d7b5de04f56c3ea360dc3d4ebbd47050b66df
   languageName: node
   linkType: hard
 
@@ -18023,12 +18023,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.11, nanoid@npm:^3.3.12":
+"nanoid@npm:^3.3.11":
   version: 3.3.12
   resolution: "nanoid@npm:3.3.12"
   bin:
     nanoid: bin/nanoid.cjs
   checksum: 10c0/ba142b7b39e11e80c16dd74b0365d407880c87c1cf7e1480956981ae940ee36060fa5b6f092cd1e315184dd19244c657bd017d03327bd3c62247d691c5e8edfb
+  languageName: node
+  linkType: hard
+
+"nanoid@npm:^3.3.16":
+  version: 3.3.16
+  resolution: "nanoid@npm:3.3.16"
+  bin:
+    nanoid: bin/nanoid.cjs
+  checksum: 10c0/bbf2dcffe22d2b62d16de2711752070b539c0f644c7916f823ad6521986b2078cbe524f2d6240f58c46e9141ea0c7b87a029e100c0f7f175228cacaf30e41bba
   languageName: node
   linkType: hard
 
@@ -20064,13 +20073,13 @@ __metadata:
   linkType: hard
 
 "postcss@npm:^8.3.11, postcss@npm:^8.4.21, postcss@npm:^8.4.24, postcss@npm:^8.4.33, postcss@npm:^8.5.17, postcss@npm:^8.5.4, postcss@npm:^8.5.6":
-  version: 8.5.19
-  resolution: "postcss@npm:8.5.19"
+  version: 8.5.25
+  resolution: "postcss@npm:8.5.25"
   dependencies:
-    nanoid: "npm:^3.3.12"
+    nanoid: "npm:^3.3.16"
     picocolors: "npm:^1.1.1"
     source-map-js: "npm:^1.2.1"
-  checksum: 10c0/302af9e4dfa8cce4f43af1798576b3a77ab7b23abac5522328c6c7a830d49b31281cba9d6071e478e6970a05ef82346d1570b8fbffae912f26a4f1a1a07f0a44
+  checksum: 10c0/0a12c1e74b456c57122e81f684e02fd98ff4d57526f794d10c996df1147158808f5ae373ac82b988c8de6cbbaa82dbd7b13803b14f5dd3cf7cc6a42ccad5c9f2
   languageName: node
   linkType: hard
 

@@ -13,6 +13,7 @@ function makeExtras(overrides: Partial<RunActionExtras> = {}): RunActionExtras {
 		location: { pageNumber: 1, row: 0, column: 0 },
 		abortDelayed: new AbortController().signal,
 		executionMode: 'concurrent',
+		rotationDelta: null,
 		...overrides,
 	}
 }
