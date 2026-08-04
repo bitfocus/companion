@@ -1,10 +1,6 @@
-@use 'sass:color';
-
 .page-tablet {
-	$primary-color: #d69e2e;
-
-	background-color: #181818;
-	color: $primary-color;
+	background-color: var(--color-overlay-bg);
+	color: var(--color-remote-accent);
 
 	height: 100vh;
 
@@ -22,12 +18,12 @@
 	}
 
 	.text-muted {
-		color: color.adjust($primary-color, $lightness: -10%) !important;
+		color: var(--color-remote-accent-muted) !important;
 		font-size: 0.93em;
 	}
 
 	.container-fluid {
-		// max-width: 1200px;
+		/* max-width: 1200px; */
 		height: 100%;
 		margin: 0 auto;
 	}
@@ -48,16 +44,16 @@
 		top: 0;
 		z-index: 100;
 
-		border: 1px solid #555;
-		background-color: #222;
+		border: 1px solid var(--color-border-dark);
+		background-color: var(--color-surface-dark);
 		padding: 10px;
 		margin: 10px 0 10px;
 	}
 
 	.button {
 		margin: 0 5px;
-		color: #d69e2e;
-		border: 1px solid #d69e2e;
+		color: var(--color-remote-accent);
+		border: 1px solid var(--color-remote-accent);
 
 		&:disabled {
 			opacity: 0.5;
@@ -102,7 +98,7 @@
 		}
 
 		&.button-armed .buttongrid-row {
-			background-color: rgba(255, 0, 0, 0.5);
+			background-color: var(--color-button-armed);
 		}
 
 		.buttons-holder {
@@ -111,13 +107,13 @@
 
 		.buttongrid-row {
 			display: grid;
-			// grid-auto-flow: column;
+			/* grid-auto-flow: column; */
 			grid-auto-columns: 1fr;
 			transition: background-color 0.05s ease-in-out;
 			background-color: transparent;
 
 			img:hover {
-				border: 1px solid rgba(255, 255, 255, 0.3);
+				border: 1px solid color-mix(in srgb, var(--color-on-dark) 30%, transparent);
 			}
 		}
 

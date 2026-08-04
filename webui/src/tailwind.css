@@ -29,12 +29,14 @@
 	--color-surface-muted: #f0f0f0;
 	--color-surface-muted-hover: #e8e8e8;
 	--color-surface-alt: #f7f7f7;
+	--color-surface-dark: #222; /* dark panel/inset surface (tablet, emulator, button editor) */
 	--color-loading-track: #3c4b64;
 
 	/* Borders */
 	--color-border: #ddd;
 	--color-border-muted: #dddfe2;
 	--color-border-strong: #999;
+	--color-border-dark: #555; /* border on dark surfaces */
 	--color-tree-line: #ccc; /* nesting guide lines in the collapsible tree / nesting table */
 
 	/* Text */
@@ -74,6 +76,11 @@
 	/* Header bar (defaults to the brand primary; can be themed separately) */
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
+
+	/* Standalone remote views (tablet / emulator) */
+	--color-remote-accent: #d69e2e; /* gold accent for the tablet/emulator chrome */
+	--color-remote-accent-muted: #af8022;
+	--color-button-armed: rgba(255, 0, 0, 0.5); /* overlay tint for an "armed"/live button */
 
 	/* Standalone dark status overlay (emulator/tablet pages) */
 	--color-overlay-bg: #181818;
