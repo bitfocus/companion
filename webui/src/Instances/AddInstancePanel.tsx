@@ -1,4 +1,5 @@
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import '../Modules/modules-manage.css'
 import {
 	faCog,
 	faExclamationTriangle,
