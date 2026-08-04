@@ -1,4 +1,5 @@
 import { faCancel, faExpand, faGamepad } from '@fortawesome/free-solid-svg-icons'
+import './Emulator.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
