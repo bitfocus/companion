@@ -51,7 +51,6 @@
 @use 'scss/collections-nesting-table';
 @use 'scss/collapsible-tree';
 @use 'scss/sticky-tables';
-@use 'scss/expression';
 @use 'scss/image-library';
 
 // ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two

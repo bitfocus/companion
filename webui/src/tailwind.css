@@ -17,6 +17,7 @@
 	--color-input-bg: #ffffff;
 	--color-input-readonly-bg: #eeeeee;
 	--color-input-invalid: red;
+	--color-syntax-error: rgb(255, 12, 138);
 
 	/* Surfaces */
 	--color-surface: #fff;

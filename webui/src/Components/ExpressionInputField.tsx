@@ -1,4 +1,5 @@
 import Editor, { type Monaco } from '@monaco-editor/react'
+import './ExpressionInputField.css'
 import Bowser from 'bowser'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
