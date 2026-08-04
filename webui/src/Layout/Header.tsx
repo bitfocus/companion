@@ -1,4 +1,5 @@
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
+import './Header.css'
 import { faCircleQuestion, faCircle as faOpenCircle } from '@fortawesome/free-regular-svg-icons'
 import {
 	faBars,

@@ -44,6 +44,10 @@
 
 	/* Drop-shadow colour (alpha applied per shadow via color-mix) */
 	--color-shadow: #000;
+
+	/* Header bar (defaults to the brand primary; can be themed separately) */
+	--color-header-bg: var(--color-primary);
+	--color-header-text: var(--color-on-dark);
 }
 
 @source '../index.html';
