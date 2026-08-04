@@ -151,7 +151,7 @@
 			top: -5px;
 			height: calc(100% + 10px);
 			width: 1px;
-			background-color: var(--color-tree-line);
+			background-color: var(--color-line);
 			z-index: 1;
 		}
 
@@ -162,7 +162,7 @@
 			top: 50%;
 			width: calc(var(--collection-nesting-level) * 10px - 5px);
 			height: 1px;
-			background-color: var(--color-tree-line);
+			background-color: var(--color-line);
 			z-index: 1;
 		}
 	}

@@ -376,5 +376,5 @@
 }
 
 .layered-overrides-table > tbody > tr {
-	border-color: var(--color-tree-line);
+	border-color: var(--color-line);
 }

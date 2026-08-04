@@ -38,9 +38,10 @@
 	--color-border: #ddd;
 	--color-border-subtle: #e9ecef; /* faint divider (lighter than --color-border) */
 	--color-border-muted: #dddfe2;
+	--color-border-medium: #bbb; /* stronger than --color-border (e.g. tab bar underline) */
 	--color-border-strong: #999;
 	--color-border-hover: #aaa; /* hovered drag/resize handle border */
-	--color-tree-line: #ccc; /* nesting guide lines in the collapsible tree / nesting table */
+	--color-line: #ccc; /* thin neutral line: tree/nesting guides, tab-panel borders, thin scrollbars */
 
 	/* Text */
 	--color-text: #111;
@@ -104,6 +105,10 @@
 	--color-shadow-35: color-mix(in srgb, var(--color-shadow) 35%, transparent);
 	--color-shadow-40: color-mix(in srgb, var(--color-shadow) 40%, transparent);
 	--color-shadow-50: color-mix(in srgb, var(--color-shadow) 50%, transparent);
+
+	/* Tabs (tab-area, and the secondary-panel tabs in layout) */
+	--color-tab-bg: #f3f3f3; /* inactive tab background */
+	--color-tab-fg: #555; /* inactive tab text */
 
 	/* Header bar (defaults to the brand primary; can be themed separately) */
 	--color-header-bg: var(--color-primary);
