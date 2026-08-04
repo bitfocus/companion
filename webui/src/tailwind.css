@@ -33,7 +33,12 @@
 	--color-text: #111;
 	--color-text-strong: #000;
 	--color-icon: #333;
+	--color-text-secondary: #666;
 	--color-text-disabled: #ccc;
+
+	/* Row interaction states (dark mode overrides these to light overlays) */
+	--color-row-hover: rgba(0, 0, 0, 0.05);
+	--color-row-selected: rgba(200, 200, 200, 0.35);
 
 	/* Text on dark/coloured backgrounds */
 	--color-on-dark: #fff;
