@@ -40,7 +40,7 @@
 	border: 1px solid var(--color-tile-border);
 	border-radius: 8px;
 	overflow: hidden;
-	background: var(--color-image-stage); /* neutral stage, matching the metadata box below */
+	background: var(--color-surface-subtle); /* neutral stage, matching the metadata box below */
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -120,7 +120,7 @@
 		padding: 1.5rem 2rem;
 		border: 2px dashed var(--color-tile-border);
 		border-radius: 6px;
-		background-color: var(--color-image-stage);
+		background-color: var(--color-surface-subtle);
 		transition: all 0.2s ease;
 
 		&.active {
@@ -184,7 +184,7 @@
 			border-radius: 6px;
 			padding: 1rem;
 			margin-bottom: 1rem;
-			background: var(--color-image-stage);
+			background: var(--color-surface-subtle);
 		}
 
 		.metadata-row {
@@ -230,7 +230,7 @@
 
 	.image-preview {
 		aspect-ratio: 1;
-		background: var(--color-image-stage); /* neutral stage; the image below carries the colour + checkerboard */
+		background: var(--color-surface-subtle); /* neutral stage; the image below carries the colour + checkerboard */
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -261,7 +261,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--color-image-stage);
+		background: var(--color-surface-subtle);
 		color: var(--color-text-muted);
 		text-align: center;
 		padding: 1rem;

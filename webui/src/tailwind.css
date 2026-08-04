@@ -30,13 +30,16 @@
 	--color-surface-muted-hover: #e8e8e8;
 	--color-surface-hover: #eee; /* light hover highlight on cards/rows */
 	--color-surface-alt: #f7f7f7;
+	--color-surface-subtle: #f8f9fa; /* very light neutral stage (preview stages, list backgrounds) */
 	--color-surface-dark: #222; /* dark panel/inset surface (tablet, emulator, button editor) */
 	--color-loading-track: #3c4b64;
 
 	/* Borders */
 	--color-border: #ddd;
+	--color-border-subtle: #e9ecef; /* faint divider (lighter than --color-border) */
 	--color-border-muted: #dddfe2;
 	--color-border-strong: #999;
+	--color-border-hover: #aaa; /* hovered drag/resize handle border */
 	--color-border-dark: #555; /* border on dark surfaces */
 	--color-tree-line: #ccc; /* nesting guide lines in the collapsible tree / nesting table */
 
@@ -60,6 +63,11 @@
 	--color-copy-source: #1b7fc2; /* highlight for a button marked as a copy/paste source */
 	--color-drop-neutral-bg: #eee; /* button drop target, awaiting a drop */
 	--color-drop-hover-bg: #daffab; /* button drop target, with a drag hovering over it */
+
+	/* Selected list item (button editor element pickers) */
+	--color-selected-item-bg: #e3f2fd;
+	--color-selected-accent: #1976d2;
+	--color-step-highlight: #2eb85c; /* green glow pulsing on the current step selector */
 
 	/* Drag & drop / grid tiles */
 	--color-drop-target: rgb(0, 123, 255); /* blue "drop here"/active accent; translucent variants via color-mix */
@@ -105,7 +113,6 @@
 	--color-overlay-btn-border-active: color-mix(in srgb, var(--color-on-dark) 50%, transparent);
 
 	/* Image library previews & upload states */
-	--color-image-stage: #f8f9fa; /* neutral preview stage / metadata box background */
 	--color-image-accent: #0d6efd; /* interactive blue: drag-over, dropzone active; alpha variants via color-mix */
 	--color-upload-success: #198754; /* uploading state green */
 	--color-text-emphasis: #495057; /* strong secondary text (metadata labels) */

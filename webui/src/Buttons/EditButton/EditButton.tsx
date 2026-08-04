@@ -1,4 +1,5 @@
 import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
+import './EditButton.css'
 import { observer } from 'mobx-react-lite'
 import { useContext, useRef } from 'react'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
