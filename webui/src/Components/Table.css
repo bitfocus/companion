@@ -1,3 +1,5 @@
+@import '../breakpoints.css';
+
 /* Table styling, consolidated from the vendored CoreUI tables and the various table tweaks that
    used to live globally in _common.scss / _settings.scss. Tables are rendered via the <Table>
    component (Components/Table.tsx); only the classes it can emit (plus a couple of companion
@@ -61,7 +63,7 @@
 	}
 }
 
-@media (max-width: 575.98px) {
+@media (--bp-sm-down) {
 	.table-responsive-sm {
 		overflow-x: auto;
 		-webkit-overflow-scrolling: touch;

@@ -1,3 +1,5 @@
+@import '../../breakpoints.css';
+
 /* dnd-kit sortable feedback for event rows (which use optimistic sorting, so the dragged row renders
    in the top-layer popover). No `filter: blur()` - a filter on a popover element breaks its rendering. */
 .entity-row {
@@ -183,7 +185,7 @@
 				padding: 0;
 
 				&.fixed .button-border {
-					@media (min-width: 1200px) and (max-width: 1399.98px), (max-width: 767.98px) {
+					@media (--bp-xl-up) and (--bp-xxl-down), (--bp-md-down) {
 						width: 48px;
 						height: 48px;
 					}

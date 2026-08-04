@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
+import postcssCustomMedia from 'postcss-custom-media'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 import { normalizeBasePath } from '../tools/webui-dev-utils'
 
@@ -150,6 +151,11 @@ export default defineConfig(({ mode }) => {
 				scss: {
 					quietDeps: true,
 				},
+			},
+			// Resolve @custom-media (shared responsive breakpoints in breakpoints.css) at build time, so
+			// component CSS can @media (--bp-*) instead of repeating hard-coded pixel values.
+			postcss: {
+				plugins: [postcssCustomMedia()],
 			},
 		},
 	}

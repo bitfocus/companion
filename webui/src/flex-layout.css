@@ -1,3 +1,5 @@
+@import './breakpoints.css';
+
 /* Scrollable container with sticky header styles */
 .scrollable-container,
 .flex-column-layout .scrollable-content {
@@ -39,7 +41,7 @@
 	}
 }
 
-@media (max-width: 1199.98px) {
+@media (--bp-xl-down) {
 	.flex-column-layout.collapse-under-xl {
 		height: unset;
 	}

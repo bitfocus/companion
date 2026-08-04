@@ -101,6 +101,7 @@
     "@types/react-transition-group": "^4.4.12",
     "jsdom": "^30.0.0",
     "monaco-editor": "^0.55.1",
+    "postcss-custom-media": "^11.0.6",
     "storybook": "^10.5.5",
     "tailwindcss": "^4.3.3",
     "type-testing": "^0.2.0",

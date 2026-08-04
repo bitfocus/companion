@@ -1,3 +1,5 @@
+@import './breakpoints.css';
+
 .float_right {
 	float: right;
 }
@@ -71,7 +73,7 @@
 			margin-bottom: 0.5rem;
 		}
 
-		@media (max-width: 575.98px) {
+		@media (--bp-sm-down) {
 			&.col-form-label {
 				/* Respect the override */
 				margin-bottom: 0;

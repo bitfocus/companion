@@ -1,3 +1,5 @@
+@import '../../breakpoints.css';
+
 .edit-button-panel {
 	height: 100%;
 
@@ -315,7 +317,7 @@
 		/* allow percentage-height children to resolve when used inside flex/grid parents */
 		min-height: 0;
 
-		@media (max-width: 767.98px) {
+		@media (--bp-md-down) {
 			overflow-y: auto;
 			display: block;
 		}
@@ -329,7 +331,7 @@
 		/* allow children with percentage heights or flex to shrink properly */
 		min-height: 0;
 
-		@media (max-width: 767.98px) {
+		@media (--bp-md-down) {
 			&:not(:first-child) {
 				margin-top: 0.5rem;
 			}
