@@ -52,6 +52,14 @@
 	--color-row-overlay: rgb(200, 200, 200); /* neutral overlay base; alpha varies per state via color-mix */
 	--color-row-selected: color-mix(in srgb, var(--color-row-overlay) 35%, transparent);
 
+	/* Button preview / rendering (the always-black button canvas and its drag/drop states) */
+	--color-button-bg: #000; /* hardware buttons are black; this does not flip with app theme */
+	--color-button-border: rgba(100, 100, 100, 0.4);
+	--color-button-placeholder: #262626;
+	--color-copy-source: #1b7fc2; /* highlight for a button marked as a copy/paste source */
+	--color-drop-neutral-bg: #eee; /* button drop target, awaiting a drop */
+	--color-drop-hover-bg: #daffab; /* button drop target, with a drag hovering over it */
+
 	/* Drag & drop / grid tiles */
 	--color-drop-target: rgb(0, 123, 255); /* blue "drop here"/active accent; translucent variants via color-mix */
 	--color-drag-row-bg: #f5f2fa; /* background of a lifted/floating dragged row */
@@ -81,6 +89,8 @@
 	--color-remote-accent: #d69e2e; /* gold accent for the tablet/emulator chrome */
 	--color-remote-accent-muted: #af8022;
 	--color-button-armed: rgba(255, 0, 0, 0.5); /* overlay tint for an "armed"/live button */
+	--color-armed-surface: #7f1111; /* opaque dark-red background of an armed button grid */
+	--color-scrollbar-thumb: #666; /* scrollbar thumb on the dark button grid */
 
 	/* Standalone dark status overlay (emulator/tablet pages) */
 	--color-overlay-bg: #181818;
