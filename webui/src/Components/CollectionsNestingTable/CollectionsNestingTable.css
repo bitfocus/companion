@@ -37,7 +37,7 @@
 			background-color: var(--color-row-selected);
 
 			&:hover {
-				background-color: color-mix(in srgb, var(--color-row-overlay) 30%, transparent) !important;
+				background-color: var(--color-row-overlay-30) !important;
 			}
 		}
 
@@ -47,7 +47,7 @@
 		}
 
 		&:hover:not(.row-selected):not(.row-dragging) {
-			background-color: color-mix(in srgb, var(--color-row-overlay) 10%, transparent);
+			background-color: var(--color-row-overlay-10);
 		}
 
 		.disabled {
@@ -136,7 +136,7 @@
 
 		&.is-drop-target p {
 			border-color: var(--color-drop-target);
-			background-color: color-mix(in srgb, var(--color-drop-target) 5%, transparent);
+			background-color: var(--color-drop-target-5);
 		}
 	}
 
@@ -233,7 +233,7 @@
 
 		&:hover {
 			border-color: var(--color-drop-target);
-			box-shadow: 0 2px 8px color-mix(in srgb, var(--color-drop-target) 20%, transparent);
+			box-shadow: 0 2px 8px var(--color-drop-target-20);
 
 			.tile-drag-handle {
 				background: var(--color-tile-handle-bg-hover);
@@ -242,7 +242,7 @@
 
 		&.tile-selected {
 			border-color: var(--color-drop-target);
-			box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-drop-target) 25%, transparent);
+			box-shadow: 0 0 0 3px var(--color-drop-target-25);
 		}
 
 		/* Grid items drag via a DragOverlay (dnd-kit doesn't move/clone the source), so dim the source

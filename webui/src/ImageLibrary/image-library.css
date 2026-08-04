@@ -69,7 +69,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: color-mix(in srgb, var(--color-image-accent) 10%, transparent);
+		background-color: var(--color-image-accent-10);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -113,12 +113,12 @@
 
 		&.active {
 			border-color: var(--color-image-accent);
-			background-color: color-mix(in srgb, var(--color-image-accent) 5%, transparent);
+			background-color: var(--color-image-accent-5);
 		}
 
 		&.uploading {
 			border-color: var(--color-upload-success);
-			background-color: color-mix(in srgb, var(--color-upload-success) 5%, transparent);
+			background-color: var(--color-upload-success-5);
 		}
 
 		.dropzone-content {

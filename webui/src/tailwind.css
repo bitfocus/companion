@@ -52,7 +52,10 @@
 
 	/* Row interaction states (dark mode overrides these to light overlays) */
 	--color-row-hover: rgba(0, 0, 0, 0.05);
-	--color-row-overlay: rgb(200, 200, 200); /* neutral overlay base; alpha varies per state via color-mix */
+	--color-row-overlay: rgb(200, 200, 200); /* neutral overlay base; the per-state alphas live below */
+	--color-row-overlay-10: color-mix(in srgb, var(--color-row-overlay) 10%, transparent); /* row hover */
+	--color-row-overlay-15: color-mix(in srgb, var(--color-row-overlay) 15%, transparent); /* tree leaf hover */
+	--color-row-overlay-30: color-mix(in srgb, var(--color-row-overlay) 30%, transparent); /* selected row hover */
 	--color-row-selected: color-mix(in srgb, var(--color-row-overlay) 35%, transparent);
 
 	/* Button preview / rendering (the always-black button canvas and its drag/drop states) */
@@ -70,7 +73,10 @@
 	--color-step-highlight: #2eb85c; /* green glow pulsing on the current step selector */
 
 	/* Drag & drop / grid tiles */
-	--color-drop-target: rgb(0, 123, 255); /* blue "drop here"/active accent; translucent variants via color-mix */
+	--color-drop-target: rgb(0, 123, 255); /* blue "drop here"/active accent */
+	--color-drop-target-5: color-mix(in srgb, var(--color-drop-target) 5%, transparent); /* wash background */
+	--color-drop-target-20: color-mix(in srgb, var(--color-drop-target) 20%, transparent); /* hover glow */
+	--color-drop-target-25: color-mix(in srgb, var(--color-drop-target) 25%, transparent); /* selected ring */
 	--color-drag-row-bg: #f5f2fa; /* background of a lifted/floating dragged row */
 	--color-dropzone-border: #bbb; /* dashed placeholder border of an empty drop zone */
 	--color-tile-border: #dee2e6;
@@ -112,8 +118,11 @@
 	--color-scrollbar-thumb: #666; /* scrollbar thumb on the dark button grid */
 
 	/* Image library previews & upload states */
-	--color-image-accent: #0d6efd; /* interactive blue: drag-over, dropzone active; alpha variants via color-mix */
+	--color-image-accent: #0d6efd; /* interactive blue: drag-over, dropzone active */
+	--color-image-accent-5: color-mix(in srgb, var(--color-image-accent) 5%, transparent); /* dropzone active wash */
+	--color-image-accent-10: color-mix(in srgb, var(--color-image-accent) 10%, transparent); /* drag overlay */
 	--color-upload-success: #198754; /* uploading state green */
+	--color-upload-success-5: color-mix(in srgb, var(--color-upload-success) 5%, transparent); /* uploading wash */
 	--color-text-emphasis: #495057; /* strong secondary text (metadata labels) */
 	--color-image-empty-text: #a8b2b8; /* muted placeholder glyph in an empty preview */
 	--color-preview-error-bg: #f8d7da;

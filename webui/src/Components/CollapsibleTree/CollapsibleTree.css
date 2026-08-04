@@ -76,7 +76,7 @@
 		cursor: pointer;
 
 		&:hover {
-			background-color: color-mix(in srgb, var(--color-row-overlay) 15%, transparent);
+			background-color: var(--color-row-overlay-15);
 
 			.collapsible-tree-leaf-add-icon {
 				opacity: 0.6;

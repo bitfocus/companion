@@ -31,7 +31,7 @@
 	background-color: var(--color-row-selected);
 
 	&:hover {
-		background-color: color-mix(in srgb, var(--color-row-overlay) 30%, transparent) !important;
+		background-color: var(--color-row-overlay-30) !important;
 	}
 }
 
