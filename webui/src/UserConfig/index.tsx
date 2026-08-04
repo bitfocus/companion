@@ -1,4 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import './settings.css'
 import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import { Callout } from '~/Components/Callout'

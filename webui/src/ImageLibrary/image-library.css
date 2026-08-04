@@ -1,11 +1,26 @@
-// Paints `--preview-bg-color` (may be translucent) over a transparency checkerboard; when the colour is
-// transparent, only the checkerboard shows.
-.image-preview-checkerboard {
+/* Paints `--preview-bg-color` (may be translucent) over a transparency checkerboard; when the colour is
+   transparent, only the checkerboard shows. The image preview boxes below extend this via the selector
+   list so the colour + checkerboard sit on the image, not the surrounding stage. */
+.image-preview-checkerboard,
+.image-preview-full img,
+.image-library-selector .image-preview img {
 	background-color: transparent;
 	background-image:
 		linear-gradient(var(--preview-bg-color, transparent), var(--preview-bg-color, transparent)),
-		linear-gradient(45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.1) 75%),
-		linear-gradient(45deg, rgba(0, 0, 0, 0.1) 25%, transparent 25%, transparent 75%, rgba(0, 0, 0, 0.1) 75%);
+		linear-gradient(
+			45deg,
+			color-mix(in srgb, var(--color-shadow) 10%, transparent) 25%,
+			transparent 25%,
+			transparent 75%,
+			color-mix(in srgb, var(--color-shadow) 10%, transparent) 75%
+		),
+		linear-gradient(
+			45deg,
+			color-mix(in srgb, var(--color-shadow) 10%, transparent) 25%,
+			transparent 25%,
+			transparent 75%,
+			color-mix(in srgb, var(--color-shadow) 10%, transparent) 75%
+		);
 	background-size:
 		100% 100%,
 		20px 20px,
@@ -17,15 +32,15 @@
 	background-repeat: no-repeat, repeat, repeat;
 }
 
-//
-// Shared image preview box — used on the page sidebar and in modal tabs
-//
+/*
+ * Shared image preview box — used on the page sidebar and in modal tabs
+ */
 
 .image-preview-full {
-	border: 1px solid #dee2e6;
+	border: 1px solid var(--color-tile-border);
 	border-radius: 8px;
 	overflow: hidden;
-	background: #f8f9fa; // neutral stage, matching the metadata box below
+	background: var(--color-image-stage); /* neutral stage, matching the metadata box below */
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -34,7 +49,7 @@
 	height: 200px;
 
 	&.drag-over {
-		border: 2px dashed #0d6efd;
+		border: 2px dashed var(--color-image-accent);
 	}
 
 	img {
@@ -42,10 +57,9 @@
 		max-height: 100%;
 		object-fit: contain;
 
-		// Colour + checkerboard sit on the image, not the stage, so they stay within its bounds; the shadow
-		// marks where a transparent image ends without a hard border.
-		@extend .image-preview-checkerboard;
-		box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25);
+		/* Colour + checkerboard sit on the image, not the stage, so they stay within its bounds (see the
+		   selector list at the top); the shadow marks where a transparent image ends without a hard border. */
+		box-shadow: 0 1px 5px color-mix(in srgb, var(--color-shadow) 25%, transparent);
 	}
 
 	.image-library-preview-empty {
@@ -67,7 +81,7 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		background-color: rgba(13, 110, 253, 0.1);
+		background-color: color-mix(in srgb, var(--color-image-accent) 10%, transparent);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -75,18 +89,18 @@
 		border-radius: 8px;
 
 		.drag-overlay-message {
-			background-color: rgba(255, 255, 255, 0.95);
+			background-color: color-mix(in srgb, var(--color-on-dark) 95%, transparent);
 			padding: 20px;
 			border-radius: 8px;
 			font-weight: bold;
-			color: #0d6efd;
+			color: var(--color-image-accent);
 		}
 	}
 }
 
-//
-// Page layout
-//
+/*
+ * Page layout
+ */
 
 .image-library-page {
 	.image-library-grid {
@@ -104,19 +118,19 @@
 	.image-library-dropzone {
 		margin: 1rem 0;
 		padding: 1.5rem 2rem;
-		border: 2px dashed #dee2e6;
+		border: 2px dashed var(--color-tile-border);
 		border-radius: 6px;
-		background-color: #f8f9fa;
+		background-color: var(--color-image-stage);
 		transition: all 0.2s ease;
 
 		&.active {
-			border-color: #0d6efd;
-			background-color: rgba(13, 110, 253, 0.05);
+			border-color: var(--color-image-accent);
+			background-color: color-mix(in srgb, var(--color-image-accent) 5%, transparent);
 		}
 
 		&.uploading {
-			border-color: #198754;
-			background-color: rgba(25, 135, 84, 0.05);
+			border-color: var(--color-upload-success);
+			background-color: color-mix(in srgb, var(--color-upload-success) 5%, transparent);
 		}
 
 		.dropzone-content {
@@ -125,21 +139,21 @@
 			align-items: center;
 			justify-content: center;
 			gap: 0.75rem;
-			color: #6c757d;
+			color: var(--color-text-muted);
 
 			svg {
-				color: #0d6efd;
+				color: var(--color-image-accent);
 			}
 
 			span {
 				font-weight: 500;
-				color: #495057;
+				color: var(--color-text-emphasis);
 			}
 		}
 
 		&.uploading .dropzone-content {
 			svg {
-				color: #198754;
+				color: var(--color-upload-success);
 			}
 		}
 	}
@@ -166,11 +180,11 @@
 		overflow-y: auto;
 
 		.image-metadata {
-			border: 1px solid #dee2e6;
+			border: 1px solid var(--color-tile-border);
 			border-radius: 6px;
 			padding: 1rem;
 			margin-bottom: 1rem;
-			background: #f8f9fa;
+			background: var(--color-image-stage);
 		}
 
 		.metadata-row {
@@ -185,14 +199,14 @@
 
 		.metadata-label {
 			font-weight: 600;
-			color: #495057;
+			color: var(--color-text-emphasis);
 		}
 	}
 }
 
-//
-// Reusable selector — used in modals and inside .image-library-page
-//
+/*
+ * Reusable selector — used in modals and inside .image-library-page
+ */
 
 .image-library-selector {
 	display: flex;
@@ -216,22 +230,21 @@
 
 	.image-preview {
 		aspect-ratio: 1;
-		background: #f8f9fa; // neutral stage; the image below carries the colour + checkerboard
+		background: var(--color-image-stage); /* neutral stage; the image below carries the colour + checkerboard */
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		overflow: hidden;
-		border-bottom: 1px solid #dee2e6;
+		border-bottom: 1px solid var(--color-tile-border);
 		position: relative;
 
-		// Sized from the image aspect ratio (--img-aspect = w/h, set on load) so it scales to fill the tile
-		// while the element box stays tight to the image, keeping the colour + checkerboard within its bounds.
+		/* Sized from the image aspect ratio (--img-aspect = w/h, set on load) so it scales to fill the tile
+		   while the element box stays tight to the image, keeping the colour + checkerboard within its bounds. */
 		img {
 			width: min(100%, calc(100% * var(--img-aspect, 1)));
 			aspect-ratio: var(--img-aspect, 1);
 			object-fit: contain;
-			@extend .image-preview-checkerboard;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+			box-shadow: 0 1px 3px color-mix(in srgb, var(--color-shadow) 20%, transparent);
 		}
 	}
 
@@ -248,8 +261,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: #f8f9fa;
-		color: #6c757d;
+		background: var(--color-image-stage);
+		color: var(--color-text-muted);
 		text-align: center;
 		padding: 1rem;
 		min-height: 100px;
@@ -261,7 +274,7 @@
 	}
 
 	.image-library-preview-empty {
-		color: #a8b2b8;
+		color: var(--color-image-empty-text);
 
 		svg {
 			max-width: none !important;
@@ -282,8 +295,8 @@
 	}
 
 	.image-library-preview-error {
-		background: #f8d7da;
-		color: #721c24;
+		background: var(--color-preview-error-bg);
+		color: var(--color-preview-error-text);
 	}
 
 	.image-name {
@@ -297,7 +310,7 @@
 
 	.image-id {
 		font-size: 0.75rem;
-		color: #6c757d;
+		color: var(--color-text-muted);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

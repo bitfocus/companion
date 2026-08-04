@@ -38,8 +38,6 @@
 @use 'scss/sidebar';
 
 @use 'scss/button-edit';
-@use 'scss/settings';
-@use 'scss/image-library';
 
 // ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two
 [data-dnd-overlay]:not([data-dnd-dragging]) {

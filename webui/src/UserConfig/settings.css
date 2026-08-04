@@ -8,8 +8,8 @@
 		font-size: 18px;
 		padding-top: 10px !important;
 		padding-bottom: 10px !important;
-		// background-color: #fff !important;
-		border-bottom: 1px solid #dddfe2 !important;
+		/* background-color: #fff !important; */
+		border-bottom: 1px solid var(--color-border-muted) !important;
 	}
 }
 
@@ -22,11 +22,11 @@
 	display: block;
 
 	> :hover {
-		background-color: #eee;
+		background-color: var(--color-surface-hover);
 	}
 }
 
-// Layout for the contents of a backup rule row
+/* Layout for the contents of a backup rule row */
 .backup-rule-content {
 	display: flex;
 	align-items: center;
