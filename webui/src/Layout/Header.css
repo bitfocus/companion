@@ -61,7 +61,9 @@
 
 /* Hamburger toggler (mobile). The icon itself is a FontAwesome glyph in Header.tsx. */
 .header-toggler {
-	padding: 0.25rem 0.75rem;
+	/* 0.25rem all round (overrides .ps-1, just in case) keeps the hover highlight uniform */
+	padding: 0.25rem !important;
+	margin-right: 0.5rem; /* toggler-padding-x - toggler-padding-y */
 	font-size: 1.25rem;
 	color: var(--color-header-text);
 	background-color: transparent;
@@ -70,6 +72,8 @@
 
 	&:hover {
 		text-decoration: none;
+		/* make the colour similar to --cui-btn-hover-bg, which is not accessible here */
+		background-color: var(--color-header-hover);
 	}
 
 	&:focus {
@@ -78,5 +82,44 @@
 
 	&:not(:disabled) {
 		cursor: pointer;
+	}
+}
+
+.header-right {
+	margin-right: 5px;
+}
+
+.header > .container-fluid {
+	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
+}
+
+.header .nav-link:hover {
+	color: var(--color-header-text-muted);
+}
+/* ensure .header-notification-item text doesn't disappear on focus */
+.header .nav-link:focus {
+	color: var(--color-header-text-muted);
+}
+
+.header-notification-item {
+	border-radius: 0.5em;
+	margin-left: 1em;
+	background-color: var(--color-header-notification-bg);
+}
+
+.header-update-icon {
+	margin-right: 0.5em;
+}
+
+.help-menu {
+	/* note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed. */
+	.help-toggle {
+		color: var(--color-header-text); /* Keep toggle white on red header */
+		margin-left: 1em; /* buffer between this and the lock icon */
+		/* the following line makes the focus/hover-highlight a square that is the same size as the notification */
+		padding: 0.2em 0em;
+		/* CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override */
+		/* override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455) */
+		border-radius: var(--cui-border-radius) !important;
 	}
 }

@@ -1,4 +1,5 @@
 import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
+import './PanelIcons.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import { Button, LinkButtonExternal } from '~/Components/Button'

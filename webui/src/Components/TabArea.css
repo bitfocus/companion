@@ -141,6 +141,24 @@
 	}
 }
 
+/* The panel that holds each tab's content (rendered by TabArea). */
+.tab-panel {
+	height: 100%;
+	padding: 1rem 1rem 1rem 1rem;
+
+	flex-grow: 1;
+
+	/* Make absolute positioned child components be relative to this */
+	position: relative;
+
+	.edit-sticky-body {
+		--raw-height: 0px;
+		min-height: calc(var(--raw-height) - 2.1rem);
+
+		flex-grow: 1;
+	}
+}
+
 /* Split-panels layout: tab-area spans the full secondary-panel-inner grid */
 .split-panels > .secondary-panel .secondary-panel-inner {
 	.tab-area {

@@ -1,3 +1,8 @@
+/* App shell, the two-column page layout (primary/secondary panels), and a few generic layout
+   utilities. Component-specific chrome lives with its component: the header in Layout/header.css,
+   the panel close/help icons in Layout/panel-icons.css, and the dropdown/context menus in
+   Components/context-menu.css. */
+
 body {
 	-webkit-text-size-adjust: 100%;
 	-moz-tab-size: 4;
@@ -73,173 +78,6 @@ form.row > * {
 	align-content: center;
 }
 
-/* .c-header .c-header-brand {
-	font-size: 1.3em;
-	margin: 0 auto;
-} */
-
-/* header-toggler is a coreui/bootstrap built-in class. It refers to the hamburger icon
-   that opens the sidebar in "mobile" mode (narrow window).
-   OTOH, .sidebar-footer (in this file) refers to the toggler at the bottom of the sidebar in the other modes */
-.header-toggler {
-	/* the next two keep the hover highlight border more uniform w/o changing spacing
-	   (toggler padding is 0.25rem y / 0.75rem x, see components/_header.scss) */
-	padding: 0.25rem !important; /* !important overrides .ps-1, just in case */
-	margin-right: 0.5rem; /* toggler-padding-x - toggler-padding-y */
-
-	/*  make the color similar to --cui-btn-hover-bg, which is not accessible here */
-	&:hover {
-		background-color: var(--color-header-hover);
-	}
-}
-
-.header-right {
-	margin-right: 5px;
-}
-
-/* uncomment this if CHeader is assigned position=sticky in Header.tsx */
-/* .header.header-sticky {
-	z-index: 40; // monaco-edit's suggest-details pane is buried if z-index > 41; use 40 just as a round number
-} */
-
-.header {
-	.nav-link:hover {
-		color: var(--color-header-text-muted);
-	}
-	/* ensure .header-notification-item text doesn't disappear on focus */
-	.nav-link:focus {
-		color: var(--color-header-text-muted);
-	}
-}
-
-.header-notification-item {
-	border-radius: 0.5em;
-	margin-left: 1em;
-	background-color: var(--color-header-notification-bg);
-}
-
-.header-update-icon {
-	margin-right: 0.5em;
-}
-
-.help-menu {
-	/* note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed. */
-	.help-toggle {
-		color: var(--color-header-text); /* Keep toggle white on red header */
-		margin-left: 1em; /* buffer between this and the lock icon */
-		/* the following line makes the focus/hover-highlight a square that is the same size as the notification */
-		padding: 0.2em 0em;
-		/* CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override */
-		/* override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455) */
-		border-radius: var(--cui-border-radius) !important;
-	}
-}
-
-.help-menu-positioner,
-.context-menu {
-	z-index: 1070; /* above CoreUI sidebar (1035) and modals (1055); matches CoreUI's $zindex-popover */
-
-	/* gather the color scheme up front: */
-	--menu-color: var(--color-text-strong);
-	--menu-bg: var(--cui-tertiary-bg); /* or just use white? */
-	--menu-hover-color: var(--color-on-dark);
-	--menu-hover-bg: var(--cui-info);
-
-	.popover2-popup {
-		--popover2-bg: var(--menu-bg);
-		--popover2-link-color: var(--menu-color);
-		--popover2-link-hover-bg: var(--menu-hover-bg);
-		--popover2-link-hover-color: var(--menu-hover-color);
-
-		min-width: 240px;
-		border: 1px solid var(--color-shadow-20); /* Subtle dark border to the dropdown */
-		box-shadow: 0 4px 16px var(--color-shadow-30); /* Professional shadow to the dropdown */
-
-		.popover2-item {
-			display: flex;
-			align-items: center;
-			font-size: 0.95rem; /* Slightly smaller, more refined */
-			padding: 0.4em 0.75em; /* More vertical padding, balanced horizontal */
-			transition: background-color 0.15s ease-in-out; /* Smooth hover transition */
-
-			&:focus-visible {
-				/* override button focus behavior (when "to" is a function), so it highlights the same way as the other items */
-				outline: none;
-			}
-
-			.dropdown-item-icon {
-				/* let the rules above and below control its padding */
-				flex-shrink: 0;
-				padding-left: 0;
-				padding-right: 0;
-			}
-
-			.dropdown-item-label {
-				padding-left: 0.75em;
-				padding-right: 1.5em;
-			}
-		}
-
-		.dropdown-divider {
-			border: none;
-			border-top: 1px solid var(--color-shadow-25); /* Light divider */
-			margin: 0.4em 0.6em;
-		}
-
-		.dropdown-group-label {
-			cursor: default;
-			padding-left: 0.75em;
-			color: color-mix(in srgb, var(--color-text-strong) 50%, transparent);
-		}
-
-		.dropdown-item-version {
-			white-space: pre; /* or pre-wrap to keep narrow but show all? */
-
-			.dropdown-item-label {
-				display: block;
-				font-size: 0.85em;
-				min-width: 0;
-				max-width: 20em; /* 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line? */
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-		}
-	}
-}
-
-/* override parts that differ from (dropdown) help-menus */
-.context-menu {
-	--menu-bg: var(--color-menu-bg); /* sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here. */
-	.popover2-popup {
-		min-width: 0;
-
-		.popover2-item {
-			font-size: 0.85rem;
-		}
-	}
-}
-
-.tab-panel {
-	height: 100%;
-	padding: 1rem 1rem 1rem 1rem;
-
-	flex-grow: 1;
-
-	/* Make absolute positioned child components be relative to this */
-	position: relative;
-
-	.edit-sticky-body {
-		--raw-height: 0px;
-		min-height: calc(var(--raw-height) - 2.1rem);
-
-		flex-grow: 1;
-	}
-}
-
-.header > .container-fluid {
-	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
-}
-
 .secondary-panel-inner {
 	box-shadow: -15px -0px 25px -20px var(--color-shadow-30);
 	overflow-y: hidden;
@@ -271,49 +109,6 @@ form.row > * {
 		padding-top: 8px;
 		padding-bottom: 7px;
 	}
-}
-
-.panel-close-button {
-	box-shadow: 2px 2px 4px var(--color-shadow-25);
-	border: none;
-	background-color: var(--color-panel-header-btn); /* the "X" is foreground; the rest is background */
-	display: flex;
-	align-items: center; /* center the "X" in the button's background */
-
-	.svg-inline--fa {
-		height: 1.25em;
-		width: 1.25em;
-		margin: 2px;
-	}
-}
-
-/* format context-help-buttons. Everything but size can be globally applied. */
-.context-help-button-btn {
-	border: 0;
-	border-radius: 100%;
-	--btn-color: var(--color-panel-header-btn); /* the circle is the foreground; the "?" is transparent */
-	background-color: var(--color-surface);
-}
-
-/* context-help-buttons in panel headers.  (For h4, h5 headings see common.css) */
-.header-buttons .context-help-button-btn {
-	box-shadow: 1px 1px 4px 1px var(--color-shadow-25);
-	margin-top: 1px; /* centers it a bit better relative to the close button */
-	width: 2em;
-	height: 2em;
-
-	.svg-inline--fa {
-		width: 2em;
-		height: 2em;
-	}
-}
-
-/* is this used anywhere? (it's not explicitly in the code) */
-.subhead-help-button {
-	border: 0;
-	background: none;
-	padding: 0;
-	cursor: pointer;
 }
 
 .secondary-panel {
@@ -535,8 +330,4 @@ hr.slim {
 			margin-right: 2px;
 		}
 	}
-}
-
-.modal-whatsnew {
-	z-index: 2000;
 }
