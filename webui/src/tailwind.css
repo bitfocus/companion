@@ -22,6 +22,7 @@
 	/* Surfaces */
 	--color-surface: #fff;
 	--color-surface-muted: #f0f0f0;
+	--color-surface-muted-hover: #e8e8e8;
 	--color-surface-alt: #f7f7f7;
 	--color-loading-track: #3c4b64;
 
@@ -29,6 +30,7 @@
 	--color-border: #ddd;
 	--color-border-muted: #dddfe2;
 	--color-border-strong: #999;
+	--color-tree-line: #ccc; /* nesting guide lines in the collapsible tree / nesting table */
 
 	/* Text */
 	--color-text: #111;
@@ -39,7 +41,8 @@
 
 	/* Row interaction states (dark mode overrides these to light overlays) */
 	--color-row-hover: rgba(0, 0, 0, 0.05);
-	--color-row-selected: rgba(200, 200, 200, 0.35);
+	--color-row-overlay: rgb(200, 200, 200); /* neutral overlay base; alpha varies per state via color-mix */
+	--color-row-selected: color-mix(in srgb, var(--color-row-overlay) 35%, transparent);
 
 	/* Text on dark/coloured backgrounds */
 	--color-on-dark: #fff;
@@ -78,6 +81,9 @@
 	--color-log-info-bg: color-mix(in srgb, var(--color-log-info) 10%, transparent);
 	--color-log-info-text: rgba(0, 0, 200, 0.7);
 	--color-log-debug-text: rgba(50, 50, 50, 0.8);
+
+	/* Spacing (non-colour theme values, e.g. for a future compactness/density setting) */
+	--variable-pill-padding: 1px 3px 0px;
 }
 
 @source '../index.html';

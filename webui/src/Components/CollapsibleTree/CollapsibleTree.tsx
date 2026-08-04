@@ -1,4 +1,5 @@
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
+import './CollapsibleTree.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'

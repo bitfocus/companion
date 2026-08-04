@@ -1,35 +1,32 @@
-@use 'variables' as *;
-@use 'sass:color';
-
 .collapsible-tree {
-	border: 1px solid #ddd;
+	border: 1px solid var(--color-border);
 	border-collapse: collapse;
-	box-shadow: 0px 2px 21px -10px rgba(0, 0, 0, 0.2);
+	box-shadow: 0px 2px 21px -10px color-mix(in srgb, var(--color-shadow) 20%, transparent);
 	font-size: 1.05em;
 	--collapsible-tree-nesting-level: 0;
 
 	.modal2-content & {
-		// fix color in the Browse Actions/Feedbacks window (AddEntitiesModal) or any modal
-		// override default --cui-modal-color = rgb(37 43 54 /0.95)
-		// unfortunately, we can't simply override that variable here because it sets "color:" on .modal, so we have to override color itself.
-		color: black;
+		/* fix color in the Browse Actions/Feedbacks window (AddEntitiesModal) or any modal
+		   override default --cui-modal-color = rgb(37 43 54 /0.95)
+		   unfortunately, we can't simply override that variable here because it sets "color:" on .modal, so we have to override color itself. */
+		color: var(--color-text-strong);
 	}
 
 	.collapsible-tree-ungrouped-header {
-		background-color: #f0f0f0;
+		background-color: var(--color-surface-muted);
 		padding: 6px 10px;
-		//padding-left: 20px; // don't -- since this is not expandible, align it with the carets
+		/* padding-left: 20px; */ /* don't -- since this is not expandible, align it with the carets */
 
-		border-bottom: 1px solid #ddd;
+		border-bottom: 1px solid var(--color-border);
 
 		font-weight: 700;
 	}
 
 	.collapsible-tree-group-row {
 		padding: 5px 10px;
-		border-bottom: 1px solid #ddd;
+		border-bottom: 1px solid var(--color-border);
 
-		background-color: #f0f0f0;
+		background-color: var(--color-surface-muted);
 		font-weight: 600;
 		cursor: pointer;
 
@@ -39,23 +36,23 @@
 		}
 
 		&:hover {
-			background-color: color.adjust(#f0f0f0, $lightness: -3%);
+			background-color: var(--color-surface-muted-hover);
 		}
 
-		// Connection nodes get a slightly different style to stand out from collections
+		/* Connection nodes get a slightly different style to stand out from collections */
 		.collapsible-tree-connection-header {
 			display: inline-flex;
 			justify-content: space-between;
 			align-items: center;
-			width: calc(100% - 15px); // Account for caret width
+			width: calc(100% - 15px); /* Account for caret width */
 		}
 
-		// Collection headers also show counts
+		/* Collection headers also show counts */
 		.collapsible-tree-collection-header {
 			display: inline-flex;
 			justify-content: space-between;
 			align-items: center;
-			width: calc(100% - 15px); // Account for caret width
+			width: calc(100% - 15px); /* Account for caret width */
 		}
 
 		.collapsible-tree-connection-count {
@@ -75,11 +72,11 @@
 
 	.collapsible-tree-leaf-row {
 		padding: 5px 10px;
-		border-bottom: 1px solid #ddd;
+		border-bottom: 1px solid var(--color-border);
 		cursor: pointer;
 
 		&:hover {
-			background-color: rgba(200, 200, 200, 0.15);
+			background-color: color-mix(in srgb, var(--color-row-overlay) 15%, transparent);
 
 			.collapsible-tree-leaf-add-icon {
 				opacity: 0.6;
@@ -137,7 +134,7 @@
 			top: -5px;
 			height: calc(100% + 10px);
 			width: 1px;
-			background-color: #ccc;
+			background-color: var(--color-tree-line);
 			z-index: 1;
 		}
 
@@ -148,7 +145,7 @@
 			top: 50%;
 			width: calc(var(--collapsible-tree-nesting-level) * 10px - 5px);
 			height: 1px;
-			background-color: #ccc;
+			background-color: var(--color-tree-line);
 			z-index: 1;
 		}
 	}
