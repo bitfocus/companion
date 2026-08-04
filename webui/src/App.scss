@@ -42,15 +42,12 @@
 @use 'scss/button-control';
 @use 'scss/button-edit';
 @use 'scss/button-grid';
-@use 'scss/cloud';
 @use 'scss/instances';
 @use 'scss/variables-table';
-@use 'scss/presets';
 @use 'scss/settings';
 @use 'scss/import-export';
 @use 'scss/collections-nesting-table';
 @use 'scss/collapsible-tree';
-@use 'scss/sticky-tables';
 @use 'scss/image-library';
 
 // ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two
