@@ -1,9 +1,7 @@
-@use '../variables' as *;
-
-// ─── Step selector ───────────────────────────────────────────────────────────
-//
-// Clickable step indicator: a row of numbered markers joined by connector lines, with completed steps
-// showing a tick. Used along the top of multi-step flows such as the setup wizard.
+/* ─── Step selector ───────────────────────────────────────────────────────────
+ *
+ * Clickable step indicator: a row of numbered markers joined by connector lines, with completed steps
+ * showing a tick. Used along the top of multi-step flows such as the setup wizard. */
 
 .step-selector {
 	display: flex;
@@ -19,7 +17,7 @@
 		min-width: 0;
 		text-align: center;
 
-		// Connector line between markers
+		/* Connector line between markers */
 		&:not(:first-child)::before {
 			content: '';
 			position: absolute;
@@ -32,7 +30,7 @@
 
 		&.step-selector-step-complete::before,
 		&.step-selector-step-active::before {
-			background-color: $primary;
+			background-color: var(--color-primary);
 		}
 	}
 
@@ -51,11 +49,11 @@
 		cursor: pointer;
 
 		&:hover .step-selector-marker {
-			border-color: $primary;
+			border-color: var(--color-primary);
 		}
 
 		&:focus-visible {
-			outline: 2px solid $primary;
+			outline: 2px solid var(--color-primary);
 			outline-offset: 2px;
 			border-radius: 4px;
 		}
@@ -88,20 +86,20 @@
 		margin-left: 0.35rem;
 		padding: 0.05rem 0.3rem;
 		border-radius: 0.5rem;
-		background-color: $primary;
-		color: #fff;
+		background-color: var(--color-primary);
+		color: var(--color-on-dark);
 		font-size: 0.6rem;
 		font-weight: bold;
 		text-transform: uppercase;
 		vertical-align: middle;
 	}
 
-	// Active step: filled marker + emphasised label
+	/* Active step: filled marker + emphasised label */
 	.step-selector-step-active {
 		.step-selector-marker {
-			border-color: $primary;
-			background-color: $primary;
-			color: #fff;
+			border-color: var(--color-primary);
+			background-color: var(--color-primary);
+			color: var(--color-on-dark);
 		}
 
 		.step-selector-button {
@@ -109,11 +107,11 @@
 		}
 	}
 
-	// Completed steps: filled marker with a tick
+	/* Completed steps: filled marker with a tick */
 	.step-selector-step-complete {
 		.step-selector-marker {
-			border-color: $primary;
-			color: $primary;
+			border-color: var(--color-primary);
+			color: var(--color-primary);
 		}
 
 		.step-selector-button {
