@@ -1,7 +1,3 @@
-@use 'vendor/coreui/mixins/breakpoints';
-
-@use 'variables' as *;
-
 .float_right {
 	float: right;
 }
@@ -30,23 +26,23 @@
 }
 
 .connectionlist-selected {
-	background-color: rgba(200, 200, 200, 0.35);
+	background-color: var(--color-row-selected);
 
 	&:hover {
-		background-color: rgba(200, 200, 200, 0.3) !important;
+		background-color: color-mix(in srgb, var(--color-row-overlay) 30%, transparent) !important;
 	}
 }
 
 .connection-status-ok {
-	background-color: #cfc;
+	background-color: var(--color-status-ok-bg);
 }
 
 .connection-status-warn {
-	background-color: #fea;
+	background-color: var(--color-status-warn-bg);
 }
 
 .connection-status-error {
-	background-color: #fcc;
+	background-color: var(--color-status-error-bg);
 }
 
 #connection_add_search_results {
@@ -61,7 +57,7 @@
 	margin-bottom: 1em;
 
 	& > div {
-		// column
+		/* column */
 		margin-bottom: 0.5rem;
 	}
 
@@ -75,9 +71,9 @@
 			margin-bottom: 0.5rem;
 		}
 
-		@include breakpoints.media-breakpoint-only('xs') {
+		@media (max-width: 575.98px) {
 			&.col-form-label {
-				// Respect the override
+				/* Respect the override */
 				margin-bottom: 0;
 			}
 		}
@@ -90,7 +86,7 @@
 	flex-shrink: 0;
 	padding-top: 1rem;
 	margin-top: auto;
-	background-color: white;
+	background-color: var(--color-surface);
 	padding-bottom: 1.5rem;
 }
 
@@ -98,9 +94,9 @@
 	margin-bottom: 0.5rem;
 }
 
-// Connection groups styling
+/* Connection groups styling */
 .connection-group-actions {
-	overflow: hidden; // workaround for a coreui "bug" that counts hidden elements as present and therefore applies the wrong border-radius
+	overflow: hidden; /* workaround for a coreui "bug" that counts hidden elements as present and therefore applies the wrong border-radius */
 	margin-bottom: 1rem;
 }
 

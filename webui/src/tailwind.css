@@ -14,6 +14,11 @@
 	--color-light: #e9e9e9;
 	--color-dark: #212631;
 
+	/* Status row/background tints */
+	--color-status-ok-bg: #cfc;
+	--color-status-warn-bg: #fea;
+	--color-status-error-bg: #fcc;
+
 	--color-input-bg: #ffffff;
 	--color-input-readonly-bg: #eeeeee;
 	--color-input-invalid: red;
@@ -37,12 +42,22 @@
 	--color-text-strong: #000;
 	--color-icon: #333;
 	--color-text-secondary: #666;
+	--color-text-muted: #6c757d;
 	--color-text-disabled: #ccc;
 
 	/* Row interaction states (dark mode overrides these to light overlays) */
 	--color-row-hover: rgba(0, 0, 0, 0.05);
 	--color-row-overlay: rgb(200, 200, 200); /* neutral overlay base; alpha varies per state via color-mix */
 	--color-row-selected: color-mix(in srgb, var(--color-row-overlay) 35%, transparent);
+
+	/* Drag & drop / grid tiles */
+	--color-drop-target: rgb(0, 123, 255); /* blue "drop here"/active accent; translucent variants via color-mix */
+	--color-drag-row-bg: #f5f2fa; /* background of a lifted/floating dragged row */
+	--color-dropzone-border: #bbb; /* dashed placeholder border of an empty drop zone */
+	--color-tile-border: #dee2e6;
+	--color-tile-handle-bg: #e9ecef;
+	--color-tile-handle-bg-hover: #d0d0d0;
+	--color-tile-handle-bg-active: #adb5bd;
 
 	/* Text on dark/coloured backgrounds */
 	--color-on-dark: #fff;
