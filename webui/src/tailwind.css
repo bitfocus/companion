@@ -51,6 +51,17 @@
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
 
+	/* Standalone dark status overlay (emulator/tablet pages) */
+	--color-overlay-bg: #181818;
+	--color-overlay-text: #f7f7f7;
+	--color-overlay-text-muted: color-mix(in srgb, var(--color-on-dark) 60%, transparent);
+	--color-overlay-btn-bg: color-mix(in srgb, var(--color-on-dark) 8%, transparent);
+	--color-overlay-btn-bg-hover: color-mix(in srgb, var(--color-on-dark) 16%, transparent);
+	--color-overlay-btn-bg-active: color-mix(in srgb, var(--color-on-dark) 22%, transparent);
+	--color-overlay-btn-border: color-mix(in srgb, var(--color-on-dark) 25%, transparent);
+	--color-overlay-btn-border-hover: color-mix(in srgb, var(--color-on-dark) 40%, transparent);
+	--color-overlay-btn-border-active: color-mix(in srgb, var(--color-on-dark) 50%, transparent);
+
 	/* Log levels */
 	--color-log-error: #f00;
 	--color-log-error-bg: color-mix(in srgb, var(--color-log-error) 5%, transparent);
