@@ -32,6 +32,7 @@
 	--color-surface-alt: #f7f7f7;
 	--color-surface-subtle: #f8f9fa; /* very light neutral stage (preview stages, list backgrounds) */
 	--color-surface-dark: #222; /* dark panel/inset surface (tablet, emulator, button editor) */
+	--color-app-bg: #f9f9f9; /* main content area background */
 	--color-loading-track: #3c4b64;
 
 	/* Borders */
@@ -113,6 +114,15 @@
 	/* Header bar (defaults to the brand primary; can be themed separately) */
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
+	--color-header-hover: #b70212; /* darkened header bg for the mobile toggler hover */
+	--color-header-text-muted: #ddd; /* dimmed header nav-link on hover/focus */
+	--color-header-notification-bg: #333;
+
+	/* Panel headers & dropdown menus (layout) */
+	--color-panel-header-bg: #dee2e5;
+	--color-panel-header-fg: #343a40; /* panel title text */
+	--color-panel-header-btn: #4b545c; /* the round context-help / close button chrome */
+	--color-menu-bg: #f3f4f7; /* context-menu popover background */
 
 	/* Modal / sidebar backdrop (dimmed behind an overlay; paired with an opacity) */
 	--color-backdrop: #080a0c;

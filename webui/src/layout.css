@@ -1,13 +1,9 @@
-@use 'variables' as *;
-@use 'vendor/coreui/mixins/ltr-rtl'; // not strictly necessary, but it allows us to clarify the origin of mixins
-@use 'sass:color';
-
 body {
 	-webkit-text-size-adjust: 100%;
 	-moz-tab-size: 4;
 	-o-tab-size: 4;
 	tab-size: 4;
-	// font-family: 'Roboto', sans-serif;
+	/* font-family: 'Roboto', sans-serif; */
 	font-family:
 		ui-sans-serif,
 		system-ui,
@@ -33,12 +29,12 @@ body {
 	height: 100vh;
 	overflow-y: hidden;
 
-	@include ltr-rtl.ltr-rtl('padding-left', var(--cui-sidebar-occupy-start, 0));
+	padding-left: var(--cui-sidebar-occupy-start, 0);
 }
 
 .body {
 	padding: 1rem 1rem 1rem 1rem;
-	background-color: #f9f9f9;
+	background-color: var(--color-app-bg);
 
 	display: flex;
 	flex-flow: column;
@@ -46,10 +42,10 @@ body {
 	max-height: 100%;
 	overflow-y: hidden;
 
-	// Fit minus the header
-	// height: calc(100% - #{$header-height}); // nocommit
+	/* Fit minus the header */
+	/* height: calc(100% - #{$header-height}); // nocommit */
 
-	// Force to fill the screen and scroll internally
+	/* Force to fill the screen and scroll internally */
 	> .container-fluid {
 		height: 100%;
 		max-height: 100%;
@@ -77,23 +73,23 @@ form.row > * {
 	align-content: center;
 }
 
-// .c-header .c-header-brand {
-// 	font-size: 1.3em;
-// 	margin: 0 auto;
-// }
+/* .c-header .c-header-brand {
+	font-size: 1.3em;
+	margin: 0 auto;
+} */
 
-// header-toggler is a coreui/bootstrap built-in class. It refers to the hamburger icon
-// that opens the sidebar in "mobile" mode (narrow window).
-// OTOH, .sidebar-footer (in this file) refers to the toggler at the bottom of the sidebar in the other modes
+/* header-toggler is a coreui/bootstrap built-in class. It refers to the hamburger icon
+   that opens the sidebar in "mobile" mode (narrow window).
+   OTOH, .sidebar-footer (in this file) refers to the toggler at the bottom of the sidebar in the other modes */
 .header-toggler {
-	// the next two keep the hover highlight border more uniform w/o changing spacing
-	// (toggler padding is 0.25rem y / 0.75rem x, see components/_header.scss)
-	padding: 0.25rem !important; // !important overrides .ps-1, just in case
-	margin-right: 0.5rem; // toggler-padding-x - toggler-padding-y
+	/* the next two keep the hover highlight border more uniform w/o changing spacing
+	   (toggler padding is 0.25rem y / 0.75rem x, see components/_header.scss) */
+	padding: 0.25rem !important; /* !important overrides .ps-1, just in case */
+	margin-right: 0.5rem; /* toggler-padding-x - toggler-padding-y */
 
-	//  make the color similar to --cui-btn-hover-bg, which is not accessible here
+	/*  make the color similar to --cui-btn-hover-bg, which is not accessible here */
 	&:hover {
-		background-color: color.adjust($header-bg, $lightness: -6%);
+		background-color: var(--color-header-hover);
 	}
 }
 
@@ -101,25 +97,25 @@ form.row > * {
 	margin-right: 5px;
 }
 
-// uncomment this if CHeader is assigned position=sticky in Header.tsx
-// .header.header-sticky {
-// 	z-index: 40; // monaco-edit's suggest-details pane is buried if z-index > 41; use 40 just as a round number
-// }
+/* uncomment this if CHeader is assigned position=sticky in Header.tsx */
+/* .header.header-sticky {
+	z-index: 40; // monaco-edit's suggest-details pane is buried if z-index > 41; use 40 just as a round number
+} */
 
 .header {
 	.nav-link:hover {
-		color: #ddd;
+		color: var(--color-header-text-muted);
 	}
 	/* ensure .header-notification-item text doesn't disappear on focus */
 	.nav-link:focus {
-		color: #ddd;
+		color: var(--color-header-text-muted);
 	}
 }
 
 .header-notification-item {
 	border-radius: 0.5em;
 	margin-left: 1em;
-	background-color: #333;
+	background-color: var(--color-header-notification-bg);
 }
 
 .header-update-icon {
@@ -127,26 +123,26 @@ form.row > * {
 }
 
 .help-menu {
-	// note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed.
+	/* note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed. */
 	.help-toggle {
-		color: $header-color; // Keep toggle white on red header
-		margin-left: 1em; // buffer between this and the lock icon
-		// the following line makes the focus/hover-highlight a square that is the same size as the notification
+		color: var(--color-header-text); /* Keep toggle white on red header */
+		margin-left: 1em; /* buffer between this and the lock icon */
+		/* the following line makes the focus/hover-highlight a square that is the same size as the notification */
 		padding: 0.2em 0em;
-		// CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override
-		// override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455)
+		/* CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override */
+		/* override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455) */
 		border-radius: var(--cui-border-radius) !important;
 	}
 }
 
 .help-menu-positioner,
 .context-menu {
-	z-index: 1070; // above CoreUI sidebar (1035) and modals (1055); matches CoreUI's $zindex-popover
+	z-index: 1070; /* above CoreUI sidebar (1035) and modals (1055); matches CoreUI's $zindex-popover */
 
-	// gather the color scheme up front:
-	--menu-color: #000;
-	--menu-bg: var(--cui-tertiary-bg); // or just use white?
-	--menu-hover-color: #fff;
+	/* gather the color scheme up front: */
+	--menu-color: var(--color-text-strong);
+	--menu-bg: var(--cui-tertiary-bg); /* or just use white? */
+	--menu-hover-color: var(--color-on-dark);
 	--menu-hover-bg: var(--cui-info);
 
 	.popover2-popup {
@@ -156,23 +152,23 @@ form.row > * {
 		--popover2-link-hover-color: var(--menu-hover-color);
 
 		min-width: 240px;
-		border: 1px solid rgba(0, 0, 0, 0.2); // Subtle dark border to the dropdown
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); // Professional shadow to the dropdown
+		border: 1px solid var(--color-shadow-20); /* Subtle dark border to the dropdown */
+		box-shadow: 0 4px 16px var(--color-shadow-30); /* Professional shadow to the dropdown */
 
 		.popover2-item {
 			display: flex;
 			align-items: center;
-			font-size: 0.95rem; // Slightly smaller, more refined
-			padding: 0.4em 0.75em; // More vertical padding, balanced horizontal
-			transition: background-color 0.15s ease-in-out; // Smooth hover transition
+			font-size: 0.95rem; /* Slightly smaller, more refined */
+			padding: 0.4em 0.75em; /* More vertical padding, balanced horizontal */
+			transition: background-color 0.15s ease-in-out; /* Smooth hover transition */
 
 			&:focus-visible {
-				// override button focus behavior (when "to" is a function), so it highlights the same way as the other items
+				/* override button focus behavior (when "to" is a function), so it highlights the same way as the other items */
 				outline: none;
 			}
 
 			.dropdown-item-icon {
-				// let the rules above and below control its padding
+				/* let the rules above and below control its padding */
 				flex-shrink: 0;
 				padding-left: 0;
 				padding-right: 0;
@@ -186,24 +182,24 @@ form.row > * {
 
 		.dropdown-divider {
 			border: none;
-			border-top: 1px solid rgba(0, 0, 0, 0.25); // Light divider
+			border-top: 1px solid var(--color-shadow-25); /* Light divider */
 			margin: 0.4em 0.6em;
 		}
 
 		.dropdown-group-label {
 			cursor: default;
 			padding-left: 0.75em;
-			color: rgba(0, 0, 0, 0.5);
+			color: color-mix(in srgb, var(--color-text-strong) 50%, transparent);
 		}
 
 		.dropdown-item-version {
-			white-space: pre; // or pre-wrap to keep narrow but show all?
+			white-space: pre; /* or pre-wrap to keep narrow but show all? */
 
 			.dropdown-item-label {
 				display: block;
 				font-size: 0.85em;
 				min-width: 0;
-				max-width: 20em; // 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line?
+				max-width: 20em; /* 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line? */
 				overflow: hidden;
 				text-overflow: ellipsis;
 			}
@@ -211,9 +207,9 @@ form.row > * {
 	}
 }
 
-// override parts that differ from (dropdown) help-menus
+/* override parts that differ from (dropdown) help-menus */
 .context-menu {
-	--menu-bg: #f3f4f7; // sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here.
+	--menu-bg: var(--color-menu-bg); /* sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here. */
 	.popover2-popup {
 		min-width: 0;
 
@@ -229,7 +225,7 @@ form.row > * {
 
 	flex-grow: 1;
 
-	// Make absolute positioned child components be relative to this
+	/* Make absolute positioned child components be relative to this */
 	position: relative;
 
 	.edit-sticky-body {
@@ -241,16 +237,16 @@ form.row > * {
 }
 
 .header > .container-fluid {
-	min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
 }
 
 .secondary-panel-inner {
-	box-shadow: -15px -0px 25px -20px rgba(0, 0, 0, 0.3);
+	box-shadow: -15px -0px 25px -20px var(--color-shadow-30);
 	overflow-y: hidden;
 }
 
 .secondary-panel * .nav-item .nav-link {
-	background-color: #f3f3f3;
+	background-color: var(--color-tab-bg);
 	padding-top: 5px;
 	margin-right: 4px;
 	font-weight: 500;
@@ -261,16 +257,16 @@ form.row > * {
 	}
 
 	&:not(.active):hover {
-		background-color: #f9f9f9;
-		color: black !important;
-		border: 1px solid #ddd;
+		background-color: var(--color-app-bg);
+		color: var(--color-text-strong) !important;
+		border: 1px solid var(--color-border);
 		border-bottom-width: 0;
 	}
 
 	&:not(.active) {
-		border: 1px solid #ddd;
+		border: 1px solid var(--color-border);
 		margin-bottom: 0px;
-		color: #555 !important;
+		color: var(--color-tab-fg) !important;
 		border-bottom-width: 0;
 		padding-top: 8px;
 		padding-bottom: 7px;
@@ -278,11 +274,11 @@ form.row > * {
 }
 
 .panel-close-button {
-	box-shadow: 2px 2px 4px rgb(0 0 0 / 25%);
+	box-shadow: 2px 2px 4px var(--color-shadow-25);
 	border: none;
-	background-color: #{$panel-header-button-color}; // the "X" is foreground; the rest is background
+	background-color: var(--color-panel-header-btn); /* the "X" is foreground; the rest is background */
 	display: flex;
-	align-items: center; // center the "X" in the button's background
+	align-items: center; /* center the "X" in the button's background */
 
 	.svg-inline--fa {
 		height: 1.25em;
@@ -291,18 +287,18 @@ form.row > * {
 	}
 }
 
-// format context-help-buttons. Everything but size can be globally applied.
+/* format context-help-buttons. Everything but size can be globally applied. */
 .context-help-button-btn {
 	border: 0;
 	border-radius: 100%;
-	--btn-color: #{$panel-header-button-color}; // the circle is the foreground; the "?" is transparent
-	background-color: white;
+	--btn-color: var(--color-panel-header-btn); /* the circle is the foreground; the "?" is transparent */
+	background-color: var(--color-surface);
 }
 
-// context-help-buttons in panel headers.  (For h4, h5 headings see _common.scss)
+/* context-help-buttons in panel headers.  (For h4, h5 headings see common.css) */
 .header-buttons .context-help-button-btn {
-	box-shadow: 1px 1px 4px 1px rgb(0 0 0 / 25%);
-	margin-top: 1px; // centers it a bit better relative to the close button
+	box-shadow: 1px 1px 4px 1px var(--color-shadow-25);
+	margin-top: 1px; /* centers it a bit better relative to the close button */
 	width: 2em;
 	height: 2em;
 
@@ -312,7 +308,7 @@ form.row > * {
 	}
 }
 
-// is this used anywhere? (it's not explicitly in the code)
+/* is this used anywhere? (it's not explicitly in the code) */
 .subhead-help-button {
 	border: 0;
 	background: none;
@@ -356,9 +352,9 @@ form.row > * {
 }
 
 .secondary-panel-simple {
-	background: white;
+	background: var(--color-surface);
 	border-radius: 12px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4px 12px var(--color-shadow-10);
 	overflow: hidden;
 	height: 100%;
 	display: flex;
@@ -367,9 +363,9 @@ form.row > * {
 	margin-right: 12px;
 
 	.secondary-panel-simple-header {
-		background: #{$panel-header-bg};
-		border-bottom: 1px solid #{$panel-header-border-color}; /* Subtle border */
-		padding: 1rem 1.5rem; // only 1rem y-padding now, to preserve the original header-height now that CloseButton & ContextHelpButton are in almost all panel headers.
+		background: var(--color-panel-header-bg);
+		border-bottom: 1px solid var(--color-tile-border); /* Subtle border */
+		padding: 1rem 1.5rem; /* only 1rem y-padding now, to preserve the original header-height now that CloseButton & ContextHelpButton are in almost all panel headers. */
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -379,7 +375,7 @@ form.row > * {
 			margin: 0;
 			font-size: 1.25rem;
 			font-weight: 600;
-			color: #{$panel-header-color};
+			color: var(--color-panel-header-fg);
 		}
 
 		.header-buttons {
@@ -404,18 +400,18 @@ form.row > * {
 			position: sticky;
 			padding: 1.5rem 1.5rem 0.5rem 1.5rem;
 			margin: -1.5rem -1.5rem 1rem -1.5rem;
-			top: -1.5rem; // Negate the parent padding
+			top: -1.5rem; /* Negate the parent padding */
 			left: 0;
-			background-color: #fff;
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			background-color: var(--color-surface);
+			box-shadow: 0 2px 4px var(--color-shadow-10);
 			z-index: 1;
 		}
 	}
 }
 
-// scroll tabs panel (note the split-panels class exists regardless on panel mode, so
-// the breakpoint restriction doesn't seem warranted (it actually "broke" single-panel mode scrolling for buttons page).
-//@include coreui.media-breakpoint-up('xl') {
+/* scroll tabs panel (note the split-panels class exists regardless on panel mode, so
+   the breakpoint restriction doesn't seem warranted (it actually "broke" single-panel mode scrolling for buttons page). */
+/* @include coreui.media-breakpoint-up('xl') { */
 .split-panels {
 	height: 100%;
 
@@ -445,28 +441,28 @@ form.row > * {
 			overflow-y: scroll;
 
 			&.no-scroll {
-				// don't allocate space ahead of time (mainly for nonIdealState?)
+				/* don't allocate space ahead of time (mainly for nonIdealState?) */
 				overflow-y: auto;
 			}
 		}
 	}
 }
-//}
+/* } */
 
 .sticky-tabs {
 	position: sticky;
 	top: 0;
 	left: 0;
-	background-color: #fff;
+	background-color: var(--color-surface);
 	z-index: 1;
 
 	top: -1.5rem;
 	margin: 0;
-	padding: 0.5rem 0 0 0; // 1.5rem covers the scroll container padding gap + 0.5rem visual breathing room
+	padding: 0.5rem 0 0 0; /* 1.5rem covers the scroll container padding gap + 0.5rem visual breathing room */
 	box-shadow: none;
 }
 
-// For bigger screens, like 1440p and 4K, allow scaling
+/* For bigger screens, like 1440p and 4K, allow scaling */
 @media only screen and (min-width: 2000px) {
 	.tab-content {
 		max-width: 100%;
@@ -488,7 +484,7 @@ form.row > * {
 }
 
 code {
-	color: #d50215;
+	color: var(--color-primary);
 	font-weight: bold;
 }
 
@@ -513,7 +509,7 @@ hr.slim {
 }
 
 .shadow-inset {
-	box-shadow: inset 0 10px 20px -10px rgba(0, 0, 0, 0.3);
+	box-shadow: inset 0 10px 20px -10px var(--color-shadow-30);
 }
 
 .text-right {
