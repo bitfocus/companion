@@ -121,7 +121,7 @@ function EmulatorNotFound({ emulatorId }: { emulatorId: string }) {
 
 	return (
 		<div className="emulator-not-found">
-			<NonIdealState icon={faGamepad} className="emulator-nonideal" style={{ color: '#f7f7f7' }}>
+			<NonIdealState icon={faGamepad} className="emulator-nonideal">
 				<div>
 					The emulator with ID <code>{emulatorId}</code> was not found.
 				</div>
