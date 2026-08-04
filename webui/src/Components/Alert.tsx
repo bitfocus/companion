@@ -1,5 +1,6 @@
 import { Button as BaseButton } from '@base-ui/react'
 import './Alert.css'
+import './close-button.css'
 import classNames from 'classnames'
 import { forwardRef, useEffect, useRef, useState, type ForwardedRef, type HTMLAttributes } from 'react'
 import { Transition } from 'react-transition-group'
