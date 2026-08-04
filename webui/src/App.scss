@@ -32,7 +32,6 @@
 @use 'scss/components/tab-area';
 @use 'scss/components/time-picker';
 
-@use 'scss/transitions';
 @use 'scss/layout';
 @use 'scss/common';
 @use 'scss/tablet';
@@ -43,7 +42,6 @@
 @use 'scss/button-edit';
 @use 'scss/button-grid';
 @use 'scss/settings';
-@use 'scss/import-export';
 @use 'scss/image-library';
 
 // ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two

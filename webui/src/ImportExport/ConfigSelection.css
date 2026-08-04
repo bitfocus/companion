@@ -1,11 +1,8 @@
-@use 'variables' as *;
-@use 'sass:color';
-
-// ─── Config selection (Export / Reset modals) ───────────────────────
-//
-// Shared styling for the "choose what to export / reset" lists. Items are grouped into bordered cards with a
-// tonal icon badge per row and an uppercase section title, mirroring the setup wizard's review styling
-// (_wizard.scss) so these flows feel like part of the same product rather than a plain checkbox list.
+/* ─── Config selection (Export / Reset modals) ───────────────────────
+ *
+ * Shared styling for the "choose what to export / reset" lists. Items are grouped into bordered cards with a
+ * tonal icon badge per row and an uppercase section title, mirroring the setup wizard's review styling
+ * so these flows feel like part of the same product rather than a plain checkbox list. */
 
 .config-selection {
 	.config-selection-intro {
@@ -46,8 +43,8 @@
 			border-top: 1px solid var(--cui-border-color-translucent, rgb(0 0 21 / 10%));
 		}
 
-		// Nested items (Include secrets, the surface sub-options) sit indented under their parent, with a
-		// muted grey badge (vs the brand-toned parent badge) so the hierarchy reads at a glance.
+		/* Nested items (Include secrets, the surface sub-options) sit indented under their parent, with a
+		   muted grey badge (vs the brand-toned parent badge) so the hierarchy reads at a glance. */
 		&.config-selection-row-sub {
 			padding-left: 2.25rem;
 
@@ -65,8 +62,8 @@
 		}
 	}
 
-	// Single-hue badge: the brand color at low opacity for the fill, full strength for the glyph. Keeping
-	// both on the same hue avoids the clashing red-on-blue of a generic "primary-subtle" token.
+	/* Single-hue badge: the brand color at low opacity for the fill, full strength for the glyph. Keeping
+	   both on the same hue avoids the clashing red-on-blue of a generic "primary-subtle" token. */
 	.config-selection-icon {
 		flex: 0 0 auto;
 		display: flex;
@@ -75,8 +72,8 @@
 		width: 1.6rem;
 		height: 1.6rem;
 		border-radius: 50%;
-		background-color: color.change($primary, $alpha: 0.12);
-		color: $primary;
+		background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+		color: var(--color-primary);
 		font-size: 0.72rem;
 	}
 
@@ -87,7 +84,7 @@
 		cursor: pointer;
 	}
 
-	// Export-only: output options use the familiar two-column form layout — label on the left, control fills.
+	/* Export-only: output options use the familiar two-column form layout — label on the left, control fills. */
 	.export-output {
 		display: flex;
 		flex-direction: column;
@@ -103,35 +100,5 @@
 		> .form-label {
 			margin-bottom: 0;
 		}
-	}
-}
-
-.import-wizard {
-	&.import-full {
-		display: grid;
-		grid-template-rows: auto 1fr;
-		overflow-y: hidden;
-	}
-
-	&.single-page {
-		display: flex;
-		flex-direction: column;
-		height: 100%;
-		overflow-y: scroll;
-		overflow-x: hidden;
-	}
-
-	.import-page-row {
-		margin-bottom: 1rem;
-		flex-grow: 1;
-	}
-	.import-page-grid {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.buttongrid {
-		flex: 1;
-		min-height: 0;
 	}
 }

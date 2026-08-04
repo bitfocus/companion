@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import './ConfigSelection.css'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
 	faBorderAll,
