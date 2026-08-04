@@ -1,7 +1,3 @@
-label.disabled {
-	color: #ccc;
-}
-
 .variable-dropdown-option {
 	overflow-wrap: break-word;
 }
@@ -33,18 +29,5 @@ label.disabled {
 		white-space: nowrap;
 		font-weight: normal;
 		padding-bottom: 0.2em;
-	}
-}
-
-.sketch-picker {
-	label {
-		margin-top: 0.3rem;
-		margin-right: 0.5rem;
-	}
-}
-
-.static-text-content {
-	& > :last-child {
-		margin-bottom: 0;
 	}
 }

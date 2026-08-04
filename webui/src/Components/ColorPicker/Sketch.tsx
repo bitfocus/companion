@@ -3,6 +3,7 @@
 // MIT Copyright (c) 2022 Reece Carolan Copyright (c) 2015 Case Sandberg
 
 import classNames from 'classnames'
+import './sketch-picker.css'
 import { observer } from 'mobx-react-lite'
 import type { CompanionColorPresetValue } from '@companion-app/shared/Model/Options.js'
 import { Alpha } from './components/Alpha'

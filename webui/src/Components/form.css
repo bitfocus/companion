@@ -69,6 +69,10 @@
 	}
 }
 
+label.disabled {
+	color: var(--color-text-disabled);
+}
+
 /* HACK: temporary until all ported */
 .input-group {
 	flex-wrap: nowrap;

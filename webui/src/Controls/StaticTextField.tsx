@@ -1,4 +1,5 @@
 import { parse } from 'marked'
+import './StaticTextField.css'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 
 export function StaticTextFieldText({

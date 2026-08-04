@@ -1,4 +1,5 @@
 import { autoUpdate, flip, shift, useFloating } from '@floating-ui/react'
+import './ColorPicker/sketch-picker.css'
 import { colord } from 'colord'
 import { useCallback, useContext, useState } from 'react'
 import { createPortal } from 'react-dom'
