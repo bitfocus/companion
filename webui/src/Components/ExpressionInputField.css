@@ -118,7 +118,7 @@
 
 	/* Override Monaco suggest widget to show details below name */
 	.monaco-editor .suggest-widget {
-		box-shadow: 0 2px 16px color-mix(in srgb, var(--color-shadow) 30%, transparent);
+		box-shadow: 0 2px 16px var(--color-shadow-30);
 		border-radius: 0.5em;
 
 		.monaco-list .monaco-list-rows {
@@ -127,7 +127,7 @@
 
 		.monaco-list .monaco-list-row {
 			align-items: center;
-			border-bottom: 1px solid color-mix(in srgb, var(--color-shadow) 10%, transparent);
+			border-bottom: 1px solid var(--color-shadow-10);
 
 			/* Reflow the inner layout into two rows */
 			.main {
@@ -190,7 +190,7 @@
 	height: auto !important;
 	overflow-y: auto;
 	max-height: 25em;
-	box-shadow: 0 4px 16px color-mix(in srgb, var(--color-shadow) 30%, transparent);
+	box-shadow: 0 4px 16px var(--color-shadow-30);
 
 	.body {
 		padding: 2px;
@@ -216,7 +216,7 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			box-shadow: 1px 1px 4px color-mix(in srgb, var(--color-shadow) 30%, transparent);
+			box-shadow: 1px 1px 4px var(--color-shadow-30);
 
 			&::before {
 				font-size: 1.3em !important;

@@ -1,6 +1,8 @@
+@import '../remote-view.css';
+
 .page-emulator-base {
-	background-color: var(--color-overlay-bg);
-	color: var(--color-remote-accent);
+	background-color: var(--remote-bg);
+	color: var(--remote-accent);
 
 	height: 100vh;
 
@@ -41,7 +43,7 @@
 
 			h1 {
 				margin: 0;
-				color: var(--color-overlay-text);
+				color: var(--remote-fg);
 				font-size: clamp(1.4rem, 3.5vw, 2rem);
 				font-weight: 600;
 				line-height: 1.2;
@@ -50,7 +52,7 @@
 
 			.emulator-list-subheading {
 				margin-top: 0.15rem;
-				color: color-mix(in srgb, var(--color-on-dark) 55%, transparent);
+				color: color-mix(in srgb, var(--remote-fg-strong) 55%, transparent);
 				font-size: 0.95rem;
 			}
 		}
@@ -75,10 +77,10 @@
 		justify-content: flex-end;
 		text-align: left;
 
-		background: color-mix(in srgb, var(--color-on-dark) 4%, transparent);
-		border: 1px solid color-mix(in srgb, var(--color-on-dark) 12%, transparent);
+		background: color-mix(in srgb, var(--remote-fg-strong) 4%, transparent);
+		border: 1px solid color-mix(in srgb, var(--remote-fg-strong) 12%, transparent);
 		border-radius: 10px;
-		color: var(--color-overlay-text);
+		color: var(--remote-fg);
 
 		transition:
 			transform 0.15s ease,
@@ -93,7 +95,7 @@
 			left: 1.5rem;
 			width: 80px; /* 8 dots × 10px */
 			height: 40px; /* 4 rows × 10px */
-			color: var(--color-overlay-text);
+			color: var(--remote-fg);
 			opacity: 0.18;
 			background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.6px);
 			background-size: 10px 10px;
@@ -114,7 +116,7 @@
 			font-size: 1.25rem;
 			font-weight: 600;
 			line-height: 1.25;
-			color: var(--color-overlay-text);
+			color: var(--remote-fg);
 			word-break: break-word;
 		}
 
@@ -123,7 +125,7 @@
 			bottom: 1.25rem;
 			right: 1.5rem;
 			font-size: 0.9rem;
-			color: color-mix(in srgb, var(--color-on-dark) 40%, transparent);
+			color: color-mix(in srgb, var(--remote-fg-strong) 40%, transparent);
 			transition:
 				transform 0.15s ease,
 				color 0.15s ease;
@@ -132,25 +134,25 @@
 		&:hover,
 		&:focus-visible {
 			transform: translateY(-2px);
-			background: color-mix(in srgb, var(--color-on-dark) 7%, transparent);
-			border-color: color-mix(in srgb, var(--color-remote-accent) 70%, transparent);
-			box-shadow: 0 6px 20px color-mix(in srgb, var(--color-shadow) 35%, transparent);
+			background: color-mix(in srgb, var(--remote-fg-strong) 7%, transparent);
+			border-color: color-mix(in srgb, var(--remote-accent) 70%, transparent);
+			box-shadow: 0 6px 20px var(--remote-shadow);
 
 			.emulator-card-grid {
-				color: var(--color-remote-accent);
+				color: var(--remote-accent);
 				opacity: 0.55;
 			}
 
 			.emulator-card-chevron {
 				transform: translateX(3px);
-				color: var(--color-remote-accent);
+				color: var(--remote-accent);
 			}
 		}
 
 		&:active {
 			transform: translateY(0);
-			border-color: var(--color-remote-accent);
-			background: color-mix(in srgb, var(--color-remote-accent) 12%, transparent);
+			border-color: var(--remote-accent);
+			background: color-mix(in srgb, var(--remote-accent) 12%, transparent);
 		}
 	}
 
@@ -160,12 +162,12 @@
 		padding-top: 2.5rem;
 
 		details {
-			border-top: 1px solid color-mix(in srgb, var(--color-on-dark) 10%, transparent);
+			border-top: 1px solid color-mix(in srgb, var(--remote-fg-strong) 10%, transparent);
 			padding-top: 1rem;
 
 			summary {
 				cursor: pointer;
-				color: color-mix(in srgb, var(--color-on-dark) 55%, transparent);
+				color: color-mix(in srgb, var(--remote-fg-strong) 55%, transparent);
 				font-size: 0.9rem;
 				list-style: none;
 				user-select: none;
@@ -182,7 +184,7 @@
 				}
 
 				&:hover {
-					color: var(--color-overlay-text);
+					color: var(--remote-fg);
 				}
 			}
 
@@ -193,12 +195,12 @@
 
 		.emulator-list-footer-content {
 			margin-top: 0.85rem;
-			color: color-mix(in srgb, var(--color-on-dark) 65%, transparent);
+			color: color-mix(in srgb, var(--remote-fg-strong) 65%, transparent);
 			font-size: 0.9rem;
 			line-height: 1.5;
 
 			b {
-				color: var(--color-overlay-text);
+				color: var(--remote-fg);
 			}
 		}
 	}
@@ -216,7 +218,7 @@
 	}
 
 	.emulatorgrid {
-		background-color: var(--color-overlay-bg);
+		background-color: var(--remote-bg);
 
 		display: grid;
 		/* height: 100vh; */
@@ -261,15 +263,15 @@
 		display: inline-block;
 		min-width: 96px;
 
-		color: var(--color-text-strong);
+		color: #000;
 	}
 }
 
 .emulator-nonideal {
 	display: block;
 	margin: 0 auto;
-	color: var(--color-overlay-text) !important;
-	background: color-mix(in srgb, var(--color-on-dark) 2%, transparent);
+	color: var(--remote-fg) !important;
+	background: color-mix(in srgb, var(--remote-fg-strong) 2%, transparent);
 	padding: 4vh;
 	border-radius: 8px;
 	text-align: center;
@@ -277,7 +279,7 @@
 
 	/* Ensure the icon is visible against dark backgrounds */
 	svg {
-		color: var(--color-overlay-text);
+		color: var(--remote-fg);
 		opacity: 0.95;
 	}
 }
@@ -288,7 +290,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: var(--color-overlay-bg);
+	background-color: var(--remote-bg);
 	padding: 2vh 2vw;
 	overflow: hidden;
 	grid-row: 2;
@@ -318,7 +320,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: clamp(0.5rem, 1.5vh, 2rem);
-		color: var(--color-overlay-text);
+		color: var(--remote-fg);
 		flex-shrink: 0;
 
 		svg {
@@ -330,7 +332,7 @@
 			margin: 0;
 			font-size: clamp(1rem, 3vh, 2rem);
 			font-weight: 600;
-			color: var(--color-overlay-text);
+			color: var(--remote-fg);
 		}
 
 		/* On short screens, make header more compact */
@@ -349,12 +351,12 @@
 			width: clamp(0.5rem, 1.5vw, 1rem);
 			height: clamp(0.5rem, 1.5vw, 1rem);
 			border-radius: 50%;
-			background-color: color-mix(in srgb, var(--color-on-dark) 15%, transparent);
-			border: 2px solid color-mix(in srgb, var(--color-on-dark) 30%, transparent);
+			background-color: color-mix(in srgb, var(--remote-fg-strong) 15%, transparent);
+			border: 2px solid color-mix(in srgb, var(--remote-fg-strong) 30%, transparent);
 
 			&.filled {
-				background-color: var(--color-remote-accent);
-				border-color: var(--color-remote-accent);
+				background-color: var(--remote-accent);
+				border-color: var(--remote-accent);
 			}
 		}
 	}
@@ -405,8 +407,8 @@
 		aspect-ratio: 1;
 		cursor: pointer;
 		border-radius: clamp(0.5rem, 2vw, 1rem);
-		background: color-mix(in srgb, var(--color-on-dark) 5%, transparent);
-		border: 2px solid color-mix(in srgb, var(--color-on-dark) 20%, transparent);
+		background: color-mix(in srgb, var(--remote-fg-strong) 5%, transparent);
+		border: 2px solid color-mix(in srgb, var(--remote-fg-strong) 20%, transparent);
 		transition: all 0.15s ease;
 		display: flex;
 		align-items: center;
@@ -415,20 +417,20 @@
 		min-width: 0;
 
 		&:hover {
-			background: color-mix(in srgb, var(--color-on-dark) 10%, transparent);
-			border-color: color-mix(in srgb, var(--color-on-dark) 30%, transparent);
+			background: color-mix(in srgb, var(--remote-fg-strong) 10%, transparent);
+			border-color: color-mix(in srgb, var(--remote-fg-strong) 30%, transparent);
 		}
 
 		&:active {
-			background: color-mix(in srgb, var(--color-remote-accent) 20%, transparent);
-			border-color: var(--color-remote-accent);
+			background: color-mix(in srgb, var(--remote-accent) 20%, transparent);
+			border-color: var(--remote-accent);
 			transform: scale(0.95);
 		}
 
 		.keypad-button-content {
 			font-size: clamp(1.5rem, 5vw, 3rem);
 			font-weight: 600;
-			color: var(--color-overlay-text);
+			color: var(--remote-fg);
 			line-height: 1;
 		}
 

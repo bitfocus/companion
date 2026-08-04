@@ -1,7 +1,7 @@
 .collections-nesting-table {
 	border: 1px solid var(--color-border);
 	border-collapse: collapse;
-	box-shadow: 0px 2px 21px -10px color-mix(in srgb, var(--color-shadow) 20%, transparent);
+	box-shadow: 0px 2px 21px -10px var(--color-shadow-20);
 
 	--collection-nesting-level: 0;
 
@@ -304,8 +304,8 @@
 	&[data-dnd-dragging],
 	&.dnd-drag-preview {
 		background-color: var(--color-drag-row-bg);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--color-shadow) 30%, transparent);
-		outline: 2px solid color-mix(in srgb, var(--color-shadow) 50%, transparent);
+		box-shadow: 0 4px 12px var(--color-shadow-30);
+		outline: 2px solid var(--color-shadow-50);
 		outline-offset: -2px;
 
 		/* On the lifted/floating feedback the reorder handle's grey background reads as an odd stripe
@@ -317,16 +317,16 @@
 }
 .collections-nesting-table-row-group[data-dnd-dragging] {
 	background-color: var(--color-surface-muted);
-	box-shadow: 0 4px 12px color-mix(in srgb, var(--color-shadow) 30%, transparent);
-	outline: 2px solid color-mix(in srgb, var(--color-shadow) 50%, transparent);
+	box-shadow: 0 4px 12px var(--color-shadow-30);
+	outline: 2px solid var(--color-shadow-50);
 	outline-offset: -2px;
 }
 .collections-nesting-table-grid-tile {
 	&[data-dnd-dragging],
 	&.dnd-drag-preview {
 		background-color: var(--color-surface);
-		box-shadow: 0 4px 12px color-mix(in srgb, var(--color-shadow) 30%, transparent);
-		outline: 2px solid color-mix(in srgb, var(--color-shadow) 50%, transparent);
+		box-shadow: 0 4px 12px var(--color-shadow-30);
+		outline: 2px solid var(--color-shadow-50);
 		outline-offset: -2px;
 	}
 }

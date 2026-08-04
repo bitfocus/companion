@@ -40,7 +40,6 @@
 	--color-border-muted: #dddfe2;
 	--color-border-strong: #999;
 	--color-border-hover: #aaa; /* hovered drag/resize handle border */
-	--color-border-dark: #555; /* border on dark surfaces */
 	--color-tree-line: #ccc; /* nesting guide lines in the collapsible tree / nesting table */
 
 	/* Text */
@@ -61,6 +60,7 @@
 	--color-button-border: rgba(100, 100, 100, 0.4);
 	--color-button-placeholder: #262626;
 	--color-copy-source: #1b7fc2; /* highlight for a button marked as a copy/paste source */
+	--color-drop-border: #000; /* outline of a button drop target */
 	--color-drop-neutral-bg: #eee; /* button drop target, awaiting a drop */
 	--color-drop-hover-bg: #daffab; /* button drop target, with a drag hovering over it */
 
@@ -87,30 +87,26 @@
 	--color-primary-softer: #f2b3b9;
 	--color-focus-ring: color-mix(in srgb, var(--color-primary) 25%, transparent);
 
-	/* Drop-shadow colour (alpha applied per shadow via color-mix) */
+	/* Drop-shadow / dark-tint scale. The alpha for each weight lives here (one place to retune when
+	   --color-shadow changes) rather than being spread through the components as inline color-mix. */
 	--color-shadow: #000;
+	--color-shadow-10: color-mix(in srgb, var(--color-shadow) 10%, transparent);
+	--color-shadow-15: color-mix(in srgb, var(--color-shadow) 15%, transparent);
+	--color-shadow-20: color-mix(in srgb, var(--color-shadow) 20%, transparent);
+	--color-shadow-25: color-mix(in srgb, var(--color-shadow) 25%, transparent);
+	--color-shadow-30: color-mix(in srgb, var(--color-shadow) 30%, transparent);
+	--color-shadow-35: color-mix(in srgb, var(--color-shadow) 35%, transparent);
+	--color-shadow-40: color-mix(in srgb, var(--color-shadow) 40%, transparent);
+	--color-shadow-50: color-mix(in srgb, var(--color-shadow) 50%, transparent);
 
 	/* Header bar (defaults to the brand primary; can be themed separately) */
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
 
-	/* Standalone remote views (tablet / emulator) */
-	--color-remote-accent: #d69e2e; /* gold accent for the tablet/emulator chrome */
-	--color-remote-accent-muted: #af8022;
-	--color-button-armed: rgba(255, 0, 0, 0.5); /* overlay tint for an "armed"/live button */
+	/* Button grid "armed"/live state (the app's own button grid; the tablet/emulator have their own set) */
+	--color-button-armed: rgba(255, 0, 0, 0.5); /* overlay tint for an armed button */
 	--color-armed-surface: #7f1111; /* opaque dark-red background of an armed button grid */
 	--color-scrollbar-thumb: #666; /* scrollbar thumb on the dark button grid */
-
-	/* Standalone dark status overlay (emulator/tablet pages) */
-	--color-overlay-bg: #181818;
-	--color-overlay-text: #f7f7f7;
-	--color-overlay-text-muted: color-mix(in srgb, var(--color-on-dark) 60%, transparent);
-	--color-overlay-btn-bg: color-mix(in srgb, var(--color-on-dark) 8%, transparent);
-	--color-overlay-btn-bg-hover: color-mix(in srgb, var(--color-on-dark) 16%, transparent);
-	--color-overlay-btn-bg-active: color-mix(in srgb, var(--color-on-dark) 22%, transparent);
-	--color-overlay-btn-border: color-mix(in srgb, var(--color-on-dark) 25%, transparent);
-	--color-overlay-btn-border-hover: color-mix(in srgb, var(--color-on-dark) 40%, transparent);
-	--color-overlay-btn-border-active: color-mix(in srgb, var(--color-on-dark) 50%, transparent);
 
 	/* Image library previews & upload states */
 	--color-image-accent: #0d6efd; /* interactive blue: drag-over, dropzone active; alpha variants via color-mix */

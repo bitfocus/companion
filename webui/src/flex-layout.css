@@ -12,7 +12,7 @@
 		top: 0;
 		z-index: 10;
 		background-color: var(--color-surface-muted); /* Ensure the background is opaque */
-		box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow) 10%, transparent); /* Add subtle shadow to separate header */
+		box-shadow: 0 1px 2px var(--color-shadow-10); /* Add subtle shadow to separate header */
 	}
 
 	/* Styles for standard tables */
@@ -23,7 +23,7 @@
 			top: 0;
 			z-index: 10;
 			background-color: var(--color-surface-muted);
-			box-shadow: 0 1px 2px color-mix(in srgb, var(--color-shadow) 10%, transparent);
+			box-shadow: 0 1px 2px var(--color-shadow-10);
 		}
 	}
 }

@@ -1,6 +1,8 @@
+@import '../remote-view.css';
+
 .page-tablet {
-	background-color: var(--color-overlay-bg);
-	color: var(--color-remote-accent);
+	background-color: var(--remote-bg);
+	color: var(--remote-accent);
 
 	height: 100vh;
 
@@ -18,7 +20,7 @@
 	}
 
 	.text-muted {
-		color: var(--color-remote-accent-muted) !important;
+		color: var(--remote-accent-muted) !important;
 		font-size: 0.93em;
 	}
 
@@ -44,16 +46,16 @@
 		top: 0;
 		z-index: 100;
 
-		border: 1px solid var(--color-border-dark);
-		background-color: var(--color-surface-dark);
+		border: 1px solid var(--remote-border);
+		background-color: var(--remote-surface);
 		padding: 10px;
 		margin: 10px 0 10px;
 	}
 
 	.button {
 		margin: 0 5px;
-		color: var(--color-remote-accent);
-		border: 1px solid var(--color-remote-accent);
+		color: var(--remote-accent);
+		border: 1px solid var(--remote-accent);
 
 		&:disabled {
 			opacity: 0.5;
@@ -98,7 +100,7 @@
 		}
 
 		&.button-armed .buttongrid-row {
-			background-color: var(--color-button-armed);
+			background-color: var(--remote-armed);
 		}
 
 		.buttons-holder {
@@ -113,7 +115,7 @@
 			background-color: transparent;
 
 			img:hover {
-				border: 1px solid color-mix(in srgb, var(--color-on-dark) 30%, transparent);
+				border: 1px solid color-mix(in srgb, var(--remote-fg-strong) 30%, transparent);
 			}
 		}
 

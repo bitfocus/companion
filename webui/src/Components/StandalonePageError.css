@@ -1,3 +1,5 @@
+@import '../remote-view.css';
+
 /* Full-screen status overlay for the standalone dark pages (emulator, tablet).
    Used by StandalonePageError: a loading spinner, plus a friendly message and Refresh
    button when the page can't reach Companion (load error or lost connection). */
@@ -9,7 +11,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background-color: var(--color-overlay-bg);
+	background-color: var(--remote-bg);
 	padding: 2vh 2vw;
 	overflow: hidden;
 
@@ -41,7 +43,7 @@
 	}
 
 	.standalone-overlay-icon {
-		color: var(--color-overlay-text);
+		color: var(--remote-fg);
 		opacity: 0.9;
 		font-size: clamp(2rem, 7vh, 3.5rem);
 	}
@@ -50,13 +52,13 @@
 		margin: 0;
 		font-size: clamp(1.15rem, 3vh, 2rem);
 		font-weight: 600;
-		color: var(--color-overlay-text);
+		color: var(--remote-fg);
 	}
 
 	p {
 		margin: 0;
 		font-size: clamp(0.9rem, 2vh, 1.1rem);
-		color: var(--color-overlay-text-muted);
+		color: var(--remote-fg-muted);
 		max-width: 100%;
 		overflow-wrap: anywhere;
 	}
@@ -67,23 +69,23 @@
 	.button {
 		margin-top: clamp(0.25rem, 1vh, 0.75rem);
 		min-width: 140px;
-		color: var(--color-overlay-text);
-		background-color: var(--color-overlay-btn-bg);
-		border: 1px solid var(--color-overlay-btn-border);
+		color: var(--remote-fg);
+		background-color: var(--remote-btn-bg);
+		border: 1px solid var(--remote-btn-border);
 		border-radius: 0.5rem;
 
 		&:hover,
 		&:focus-visible {
-			color: var(--color-on-dark);
-			background-color: var(--color-overlay-btn-bg-hover);
-			border-color: var(--color-overlay-btn-border-hover);
+			color: var(--remote-fg-strong);
+			background-color: var(--remote-btn-bg-hover);
+			border-color: var(--remote-btn-border-hover);
 		}
 
 		&:active,
 		&:not([disabled]):active {
-			color: var(--color-on-dark);
-			background-color: var(--color-overlay-btn-bg-active);
-			border-color: var(--color-overlay-btn-border-active);
+			color: var(--remote-fg-strong);
+			background-color: var(--remote-btn-bg-active);
+			border-color: var(--remote-btn-border-active);
 		}
 	}
 }

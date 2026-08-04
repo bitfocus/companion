@@ -10,7 +10,7 @@
 	grid-template-columns: min-content 1fr min-content;
 	margin-top: 1rem;
 	border: 1px solid var(--color-border);
-	box-shadow: 0px 2px 21px -10px color-mix(in srgb, var(--color-shadow) 20%, transparent);
+	box-shadow: 0px 2px 21px -10px var(--color-shadow-20);
 	color: var(--color-text);
 	width: 100%;
 

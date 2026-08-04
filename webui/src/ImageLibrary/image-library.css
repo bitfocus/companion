@@ -7,20 +7,8 @@
 	background-color: transparent;
 	background-image:
 		linear-gradient(var(--preview-bg-color, transparent), var(--preview-bg-color, transparent)),
-		linear-gradient(
-			45deg,
-			color-mix(in srgb, var(--color-shadow) 10%, transparent) 25%,
-			transparent 25%,
-			transparent 75%,
-			color-mix(in srgb, var(--color-shadow) 10%, transparent) 75%
-		),
-		linear-gradient(
-			45deg,
-			color-mix(in srgb, var(--color-shadow) 10%, transparent) 25%,
-			transparent 25%,
-			transparent 75%,
-			color-mix(in srgb, var(--color-shadow) 10%, transparent) 75%
-		);
+		linear-gradient(45deg, var(--color-shadow-10) 25%, transparent 25%, transparent 75%, var(--color-shadow-10) 75%),
+		linear-gradient(45deg, var(--color-shadow-10) 25%, transparent 25%, transparent 75%, var(--color-shadow-10) 75%);
 	background-size:
 		100% 100%,
 		20px 20px,
@@ -59,7 +47,7 @@
 
 		/* Colour + checkerboard sit on the image, not the stage, so they stay within its bounds (see the
 		   selector list at the top); the shadow marks where a transparent image ends without a hard border. */
-		box-shadow: 0 1px 5px color-mix(in srgb, var(--color-shadow) 25%, transparent);
+		box-shadow: 0 1px 5px var(--color-shadow-25);
 	}
 
 	.image-library-preview-empty {
@@ -244,7 +232,7 @@
 			width: min(100%, calc(100% * var(--img-aspect, 1)));
 			aspect-ratio: var(--img-aspect, 1);
 			object-fit: contain;
-			box-shadow: 0 1px 3px color-mix(in srgb, var(--color-shadow) 20%, transparent);
+			box-shadow: 0 1px 3px var(--color-shadow-20);
 		}
 	}
 

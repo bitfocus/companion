@@ -235,8 +235,8 @@
 			}
 			&.dnd-drag-preview {
 				background-color: var(--color-surface);
-				box-shadow: 0 4px 12px color-mix(in srgb, var(--color-shadow) 30%, transparent);
-				outline: 2px solid color-mix(in srgb, var(--color-shadow) 50%, transparent);
+				box-shadow: 0 4px 12px var(--color-shadow-30);
+				outline: 2px solid var(--color-shadow-50);
 				outline-offset: -2px;
 
 				/* Blend the reorder handle into the lifted card */

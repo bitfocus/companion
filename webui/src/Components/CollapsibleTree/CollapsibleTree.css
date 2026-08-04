@@ -1,7 +1,7 @@
 .collapsible-tree {
 	border: 1px solid var(--color-border);
 	border-collapse: collapse;
-	box-shadow: 0px 2px 21px -10px color-mix(in srgb, var(--color-shadow) 20%, transparent);
+	box-shadow: 0px 2px 21px -10px var(--color-shadow-20);
 	font-size: 1.05em;
 	--collapsible-tree-nesting-level: 0;
 
