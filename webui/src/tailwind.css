@@ -103,6 +103,9 @@
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
 
+	/* Modal / sidebar backdrop (dimmed behind an overlay; paired with an opacity) */
+	--color-backdrop: #080a0c;
+
 	/* Button grid "armed"/live state (the app's own button grid; the tablet/emulator have their own set) */
 	--color-button-armed: rgba(255, 0, 0, 0.5); /* overlay tint for an armed button */
 	--color-armed-surface: #7f1111; /* opaque dark-red background of an armed button grid */

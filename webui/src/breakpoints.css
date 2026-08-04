@@ -2,6 +2,7 @@
    xl 1200 / xxl 1400). Change a value here and every `@media (--bp-*)` that references it updates —
    resolved at build time by postcss-custom-media. Import this file wherever a breakpoint is used. */
 @custom-media --bp-sm-up (min-width: 576px);
+@custom-media --bp-lg-up (min-width: 992px);
 @custom-media --bp-xl-up (min-width: 1200px);
 
 @custom-media --bp-sm-down (max-width: 575.98px);
