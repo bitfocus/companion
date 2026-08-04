@@ -27,16 +27,16 @@
 				color: var(--color-on-dark);
 			}
 			&.log-type-error {
-				background-color: color-mix(in srgb, var(--color-log-error) 5%, transparent);
+				background-color: var(--color-log-error-bg);
 				color: var(--color-log-error-text);
 				border: 1px solid var(--color-log-error);
 			}
 			&.log-type-warn {
-				background-color: color-mix(in srgb, var(--color-log-warn) 20%, transparent);
+				background-color: var(--color-log-warn-bg);
 				color: var(--color-log-warn);
 			}
 			&.log-type-info {
-				background-color: color-mix(in srgb, var(--color-log-info) 10%, transparent);
+				background-color: var(--color-log-info-bg);
 				color: var(--color-log-info-text);
 			}
 			&.log-type-debug {

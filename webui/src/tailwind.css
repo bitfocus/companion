@@ -41,6 +41,7 @@
 	/* Primary tints */
 	--color-primary-soft: #ea818a;
 	--color-primary-softer: #f2b3b9;
+	--color-focus-ring: color-mix(in srgb, var(--color-primary) 25%, transparent);
 
 	/* Drop-shadow colour (alpha applied per shadow via color-mix) */
 	--color-shadow: #000;
@@ -49,11 +50,14 @@
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
 
-	/* Log levels (backgrounds are these mixed with transparent) */
+	/* Log levels */
 	--color-log-error: #f00;
+	--color-log-error-bg: color-mix(in srgb, var(--color-log-error) 5%, transparent);
 	--color-log-error-text: rgb(200, 0, 0);
 	--color-log-warn: rgb(255, 128, 0);
+	--color-log-warn-bg: color-mix(in srgb, var(--color-log-warn) 20%, transparent);
 	--color-log-info: rgb(0, 0, 255);
+	--color-log-info-bg: color-mix(in srgb, var(--color-log-info) 10%, transparent);
 	--color-log-info-text: rgba(0, 0, 200, 0.7);
 	--color-log-debug-text: rgba(50, 50, 50, 0.8);
 }

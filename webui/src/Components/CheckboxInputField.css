@@ -27,7 +27,7 @@
 	&:focus-visible {
 		border-color: var(--color-primary-soft);
 		outline: 0;
-		box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-primary) 25%, transparent);
+		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
 	}
 
 	/*
