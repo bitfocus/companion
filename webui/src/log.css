@@ -23,24 +23,24 @@
 			overflow-wrap: break-word;
 
 			&.log-type-fatal {
-				background-color: black;
-				color: white;
+				background-color: var(--color-text-strong);
+				color: var(--color-on-dark);
 			}
 			&.log-type-error {
-				background-color: rgba(255, 0, 0, 0.05);
-				color: rgba(200, 0, 0, 1);
-				border: 1px solid red;
+				background-color: color-mix(in srgb, var(--color-log-error) 5%, transparent);
+				color: var(--color-log-error-text);
+				border: 1px solid var(--color-log-error);
 			}
 			&.log-type-warn {
-				background-color: rgba(255, 128, 0, 0.2);
-				color: rgba(255, 128, 0, 1);
+				background-color: color-mix(in srgb, var(--color-log-warn) 20%, transparent);
+				color: var(--color-log-warn);
 			}
 			&.log-type-info {
-				background-color: rgba(0, 0, 255, 0.1);
-				color: rgba(0, 0, 200, 0.7);
+				background-color: color-mix(in srgb, var(--color-log-info) 10%, transparent);
+				color: var(--color-log-info-text);
 			}
 			&.log-type-debug {
-				color: rgba(50, 50, 50, 0.8);
+				color: var(--color-log-debug-text);
 			}
 		}
 	}

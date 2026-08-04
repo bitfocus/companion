@@ -1,4 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
+import '../log.css'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 import dayjs from 'dayjs'

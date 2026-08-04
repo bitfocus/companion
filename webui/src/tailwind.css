@@ -48,6 +48,14 @@
 	/* Header bar (defaults to the brand primary; can be themed separately) */
 	--color-header-bg: var(--color-primary);
 	--color-header-text: var(--color-on-dark);
+
+	/* Log levels (backgrounds are these mixed with transparent) */
+	--color-log-error: #f00;
+	--color-log-error-text: rgb(200, 0, 0);
+	--color-log-warn: rgb(255, 128, 0);
+	--color-log-info: rgb(0, 0, 255);
+	--color-log-info-text: rgba(0, 0, 200, 0.7);
+	--color-log-debug-text: rgba(50, 50, 50, 0.8);
 }
 
 @source '../index.html';

@@ -1,0 +1,22 @@
+.pages-list-table {
+	/* The first row is the header */
+	> .collections-nesting-table-row-item:first-child {
+		background-color: var(--color-surface-muted);
+	}
+
+	.pages-list-number {
+		width: 5rem;
+		text-align: center;
+	}
+
+	/* Fixed-width action column so the header's single "add" button lines up with, and matches the
+	   width of, the three action buttons in each row (the buttons fill the group equally). */
+	.pages-list-actions {
+		flex: 0 0 auto;
+		width: 6.5rem;
+
+		> * {
+			flex: 1 1 0;
+		}
+	}
+}
