@@ -309,18 +309,14 @@ export class GraphicsLayeredButtonRenderer {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
 		if (skipDraw || !element.text) return drawBounds
 
+		// Draw button text
+		// Scale font to be a percentage relative to the height of the draw area
+		const fontSize = (element.fontsize * drawBounds.height) / 100 / 1.2
+
 		// Force some padding around the text, scaled proportionally
 		const marginScale = 0.015
 		const marginX = 2 * marginScale * drawBounds.width
 		const marginY = 1 * marginScale * drawBounds.height
-		const innerHeight = drawBounds.height - 2 * marginY
-
-		// Draw button text
-		// Scale font so the size is a percentage of the (inner) draw height, where 100% fills the
-		// line box exactly. Divide by the font's real line-box ratio (fontBoundingBox height / em) so
-		// this holds per-font, and vertical alignment produces no visual change at 100%.
-		const lineBoxRatio = img.getFontLineBoxRatio(element.font)
-		const fontSize = (element.fontsize * innerHeight) / 100 / lineBoxRatio
 
 		await img.usingTemporaryLayer(element.opacity, async (img) => {
 			await img.usingRotation(drawBounds, element.rotation, async () => {
@@ -328,7 +324,7 @@ export class GraphicsLayeredButtonRenderer {
 					drawBounds.x + marginX,
 					drawBounds.y + marginY,
 					drawBounds.width - 2 * marginX,
-					innerHeight,
+					drawBounds.height - 2 * marginY,
 					element.text,
 					parseColor(element.color),
 					fontSize,

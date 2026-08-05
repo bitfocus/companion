@@ -289,17 +289,14 @@ export function computeTextLayout(
 	}
 	//console.log('we got the break', text, lines.map(line => byteToString(line.text)))
 
-	// Check if text fits: all text was consumed AND it fits vertically. A tiny tolerance absorbs
-	// floating-point rounding so a line box sized to exactly fill the box (100%) is not spuriously
-	// rejected and shrunk to the next candidate.
-	const verticalFitLimit = h + h * 1e-4
+	// Check if text fits: all text was consumed AND it fits vertically
 	const allTextConsumed = lastDrawnCharCount >= displayTextChars.length
-	const fitsVertically = lines.length >= 1 && lines.length * measuredLineHeight <= verticalFitLimit
+	const fitsVertically = lines.length >= 1 && lines.length * measuredLineHeight <= h
 	const fits = allTextConsumed && fitsVertically
 
 	// If the text is too tall, drop the last line so the remainder fits vertically. Never drop the sole
 	// line: fixed-size text that is simply too tall must still be drawn (and clip) rather than disappear.
-	if (lines.length > 1 && lines.length * measuredLineHeight > verticalFitLimit) {
+	if (lines.length > 1 && lines.length * measuredLineHeight > h) {
 		lines.splice(lines.length - 1, 1)
 	}
 
