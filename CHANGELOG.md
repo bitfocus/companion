@@ -1,5 +1,39 @@
 # Bitfocus Companion
 
+## Companion v5.0.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- add gauge 'auto' origin to default to grow from minimum on negative ranges
+- form-labels with missing formatting
+- push drawing bounds lines outside the bounds #4359
+- image library size adjustment #4360
+- various image library fixes #4360
+- attempt to be more tolerant of mangled base64 images
+- various image library fixes #4360
+- adjust gauge track movement to avoid marker spilling over #4359
+- correct straight alpha handling when stripping alpha #4359
+- missing blockquote css #4351
+- missing close button for remote surface edit panel
+- Topbar text can draw outside of preview area #4359
+- short help modals close automatically #4367
+- 0 width line still visible
+- line position value fixup #4359
+- line position not implemented #4359
+- remember open graphics properties sections #4359
+- insert elements above the currently selected #4359
+- clip preview drawing to the content bounds #4359
+- group compositions can be clipped unexpectedly #4359
+- group and reference elements using wrong center point for rotation #4359
+- preview marker lines not following rotation #4359
+- allow picking translucent text color #4359
+- rename 'layer' property group to 'drawing' #4359
+- make color spelling consistent #4359
+- match field alpha requirement when parsing elements
+- accept css color strings for colors from modules
+- enable more polyfills for older browsers
+- useLocalStorage unexpectedly propagating to other tabs
+
 ## Companion v5.0.2 - Release Notes
 
 ### 🐞 BUG FIXES
