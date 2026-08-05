@@ -2830,6 +2830,15 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(el.origin).toBe(-100)
 		})
 
+		test('origin resolves an empty/"auto" value to null (grow from minimum), keeping real numbers', async () => {
+			// null (the new default) and an empty string both mean "auto" and pass through as null.
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val(null) }))).origin).toBe(null)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val('' as unknown as number) }))).origin).toBe(null)
+			// A real number (including 0) is preserved.
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val(0) }))).origin).toBe(0)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val(50) }))).origin).toBe(50)
+		})
+
 		test('value resolved from expression', async () => {
 			const el = gaugeDrawEl(
 				await convertGauge(makeGaugeEl({ value: expr('$(counter:level)') }), { counter: { level: 75 } })

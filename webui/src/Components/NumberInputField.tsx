@@ -11,10 +11,14 @@ interface NumberInputFieldProps {
 	step?: number
 	tooltip?: string
 	range?: boolean
-	value: number | undefined
+	value: number | null | undefined
 	setValue: (value: number) => void
 	onBlur?: (e: React.FocusEvent<HTMLElement>) => void
 	disabled?: boolean
+	// When true, the field can be cleared to the "auto" state (displayed as "auto"), which invokes `onClear`.
+	allowNull?: boolean
+	// Called when a nullable field is cleared. Only meaningful together with `allowNull`.
+	onClear?: () => void
 	checkValid?: boolean | ((value: number) => boolean | undefined)
 	// When true, show the min value as a visual -∞ when value <= min
 	showMinAsNegativeInfinity?: boolean
@@ -34,6 +38,8 @@ export function NumberInputField({
 	setValue,
 	onBlur,
 	disabled,
+	allowNull,
+	onClear,
 	checkValid,
 	showMinAsNegativeInfinity,
 	showMaxAsPositiveInfinity,
@@ -43,12 +49,21 @@ export function NumberInputField({
 
 	const onChangeValue = useCallback(
 		(value: number | null) => {
-			if (value !== null && !isNaN(value)) {
+			if (value === null) {
+				// A cleared field. When the field is nullable this is the "auto" state; otherwise ignore it
+				// (base-ui reports null for a transiently-empty input mid-edit).
+				if (allowNull) {
+					setTmpValue(null)
+					onClear?.()
+				}
+				return
+			}
+			if (!isNaN(value)) {
 				if (!immediateValue) setTmpValue(value)
 				setValue(value)
 			}
 		},
-		[immediateValue, setValue]
+		[allowNull, onClear, immediateValue, setValue]
 	)
 
 	const handleBlur = useCallback(
@@ -59,8 +74,16 @@ export function NumberInputField({
 		[onBlur]
 	)
 
+	// The value currently in effect (the in-progress edit, else the committed value).
+	const rawEffective = (immediateValue ? null : tmpValue) ?? value
+	// A nullable ("auto") field stays null when empty so base-ui renders the placeholder; otherwise coerce to a number.
+	const controlledValue: number | null = allowNull
+		? rawEffective == null
+			? null
+			: Number(rawEffective)
+		: Number(rawEffective ?? 0)
 	// Compute whether we should visually show -∞ or ∞.
-	const numericEffective = Number((immediateValue ? null : tmpValue) ?? value ?? 0)
+	const numericEffective = Number(rawEffective ?? 0)
 	// Only show infinity overlays when the user has explicitly set a value.
 	const hasExplicitValue = (!immediateValue && tmpValue !== null) || value !== undefined
 	let showOverlayValue: string | null = null
@@ -89,7 +112,7 @@ export function NumberInputField({
 		<NumberField.Root
 			id={id}
 			disabled={disabled}
-			value={numericEffective}
+			value={controlledValue}
 			onValueChange={onChangeValue}
 			onBlur={handleBlur}
 			min={min}
@@ -100,7 +123,10 @@ export function NumberInputField({
 			format={{ useGrouping: false }}
 		>
 			<NumberField.Group className="number-field-group">
-				<NumberField.Input className={classNames('number-field-input', { 'invalid-value': valueIsInvalid })} />
+				<NumberField.Input
+					className={classNames('number-field-input', { 'invalid-value': valueIsInvalid })}
+					placeholder={allowNull ? 'auto' : undefined}
+				/>
 
 				<NumberField.Increment className="number-field-increment">
 					<PlusIcon />

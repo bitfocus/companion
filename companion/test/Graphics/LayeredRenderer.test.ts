@@ -1568,6 +1568,14 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawGauge(makeGaugeElement({ value: 0, min: -232, max: 24 }))).toMatchImageSnapshot()
 		})
 
+		test('negative range with auto origin fills from the minimum (not backwards)', async () => {
+			// Reported bug: a volume gauge -80..0 with the default ("auto") origin. Value -20 sits 75% along
+			// the track, and the fill must grow from the quiet end (min) up to 75% rather than from 0dB backwards.
+			await expect(
+				await drawGauge(makeGaugeElement({ value: -20, min: -80, max: 0, origin: null }))
+			).toMatchImageSnapshot()
+		})
+
 		test('origin at midpoint - pan fills right of centre', async () => {
 			await expect(
 				await drawGauge(makeGaugeElement({ value: 75, origin: 50, stops: [{ value: 0, color: 0x00aaff }] }))

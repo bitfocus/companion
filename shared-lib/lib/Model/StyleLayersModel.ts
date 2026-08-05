@@ -226,7 +226,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	value: number
 	min: number
 	max: number
-	origin: number
+	origin: number | null
 	symmetric: boolean
 	orientation: 'horizontal' | 'vertical' | 'ring'
 	reverse: boolean
@@ -251,7 +251,7 @@ export interface ButtonGraphicsGaugeElement
 	value: ExpressionOrValue<number>
 	min: ExpressionOrValue<number>
 	max: ExpressionOrValue<number>
-	origin: ExpressionOrValue<number>
+	origin: ExpressionOrValue<number | null>
 	symmetric: ExpressionOrValue<boolean>
 	orientation: ExpressionOrValue<'horizontal' | 'vertical' | 'ring'>
 	reverse: ExpressionOrValue<boolean>

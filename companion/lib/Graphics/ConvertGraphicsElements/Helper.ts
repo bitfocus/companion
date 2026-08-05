@@ -152,6 +152,29 @@ export class ElementExpressionHelper<T> {
 	}
 
 	/**
+	 * Like {@link getNumber}, but for a nullable ("auto") number field: an explicitly empty value (`null`,
+	 * `undefined` or an empty string, or an expression resolving to one) yields `null` rather than the
+	 * default. A non-empty but unparsable value falls back to `defaultValue`.
+	 */
+	getNumberOrNull(propertyName: keyof T, defaultValue: number | null): number | null {
+		const value = this.#getValue(propertyName)
+
+		if (!value.isExpression) {
+			if (value.value === null || value.value === undefined || value.value === '') return null
+			const num = Number(value.value)
+			return isNaN(num) ? defaultValue : num
+		}
+
+		// Deliberately do NOT request the 'number' type, as we need to receive null too
+		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+		if (!result.ok) return defaultValue
+
+		if (result.value === null || result.value === undefined || result.value === '') return null
+		const num = Number(result.value)
+		return isNaN(num) ? defaultValue : num
+	}
+
+	/**
 	 * Resolve a color property, preserving css color strings. A numeric (or numeric-string) value becomes a number;
 	 * a valid css color string is kept as-is; anything else falls back to the default. Mirrors the number/string
 	 * semantics of parseColor so the value renders correctly downstream.

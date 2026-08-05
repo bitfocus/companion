@@ -100,6 +100,7 @@ function translateNumberField(field: CompanionInputFieldNumber): Complete<Compan
 		showMaxAsPositiveInfinity: undefined,
 		clampValues: false,
 		asInteger: false,
+		allowNull: false,
 	}
 }
 function translateDropdownField(field: CompanionInputFieldDropdown): Complete<CompanionInputFieldDropdownExtended> {

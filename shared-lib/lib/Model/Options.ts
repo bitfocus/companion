@@ -319,8 +319,8 @@ export interface CompanionInputFieldMultiDropdownExtended extends CompanionInput
 }
 export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBaseExtended {
 	type: 'number'
-	/** The default value */
-	default: number
+	/** The default value. `null` is only valid together with `allowNull` and represents the "auto" state. */
+	default: number | null
 	/**
 	 * The minimum value to allow
 	 * Note: values may not conform to this
@@ -344,6 +344,11 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	clampValues?: boolean
 	/** Whether to only allow integer values */
 	asInteger?: boolean
+	/**
+	 * When true, the field can be cleared to `null`, shown in the UI as "auto". The consumer decides what
+	 * "auto" resolves to. Requires the value type to permit `null`.
+	 */
+	allowNull?: boolean
 }
 export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended {
 	type: 'checkbox'

@@ -559,8 +559,9 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				id: 'origin',
 				label: 'Origin (0-point)',
 				tooltip:
-					'The value the fill grows from. Set to the Minimum for a normal bar, or to the midpoint for a bipolar (pan/centre) gauge.',
-				default: 0,
+					'The value the fill grows from. Leave as "auto" to grow from the Minimum (a normal bar), or set to the midpoint for a bipolar (pan/centre) gauge.',
+				default: null,
+				allowNull: true,
 				min: -1000000,
 				max: 1000000,
 				step: 1,

@@ -173,6 +173,8 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 					step={option.step}
 					range={option.range}
 					disabled={readonly}
+					allowNull={option.allowNull}
+					onClear={() => setValue(null)}
 					setValue={setValue}
 					checkValid={checkValid}
 					showMinAsNegativeInfinity={option.showMinAsNegativeInfinity}
