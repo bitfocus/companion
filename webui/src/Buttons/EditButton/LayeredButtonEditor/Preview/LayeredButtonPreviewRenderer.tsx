@@ -3,6 +3,7 @@ import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocalStorage, useResizeObserver } from 'usehooks-ts'
+import type { ElementGeometry } from '@companion-app/shared/Graphics/Geometry.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { DrawBounds, type ResolveButtonStylePropertiesConfig } from '@companion-app/shared/Graphics/Util.js'
@@ -27,7 +28,7 @@ import {
 } from './boundsFields.js'
 import { fitCanvasSize, PAD_X, PAD_Y, parseAspectRatio } from './canvasSize.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
-import { buildElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
+import { filterElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
 import FontLoader from './FontLoader.js'
 import { GraphicsImage } from './Image.js'
 import { LineSelectionOverlay } from './LineSelectionOverlay.js'
@@ -346,13 +347,19 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 }: LayeredButtonCanvasProps) {
 	const drawContext = useRef<RendererDrawContext | null>(null)
 
+	// Element geometry as resolved by the renderer itself, so the editor never has to recompute the layout
+	const [geometry, setGeometry] = useState<readonly ElementGeometry[]>([])
+
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
 	useEffect(() => {
 		if (!canvas || !drawStyle) return
 
 		// Setup the context on the first run, or when something changes
-		if (!drawContext.current || drawContext.current.canvas !== canvas)
-			drawContext.current = new RendererDrawContext(canvas)
+		if (!drawContext.current || drawContext.current.canvas !== canvas) {
+			// Drop the previous canvas' geometry rather than hit-testing against a stale layout
+			setGeometry([])
+			drawContext.current = new RendererDrawContext(canvas, setGeometry)
+		}
 
 		// Update any cached properties
 		drawContext.current.setHiddenElements(hiddenElements)
@@ -397,15 +404,11 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		[drawStyle, width, height]
 	)
 
-	// Absolute pixel rects for every element, used both for click-to-select and for outlining a selection
-	// the overlay can't edit.
+	// Rects for every selectable element, used for click-to-select and for outlining an unselectable section
 	const selectableIds = styleStore.selectableElementIds
 	const elementRects = useMemo(
-		() =>
-			drawStyle && contentBoundsPx
-				? buildElementRects(drawStyle.elements, contentBoundsPx, hiddenElements, selectableIds)
-				: [],
-		[drawStyle, contentBoundsPx, hiddenElements, selectableIds]
+		() => (drawStyle ? filterElementRects(geometry, drawStyle.elements, hiddenElements, selectableIds) : []),
+		[drawStyle, geometry, hiddenElements, selectableIds]
 	)
 
 	const selectElementById = useCallback((id: string) => styleStore.setSelectedElementId(id), [styleStore])
@@ -448,7 +451,7 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 						controlId={controlId}
 						canvas={canvas}
 						selectedElement={selectedElement}
-						selectedElementRect={findElementRect(elementRects, selectedElement.id)?.rect ?? null}
+						selectedElementRect={findElementRect(elementRects, selectedElement.id) ?? null}
 						isTopLevelSelection={styleStore.elements.some((el) => el.id === selectedElement.id)}
 						elementRects={elementRects}
 						contentBoundsPx={contentBoundsPx}
@@ -460,7 +463,7 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 						controlId={controlId}
 						canvas={canvas}
 						selectedElement={selectedElement}
-						selectedElementRect={findElementRect(elementRects, selectedElement.id)?.rect ?? null}
+						selectedElementRect={findElementRect(elementRects, selectedElement.id) ?? null}
 						isTopLevelSelection={styleStore.elements.some((el) => el.id === selectedElement.id)}
 						elementRects={elementRects}
 						contentBoundsPx={contentBoundsPx}
@@ -477,18 +480,20 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 class RendererDrawContext {
 	readonly #image: GraphicsImage
 	readonly #debounce: PromiseDebounce
+	readonly #onGeometry: (geometry: readonly ElementGeometry[]) => void
 	readonly canvas: HTMLCanvasElement
 
 	#hiddenElements: ReadonlySet<string> = new Set()
 	#selectedElementId: string | null = null
 
-	constructor(canvas: HTMLCanvasElement) {
+	constructor(canvas: HTMLCanvasElement, onGeometry: (geometry: readonly ElementGeometry[]) => void) {
 		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
 		const image = GraphicsImage.create(canvas, textLayoutCache)
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
+		this.#onGeometry = onGeometry
 		this.canvas = canvas
 	}
 
@@ -514,7 +519,7 @@ class RendererDrawContext {
 				}
 			}
 
-			await GraphicsLayeredButtonRenderer.draw(
+			const geometry = await GraphicsLayeredButtonRenderer.draw(
 				this.#image,
 				this.#lastDrawStyle,
 				this.#hiddenElements,
@@ -523,6 +528,7 @@ class RendererDrawContext {
 			)
 
 			this.#image.drawComplete()
+			this.#onGeometry(geometry)
 		} catch (e) {
 			console.error('draw failed!', e)
 		}

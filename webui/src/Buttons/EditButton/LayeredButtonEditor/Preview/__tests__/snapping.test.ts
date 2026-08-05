@@ -1,11 +1,21 @@
 import { describe, expect, test } from 'vitest'
+import { DrawBounds } from '@companion-app/shared/Graphics/Util.js'
 import type { ElementRect, PixelRect } from '../elementHitTest.js'
 import { collectSnapTargets, SNAP_THRESHOLD_PX, snapAxis, thresholdFractionFor } from '../snapping.js'
 
 const CONTENT: PixelRect = { x: 10, y: 20, width: 100, height: 100 }
 
-function rect(id: string, x: number, y: number, width: number, height: number, isTopLevel = true): ElementRect {
-	return { id, rect: { x, y, width, height }, isTopLevel }
+function rect(
+	id: string,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	isTopLevel = true,
+	rotation = 0
+): ElementRect {
+	const bounds = new DrawBounds(x, y, width, height)
+	return { id, rect: bounds, rotations: rotation ? [{ pivot: bounds, angle: rotation }] : [], isTopLevel }
 }
 
 describe('thresholdFractionFor', () => {
@@ -32,6 +42,12 @@ describe('collectSnapTargets', () => {
 
 	test('excludes the element being dragged', () => {
 		expect(collectSnapTargets([rect('me', 35, 20, 25, 100)], CONTENT, 'me', 'x')).toEqual([0, 0.5, 1])
+	})
+
+	test('excludes rotated elements, whose unrotated edges are not where they appear', () => {
+		const rotated = rect('other', 35, 20, 25, 100, true, 30)
+
+		expect(collectSnapTargets([rotated], CONTENT, 'me', 'x')).toEqual([0, 0.5, 1])
 	})
 
 	test('excludes nested elements, which are not valid snap targets', () => {

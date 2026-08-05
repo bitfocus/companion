@@ -1,3 +1,8 @@
+import {
+	inverseRotatePointThroughRotations,
+	type ElementGeometry,
+	type MarkerRotation,
+} from '@companion-app/shared/Graphics/Geometry.js'
 import { DrawBounds } from '@companion-app/shared/Graphics/Util.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 
@@ -10,8 +15,10 @@ export interface PixelRect {
 
 export interface ElementRect {
 	id: string
-	/** Absolute rect in the canvas's backing-pixel space */
-	rect: PixelRect
+	/** Unrotated rect in the canvas's backing-pixel space */
+	rect: DrawBounds
+	/** Rotations applied to `rect`, outermost first */
+	rotations: MarkerRotation[]
 	/** Top-level elements are the only ones the drag/resize overlay can edit */
 	isTopLevel: boolean
 }
@@ -19,89 +26,65 @@ export interface ElementRect {
 /** Minimum clickable thickness given to a line's bounding box, in canvas backing pixels */
 const LINE_HIT_THICKNESS_PX = 8
 
-function toRect(bounds: DrawBounds): PixelRect {
-	return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
-}
-
-// Mirrors GraphicsLayeredButtonRenderer.#drawGroupElement: a group with squareCoords gives its children a
-// centered square coordinate space rather than the full group rect.
-function groupChildBounds(bounds: DrawBounds, squareCoords: boolean): DrawBounds {
-	if (!squareCoords) return bounds
-
-	const size = Math.min(bounds.width, bounds.height)
-	return new DrawBounds(bounds.x + (bounds.width - size) / 2, bounds.y + (bounds.height - size) / 2, size, size)
+/** Net rotation of an element in degrees, 0 when it sits in an unrotated frame. */
+export function netRotation(rotations: readonly MarkerRotation[]): number {
+	let total = 0
+	for (const rotation of rotations) total += rotation.angle
+	return total
 }
 
 /**
- * Flatten the resolved draw elements into absolute pixel rects, in draw order (bottom-most first).
+ * Narrow the renderer's geometry down to the elements the editor lets the user pick, in draw order
+ * (bottom-most first, parents before their children).
  *
- * Draw elements carry bounds already resolved to 0-1 fractions of their parent, so this works for
- * expression-driven elements too. Rotation is intentionally ignored - rects are axis-aligned, which is
- * accurate enough for picking and for drawing a selection outline.
+ * The geometry itself - bounds composition, group coordinate spaces, rotation - comes from the renderer
+ * so it can't drift from what was actually drawn. This only applies the editor's own policy about what
+ * is selectable.
  */
-export function buildElementRects(
+export function filterElementRects(
+	geometry: readonly ElementGeometry[],
 	elements: readonly SomeButtonGraphicsDrawElement[],
-	contentBoundsPx: PixelRect,
 	hiddenElements: ReadonlySet<string>,
 	selectableIds: ReadonlySet<string>
 ): ElementRect[] {
-	const out: ElementRect[] = []
-
-	const walk = (list: readonly SomeButtonGraphicsDrawElement[], parentBounds: DrawBounds, isTopLevel: boolean) => {
+	const topLevelIds = new Set(elements.map((element) => element.id))
+	const byId = new Map<string, SomeButtonGraphicsDrawElement>()
+	const index = (list: readonly SomeButtonGraphicsDrawElement[]) => {
 		for (const element of list) {
-			// The canvas is the background - it fills the button, so treating it as a hit target would swallow
-			// every click on empty space.
-			if (element.type === 'canvas') continue
-			if (!element.enabled || hiddenElements.has(element.id)) continue
-
-			const selectable = selectableIds.has(element.id)
-
-			if (element.type === 'line') {
-				const fromX = parentBounds.x + element.fromX * parentBounds.width
-				const toX = parentBounds.x + element.toX * parentBounds.width
-				const fromY = parentBounds.y + element.fromY * parentBounds.height
-				const toY = parentBounds.y + element.toY * parentBounds.height
-
-				if (selectable) {
-					// A horizontal or vertical line has a zero-thickness bounding box, which is all but
-					// impossible to click, so give every line rect a minimum grabbable thickness.
-					const padX = Math.max(0, (LINE_HIT_THICKNESS_PX - Math.abs(toX - fromX)) / 2)
-					const padY = Math.max(0, (LINE_HIT_THICKNESS_PX - Math.abs(toY - fromY)) / 2)
-
-					out.push({
-						id: element.id,
-						rect: {
-							x: Math.min(fromX, toX) - padX,
-							y: Math.min(fromY, toY) - padY,
-							width: Math.abs(toX - fromX) + padX * 2,
-							height: Math.abs(toY - fromY) + padY * 2,
-						},
-						isTopLevel,
-					})
-				}
-				continue
-			}
-
-			const bounds = parentBounds.compose(element.x, element.y, element.width, element.height)
-			if (selectable) out.push({ id: element.id, rect: toRect(bounds), isTopLevel })
-
-			// Children are pushed after their parent so a reverse scan finds the child first.
-			//
-			// Only descend when the children are elements the user can actually select. Composite elements are
-			// emitted as groups too, but their children are internal and carry generated ids that don't exist
-			// in the edited model - clicking one must select the composite as a whole. The same test keeps us
-			// out of reference children, which come from another button entirely.
-			if (element.type === 'group' && element.children.some((child) => selectableIds.has(child.id))) {
-				walk(element.children, groupChildBounds(bounds, element.squareCoords), false)
-			}
+			byId.set(element.id, element)
+			if (element.type === 'group' || element.type === 'reference') index(element.children)
 		}
 	}
+	index(elements)
 
-	walk(
-		elements,
-		new DrawBounds(contentBoundsPx.x, contentBoundsPx.y, contentBoundsPx.width, contentBoundsPx.height),
-		true
-	)
+	const out: ElementRect[] = []
+
+	for (const entry of geometry) {
+		const element = byId.get(entry.id)
+		if (!element) continue
+
+		// The canvas is the background - it fills the button, so treating it as a hit target would swallow
+		// every click on empty space.
+		if (element.type === 'canvas') continue
+		if (!element.enabled || hiddenElements.has(element.id)) continue
+
+		// Composite elements are emitted as groups, but their children are internal and carry generated ids
+		// that don't exist in the edited model - clicking one must select the composite as a whole. The same
+		// test keeps us out of reference children, which come from another button entirely.
+		if (!selectableIds.has(element.id)) continue
+
+		let rect = entry.bounds
+
+		if (element.type === 'line') {
+			// The renderer only pads a line's bounds out to its stroke thickness, which is all but impossible
+			// to click on a thin line, so give every line rect a minimum grabbable thickness.
+			const padX = Math.max(0, (LINE_HIT_THICKNESS_PX - rect.width) / 2)
+			const padY = Math.max(0, (LINE_HIT_THICKNESS_PX - rect.height) / 2)
+			rect = new DrawBounds(rect.x - padX, rect.y - padY, rect.width + padX * 2, rect.height + padY * 2)
+		}
+
+		out.push({ id: element.id, rect, rotations: entry.rotations, isTopLevel: topLevelIds.has(element.id) })
+	}
 
 	return out
 }
@@ -109,8 +92,15 @@ export function buildElementRects(
 /** Find the top-most element containing the point, or null when the point is over empty space. */
 export function hitTestElements(rects: readonly ElementRect[], x: number, y: number): ElementRect | null {
 	for (let i = rects.length - 1; i >= 0; i--) {
-		const { rect } = rects[i]
-		if (x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height) return rects[i]
+		const entry = rects[i]
+		const { rect } = entry
+
+		// Undo the element's rotations to test the point in the frame the rect is expressed in
+		const [localX, localY] = inverseRotatePointThroughRotations(entry.rotations, x, y)
+
+		if (localX >= rect.x && localX <= rect.x + rect.width && localY >= rect.y && localY <= rect.y + rect.height) {
+			return entry
+		}
 	}
 	return null
 }

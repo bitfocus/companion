@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { resolveMarkerTransform } from '@companion-app/shared/Graphics/Geometry.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import {
@@ -11,7 +12,7 @@ import {
 	type BoundsFractions,
 	type BoundsKey,
 } from './boundsFields.js'
-import type { ElementRect, PixelRect } from './elementHitTest.js'
+import { netRotation, type ElementRect, type PixelRect } from './elementHitTest.js'
 import { SnapGuide } from './SnapGuide.js'
 import { collectSnapTargets, snapAxis, thresholdFractionFor } from './snapping.js'
 
@@ -21,8 +22,8 @@ interface SelectionOverlayProps {
 	controlId: string
 	canvas: HTMLCanvasElement
 	selectedElement: SomeButtonGraphicsElement
-	/** Absolute rect of the selection, used to outline selections the overlay can't edit */
-	selectedElementRect: PixelRect | null
+	/** The selection as the renderer drew it, used to outline selections the overlay can't edit */
+	selectedElementRect: ElementRect | null
 	isTopLevelSelection: boolean
 	/** Every element's absolute rect, used as snap targets */
 	elementRects: readonly ElementRect[]
@@ -50,6 +51,14 @@ interface DragState {
 	snapTargetsY: number[]
 }
 
+/** Rotate a vector clockwise by `degrees` (matching the canvas' positive rotation direction) */
+function rotateVector(x: number, y: number, degrees: number): [number, number] {
+	const rad = (degrees * Math.PI) / 180
+	const cos = Math.cos(rad)
+	const sin = Math.sin(rad)
+	return [x * cos - y * sin, x * sin + y * cos]
+}
+
 /** Guide lines to draw during a drag, in fraction-of-content space */
 interface SnapLines {
 	x: number | null
@@ -74,6 +83,11 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 
 	const elementId = selectedElement.id
 	const boundsFields = getDraggableBoundsFields(selectedElement)
+
+	// The rotation the renderer actually drew the element at, so the overlay lines up with the canvas even
+	// when the element's `rotation` is expression-driven. Interactive selections are always top-level, so
+	// this is just the element's own rotation - there is no parent frame to compose with.
+	const angle = selectedElementRect ? netRotation(selectedElementRect.rotations) : 0
 
 	// Only top-level elements with plain (non-expression) bounds can be dragged. Anything else still gets an
 	// outline so the selection is visible, rather than the overlay silently disappearing.
@@ -137,8 +151,18 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 			const rect = canvas.getBoundingClientRect()
 			const scaleX = canvas.width / rect.width
 			const scaleY = canvas.height / rect.height
-			let dxFraction = ((e.clientX - state.startClientX) * scaleX) / contentBoundsPx.width
-			let dyFraction = ((e.clientY - state.startClientY) * scaleY) / contentBoundsPx.height
+			let dxPx = (e.clientX - state.startClientX) * scaleX
+			let dyPx = (e.clientY - state.startClientY) * scaleY
+
+			// A resize handle sits in the element's rotated frame, so undo the rotation to get the movement
+			// along the element's own axes. A move needs no such correction: rotation is about the element's
+			// own centre, so a screen-space translation is the same translation unrotated.
+			if (state.mode === 'resize' && angle) [dxPx, dyPx] = rotateVector(dxPx, dyPx, -angle)
+
+			// Done after the rotation, which has to happen in pixel space - the two axes of fraction space are
+			// scaled differently whenever the content bounds aren't square
+			let dxFraction = dxPx / contentBoundsPx.width
+			let dyFraction = dyPx / contentBoundsPx.height
 
 			// Shift locks a move to whichever axis the pointer has travelled further along
 			if (state.mode === 'move' && e.shiftKey) {
@@ -192,9 +216,11 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 			}
 
 			// Ctrl/cmd inverts the toolbar's snap-enabled setting for the duration of the drag
-			// (shift is axis-lock, alt is duplicate)
+			// (shift is axis-lock, alt is duplicate). Snapping is off entirely for a rotated element: its
+			// unrotated edges aren't where the user sees them, so the guides would land somewhere other than
+			// the element (collectSnapTargets skips rotated elements as targets for the same reason).
 			const lines: SnapLines = { x: null, y: null }
-			const snapActive = e.ctrlKey || e.metaKey ? !snapEnabledRef.current : snapEnabledRef.current
+			const snapActive = !angle && (e.ctrlKey || e.metaKey ? !snapEnabledRef.current : snapEnabledRef.current)
 			if (snapActive) {
 				const left = state.corner?.includes('w')
 				const top = state.corner?.includes('n')
@@ -276,11 +302,28 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 				}
 			}
 
+			// Resizing anchors the opposite edges in the element's own coordinates, but the element rotates about
+			// its centre - so moving that centre swings the anchored corner away on screen. Translate the result
+			// by however much the rotation displaced it. `d - R(d)` is zero at zero rotation.
+			if (state.mode === 'resize' && angle) {
+				const centreShiftX = state.startFields.x + state.startFields.width / 2 - (next.x + next.width / 2)
+				const centreShiftY = state.startFields.y + state.startFields.height / 2 - (next.y + next.height / 2)
+
+				// The rotation is a screen-space one, so the displacement has to be rotated in pixel space -
+				// fraction space scales its two axes differently unless the content bounds are square
+				const dx = centreShiftX * contentBoundsPx.width
+				const dy = centreShiftY * contentBoundsPx.height
+				const [rx, ry] = rotateVector(dx, dy, angle)
+
+				next.x += (dx - rx) / contentBoundsPx.width
+				next.y += (dy - ry) / contentBoundsPx.height
+			}
+
 			setSnapLines(lines)
 			liveFieldsRef.current = next
 			setLiveFields(next)
 		},
-		[canvas, contentBoundsPx, linkedRef, snapEnabledRef]
+		[canvas, contentBoundsPx, linkedRef, snapEnabledRef, angle]
 	)
 
 	const onPointerUp = useCallback(() => {
@@ -392,12 +435,20 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 	if (!isInteractive || !boundsFields) {
 		if (!selectedElementRect) return null
 
+		// The element may sit inside rotated groups, so place its box at the rotated centre and let one CSS
+		// rotation carry the whole chain (see resolveMarkerTransform)
+		const transform = resolveMarkerTransform({
+			bounds: selectedElementRect.rect,
+			rotations: selectedElementRect.rotations,
+		})
+
 		const readonlyStyle: React.CSSProperties = {
 			position: 'absolute',
-			left: percentOf(selectedElementRect.x, canvasSizePx.width),
-			top: percentOf(selectedElementRect.y, canvasSizePx.height),
-			width: percentOf(selectedElementRect.width, canvasSizePx.width),
-			height: percentOf(selectedElementRect.height, canvasSizePx.height),
+			left: percentOf(transform.centerX - transform.width / 2, canvasSizePx.width),
+			top: percentOf(transform.centerY - transform.height / 2, canvasSizePx.height),
+			width: percentOf(transform.width, canvasSizePx.width),
+			height: percentOf(transform.height, canvasSizePx.height),
+			transform: transform.angle ? `rotate(${transform.angle}deg)` : undefined,
 			border: '1px dashed rgba(255, 255, 255, 0.6)',
 			outline: '1px dashed rgba(0, 0, 0, 0.4)',
 			boxSizing: 'border-box',
@@ -423,6 +474,8 @@ export const SelectionOverlay = observer(function SelectionOverlay({
 		top: percentOf(yPx, canvasSizePx.height),
 		width: percentOf(widthPx, canvasSizePx.width),
 		height: percentOf(heightPx, canvasSizePx.height),
+		// Rotating the box carries the resize handles round with it, since they're its children
+		transform: angle ? `rotate(${angle}deg)` : undefined,
 		border: isDragging ? '1px dashed #2276d2' : '1px solid transparent',
 		cursor: 'move',
 		pointerEvents: 'auto',

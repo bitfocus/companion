@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { resolveMarkerTransform } from '@companion-app/shared/Graphics/Geometry.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import {
@@ -23,7 +24,7 @@ interface LineSelectionOverlayProps {
 	canvas: HTMLCanvasElement
 	selectedElement: SomeButtonGraphicsElement
 	/** Absolute rect of the selection, used to outline a line the overlay can't edit */
-	selectedElementRect: PixelRect | null
+	selectedElementRect: ElementRect | null
 	isTopLevelSelection: boolean
 	/** Every element's absolute rect, used as snap targets */
 	elementRects: readonly ElementRect[]
@@ -268,12 +269,20 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 	if (!isInteractive || !lineFields) {
 		if (!selectedElementRect) return null
 
+		// A line has no rotation of its own, but it can sit inside rotated groups - place the box at the
+		// rotated centre and let one CSS rotation carry the whole chain.
+		const transform = resolveMarkerTransform({
+			bounds: selectedElementRect.rect,
+			rotations: selectedElementRect.rotations,
+		})
+
 		const readonlyStyle: React.CSSProperties = {
 			position: 'absolute',
-			left: percentOf(selectedElementRect.x, canvasSizePx.width),
-			top: percentOf(selectedElementRect.y, canvasSizePx.height),
-			width: percentOf(selectedElementRect.width, canvasSizePx.width),
-			height: percentOf(selectedElementRect.height, canvasSizePx.height),
+			left: percentOf(transform.centerX - transform.width / 2, canvasSizePx.width),
+			top: percentOf(transform.centerY - transform.height / 2, canvasSizePx.height),
+			width: percentOf(transform.width, canvasSizePx.width),
+			height: percentOf(transform.height, canvasSizePx.height),
+			transform: transform.angle ? `rotate(${transform.angle}deg)` : undefined,
 			border: '1px dashed rgba(255, 255, 255, 0.6)',
 			outline: '1px dashed rgba(0, 0, 0, 0.4)',
 			boxSizing: 'border-box',

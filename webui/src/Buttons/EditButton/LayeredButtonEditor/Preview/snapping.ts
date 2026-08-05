@@ -1,4 +1,4 @@
-import type { ElementRect, PixelRect } from './elementHitTest.js'
+import { netRotation, type ElementRect, type PixelRect } from './elementHitTest.js'
 
 /** How close (in canvas backing pixels) an edge must be to a target before it snaps */
 export const SNAP_THRESHOLD_PX = 5
@@ -28,6 +28,8 @@ export function collectSnapTargets(
 
 	for (const entry of rects) {
 		if (!entry.isTopLevel || entry.id === excludeId) continue
+		// A rotated element's unrotated edges aren't where the user sees them, so it makes a misleading target
+		if (netRotation(entry.rotations)) continue
 
 		const start = ((axis === 'x' ? entry.rect.x : entry.rect.y) - origin) / extent
 		const size = (axis === 'x' ? entry.rect.width : entry.rect.height) / extent
