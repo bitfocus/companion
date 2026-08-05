@@ -132,19 +132,20 @@ export async function writeExportToFile(
 /**
  * Publish a completed temp file to its final path without clobbering an existing file. `fs.link` is
  * atomic and fails with `EEXIST` if `filePath` already exists, so a file written concurrently under
- * the same name is never overwritten (`fs.rename` would silently clobber it). Filesystems without
- * hard-link support fall back to `rename`, where that race is unavoidable.
+ * the same name is never overwritten (`fs.rename` would silently clobber it).
+ *
+ * `EEXIST` is the one error we honour; any other link failure means hard-links aren't usable at the
+ * destination (many network/cloud FUSE mounts reject `fs.link` with codes like `EPERM`, `ENOSYS`,
+ * `ENOTSUP`, `EOPNOTSUPP`, `EIO` or `EXDEV`) so we fall back to `rename`, where the no-clobber race
+ * is unavoidable. If the fallback can't publish either, its error surfaces instead.
  */
 async function publishFileNoClobber(tempPath: string, filePath: string): Promise<void> {
 	try {
 		await fs.link(tempPath, filePath)
 	} catch (e) {
-		const code = (e as NodeJS.ErrnoException)?.code
-		if (code === 'EPERM' || code === 'ENOSYS' || code === 'ENOTSUP' || code === 'EOPNOTSUPP') {
-			await fs.rename(tempPath, filePath)
-			return
-		}
-		throw e
+		if ((e as NodeJS.ErrnoException)?.code === 'EEXIST') throw e
+
+		await fs.rename(tempPath, filePath)
 	}
 }
 

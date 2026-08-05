@@ -277,6 +277,26 @@ describe('writeExportToFile', () => {
 		expect(await fs.readdir(tmpDir)).toEqual(['out.companionconfig'])
 	})
 
+	test('falls back to rename when the filesystem rejects hard-links (e.g. EIO on a cloud FUSE mount)', async () => {
+		// Mountain Duck and similar network/cloud mounts fail fs.link with EIO rather than a
+		// link-unsupported code - the backup must still succeed via the rename fallback. See #4394.
+		const linkSpy = vi
+			.spyOn(fs, 'link')
+			.mockRejectedValueOnce(Object.assign(new Error('EIO: i/o error, link'), { code: 'EIO' }))
+		try {
+			const filePath = path.join(tmpDir, 'out.companionconfig')
+			const size = await writeExportToFile(sampleData, 'json', filePath)
+
+			const contents = await fs.readFile(filePath, 'utf-8')
+			expect(JSON.parse(contents)).toEqual(sampleData)
+			expect(size).toBe(Buffer.byteLength(contents))
+			expect(await fs.readdir(tmpDir)).toEqual(['out.companionconfig'])
+			expect(linkSpy).toHaveBeenCalledOnce()
+		} finally {
+			linkSpy.mockRestore()
+		}
+	})
+
 	test('concurrent writes to the same path: one wins, the other fails, content stays intact', async () => {
 		const filePath = path.join(tmpDir, 'out.companionconfig')
 
