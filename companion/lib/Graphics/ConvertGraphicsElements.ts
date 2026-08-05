@@ -847,7 +847,7 @@ function convertGaugeElementForDrawing(
 		value: helper.getNumber('value', 0),
 		min: helper.getNumber('min', 0),
 		max: helper.getNumber('max', 100),
-		origin: helper.getNumber('origin', 0),
+		origin: helper.getNumberOrNull('origin', null),
 		symmetric: helper.getBoolean('symmetric', false),
 		orientation: helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal'),
 		reverse: helper.getBoolean('reverse', false),

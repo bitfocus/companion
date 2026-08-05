@@ -349,6 +349,83 @@ describe('ElementExpressionHelper', () => {
 		})
 	})
 
+	describe('getNumberOrNull', () => {
+		// --- Plain values ---
+		test('returns Number() of a plain numeric value', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val(42) }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(42)
+		})
+
+		test('preserves an explicit 0 (does not treat it as empty/auto)', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val(0) }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(0)
+		})
+
+		test('coerces a numeric string', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val('3.14') as any }))
+			expect(helper.getNumberOrNull('numProp', null)).toBeCloseTo(3.14)
+		})
+
+		test('null value yields null (auto)', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val(null) as any }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('undefined value yields null (auto)', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val(undefined) as any }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('empty-string value yields null (auto)', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val('') as any }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('non-numeric string falls back to defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ numProp: val('not-a-number') as any }))
+			expect(helper.getNumberOrNull('numProp', 7)).toBe(7)
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		// --- Expressions ---
+		test('evaluates an expression to a number', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:x) * 2') }), { ns: { x: 5 } })
+			expect(helper.getNumberOrNull('numProp', null)).toBe(10)
+		})
+
+		test('coerces a numeric-string expression result', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:x)') }), { ns: { x: '40' } })
+			expect(helper.getNumberOrNull('numProp', null)).toBe(40)
+		})
+
+		// The regression that motivated this method: requesting the 'number' result type coerces
+		// null/'' to 0 before we see it, so an expression meaning "auto" would wrongly become 0.
+		test('expression resolving to null yields null (not 0)', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:x)') }), { ns: { x: null as any } })
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('expression resolving to an empty string yields null (not 0)', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:x)') }), { ns: { x: '' } })
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('expression resolving to a missing variable yields null', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr('$(ns:missing)') }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('empty expression yields null', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr('') }))
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
+
+		test('expression with a syntax error falls back to defaultValue', () => {
+			const { helper } = makeHelper(makeEl({ numProp: expr(')') }))
+			expect(helper.getNumberOrNull('numProp', 5)).toBe(5)
+		})
+	})
+
 	describe('getColor', () => {
 		test('plain number is returned as a number', () => {
 			const { helper } = makeHelper(makeEl({ colorProp: val(0xff0000) }))

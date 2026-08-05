@@ -25,7 +25,8 @@ function convertFieldType(field: SomeCompanionInputField, isExpressionable: bool
 	let tsType: string
 	switch (field.type) {
 		case 'number':
-			tsType = 'number'
+			// A nullable ("auto") number field can hold null in addition to a number.
+			tsType = field.allowNull ? 'number | null' : 'number'
 			break
 		case 'textinput':
 			tsType = 'string'

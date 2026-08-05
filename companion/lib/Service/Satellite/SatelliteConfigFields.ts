@@ -98,6 +98,7 @@ function translateNumberField(field: NumberField): Complete<CompanionInputFieldN
 		showMaxAsPositiveInfinity: undefined,
 		clampValues: false,
 		asInteger: false,
+		allowNull: false,
 	}
 }
 

@@ -500,7 +500,8 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		const valuePos = norm(finite(element.value, 0))
-		const originPos = norm(finite(element.origin, min))
+		// `origin === null` is the "auto" default: a normal bar grows from the minimum (track position 0).
+		const originPos = norm(element.origin === null ? min : finite(element.origin, min))
 
 		// Active fill interval in track-position space (0–100).
 		// Non-symmetric: from the origin toward the value (handles normal bars, centre-bar, pan).

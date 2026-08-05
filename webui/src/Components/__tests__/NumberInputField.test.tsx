@@ -294,4 +294,45 @@ describe('NumberInputField', () => {
 			expect(input).toHaveValue('10')
 		})
 	})
+
+	describe('allowNull ("auto")', () => {
+		it('renders an empty input with an "auto" placeholder when value is null', () => {
+			render(<NumberInputField id={undefined} value={null} setValue={vi.fn()} allowNull onClear={vi.fn()} />)
+			const input = screen.getByRole('textbox')
+			expect(input).toHaveValue('')
+			expect(input).toHaveAttribute('placeholder', 'auto')
+		})
+
+		it('shows a provided numeric value normally even when nullable', () => {
+			render(<NumberInputField id={undefined} value={-40} setValue={vi.fn()} allowNull onClear={vi.fn()} />)
+			expect(screen.getByRole('textbox')).toHaveValue('-40')
+		})
+
+		it('invokes onClear (not setValue) when the field is cleared', async () => {
+			const user = userEvent.setup()
+			const onClear = vi.fn()
+			const setValue = vi.fn()
+			render(<NumberInputField id={undefined} value={-40} setValue={setValue} allowNull onClear={onClear} />)
+			const input = screen.getByRole('textbox')
+
+			await user.clear(input)
+			input.blur()
+
+			expect(onClear).toHaveBeenCalled()
+			expect(setValue).not.toHaveBeenCalled()
+		})
+
+		it('does not clear to null when allowNull is not set', async () => {
+			const user = userEvent.setup()
+			const setValue = vi.fn()
+			render(<NumberInputField id={undefined} value={5} setValue={setValue} />)
+			const input = screen.getByRole('textbox')
+
+			await user.clear(input)
+			input.blur()
+
+			// setValue is only ever called with real numbers, never for the transiently-empty input.
+			for (const call of setValue.mock.calls) expect(call[0]).not.toBeNull()
+		})
+	})
 })
