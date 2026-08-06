@@ -44,9 +44,8 @@
 		}
 	}
 
-	/* `.tab-bar__tab` / `.tab-bar__indicator` are siblings of `.tab-bar` in the DOM under `.tab-area`
-	   (the Sass `&__tab` concatenation compiled to `.tab-area .tab-bar__tab`, not a descendant of the
-	   tab bar), so they are written flat here rather than nested inside `.tab-bar`. */
+	/* `.tab-bar__tab` / `.tab-bar__indicator` are DOM siblings of `.tab-bar` (both under `.tab-area`),
+	   not children of it, so despite the BEM names they are matched flat here, not nested in `.tab-bar`. */
 	.tab-bar__tab {
 		flex-shrink: 0;
 		display: block;

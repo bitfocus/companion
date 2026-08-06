@@ -204,9 +204,8 @@ form.row > * {
 	}
 }
 
-/* scroll tabs panel (note the split-panels class exists regardless on panel mode, so
-   the breakpoint restriction doesn't seem warranted (it actually "broke" single-panel mode scrolling for buttons page). */
-/* @include coreui.media-breakpoint-up('xl') { */
+/* Scrollable split-panels layout, applied at all widths: gating it behind a min-width breakpoint
+   broke single-panel-mode scrolling on the buttons page. */
 .split-panels {
 	height: 100%;
 

@@ -1,10 +1,7 @@
 @import '../breakpoints.css';
 
-/* Table styling, consolidated from the vendored CoreUI tables and the various table tweaks that
-   used to live globally in _common.scss / _settings.scss. Tables are rendered via the <Table>
-   component (Components/Table.tsx); only the classes it can emit (plus a couple of companion
-   variants) are kept here — the unused CoreUI variants (bordered/borderless/hover/active/colours)
-   were dropped. */
+/* Table styling for the <Table> component (Components/Table.tsx): only the classes it can emit,
+   plus a couple of companion-specific variants. */
 
 .table {
 	width: 100%;
