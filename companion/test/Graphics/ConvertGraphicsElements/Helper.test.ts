@@ -457,6 +457,33 @@ describe('ElementExpressionHelper', () => {
 			const { helper } = makeHelper(makeEl({ numProp: expr(')') }))
 			expect(helper.getNumberOrNull('numProp', 5)).toBe(5)
 		})
+
+		// --- Value-feedback overrides ---
+		test('a value-feedback override transforms $(this:value) into a number', () => {
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['numProp', valueOverride('$(this:value) * 2', 21)],
+			])
+			const { helper } = makeHelper(makeEl({ numProp: val(0) }), {}, overrides)
+			expect(helper.getNumberOrNull('numProp', null)).toBe(42)
+		})
+
+		test('a value-feedback override resolving to undefined falls back to the element value', () => {
+			// undefined = no override
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['numProp', valueOverride('$(this:value)', undefined)],
+			])
+			const { helper } = makeHelper(makeEl({ numProp: val(7) }), {}, overrides)
+			expect(helper.getNumberOrNull('numProp', null)).toBe(7)
+		})
+
+		test('a value-feedback override resolving to null yields null (auto), not the element value', () => {
+			// null is a real "auto" result, unlike the undefined no-override sentinel
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['numProp', valueOverride('$(this:value)', null)],
+			])
+			const { helper } = makeHelper(makeEl({ numProp: val(9) }), {}, overrides)
+			expect(helper.getNumberOrNull('numProp', null)).toBe(null)
+		})
 	})
 
 	describe('getColor', () => {

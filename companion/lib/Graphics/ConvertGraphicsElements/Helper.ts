@@ -256,7 +256,7 @@ export class ElementExpressionHelper<T> {
 	 * default. A non-empty but unparsable value falls back to `defaultValue`.
 	 */
 	getNumberOrNull(propertyName: keyof T, defaultValue: number | null): number | null {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			if (value.value === null || value.value === undefined || value.value === '') return null
@@ -265,7 +265,7 @@ export class ElementExpressionHelper<T> {
 		}
 
 		// Deliberately do NOT request the 'number' type, as we need to receive null too
-		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+		const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, undefinedFallback)
 		if (!result.ok) return defaultValue
 
 		if (result.value === null || result.value === undefined || result.value === '') return null
