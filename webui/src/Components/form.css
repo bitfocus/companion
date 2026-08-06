@@ -1,3 +1,5 @@
+@import '../breakpoints.css';
+
 .flex-form {
 	/* The modal2 parts manage their own padding and borders, so exclude them from the generic child margin
 	   (the same way .button-group is) — otherwise the body's margin adds an unwanted gap before the footer. */
@@ -200,3 +202,47 @@ label.disabled {
 	min-width: 0;
 }
 */
+
+/* Shared chrome for the connection/instance/surface edit and list panels (used across the
+   Connections, Instances, Surfaces and Modules features). */
+.edit-connection {
+	margin-bottom: 1em;
+
+	& > div {
+		/* column */
+		margin-bottom: 0.5rem;
+	}
+
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 1em;
+		margin-bottom: 0.5rem;
+
+		&.col-form-label {
+			margin-bottom: 0.5rem;
+		}
+
+		@media (--bp-sm-down) {
+			&.col-form-label {
+				/* Respect the override */
+				margin-bottom: 0;
+			}
+		}
+	}
+}
+
+.connection-form-buttons {
+	position: sticky;
+	bottom: 0;
+	flex-shrink: 0;
+	padding-top: 1rem;
+	margin-top: auto;
+	background-color: var(--color-surface);
+	padding-bottom: 1.5rem;
+}
+
+.connection-group-actions {
+	overflow: hidden; /* workaround for a coreui "bug" that counts hidden elements as present and therefore applies the wrong border-radius */
+	margin-bottom: 1rem;
+}

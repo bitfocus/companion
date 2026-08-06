@@ -41,3 +41,15 @@
 		}
 	}
 }
+
+.connectionlist-selected {
+	background-color: var(--color-row-selected);
+
+	&:hover {
+		background-color: var(--color-row-overlay-30) !important;
+	}
+}
+
+.import-module {
+	margin-bottom: 0.5rem;
+}
