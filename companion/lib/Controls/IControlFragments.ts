@@ -81,6 +81,14 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleUpdateOption(id: string, key: string, value: ExpressionOrValue<JsonValue | undefined>): boolean
 
 	/**
+	 * Update several options on an element from the layered style, as a single commit
+	 * @param id Element id to update
+	 * @param values New ExpressionOrValue for each option key
+	 * @returns true if any changes were made
+	 */
+	layeredStyleUpdateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean
+
+	/**
 	 * Update the style from legacy properties
 	 * Future: Once the old button style is removed, this should be reworked to utilise the new style system better
 	 * @param diff The properties to update

@@ -2,6 +2,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Canvas, GlobalFonts } from '@napi-rs/canvas'
 import { beforeAll, describe, expect, test } from 'vitest'
+import type { ElementGeometry } from '@companion-app/shared/Graphics/Geometry.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import type {
@@ -1774,6 +1775,112 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			const cssTransparent = await renderPng([makeTextElement({ outlineColor: 'rgba(0, 0, 0, 0)' })])
 			const numericTransparent = await renderPng([makeTextElement({ outlineColor: 0xff000000 })]) // alpha byte 0xff = transparent
 			expect(cssTransparent.equals(numericTransparent)).toBe(true)
+		})
+	})
+
+	describe('element geometry', () => {
+		// A 72x58 image with 2px padding and no decoration leaves a 68x54 content area at (2, 2)
+		async function drawGeometry(elements: SomeButtonGraphicsDrawElement[]): Promise<ElementGeometry[]> {
+			const img = Image.create(72, 58, 1, null)
+			return GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({ decoration: ButtonGraphicsDecorationType.None, elements }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+		}
+
+		function rectOf(entry: ElementGeometry) {
+			const { x, y, width, height } = entry.bounds
+			return { x, y, width, height }
+		}
+
+		test('resolves a top-level element against the content bounds', async () => {
+			const geometry = await drawGeometry([makeBoxElement({ id: 'a', x: 0.25, y: 0.5, width: 0.5, height: 0.25 })])
+
+			expect(geometry).toHaveLength(1)
+			expect(rectOf(geometry[0])).toEqual({ x: 2 + 17, y: 2 + 27, width: 34, height: 13.5 })
+			expect(geometry[0].rotations).toEqual([])
+		})
+
+		test('emits parents before their children, in draw order', async () => {
+			const geometry = await drawGeometry([
+				makeBoxElement({ id: 'under' }),
+				makeGroupElement([makeBoxElement({ id: 'child' })], { id: 'g' }),
+			])
+
+			expect(geometry.map((entry) => entry.id)).toEqual(['under', 'g', 'child'])
+		})
+
+		test('composes a child against its group, not the content bounds', async () => {
+			// Group occupies the right half; the child fills the left half of that
+			const geometry = await drawGeometry([
+				makeGroupElement([makeBoxElement({ id: 'child', width: 0.5 })], { id: 'g', x: 0.5, width: 0.5 }),
+			])
+
+			expect(rectOf(geometry[1])).toEqual({ x: 2 + 34, y: 2, width: 17, height: 54 })
+		})
+
+		test('squareCoords records the pre-square group bounds but gives children the square space', async () => {
+			const geometry = await drawGeometry([
+				makeGroupElement([makeBoxElement({ id: 'child' })], { id: 'g', squareCoords: true }),
+			])
+
+			expect(rectOf(geometry[0])).toEqual({ x: 2, y: 2, width: 68, height: 54 })
+			// The square is 54x54, centred horizontally within the 68-wide group
+			expect(rectOf(geometry[1])).toEqual({ x: 2 + 7, y: 2, width: 54, height: 54 })
+		})
+
+		test('a rotated element records a rotation about its own bounds', async () => {
+			const geometry = await drawGeometry([makeBoxElement({ id: 'a', rotation: 30 })])
+
+			expect(geometry[0].rotations).toEqual([{ pivot: geometry[0].bounds, angle: 30 }])
+		})
+
+		test('nested rotations accumulate outermost-first, pivoting about the square group space', async () => {
+			const geometry = await drawGeometry([
+				makeGroupElement([makeBoxElement({ id: 'child', rotation: 40 })], {
+					id: 'g',
+					rotation: 25,
+					squareCoords: true,
+				}),
+			])
+
+			const [groupEntry, childEntry] = geometry
+			// The group rotates about the square space it hands its children, not its own wider bounds
+			const groupPivot = groupEntry.rotations[0].pivot
+			expect({ x: groupPivot.x, y: groupPivot.y, width: groupPivot.width, height: groupPivot.height }).toEqual({
+				x: 2 + 7,
+				y: 2,
+				width: 54,
+				height: 54,
+			})
+
+			expect(childEntry.rotations).toEqual([
+				{ pivot: groupPivot, angle: 25 },
+				{ pivot: childEntry.bounds, angle: 40 },
+			])
+		})
+
+		test('hidden and disabled elements still report their geometry', async () => {
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					elements: [
+						makeBoxElement({ id: 'hidden' }),
+						makeBoxElement({ id: 'off', enabled: false }),
+						makeBoxElement({ id: 'shown' }),
+					],
+				}),
+				new Set(['hidden']),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(geometry.map((entry) => entry.id)).toEqual(['hidden', 'off', 'shown'])
 		})
 	})
 })

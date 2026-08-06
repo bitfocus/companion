@@ -110,8 +110,11 @@
 		z-index: 5;
 	}
 
-	> :not(:last-child),
-	> :not(:last-child) .input-group-borders {
+	// Base UI's NumberField renders a visually-hidden <input aria-hidden> as a trailing
+	// sibling, so :last-child would wrongly target it and strip the real last element's
+	// rounding. Match "has a following visible sibling" instead.
+	> :has(~ :not([aria-hidden])),
+	> :has(~ :not([aria-hidden])) .input-group-borders {
 		--border-right-radius: 0;
 		border-top-right-radius: 0;
 		border-bottom-right-radius: 0;

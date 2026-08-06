@@ -11,31 +11,101 @@ export interface MarkerRotation {
 }
 
 /**
- * The selected element's bounds plus the rotation transforms applied to it (outermost first), used
- * to draw the selection marker lines in the element's rotated frame.
+ * An element's bounds plus the rotation transforms applied to it (outermost first), used to draw the
+ * selection marker lines in the element's rotated frame.
  */
 export interface SelectedElementMarker {
 	bounds: DrawBounds
 	rotations: MarkerRotation[]
 }
 
+/** One drawn element's resolved geometry, as emitted by the renderer. */
+export interface ElementGeometry extends SelectedElementMarker {
+	id: string
+}
+
 /** A line segment as its two endpoints: [x1, y1, x2, y2] */
 export type MarkerLine = [number, number, number, number]
 
 /**
- * Build a selection marker for `bounds`, wrapping any `inner` rotations with an outer rotation about
- * `pivot`'s center. A zero angle adds nothing. Rotations stay ordered outermost-first.
+ * Extend a parent's rotation chain with a rotation about `pivot`'s center. A zero angle adds nothing.
+ * Rotations stay ordered outermost-first.
  */
-export function buildSelectionMarker(
-	bounds: DrawBounds,
-	pivot: DrawBounds,
-	angle: number,
-	inner: MarkerRotation[] = []
-): SelectedElementMarker {
-	return {
-		bounds,
-		rotations: angle ? [{ pivot, angle }, ...inner] : inner,
+export function appendRotation(parent: MarkerRotation[], pivot: DrawBounds, angle: number): MarkerRotation[] {
+	return angle ? [...parent, { pivot, angle }] : parent
+}
+
+/**
+ * Rotate a point about each pivot centre. Rotations are outermost-first, applied innermost-first to
+ * match how the nested canvas transforms compose.
+ */
+export function rotatePointThroughRotations(
+	rotations: readonly MarkerRotation[],
+	x: number,
+	y: number
+): [number, number] {
+	for (let i = rotations.length - 1; i >= 0; i--) {
+		;[x, y] = rotateAbout(rotations[i], x, y, 1)
 	}
+	return [x, y]
+}
+
+/** The exact inverse of {@link rotatePointThroughRotations}: outermost-first, with negated angles. */
+export function inverseRotatePointThroughRotations(
+	rotations: readonly MarkerRotation[],
+	x: number,
+	y: number
+): [number, number] {
+	for (let i = 0; i < rotations.length; i++) {
+		;[x, y] = rotateAbout(rotations[i], x, y, -1)
+	}
+	return [x, y]
+}
+
+function rotateAbout({ pivot, angle }: MarkerRotation, x: number, y: number, sign: 1 | -1): [number, number] {
+	if (!angle) return [x, y]
+
+	const cx = pivot.x + pivot.width / 2
+	const cy = pivot.y + pivot.height / 2
+	const rad = (sign * angle * Math.PI) / 180
+	const cos = Math.cos(rad)
+	const sin = Math.sin(rad)
+	const dx = x - cx
+	const dy = y - cy
+
+	return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]
+}
+
+/** An element's rotated frame expressed as a single rotation of its box about its own centre */
+export interface MarkerTransform {
+	centerX: number
+	centerY: number
+	width: number
+	height: number
+	/** Net rotation in degrees */
+	angle: number
+}
+
+/**
+ * Collapse a marker's rotation chain into a single rotation about the element's own centre.
+ *
+ * Every transform in the chain is a pure rotation about a point, so the element stays a rigid,
+ * unscaled rectangle: a `width` x `height` box centred on the rotated centre and rotated by the summed
+ * angle is exact at any nesting depth. That makes it directly expressible as a CSS transform.
+ */
+export function resolveMarkerTransform(marker: SelectedElementMarker): MarkerTransform {
+	const { bounds, rotations } = marker
+
+	const [centerX, centerY] = rotatePointThroughRotations(
+		rotations,
+		bounds.x + bounds.width / 2,
+		bounds.y + bounds.height / 2
+	)
+
+	let angle = 0
+	for (const rotation of rotations) angle += rotation.angle
+
+	return { centerX, centerY, width: bounds.width, height: bounds.height, angle }
 }
 
 /**
@@ -98,25 +168,6 @@ export function computeSelectionMarkerLines(
 	let totalAngle = 0
 	for (const { angle } of rotations) totalAngle += angle
 
-	// Rotate a point about each pivot centre. Rotations are outermost-first, applied innermost-first
-	// to match how the nested canvas transforms compose.
-	const rotatePoint = (x: number, y: number): [number, number] => {
-		for (let i = rotations.length - 1; i >= 0; i--) {
-			const { pivot, angle } = rotations[i]
-			if (!angle) continue
-			const cx = pivot.x + pivot.width / 2
-			const cy = pivot.y + pivot.height / 2
-			const rad = (angle * Math.PI) / 180
-			const cos = Math.cos(rad)
-			const sin = Math.sin(rad)
-			const dx = x - cx
-			const dy = y - cy
-			x = cx + dx * cos - dy * sin
-			y = cy + dx * sin + dy * cos
-		}
-		return [x, y]
-	}
-
 	// The four edges, each as a midpoint on the edge plus its unrotated direction in degrees. `outset`
 	// pushes each edge outward (away from the centre) so the line sits just outside the element instead
 	// of straddling its edge.
@@ -129,7 +180,7 @@ export function computeSelectionMarkerLines(
 
 	const lines: MarkerLine[] = []
 	for (const edge of edges) {
-		const [mx, my] = rotatePoint(edge.x, edge.y)
+		const [mx, my] = rotatePointThroughRotations(rotations, edge.x, edge.y)
 		const rad = ((edge.direction + totalAngle) * Math.PI) / 180
 		const ends = clipLineToRect(mx, my, Math.cos(rad), Math.sin(rad), width, height)
 		if (ends) lines.push(ends)

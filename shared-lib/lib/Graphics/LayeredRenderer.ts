@@ -13,7 +13,13 @@ import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './GaugeColorModel.js'
-import { buildSelectionMarker, computeSelectionMarkerLines, type SelectedElementMarker } from './Geometry.js'
+import {
+	appendRotation,
+	computeSelectionMarkerLines,
+	type ElementGeometry,
+	type MarkerRotation,
+	type SelectedElementMarker,
+} from './Geometry.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
 import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
 
@@ -25,38 +31,60 @@ import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
 const TEXT_OUTLINE_FACTOR = 1 / 16
 
 export class GraphicsLayeredButtonRenderer {
+	static #computeTopBarBounds(outerBounds: DrawBounds): DrawBounds {
+		return new DrawBounds(
+			outerBounds.x,
+			outerBounds.y,
+			outerBounds.width,
+			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * outerBounds.height))
+		)
+	}
+
+	/**
+	 * Compute the bounds of the top-level content area (ie the space that root elements' x/y/width/height
+	 * fractions are relative to). Exposed so callers (eg the editor's selection overlay) can map between
+	 * pixel coordinates and the fractional coordinate space without duplicating this layout math.
+	 */
+	static computeContentBounds(outerBounds: DrawBounds, decoration: ButtonGraphicsDecorationType): DrawBounds {
+		const topBarBounds = this.#computeTopBarBounds(outerBounds)
+		const topBarHeight = decoration === ButtonGraphicsDecorationType.TopBar ? topBarBounds.height : 0
+
+		return new DrawBounds(
+			outerBounds.x,
+			outerBounds.y + topBarHeight,
+			outerBounds.width,
+			outerBounds.height - topBarHeight
+		)
+	}
+
 	static async draw(
 		img: ImageBase<any>,
 		drawStyle: RendererButtonStyle,
 		elementsToHide: ReadonlySet<string>,
 		selectedElementId: string | null,
 		paddingPx: { x: number; y: number }
-	): Promise<void> {
+	): Promise<ElementGeometry[]> {
 		const backgroundElement = drawStyle.elements[0]?.type === 'canvas' ? drawStyle.elements[0] : undefined
-
-		const drawWidth = img.width - paddingPx.x * 2
-		const drawHeight = img.height - paddingPx.y * 2
 
 		// Read the resolved `decoration`, not the raw one off the canvas
 		const decoration = drawStyle.decoration
-		const showTopBar = decoration === ButtonGraphicsDecorationType.TopBar
 
-		const topBarBounds = new DrawBounds(
+		const outerBounds = new DrawBounds(
 			paddingPx.x,
 			paddingPx.y,
-			drawWidth,
-			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * drawHeight))
+			img.width - paddingPx.x * 2,
+			img.height - paddingPx.y * 2
 		)
-		const topBarHeight = showTopBar ? topBarBounds.height : 0
-		const drawBounds = new DrawBounds(paddingPx.x, paddingPx.y + topBarHeight, drawWidth, drawHeight - topBarHeight)
+		const topBarBounds = this.#computeTopBarBounds(outerBounds)
+		const drawBounds = this.computeContentBounds(outerBounds, decoration)
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
 		// Clip element drawing to the button rectangle, so that only the markers draw outside the bounds
-		const clipBounds =
-			paddingPx.x > 0 || paddingPx.y > 0 ? new DrawBounds(paddingPx.x, paddingPx.y, drawWidth, drawHeight) : null
-		const selectedMarker = await img.usingClip(clipBounds, async () =>
-			this.#drawElements(img, drawStyle.elements, elementsToHide, selectedElementId, drawBounds, false)
+		const clipBounds = paddingPx.x > 0 || paddingPx.y > 0 ? outerBounds : null
+		const elementGeometry: ElementGeometry[] = []
+		await img.usingClip(clipBounds, async () =>
+			this.#drawElements(img, drawStyle.elements, elementsToHide, drawBounds, false, [], elementGeometry)
 		)
 
 		switch (decoration) {
@@ -83,22 +111,31 @@ export class GraphicsLayeredButtonRenderer {
 		}
 
 		// Draw a border around the selected element, do this last so it's on top
+		const selectedMarker = selectedElementId
+			? elementGeometry.find((entry) => entry.id === selectedElementId)
+			: undefined
 		if (selectedMarker) this.#drawBoundsLines(img, selectedMarker)
+
+		return elementGeometry
 	}
 
 	/**
-	 * Draw the elements to the image
-	 * Returns the selected element bounds, or null if no element was selected or the selected element was not found
+	 * Draw the elements to the image, collecting each one's resolved geometry into `out`.
+	 *
+	 * Geometry is collected for every element, including hidden and disabled ones and the internal
+	 * children of references - it describes the layout, and it is up to the caller (the editor) to decide
+	 * which elements it cares about. Parents are pushed before their children, so a reverse scan of `out`
+	 * finds the top-most element at a point.
 	 */
 	static async #drawElements(
 		img: ImageBase<any>,
 		elements: SomeButtonGraphicsDrawElement[],
 		elementsToHide: ReadonlySet<string>,
-		selectedElementId: string | null,
 		drawBounds: DrawBounds,
-		skipDrawParent: boolean
-	): Promise<SelectedElementMarker | null> {
-		let selectedMarker: SelectedElementMarker | null = null
+		skipDrawParent: boolean,
+		parentRotations: MarkerRotation[],
+		out: ElementGeometry[]
+	): Promise<void> {
 		for (const element of elements) {
 			// Skip the background element, it's handled separately
 			if (element.type === 'canvas') continue
@@ -123,26 +160,22 @@ export class GraphicsLayeredButtonRenderer {
 							)
 						}
 
+						// The pivot is the post-square box, matching what `usingRotation` is given below
+						const childRotations = appendRotation(parentRotations, groupBounds, element.rotation)
+						out.push({ id: element.id, bounds: elementBounds, rotations: childRotations })
+						elementBounds = null // Already recorded, with the correct pivot
+
 						await img.usingTemporaryLayer(element.opacity, async (img) => {
 							await img.usingRotation(groupBounds, element.rotation, async () => {
-								// Propagate the selected child, prefixing this group's rotation so the marker
-								// is drawn in the same rotated frame the child was drawn in
-								const childMarker = await this.#drawElements(
+								await this.#drawElements(
 									img,
 									element.children,
 									elementsToHide,
-									selectedElementId,
 									groupBounds,
-									skipDraw
+									skipDraw,
+									childRotations,
+									out
 								)
-								if (childMarker) {
-									selectedMarker = buildSelectionMarker(
-										childMarker.bounds,
-										groupBounds,
-										element.rotation,
-										childMarker.rotations
-									)
-								}
 							})
 						})
 						break
@@ -151,18 +184,19 @@ export class GraphicsLayeredButtonRenderer {
 						// Compute the reference's own bounds first so rotation pivots about its centre, not the container's
 						const referenceBounds = drawBounds.compose(element.x, element.y, element.width, element.height)
 
-						elementBounds = referenceBounds
+						const childRotations = appendRotation(parentRotations, referenceBounds, element.rotation)
+						out.push({ id: element.id, bounds: referenceBounds, rotations: childRotations })
+
 						await img.usingTemporaryLayer(element.opacity, async (img) => {
 							await img.usingRotation(referenceBounds, element.rotation, async () => {
-								// Note: children of a reference element cannot be individually selected,
-								// so the return value (selected child bounds) is intentionally discarded.
 								await this.#drawElements(
 									img,
 									element.children,
 									elementsToHide,
-									selectedElementId,
 									referenceBounds,
-									skipDraw
+									skipDraw,
+									childRotations,
+									out
 								)
 							})
 						})
@@ -194,14 +228,17 @@ export class GraphicsLayeredButtonRenderer {
 				// TODO - log/report error where? Or should this abandon the render and do a placeholder?
 			}
 
-			// Capture the selected element's bounds and rotation, to draw the marker later
-			if (element.id === selectedElementId && elementBounds) {
+			// Groups and references record themselves above, so their pivot can be the box they actually
+			// rotated about. Everything else rotates about its own bounds.
+			if (elementBounds) {
 				const rotation = 'rotation' in element ? element.rotation : 0
-				selectedMarker = buildSelectionMarker(elementBounds, elementBounds, rotation)
+				out.push({
+					id: element.id,
+					bounds: elementBounds,
+					rotations: appendRotation(parentRotations, elementBounds, rotation),
+				})
 			}
 		}
-
-		return selectedMarker
 	}
 
 	static #drawBackgroundElement(
