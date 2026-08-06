@@ -123,8 +123,11 @@ export const parseColorAlpha = (color: number | string): number => colord(parseC
  * (Numeric strings such as '123' are treated as a color number, matching parseColor.)
  */
 export const colorToNumber = (color: number | string): number => {
-	if (typeof color === 'number') return color
-	if (color.trim() !== '' && !isNaN(Number(color))) return Number(color)
+	// Guard non-finite numbers (NaN/Infinity) so they fall back to 0 rather than reaching downstream
+	// colour maths; applies to both a numeric input and a numeric string such as '1e999'.
+	if (typeof color === 'number') return Number.isFinite(color) ? color : 0
+	const asNumber = Number(color)
+	if (color.trim() !== '' && Number.isFinite(asNumber)) return asNumber
 	if (!colord(color).isValid()) return 0
 
 	const { r, g, b, a } = colord(color).toRgb()

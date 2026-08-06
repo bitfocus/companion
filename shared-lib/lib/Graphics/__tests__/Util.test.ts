@@ -66,6 +66,16 @@ describe('colorToNumber', () => {
 	test('returns 0 for an invalid color', () => {
 		expect(colorToNumber('not-a-color')).toBe(0)
 	})
+
+	test('returns 0 for non-finite numeric inputs rather than passing them through', () => {
+		expect(colorToNumber(NaN)).toBe(0)
+		expect(colorToNumber(Infinity)).toBe(0)
+		expect(colorToNumber(-Infinity)).toBe(0)
+	})
+
+	test('returns 0 for a numeric string that overflows to infinity', () => {
+		expect(colorToNumber('1e999')).toBe(0)
+	})
 })
 
 describe('resolveButtonStyleProperties', () => {
